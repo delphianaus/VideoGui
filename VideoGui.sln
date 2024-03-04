@@ -1,0 +1,63 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33103.184
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VideoGui", "VideoGui\VideoGui.csproj", "{B6B6B0A5-4557-48D7-BAD2-1B1080286360}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{030B0544-C366-413D-97A5-DC9E5D079F51}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+		VideoGui\Toggle.cs = VideoGui\Toggle.cs
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NotifyIconWpf", "NotifyIconWpf\NotifyIconWpf.csproj", "{246B413C-BFDF-4F53-8F09-7CE0F87A8A46}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ToggleClass", "ToggleClass\ToggleClass.csproj", "{9FFBD991-F4FF-40CE-9FCA-B7BB84A291AB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|x64 = Debug|x64
+		Release|Any CPU = Release|Any CPU
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B6B6B0A5-4557-48D7-BAD2-1B1080286360}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B6B6B0A5-4557-48D7-BAD2-1B1080286360}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B6B6B0A5-4557-48D7-BAD2-1B1080286360}.Debug|x64.ActiveCfg = Debug|x64
+		{B6B6B0A5-4557-48D7-BAD2-1B1080286360}.Debug|x64.Build.0 = Debug|x64
+		{B6B6B0A5-4557-48D7-BAD2-1B1080286360}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B6B6B0A5-4557-48D7-BAD2-1B1080286360}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B6B6B0A5-4557-48D7-BAD2-1B1080286360}.Release|x64.ActiveCfg = Release|x64
+		{B6B6B0A5-4557-48D7-BAD2-1B1080286360}.Release|x64.Build.0 = Release|x64
+		{246B413C-BFDF-4F53-8F09-7CE0F87A8A46}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{246B413C-BFDF-4F53-8F09-7CE0F87A8A46}.Debug|Any CPU.Build.0 = Debug|x64
+		{246B413C-BFDF-4F53-8F09-7CE0F87A8A46}.Debug|x64.ActiveCfg = Debug|x64
+		{246B413C-BFDF-4F53-8F09-7CE0F87A8A46}.Debug|x64.Build.0 = Debug|x64
+		{246B413C-BFDF-4F53-8F09-7CE0F87A8A46}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{246B413C-BFDF-4F53-8F09-7CE0F87A8A46}.Release|Any CPU.Build.0 = Release|Any CPU
+		{246B413C-BFDF-4F53-8F09-7CE0F87A8A46}.Release|x64.ActiveCfg = Release|Any CPU
+		{246B413C-BFDF-4F53-8F09-7CE0F87A8A46}.Release|x64.Build.0 = Release|Any CPU
+		{9FFBD991-F4FF-40CE-9FCA-B7BB84A291AB}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{9FFBD991-F4FF-40CE-9FCA-B7BB84A291AB}.Debug|Any CPU.Build.0 = Debug|x64
+		{9FFBD991-F4FF-40CE-9FCA-B7BB84A291AB}.Debug|x64.ActiveCfg = Debug|x64
+		{9FFBD991-F4FF-40CE-9FCA-B7BB84A291AB}.Debug|x64.Build.0 = Debug|x64
+		{9FFBD991-F4FF-40CE-9FCA-B7BB84A291AB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9FFBD991-F4FF-40CE-9FCA-B7BB84A291AB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9FFBD991-F4FF-40CE-9FCA-B7BB84A291AB}.Release|x64.ActiveCfg = Release|Any CPU
+		{9FFBD991-F4FF-40CE-9FCA-B7BB84A291AB}.Release|x64.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{B6B6B0A5-4557-48D7-BAD2-1B1080286360} = {030B0544-C366-413D-97A5-DC9E5D079F51}
+		{246B413C-BFDF-4F53-8F09-7CE0F87A8A46} = {030B0544-C366-413D-97A5-DC9E5D079F51}
+		{9FFBD991-F4FF-40CE-9FCA-B7BB84A291AB} = {030B0544-C366-413D-97A5-DC9E5D079F51}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		VisualSVNWorkingCopyRoot = .
+		SolutionGuid = {AE8AF903-432C-4686-8BF4-FB51CE4C887B}
+	EndGlobalSection
+EndGlobal

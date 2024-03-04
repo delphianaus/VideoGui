@@ -1,0 +1,95 @@
+﻿<Window x:Class="VideoGui.AudioJoiner" Name="frmAudioJoiner"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:VideoGui" Loaded="Window_Loaded" Closing="Window_Closing"
+        mc:Ignorable="d" WindowStartupLocation="CenterScreen" WindowStyle="ToolWindow" 
+        Title="Audio Joiner" Height="357" Width="724" SizeChanged="Window_SizeChanged" >
+    <Grid>
+        <StackPanel x:Name="stkmain" Orientation="Vertical" Margin="0,0,0,2">
+            <StackPanel >
+                <Border x:Name="brdFileInfo" BorderThickness="2" BorderBrush="Black" Height="52" Margin="4,3,5,0">
+                    <Canvas x:Name="CnvMedialElements">
+                        <Label Content="Source Directory" HorizontalAlignment="Center" VerticalAlignment="Top" Height="26" Canvas.Left="9" Canvas.Top="9"/>
+                        <TextBox x:Name="txtsrcdir" HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Center" Width="556" Canvas.Left="120" Canvas.Top="13"/>
+                        <Button x:Name="btnSelectSourceDir" HorizontalAlignment="Center" VerticalAlignment="Top" Width="20" Height="20" Canvas.Left="683" Canvas.Top="12" Click="btnSelectSourceDir_Click" RenderTransformOrigin="-13.634,1.02" />
+                    </Canvas>
+                </Border>
+            </StackPanel>
+            <StackPanel x:Name="StackHeader0" >
+                <StackPanel x:Name="StackHeader1" Orientation="Horizontal" Width="719">
+                    <StackPanel x:Name="StackHeader2" Width="719">
+                        <Border x:Name="brd1" Margin="2,2,2,2" BorderThickness="2" BorderBrush="Black">
+                            <StackPanel Name="stackheader4" Orientation="Vertical" Width="719" >
+                                <StackPanel Name="StackHeader5" Height="30" Width="719">
+                                    <ListBox x:Name="lstItems" Height="204" Canvas.Top="2" 
+                             IsSynchronizedWithCurrentItem="True"  IsManipulationEnabled="True" 
+                              BorderThickness="2,2,2,2" Width="719">
+                                        <ListBox.Template>
+                                            <ControlTemplate x:Name="GridControlss">
+                                                <DockPanel x:Name="DockPanel1" Width= "{Binding ElementName=MediaImporter,Path=DockPanelWidth}" 
+                                                    LastChildFill="True" Margin="0,0,0,0" 
+                                                    HorizontalAlignment="Left" >
+                                                    <Grid x:Name="griddpl" DockPanel.Dock="Top" Height="30" HorizontalAlignment="Left" Width="1000"  Margin="4,0,0,0" >
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition x:Name="title1" Width="340"/>
+                                                            <ColumnDefinition x:Name="title2" Width="100"/>
+                                                            <ColumnDefinition x:Name="title3" Width="140"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <Label Grid.Column="0" Margin="4,0,0,0" Content="Source Filename" HorizontalAlignment="Left" VerticalAlignment="Top" />
+                                                        <Label Grid.Column="1" Margin="4,0,0,0" Content="Duration" HorizontalAlignment="Left" VerticalAlignment="Top" />
+                                                        <Label Grid.Column="2" Content="Status" HorizontalAlignment="Left" VerticalAlignment="Top"  />
+                                                    </Grid>
+                                                    <ItemsPresenter></ItemsPresenter>
+                                                </DockPanel>
+                                            </ControlTemplate>
+                                        </ListBox.Template>
+                                    </ListBox>
+                                </StackPanel>
+                                <StackPanel x:Name="Stackheader6" ScrollViewer.VerticalScrollBarVisibility="Disabled" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Width="719">
+                                    <ScrollViewer HorizontalAlignment="Left" VerticalAlignment="Top" >
+                                        <StackPanel ScrollViewer.VerticalScrollBarVisibility="Disabled" 
+                                             ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                            <ListBox Name="lstSchedules" ScrollViewer.HorizontalScrollBarVisibility="Disabled" 
+                                              SelectionMode="Multiple" ScrollViewer.CanContentScroll="True" 
+                                              ScrollViewer.VerticalScrollBarVisibility="Visible" 
+                                              Padding="0,0,0,2" Height="177" Width="690">
+                                                <ListBox.ItemTemplate>
+                                                    <DataTemplate x:Name="GridControlsB" >
+                                                        <Grid Margin="0,2" x:Name="gridwidths">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition x:Name="col1" Width="340"/>
+                                                                <ColumnDefinition x:Name="col2" Width="100" />
+                                                                <ColumnDefinition x:Name="col3" Width="140"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            <TextBlock Name="Filename" Grid.Column="0" Margin="4,0,0,0"  Text="{Binding FileName}"/>
+                                                            <TextBlock Name="FirstFrameTime" Grid.Column="1" Margin="4,0,0,0" Text="{Binding TimeData}"/>
+                                                            <TextBlock Name="SuggestedName"  Grid.Column="2" Text="{Binding Status}"/>
+                                                        </Grid>
+                                                    </DataTemplate>
+                                                </ListBox.ItemTemplate>
+                                            </ListBox>
+                                        </StackPanel>
+                                    </ScrollViewer>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                </StackPanel>
+            </StackPanel>
+            <StackPanel x:Name="StackHeader4" Height="71" Width="717">
+                <Border x:Name="brdControls" BorderBrush="Black" BorderThickness="2" Height="68" RenderTransformOrigin="0.5,0.5" Width="718">
+                    <Canvas x:Name="cnvcontrols" Margin="0,0,-2,0">
+                        <Button x:Name="btnRename" IsEnabled="False" HorizontalAlignment="Center" Content="Process ALL" Width="90" Height="30" Click="btnRename_Click" Canvas.Left="14" Canvas.Top="18" VerticalAlignment="Top"/>
+                        <Button x:Name="btnClose" Content="Close" Width="90" Height="30" Click="btnClose_Click" HorizontalAlignment="Center" Canvas.Left="603" Canvas.Top="18" VerticalAlignment="Center"/>
+                        <Label Name="lblSetDest" Content="Destination Directory :" Canvas.Left="111" HorizontalAlignment="Center" Canvas.Top="20" VerticalAlignment="Center"/>
+                        <Button x:Name="btnSetDetDir" Width="22" Height="22" Canvas.Left="543" HorizontalAlignment="Center" VerticalAlignment="Top" Canvas.Top="22" Click="btnSetDetDir_Click"/>
+                        <TextBox x:Name="txtDestDir" Width="298" Height="22" Canvas.Left="240" HorizontalAlignment="Center" Canvas.Top="22" VerticalAlignment="Top"/>
+                    </Canvas>
+                </Border>
+            </StackPanel>
+        </StackPanel>
+    </Grid>
+</Window>

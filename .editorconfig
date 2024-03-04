@@ -1,0 +1,4 @@
+﻿[*.cs]
+
+# CS7064: Error opening icon file C:\Users\justi\source\repos\VideoGui\VideoGui\computer - Copy.ico -- Could not find file 'C:\Users\justi\source\repos\VideoGui\VideoGui\computer - Copy.ico'.
+dotnet_diagnostic.CS7064.severity = silent
