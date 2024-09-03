@@ -165,7 +165,6 @@ namespace VideoGui
                     Dispatcher.Invoke(() => Progress_HttpReceiveProgressFFMPEG(sender, e));
                     return;
                 }
-                System.Windows.Forms.Application.DoEvents();
                 lblStatus.Content = "Status : [Downloading FFMPEG " + e.ProgressPercentage.ToString() + " %]";
                 if (e.BytesTransferred < e.TotalBytes)
                 {
@@ -176,7 +175,6 @@ namespace VideoGui
                     lblStatus.Content = "Status : [Finsihed Downloading FFMPEG]";
 
                 }
-                System.Windows.Forms.Application.DoEvents();
             }
             catch (Exception ex)
             {
@@ -351,12 +349,10 @@ namespace VideoGui
                 int zipsize = 0;
                 //progress.HttpReceiveProgress += Progress_HttpReceiveProgressFFMPEG;
                 CancellationTokenSource ProcessingCancellationTokenSource = new CancellationTokenSource();
-                System.Windows.Forms.Application.DoEvents();
                 var client = HttpClientFactory.Create();
                 lblStatus.Content = "Status : [Downloading FFMPEG]";
                 statusupdate = 0;
                 lineno = 1;
-                System.Windows.Forms.Application.DoEvents();
 
                 System.Net.WebClient wc = new System.Net.WebClient();
                 wc.OpenRead(URL);
@@ -378,7 +374,6 @@ namespace VideoGui
                             while (!done)
                             {
                                 Thread.Sleep(100);
-                                System.Windows.Forms.Application.DoEvents();
                             }
                             if (Ms.Length == contentLength) break;
                         }
@@ -389,7 +384,6 @@ namespace VideoGui
                         //while ((!cts.IsCancellationRequested) && (!done))
                         // {
                         //     Thread.Sleep(250);
-                        //     System.Windows.Forms.Application.DoEvents();
                         // }
 
                         statusupdate = 1;
@@ -650,7 +644,6 @@ namespace VideoGui
                     if (cnt >= 1)
                     {
                         lblStatus.Content = "Status : Already Running";
-                        System.Windows.Forms.Application.DoEvents();
                         Thread.Sleep(4000);
                         Terminate();
                     }
@@ -662,7 +655,6 @@ namespace VideoGui
                         cts.CancelAfter(TimeSpan.FromSeconds(2));
                         while (!cts.IsCancellationRequested)
                         {
-                            System.Windows.Forms.Application.DoEvents();
                             Thread.Sleep(250);
                         }
                         Terminate();
@@ -670,7 +662,6 @@ namespace VideoGui
 
                     lblYouTubeHelper.Content += " " + Assembly.GetExecutingAssembly().GetName().Version.ToString();
                     var cts1 = new CancellationTokenSource();
-                    System.Windows.Forms.Application.DoEvents();
                     cts1.CancelAfter(TimeSpan.FromSeconds(3));
                     while (!cts1.IsCancellationRequested)
                     {
@@ -688,13 +679,11 @@ namespace VideoGui
                     {
                         Task.Run(() => Download7zip());
                     }
-                    System.Windows.Forms.Application.DoEvents();
                     string sbpath = "";
                     string AppPath = System.IO.Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
                     if (AppPath != "")
                     {
                         lblStatus.Content = "Status : Checking For FFMPEG update";
-                        System.Windows.Forms.Application.DoEvents();
                         statusupdate = 0;
                         ffmpegready = false;
                         bytesdone = 0;
@@ -705,7 +694,6 @@ namespace VideoGui
                         lblStatus.Content = "Status : Downloading FFMPEG";
                         while (!ffmpegready && !done)
                         {
-                            System.Windows.Forms.Application.DoEvents();
                             switch (statusupdate)
                             {
                                 case 0:
@@ -714,38 +702,32 @@ namespace VideoGui
                                         {
                                             string str = $"Status : [Downloading FFMPEG {prcdone} %]";
                                             lblStatus.Content = str;
-                                            System.Windows.Forms.Application.DoEvents();
                                         }
                                         else
                                         {
                                             string str = $"Status : [Downloading FFMPEG {onfinish}]";
                                             lblStatus.Content =  str;
-                                            System.Windows.Forms.Application.DoEvents();
                                         }
                                         break;
                                     }
                                 case 1:
                                     {
                                         lblStatus.Content = "Status : [Unzippping FFMPEG]";
-                                        System.Windows.Forms.Application.DoEvents();
                                         break;
                                     }
                                 case 2:
                                     {
                                         lblStatus.Content = "Status : [Unzippped FFMPEG]";
-                                        System.Windows.Forms.Application.DoEvents();
                                         break;
                                     }
                                 case 3:
                                     {
                                         lblStatus.Content = "Status : [Updating Registry]";
-                                        System.Windows.Forms.Application.DoEvents();
                                         break;
                                     }
                                 case 5:
                                     {
                                         lblStatus.Content = "Error : [FFMPEG Update]";
-                                        System.Windows.Forms.Application.DoEvents();
                                         ffmpegready = true;
                                         break;
                                     }
@@ -755,17 +737,11 @@ namespace VideoGui
 
                         }
                         lblStatus.Content = "Status : Launching Main App";
-                        MainAppWindow = new MainWindow();
+                        MainAppWindow = new MainWindow(DoOnFinish);
                         Hide();
+                        MainAppWindow.ShowActivated = true;
                         MainAppWindow.Show();
-                        while (!MainAppWindow.canclose)
-                        {
-                            Thread.Sleep(600);
-                            System.Windows.Forms.Application.DoEvents();
-                        }
-                        lblStatus.Content = "Status : Shutting Down App";
-                        Close();
-                        Terminate();
+                       
                     }
                 }
             }
@@ -776,17 +752,13 @@ namespace VideoGui
             }
         }
 
-        public void CheckForFFPEGUpdate()
+        private void DoOnFinish()
         {
-            try
-            {
-                GetUpdateAsync("https://www.gyan.dev/ffmpeg/builds/", new Gyendev());
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
-                Close();
-            }
+
+            lblStatus.Content = "Status : Shutting Down App";
+            Terminate();
         }
+
+       
     }
 }

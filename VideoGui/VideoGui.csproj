@@ -8,23 +8,25 @@
     <StartupObject>VideoGui.App</StartupObject>
     <ApplicationIcon>Properties\computer.ico</ApplicationIcon>
     <Platforms>x64</Platforms>
-    <AssemblyVersion>1.0.0.281</AssemblyVersion>
-    <FileVersion>1.0.0.281</FileVersion>
+    <AssemblyVersion>1.0.0.306</AssemblyVersion>
+    <FileVersion>1.0.0.306</FileVersion>
     <Nullable>annotations</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <UseWindowsForms>True</UseWindowsForms>
+    <IncludeSymbols>True</IncludeSymbols>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <PlatformTarget>x64</PlatformTarget>
     <DefineConstants>TRACE</DefineConstants>
-    <DebugType>portable</DebugType>
+    <DebugType>full</DebugType>
     <DebugSymbols>true</DebugSymbols>
     <WarningLevel>0</WarningLevel>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <PlatformTarget>x64</PlatformTarget>
-    <DebugType>none</DebugType>
+    <DebugType>full</DebugType>
     <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
 
@@ -35,10 +37,6 @@
     <Page Remove="lev\**" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Compile Remove="complexvideos.xaml.cs" />
-    <Compile Remove="gyen.dev.cs" />
-  </ItemGroup>
 
   <ItemGroup>
     <None Remove="Icons\computer.ico" />
@@ -66,20 +64,27 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="AsyncAwaitBestPractices" Version="6.0.6" />
-    <PackageReference Include="CliWrap" Version="3.6.4" />
-    <PackageReference Include="FirebirdSql.Data.FirebirdClient" Version="9.1.1" />
+    <PackageReference Include="AsyncAwaitBestPractices" Version="8.0.0" />
+    <PackageReference Include="CliWrap" Version="3.6.6" />
+    <PackageReference Include="DotNetProjects.Extended.Wpf.Toolkit" Version="5.0.115" />
+    <PackageReference Include="FirebirdSql.Data.FirebirdClient" Version="10.3.1" />
     <PackageReference Include="FolderBrowserEx" Version="1.0.1" />
+    <PackageReference Include="HtmlAgilityPack" Version="1.11.63" />
     <PackageReference Include="MediaInfo.Wrapper.Core" Version="21.9.3" />
     <PackageReference Include="Microsoft.AspNet.WebApi.Client" Version="6.0.0" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0-preview.3.23174.8" />
-    <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0-preview.3.23174.8" />
-    <PackageReference Include="Microsoft.NETCore.Platforms" Version="8.0.0-preview.3.23174.8" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.0-preview.7.24405.7" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.0-preview.7.24405.7" />
+    <PackageReference Include="Microsoft.NETCore.Platforms" Version="8.0.0-preview.7.23375.6" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2730-prerelease" />
     <PackageReference Include="Nancy" Version="2.0.0" />
-    <PackageReference Include="Squid-Box.SevenZipSharp" Version="1.6.1.23" />
-    <PackageReference Include="System.Management" Version="8.0.0-preview.3.23174.8" />
-    <PackageReference Include="WindowsAPICodePackShellExtensions" Version="8.0.0" />
+    <PackageReference Include="runtime.native.System.Net.Http" Version="4.3.1" />
+    <PackageReference Include="Squid-Box.SevenZipSharp" Version="1.6.2.24" />
+    <PackageReference Include="System.DirectoryServices.AccountManagement" Version="9.0.0-preview.7.24405.7" />
+    <PackageReference Include="System.Management" Version="9.0.0-preview.7.24405.7" />
+    <PackageReference Include="System.Net.Http" Version="4.3.4" />
+    <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
+    <PackageReference Include="WindowsAPICodePackShellExtensions" Version="8.0.5" />
     <ProjectReference Include="..\ToggleClass\ToggleClass.csproj" />
     <ProjectReference Include="..\NotifyIconWpf\NotifyIconWpf.csproj" />
 

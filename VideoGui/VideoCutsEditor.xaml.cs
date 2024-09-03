@@ -26,6 +26,7 @@ using System.Runtime.InteropServices;
 using CliWrap;
 using System.Windows.Forms;
 using FolderBrowserDialog = FolderBrowserEx.FolderBrowserDialog;
+using FirebirdSql.Data.FirebirdClient;
 
 namespace VideoGui
 {
@@ -37,11 +38,13 @@ namespace VideoGui
         OnFinish DoOnFinish;
         string Filename = "";
         int _TotalSecs = 0;
+        string ConnectionString = "";
         public AddRecordDelegate DoAddRecord;
         List<VideoCutInfo> ListOfCuts = new List<VideoCutInfo>();
-        public VideoCutsEditor(AddRecordDelegate _DoAddRecord, OnFinish _DoOnFinish)
+        public VideoCutsEditor(AddRecordDelegate _DoAddRecord, OnFinish _DoOnFinish, string connectionString)
         {
             InitializeComponent();
+            ConnectionString = connectionString;
             DoAddRecord = _DoAddRecord;
             DoOnFinish = _DoOnFinish;
         }
@@ -58,7 +61,7 @@ namespace VideoGui
                 string Root = key.GetValueStr("CutSourceDirectory", "c:\\");
                 key?.Close();
 
-
+                
                 FolderBrowserDialog folderBrowserDialog = new FolderBrowserDialog();
                 folderBrowserDialog.Title = "Select a folder";
                 folderBrowserDialog.InitialFolder = Root;
@@ -71,23 +74,54 @@ namespace VideoGui
                     key.SetValue("CutSourceDirectory", txtsrcdir.Text);
                     key?.Close();
                     int threash = 70;
+                    string id = "";
+                    using (var connection = new FbConnection(ConnectionString))
+                    {
+                        connection.Open(); 
+                        string sql = $"SELECT ID FROM AUTOEDITS WHERE SOURCE = @P0";
+                        using (var command = new FbCommand(sql.ToUpper(), connection))
+                        {
+                            command.Parameters.Clear();
+                            command.Parameters.AddWithValue("@p0", txtsrcdir.Text);
+                            object result = command.ExecuteScalar();
+                            if (result is string idxx)
+                            {
+                                id = ""; 
+                            }
+                        }
+                        connection.Close();
+                    }
+
+                    if (id != "")
+                    {
+                        ConnectionString.ExecuteReader($"SELECT * FROM AUTOEDITS WHERE ID = {id}", OnReadAutoEdit);
+                    }
                     Filename = txtsrcdir.Text.Split("\\").ToList().LastOrDefault();
                     var FileIndexer = new ffmpegbridge();
                     List<string> files = Directory.EnumerateFiles(txtsrcdir.Text,"*.mp4", SearchOption.TopDirectoryOnly).ToList();
                     FileIndexer.ReadDuration(files);
                     while (!FileIndexer.Finished)
                     {
-                        System.Windows.Forms.Application.DoEvents();
                         Thread.Sleep(100);
                     }
-                    var TotalSecs = FileIndexer.GetDuration().TotalSeconds;
-
+                    var TotalSecs = FileIndexer.GetDuration();
+                    lblTotalTime.Content = TotalSecs.ToFFmpeg();
                     FileIndexer = null;
-                    _TotalSecs = Math.Truncate(TotalSecs).ToInt();
-                    TimeSpan Target = TimeSpan.FromMinutes(22);
+                    _TotalSecs = Math.Truncate(TotalSecs.TotalSeconds).ToInt();
+                    TimeSpan Target = TimeSpan.Zero;
+                    if (txtTarget.Text != "")
+                    {
+                        string time = "00:" + txtTarget;
+                        Target = time.FromStrToTimeSpan();
+                    }
+                    else Target = TimeSpan.FromMinutes(22);
+                    int Threash = txtThreash.Text.ToInt(-1);
+                    if (Threash == -1) Threash = 70;
+                    int Segment = txtSegment.Text.ToInt(-1);
+                    if (Segment == -1) Segment = 5;
                     if (txxtEditDirectory.Text != "" || txtsrcdir.Text != "")
                     {
-                        DoCalcs(Filename, _TotalSecs, Target, 70, 5);
+                        DoCalcs(Filename, _TotalSecs, Target, Threash, Segment);
                     }
                     else
                     {
@@ -101,6 +135,25 @@ namespace VideoGui
             }
         }
 
+        private void OnReadAutoEdit(FbDataReader reader)
+        {
+            try
+            {
+                string DestDir = (reader["DESTINATION"] is string des) ? des : "";
+                string Target = (reader["TARGET"] is string target) ? target : "";
+                string Segment = (reader["SEGMENT"] is string segment) ? segment : "";
+                string Threashhold = (reader["THREASHHOLD"] is string theashhold) ? theashhold : "";
+                txxtEditDirectory.Text = (DestDir != "") ? DestDir : txxtEditDirectory.Text;
+                txtSegment.Text = (Segment != "") ? Segment : txtSegment.Text;
+                txtThreash.Text = (Threashhold != "") ? Threashhold : txtThreash.Text;
+                txtTarget.Text = (Target != "") ? Target : txtTarget.Text;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"OnReadAutoEdit {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+
+        }
 
         private void txtEditFileSelect_Click(object sender, RoutedEventArgs e)
         {
@@ -118,7 +171,7 @@ namespace VideoGui
                 {
                     txxtEditDirectory.Text = folderBrowserDialog.SelectedFolder;
                     key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
-                    key.SetValue("AdobeDestinationDir", txtsrcdir.Text);
+                    key.SetValue("AdobeDestinationDir", txxtEditDirectory.Text);
                     key?.Close();
 
                     
@@ -184,6 +237,8 @@ namespace VideoGui
                     LastThresh = threash;
                     BtnCalc.IsEnabled = false;
                     btnAccept.IsEnabled = true;
+                    btnAcceptSelected.IsEnabled = true;
+                    chkExportForTwitch.IsEnabled = btnAcceptSelected.IsEnabled;
                 }
             }
 
@@ -308,13 +363,14 @@ namespace VideoGui
             try
             {
                 RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
-                string destdir = key.GetValueStr("AdobeDestinationDir", "c:\\Adobe");
+                string TwitchDir = key.GetValueStr("DestDirectoryTwitch");
+                string destdir = (chkExportForTwitch.IsChecked.Value) ? TwitchDir : txxtEditDirectory.Text;
                 key?.Close();
                 DoAddRecord?.Invoke(true, false, false, false, true, false, false, false,
                                         true, ctv.TimeFrom.ToFFmpeg(), (ctv.TimeTo - ctv.TimeFrom).ToFFmpeg()
                                         , txtsrcdir.Text,
-                                        destdir + "\\" + ctv.FileName + $"part {ctv._CutNo}.mp4");
-                System.Windows.Forms.Application.DoEvents();
+                                        destdir + "\\" + ctv.FileName + $"part {ctv._CutNo}.mp4",
+                                        null,null,chkExportForTwitch.IsChecked.Value);
                 lblStatus.Content = $"Injecting {ctv.FileName} part {ctv._CutNo}";
             }
             catch (Exception ex)
@@ -322,9 +378,73 @@ namespace VideoGui
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
             }
         }
-        private void btnAccept_Click(object sender, RoutedEventArgs e)
+
+        private void SaveData()
         {
             try
+            {
+                int idx = 0;
+                string sql = $"SELECT ID FROM AUTOEDITS WHERE SOURCE = {txtsrcdir.Text}";
+                var res = ConnectionString.RunExecuteScalar(sql, -1);
+                if (res != -1)
+                {
+                    sql = $"UPDATE AUTOEDITS SET DESTINATION = @P1, THRESHHOLD = @P2, TARGET = @P3, " +
+                        "SEGMENT = @P4 WHERE ID = @P5";
+                    using (var connection = new FbConnection(ConnectionString))
+                    {
+                        connection.Open();
+                        using (var command = new FbCommand(sql, connection))
+                        {
+                            command.Parameters.Clear();
+                            command.Parameters.AddWithValue("@P1", txxtEditDirectory.Text);
+                            command.Parameters.AddWithValue("@P2", txtThreash.Text);
+                            command.Parameters.AddWithValue("@P3", txtTarget.Text);
+                            command.Parameters.AddWithValue("@P4", txtSegment.Text);
+                            command.Parameters.AddWithValue("@P5", res);
+                            object result = command.ExecuteScalar();
+                            if (result is int idxx)
+                            {
+                                idx = idxx;
+                            }
+                        }
+                        connection.Close();
+                    }
+                }
+                else
+                {
+                    sql = "INSERT INTO AUTOEDITS" +
+                            "(SOURCE,DESTINATION,TARGET,SEGMENT,THRESHHOLD)  " +
+                            "VALUES(@P1,@P2,@P3,@P4,@P5) RETURNING ID";
+                    using (var connection = new FbConnection(ConnectionString))
+                    {
+                        connection.Open();
+                        using (var command = new FbCommand(sql, connection))
+                        {
+                            command.Parameters.Clear();
+                            command.Parameters.AddWithValue("@P1", txtsrcdir.Text);
+                            command.Parameters.AddWithValue("@P2", txxtEditDirectory.Text);
+                            command.Parameters.AddWithValue("@P3", txtTarget.Text);
+                            command.Parameters.AddWithValue("@P4", txtSegment.Text);
+                            command.Parameters.AddWithValue("@P5", txtThreash.Text);
+                            object result = command.ExecuteScalar();
+                            if (result is int idxx)
+                            {
+                                idx = idxx;
+                            }
+                        }
+                        connection.Close();
+                    }
+
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"SaveData {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
+        private void btnAccept_Click(object sender, RoutedEventArgs e)
+        {
+           try
             {
         
                 lblStatus.Content = "Injecting";
@@ -334,6 +454,10 @@ namespace VideoGui
                 }
                 btnAccept.IsEnabled = false;
                 lblStatus.Content = "";
+                SaveData();
+                txtSegment1.Text = txtSegment.Text;
+                txtTarget1.Text = txtTarget.Text;
+                txtThreash1.Text = txtThreash.Text;
                 
             }
             catch (Exception ex)
@@ -347,6 +471,35 @@ namespace VideoGui
             try
             {
                 foreach(VideoCutInfo ctv in lstSchedules.SelectedItems)
+                {
+                    AddItem(ctv);
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+            }
+        }
+
+        private void BtnRestore_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                txtSegment.Text = txtSegment1.Text;
+                txtTarget.Text = txtTarget1.Text;
+                txtThreash.Text = txtThreash1.Text;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+            }
+        }
+
+        private void btnAcceptSelected_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                foreach (VideoCutInfo ctv in lstSchedules.SelectedItems)
                 {
                     AddItem(ctv);
                 }

@@ -43,6 +43,7 @@ using Microsoft.Extensions.Primitives;
 using System.Data.SqlTypes;
 using VideoGui.Models.delegates;
 using FirebirdSql.Data.FirebirdClient;
+using Microsoft.Web.WebView2.Wpf;
 
 namespace VideoGui
 {
@@ -58,6 +59,8 @@ namespace VideoGui
         {
             return new JavaScriptSerializer().Serialize(t);
         }
+
+
         public static List<T> AsObjectList<T>(string tt)
         {
             return new JavaScriptSerializer().Deserialize<List<T>>(tt);
@@ -306,6 +309,13 @@ namespace VideoGui
             return res;
         }
 
+        public static bool ParseDate(this string Value, out DateOnly DateValue, string Format)
+        {
+            bool res = false;
+            res = DateOnly.TryParseExact(Value, Format, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateValue);
+            return res;
+        }
+
         public static string ToBitrate(this float bitrate, bool IsMBit = true)
         {
             string res = "";
@@ -339,6 +349,59 @@ namespace VideoGui
                 res = returner;
             }
             return res;
+        }
+
+       
+        public static void SetURL(this WebView2 webview, string URL)
+        {
+            try
+            {
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    webview.AllowDrop = false;
+                    webview.Source = new Uri(URL);
+                });
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"SetURL {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
+
+        public static double ToDouble(this object obj, double defaultint = -1)
+        {
+            try
+            {
+                if (obj != null)
+                {
+                    if (double.TryParse(obj.ToString(), out double result))
+                    {
+                        return result;
+                    }
+                    else return defaultint;
+                }
+                else return 0;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"ToDouble(obj) {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+                return 0;
+            }
+        }
+        public static Double ToDouble(this string obj)
+        {
+            try
+            {
+                if (Double.TryParse(obj.ToString(), out Double result))
+                {
+                    return result;
+                }
+                else return 0;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite(" ToDouble() " + MethodBase.GetCurrentMethod().Name); return 0;
+            }
         }
         public static bool GetValueBool(this RegistryKey RegKey, string KeyName, bool DefValue = false)
         {
@@ -513,6 +576,46 @@ namespace VideoGui
             });
         }
 
+        public static void AddFieldToTable(this string connectionStr, string Table, string Field, string FieldType, object defaultvalue = null)
+        {
+            try
+            {
+                string sql = (defaultvalue is not null) ?
+                $"ALTER TABLE {Table} ADD {Field} {FieldType} DEFAULT @DF NOT NULL;"
+                : $"SELECT RDB$FIELD_NAME AS FIELD_NAME FROM RDB$RELATION_FIELDS WHERE " +
+                   $"RDB$RELATION_NAME='{Table}'AND RDB$FIELD_NAME = '{Field}';";
+
+                int idx = -1;
+                using (var connection = new FbConnection(connectionStr))
+                {
+                    connection.Open();
+                    if (defaultvalue is string)
+                    {
+                        sql = sql.Replace("@DF", "''");
+                    }
+                    if (defaultvalue is int)
+                    {
+                        sql = sql.Replace("@DF", $"{defaultvalue}");
+                    }
+                    using (var command = new FbCommand(sql, connection))
+                    {
+                        command.Parameters.Clear();
+                        if (command.ExecuteScalar() is int res)
+                        {
+                            idx = res;
+                        }
+                    }
+                    connection.Close();
+                }
+
+
+
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"AddFieldToTable {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
         public static void CreateTableIfNotExists(this string connectionStr, string sql)
         {
             try
@@ -719,7 +822,6 @@ namespace VideoGui
                     frameworkelement.Dispatcher.Invoke(() =>
                     {
                         lstbox.Items.Refresh();
-                        System.Windows.Forms.Application.DoEvents();
                     });
 
                 }
@@ -782,6 +884,18 @@ namespace VideoGui
                     ttb.Text = TextStr;
                 }
             });
+        }
+        public static DateTime AtTime(this DateTime thisdate, TimeOnly thistime)
+        {
+            try
+            {
+                return new DateTime(thisdate.Year, thisdate.Month, thisdate.Day, thistime.Hour, thistime.Minute, thistime.Second);
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"AtTime {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+                return thisdate;
+            }
         }
 
 
@@ -983,9 +1097,11 @@ namespace VideoGui
         {
             try
             {
+
                 TimeSpan ts = TimeSpan.Zero;
+                if (data == "" || data is null) return ts;
                 List<string> values = data.Split(':').ToList();
-                if (values.Count < 3) 
+                if (values.Count < 3)
                 {
                     ts += TimeSpan.FromMinutes(values[0].ToInt());
                     string secs = values[1].ToString();
@@ -1168,7 +1284,7 @@ namespace VideoGui
                 }
                 string date = DateTime.Now.ToString("dd_MM_yyyy");
                 using var txtWriter = System.IO.File.AppendText(m_exePath + $"\\{date}-log.log");
-                txtWriter.Write("\r\n","Log Entry : {0}", InternalCallingMethod);
+                txtWriter.Write("\r\n", "Log Entry : {0}", InternalCallingMethod);
                 txtWriter.WriteLine("{0}", DateTime.Now.ToLongTimeString());
                 txtWriter.WriteLine("Error :{0}", Debugger.Message);
                 txtWriter.WriteLine("-------------------------------");
@@ -1339,22 +1455,7 @@ namespace VideoGui
 
         }
 
-        public static Double ToDouble(this string obj)
-        {
-            try
-            {
-                if (Double.TryParse(obj.ToString(), out Double result))
-                {
-                    return result;
-                }
-                else return 0;
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite(" ToDouble() " + MethodBase.GetCurrentMethod().Name); return 0;
-            }
 
-        }
         public static bool IsAdministrator(this bool obj)
         {
             return (new WindowsPrincipal(WindowsIdentity.GetCurrent()))
@@ -1469,7 +1570,7 @@ namespace VideoGui
             }
         }
 
-            public static string GetShortName(this string FileName)
+        public static string GetShortName(this string FileName)
         {
             try
             {
@@ -1911,8 +2012,8 @@ namespace VideoGui
                 }
                 string date = DateTime.Now.ToString("dd_MM_yyyy");
                 using var txtWriter = System.IO.File.AppendText(m_exePath + $"\\{date}-log.log");
-                txtWriter.Write("\r\n","Log Entry : {0}", InternalCallingMethod);
-                foreach(string line in obj)
+                txtWriter.Write("\r\n", "Log Entry : {0}", InternalCallingMethod);
+                foreach (string line in obj)
                 {
                     txtWriter.WriteLine("{0}", line);
                 }
@@ -1936,7 +2037,7 @@ namespace VideoGui
                 {
                     if (LogName == "")
                     {
-                        txtWriter.Write("\r\n","Log Entry : ");
+                        txtWriter.Write("\r\n", "Log Entry : ");
                         txtWriter.WriteLine("{0} {1}", DateTime.Now.ToLongTimeString(), DateTime.Now.ToLongDateString());
                         txtWriter.WriteLine("  :");
                     }

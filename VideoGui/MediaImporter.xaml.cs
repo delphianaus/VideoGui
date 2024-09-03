@@ -117,14 +117,12 @@ namespace VideoGui
                 {
                     while (MaxFile > 16)
                     {
-                        System.Windows.Forms.Application.DoEvents();
                         Thread.Sleep(25);
                     }
                     ReadFile(file).ConfigureAwait(false);
                 }
                 while (MaxFile > 0)
                 {
-                    System.Windows.Forms.Application.DoEvents();
                     Thread.Sleep(100);
                 }
                 MediaInfoTimesSort.Sort();
@@ -162,7 +160,6 @@ namespace VideoGui
                 foreach (var f in MediaInfoTimes)
                 {
                     Import_Record_Add?.Invoke(f.Item3, f.Item4, f.Item2);
-                    System.Windows.Forms.Application.DoEvents();
                     Thread.Sleep(15);
                 }
                 bool EnableButton = false;
@@ -198,19 +195,18 @@ namespace VideoGui
                 if (selectresult == System.Windows.Forms.DialogResult.OK)
                 {
                     folder = folderBrowserDialog.SelectedFolder;
-                    var Flist = folder.Split("//").ToList();
-                    var fl = Flist.LastOrDefault();
-                    if (fl is not null)
+                    var Flist = folder.Split("\\").ToList();
+                    int cnt = Flist.Count-1;
+                    if (cnt > 0)
                     {
-                        Flist.Remove(fl);
-                        string froot = folder.Replace(fl, "");
-                        if (froot.EndsWith(@"\\\\"))
+                        string fldr = Flist[cnt];
+                        fldr = folder.Replace($"\\{fldr}", "");
+                        if (fldr != "")
                         {
-                            froot = froot.Replace(@"\\\\", @"\\");
+                            RegistryKey keyx = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                            keyx.SetValue("MediaImporterSource", fldr);
+                            keyx?.Close();
                         }
-                        RegistryKey keyx = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
-                        keyx.SetValue("MediaImporterSource", "c:\\");
-                        keyx?.Close();
                     }
                     txtsrcdir.Text = folder;
                     GetFiles(folder).ConfigureAwait(false);
@@ -378,10 +374,12 @@ namespace VideoGui
                 folderBrowserDialog.Title = "Select a folder";
                 RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                 string defaultprogramlocation = key.GetValueStr("defaultprogramlocation", "c:\\videogui");
+                string Root = key.GetValueStr("MediaImporterSource", "c:\\");
                 key?.Close();
                 string AppDrive = Path.GetPathRoot(defaultprogramlocation);
-                folderBrowserDialog.InitialFolder = File.Exists("E:\\GoPro9") ? "E:\\GoPro9" : "C:\\GoPro9";
-                if (!File.Exists(folderBrowserDialog.InitialFolder)) folderBrowserDialog.InitialFolder = AppDrive;
+                folderBrowserDialog.InitialFolder = Root;
+                //File.Exists("E:\\GoPro9") ? "E:\\GoPro9" : "C:\\GoPro9";
+                if (!Directory.Exists(folderBrowserDialog.InitialFolder)) folderBrowserDialog.InitialFolder = AppDrive;
                 folderBrowserDialog.AllowMultiSelect = false;
 
                 var folder = "";
@@ -608,6 +606,49 @@ namespace VideoGui
             catch (Exception ex)
             {
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+            }
+        }
+
+        private void mnuSelectDateFrom_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (lstSchedules.SelectedItems.Count > 0)
+                {
+                    var p = lstSchedules.SelectedItems[lstSchedules.SelectedItems.Count - 1];
+                    if (p is FileInfoGoPro fpgx)
+                    {
+                        DoSetFromTime?.Invoke(fpgx.TimeData);
+                        txtStart.Text = fpgx.TimeData.ToFFmpeg().Replace(".000", "");
+                        Thread.Sleep(100);
+
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"mnuSelectDateFrom_Click {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
+
+        private void mnuSelectDateTo_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (lstSchedules.SelectedItems.Count > 0)
+                {
+                    var p = lstSchedules.SelectedItems[lstSchedules.SelectedItems.Count - 1];
+                    if (p is FileInfoGoPro fpgx)
+                    {
+                        DoSetToTime?.Invoke(fpgx.TimeData);
+                        txtEnd.Text = fpgx.TimeData.ToFFmpeg().Replace(".000", "");
+                        Thread.Sleep(100);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"mnuSelectDateFrom_Click {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
             }
         }
     }

@@ -289,7 +289,6 @@ namespace VideoGui
                     while (InCompletedTasks >= 8)
                     {
                         InCompletedTasks = MultiThreads.Where(downloader => !downloader.IsCompleted).Count();
-                        System.Windows.Forms.Application.DoEvents();
                         Thread.Sleep(50);
                     }
                     Index++;
@@ -346,7 +345,6 @@ namespace VideoGui
                     while (InCompletedTasks >= 8)
                     {
                         InCompletedTasks = MultiThreads.Where(downloader => !downloader.IsCompleted).Count();
-                        System.Windows.Forms.Application.DoEvents();
                         Thread.Sleep(50);
                     }
                     index++;

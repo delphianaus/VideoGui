@@ -41,7 +41,9 @@ namespace VideoGui.ffmpeg
         IConverter UseHardwareAcceleration(HardwareAccelerator hardwareAccelerator, VideoCodec decoder, VideoCodec encoder, int device = 0);
         IConverter UseHardwareAcceleration(string hardwareAccelerator, string decoder, string encoder, int device = 0);
         IConverter UseMultiThread(bool multiThread);
-        IConverter SetOutput(string outputPath);
+        IConverter SetOutput(string outputPath, bool IsTwitchStream = false);
+
+        
 
         IConverter SetConcat(bool concat, List<string> Files);
         IConverter SetCutList(List<string> cutList);
@@ -52,7 +54,11 @@ namespace VideoGui.ffmpeg
         IConverter UseShortest(bool useShortest);
         IConverter SetDefaultPath(string path);
 
+        IConverter SetMuxing(bool IsMuxed, string MuxData);
+
         IConverter SetMultiModeFile(string filename);
+
+        IConverter SetOverlay(string Source, bool IsShortVideo);
 
         Task<IConversionResult> Start();
         Task<IConversionResult> ProbeFile(string filename, bool is1080p);

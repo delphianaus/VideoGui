@@ -12,6 +12,13 @@ namespace VideoGui.Models.delegates
 {
     public enum FilterTypes { DestinationDirectory, DestinationFileName, SourceDirectory};
     public enum FilterClass { Current, Historic};
+    public enum SortOrder { ASCENDING, DESCENDING };
+    public enum AgeRestriction { AGE_RESTRICTION, NOT_AGE_RESTRICTED };
+    public enum StatusTypes { HAS_SCHEDULE, DRAFT, UNLISTED, PRIVATE, PUBLIC };
+    public enum TitleDesc { TITLE, DESCRIPTION };
+    public enum ViewType { LESS_EQUAL, GREATER_EQUAL };
+    public enum dataFormName { MasterTagSelect, TagSelecteditor };
+    public enum MadeForKids { MFK_SET_BY_YOU, MFK_SET_BY_YOUTUBE, NOT_MADE_FOR_KIDS, NO_SELECTION };
     public delegate void _StatsHandlerDateTimeSetter(string filename, DateTime start);
     public delegate DateTime _StatsHandlerDateTimeGetter(string filename);
     public delegate bool _StatsHandlerBool(int mode, string filename);
@@ -24,10 +31,12 @@ namespace VideoGui.Models.delegates
     public delegate void _StatsHandler(int mode, string filename);
     public delegate void CompairFinished();
     public delegate void ComplexFinished();
-    public delegate void AudioJoinerOnClose();  
+    public delegate void AudioJoinerOnClose();
+    public delegate void AddressUpdate(string address);
+    public delegate void AddressUpdateId(string address, string id);
     public delegate void AddRecordDelegate(bool IsElapsed,bool Is720P, bool IsShorts, bool IsCreateShorts,bool IsTrimEncode, bool IsCutEncode, 
-          bool IsDeleteMonitored, bool IsPersistantSource, bool IsAdobe,
-               string textstart, string textduration, string sourcedirectory, string destFilename);
+          bool IsDeleteMonitored, bool IsPersistantSource, bool IsAdobe, string textstart, string textduration, string sourcedirectory, 
+          string destFilename, Nullable<DateTime> twitchschedule = null, string RTMP = "",bool IsTwichStream=false, bool IsMuxed=false,string MuxData="");
     public delegate void RemoveRecordDelegate(int ID,bool Bypass=false, bool KillRecord = false);
     public delegate void SetLists(int Id);
     public delegate void GetListDelegate(int ID);
@@ -56,7 +65,7 @@ namespace VideoGui.Models.delegates
     public delegate string GetFilerString(FilterTypes Filters, FilterClass Active);
     public delegate void SetFilterString(string Filter, FilterTypes FilterType, FilterClass FilterClassIs);
     public delegate void OnFirebirdReader(FbDataReader reader);
-
+    public delegate void databasehook<T>(object ThisForm, T tld);
 
 
 

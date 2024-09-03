@@ -254,9 +254,7 @@ namespace VideoGui.ffmpeg.Streams.MediaInfo
                         }
                         else
                         {
-                            System.Windows.Forms.Application.DoEvents();
                             Thread.Sleep(300);
-                            System.Windows.Forms.Application.DoEvents();
                             string err = "ffmpeg.get failed " + filePath;
                             err.WriteLog(MethodBase.GetCurrentMethod().Name) ;
                             return await Get(filePath, exePath, cancellationToken);
@@ -271,12 +269,10 @@ namespace VideoGui.ffmpeg.Streams.MediaInfo
                 {
                     if (File.Exists(filePath))
                     {
-                        System.Windows.Forms.Application.DoEvents();
                         Thread.Sleep(500);
                         string err = "ffmpeg.get failed " + filePath;
                         err.WriteLog(MethodBase.GetCurrentMethod().Name);
                         return await Get(filePath, exePath, cancellationToken);
-                        System.Windows.Forms.Application.DoEvents();
                     }
                 }
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);

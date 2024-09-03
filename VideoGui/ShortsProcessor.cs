@@ -37,11 +37,12 @@ namespace VideoGui
                 var fnamex = System.IO.Path.GetFileNameWithoutExtension(source);
                 var dir = System.IO.Path.GetDirectoryName(source);
                 var fnmp3 = System.IO.Path.Combine(dir, fname);
-                string pr = source.ToLower().Replace("(shorts)","").Replace(".mp4","").Replace(".mkv","").Trim();
+                string pr = source.ToLower().Replace("(shorts_logo)","").Replace(".mp4","").Replace(".mkv","").Trim();
+                string pr2 = source.Substring(0, pr.Length);
                 var sx = $"{qs}{source.Replace("\\", "/")}{qs}";
                 fnmp3 = $"{qs}{fnmp3.Replace("\\", "/")}{qs}";
                 
-                Directory.CreateDirectory(pr); 
+                Directory.CreateDirectory(pr2); 
                 var py = System.IO.Path.Combine(dir, fnamex) + ".py";
                 List<string> convert = new List<string>() {
                     "#--automatically built--",
@@ -65,7 +66,7 @@ namespace VideoGui
                     "ed = Editor()",
                    // "gui = Gui()",
                     "filename = "+sx,
-                    "fname = basename(filename.replace(\" (shorts)\",\"\").replace(\".mkv\",\"\").replace(\".mp4\",\"\"))",
+                    "fname = basename(filename.replace(\" (shorts_logo)\",\"\").replace(\".mkv\",\"\").replace(\".mp4\",\"\"))",
                     "dir = dirname(filename)",
                 //    "",
                     "adm.loadVideo(filename)",
@@ -91,8 +92,8 @@ namespace VideoGui
                     "    adm.audioSetChannelDelays(0, 0, 0, 0, 0, 0, 0, 0, 0, 0)",
                     "    adm.audioSetChannelRemap(0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8)",
                     "    adm.audioSetShift(0, 0, 0)",
-                    "    adm.setContainer(\"MKV\", \"forceAspectRatio=False\", \"displayWidth=1280\", \"displayAspectRatio=2\", \"addColourInfo=False\", \"colMatrixCoeff=2\", \"colRange=0\", \"colTransfer=2\", \"colPrimaries=2\")",
-                    "    adm.save(dir + fname + \"/\" +str(filecounter) + \".mkv\")",
+                    "    adm.setContainer(\"MP4\", \"forceAspectRatio=False\", \"displayWidth=1280\", \"displayAspectRatio=2\", \"addColourInfo=False\", \"colMatrixCoeff=2\", \"colRange=0\", \"colTransfer=2\", \"colPrimaries=2\")",
+                    "    adm.save(dir + fname + \"/\" +str(filecounter) + \".mp4\")",
                     "    filecounter+=1",
                     "    segid += 1",
                     "    segsizeid += 1",
@@ -204,7 +205,7 @@ namespace VideoGui
 
                 string dir = Path.GetDirectoryName(SourceFile);
                 string np = Path.GetFileName(SourceFile);
-                np = np.Replace("(shorts)", "").Replace(".mp4", "").Trim();
+                np = np.Replace("(shorts_logo)", "").Replace(".mp4", "").Trim();
                 string subp = Path.Combine(dir, np);
                 List<int> list = new List<int>();
                 for (int i2 = 0; i2 < NumberShorts - 1; i2++)
@@ -226,15 +227,15 @@ namespace VideoGui
                     }
                     else cp = 1;
                     int iir = rnd.Next(list.Count);
-                    string destDir = Path.Combine(subp, "" + (cp), $"{list[iir]}.mkv");
-                    string oldfile = Path.Combine(subp, $"{list[iir]}.mkv");
+                    string destDir = Path.Combine(subp, "" + (cp), $"{list[iir]}.mp4");
+                    string oldfile = Path.Combine(subp, $"{list[iir]}.mp4");
                     if (oldfile != destDir)
                     {
                         File.Move(oldfile, destDir);
                     }
                     list.RemoveAt(iir);
                 }
-                string LastFile = Directory.EnumerateFiles(subp, "*.mkv", SearchOption.TopDirectoryOnly).ToList().FirstOrDefault();
+                string LastFile = Directory.EnumerateFiles(subp, "*.mp4", SearchOption.TopDirectoryOnly).ToList().FirstOrDefault();
                 if (File.Exists(LastFile))
                 {
                     List<string> dirs = Directory.EnumerateDirectories(subp).ToList();
@@ -242,12 +243,12 @@ namespace VideoGui
                     string dirp = dirs.FirstOrDefault()?.ToString();
                     if (Directory.Exists(dirp))
                     {
-                        MaxNumber = Directory.EnumerateFiles(dirp, "*.mkv").ToList().Count();
+                        MaxNumber = Directory.EnumerateFiles(dirp, "*.mp4").ToList().Count();
                     }
                     string DirectoryToUse = dirp;
                     foreach (var directory in dirs)
                     {
-                        mx = Directory.EnumerateFiles(directory, "*.mkv").ToList().Count();
+                        mx = Directory.EnumerateFiles(directory, "*.mp4").ToList().Count();
                         if (mx < MaxNumber)
                         {
                             MaxNumber = mx;

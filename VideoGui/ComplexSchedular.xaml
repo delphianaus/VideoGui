@@ -3,46 +3,49 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:VideoGui"
+        xmlns:local="clr-namespace:VideoGui" 
+        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
         SizeChanged="Window_SizeChanged" 
         mc:Ignorable="d" DataContext="{Binding RelativeSource={RelativeSource Self}}" 
-        Title="Complex Schedule Editor" Height="450" Width="911" Closing="Window_Closing" Loaded="Window_Loaded"
+        Title="Complex Schedule Editor" Height="474" Width="915" Closing="Window_Closing" Loaded="Window_Loaded"
         ResizeMode="CanResizeWithGrip" WindowStartupLocation="CenterScreen"  WindowStyle="ToolWindow" >
     <Window.Resources>
-        <BitmapImage x:Key="historic" UriSource="icons/Historic.png"/>
-        <BitmapImage x:Key="current" UriSource="icons/Current.png"/>
-        <Style x:Key="ToggleStyle1" TargetType="{x:Type ToggleButton}">
-            <Setter Property="MaxHeight" Value="40"></Setter>
-            <Setter Property="MaxWidth" Value="73"></Setter>
-            <Setter Property="MinHeight" Value="40"></Setter>
-            <Setter Property="MinWidth" Value="73"></Setter>
+        <BitmapImage x:Key="HISTORIC" UriSource="icons/historic.png"/>
+        <BitmapImage x:Key="CURRENT" UriSource="icons/Current.png"/>
+        <Style x:Key="ToggleSetEditStyle" TargetType="{x:Type ToggleButton}">
+            <Setter Property="MinHeight" Value="28"/>
+            <Setter Property="MinWidth" Value="50"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="{x:Type ToggleButton}">
                         <Image x:Name="PART_Image"  />
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsChecked" Value="true">
-                                <Setter TargetName="PART_Image" Property="Source" Value="{StaticResource current}"/>
+                                <Setter TargetName="PART_Image" Property="Source" Value="{StaticResource CURRENT}"/>
                             </Trigger>
                             <Trigger Property="IsChecked" Value="False">
-                                <Setter TargetName="PART_Image" Property="Source" Value="{StaticResource historic}"/>
+                                <Setter TargetName="PART_Image" Property="Source" Value="{StaticResource HISTORIC}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
         </Style>
+
     </Window.Resources>
-    <Grid>
+    <Grid Margin="0,0,0,9">
         <StackPanel x:Name="stkmain" Orientation="Vertical">
             <StackPanel Orientation="Horizontal">
                 <StackPanel x:Name="StackPanelFlags" Width="534" Height="39" Margin="2,0,0,0">
                     <Border x:Name="BrdFLags" Height="39"  BorderBrush="Black" BorderThickness="2" VerticalAlignment="Top">
                         <Canvas x:Name="CnvFags" HorizontalAlignment="Left" VerticalAlignment="Top">
                             <CheckBox x:Name="Chk720P" Content="720p Video" HorizontalAlignment="Center" VerticalAlignment="Top" Canvas.Left="5" Canvas.Top="11"/>
-                            <CheckBox x:Name="ChkShorts" Content="Shorts Generation" VerticalAlignment="Center" Canvas.Left="118" Canvas.Top="11" HorizontalAlignment="Left"/>
-                            <CheckBox x:Name="ChkCut" Content="Video Cut Trim" HorizontalAlignment="Left" VerticalAlignment="Center" Canvas.Left="260" Canvas.Top="11"/>
-                            <CheckBox x:Name="ChkEnableTrim" Content="Video Encode Trim" HorizontalAlignment="Left" VerticalAlignment="Center" Canvas.Left="394" Canvas.Top="11"/>
+                            <CheckBox x:Name="ChkShorts" Content="Shorts Generation" VerticalAlignment="Center" Canvas.Left="87" Canvas.Top="11" HorizontalAlignment="Left"/>
+                            <CheckBox x:Name="ChkCut" Content="Video Cut Trim" HorizontalAlignment="Left" VerticalAlignment="Center" Canvas.Left="200" Canvas.Top="11"/>
+                            <CheckBox x:Name="ChkEnableTrim" Content="Video Encode Trim" HorizontalAlignment="Left" VerticalAlignment="Center" Canvas.Left="299" Canvas.Top="11"/>
+                            <CheckBox x:Name="ChkTwitch" Content="Twitch" Canvas.Left="419" Canvas.Top="11" HorizontalAlignment="Left" VerticalAlignment="Center" LostFocus="ChkTwitch_LostFocus"/>
+                            <CheckBox x:Name="ChkMuxer" Content="Mux" Canvas.Left="478" Canvas.Top="11" HorizontalAlignment="Left" VerticalAlignment="Center" LostFocus="ChkTwitch_LostFocus"/>
+
                         </Canvas>
                     </Border>
                 </StackPanel>
@@ -59,8 +62,8 @@
                 </StackPanel>
             </StackPanel>
             <StackPanel>
-                <Border x:Name="brdFileInfo" BorderThickness="2" BorderBrush="Black" Height="113" Margin="2,0,2,0">
-                    <Canvas x:Name="CnvMedialElements" Margin="1,0,-2,0">
+                <Border x:Name="brdFileInfo" BorderThickness="2" BorderBrush="Black" Height="136" Margin="2,0,2,0">
+                    <Canvas x:Name="CnvMedialElements" Margin="1,6,-2,-6">
                         <Label Content="Source Directory" HorizontalAlignment="Center" VerticalAlignment="Center" Height="26" Canvas.Left="9" Canvas.Top="5"/>
                         <TextBox x:Name="txtsrcdir" HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Center" Width="710" Canvas.Left="145" Canvas.Top="9"/>
                         <Label Content="Destination Directory" HorizontalAlignment="Center" VerticalAlignment="Center" Height="26" Canvas.Left="9" Canvas.Top="29"/>
@@ -69,12 +72,35 @@
                         <Label Content="Destination Filename" HorizontalAlignment="Center" VerticalAlignment="Center" Height="26" Canvas.Left="9" Canvas.Top="55"/>
                         <TextBox x:Name="txtdestdir" HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Center" Width="710" Canvas.Left="145" Canvas.Top="33" />
                         <Button x:Name="btnSelectSourceDir" HorizontalAlignment="Right" VerticalAlignment="Center" Width="20" Height="20" Canvas.Left="865" Canvas.Top="8" Click="btnSelectSourceDir_Click" />
-                        <CheckBox x:Name="chkDeleteMonitored" Content="Delete Monitored Source" HorizontalAlignment="Left" VerticalAlignment="Center" Canvas.Left="13" Canvas.Top="83"/>
-                        <CheckBox x:Name="chkPersistantSource" Content="Persistant Job" HorizontalAlignment="Left" VerticalAlignment="Center" Canvas.Left="181" Canvas.Top="83"/>
-                        <Button x:Name="btnInject" Width="74" Height="21" HorizontalAlignment="Left" VerticalAlignment="Top" Content="Inject" Canvas.Top="81" Canvas.Left="716" Click="btnInject_Click"/>
-                        <Button x:Name="btnNew" Width="74" HorizontalAlignment="Left" VerticalAlignment="Center" Content="New" Canvas.Top="81" Canvas.Left="597" Height="21" Click="btnNew_Click"/>
-                        <ToggleButton x:Name="tglflip" Style="{DynamicResource ToggleStyle1}" Width="73" Height="40" HorizontalAlignment="Center" Margin="0,9,0,0" Click="tglflip_Click" IsChecked="True" Checked="tglflip_Checked" Canvas.Left="812" Canvas.Top="52"/>
-                        <CheckBox x:Name="chkCreateShorts" Content="Create Shorts" Canvas.Left="284" Canvas.Top="83" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <CheckBox x:Name="chkDeleteMonitored" Content="Delete Monitored Source" HorizontalAlignment="Center" VerticalAlignment="Top" Canvas.Left="13" Canvas.Top="94"/>
+                        <CheckBox x:Name="chkPersistantSource" Content="Persistant Job" HorizontalAlignment="Center" VerticalAlignment="Top" Canvas.Left="181" Canvas.Top="94"/>
+                        <Button x:Name="btnInject" Width="56" Height="41" HorizontalAlignment="Left" VerticalAlignment="Center" Content="Inject" Canvas.Top="80" Canvas.Left="746" Click="btnInject_Click"/>
+                        <Button x:Name="btnNew" Width="68" HorizontalAlignment="Center" VerticalAlignment="Center" Content="New" Canvas.Top="80" Canvas.Left="665" Height="41" Click="btnNew_Click"/>
+                        <ToggleButton x:Name="tglflip" 
+                                      Style="{DynamicResource ToggleSetEditStyle}" 
+                                      Width="73" Height="40" 
+                                      HorizontalAlignment="Center" 
+                                      Margin="0,9,0,0" 
+                                      Click="tglflip_Click" 
+                                      IsChecked="True" 
+                                      Checked="tglflip_Checked" 
+                                      Canvas.Left="812" 
+                                      Canvas.Top="63"/>
+                        <CheckBox x:Name="chkCreateShorts" Content="Create Shorts" Canvas.Left="284" Canvas.Top="94" HorizontalAlignment="Center" VerticalAlignment="Top"/>
+                        <xctk:DateTimePicker Name="ReleaseDate" Format="Custom" Visibility="Hidden"
+                                                   FormatString="MM-dd-yy hh:mm:ss tt" TimeFormat="Custom" TimeFormatString="hh:mm:ss tt"  
+                                                   MinWidth="195" Value="{Binding ReleaseDate}" HorizontalAlignment="Left" 
+                                                   VerticalAlignment="Center" Focusable="True" Canvas.Left="466" Canvas.Top="80" Height="42" AutoCloseCalendar="True" Width="122"   />
+                        <TextBox x:Name="txtMuxExt" Canvas.Left="461" TextWrapping="Wrap" 
+                                 Text="b,p,o" Canvas.Top="105" Width="188" Visibility="Hidden" 
+                                 HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                        <Label Content="Destination Filename" Height="26" Canvas.Left="9" Canvas.Top="55" HorizontalAlignment="Center" VerticalAlignment="Center" RenderTransformOrigin="3.445,1.531"/>
+                        <Label Name="lblmux" Content="Mux Extensions" Height="26" Canvas.Left="459" 
+                               Canvas.Top="80" HorizontalAlignment="Left" Visibility="Hidden"
+                               VerticalAlignment="Center"/>
+                        <Button x:Name="btnAddMux" Click="btnAddMux_Click" Content="Add Muxes" 
+                                Width="82" Height="21" HorizontalAlignment="Left" Canvas.Left="567" VerticalAlignment="Center" 
+                                Canvas.Top="82" FontSize="10" Visibility="Hidden"/>
                     </Canvas>
                 </Border>
             </StackPanel>
@@ -82,8 +108,8 @@
                 <Border x:Name="brd1" Margin="2,2,2,2" BorderThickness="2" BorderBrush="Black">
                     <StackPanel Orientation="Vertical">
                         <StackPanel Height="30">
-                            <ListBox x:Name="lstItems" VerticalAlignment="top" 
-                           Width="945" Height="172" HorizontalAlignment="Left" Canvas.Top="2" 
+                            <ListBox x:Name="lstItems" 
+                           Width="906" Height="172" HorizontalAlignment="Left" Canvas.Top="2" 
                              IsSynchronizedWithCurrentItem="True"  IsManipulationEnabled="True">
                                 <ListBox.Template>
                                     <ControlTemplate x:Name="GridControlss">
@@ -178,7 +204,7 @@
                     </StackPanel>
                 </Border>
             </StackPanel>
-            <StackPanel Height="65">
+            <StackPanel Height="55" RenderTransformOrigin="0.5,0.5">
                 <Button x:Name="btnCloe" HorizontalAlignment="Right" Content="Close" Width="90" Margin="0,8,9,0" Height="30" Click="btnCloe_Click"/>
             </StackPanel>
         </StackPanel>

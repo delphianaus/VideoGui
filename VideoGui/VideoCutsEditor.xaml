@@ -124,6 +124,22 @@
                                         </TransformGroup>
                                     </Button.RenderTransform>
                                 </Button>
+                                <Label x:Name="lblThreash_Copy" Content="Threashold" Canvas.Left="22" Canvas.Top="267" HorizontalAlignment="Center" VerticalAlignment="Top"/>
+                                <TextBox x:Name="txtThreash1" Canvas.Left="97" TextWrapping="Wrap" Canvas.Top="271" Width="54" KeyDown="IsCalcEnabled_KeyDown" HorizontalAlignment="Center" VerticalAlignment="Top"/>
+                                <Label x:Name="lblTarget_Copy" Content="Target" Canvas.Left="22" Canvas.Top="299" HorizontalAlignment="Center" VerticalAlignment="Top"/>
+                                <TextBox x:Name="txtTarget1" Canvas.Left="97" TextWrapping="Wrap" Canvas.Top="303" Width="54" KeyDown="IsCalcEnabled_KeyDown" HorizontalAlignment="Center" VerticalAlignment="Top"/>
+                                <Label x:Name="lblsegment_Copy" Content="Segment" Canvas.Left="22" Canvas.Top="327" HorizontalAlignment="Center" VerticalAlignment="Top"/>
+                                <TextBox x:Name="txtSegment1" Canvas.Left="97" TextWrapping="Wrap" Canvas.Top="331" Width="54" KeyDown="IsCalcEnabled_KeyDown" HorizontalAlignment="Center" VerticalAlignment="Top"/>
+                                <Button x:Name="BtnRestore" Content="Restore" Height="35" Canvas.Left="139" Canvas.Top="292" Width="80" RenderTransformOrigin="0.5,0.5" Click="BtnRestore_Click" HorizontalAlignment="Center" VerticalAlignment="Top">
+                                    <Button.RenderTransform>
+                                        <TransformGroup>
+                                            <ScaleTransform/>
+                                            <SkewTransform/>
+                                            <RotateTransform Angle="90"/>
+                                            <TranslateTransform/>
+                                        </TransformGroup>
+                                    </Button.RenderTransform>
+                                </Button>
 
                             </Canvas>
                         </Border>
@@ -135,6 +151,8 @@
                     <Canvas x:Name="cnvcontrols" Margin="0,0,6,0">
                         <Button x:Name="btnClose" Content="Close" Width="90" Height="30"  HorizontalAlignment="Center" Canvas.Left="603" Canvas.Top="12" VerticalAlignment="Top" Click="btnClose_Click"/>
                         <Button x:Name="btnAccept" Content="Accept" Width="90" Height="30" Canvas.Left="10" Canvas.Top="12" Click="btnAccept_Click" HorizontalAlignment="Left" VerticalAlignment="Center" IsEnabled="False"/>
+                        <Button x:Name="btnAcceptSelected" Content="Accept Selected" Width="134" Height="30" Canvas.Left="110" Canvas.Top="13" Click="btnAcceptSelected_Click" IsEnabled="False" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                        <CheckBox x:Name="chkExportForTwitch" Content="Twitch Export" Canvas.Left="256" Canvas.Top="19" HorizontalAlignment="Left" VerticalAlignment="Center" Width="133" FontSize="16" IsEnabled="False" />
                     </Canvas>
                 </Border>
             </StackPanel>

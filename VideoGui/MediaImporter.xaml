@@ -62,6 +62,9 @@
                                                         <MenuItem IsCheckable="True" IsChecked="False" Name="mnuFilterTo" Header="Selecy/Deslect Time To Filter" Click="mnuFilterTo_Click" />
                                                         <MenuItem Name="mnuClearFilters" Header="Clear Filters" Click="mnuClearFilters_Click"/>
                                                         <Separator/>
+                                                        <MenuItem Name="mnuSelectDateFrom" Header="Select From Date" Click="mnuSelectDateFrom_Click"/>
+                                                        <MenuItem Name="mnuSelectDateTo" Header="Select To Date" Click="mnuSelectDateTo_Click"/>
+                                                        <Separator/>
                                                         <MenuItem Name="mnuMoveSelected" Header="Move Selected Files" Click="mnuMoveSelected_Click"/>
                                                         <Separator/>
                                                         <MenuItem Name="mnuSelectAll" Header="Select All" Click="mnuSelectAll_Click"/>

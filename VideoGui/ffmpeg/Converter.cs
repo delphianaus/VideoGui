@@ -11,6 +11,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Transactions;
+using System.Windows;
 using CliWrap;
 using CliWrap.EventStream;
 using Microsoft.Extensions.Logging;
@@ -21,6 +22,7 @@ using VideoGui.ffmpeg.Streams.Audio;
 using VideoGui.ffmpeg.Streams.MediaInfo;
 using VideoGui.ffmpeg.Streams.Video;
 using VideoGui.Models.delegates;
+using static System.Formats.Asn1.AsnWriter;
 using static System.Net.WebRequestMethods;
 
 
@@ -30,14 +32,16 @@ namespace VideoGui.ffmpeg
     {
         string myStrQuote = "\"";
         List<(string, bool)> _parameters = new List<(string, bool)>();
+        List<string> _twitchparameters = new List<string>();
+
         List<(string, bool)> _userparameters = new List<(string, bool)>();
         private readonly List<IStream> _streams = new List<IStream>();
         private readonly Dictionary<string, int> _inputFileMap = new Dictionary<string, int>();
         private string OutputFilePath = "";
         private string _output = "";
         private VsyncParams _vsyncmode;
-        private bool _IsProbe = false, _IsComplex = false, _IsConcat = false;
-        private string ComplexBitRate = string.Empty;
+        private bool _IsProbe = false, _IsComplex = false, _IsConcat = false, IsMuxed = false;
+        private string ComplexBitRate = string.Empty, MuxData = "";
         public bool _Is1080p;
         public int mtscnt = 0;
         private TimeSpan startime = TimeSpan.Zero;
@@ -57,6 +61,8 @@ namespace VideoGui.ffmpeg
 
         string ComplexEncoder = string.Empty;
         public int ProbeID = -1;
+        public string LogoSource = "";
+        public bool IsLogo = false;
 
         private Func<string, string> _buildInputFileName = null;
         private Func<string, string> _buildOutputFileName = null;
@@ -308,6 +314,37 @@ namespace VideoGui.ffmpeg
                 return null;
             }
         }
+
+        public IConverter SetOverlay(string Source, bool IsShortVideo)
+        {
+            try
+            {
+                LogoSource = Source;
+                IsLogo = IsShortVideo;
+                return this;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+                return null;
+            }
+        }
+
+        public IConverter SetMuxing(bool _IsMuxed, string _MuxData)
+        {
+            try
+            {
+                IsMuxed = _IsMuxed;
+                MuxData = _MuxData;
+                return this;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+                return null;
+            }
+
+        }
         public IConverter SetMultiModeFile(string filename)
         {
             try
@@ -468,251 +505,333 @@ namespace VideoGui.ffmpeg
                 }
                 _parameterAsstring = "";
                 errn = 4;
-                List<string> argsx = new List<string>();
-                List<string> args2x = new List<string>();
-                argsx.AddRange(GetParameters());
-                errn = 114;
-                argsx.AddRange(GetInputs());
-                errn = 115;
-
-                args2x.AddRange(GetStreamsPreInputs());
-                errn = 116;
-
-                args2x.AddRange(GetStreamsPostInputs());
-                errn = 117;
-
-                args2x.AddRange(GetFilters());
-                errn = 118;
-
-                args2x.AddRange(GetMap());
-                errn = 119;
-
-                args2x.AddRange(GetParameters(false));
-                errn = 120;
-
-                args2x.AddRange(GetUserDefinedParameters(true));
-                //errn = 121;
-
-                _dest = GetOutputFilename().Replace("\"", "");
-                errn = 5;
-                for (int i = args2x.Count - 1; i > -1; i--)
+                bool vcopy = false, acopy = false, onseek = false ;
+                if (!IsMuxed)
                 {
-                    if (args2x[i].Trim() == "")
+                    List<string> argsx = new List<string>();
+                    List<string> args2x = new List<string>();
+                    argsx.AddRange(GetParameters());
+                    errn = 114;
+                    argsx.AddRange(GetInputs());
+                    errn = 115;
+
+                    args2x.AddRange(GetStreamsPreInputs());
+                    errn = 116;
+
+                    args2x.AddRange(GetStreamsPostInputs());
+                    errn = 117;
+
+                    args2x.AddRange(GetFilters());
+                    errn = 118;
+
+                    args2x.AddRange(GetMap());
+                    errn = 119;
+
+                    args2x.AddRange(GetParameters(false));
+                    errn = 120;
+
+                    args2x.AddRange(GetUserDefinedParameters(true));
+                    //errn = 121;
+
+
+
+                    _dest = GetOutputFilename().Replace("\"", "");
+                    errn = 5;
+                    for (int i = args2x.Count - 1; i > -1; i--)
                     {
-                        args2x.RemoveAt(i);
+                        if (args2x[i].Trim() == "")
+                        {
+                            args2x.RemoveAt(i);
+                        }
+                    }
+
+                    cmd = null;
+                    if (_source is not null)
+                    {
+                        var fn = _source.Replace("\"", "");
+                        if (_dest != "")
+                        {
+                            cmd = Cli.Wrap(defaultpath + "\\ffmpeg.exe").
+                                WithArguments(args => args
+                                .Add(GetParameters())
+                                .Add(GetInputs())
+                                .Add(args2x)
+                                .Add($"{_dest}"))
+                                .WithValidation(CommandResultValidation.None).
+                               WithWorkingDirectory(defaultpath);
+                        }
+                        else
+                        {
+                            cmd = Cli.Wrap(defaultpath + "\\ffmpeg.exe").
+                                WithArguments(args => args
+                                .Add(GetParameters())
+                                .Add(GetInputs())
+                                .Add(args2x)
+                                .Add(_twitchparameters))
+                                .WithValidation(CommandResultValidation.None).
+                               WithWorkingDirectory(defaultpath);
+                        }
+                    }
+
+                    errn = 6;
+                    ProbeData.Clear();
+                    errn = 7;
+                    foreach (IStream stream in _streams)
+                    {
+                        if (stream is VideoStream vss)
+                        {
+                            vcopy = stream.IsCopy;
+                        }
+                        if (stream is AudioStream ass)
+                        {
+                            acopy = stream.IsCopy;
+                        }
+                    }
+                    errn = 8;
+                    if (cmd is not null)
+                    {
+                        if (_twitchparameters.Count > 0)
+                        {
+                            string cmdp = cmd.ToString();
+                            string fn = Path.GetDirectoryName(_source);
+                            string filen = fn.Split("\\").ToList().LastOrDefault();
+                            System.IO.File.WriteAllText(@"c:\videogui\stream_" + filen + ".bat", cmdp);
+                            if (true)
+                            {
+
+                            }
+                        }
                     }
                 }
-
-                cmd = null;
-                if (_source is not null)
+                else
                 {
-                    var fn = _source.Replace("\"", "");
+                    foreach (var source in _streams.SelectMany(x => x.GetSource()).Distinct())
+                    {
+                        _source = source;
+                        break;
+                    }
+                    //bool vcopy = true, acopy = false
+                    onseek = false;
+                    string src = _source;
+                    string sep1 = "b", sep2 = "p", sep3 = "o";
+                    var liststems = MuxData.Split(',').ToList();
+                    if (liststems.Count <= 3)
+                    {
+                        sep1 = liststems[0];
+                        sep2 = liststems[1];
+                        sep3 = liststems[2];
+                    }
+                    string BaseDirectory = Path.GetDirectoryName(_source), Ext = Path.GetExtension(src);
+                    string FileNameNoExt = Path.GetFileNameWithoutExtension(src);
+                    string srcb = Path.Combine(BaseDirectory, FileNameNoExt + sep1 + ".mp3");
+                    string srcp = Path.Combine(BaseDirectory, FileNameNoExt + sep2 + ".mp3");
+                    string srco = Path.Combine(BaseDirectory, FileNameNoExt + sep3 + ".mp3");
+                    string BaseDirectoryLast = BaseDirectory.Split('\\').Last();
+                    string DestDirectory = BaseDirectory.Replace(BaseDirectoryLast, "Filtered");
+                    if (!Directory.Exists(DestDirectory))
+                    {
+                        Directory.CreateDirectory(DestDirectory);
+                    }
+                    string DestFileName = Path.Combine(DestDirectory, FileNameNoExt + ".mp4");
                     cmd = Cli.Wrap(defaultpath + "\\ffmpeg.exe").
                         WithArguments(args => args
-                        .Add(GetParameters())
-                        .Add(GetInputs())
-                        .Add(args2x)
-                        .Add($"{_dest}"))
+                        .Add("-i").Add(src).Add("-i").Add(srcb).Add("-i").Add(srcp).Add("-i").Add(srco)
+                        .Add("-filter_complex").Add("[1:a][2:a][3:a]amerge=inputs=3[a]", true)
+                        .Add("-map").Add("0:v").Add("-map").Add("[a]").Add("-c:v").Add("copy")
+                        .Add("-c:a").Add("aac").Add("-b:a").Add("160K").Add("-ac").Add("2")
+                        .Add(DestFileName))
                         .WithValidation(CommandResultValidation.None).
                        WithWorkingDirectory(defaultpath);
+                    _dest = DestFileName;
                 }
-
-
-                errn = 6;
-                ProbeData.Clear();
-                errn = 7;
-                bool onseek = false, vcopy = false, acopy = false;
-                foreach (IStream stream in _streams)
+                await foreach (var commandEvent in cmd.ListenAsync())
                 {
-                    if (stream is VideoStream vss)
+                    switch (commandEvent)
                     {
-                        vcopy = stream.IsCopy;
-                    }
-                    if (stream is AudioStream ass)
-                    {
-                        acopy = stream.IsCopy;
-                    }
-                }
-                errn = 8;
-                if (cmd is not null)
-                {
+                        case StartedCommandEvent StartedEvent:
+                            {
+                                errn = 9;
+                                ProcessID = StartedEvent.ProcessId;
+                                InternalProcessId = ProcessID;
+                                ProcessRunning = true;
+                                OnConverterStarted?.Invoke(this, _source, ProcessID);
+                                break;
+                            }
+                        case StandardOutputCommandEvent OutputEvent:
+                            {
+                                errn = 10;
+                                ProbeData.Add(OutputEvent.Text);
+                                break;
+                            }
+                        case StandardErrorCommandEvent ErrorEvent:
+                            {
+                                errn = 11;
+                                string data = ErrorEvent.Text;
+                                ProbeData.Add(data);
 
-                    await foreach (var commandEvent in cmd.ListenAsync())
-                    {
-                        switch (commandEvent)
-                        {
-                            case StartedCommandEvent StartedEvent:
+                                if (data.ContainsAll(new string[] { "NUMBER_OF_FRAMES" }))
                                 {
-                                    errn = 9;
-                                    ProcessID = StartedEvent.ProcessId;
-                                    InternalProcessId = ProcessID;
-                                    ProcessRunning = true;
-                                    OnConverterStarted?.Invoke(this, _source, ProcessID);
+                                    List<string> frames = data.Trim().Split(":").ToList<string>();
+                                    string frmecnt = frames.Last<string>().Trim();
+                                    if (!frmecnt.Contains("NUMBER_OF_FRAMES"))
+                                    {
+                                        Int64.TryParse(frmecnt, out maxframes);
+                                    }
+                                }
+                                if (data.ToUpper().Contains("DURATION:"))
+                                {
+                                    List<string> frames = data.Trim().Split(" ").ToList<string>();
+                                    int idx = frames.IndexOf("Duration:");
+                                    if (idx != -1)
+                                    {
+                                        string frmecnt = frames[idx + 1].Trim();
+                                        frmecnt = frmecnt.Replace(",", "");
+                                        int max = (frmecnt.Length > 11) ? 11 : frmecnt.Length;
+                                        maxduration = frmecnt.Trim().Substring(0, max);
+                                        TimeSpan.TryParse(maxduration, out MaxDuration);
+                                        if (MaxDuration == TimeSpan.Zero)
+                                        {
+                                            MaxDuration = TimeSpan.FromSeconds(totalseconds);
+                                        }
+                                    }
+                                }
+                                if (!bIsEncoding)
+                                {
+                                    bIsEncoding = data.Contains("Press [q] to stop, [?] for help") || bIsEncoding;
                                     break;
                                 }
-                            case StandardOutputCommandEvent OutputEvent:
+                                else
                                 {
-                                    errn = 10;
-                                    ProbeData.Add(OutputEvent.Text);
-                                    break;
+                                    if (!bMetaData)
+                                    {
+                                        bMetaData = data.Contains("Metadata:") || bMetaData;
+                                        if (!vcopy && !acopy)
+                                            break;
+                                    }
                                 }
-                            case StandardErrorCommandEvent ErrorEvent:
+                                if (bIsEncoding && (bMetaData || (vcopy || acopy)))
                                 {
-                                    errn = 11;
-                                    string data = ErrorEvent.Text;
-                                    ProbeData.Add(data);
-
-                                    if (data.ContainsAll(new string[] { "NUMBER_OF_FRAMES" }))
+                                    string ComplexFile = "";
+                                    if (_IsComplex && data.ContainsAll(new string[] { "Output", "#", "to" }))
                                     {
-                                        List<string> frames = data.Trim().Split(":").ToList<string>();
-                                        string frmecnt = frames.Last<string>().Trim();
-                                        if (!frmecnt.Contains("NUMBER_OF_FRAMES"))
-                                        {
-                                            Int64.TryParse(frmecnt, out maxframes);
-                                        }
+                                        int idx = data.IndexOf("'");
+                                        string tempf = data.Substring(idx);
+                                        idx = tempf.IndexOf("'");
+                                        string fnm = tempf.Substring(0, idx - 1);
+                                        ComplexFile = fnm;
                                     }
-                                    if (data.ToUpper().Contains("DURATION:"))
+                                    double perc = -1;
+                                    if (data.Contains("time="))
                                     {
-                                        List<string> frames = data.Trim().Split(" ").ToList<string>();
-                                        int idx = frames.IndexOf("Duration:");
-                                        if (idx != -1)
+                                        int idx = data.IndexOf("time=");
+                                        int idx2 = data.IndexOf("bitrate");
+                                        if (idx != 1)
                                         {
-                                            string frmecnt = frames[idx + 1].Trim();
-                                            frmecnt = frmecnt.Replace(",", "");
-                                            int max = (frmecnt.Length > 11) ? 11 : frmecnt.Length;
-                                            maxduration = frmecnt.Trim().Substring(0, max);
-                                            TimeSpan.TryParse(maxduration, out MaxDuration);
-                                            if (MaxDuration == TimeSpan.Zero)
-                                            {
-                                                MaxDuration = TimeSpan.FromSeconds(totalseconds);
-                                            }
-                                        }
-                                    }
-                                    if (!bIsEncoding)
-                                    {
-                                        bIsEncoding = data.Contains("Press [q] to stop, [?] for help") || bIsEncoding;
-                                        break;
-                                    }
-                                    else
-                                    {
-                                        if (!bMetaData)
-                                        {
-                                            bMetaData = data.Contains("Metadata:") || bMetaData;
-                                            if (!vcopy && !acopy)
-                                                break;
-                                        }
-                                    }
-                                    if (bIsEncoding && (bMetaData || (vcopy || acopy)))
-                                    {
-                                        string ComplexFile = "";
-                                        if (_IsComplex && data.ContainsAll(new string[] { "Output", "#", "to" }))
-                                        {
-                                            int idx = data.IndexOf("'");
-                                            string tempf = data.Substring(idx);
-                                            idx = tempf.IndexOf("'");
-                                            string fnm = tempf.Substring(0, idx - 1);
-                                            ComplexFile = fnm;
-                                        }
-                                        double perc = -1;
-                                        if (data.Contains("time="))
-                                        {
-                                            int idx = data.IndexOf("time=");
-                                            int idx2 = data.IndexOf("bitrate");
-                                            if (idx != 1)
-                                            {
-                                                string sp = data.Substring(idx + 5, idx2 - (idx + 5)).Trim();
-                                                if (sp.StartsWith("-"))
-                                                {
-                                                    onseek = false;
-                                                    ComplexFile = (!_IsComplex) ? _source : ComplexFile;
-                                                    ComplexFile = (MutliModeFileName != "") ? MutliModeFileName : ComplexFile;
-                                                    OnConverterOnSeek?.Invoke(this, ComplexFile, sp, ProcessID);
-                                                    continue;
-                                                }
-                                                else if (!onseek)
-                                                {
-                                                    OnConverterOnSeek?.Invoke(this, ComplexFile, "", ProcessID);
-                                                    onseek = true;
-                                                }
-                                                if (sp != "")
-                                                {
-                                                    TimeSpan Tse = TimeSpan.Zero;
-                                                    TimeSpan.TryParse(sp, out Tse);
-                                                    double totalsecs = Tse.TotalSeconds;
-                                                    if (totalseconds > 0)
-                                                    {
-                                                        //totalseconds -= startime.TotalSeconds;
-                                                        perc = (100 / totalseconds) * totalsecs;
-                                                    }
-                                                }
-                                            }
-                                        }
-
-                                        if (data.ContainsAll(new string[] { "frame", "fps", "size", "bitrate", "speed" }))
-                                        {
+                                            string sp = data.Substring(idx + 5, idx2 - (idx + 5)).Trim();
+                                            onseek = false;
                                             ComplexFile = (!_IsComplex) ? _source : ComplexFile;
                                             ComplexFile = (MutliModeFileName != "") ? MutliModeFileName : ComplexFile;
-                                            OnConverteringData?.Invoke(this, data, ComplexFile.Replace("\"", ""), ProcessID);
-                                            OnProgressEventHandler?.Invoke(_dest, data);
-                                            int pos1 = data.IndexOf("frame=");
-                                            string frm = data.Substring(pos1 + 6);
-                                            string frm2x = frm.Substring(0, frm.IndexOf("fps")).Trim();
-                                            long currentframe = -1;
-                                            long.TryParse(frm2x, out currentframe);
-                                            int percentdone = 0;
-                                            if ((maxframes != -1) && (!_IsComplex))
+                                            if (onseek)
                                             {
-                                                float mx = maxframes;
-                                                float pcd = (100 / mx);
-                                                pcd = pcd * currentframe;
+                                                OnConverterOnSeek?.Invoke(this, ComplexFile, sp, ProcessID);
+                                                continue;
+                                            }
+
+                                            if (sp != "" && IsMuxed)
+                                            {
+                                                TimeSpan Tse = TimeSpan.Zero;
+                                                TimeSpan.TryParse(sp, out Tse);
+                                                double totalsecs = Tse.TotalSeconds;
+                                                if (totalseconds > 0)
+                                                {
+                                                    //totalseconds -= startime.TotalSeconds;
+                                                    perc = (100 / totalseconds) * totalsecs;
+                                                }
+                                                if (data.ContainsAll(new string[] { "frame", "fps", "size", "bitrate", "speed" }))
+                                                {
+
+                                                }
+                                            }
+
+                                        }
+                                    }
+
+                                    if (data.ContainsAll(new string[] { "size", "bitrate", "speed" }))
+                                    {
+                                        ComplexFile = (!_IsComplex) ? _source : ComplexFile;
+                                        ComplexFile = (MutliModeFileName != "") ? MutliModeFileName : ComplexFile;
+                                        OnConverteringData?.Invoke(this, data, ComplexFile.Replace("\"", ""), ProcessID);
+                                        OnProgressEventHandler?.Invoke(_dest, data);
+                                        string frm = "";
+                                        if (data.Contains("frame="))
+                                        {
+                                            int pos1 = data.IndexOf("frame=");
+                                            frm = data.Substring(pos1 + 6);
+                                        }
+                                        long currentframe = -1;
+                                        if (data.Contains("fps") && frm != "")
+                                        {
+                                            string frm2x = (frm.Substring(0, frm.IndexOf("fps")).Trim());
+                                            long.TryParse(frm2x, out currentframe);
+                                        }
+                                        int percentdone = 0;
+                                        if ((maxframes != -1) && (!_IsComplex && currentframe != -1))
+                                        {
+                                            float mx = maxframes;
+                                            float pcd = (100 / mx);
+                                            pcd = pcd * currentframe;
+                                            percentdone = Convert.ToInt32(pcd);
+                                            if (percentdone > 100)
+                                            {
+                                                percentdone = 0;
+                                            }
+                                        }
+                                        else
+                                        {
+                                            if (perc != -1)
+                                            {
+                                                percentdone = Convert.ToInt32(perc);
+                                            }
+                                        }
+
+                                        int pos2 = data.IndexOf("time=");
+                                        string frm2 = data.Substring(pos2 + 5);
+                                        frm2 = frm2.Substring(0, frm2.IndexOf("bitrate")).Trim();
+                                        TimeSpan.TryParse(frm2.Trim(), out Eta);
+                                        if ((maxframes == -1) && (!_IsComplex))
+                                        {
+                                            double mx = MaxDuration.TotalSeconds;
+                                            if (MaxDuration.TotalSeconds > 0)
+                                            {
+                                                double pcd = (100 / mx);
+                                                pcd = pcd * Eta.TotalSeconds;
                                                 percentdone = Convert.ToInt32(pcd);
                                                 if (percentdone > 100)
                                                 {
                                                     percentdone = 0;
                                                 }
                                             }
-                                            else
-                                            {
-                                                if (perc != -1)
-                                                {
-                                                    percentdone = Convert.ToInt32(perc);
-                                                }
-                                            }
-
-                                            int pos2 = data.IndexOf("time=");
-                                            string frm2 = data.Substring(pos2 + 5);
-                                            frm2 = frm2.Substring(0, frm2.IndexOf("bitrate")).Trim();
-                                            TimeSpan.TryParse(frm2.Trim(), out Eta);
-                                            if ((maxframes == -1) && (!_IsComplex))
-                                            {
-                                                double mx = MaxDuration.TotalSeconds;
-                                                if (MaxDuration.TotalSeconds > 0)
-                                                {
-                                                    double pcd = (100 / mx);
-                                                    pcd = pcd * Eta.TotalSeconds;
-                                                    percentdone = Convert.ToInt32(pcd);
-                                                    if (percentdone > 100)
-                                                    {
-                                                        percentdone = 0;
-                                                    }
-                                                }
-                                                //else percentdone = 0;
-                                            }
-                                            if (_IsComplex)
-                                            {
-                                                // findfile in DestFIle; Get Index , Get Cut , Get DUration, from time work out %
-                                            }
-                                            ComplexFile = (!_IsComplex) ? _source : ComplexFile;
-                                            ComplexFile = (MutliModeFileName != "") ? MutliModeFileName : ComplexFile;
-                                            OnConverterProgress?.Invoke(this, ComplexFile, percentdone, Eta, MaxDuration, ProcessID);
+                                            //else percentdone = 0;
                                         }
+                                        if (_IsComplex)
+                                        {
+                                            // findfile in DestFIle; Get Index , Get Cut , Get DUration, from time work out %
+                                        }
+                                        ComplexFile = (!_IsComplex) ? _source : ComplexFile;
+                                        ComplexFile = (MutliModeFileName != "") ? MutliModeFileName : ComplexFile;
+                                        OnConverterProgress?.Invoke(this, ComplexFile, percentdone, Eta, MaxDuration, ProcessID);
                                     }
-                                    break;
                                 }
-                            case ExitedCommandEvent ExitEvent:
+                                break;
+                            }
+                        case ExitedCommandEvent ExitEvent:
+                            {
+                                if (IsLogo && !IsMuxed)
                                 {
-
-
+                                    AddLogo();
+                                }
+                                else
+                                {
                                     errn = 12;
                                     /*if (vcopy || acopy)
                                     {
@@ -724,9 +843,9 @@ namespace VideoGui.ffmpeg
                                   \\      }
                                     }*/
                                     OnConverterStopped?.Invoke(this, _dest.Replace("\"", ""), ProcessID, ExitEvent.ExitCode, ProbeData);
-                                    break;
                                 }
-                        }
+                                break;
+                            }
                     }
                 }
                 return new ConversionResult
@@ -752,6 +871,235 @@ namespace VideoGui.ffmpeg
             }
         }
 
+        public async Task AddLogo()
+        {
+            try
+            {
+                _Is1080p = false;
+                bool bIsEncoding = false;
+                bool bSideDataRec = false;
+                List<string> ProbeData = new List<string>();
+                bool bMetaData = false;
+                int percent = 0;
+                Int64 maxframes = -1;
+                string maxduration = "";
+                TimeSpan Eta = TimeSpan.Zero;
+                TimeSpan MaxDuration = TimeSpan.Zero;
+                DateTime startTime = DateTime.Now;
+                bool onseek = false, vcopy = false, acopy = true;
+                _twitchparameters.AddRange(GetParameters());
+                _twitchparameters.Add("-i");
+                _twitchparameters.Add(_dest);
+                _twitchparameters.Add("-i");
+                _twitchparameters.Add(LogoSource);
+                _twitchparameters.Add("-filter_complex");
+                _twitchparameters.Add("[0:v][1:v]overlay=510:10");
+                _twitchparameters.Add("-c:a");
+                _twitchparameters.Add("copy");
+                _twitchparameters.Add("-b:v");
+                _twitchparameters.Add("1385K");
+                _twitchparameters.Add("-maxrate");
+                _twitchparameters.Add("2330K");
+                _twitchparameters.AddRange(GetParameters(false));
+                _twitchparameters.Add(_dest.Replace("(shorts)", "(shorts_logo)"));
+                for (int i = _twitchparameters.Count - 1; i > -1; i--)
+                {
+                    if (_twitchparameters[i].Trim() == "")
+                    {
+                        _twitchparameters.RemoveAt(i);
+                    }
+                }
+
+
+
+                cmd = Cli.Wrap(defaultpath + "\\ffmpeg.exe").
+                                 WithArguments(args => args
+                                 .Add(_twitchparameters))
+                                 .WithValidation(CommandResultValidation.None).
+                                WithWorkingDirectory(defaultpath);
+                await foreach (var commandEvent in cmd.ListenAsync())
+                {
+                    switch (commandEvent)
+                    {
+                        case StartedCommandEvent StartedEvent:
+                            {
+                                ProcessID = StartedEvent.ProcessId;
+                                InternalProcessId = ProcessID;
+                                ProcessRunning = true;
+                                OnConverterStarted?.Invoke(this, _source, ProcessID);
+                                break;
+                            }
+                        case StandardOutputCommandEvent OutputEvent:
+                            {
+                                ProbeData.Add(OutputEvent.Text);
+                                break;
+                            }
+                        case StandardErrorCommandEvent ErrorEvent:
+                            {
+                                string data = ErrorEvent.Text;
+                                ProbeData.Add(data);
+
+                                if (data.ContainsAll(new string[] { "NUMBER_OF_FRAMES" }))
+                                {
+                                    List<string> frames = data.Trim().Split(":").ToList<string>();
+                                    string frmecnt = frames.Last<string>().Trim();
+                                    if (!frmecnt.Contains("NUMBER_OF_FRAMES"))
+                                    {
+                                        Int64.TryParse(frmecnt, out maxframes);
+                                    }
+                                }
+                                if (data.ToUpper().Contains("DURATION:"))
+                                {
+                                    List<string> frames = data.Trim().Split(" ").ToList<string>();
+                                    int idx = frames.IndexOf("Duration:");
+                                    if (idx != -1)
+                                    {
+                                        string frmecnt = frames[idx + 1].Trim();
+                                        frmecnt = frmecnt.Replace(",", "");
+                                        int max = (frmecnt.Length > 11) ? 11 : frmecnt.Length;
+                                        maxduration = frmecnt.Trim().Substring(0, max);
+                                        TimeSpan.TryParse(maxduration, out MaxDuration);
+                                        if (MaxDuration == TimeSpan.Zero)
+                                        {
+                                            MaxDuration = TimeSpan.FromSeconds(totalseconds);
+                                        }
+                                    }
+                                }
+                                if (!bIsEncoding)
+                                {
+                                    bIsEncoding = data.Contains("Press [q] to stop, [?] for help") || bIsEncoding;
+                                    break;
+                                }
+                                else
+                                {
+                                    if (!bMetaData)
+                                    {
+                                        bMetaData = data.Contains("Metadata:") || bMetaData;
+                                        if (!vcopy && !acopy)
+                                            break;
+                                    }
+                                }
+                                if (bIsEncoding && (bMetaData || (vcopy || acopy)))
+                                {
+                                    string ComplexFile = "";
+                                    if (_IsComplex && data.ContainsAll(new string[] { "Output", "#", "to" }))
+                                    {
+                                        int idx = data.IndexOf("'");
+                                        string tempf = data.Substring(idx);
+                                        idx = tempf.IndexOf("'");
+                                        string fnm = tempf.Substring(0, idx - 1);
+                                        ComplexFile = fnm;
+                                    }
+                                    double perc = -1;
+                                    if (data.Contains("time="))
+                                    {
+                                        int idx = data.IndexOf("time=");
+                                        int idx2 = data.IndexOf("bitrate");
+                                        if (idx != 1)
+                                        {
+                                            string sp = data.Substring(idx + 5, idx2 - (idx + 5)).Trim();
+                                            if (sp.StartsWith("-"))
+                                            {
+                                                onseek = false;
+                                                ComplexFile = (!_IsComplex) ? _source : ComplexFile;
+                                                ComplexFile = (MutliModeFileName != "") ? MutliModeFileName : ComplexFile;
+                                                OnConverterOnSeek?.Invoke(this, ComplexFile, sp, ProcessID);
+                                                continue;
+                                            }
+                                            else if (!onseek)
+                                            {
+                                                OnConverterOnSeek?.Invoke(this, ComplexFile, "", ProcessID);
+                                                onseek = true;
+                                            }
+                                            if (sp != "")
+                                            {
+                                                TimeSpan Tse = TimeSpan.Zero;
+                                                TimeSpan.TryParse(sp, out Tse);
+                                                double totalsecs = Tse.TotalSeconds;
+                                                if (totalseconds > 0)
+                                                {
+                                                    //totalseconds -= startime.TotalSeconds;
+                                                    perc = (100 / totalseconds) * totalsecs;
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    if (data.ContainsAll(new string[] { "frame", "fps", "size", "bitrate", "speed" }))
+                                    {
+                                        ComplexFile = (!_IsComplex) ? _source : ComplexFile;
+                                        ComplexFile = (MutliModeFileName != "") ? MutliModeFileName : ComplexFile;
+                                        OnConverteringData?.Invoke(this, data, ComplexFile.Replace("\"", ""), ProcessID);
+                                        OnProgressEventHandler?.Invoke(_dest, data);
+                                        int pos1 = data.IndexOf("frame=");
+                                        string frm = data.Substring(pos1 + 6);
+                                        string frm2x = frm.Substring(0, frm.IndexOf("fps")).Trim();
+                                        long currentframe = -1;
+                                        long.TryParse(frm2x, out currentframe);
+                                        int percentdone = 0;
+                                        if ((maxframes != -1) && (!_IsComplex))
+                                        {
+                                            float mx = maxframes;
+                                            float pcd = (100 / mx);
+                                            pcd = pcd * currentframe;
+                                            percentdone = Convert.ToInt32(pcd);
+                                            if (percentdone > 100)
+                                            {
+                                                percentdone = 0;
+                                            }
+                                        }
+                                        else
+                                        {
+                                            if (perc != -1)
+                                            {
+                                                percentdone = Convert.ToInt32(perc);
+                                            }
+                                        }
+
+                                        int pos2 = data.IndexOf("time=");
+                                        string frm2 = data.Substring(pos2 + 5);
+                                        frm2 = frm2.Substring(0, frm2.IndexOf("bitrate")).Trim();
+                                        TimeSpan.TryParse(frm2.Trim(), out Eta);
+                                        if ((maxframes == -1) && (!_IsComplex))
+                                        {
+                                            double mx = MaxDuration.TotalSeconds;
+                                            if (MaxDuration.TotalSeconds > 0)
+                                            {
+                                                double pcd = (100 / mx);
+                                                pcd = pcd * Eta.TotalSeconds;
+                                                percentdone = Convert.ToInt32(pcd);
+                                                if (percentdone > 100)
+                                                {
+                                                    percentdone = 0;
+                                                }
+                                            }
+                                            //else percentdone = 0;
+                                        }
+                                        if (_IsComplex)
+                                        {
+                                            // findfile in DestFIle; Get Index , Get Cut , Get DUration, from time work out %
+                                        }
+                                        ComplexFile = (!_IsComplex) ? _source : ComplexFile;
+                                        ComplexFile = (MutliModeFileName != "") ? MutliModeFileName : ComplexFile;
+                                        OnConverterProgress?.Invoke(this, ComplexFile, percentdone, Eta, MaxDuration, ProcessID);
+                                    }
+                                }
+                                break;
+                            }
+                        case ExitedCommandEvent ExitEvent:
+                            {
+                                OnConverterStopped?.Invoke(this, _dest.Replace("\"", ""), ProcessID, ExitEvent.ExitCode, ProbeData);
+                                break;
+                            }
+
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"{this} {MethodBase.GetCurrentMethod().Name}");
+            }
+        }
 
         private IEnumerable<string> GetUserDefinedParameters(bool Input = true)
         {
@@ -1205,13 +1553,24 @@ namespace VideoGui.ffmpeg
             }
         }
 
-        public IConverter SetOutput(string outputPath)
+        public IConverter SetOutput(string outputPath, bool IsTwitchStream = false)
         {
             try
             {
                 const string myStrQuote = "\"";
-                OutputFilePath = outputPath.Contains(" ") ? myStrQuote + outputPath + myStrQuote : outputPath;
-                _output = outputPath.Trim().Contains(" ") ? outputPath.Escape() : outputPath;
+                if (IsTwitchStream)
+                {
+                    //live_1061414984_Vu5NrETzHYqB1f4bZO12dxaCOfUkxf
+                    _twitchparameters.Add("-f");
+                    _twitchparameters.Add("flv");
+                    _twitchparameters.Add($"rtmp://syd03.contribute.live-video.net/app/{outputPath}");
+                    _output = "";
+                }
+                else
+                {
+                    OutputFilePath = outputPath.Contains(" ") ? myStrQuote + outputPath + myStrQuote : outputPath;
+                    _output = outputPath.Trim().Contains(" ") ? outputPath.Escape() : outputPath;
+                }
                 return this;
             }
             catch (Exception ex)
@@ -1304,7 +1663,7 @@ namespace VideoGui.ffmpeg
                     {
                         if (!pmt.HasExited && pmt.ProcessName.Contains("ffmpeg"))
                         {
-                            pmt.Kill(); 
+                            pmt.Kill();
                         }
                     }
                 }

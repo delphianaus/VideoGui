@@ -18,19 +18,20 @@ namespace VideoGui
 {
     public class JobListDetails : INotifyPropertyChanged
     {
-        private string _ScriptFile, _title, _MultiFile, _fileinfo, _sourcePath, _handle, _VideoInfo, _MultiSourceDir,
-            _SourceFile, _FileNoExt, _FileExt, _DestMFile, _StartPos, _EndPos, _PosMode;
+        private string _RTMP,_ScriptFile, _title, _MultiFile, _fileinfo, _sourcePath, _handle, _VideoInfo, _MultiSourceDir,
+            _SourceFile, _FileNoExt, _FileExt, _DestMFile, _StartPos, _EndPos, _PosMode, _MuxData;
         private int _progress, _OwnedByID, _SourceFileIndex, _DeletionFileHandle;
         private double _TotalSeconds;
         //CET MOD
-        private bool _Is5K,_Is4kAdobe, _IsCET, _IsMSJ, _IsNVM, _Complete, _ConversionStarted, _ProbePassed, _IsCST, _KeepSource, _IsMulti,
+        private bool _IsTwitchStream,_Is5K,_Is4kAdobe, _IsCET, _IsMSJ, _IsNVM, _Complete, _ConversionStarted, _ProbePassed, _IsCST, _KeepSource, _IsMulti,
             _fisheye, _processed, _X264Override, _ComplexMode, _Is720p,
             _Is48K, _IsComplex, _ProbeLock, _IsAc3_2Channel, _IsAc3_6Channel, _InProcess, _IsSkipped,
             _IsShorts, _IsCreateShorts,
-            _Mpeg4ASP, _Mpeg4AVC, _Is1080p, _Is4K, _IsEdt, _IsInterlaced, _ProbeStarted;
+            _Mpeg4ASP, _Mpeg4AVC, _Is1080p, _Is4K, _IsEdt, _IsInterlaced, _ProbeStarted, _IsMuxed;
         private FontStyle _ItemFontStyle;
         private Color _ForegroundColor;
 
+        private Nullable<DateTime> _twitchschedule;
         private DateTime _JobDate, _ProbeDate, _LastProgressEvent;
         private List<string> ComplexCutList = new List<string>();
 
@@ -74,6 +75,8 @@ namespace VideoGui
         public DateTime ProbeDate { get => _ProbeDate; set { _ProbeDate = value; OnPropertyChanged(); } }
         public DateTime LastProgressEvent { get => _LastProgressEvent; set { _LastProgressEvent = value; OnPropertyChanged(); } }
         public bool IsAc3_2Channel { get => _IsAc3_2Channel; set { _IsAc3_2Channel = value; OnPropertyChanged(); } }
+        public bool IsMuxed { get => _IsMuxed; set { _IsMuxed = value; OnPropertyChanged(); } }
+        public string MuxData { get => _MuxData; set { _MuxData = value; OnPropertyChanged(); } }
         public bool IsAc3_6Channel { get => _IsAc3_6Channel; set { _IsAc3_6Channel = value; OnPropertyChanged(); } }
         public bool Is48K { get => _Is48K; set { _Is48K = value; OnPropertyChanged(); } }
         public bool KeepSource { get => _KeepSource; set { _KeepSource = value; OnPropertyChanged(); } }
@@ -84,6 +87,14 @@ namespace VideoGui
 
         public bool IsMSJ { get => _IsMSJ; set { _IsMSJ = value; OnPropertyChanged(); } }
         public bool Is5K { get => _Is5K; set { _Is5K = value; OnPropertyChanged(); } }
+        public bool IsTwitchStream { get => _IsTwitchStream; set { _IsTwitchStream = value; OnPropertyChanged(); } }
+        public bool IsTwitchOut { get => _IsTwitchStream && !_twitchschedule.HasValue; set { _IsTwitchStream = _IsTwitchStream; OnPropertyChanged(); } }
+
+
+        public bool IsTwitchActive { get => _IsTwitchStream && _twitchschedule.HasValue; set { _IsTwitchStream = _IsTwitchStream; OnPropertyChanged(); } }
+        public Nullable<DateTime> twitchschedule { get => _twitchschedule; set { _twitchschedule = value; OnPropertyChanged(); } }
+        public string RTMP { get => _RTMP; set { _RTMP = value; OnPropertyChanged(); } }
+
 
         public bool IsShorts { get => _IsShorts; set { _IsShorts = value; OnPropertyChanged(); } }
         public bool IsCreateShorts { get => _IsCreateShorts; set { _IsCreateShorts = value; OnPropertyChanged(); } }
@@ -143,13 +154,31 @@ namespace VideoGui
             try
             {
                 Is5K = false;
+                RTMP = "";
                 var srcdir = reader["SRCDIR"].ToString();
                 var destfname = reader["DESTFNAME"].ToString();
                 Title = Path.GetFileName(destfname);
                 Is720P = (reader["B720P"] is Int16 _is720p) ? (Int16)_is720p == 1 : false;
                 IsShorts = (reader["BSHORTS"] is Int16 _isShorts) ? (Int16)_isShorts == 1 : false;
+                IsMuxed = (reader["ISMUXED"] is Int16 _isMux) ? (Int16)_isMux == 1 : false;
+                MuxData  = (reader["MUXDATA"] is string _isMuxData) ? _isMuxData : "";
                 IsCreateShorts = (reader["BCREATESHORTS"] is Int16 _isCShorts) ? (Int16)_isCShorts == 1 : false;
                 var IsEncodeTrim = (reader["BENCODETRIM"] is Int16 _isEncodeTrim) ? (Int16)_isEncodeTrim == 1 : false;
+                IsTwitchStream = (reader["BTWITCHSTREAM"] is Int16 _isTwitchStream) ? (Int16)_isTwitchStream == 1 : false;
+                Nullable<DateTime> TwitchDateOnly = (reader["TWITCHDATE"] is DateTime _TwitchDate) ? (DateTime)_TwitchDate  : null;
+                Nullable<TimeSpan> TwitchTimeSpan = (reader["TWITCHTIME"] is TimeSpan _TwitchTime) ? (TimeSpan)_TwitchTime : null;
+                twitchschedule = null;
+                if (TwitchDateOnly is not null &&  TwitchTimeSpan is not null)
+                {
+                    twitchschedule = TwitchDateOnly.Value.AtTime(TimeOnly.FromTimeSpan(TwitchTimeSpan.Value));
+                    if (twitchschedule.Value.Year < 1800)
+                    {
+                        //IsTwitchStream = false;
+                        RTMP = "";
+                        twitchschedule = null;
+                    }
+                    else RTMP = reader["RTMP"].ToString();
+                }
                 var IsCutTrim = (reader["BCUTTRIM"] is Int16 _isCutTrim) ? (Int16)_isCutTrim == 1 : false;
                 long start = reader["STARTPOS"].ToString().ToInt();
                 long end = reader["DURATION"].ToString().ToInt();
@@ -167,6 +196,8 @@ namespace VideoGui
                 if (IsCutTrim) ScriptType = 1;
                 if (IsEncodeTrim) ScriptType = 3;
                 if (IsCreateShorts) ScriptType = 4;
+                if (IsTwitchStream) ScriptType = 5;
+                if (IsMuxed) ScriptType = 6;
                 string CutFrames = (_Duration != TimeSpan.Zero) ?
                     $"|{_StartPos.ToFFmpeg()}|{_Duration.ToFFmpeg()}|time" : "";
                 ScriptFile = $"true|{destfname}|{srcdir}|*.mp4{CutFrames}";
@@ -182,6 +213,7 @@ namespace VideoGui
                 _IsCST = ScriptType == 1;// IsCutTrim
                 _IsEdt = ScriptType == 2;// Is720p
                 _IsCET = ScriptType == 3;// IsCutTrim
+                IsTwitchStream = ScriptType == 5;
                 Is4K = (Is4KAdobe) ? true : Is4K;
                 List<string> Commands = _ScriptFile.Split('|').ToList();
                 string ks = Commands.FirstOrDefault();
@@ -201,7 +233,7 @@ namespace VideoGui
                 Commands.RemoveAt(0);
                 string ext = Commands.FirstOrDefault();
                 Commands.RemoveAt(0);
-                if ((Commands.Count >= 2) && (IsCST || IsCET))
+                if ((Commands.Count >= 2) && (IsCST || IsCET || IsTwitchStream))
                 {
                     StartPos = Commands.FirstOrDefault();
                     EndPos = Commands[1].ToString();
@@ -223,15 +255,18 @@ namespace VideoGui
         public JobListDetails(string _Title, int _SourceFileIndex, int _Autoinssertid, string _ScriptFile,
             int _ScriptType, bool _Is1080p = false, bool _Is4Kp = false, bool _ISMJS = false,
             bool __Is4KAdobe = false, bool __IsShorts = false, bool __IsCreateShorts = false,
-            string _FIleInfo = "")
+            string _FIleInfo = "", bool __IsMuxed = false, string __muxdata = "")
         {
             // _ScriptType - 0 = src, 1 cst, 2 edt
             DeletionFileHandle = -1;
-            (Fileinfo, Progress, SourceFileIndex, Is1080p, Is4K, ScriptFile) = (_FIleInfo, 0, _SourceFileIndex, _Is1080p, _Is4Kp, ScriptFile);
+            (Fileinfo, Progress, SourceFileIndex, Is1080p, Is4K, ScriptFile) = (_FIleInfo, 0, _SourceFileIndex, _Is1080p, _Is4Kp, _ScriptFile);
             (ProbePassed, Complete, ProbeLock, _ProbeStarted, _ConversionStarted, Processed) = (true, false, false, false, false, false);
             (JobDate, MultiFile) = (DateTime.Now, _Title);
             _IsNVM = true;
+            _IsMuxed = __IsMuxed;
+            MuxData = __muxdata;
             Is5K = false;
+            IsTwitchStream = false || _ScriptType == 5;
             Is4KAdobe = __Is4KAdobe;
             _IsMSJ = _ISMJS;
             DeletionFileHandle = _Autoinssertid;
@@ -259,18 +294,21 @@ namespace VideoGui
             Commands.RemoveAt(0);
             string ext = Commands.FirstOrDefault();
             Commands.RemoveAt(0);
-            if ((Commands.Count >= 2) && (IsCST || IsCET))
+            if ((Commands.Count >= 2) && (IsCST || IsCET  || IsTwitchOut))
             {
                 StartPos = Commands.FirstOrDefault();
                 EndPos = Commands[1].ToString();
                 PosMode = Commands[2].ToString();
             }
-            List<string> Files = Directory.EnumerateFiles(sourceDir, "*" + ext, SearchOption.AllDirectories).ToList();
-            foreach (string file in Files)
+            if (!IsMuxed)
             {
-                if (File.Exists(file))
+                List<string> Files = Directory.EnumerateFiles(sourceDir, "*" + ext, SearchOption.AllDirectories).ToList();
+                foreach (string file in Files)
                 {
-                    ComplexCutList.Add($"file '{file}'");
+                    if (File.Exists(file))
+                    {
+                        ComplexCutList.Add($"file '{file}'");
+                    }
                 }
             }
             _handle = "";
@@ -278,6 +316,13 @@ namespace VideoGui
             (_Is48K, _IsAc3_2Channel, _IsAc3_6Channel) = (false, false, false);
             ItemFontStyle = (X264Override) ? System.Windows.FontStyles.Italic : System.Windows.FontStyles.Normal;
             ForegroundColor = X264Override ? Color.FromScRgb(100, 6, 186, 28) : Color.FromArgb(100, 246, 8, 50);
+            if (IsMuxed)
+            {
+                IsMulti = false;
+                Title = Path.GetFileNameWithoutExtension(MultiSourceDir);
+                SourceFile = MultiSourceDir;
+                SourcePath = Path.GetDirectoryName(MultiSourceDir);
+            }
         }
 
         public JobListDetails(string _Title, int _SourceFileIndex, bool _Is1080p = false, 
@@ -287,6 +332,8 @@ namespace VideoGui
         {
             Fileinfo = _FIleInfo;
             Progress = _Progress;
+            RTMP = "";
+            twitchschedule = DateTime.Now.AddYears(-100);
             Processed = false;
             SourceFileIndex = _SourceFileIndex;
             DeletionFileHandle = -1;

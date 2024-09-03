@@ -108,7 +108,7 @@
 
         <Button x:Name="btnstart" Content="Start" HorizontalAlignment="Left" Height="22" Margin="26,0,0,141" VerticalAlignment="Bottom" Click="Btnstart_Click" Width="42"/>
         <ProgressBar x:Name="Progressbar1" HorizontalAlignment="Left" Height="18" Margin="132,0,0,118" VerticalAlignment="Bottom" Width="882" />
-        <ProgressBar x:Name="Progressbar2" HorizontalAlignment="Left" Height="18" Margin="132,0,0,144" VerticalAlignment="Bottom" Width="882" />
+        <ProgressBar x:Name="Progressbar2" HorizontalAlignment="Left" Height="18" Margin="132,0,0,144" VerticalAlignment="Bottom" Width="881" />
         <Border x:Name="brdlstbox" BorderThickness="2" BorderBrush="Black" Margin="5,5,5,215" VerticalAlignment="Top" Height="490" HorizontalAlignment="Left">
             <ListBox x:Name="lstBoxJobs" Margin="1,1,1,1"
                  AllowDrop="True" 
@@ -178,6 +178,7 @@
         <ToggleButton x:Name="GPUEncode" Style="{DynamicResource ToggleStyle1}" Margin="921,0,7,76" Height="24" Width="Auto" HorizontalAlignment="Left" VerticalAlignment="Bottom" IsChecked="False"/>
         <ToggleButton x:Name="X265Output" Style="{DynamicResource ToggleStyle2}"  Margin="816,0,96,76" Height="24" Width="Auto" HorizontalAlignment="Left" VerticalAlignment="Bottom"/>
         <ToggleButton x:Name="Fisheye" Style="{DynamicResource ToggleStyle3}"  Margin="1025,0,7,76" Height="24"  Width="Auto" HorizontalAlignment="Left" VerticalAlignment="Bottom"/>
+
         <Button x:Name="btnConfig" Content="Configuration" HorizontalAlignment="Left" Height="22" Margin="26,0,0,113" VerticalAlignment="Bottom" Click="BtnConfig_Click" Width="97"/>
         <CheckBox x:Name="ChkDropFormat" Content="Drop As X265" HorizontalAlignment="Left" Margin="26,0,0,175" VerticalAlignment="Bottom" IsChecked="True" Width="97"/>
         <CheckBox x:Name="ChkAudioConversion" Content="Convert If AC-3 -&gt; AAC" HorizontalAlignment="Left" Margin="302,0,0,173" VerticalAlignment="Bottom" IsChecked="True" Width="147" />
@@ -204,16 +205,19 @@
             <Label x:Name="lblQueStatus" Background="#FFBFBFBF" Width="42" Height="34" Content="Que" FontSize="11"/>
             <Label x:Name="lblQueInfo" HorizontalAlignment="Left" Height="28" VerticalAlignment="Center" Width="45"/>
             <Label x:Name="lblAccelStatus" Background="#FFBFBFBF" Width="67" Height="34" Content="Accel HW" FontSize="11"/>
-            <Label x:Name="lbAccelHW" Content="" HorizontalAlignment="Left" Height="28" VerticalAlignment="Center" Width="228"/>
-            <Button x:Name="btnRunTest" Content="Audio Joiner" HorizontalAlignment="Left" Height="28" VerticalAlignment="Center" Width="87" Click="btnRunTest_Click"/>
-            <Button x:Name="btnScriptEditor" Content="Script Injector" HorizontalAlignment="Left" Height="28" VerticalAlignment="Center" Width="81" Click="btnScriptEditor_Click"/>
-            <Button x:Name="btnMediaImporter" Content="Import GoPro Footage" HorizontalAlignment="Left" Height="28" VerticalAlignment="Center" Width="126" Click="btnMediaImporter_Click"/>
-            <Button x:Name="btnShortsCreator" Content="Create Shorts" HorizontalAlignment="Left" Height="28" VerticalAlignment="Top" Width="79" Click="btnShortsCreator_Click"/>
-            <Button x:Name="btnVIdeoEdit" Content="Edit Points" HorizontalAlignment="Center" Height="28" VerticalAlignment="Center" Width="79" Click="btnVIdeoEdit_Click"/>
-
+            <Label x:Name="lbAccelHW" Content="" HorizontalAlignment="Left" Height="28" VerticalAlignment="Center" Width="80"/>
+            <Button x:Name="btnRunTest" Content="Audio Joiner" HorizontalAlignment="Left" Height="28" VerticalAlignment="Center" Width="70" Click="btnRunTest_Click"/>
+            <Button x:Name="btnScriptEditor" Content="Script Injector" HorizontalAlignment="Left" Height="28" VerticalAlignment="Center" Width="77" Click="btnScriptEditor_Click"/>
+            <Button x:Name="btnMediaImporter" Content="Import Footage" HorizontalAlignment="Left" Height="28" VerticalAlignment="Center" Width="89" Click="btnMediaImporter_Click"/>
+            <Button x:Name="btnShortsCreator" Content="Create Shorts" HorizontalAlignment="Left" Height="28" VerticalAlignment="Top" Width="74" Click="btnShortsCreator_Click"/>
+            <Button x:Name="btnVIdeoEdit" Content="Edit Points" HorizontalAlignment="Center" Height="28" VerticalAlignment="Center" Width="63" Click="btnVIdeoEdit_Click"/>
+            <Button x:Name="btnScraperDraft" Content="Scrape Draft" HorizontalAlignment="Center" Height="28" VerticalAlignment="Center" Width="88" 
+                    Click="btnScraperDraft_Click"/>
+            <Button x:Name="btnSetupload" Content="Uploads Directory" HorizontalAlignment="Center" Height="28" VerticalAlignment="Center" Width="110" 
+                Click="btnSetupload_Click"/>
         </StatusBar>
 
-        <StatusBar x:Name="statusbar2" Height="34" Margin="26,0,77,34" VerticalAlignment="Bottom">
+        <StatusBar x:Name="statusbar2" Height="34" Margin="26,0,10,34" VerticalAlignment="Bottom">
             <Label x:Name="lblSpeedStatus" Background="#FFBFBFBF" Width="64" Height="34" Content="Speed" MouseDoubleClick="Label_MouseDoubleClick" FontSize="11" HorizontalAlignment="Left"/>
             <Label x:Name="lblSpeed" Content="" HorizontalAlignment="Left" Height="28" VerticalAlignment="Center" Width="47" RenderTransformOrigin="-2.468,3.693"/>
             <Label x:Name="lblCurrentFrameStatus" Background="#FFBFBFBF" Width="81" Height="34" Content="Current Frame" FontSize="11"/>
@@ -232,13 +236,13 @@
             <Label x:Name="lblPercent" HorizontalAlignment="Left" Height="28" VerticalAlignment="Center" Width="54"/>
 
         </StatusBar>
-        <CheckBox x:Name="ChkAutoAAC" Content="Auto -&gt; AAC" HorizontalAlignment="Left" Margin="462,0,0,173" VerticalAlignment="Bottom" Width="90" />
+        <CheckBox x:Name="ChkAutoAAC" Content="Auto -&gt; AAC" HorizontalAlignment="Left" Margin="442,0,0,173" VerticalAlignment="Bottom" Width="90" />
         <CheckBox x:Name="ChkChangeOutputname" Content="Change Output Name" HorizontalAlignment="Left" Margin="612,0,0,84" VerticalAlignment="Bottom" Width="141" />
         <CheckBox x:Name="ChkReEncode" Content="Re Encode" HorizontalAlignment="Left" Margin="528,0,0,84" VerticalAlignment="Bottom" Width="87" />
         <Button x:Name="BtnFileFixer" Content="File Fixer" HorizontalAlignment="Left" Height="24" Margin="758,0,0,170" VerticalAlignment="Bottom" Width="53" Click="BtnFileFixer_Click"/>
         <Button x:Name="BtnVideoCardDetails" Content="" HorizontalAlignment="Left" Height="30" Margin="758,0,0,75" VerticalAlignment="Bottom" Width="41" Click="BtnVideoCardDetails_Click"/>
-        <CheckBox x:Name="ChkResize1080p" Content="Resize 1080p" HorizontalAlignment="Left" Margin="559,0,0,173" VerticalAlignment="Bottom" Width="91" IsChecked="True" />
-        <CheckBox x:Name="ChkResize1080shorts" Content="Create Shorts" HorizontalAlignment="Left" Margin="657,0,0,173" VerticalAlignment="Bottom" Width="94" IsChecked="True" />
+        <Label Content="Max Shorts" HorizontalAlignment="Left" Height="28" Margin="537,0,0,167" VerticalAlignment="Bottom" Width="65"/>
+        <TextBox x:Name="txtMaxShorts" HorizontalAlignment="Left" Margin="610,0,0,171" TextWrapping="Wrap" Text="80" VerticalAlignment="Bottom" Width="48" FontSize="14"/>
     </Grid>
 
 </Window>

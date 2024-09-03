@@ -114,6 +114,7 @@ namespace VideoGui
         {
             try
             {
+                if (filename is null) return false;
                 bool res = false;
                 foreach (var _ in RunningStats.Where(ss => ss.filename.Trim() == filename.Trim()).Select(ss => new { }))
                 {

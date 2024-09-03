@@ -79,9 +79,7 @@ namespace VideoGui
                         Application.Current.Dispatcher.Invoke(() =>
                         {
                             SearchedTVShows.Add(RecordToAdd);
-                            System.Windows.Forms.Application.DoEvents();
                             LstAllShows.Items.Refresh();
-                            System.Windows.Forms.Application.DoEvents();
 
                         });
 
@@ -248,17 +246,14 @@ namespace VideoGui
                 List<string> ListOfItems = new(CmbSearchStrings.Items.OfType<string>().ToList());
                 int UnCompletedTasks = 0, TotalTask = 0;
                 (ProgressBar1.Maximum, ProgressBar1.Value) = (TotalList.Count - 1, 0);
-                System.Windows.Forms.Application.DoEvents();
                 for (int i = 0; i < TotalList.Count - 1; i++)
                 {
                     ProgressBar1.Value = i;
-                    System.Windows.Forms.Application.DoEvents();
                     PageDownloadTasks.Add(Task.Run(() => SearchList(new(ListOfItems), TotalList[i], UpdateSearchRecords)));
                     UnCompletedTasks = (PageDownloadTasks.Where(downloader => !downloader.IsCompleted)).Count();
                     while (UnCompletedTasks >= 5)
                     {
                         UnCompletedTasks = (PageDownloadTasks.Where(downloader => !downloader.IsCompleted)).Count();
-                        System.Windows.Forms.Application.DoEvents();
                     }
                 }
             }

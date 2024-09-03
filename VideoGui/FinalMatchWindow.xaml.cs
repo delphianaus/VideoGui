@@ -65,7 +65,6 @@ namespace VideoGui
                 DoStuff.Stop();
                 DoStuff.IsEnabled = false;
                 Hide();
-                System.Windows.Forms.Application.DoEvents();
                 SetupMatcher();
             }
             catch (Exception ex)
@@ -99,7 +98,6 @@ namespace VideoGui
                         {
                             if (pgs != null)
                             {
-                                System.Windows.Forms.Application.DoEvents();
                                 FileNamesClass _FilesToProcess = FilesToProcess[index];
                                 _FilesToProcess.ComboItems.Clear();
                                 _FilesToProcess.ComboItems.AddRange(record2.ComboItems);
@@ -107,7 +105,6 @@ namespace VideoGui
                                 _FilesToProcess.IsCorrect = record2.IsCorrect;
                                 _FilesToProcess.IsEnabled = record2.IsEnabled;
                                 _FilesToProcess.IdentifiedAs = record2.IdentifiedAs;
-                                System.Windows.Forms.Application.DoEvents();
                             }
 
                         });
@@ -144,7 +141,6 @@ namespace VideoGui
                 while (TotalTask - CompletedTasks > 0)
                 {
                     CompletedTasks = (PageDownloadTasks.Where(downloader => downloader.IsCompleted)).Count();
-                    System.Windows.Forms.Application.DoEvents();
                 }
                 KillProgressWindow();
                 Application.Current.Dispatcher.Invoke(() =>
@@ -228,9 +224,7 @@ namespace VideoGui
                 {
                     if (pgs != null)
                     {
-                        System.Windows.Forms.Application.DoEvents();
                         pgs.UpdateProgress(progress, status);
-                        System.Windows.Forms.Application.DoEvents();
                     }
 
                 });
@@ -249,9 +243,7 @@ namespace VideoGui
                 {
                     if (pgs != null)
                     {
-                        System.Windows.Forms.Application.DoEvents();
                         pgs.UpdateStatus(Status);
-                        System.Windows.Forms.Application.DoEvents();
                     }
                 });
             }
@@ -340,15 +332,13 @@ namespace VideoGui
                         string newfile = fls.InitialPath.Replace("done","dddd") + "\\" + newdir + "\\" + fls.Title;
                         Application.Current.Dispatcher.Invoke(() =>
                         {
-                            System.Windows.Forms.Application.DoEvents();
+                            
                             if (!System.IO.Directory.Exists(dirname.Replace("done", "dddd")))
                             {
                                 System.IO.Directory.CreateDirectory(dirname.Replace("done", "dddd"));
                             }
-                            System.Windows.Forms.Application.DoEvents();
                             if (System.IO.File.Exists(OldFile)) System.IO.File.Move(OldFile, newfile);
                             ProgressBar1.Value++;
-                            System.Windows.Forms.Application.DoEvents();
                         });
 
                     }

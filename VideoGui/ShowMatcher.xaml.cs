@@ -106,7 +106,6 @@ namespace VideoGui
                 DoStuff.Stop();
                 DoStuff.IsEnabled = false;
                 Hide();
-                System.Windows.Forms.Application.DoEvents();
                 LoadJson();
             }
             catch (Exception ex)
@@ -416,7 +415,6 @@ namespace VideoGui
                     while (UnCompletedTasks >= 10)
                     {
                         UnCompletedTasks = (PageDownloadTasks.Where(downloader => !downloader.IsCompleted)).Count();
-                        System.Windows.Forms.Application.DoEvents();
                     }
  
                     continue;
@@ -475,9 +473,7 @@ namespace VideoGui
                 {
                     if (pgs != null)
                     {
-                        System.Windows.Forms.Application.DoEvents();
                         pgs.UpdateProgress(progress, status);
-                        System.Windows.Forms.Application.DoEvents();
                     }
 
                 });
@@ -496,9 +492,7 @@ namespace VideoGui
                 {
                     if (pgs != null)
                     {
-                        System.Windows.Forms.Application.DoEvents();
                         pgs.UpdateStatus(Status);
-                        System.Windows.Forms.Application.DoEvents();
                     }
                 });
             }
@@ -643,7 +637,6 @@ namespace VideoGui
                     while (UnCompletedTasks >= 5)
                     {
                         UnCompletedTasks = (PageDownloadTasks.Where(downloader => !downloader.IsCompleted)).Count();
-                        System.Windows.Forms.Application.DoEvents();
                     }
 
                     continue;

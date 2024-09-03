@@ -23,6 +23,9 @@ using System.Threading;
 using System.Management;
 using System.Diagnostics;
 using MS.WindowsAPICodePack.Internal;
+using VideoGui.Models;
+using static System.Net.WebRequestMethods;
+using File = System.IO.File;
 
 namespace VideoGui
 {
@@ -62,26 +65,247 @@ namespace VideoGui
                 ex.LogWrite($"{this} {MethodBase.GetCurrentMethod().Name}");
             }
         }
+
+        public async Task<string> AddLogo(string _dest, string logosource)
+        {
+            try
+            {
+                double totalseconds = -1;
+                ffmpegbridge FileIndexer = new ffmpegbridge();
+                FileIndexer.ReadDuration(_dest);
+
+                while (!FileIndexer.Finished)
+                {
+                    Thread.Sleep(100);
+                }
+
+                totalseconds = FileIndexer.GetDuration().TotalSeconds;
+                bool bIsEncoding = false;
+                bool bSideDataRec = false;
+                string desth = _dest;
+                if (desth.Contains("(shorts)"))
+                {
+                    desth = _dest.Replace("(shorts)", "");
+                }
+                string newdest = Path.GetDirectoryName(desth) + "\\" + Path.GetFileNameWithoutExtension(desth) + "(shorts_logo)" + Path.GetExtension(desth);
+
+                List<string> ProbeData = new List<string>();
+                bool bMetaData = false;
+                List<string> _twitchparameters = new List<string>();
+                int percent = 0;
+                Int64 maxframes = -1;
+                string maxduration = "";
+                TimeSpan Eta = TimeSpan.Zero;
+                TimeSpan MaxDuration = TimeSpan.Zero;
+                DateTime startTime = DateTime.Now;
+                bool onseek = false, vcopy = false, acopy = true;
+                //-hwaccel vulkan -c:v hevc
+                _twitchparameters.Add("-y");
+                _twitchparameters.Add("-hwaccel");
+                _twitchparameters.Add("vulkan");
+                _twitchparameters.Add("-c:v");
+                _twitchparameters.Add("hevc");
+                _twitchparameters.Add("-i");
+                _twitchparameters.Add(_dest);
+                _twitchparameters.Add("-i");
+                _twitchparameters.Add(logosource);
+                _twitchparameters.Add("-filter_complex");
+                _twitchparameters.Add("[0:v][1:v]overlay=510:10");
+                _twitchparameters.Add("-c:a");
+                _twitchparameters.Add("copy");
+                _twitchparameters.Add("-b:v");
+                _twitchparameters.Add("1385K");
+                _twitchparameters.Add("-maxrate");
+                _twitchparameters.Add("2330K");
+                _twitchparameters.Add("-c:v");
+                _twitchparameters.Add("hevc_amf");
+                _twitchparameters.Add("-threads");
+                _twitchparameters.Add("1");
+                _twitchparameters.Add(newdest);
+                for (int i = _twitchparameters.Count - 1; i > -1; i--)
+                {
+                    if (_twitchparameters[i].Trim() == "")
+                    {
+                        _twitchparameters.RemoveAt(i);
+                    }
+                }
+
+
+                string defaultpath = (Debugger.IsAttached) ? @"C:\VideoGui" : Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
+                var cmd = Cli.Wrap(defaultpath + "\\ffmpeg.exe").
+                                 WithArguments(args => args
+                                 .Add(_twitchparameters))
+                                 .WithValidation(CommandResultValidation.None).
+                                WithWorkingDirectory(defaultpath);
+                await foreach (var commandEvent in cmd.ListenAsync())
+                {
+                    switch (commandEvent)
+                    {
+
+
+                        case StandardErrorCommandEvent ErrorEvent:
+                            {
+                                string data = ErrorEvent.Text;
+                                ProbeData.Add(data);
+
+                                if (data.ContainsAll(new string[] { "NUMBER_OF_FRAMES" }))
+                                {
+                                    List<string> frames = data.Trim().Split(":").ToList<string>();
+                                    string frmecnt = frames.Last<string>().Trim();
+                                    if (!frmecnt.Contains("NUMBER_OF_FRAMES"))
+                                    {
+                                        Int64.TryParse(frmecnt, out maxframes);
+                                    }
+                                }
+                                if (data.ToUpper().Contains("DURATION:"))
+                                {
+                                    List<string> frames = data.Trim().Split(" ").ToList<string>();
+                                    int idx = frames.IndexOf("Duration:");
+                                    if (idx != -1 && MaxDuration == TimeSpan.Zero)
+                                    {
+                                        string frmecnt = frames[idx + 1].Trim();
+                                        frmecnt = frmecnt.Replace(",", "");
+                                        int max = (frmecnt.Length > 11) ? 11 : frmecnt.Length;
+                                        maxduration = frmecnt.Trim().Substring(0, max);
+                                        TimeSpan.TryParse(maxduration, out MaxDuration);
+                                        if (MaxDuration == TimeSpan.Zero)
+                                        {
+                                            MaxDuration = TimeSpan.FromSeconds(totalseconds);
+                                        }
+                                    }
+                                }
+                                if (!bIsEncoding)
+                                {
+                                    bIsEncoding = data.Contains("Press [q] to stop, [?] for help") || bIsEncoding;
+                                    continue;
+                                }
+                                else
+                                {
+                                    if (!bMetaData)
+                                    {
+                                        bMetaData = data.Contains("Metadata:") || bMetaData;
+                                        if (!vcopy && !acopy)
+                                            continue;
+                                    }
+                                }
+                                if (bIsEncoding && (bMetaData || (vcopy || acopy)))
+                                {
+                                    
+                                    double perc = -1;
+                                    if (data.Contains("time="))
+                                    {
+                                        int idx = data.IndexOf("time=");
+                                        int idx2 = data.IndexOf("bitrate");
+                                        if (idx != 1)
+                                        {
+                                            string sp = data.Substring(idx + 5, idx2 - (idx + 5)).Trim();
+
+                                            if (sp != "")
+                                            {
+                                                TimeSpan Tse = TimeSpan.Zero;
+                                                TimeSpan.TryParse(sp, out Tse);
+                                                double totalsecs = Tse.TotalSeconds;
+                                                if (totalseconds > 0)
+                                                {
+                                                    perc = (100 / totalseconds) * totalsecs;
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    if (data.ContainsAll(new string[] { "frame", "fps", "size", "bitrate", "speed" }))
+                                    {
+                                        int pos1 = data.IndexOf("frame=");
+                                        string frm = data.Substring(pos1 + 6);
+                                        string frm2x = frm.Substring(0, frm.IndexOf("fps")).Trim();
+                                        long currentframe = -1;
+                                        long.TryParse(frm2x, out currentframe);
+                                        int percentdone = 0;
+                                        if ((maxframes != -1))
+                                        {
+                                            float mx = maxframes;
+                                            float pcd = (100 / mx);
+                                            pcd = pcd * currentframe;
+                                            percentdone = Convert.ToInt32(pcd);
+                                            if (percentdone > 100)
+                                            {
+                                                percentdone = 0;
+                                            }
+                                        }
+                                        else
+                                        {
+                                            if (perc != -1)
+                                            {
+                                                percentdone = Convert.ToInt32(perc);
+                                            }
+                                        }
+
+                                        int pos2 = data.IndexOf("time=");
+                                        string frm2 = data.Substring(pos2 + 5);
+                                        frm2 = frm2.Substring(0, frm2.IndexOf("bitrate")).Trim();
+                                        TimeSpan.TryParse(frm2.Trim(), out Eta);
+                                        if (maxframes == -1)
+                                        {
+                                            double mx = MaxDuration.TotalSeconds;
+                                            if (MaxDuration.TotalSeconds > 0)
+                                            {
+                                                double pcd = (100 / mx);
+                                                pcd = pcd * Eta.TotalSeconds;
+                                                percentdone = Convert.ToInt32(pcd);
+                                                if (percentdone > 100)
+                                                {
+                                                    percentdone = 0;
+                                                }
+                                            }
+                                        }
+                                        // Dispatcher.Invoke(() =>
+                                        //  {
+                                        pg1.Value = percentdone;
+                                        //  });
+                                    }
+                                }
+                                break;
+                            }
+                        case ExitedCommandEvent ExitEvent:
+                            {
+
+                                lblProgress.Content = "Progress : Complete";// + percentdone + " " + Eta;
+
+                                break;
+                            }
+
+                    }
+                }
+                return newdest;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"{this} {MethodBase.GetCurrentMethod().Name}");
+                return "";
+            }
+        }
+
         public void OnShortsCreated()
         {
             try
             {
+
                 float p = (float)(NumberShorts / 25.0);
-                decimal r = Math.Truncate((decimal)p ) ;
+                decimal r = Math.Truncate((decimal)p);
                 int maxp = r.ToInt();
 
                 string dir = Path.GetDirectoryName(shortsfile);
                 string np = Path.GetFileName(shortsfile);
-                np = np.Replace("(shorts)", "").Replace(".mp4", "").Trim();
-                string subp = Path.Combine(dir, np);    
+                np = np.Replace("(shorts_logo)", "").Replace("(shorts)", "").Replace(".mp4", "").Trim();
+                string subp = Path.Combine(dir, np);
                 List<int> list = new List<int>();
-                for(int i2=0; i2<NumberShorts-1; i2++)
-                { 
-                    list.Add(i2+1);
-                }
-                for(int px=0; px<r; px++)
+                for (int i2 = 0; i2 < NumberShorts - 1; i2++)
                 {
-                    Directory.CreateDirectory(Path.Combine(subp,(px+1).ToString()));
+                    list.Add(i2 + 1);
+                }
+                for (int px = 0; px < r; px++)
+                {
+                    Directory.CreateDirectory(Path.Combine(subp, (px + 1).ToString()));
                 }
 
                 int cp = 0;
@@ -94,15 +318,15 @@ namespace VideoGui
                     }
                     else cp = 1;
                     int iir = rnd.Next(list.Count);
-                    string destDir = Path.Combine(subp, "" + (cp), $"{list[iir]}.mkv");
-                    string oldfile = Path.Combine(subp, $"{list[iir]}.mkv");
-                    if (oldfile!=destDir)
+                    string destDir = Path.Combine(subp, "" + (cp), $"{list[iir]}.mp4");
+                    string oldfile = Path.Combine(subp, $"{list[iir]}.mp4");
+                    if (oldfile != destDir)
                     {
                         File.Move(oldfile, destDir);
                     }
                     list.RemoveAt(iir);
                 }
-                string LastFile = Directory.EnumerateFiles(subp, "*.mkv",SearchOption.TopDirectoryOnly).ToList().FirstOrDefault();
+                string LastFile = Directory.EnumerateFiles(subp, "*.mp4", SearchOption.TopDirectoryOnly).ToList().FirstOrDefault();
                 if (File.Exists(LastFile))
                 {
                     List<string> dirs = Directory.EnumerateDirectories(subp).ToList();
@@ -110,12 +334,12 @@ namespace VideoGui
                     string dirp = dirs.FirstOrDefault()?.ToString();
                     if (Directory.Exists(dirp))
                     {
-                        MaxNumber = Directory.EnumerateFiles(dirp, "*.mkv").ToList().Count();
+                        MaxNumber = Directory.EnumerateFiles(dirp, "*.mp4").ToList().Count();
                     }
                     string DirectoryToUse = dirp;
-                    foreach(var directory in dirs)
+                    foreach (var directory in dirs)
                     {
-                        mx = Directory.EnumerateFiles(directory, "*.mkv").ToList().Count();
+                        mx = Directory.EnumerateFiles(directory, "*.mp4").ToList().Count();
                         if (mx < MaxNumber)
                         {
                             MaxNumber = mx;
@@ -128,7 +352,7 @@ namespace VideoGui
                 }
                 MessageBox.Show("Shorts Created");
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 ex.LogWrite($"{this} {MethodBase.GetCurrentMethod().Name}");
             }
@@ -137,8 +361,10 @@ namespace VideoGui
         {
             try
             {
-               EData.Clear();
-               Data.Clear();
+                source = await AddLogo(shortsfile, @"C:\videogui\logo.png");
+
+                EData.Clear();
+                Data.Clear();
                 var qs = "\"";
                 var fname = System.IO.Path.GetFileName(source);
                 var fnamex = System.IO.Path.GetFileNameWithoutExtension(source);
@@ -169,7 +395,7 @@ namespace VideoGui
                     "ed = Editor()",
                    // "gui = Gui()",
                     "filename = "+sx,
-                    "fname = basename(filename.replace(\" (shorts)\",\"\").replace(\".mkv\",\"\").replace(\".mp4\",\"\"))",
+                    "fname = basename(filename.replace(\" (shorts_logo)\",\"\").replace(\".mkv\",\"\").replace(\".mp4\",\"\"))",
                     "dir = dirname(filename)",
                 //    "",
                     "adm.loadVideo(filename)",
@@ -195,8 +421,8 @@ namespace VideoGui
                     "    adm.audioSetChannelDelays(0, 0, 0, 0, 0, 0, 0, 0, 0, 0)",
                     "    adm.audioSetChannelRemap(0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8)",
                     "    adm.audioSetShift(0, 0, 0)",
-                    "    adm.setContainer(\"MKV\", \"forceAspectRatio=False\", \"displayWidth=1280\", \"displayAspectRatio=2\", \"addColourInfo=False\", \"colMatrixCoeff=2\", \"colRange=0\", \"colTransfer=2\", \"colPrimaries=2\")",
-                    "    adm.save(dir + fname + \"/\" +str(filecounter) + \".mkv\")",
+                    "    adm.setContainer(\"MP4\", \"forceAspectRatio=False\", \"displayWidth=1280\", \"displayAspectRatio=2\", \"addColourInfo=False\", \"colMatrixCoeff=2\", \"colRange=0\", \"colTransfer=2\", \"colPrimaries=2\")",
+                    "    adm.save(dir + fname + \"/\" +str(filecounter) + \".MP4\")",
                     "    filecounter+=1",
                     "    segid += 1",
                     "    segsizeid += 1",
@@ -240,7 +466,7 @@ namespace VideoGui
                 }
                 dir = "C:\\VideoGui";
                 string FileToWrite = $"C:\\Program Files\\Avidemux 2.8 VC++ 64bits\\avidemux_cli.exe";
-             
+
                 Task.Run(() => { RunProces(FileToWrite, py); });
             }
             catch (Exception ex)
@@ -249,12 +475,12 @@ namespace VideoGui
             }
 
         }
-       
-       
 
-        
+
+
+
         List<string> convert = new List<string>();
-        public Task RunProces(string processname,string py)
+        public Task RunProces(string processname, string py)
         {
             try
             {
@@ -307,7 +533,7 @@ namespace VideoGui
                 //convert.Add(e.Data);
                 if (e.Data is not null)
                 {
-                   
+
                     if (e.Data.ContainsAll(new string[] { "Encoding", "Phase", "Saving" }))
                     {
                         DoOnStartEvent("");
@@ -370,7 +596,6 @@ namespace VideoGui
                     while (!bridge.Finished)
                     {
                         Thread.Sleep(100);
-                        System.Windows.Forms.Application.DoEvents();
                     }
                     TimeSpan dur = bridge.GetDuration();
                     lblDuration.Content = dur.ToCustomTimeString();
@@ -381,25 +606,23 @@ namespace VideoGui
                     string newpath = Path.Combine(Dir, NewDir).Trim();
                     if (Directory.Exists(newpath))
                     {
-                        List<string> files = Directory.EnumerateFiles(newpath,"*.*",SearchOption.AllDirectories).ToList();
+                        List<string> files = Directory.EnumerateFiles(newpath, "*.*", SearchOption.AllDirectories).ToList();
                         foreach (string _file in files)
                         {
                             while (max > 16)
                             {
                                 Thread.Sleep(50);
-                                System.Windows.Forms.Application.DoEvents();
                             }
                             max++;
                             DeleteFile(_file).ConfigureAwait(false);
                         }
                         max = 0;
                         List<string> dirs = Directory.EnumerateDirectories(newpath).ToList();
-                        foreach(string _dir in dirs)
+                        foreach (string _dir in dirs)
                         {
                             while (max > 16)
                             {
                                 Thread.Sleep(50);
-                                System.Windows.Forms.Application.DoEvents();
                             }
                             max++;
                             DeletePath(_dir).ConfigureAwait(false);
@@ -408,6 +631,8 @@ namespace VideoGui
                     else Directory.CreateDirectory(newpath);
                     DoOnStart = DoOnStartEvent;
                     mondir = newpath;
+                   
+                        
                     CreateShorts(shortsfile, OnShortsCreated).ConfigureAwait(false);
                 }
             }
@@ -422,14 +647,15 @@ namespace VideoGui
             DoOnFinish?.Invoke();
         }
 
-        private void btnCreatShorts_Click(object sender, RoutedEventArgs e)
-        {
-
-        }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             frmShortsCreator.Height += 20;
+        }
+
+        private void btnCreatShorts_Click(object sender, RoutedEventArgs e)
+        {
+
         }
 
         private void btnClose_Click(object sender, RoutedEventArgs e)

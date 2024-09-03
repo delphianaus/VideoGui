@@ -155,14 +155,12 @@ namespace VideoGui
                 {
                     while (MaxFile > 8)
                     {
-                        System.Windows.Forms.Application.DoEvents();
                         Thread.Sleep(25);
                     }
                     ReadFile(file).ConfigureAwait(false);
                 }
                 while (MaxFile > 0)
                 {
-                    System.Windows.Forms.Application.DoEvents();
                     Thread.Sleep(100);
                 }
                 Finished = true;

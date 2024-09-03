@@ -11,7 +11,6 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Windows.Threading;
@@ -20,6 +19,9 @@ using System.Windows.Markup;
 using Microsoft.Win32;
 using VideoGui.Models.delegates;
 using FolderBrowserDialog = FolderBrowserEx.FolderBrowserDialog;
+using static VideoGui.ffmpeg.Probe.FormatModel;
+using System.IO;
+using Path = System.IO.Path;
 
 namespace VideoGui
 {
@@ -92,12 +94,15 @@ namespace VideoGui
                 ChkCut.Click += OnMouseClick;
                 ChkEnableTrim.Click += OnMouseClick;
                 ChkShorts.Click += OnMouseClick;
+                ChkTwitch.Click += OnMouseClick;
+                ChkMuxer.Click += OnMouseClick;
                 chkCreateShorts.Click += OnMouseClick;
                 ChkElapsed.Click += OnMouseClick;
                 txtdestdir.KeyUp += keyupEventHandler;
                 txtDuration.KeyUp += keyupEventHandler;
                 txtsrcdir.KeyUp += keyupEventHandler;
                 txtStart.KeyUp += keyupEventHandler;
+                txtMuxExt.KeyUp += keyupEventHandler;
 
                 DataObject.AddPastingHandler(txtStart, OntextPaste);
                 DataObject.AddPastingHandler(txtDuration, OntextPaste);
@@ -292,14 +297,12 @@ namespace VideoGui
                         {
                             if (time != "")
                             {
-                                System.Windows.Forms.Application.DoEvents();
                                 List<string> timespans = time.Split("-").ToList();
                                 TimeSpan Start = timespans.FirstOrDefault().FromStrToTimeSpan();
                                 TimeSpan End = timespans.LastOrDefault().FromStrToTimeSpan() - Start;
-                                DoAddRecord?.Invoke(true, false, false, false,true, false, false, false,
+                                DoAddRecord?.Invoke(true, false, false, false, true, false, false, false,
                                      true, Start.ToFFmpeg(), End.ToFFmpeg(), txtsrcdir.Text,
                                      txtdestdir.Text + "\\" + txtFilename.Text + $" {RecNum++}");
-                                System.Windows.Forms.Application.DoEvents();
 
                             }
                         }
@@ -411,6 +414,7 @@ namespace VideoGui
             {
                 RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                 string rootfolder = key.GetValueStr("DestinationDir", "c:\\");
+                destinationdir = rootfolder;
                 key?.Close();
                 FolderBrowserDialog ofg = new FolderBrowserDialog();
                 ofg.AllowMultiSelect = false;
@@ -436,38 +440,60 @@ namespace VideoGui
             try
             {
                 RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
-                string rootfolder = key.GetValueStr("SourceDirFiles", "c:\\");
+                string rootfolder = key.GetValueStr("SourceDirFiles", @"c:\");
+                string root = key.GetValueStr("SourceAdobe", @"c:\");
                 key?.Close();
                 //txtdestdir.Text = rootfolder;
-                FolderBrowserDialog ofg = new FolderBrowserDialog();
-                ofg.AllowMultiSelect = false;
-                ofg.InitialFolder = rootfolder;
-                ofg.Title = "Select Source Directory";
-
-                if (ofg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                if (!ChkMuxer.IsChecked.Value)
                 {
-                    txtsrcdir.Text = ofg.SelectedFolder;
-                    List<string> files = txtsrcdir.Text.Split('\\').ToList();
-                    string p = files.LastOrDefault();
-                    string r = ofg.SelectedFolder.Replace(p, "");
-                    if (r.EndsWith("\\"))
-                    {
-                        r = r.Substring(0, r.Length - 1);
-                    }
-                    RegistryKey key2 = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
-                    key2.SetValue("SourceDirFiles", r);
-                    key2?.Close();
+                    FolderBrowserDialog ofg = new FolderBrowserDialog();
+                    ofg.AllowMultiSelect = false;
+                    ofg.InitialFolder = rootfolder;
+                    ofg.Title = "Select Source Directory";
 
-                    string fname = "";
-                    if (Chk720P.IsChecked == true)
+                    if (ofg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                     {
-                        fname = " (Edt720)";
+                        txtsrcdir.Text = ofg.SelectedFolder;
+                        List<string> files = txtsrcdir.Text.Split('\\').ToList();
+                        string p = files.LastOrDefault();
+                        string r = ofg.SelectedFolder.Replace(p, "");
+                        if (r.EndsWith("\\"))
+                        {
+                            r = r.Substring(0, r.Length - 1);
+                        }
+                        RegistryKey key2 = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                        key2.SetValue("SourceDirFiles", r);
+                        key2?.Close();
+
+                        string fname = "";
+                        if (Chk720P.IsChecked == true)
+                        {
+                            fname = " (Edt720)";
+                        }
+                        else if (ChkShorts.IsChecked == true)
+                        {
+                            fname = " (shorts)";
+                        }
+                        txtFilename.Text = files.LastOrDefault() + fname;
                     }
-                    else if (ChkShorts.IsChecked == true)
+                }
+                else
+                {
+                    var fld = new OpenFileDialog();
+                    fld.Filter = "mp4|*.mp4";
+                    fld.DefaultExt = "*.mp4";
+                    fld.DefaultDirectory = root;
+                    fld.Multiselect = false;
+                    var fd = fld.ShowDialog();
+                    if ((fd != null) && (fd.Value == true))
                     {
-                        fname = " (shorts)";
+                        string src = fld.FileName;
+                        string SelectedDir = System.IO.Path.GetDirectoryName(src);
+                        key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                        key.SetValue("SourceAdobe", SelectedDir);
+                        key?.Close();
+                        txtsrcdir.Text = src;
                     }
-                    txtFilename.Text = files.LastOrDefault() + fname;
                 }
             }
             catch (Exception ex)
@@ -530,7 +556,7 @@ namespace VideoGui
                                 bool IsChecked = Chk720P.IsChecked.Value || CompChecked;
                                 SetEditboxes(!IsChecked);
                                 chkCreateShorts.IsChecked = (!IsChecked) ? false : chkCreateShorts.IsChecked;
-                                
+
                                 if (CompChecked)
                                 {
                                     Chk720P.IsChecked = false;
@@ -543,7 +569,7 @@ namespace VideoGui
                             {
                                 bool IsChecked = !ChkShorts.IsChecked.Value || !Chk720P.IsChecked.Value || CompChecked;
                                 SetEditboxes(!IsChecked);
-                                
+
                                 if (CompChecked)
                                 {
                                     Chk720P.IsChecked = false;
@@ -642,7 +668,12 @@ namespace VideoGui
                     txtsrcdir.Text = item2.SourceDirectory;
                     txtdestdir.Text = item2.DestinationDirectory;
                     txtFilename.Text = item2.Filename.Replace(".mp4", "");
-                    if (Chk720P.IsChecked.Value || ChkShorts.IsChecked.Value)
+                    ReleaseDate.Value = item2.TwitchSchedule;
+                    ChkTwitch.IsChecked = item2.IsTwitchStream;
+                    ChkMuxer.IsChecked = item2.IsMuxed;
+                    txtMuxExt.Text = item2.MuxData;
+                    txtMuxExt.Visibility = (ChkMuxer.IsChecked.Value) ? Visibility.Visible : Visibility.Hidden;
+                    if (ChkTwitch.IsChecked.Value || Chk720P.IsChecked.Value || ChkShorts.IsChecked.Value)
                     {
                         SetEditboxes(true);
                     }
@@ -656,6 +687,7 @@ namespace VideoGui
                     RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                     bool IsChkElapsedIsChecked = key.GetValueBool("Elapsed", true);
                     key?.Close();
+
                     TimeSpan st = txtStart.Text.FromStrToTimeSpan();
                     TimeSpan Dur = item2.Duration;
                     if (st != TimeSpan.Zero && Dur != TimeSpan.Zero)
@@ -688,7 +720,12 @@ namespace VideoGui
                     txtsrcdir.Text = item.SourceDirectory;
                     txtdestdir.Text = item.DestinationDirectory;
                     txtFilename.Text = item.Filename.Replace(".mp4", "");
-                    if (Chk720P.IsChecked.Value || ChkShorts.IsChecked.Value)
+                    ReleaseDate.Value = item.TwitchSchedule;
+                    ChkTwitch.IsChecked = item.IsTwitchStream;
+                    ChkMuxer.IsChecked = item.IsMuxed;
+                    txtMuxExt.Text = item.MuxData;
+                    txtMuxExt.Visibility = (ChkMuxer.IsChecked.Value) ? Visibility.Visible : Visibility.Hidden;
+                    if (ChkTwitch.IsChecked.Value || Chk720P.IsChecked.Value || ChkShorts.IsChecked.Value)
                     {
                         SetEditboxes(true);
                     }
@@ -742,6 +779,8 @@ namespace VideoGui
                 string rootfolder = key.GetValueStr("DestinationDir", "c:\\");
                 key?.Close();
                 txtdestdir.Text = rootfolder;
+
+
                 DoSetLists?.Invoke(0);// Set to true for Current
             }
             catch (Exception ex)
@@ -756,6 +795,7 @@ namespace VideoGui
             {
                 RegistryKey key2 = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                 key2.SetValue("Elasped", ChkElapsed.IsChecked.Value);
+                string RTMP = key2.GetValueStr("RTMP", "rtmp://syd03.contribute.live-video.net/app/live_1061414984_Vu5NrETzHYqB1f4bZO12dxaCOfUkxf");
                 key2?.Close();
 
                 string duration = txtDuration.Text;
@@ -771,15 +811,18 @@ namespace VideoGui
                     else duration = txtDuration.Text;
                 }
                 bool IsAdobe = txtdestdir.Text.ToLower() == adobedir.ToLower();
-
-                DoAddRecord?.Invoke(ChkElapsed.IsChecked.Value, Chk720P.IsChecked.Value, 
+                Nullable<DateTime> twitchdata = null;
+                twitchdata = (ReleaseDate.Value.HasValue) ? ReleaseDate.Value.Value : null;
+                DoAddRecord?.Invoke(ChkElapsed.IsChecked.Value, Chk720P.IsChecked.Value,
                     ChkShorts.IsChecked.Value, chkCreateShorts.IsChecked.Value,
                     ChkEnableTrim.IsChecked.Value, ChkCut.IsChecked.Value,
                     chkDeleteMonitored.IsChecked.Value,
                     chkPersistantSource.IsChecked.Value,
                     IsAdobe,
                     txtStart.Text, duration, txtsrcdir.Text,
-                    txtdestdir.Text + "\\" + txtFilename.Text);
+                    txtdestdir.Text + "\\" + txtFilename.Text,
+                    twitchdata, (ChkTwitch.IsChecked.Value ? RTMP : ""), ChkTwitch.IsChecked.Value,
+                    ChkMuxer.IsChecked.Value, txtMuxExt.Text);
 
             }
             catch (Exception ex)
@@ -1001,23 +1044,108 @@ namespace VideoGui
             }
         }
 
+        private void ChkTwitch_LostFocus(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (ChkTwitch.IsChecked.Value)
+                {
+                    ReleaseDate.Value = DateTime.Now;
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+            }
+        }
+
+        private void btnAddMux_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                string root = key.GetValueStr("SourceAdobe", @"c:\");
+                key?.Close();
+
+                if (root != @"c:\")
+                {
+                    string last = root.Split('\\').ToList().LastOrDefault();
+                    string newdir = root.Replace(last, "filtered");
+                    List<string> tobeprocessed = new List<string>();
+                    var processingfiles = Directory.EnumerateFiles(root, "*.mp4", SearchOption.AllDirectories).ToList();
+                    var processedfiles = Directory.EnumerateFiles(newdir, "*.mp4", SearchOption.AllDirectories).ToList();
+                    List<string> pf = processedfiles.Select(file => Path.GetFileNameWithoutExtension(file)).ToList();
+                    foreach (var file in processingfiles.Where(file => !pf.Contains(Path.GetFileNameWithoutExtension(file))))
+                    {
+                        string dir = Path.GetDirectoryName(file);
+                        string fileb = Path.Combine(dir, Path.GetFileNameWithoutExtension(file) + "b.mp3");
+                        string filep = Path.Combine(dir, Path.GetFileNameWithoutExtension(file) + "p.mp3");
+                        string fileo = Path.Combine(dir, Path.GetFileNameWithoutExtension(file) + "o.mp3");
+                        if (File.Exists(fileb) && File.Exists(filep) && File.Exists(fileo))
+                        {
+                            tobeprocessed.Add(file);
+                        }
+                    }
+                    foreach (var tbpfile in tobeprocessed)
+                    {
+                        DoAddRecord?.Invoke(ChkElapsed.IsChecked.Value, Chk720P.IsChecked.Value,
+                            ChkShorts.IsChecked.Value, chkCreateShorts.IsChecked.Value,
+                            ChkEnableTrim.IsChecked.Value, ChkCut.IsChecked.Value,
+                            chkDeleteMonitored.IsChecked.Value, chkPersistantSource.IsChecked.Value,
+                            false, txtStart.Text, "", tbpfile,
+                            txtdestdir.Text + "\\" + txtFilename.Text,
+                            null, "", ChkTwitch.IsChecked.Value,
+                            ChkMuxer.IsChecked.Value, txtMuxExt.Text);
+                    }
+                }
+
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"btnAddMux_Click {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
+            }
+        }
+
         private void OnMouseClick(object sender, RoutedEventArgs e)
         {
             try
             {
                 string CompName;
+                RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                string rootfolder = key.GetValueStr("DestinationDir", "c:\\");
+                destinationdir = rootfolder;
+                key?.Close();
+
                 if (sender is System.Windows.Controls.CheckBox FormCheckBox)
                 {
                     bool CompChecked = false;
                     (CompName, CompChecked) = (FormCheckBox.Name, FormCheckBox.IsChecked.Value);
                     switch (CompName)
                     {
+                        case "ChkMuxer":
+                            {
+                                bool IsCheckedMux = ChkMuxer.IsChecked.Value || CompChecked;
+                                txtMuxExt.Visibility = (IsCheckedMux) ? Visibility.Visible : Visibility.Hidden;
+                                lblmux.Visibility = txtMuxExt.Visibility;
+                                btnAddMux.Visibility = txtMuxExt.Visibility;
+                                chkCreateShorts.IsChecked = false;
+                                Chk720P.IsChecked = false;
+                                ChkEnableTrim.IsChecked = false;
+                                ChkCut.IsChecked = false;
+                                ChkShorts.IsChecked = false;
+                                ChkTwitch.IsChecked = false;
+                                break;
+                            }
                         case "Chk720P":
                             {
                                 bool IsChecked = ChkShorts.IsChecked.Value || CompChecked;
+
                                 SetEditboxes(IsChecked);
                                 if (CompChecked)
                                 {
+                                    txtMuxExt.Visibility = (!CompChecked) ? Visibility.Visible : Visibility.Hidden;
+                                    lblmux.Visibility = txtMuxExt.Visibility;
+
                                     ChkShorts.IsChecked = false;
                                     ChkEnableTrim.IsChecked = false;
                                     ChkCut.IsChecked = false;
@@ -1032,9 +1160,13 @@ namespace VideoGui
                                 SetEditboxes(IsChecked);
                                 if (CompChecked)
                                 {
+                                    txtMuxExt.Visibility = (!CompChecked) ? Visibility.Visible : Visibility.Hidden;
+                                    lblmux.Visibility = txtMuxExt.Visibility;
+
                                     Chk720P.IsChecked = false;
                                     ChkEnableTrim.IsChecked = false;
                                     ChkCut.IsChecked = false;
+                                    chkCreateShorts.IsChecked = true;
                                     txtdestdir.Text = destinationdir;
                                 }
                                 break;
@@ -1042,13 +1174,37 @@ namespace VideoGui
                         case "ChkCreateShorts":
                             {
                                 bool IsChecked = ChkShorts.IsChecked.Value && CompChecked;
+                                txtMuxExt.Visibility = (!CompChecked) ? Visibility.Visible : Visibility.Hidden;
+                                lblmux.Visibility = txtMuxExt.Visibility;
+
                                 SetEditboxes(IsChecked);
                                 chkCreateShorts.IsChecked = (!IsChecked) ? false : chkCreateShorts.IsChecked;
                                 break;
                             }
+
+                        case "ChkTwitch":
+                            {
+                                if (CompChecked)
+                                {
+                                    txtMuxExt.Visibility = (!CompChecked) ? Visibility.Visible : Visibility.Hidden;
+                                    lblmux.Visibility = txtMuxExt.Visibility;
+                                    chkCreateShorts.IsChecked = false;
+                                    Chk720P.IsChecked = false;
+                                    ChkEnableTrim.IsChecked = false;
+                                    ChkCut.IsChecked = false;
+                                }
+
+                                ReleaseDate.Visibility = CompChecked ? Visibility.Visible : Visibility.Hidden;
+                                SetEditboxes(!CompChecked);
+                                break;
+                            }
+
                         case "ChkEnableTrim":
                             {
                                 bool IsChecked = !ChkShorts.IsChecked.Value || !Chk720P.IsChecked.Value || CompChecked;
+                                txtMuxExt.Visibility = (!CompChecked) ? Visibility.Visible : Visibility.Hidden;
+                                lblmux.Visibility = txtMuxExt.Visibility;
+
                                 SetEditboxes(!IsChecked);
                                 if (CompChecked)
                                 {
@@ -1087,6 +1243,9 @@ namespace VideoGui
                                 SetEditboxes(!IsChecked);
                                 if (CompChecked)
                                 {
+                                    txtMuxExt.Visibility = (!CompChecked) ? Visibility.Visible : Visibility.Hidden;
+                                    lblmux.Visibility = txtMuxExt.Visibility;
+
                                     Chk720P.IsChecked = false;
                                     ChkShorts.IsChecked = false;
                                     ChkEnableTrim.IsChecked = false;
@@ -1141,6 +1300,11 @@ namespace VideoGui
                                     ChkElapsed.Focus();
                                     break;
                                 }
+                            case "txtMuxExt":
+                                {
+                                    txtMuxExt.Focus();
+                                    break;
+                                }
                         }
                     }
                 }
@@ -1169,6 +1333,8 @@ namespace VideoGui
                 txtsrcdir.Clear();
                 txtdestdir.Clear();
                 txtFilename.Clear();
+                ChkMuxer.IsChecked = false;
+                txtMuxExt.Text = "";
                 SetEditboxes(false);
             }
             catch (Exception ex)

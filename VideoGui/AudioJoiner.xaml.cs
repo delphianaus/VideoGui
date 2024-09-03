@@ -133,24 +133,22 @@ namespace VideoGui
         {
             try
             {
-                StackHeader0.Width = frmAudioJoiner.Width - 8;
-                
-                StackHeader1.Width = frmAudioJoiner.Width - 8;
-                StackHeader2.Width = frmAudioJoiner.Width - 24;
-                StackHeader4.Width = frmAudioJoiner.Width - 6;
-                StackHeader5.Width = stackheader4.Width;
-                Stackheader6.Height = StackHeader0.Height - 30;
+               
                 brdControls.Width = frmAudioJoiner.Width - 8;
+                brd1.Width = brdControls.Width;
+                brdFileInfo.Width = brdControls.Width;
                 cnvcontrols.Width = brdControls.Width - 2;
-                lstItems.Width = StackHeader5.Width;
-                lstSchedules.Width = StackHeader2.Width - 2;
+
+                lstItems.Width = brd1.Width;
+                lstSchedules.Width = lstItems.Width;
+
                 lstSchedules.Height = frmAudioJoiner.Height - (367 - 177);
                 Canvas.SetLeft(btnClose, frmAudioJoiner.Width - 124);
-                stkmain.Height = frmAudioJoiner.Height - 16;
-                brd1.Height = StackHeader0.Height - 4;
+                brd1.Height = frmAudioJoiner.Height - 150;
                 txtsrcdir.Width = frmAudioJoiner.Width - (724 - 542);
                 Canvas.SetLeft(btnSelectSourceDir, frmAudioJoiner.Width - 53);
-                lstItems.Width = StackHeader2.Width + 200;
+                
+               
             }
             catch (Exception ex)
             {
@@ -202,7 +200,6 @@ namespace VideoGui
                     {
                         while (MaxFile > 16)
                         {
-                            System.Windows.Forms.Application.DoEvents();
                             Thread.Sleep(25);
                         }
                         ReadFile(file).ConfigureAwait(false);
@@ -210,7 +207,6 @@ namespace VideoGui
                 }
                 while (MaxFile > 0)
                 {
-                    System.Windows.Forms.Application.DoEvents();
                     Thread.Sleep(100);
                 }
                 btnRename.IsEnabled = true;
@@ -288,9 +284,8 @@ namespace VideoGui
                 MaxFile = 0;
                 foreach (var f in MediaInfoTimes)
                 {
-                    while (MaxFile >= 5)
+                    while (MaxFile >= 10)
                     {
-                        System.Windows.Forms.Application.DoEvents();
                         Thread.Sleep(250);
                     }
                     MaxFile++;
@@ -374,7 +369,6 @@ namespace VideoGui
                         this.Dispatcher.Invoke(() =>
                         {
                             lstSchedules.Items.Refresh();
-                            System.Windows.Forms.Application.DoEvents();
                         });
                         break;
                     }
@@ -394,7 +388,6 @@ namespace VideoGui
                         this.Dispatcher.Invoke(() =>
                         {
                             lstSchedules.Items.Refresh();
-                            System.Windows.Forms.Application.DoEvents();
                         });
                         break;
                     }
@@ -422,7 +415,6 @@ namespace VideoGui
                         this.Dispatcher.Invoke(() =>
                         {
                             lstSchedules.Items.Refresh();
-                            System.Windows.Forms.Application.DoEvents();
                         });
 
                         break;
@@ -446,8 +438,6 @@ namespace VideoGui
                             this.Dispatcher.Invoke(() =>
                             {
                                 lstSchedules.Items.Refresh();
-                                System.Windows.Forms.Application.DoEvents();
-                             
                             });
                             break;
                         }
