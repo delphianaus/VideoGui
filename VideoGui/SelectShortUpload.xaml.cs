@@ -1,4 +1,5 @@
-﻿using FolderBrowserEx;
+﻿using FirebirdSql.Data.FirebirdClient;
+using FolderBrowserEx;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
@@ -53,15 +54,62 @@ namespace VideoGui
                 if (ofg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                 {
                     txtsrcdir.Text = ofg.SelectedFolder;
+                    var p = new CustomParams_GetConnectionString();
+                    dbInit?.Invoke(this, p);
+                    int res = -1;
+                    if (p.ConnectionString is not null && p.ConnectionString.Length > 0)
+                    {
+                        string connectionString = p.ConnectionString;
+                        using (var connection = new FbConnection(connectionString))
+                        {
+                            connection.Open();
+                            string sql = "select * from SHORTSDIRECTORY WHERE DIRECTORYNAME = @P0";
+                            using (var command = new FbCommand(sql.ToUpper(), connection))
+                            {
+                                command.Parameters.Clear();
+                                command.Parameters.AddWithValue("@p0", ofg.SelectedFolder.ToUpper());
+                                object result = command.ExecuteScalar();
+                                if (result is Int16 idxx)
+                                {
+                                    res = idxx;
+                                }
+                            }
+                            if (res == -1)
+                            {
+                                sql = "INSERT INTO SHORTSDIRECTORY(DIRECTORYNAME) VALUES (@P0) RETURNING ID";
+                                using (var command = new FbCommand(sql.ToUpper(), connection))
+                                {
+                                    command.Parameters.Clear();
+                                    command.Parameters.AddWithValue("@p0", ofg.SelectedFolder.ToUpper());
+                                    object result = command.ExecuteScalar();
+                                    if (result is Int16 idxx)
+                                    {
+                                        res = idxx;
+                                    }
+                                }
+                            }
+                            connection.Close();
+                        }
+                    }
+
                     RegistryKey key2 = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                     key2.SetValue("UploadPath", txtsrcdir.Text);
+                    if (res != -1)
+                    {
+                        key2.SetValue("CurrentDirId", res);
+                    }
                     if (txtMaxUpload.Text != "")
                     {
                         key2.SetValue("UploadNumber", txtMaxUpload.Text);
                     }
                     key2?.Close();
-                    int cnt = Directory.EnumerateFiles(ofg.SelectedFolder, "*.mp4", SearchOption.AllDirectories).ToList().Count();
-                    lblShortNo.Content = cnt.ToString();
+                    List<string> files = Directory.EnumerateFiles(ofg.SelectedFolder, "*.mp4", SearchOption.AllDirectories).ToList();
+                    foreach (var filename in files.Where(filename => !filename.Contains("_") && res != -1))
+                    {
+                        string newfile = System.IO.Path.GetFileNameWithoutExtension(filename) + $"_{res}{Path.GetExtension(filename)}";
+                        File.Move(filename, newfile);
+                    }
+                    lblShortNo.Content = files.Count.ToString();
                 }
             }
             catch (Exception ex)

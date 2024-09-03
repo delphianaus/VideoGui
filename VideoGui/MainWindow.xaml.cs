@@ -343,7 +343,10 @@ namespace VideoGui
         {
             try
             {
-        
+                if (tld is CustomParams_GetConnectionString CGCS)
+                {
+                    CGCS.ConnectionString = GetConectionString();
+                }
             }
             catch (Exception ex)
             {

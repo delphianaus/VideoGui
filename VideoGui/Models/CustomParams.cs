@@ -19,6 +19,11 @@ namespace VideoGui.Models
         }
 
     }
+
+    public class CustomParams_GetConnectionString()
+    {
+        public string ConnectionString = "";
+    }
     public class CustomParmam_NewVideoInfo
     {
         public string id = "";
