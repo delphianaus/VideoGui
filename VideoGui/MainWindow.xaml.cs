@@ -330,6 +330,12 @@ namespace VideoGui
                             scraperModule_Handler(ThisForm, tld);
                             break;
                         }
+                    case SelectShortUpload selectShortUpload:
+                        {
+                            selectShortUpload_Handler(ThisForm, tld);
+                            break;
+                        }
+
                 }
             }
             catch (Exception ex)
@@ -337,6 +343,14 @@ namespace VideoGui
                 ex.LogWrite($"ModuleCallback {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
 
+        }
+
+        private void selectShortUpload_Handler(object thisForm, object tld)
+        {
+            if (tld is CustomParams_GetConnectionString CGCS)
+            {
+                CGCS.ConnectionString = GetConectionString();
+            }
         }
 
         private void scraperModule_Handler(object thisForm, object tld)
@@ -864,6 +878,10 @@ namespace VideoGui
                 sqlstring = $"create table MonitoredDeletion({Id},DestinationFile varchar(500))";
                 connectionString.CreateTableIfNotExists(sqlstring);
 
+                sqlstring = $"create table UPLOADSRECORD({Id},UPLOADFILE varchar(256), UPLOAD_DATE DATE, UPLOAD_TIME TIME)";
+                connectionString.CreateTableIfNotExists(sqlstring);
+
+
                 sqlstring = $"create table PLANINGQUES({Id},SOURCE varchar(500),SourceDir varchar(500))";
                 connectionString.CreateTableIfNotExists(sqlstring);
 
@@ -994,6 +1012,8 @@ namespace VideoGui
                 connectionString.ExecuteReader("SELECT * FROM AUTOINSERTHISTORY Order By DELETIONDATE desc", OnReadAutoInsertHistory);
                 connectionString.ExecuteReader("SELECT * FROM PLANINGQUES", OnReadPlanningQues);
                 connectionString.ExecuteReader("SELECT * FROM PLANINGCUTS", OnReadPlanningCuts);
+                var sql = "DELETE FROM UPLOADSRECORD WHERE UPLOAD_DATE <> CAST(GETDATE() AS DATE);";
+                connectionString.ExecuteNonQuery(sql);
             }
             catch (Exception ex)
             {
