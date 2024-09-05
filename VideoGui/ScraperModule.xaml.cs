@@ -666,21 +666,20 @@ namespace VideoGui
                         int finishedz = 0;
                         for (int i = 0; i < Nodes1.Count; i++)
                         {
-                            var n = Nodes1[i];
                             finishedz++;
-                            if (n.InnerText.ToLower().Contains("limit"))
+                            if (Nodes1[1].InnerText.ToLower().Contains("limit"))
                             {
                                 Exceeded = true;
                             }
                             else
                             {
-                                if (Nodes1[i].InnerText.Contains("100% uploaded"))
+                                if (Nodes1[i].InnerText.ToLower().Contains("100% uploaded"))
                                 {
-                                    int start = n.InnerText.IndexOf("\n") + 1;
-                                    int end = n.InnerText.IndexOf("\n", start);
-                                    string filename1 = n.InnerText.Substring(start, end - start).Trim();
-                                    var filenameMatch4 = Regex.Match(Nodes1[i].InnerText, @"\n([^ ]+)\n");
-                                    if (filename1 != "")
+                                    int start = Nodes1[1].InnerText.IndexOf("\n") + 1;
+                                    int end = Nodes1[1].InnerText.IndexOf("\n", start);
+                                    string filename1 = Nodes1[1].InnerText.Substring(start, end - start).Trim();
+
+                                    if (filename1 != "" && ScheduledOk.IndexOf(filename1) == -1)
                                     {
                                         string[] files = Directory.GetFiles("Z:\\", filename1, SearchOption.AllDirectories);
                                         foreach (string file in files)
@@ -688,16 +687,13 @@ namespace VideoGui
                                             File.Delete(file);
                                             lstMain.Items.Insert(0, $"{file} Deleted");
                                             RegistryKey key = "SOFTWARE\\Scraper".OpenSubKey(Registry.CurrentUser);
-                                            if (ScheduledOk.IndexOf(file) == -1)
-                                            {
-                                                string DateTimeStr = DateTime.Now.ToString("dd-MM-yyyy hh:mm:ss");
-                                                string[] existingStrings = (string[])key.GetValue("ScheduledItems", new string[0]);
-                                                string[] newStrings = { $"{DateTimeStr}" };
-                                                string[] allStrings = existingStrings.Union(newStrings).ToArray();
-                                                key.SetValue("ScheduledItems", allStrings, RegistryValueKind.MultiString);
-                                                key.Close();
-                                                ScheduledOk.Add(file);
-                                            }
+                                            string DateTimeStr = DateTime.Now.ToString("dd-MM-yyyy hh:mm:ss");
+                                            string[] existingStrings = (string[])key.GetValue("ScheduledItems", new string[0]);
+                                            string[] newStrings = { $"{DateTimeStr}" };
+                                            string[] allStrings = existingStrings.Union(newStrings).ToArray();
+                                            key.SetValue("ScheduledItems", allStrings, RegistryValueKind.MultiString);
+                                            key.Close();
+                                            ScheduledOk.Add(filename1);
                                         }
                                     }
                                 }
