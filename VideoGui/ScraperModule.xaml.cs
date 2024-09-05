@@ -644,7 +644,7 @@ namespace VideoGui
                                                 Thread.Sleep(100);
                                             }
                                             html = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
-                                            if (Regex.IsMatch(html.ToLower(), @"save and close|title-row style-scope ytcp-uploads-dialog|Daily Limit"))
+                                            if (Regex.IsMatch(html.ToLower(), @"saving|save and close|title-row style-scope ytcp-uploads-dialog|daily limit"))
                                             {
                                                 Thread.Sleep(300);
                                                 await ActiveWebView[1].ExecuteScriptAsync(Script_Close);
