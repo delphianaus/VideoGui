@@ -62,6 +62,7 @@ using static Microsoft.WindowsAPICodePack.Shell.PropertySystem.SystemProperties.
 using Task = System.Threading.Tasks.Task;
 using Newtonsoft.Json.Linq;
 using System.Globalization;
+using static System.Windows.Forms.AxHost;
 
 namespace VideoGui
 {
@@ -581,7 +582,7 @@ namespace VideoGui
                                 }
                                 else
                                 {
-                                    lstMain.Items.Insert(0, "loop exited");
+                                    // lstMain.Items.Insert(0, "loop exited");
                                     html = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
                                     Nodes = GetNodes(html, Span_Name);
                                 }
@@ -589,84 +590,58 @@ namespace VideoGui
                             int CompleteCnt = 0;
                             if (Nodes.Count > 0)
                             {
-                                for (int i = Nodes.Count - 1; i >= 0; i--)
+                                for (int i = 0; i < Nodes.Count; i++)
                                 {
                                     if (ExitDialog)
                                     {
-                                        break;
+                                        return;
                                     }
                                     if (Regex.IsMatch(Nodes[i].InnerText, @"Complete|100% uploaded"))
                                     {
                                         CompleteCnt++;
-                                        continue;
                                     }
                                     if (Regex.IsMatch(Nodes[i].InnerText, @"Waiting"))
                                     {
                                         var filenameMatch = Regex.Match(Nodes[i].InnerText, @"\n([^ ]+)\n");
-                                        if (filenameMatch.Success)
+                                        if (filenameMatch.Success && !clicks.Any(clicks => clicks.FileName == filenameMatch.Groups[1].Value))
                                         {
+                                            clicks.Add(new Uploads(filenameMatch.Groups[1].Value, "Waiting"));
                                             var filename = filenameMatch.Groups[1].Value.Trim();
-                                            if (clicks.Any(x => x.FileName == filename))
+                                            var buttonLabel = $"Edit video {filename}";
+                                            lstMain.Items.Insert(0, filename + " = " + buttonLabel);
+                                            await ActiveWebView[1].ExecuteScriptAsync($"document.querySelector('button[aria-label=\"{buttonLabel}\"]').click()");
+                                            var cts = new CancellationTokenSource();
+                                            while (!cts.IsCancellationRequested)
                                             {
-                                                clicks.Add(new Uploads(filename, "waiting"));
-                                                var buttonLabel = $"Edit video {filename}";
-                                                lstMain.Items.Insert(0, filename + " = " + buttonLabel);
-                                                await ActiveWebView[1].ExecuteScriptAsync($"document.querySelector('button[aria-label=\"{buttonLabel}\"]').click()");
-                                                var cts = new CancellationTokenSource();
-                                                while (!cts.IsCancellationRequested)
+                                                if (ExitDialog)
                                                 {
-                                                    if (ExitDialog)
+                                                    cts.Cancel();
+                                                    return;
+                                                }
+                                                var htmlcheck = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
+                                                if (htmlcheck is not null)
+                                                {
+                                                    if (Regex.IsMatch(htmlcheck, @"Uploads complete|Daily limit"))
                                                     {
-                                                        cts.Cancel();
                                                         break;
                                                     }
-                                                    var htmlcheck = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
-                                                    if (htmlcheck is not null)
+                                                    if (!Regex.IsMatch(htmlcheck, @"title-row style-scope ytcp-uploads-dialog"))
                                                     {
-                                                        List<HtmlNode> Nodes3 = GetNodes(htmlcheck, Span_Name);
-                                                        foreach (HtmlNode node in Nodes3)
+                                                        //update clicks  upload record
+                                                        foreach (var click in clicks.Where(clicks => clicks.FileName == filename))
                                                         {
-                                                            var filenameMatch2 = Regex.Match(node.InnerText, @"\n([^ ]+)\n");
-                                                            if (filenameMatch2.Success)
-                                                            {
-                                                                var filename2 = filenameMatch2.Groups[1].Value.Trim();
-                                                                if (string.Equals(filename2, filename, StringComparison.OrdinalIgnoreCase))
-                                                                {
-                                                                    int o = 0;
-                                                                    System.Collections.IList listg = filenameMatch2.Groups;
-                                                                    for (int i1 = 1; i1 < filenameMatch2.Groups.Count; i1++)
-                                                                    {
-                                                                        string fn = filenameMatch2.Groups[i1].Value.Trim().ToLower();
-                                                                        if (!fn.Contains("Waiting") && !fn.Contains("daily"))
-                                                                        {
-                                                                            var upload = clicks.FirstOrDefault(s => string.Equals(s.FileName, filename, StringComparison.OrdinalIgnoreCase));
-                                                                            if (upload != null)
-                                                                            {
-                                                                                upload.Status = fn;
-                                                                                break;
-                                                                            }
-                                                                        }
-                                                                    }
-                                                                    break;
-                                                                }
-                                                            }
-                                                        }
-
-                                                        int cnt = clicks.Count(upload => upload.IsCounted()) + ts;
-                                                        lblInsertId.Content = $"In Progress Total : {cnt}";
-                                                        if (Regex.IsMatch(htmlcheck, @"uploading|Uploads complete|Daily limit"))
-                                                        {
+                                                            click.Status = "Uploading";
                                                             break;
                                                         }
-                                                        if (!Regex.IsMatch(htmlcheck, @"title-row style-scope ytcp-uploads-dialog"))
+                                                        cts.CancelAfter(TimeSpan.FromMilliseconds(500));
+                                                        while (!cts.IsCancellationRequested)
                                                         {
-                                                            cts.CancelAfter(TimeSpan.FromMilliseconds(500));
                                                             Thread.Sleep(50);
-                                                            break;
                                                         }
+                                                        break;
                                                     }
-                                                    Thread.Sleep(100);
                                                 }
+                                                Thread.Sleep(100);
                                             }
                                             html = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
                                             if (Regex.IsMatch(html.ToLower(), @"save and close|title-row style-scope ytcp-uploads-dialog|Daily Limit"))
@@ -675,7 +650,6 @@ namespace VideoGui
                                                 await ActiveWebView[1].ExecuteScriptAsync(Script_Close);
                                             }
                                             found = true;
-                                            break;
                                         }
                                     }
                                 }
@@ -705,29 +679,35 @@ namespace VideoGui
                                     int start = n.InnerText.IndexOf("\n") + 1;
                                     int end = n.InnerText.IndexOf("\n", start);
                                     string filename1 = n.InnerText.Substring(start, end - start).Trim();
-                                    string[] files = Directory.GetFiles("Z:\\", filename1, SearchOption.AllDirectories);
-                                    foreach (string file in files)
+                                    var filenameMatch4 = Regex.Match(Nodes1[i].InnerText, @"\n([^ ]+)\n");
+                                    if (filename1 != "")
                                     {
-                                        File.Delete(file);
-                                        RegistryKey key = "SOFTWARE\\Scraper".OpenSubKey(Registry.CurrentUser);
-                                        if (ScheduledOk.IndexOf(file) == -1)
+                                        string[] files = Directory.GetFiles("Z:\\", filename1, SearchOption.AllDirectories);
+                                        foreach (string file in files)
                                         {
-                                            string DateTimeStr = DateTime.Now.ToString("dd-MM-yyyy hh:mm:ss");
-                                            string[] existingStrings = (string[])key.GetValue("ScheduledItems", new string[0]);
-                                            string[] newStrings = { $"{DateTimeStr}" };
-                                            string[] allStrings = existingStrings.Union(newStrings).ToArray();
-                                            key.SetValue("ScheduledItems", allStrings, RegistryValueKind.MultiString);
-                                            key.Close();
-                                            ScheduledOk.Add(file);
+                                            File.Delete(file);
+                                            lstMain.Items.Insert(0, $"{file} Deleted");
+                                            RegistryKey key = "SOFTWARE\\Scraper".OpenSubKey(Registry.CurrentUser);
+                                            if (ScheduledOk.IndexOf(file) == -1)
+                                            {
+                                                string DateTimeStr = DateTime.Now.ToString("dd-MM-yyyy hh:mm:ss");
+                                                string[] existingStrings = (string[])key.GetValue("ScheduledItems", new string[0]);
+                                                string[] newStrings = { $"{DateTimeStr}" };
+                                                string[] allStrings = existingStrings.Union(newStrings).ToArray();
+                                                key.SetValue("ScheduledItems", allStrings, RegistryValueKind.MultiString);
+                                                key.Close();
+                                                ScheduledOk.Add(file);
+                                            }
                                         }
                                     }
                                 }
                             }
-                            if (finishedz == Nodes1.Count)
-                            {
-                                Close();
-                            }
                         }
+                        if (finishedz == Nodes1.Count)
+                        {
+                            Close();
+                        }
+
                     }
                     /*if (!Exceeded && finished && MaxUploads > 0)
                     {

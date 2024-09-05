@@ -18,7 +18,9 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using VideoGui.Models;
 using VideoGui.Models.delegates;
+using Path = System.IO.Path;
 
 namespace VideoGui
 {
