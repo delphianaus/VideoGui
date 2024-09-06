@@ -10,6 +10,7 @@ using FirebirdSql.Data.FirebirdClient;
 
 namespace VideoGui.Models.delegates
 {
+    public enum dataUpdatType { Add, Remove, Edit, Change, Delete, Insert, Get };
     public enum FilterTypes { DestinationDirectory, DestinationFileName, SourceDirectory};
     public enum FilterClass { Current, Historic};
     public enum SortOrder { ASCENDING, DESCENDING };
