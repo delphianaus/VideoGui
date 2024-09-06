@@ -118,7 +118,7 @@ namespace VideoGui {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/VideoGui;V1.0.0.306;component/finalmatchwindow.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/VideoGui;V1.0.0.308;component/finalmatchwindow.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\..\FinalMatchWindow.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);

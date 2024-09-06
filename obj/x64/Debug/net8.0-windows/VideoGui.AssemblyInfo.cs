@@ -13,11 +13,11 @@ using System.Reflection;
 
 [assembly: System.Reflection.AssemblyCompanyAttribute("VideoGui")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
-[assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.306")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+54d1bec2ee4b06fa6269d7009ba777921f401378")]
+[assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.308")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9832da913c2c9378c83f3551a0e1aa341b425d35")]
 [assembly: System.Reflection.AssemblyProductAttribute("VideoGui")]
 [assembly: System.Reflection.AssemblyTitleAttribute("VideoGui")]
-[assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.306")]
+[assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.308")]
 [assembly: System.Runtime.Versioning.TargetPlatformAttribute("Windows7.0")]
 [assembly: System.Runtime.Versioning.SupportedOSPlatformAttribute("Windows7.0")]
 

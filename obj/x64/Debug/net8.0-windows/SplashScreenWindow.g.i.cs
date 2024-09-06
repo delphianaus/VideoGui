@@ -70,7 +70,7 @@ namespace VideoGui {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/VideoGui;V1.0.0.306;component/splashscreenwindow.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/VideoGui;V1.0.0.308;component/splashscreenwindow.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\..\SplashScreenWindow.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);
