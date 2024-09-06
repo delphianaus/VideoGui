@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "VideoGui": {
-      "commandName": "Project",
-      "nativeDebugging": true
-    }
-  }
-}
