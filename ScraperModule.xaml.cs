@@ -63,6 +63,7 @@ using Task = System.Threading.Tasks.Task;
 using Newtonsoft.Json.Linq;
 using System.Globalization;
 using static System.Windows.Forms.AxHost;
+using FirebirdSql.Data.FirebirdClient;
 
 namespace VideoGui
 {
@@ -515,22 +516,31 @@ namespace VideoGui
                     int max = 0;
 
                     SendKeysString = "";
-                    RegistryKey key = "SOFTWARE\\Scraper".OpenSubKey(Registry.CurrentUser);
-                    if (key.GetValueNames().ToList().Contains("ScheduledItems"))
+                    var p1 = new CustomParams_GetConnectionString();
+                    dbInitializer?.Invoke(this, p1);
+                    string connectionStr = p1.ConnectionString;
+                    using (var connection = new FbConnection(connectionStr))
                     {
-                        List<string> ScheduledItems = key?.GetValueStrs("ScheduledItems").ToList();
-                        key?.Close();
-                        List<DateTime> Dates = ScheduledItems
-                            .Select(scheduledItem => DateTime.TryParseExact(scheduledItem, "dd-MM-yyyy hh:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dateValue) ? dateValue : (DateTime?)null)
-                            .Where(dateValue => dateValue.HasValue).Select(dateValue => dateValue.Value).ToList();
-
-                        TotalScheduled = Dates.Count(date => date.Date == DateTime.Now.Date);
+                        connection.Open();
+                        string sql = "select * from UPLOADSRECORD WHERE UPLOAD_DATE = @P0";
+                        using (var command = new FbCommand(sql.ToUpper(), connection))
+                        {
+                            command.Parameters.Clear();
+                            command.Parameters.AddWithValue("@p0", DateTime.Now.Date);
+                            using (var reader = command.ExecuteReader())
+                            {
+                                while (reader.Read())
+                                {
+                                    TotalScheduled++;
+                                }
+                            }
+                        }
+                        connection.Close();
                     }
                     ts = TotalScheduled;
                     foreach (string f in Files.Where(f => File.Exists(f)).Take(SlotsPerUpload))
                     {
                         max++;
-
                         //if (((TotalScheduled+max) > MaxUploads)) break;
                         lblInsert.Content = $"Scheduling {TotalScheduled + max} of {MaxUploads}";
                         SendKeysString += "\"" + @"Z:\" + new DirectoryInfo(Path.GetDirectoryName(f)).Name + "\\" + Path.GetFileName(f) + "\" ";
@@ -548,6 +558,11 @@ namespace VideoGui
                 {
                     HasExited = false;
                     ExitDialog = false;
+                    string connectStr = "";
+                    var p = new CustomParams_GetConnectionString();
+                    dbInitializer?.Invoke(this, p);
+                    connectStr = p.ConnectionString;
+
                     List<Uploads> clicks = new List<Uploads>();
                     List<bool> filesDone = Enumerable.Repeat(false, Files.Count).ToList();
                     bool Exit = false, finished = false;
@@ -678,7 +693,6 @@ namespace VideoGui
                                     int start = Nodes1[1].InnerText.IndexOf("\n") + 1;
                                     int end = Nodes1[1].InnerText.IndexOf("\n", start);
                                     string filename1 = Nodes1[1].InnerText.Substring(start, end - start).Trim();
-
                                     if (filename1 != "" && ScheduledOk.IndexOf(filename1) == -1)
                                     {
                                         string[] files = Directory.GetFiles("Z:\\", filename1, SearchOption.AllDirectories);
@@ -686,13 +700,37 @@ namespace VideoGui
                                         {
                                             File.Delete(file);
                                             lstMain.Items.Insert(0, $"{file} Deleted");
-                                            RegistryKey key = "SOFTWARE\\Scraper".OpenSubKey(Registry.CurrentUser);
-                                            string DateTimeStr = DateTime.Now.ToString("dd-MM-yyyy hh:mm:ss");
-                                            string[] existingStrings = (string[])key.GetValue("ScheduledItems", new string[0]);
-                                            string[] newStrings = { $"{DateTimeStr}" };
-                                            string[] allStrings = existingStrings.Union(newStrings).ToArray();
-                                            key.SetValue("ScheduledItems", allStrings, RegistryValueKind.MultiString);
-                                            key.Close();
+                                            int res = -1;
+                                            using (var connection = new FbConnection(connectStr))
+                                            {
+                                                connection.Open();
+                                                string sql = "select * from UPLOADSRECORD WHERE UPLOADFILE = @P0";
+                                                using (var command = new FbCommand(sql.ToUpper(), connection))
+                                                {
+                                                    command.Parameters.Clear();
+                                                    command.Parameters.AddWithValue("@p0", file);
+                                                    object result = command.ExecuteScalar();
+                                                    if (result is Int16 idxx)
+                                                    {
+                                                        res = idxx;
+                                                    }
+                                                }
+                                                if (res == -1)
+                                                {
+                                                    sql = "INSERT INTO UPLOADSRECORD(UPLOADFILE) VALUES (@P0) RETURNING ID";
+                                                    using (var command = new FbCommand(sql.ToUpper(), connection))
+                                                    {
+                                                        command.Parameters.Clear();
+                                                        command.Parameters.AddWithValue("@p0", file);
+                                                        object result = command.ExecuteScalar();
+                                                        if (result is Int16 idxx)
+                                                        {
+                                                            res = idxx;
+                                                        }
+                                                    }
+                                                }
+                                                connection.Close();
+                                            }
                                             ScheduledOk.Add(filename1);
                                         }
                                     }
