@@ -126,7 +126,7 @@ namespace VideoGui {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/VideoGui;V1.0.0.306;component/selectshortupload.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/VideoGui;V1.0.0.308;component/selectshortupload.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\..\SelectShortUpload.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);
