@@ -1,4 +1,4 @@
-﻿ing FirebirdSql.Data.FirebirdClient;
+﻿using FirebirdSql.Data.FirebirdClient;
 using FolderBrowserEx;
 using Microsoft.Win32;
 using System;
@@ -82,10 +82,7 @@ namespace VideoGui
                                     command.Parameters.Clear();
                                     command.Parameters.AddWithValue("@p0", ThisDir.ToUpper());
                                     object result = command.ExecuteScalar();
-                                    if (result is int idxx)
-                                    {
-                                        res = idxx;
-                                    }
+                                    res = result.ToInt(-1);
                                 }
                             }
                             connection.Close();
