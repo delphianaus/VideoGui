@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "l334E/KmN7g=",
+  "dgSpecHash": "scG1nxC6VQk=",
   "success": true,
-  "projectFilePath": "C:\\VideoGui\\src\\VideoGui\\VideoGui.csproj",
+  "projectFilePath": "C:\\VideoGui\\src\\Videogui\\VideoGui.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\justi\\.nuget\\packages\\asyncawaitbestpractices\\8.0.0\\asyncawaitbestpractices.8.0.0.nupkg.sha512",
     "C:\\Users\\justi\\.nuget\\packages\\cliwrap\\3.6.6\\cliwrap.3.6.6.nupkg.sha512",

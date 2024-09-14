@@ -1,0 +1,204 @@
+
+12:50:53 PM
+Error :unsuccessful metadata update
+ALTER TABLE AUTOINSERT failed
+violation of PRIMARY or UNIQUE KEY constraint "RDB$INDEX_15" on table "RDB$RELATION_FIELDS"
+Problematic key value is ("RDB$FIELD_NAME" = 'ISMUXED', "RDB$RELATION_NAME" = 'AUTOINSERT')
+-------------------------------
+
+12:50:53 PM
+Error :unsuccessful metadata update
+ALTER TABLE AUTOINSERT failed
+violation of PRIMARY or UNIQUE KEY constraint "RDB$INDEX_15" on table "RDB$RELATION_FIELDS"
+Problematic key value is ("RDB$FIELD_NAME" = 'MUXDATA', "RDB$RELATION_NAME" = 'AUTOINSERT')
+-------------------------------
+
+12:50:54 PM
+Error :unsuccessful metadata update
+ALTER TABLE AUTOINSERTHISTORY failed
+violation of PRIMARY or UNIQUE KEY constraint "RDB$INDEX_15" on table "RDB$RELATION_FIELDS"
+Problematic key value is ("RDB$FIELD_NAME" = 'ISMUXED', "RDB$RELATION_NAME" = 'AUTOINSERTHISTORY')
+-------------------------------
+
+12:50:54 PM
+Error :unsuccessful metadata update
+ALTER TABLE AUTOINSERTHISTORY failed
+violation of PRIMARY or UNIQUE KEY constraint "RDB$INDEX_15" on table "RDB$RELATION_FIELDS"
+Problematic key value is ("RDB$FIELD_NAME" = 'MUXDATA', "RDB$RELATION_NAME" = 'AUTOINSERTHISTORY')
+-------------------------------
+
+12:50:55 PM
+Error :Dynamic SQL Error
+SQL error code = -104
+Token unknown - line 1, column 105
+BIGINT
+-------------------------------
+
+12:50:55 PM
+Error :The parameter is incorrect. : 'D:\shorts\VLINE Southern Cross To Ballarat 180824 (shorts).mp4'
+-------------------------------
+
+12:50:55 PM
+Error :Dynamic SQL Error
+SQL error code = -204
+Table unknown
+PLANINGCUTS
+At line 1, column 15
+-------------------------------
+
+12:50:55 PM
+Error :An invalid connection string argument has been supplied or a required connection string argument has not been supplied.
+-------------------------------
+
+12:54:02 PM
+Error :unsuccessful metadata update
+ALTER TABLE AUTOINSERT failed
+violation of PRIMARY or UNIQUE KEY constraint "RDB$INDEX_15" on table "RDB$RELATION_FIELDS"
+Problematic key value is ("RDB$FIELD_NAME" = 'ISMUXED', "RDB$RELATION_NAME" = 'AUTOINSERT')
+-------------------------------
+
+12:54:02 PM
+Error :unsuccessful metadata update
+ALTER TABLE AUTOINSERT failed
+violation of PRIMARY or UNIQUE KEY constraint "RDB$INDEX_15" on table "RDB$RELATION_FIELDS"
+Problematic key value is ("RDB$FIELD_NAME" = 'MUXDATA', "RDB$RELATION_NAME" = 'AUTOINSERT')
+-------------------------------
+
+12:54:02 PM
+Error :unsuccessful metadata update
+ALTER TABLE AUTOINSERTHISTORY failed
+violation of PRIMARY or UNIQUE KEY constraint "RDB$INDEX_15" on table "RDB$RELATION_FIELDS"
+Problematic key value is ("RDB$FIELD_NAME" = 'ISMUXED', "RDB$RELATION_NAME" = 'AUTOINSERTHISTORY')
+-------------------------------
+
+12:54:03 PM
+Error :unsuccessful metadata update
+ALTER TABLE AUTOINSERTHISTORY failed
+violation of PRIMARY or UNIQUE KEY constraint "RDB$INDEX_15" on table "RDB$RELATION_FIELDS"
+Problematic key value is ("RDB$FIELD_NAME" = 'MUXDATA', "RDB$RELATION_NAME" = 'AUTOINSERTHISTORY')
+-------------------------------
+
+12:54:03 PM
+Error :Dynamic SQL Error
+SQL error code = -104
+Token unknown - line 1, column 105
+BIGINT
+-------------------------------
+
+12:54:03 PM
+Error :The parameter is incorrect. : 'D:\shorts\VLINE Southern Cross To Ballarat 180824 (shorts).mp4'
+-------------------------------
+
+12:54:04 PM
+Error :Dynamic SQL Error
+SQL error code = -204
+Table unknown
+PLANINGCUTS
+At line 1, column 15
+-------------------------------
+
+12:54:04 PM
+Error :An invalid connection string argument has been supplied or a required connection string argument has not been supplied.
+-------------------------------
+
+12:55:12 PM
+Error :unsuccessful metadata update
+ALTER TABLE AUTOINSERT failed
+violation of PRIMARY or UNIQUE KEY constraint "RDB$INDEX_15" on table "RDB$RELATION_FIELDS"
+Problematic key value is ("RDB$FIELD_NAME" = 'ISMUXED', "RDB$RELATION_NAME" = 'AUTOINSERT')
+-------------------------------
+
+12:55:12 PM
+Error :unsuccessful metadata update
+ALTER TABLE AUTOINSERT failed
+violation of PRIMARY or UNIQUE KEY constraint "RDB$INDEX_15" on table "RDB$RELATION_FIELDS"
+Problematic key value is ("RDB$FIELD_NAME" = 'MUXDATA', "RDB$RELATION_NAME" = 'AUTOINSERT')
+-------------------------------
+
+12:55:12 PM
+Error :unsuccessful metadata update
+ALTER TABLE AUTOINSERTHISTORY failed
+violation of PRIMARY or UNIQUE KEY constraint "RDB$INDEX_15" on table "RDB$RELATION_FIELDS"
+Problematic key value is ("RDB$FIELD_NAME" = 'ISMUXED', "RDB$RELATION_NAME" = 'AUTOINSERTHISTORY')
+-------------------------------
+
+12:55:13 PM
+Error :unsuccessful metadata update
+ALTER TABLE AUTOINSERTHISTORY failed
+violation of PRIMARY or UNIQUE KEY constraint "RDB$INDEX_15" on table "RDB$RELATION_FIELDS"
+Problematic key value is ("RDB$FIELD_NAME" = 'MUXDATA', "RDB$RELATION_NAME" = 'AUTOINSERTHISTORY')
+-------------------------------
+
+12:55:13 PM
+Error :Dynamic SQL Error
+SQL error code = -104
+Token unknown - line 1, column 105
+BIGINT
+-------------------------------
+
+12:55:13 PM
+Error :The parameter is incorrect. : 'D:\shorts\VLINE Southern Cross To Ballarat 180824 (shorts).mp4'
+-------------------------------
+
+12:55:14 PM
+Error :Dynamic SQL Error
+SQL error code = -204
+Table unknown
+PLANINGCUTS
+At line 1, column 15
+-------------------------------
+
+12:55:14 PM
+Error :An invalid connection string argument has been supplied or a required connection string argument has not been supplied.
+-------------------------------
+
+12:56:28 PM
+Error :unsuccessful metadata update
+ALTER TABLE AUTOINSERT failed
+violation of PRIMARY or UNIQUE KEY constraint "RDB$INDEX_15" on table "RDB$RELATION_FIELDS"
+Problematic key value is ("RDB$FIELD_NAME" = 'ISMUXED', "RDB$RELATION_NAME" = 'AUTOINSERT')
+-------------------------------
+
+12:56:29 PM
+Error :unsuccessful metadata update
+ALTER TABLE AUTOINSERT failed
+violation of PRIMARY or UNIQUE KEY constraint "RDB$INDEX_15" on table "RDB$RELATION_FIELDS"
+Problematic key value is ("RDB$FIELD_NAME" = 'MUXDATA', "RDB$RELATION_NAME" = 'AUTOINSERT')
+-------------------------------
+
+12:56:29 PM
+Error :unsuccessful metadata update
+ALTER TABLE AUTOINSERTHISTORY failed
+violation of PRIMARY or UNIQUE KEY constraint "RDB$INDEX_15" on table "RDB$RELATION_FIELDS"
+Problematic key value is ("RDB$FIELD_NAME" = 'ISMUXED', "RDB$RELATION_NAME" = 'AUTOINSERTHISTORY')
+-------------------------------
+
+12:56:30 PM
+Error :unsuccessful metadata update
+ALTER TABLE AUTOINSERTHISTORY failed
+violation of PRIMARY or UNIQUE KEY constraint "RDB$INDEX_15" on table "RDB$RELATION_FIELDS"
+Problematic key value is ("RDB$FIELD_NAME" = 'MUXDATA', "RDB$RELATION_NAME" = 'AUTOINSERTHISTORY')
+-------------------------------
+
+12:56:30 PM
+Error :Dynamic SQL Error
+SQL error code = -104
+Token unknown - line 1, column 105
+BIGINT
+-------------------------------
+
+12:56:30 PM
+Error :The parameter is incorrect. : 'D:\shorts\VLINE Southern Cross To Ballarat 180824 (shorts).mp4'
+-------------------------------
+
+12:56:31 PM
+Error :Dynamic SQL Error
+SQL error code = -204
+Table unknown
+PLANINGCUTS
+At line 1, column 15
+-------------------------------
+
+12:56:31 PM
+Error :An invalid connection string argument has been supplied or a required connection string argument has not been supplied.
+-------------------------------

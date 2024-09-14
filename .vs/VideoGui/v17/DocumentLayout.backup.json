@@ -1,7 +1,40 @@
 {
   "Version": 1,
   "WorkspaceRootPath": "C:\\VideoGui\\src\\VideoGui\\",
-  "Documents": [],
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{DB83E2CC-152B-427C-9053-D06AF2FFF309}|VideoGui.csproj|c:\\videogui\\src\\videogui\\videogui.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
+      "RelativeMoniker": "D:0:0:{DB83E2CC-152B-427C-9053-D06AF2FFF309}|VideoGui.csproj|solutionrelative:videogui.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{DB83E2CC-152B-427C-9053-D06AF2FFF309}|VideoGui.csproj|c:\\videogui\\src\\videogui\\selectshortupload.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "RelativeMoniker": "D:0:0:{DB83E2CC-152B-427C-9053-D06AF2FFF309}|VideoGui.csproj|solutionrelative:selectshortupload.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{DB83E2CC-152B-427C-9053-D06AF2FFF309}|VideoGui.csproj|c:\\videogui\\src\\videogui\\mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{DB83E2CC-152B-427C-9053-D06AF2FFF309}|VideoGui.csproj|solutionrelative:mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{DB83E2CC-152B-427C-9053-D06AF2FFF309}|VideoGui.csproj|c:\\videogui\\src\\videogui\\scrapermodule.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{DB83E2CC-152B-427C-9053-D06AF2FFF309}|VideoGui.csproj|solutionrelative:scrapermodule.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{DB83E2CC-152B-427C-9053-D06AF2FFF309}|VideoGui.csproj|c:\\videogui\\src\\videogui\\scrapermodule.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "RelativeMoniker": "D:0:0:{DB83E2CC-152B-427C-9053-D06AF2FFF309}|VideoGui.csproj|solutionrelative:scrapermodule.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{DB83E2CC-152B-427C-9053-D06AF2FFF309}|VideoGui.csproj|c:\\videogui\\src\\videogui\\models\\delegates.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{DB83E2CC-152B-427C-9053-D06AF2FFF309}|VideoGui.csproj|solutionrelative:models\\delegates.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{DB83E2CC-152B-427C-9053-D06AF2FFF309}|VideoGui.csproj|c:\\videogui\\src\\videogui\\models\\customparams.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{DB83E2CC-152B-427C-9053-D06AF2FFF309}|VideoGui.csproj|solutionrelative:models\\customparams.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{DB83E2CC-152B-427C-9053-D06AF2FFF309}|VideoGui.csproj|c:\\videogui\\src\\videogui\\selectshortupload.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{DB83E2CC-152B-427C-9053-D06AF2FFF309}|VideoGui.csproj|solutionrelative:selectshortupload.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
   "DocumentGroupContainers": [
     {
       "Orientation": 0,
@@ -9,8 +42,36 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": -1,
+          "SelectedChildIndex": 13,
           "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{e506b91c-c606-466a-90a9-123d1d1e12b3}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{1a46fd64-28d5-434c-8eb3-17a02d419b53}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{aa2115a1-9712-457b-9047-dbb71ca2cdd2}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:129:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:130:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:131:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:132:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
+            },
             {
               "$type": "Bookmark",
               "Name": "ST:0:0:{3ae79031-e1bc-11d0-8f78-00a0c9110057}"
@@ -21,17 +82,124 @@
             },
             {
               "$type": "Bookmark",
-              "Name": "ST:0:0:{aa2115a1-9712-457b-9047-dbb71ca2cdd2}"
+              "Name": "ST:0:0:{1c4feeaa-4718-4aa9-859d-94ce25d182ba}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:129:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:1:0:{3ae79031-e1bc-11d0-8f78-00a0c9110057}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{cce594b6-0c39-4442-ba28-10c64ac7e89f}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "VideoGui.csproj",
+              "DocumentMoniker": "C:\\VideoGui\\src\\Videogui\\VideoGui.csproj",
+              "RelativeDocumentMoniker": "VideoGui.csproj",
+              "ToolTip": "C:\\VideoGui\\src\\Videogui\\VideoGui.csproj",
+              "RelativeToolTip": "VideoGui.csproj",
+              "ViewState": "AgIAABgAAAAAAAAAAAAAACcAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
+              "WhenOpened": "2024-09-14T07:41:44.658Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "SelectShortUpload.xaml.cs",
+              "DocumentMoniker": "C:\\VideoGui\\src\\VideoGui\\SelectShortUpload.xaml.cs",
+              "RelativeDocumentMoniker": "SelectShortUpload.xaml.cs",
+              "ToolTip": "C:\\VideoGui\\src\\VideoGui\\SelectShortUpload.xaml.cs",
+              "RelativeToolTip": "SelectShortUpload.xaml.cs",
+              "ViewState": "AgIAAGIAAAAAAAAAAAAAAGoAAABBAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-09-14T06:47:58.878Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "SelectShortUpload.xaml",
+              "DocumentMoniker": "C:\\VideoGui\\src\\VideoGui\\SelectShortUpload.xaml",
+              "RelativeDocumentMoniker": "SelectShortUpload.xaml",
+              "ToolTip": "C:\\VideoGui\\src\\VideoGui\\SelectShortUpload.xaml",
+              "RelativeToolTip": "SelectShortUpload.xaml",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
+              "WhenOpened": "2024-09-14T06:47:54.387Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "delegates.cs",
+              "DocumentMoniker": "C:\\VideoGui\\src\\VideoGui\\Models\\delegates.cs",
+              "RelativeDocumentMoniker": "Models\\delegates.cs",
+              "ToolTip": "C:\\VideoGui\\src\\VideoGui\\Models\\delegates.cs",
+              "RelativeToolTip": "Models\\delegates.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-09-10T02:50:10.991Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "ScraperModule.xaml",
+              "DocumentMoniker": "C:\\VideoGui\\src\\VideoGui\\ScraperModule.xaml",
+              "RelativeDocumentMoniker": "ScraperModule.xaml",
+              "ToolTip": "C:\\VideoGui\\src\\VideoGui\\ScraperModule.xaml",
+              "RelativeToolTip": "ScraperModule.xaml",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
+              "WhenOpened": "2024-09-07T04:43:31.383Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "ScraperModule.xaml.cs",
+              "DocumentMoniker": "C:\\VideoGui\\src\\VideoGui\\ScraperModule.xaml.cs",
+              "RelativeDocumentMoniker": "ScraperModule.xaml.cs",
+              "ToolTip": "C:\\VideoGui\\src\\VideoGui\\ScraperModule.xaml.cs",
+              "RelativeToolTip": "ScraperModule.xaml.cs",
+              "ViewState": "AgIAADAGAAAAAAAAAAAYwGAGAAAUAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-09-07T04:34:50.92Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "MainWindow.xaml.cs",
+              "DocumentMoniker": "C:\\VideoGui\\src\\VideoGui\\MainWindow.xaml.cs",
+              "RelativeDocumentMoniker": "MainWindow.xaml.cs",
+              "ToolTip": "C:\\VideoGui\\src\\VideoGui\\MainWindow.xaml.cs",
+              "RelativeToolTip": "MainWindow.xaml.cs",
+              "ViewState": "AgIAAG4AAAAAAAAAAAAYwHcAAAAgAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-09-06T11:08:15.467Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "CustomParams.cs",
+              "DocumentMoniker": "C:\\VideoGui\\src\\VideoGui\\Models\\CustomParams.cs",
+              "RelativeDocumentMoniker": "Models\\CustomParams.cs",
+              "ToolTip": "C:\\VideoGui\\src\\VideoGui\\Models\\CustomParams.cs",
+              "RelativeToolTip": "Models\\CustomParams.cs",
+              "ViewState": "AgIAAA4AAAAAAAAAAAAAwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-09-06T11:08:03.178Z"
             }
           ]
         },
         {
-          "DockedWidth": 1509,
+          "DockedWidth": 200,
           "SelectedChildIndex": -1,
           "Children": [
             {
               "$type": "Bookmark",
-              "Name": "ST:0:0:{1a46fd64-28d5-434c-8eb3-17a02d419b53}"
+              "Name": "ST:0:0:{eefa5220-e298-11d0-8f78-00a0c9110057}"
             }
           ]
         }

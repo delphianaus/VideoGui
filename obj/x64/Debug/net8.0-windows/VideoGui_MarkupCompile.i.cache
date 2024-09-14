@@ -4,16 +4,16 @@
 winexe
 C#
 .cs
-C:\VideoGui\src\VideoGui\obj\x64\Debug\net8.0-windows\
+C:\VideoGui\src\Videogui\obj\x64\Debug\net8.0-windows\
 VideoGui
 none
 false
 TRACE;DEBUG;NET;NET8_0;NETCOREAPP
-C:\VideoGui\src\VideoGui\App.xaml
+C:\VideoGui\src\Videogui\App.xaml
 26-1601012087
 11847961529
 952115262174
-263775502567
+2631728104395
 AudioJoiner.xaml;AutoCancel.xaml;ComplexSchedular.xaml;ConfigurationSettings.xaml;ConverterProgressInfo.xaml;CustomStringEntry.xaml;DefaultDirectories.xaml;DialogAges.xaml;FinalMatchWindow.xaml;MainWindow.xaml;MatchedShowsVerifier.xaml;MediaImporter.xaml;ProgressWIndow.xaml;SchedulingSelectEditor.xaml;ScraperModule.xaml;SelectEditProfile.xaml;SelectReleaseSchedule.xaml;SelectShortUpload.xaml;ShortsCreator.xaml;ShowMatcher.xaml;SourceDestComp.xaml;SplashScreenWindow.xaml;Themes\Generic.xaml;VideoCardSelector.xaml;VideoCutsEditor.xaml;VideoSizeChecker.xaml;
 
 True
