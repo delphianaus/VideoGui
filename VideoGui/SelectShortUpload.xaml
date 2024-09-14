@@ -1,0 +1,32 @@
+﻿<Window x:Class="VideoGui.SelectShortUpload"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:VideoGui" Loaded="Window_Loaded"
+        mc:Ignorable="d" ResizeMode="CanResizeWithGrip" WindowStartupLocation="CenterScreen"  
+        WindowStyle="ToolWindow" Title="Shorts Upload Settings" Height="175" Width="677">
+    <Grid>
+        <Border x:Name="brdFileInfo" BorderThickness="2" BorderBrush="Black" Height="78" Margin="4,4,5,0" MinHeight="84" VerticalAlignment="Top">
+            <Canvas x:Name="CnvMedialElements" Margin="1,2,1,2">
+                <Label Content="Source File" HorizontalAlignment="Center" VerticalAlignment="Top" Height="26" Canvas.Left="9" Canvas.Top="9"/>
+                <TextBox x:Name="txtsrcdir" HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Center" Width="492" Canvas.Left="120" Canvas.Top="13"/>
+                <Button x:Name="btnSelectSourceDir" HorizontalAlignment="Left" VerticalAlignment="Center" Width="20" Height="20" Canvas.Left="618" Canvas.Top="13" Click="btnSelectSourceDir_Click" RenderTransformOrigin="-13.634,1.02" />
+                <Label Content="Number Of Shorts" Height="26" Canvas.Left="9" Canvas.Top="40" HorizontalAlignment="Center" VerticalAlignment="Top"/>
+                <Label x:Name="lblShortNo" Content="x" Height="26" Canvas.Left="108" Canvas.Top="40" HorizontalAlignment="Left" VerticalAlignment="Center" Width="29"/>
+                <Label Content="Uploads Per Slot" Height="26" Canvas.Left="161" Canvas.Top="40" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                <TextBox x:Name="txtMaxUpload" Text="5" HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Center" 
+                         Width="40" Canvas.Left="261" Canvas.Top="45" KeyDown="txtMaxUpload_KeyDown" LostFocus="txtMaxUpload_LostFocus"/>
+                <Label Content="Max Uploads" Height="26" Canvas.Left="312" Canvas.Top="40" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                <TextBox x:Name="txtTotalUploads" Text="100" TextWrapping="Wrap" 
+                    Width="40" Canvas.Left="385" Canvas.Top="45" HorizontalAlignment="Left" VerticalAlignment="Center" KeyDown="txtTotalUploads_KeyDown"/>
+
+            </Canvas>
+        </Border>
+        <Button x:Name="btnClose" Height="35" Width="123" Content="Close" Margin="0,93,5,0" 
+                HorizontalAlignment="Right" VerticalAlignment="Top" Click="btnClose_Click"/>
+        <Button x:Name="btnRunUploaders" Height="24" Width="123" Content="Run Uploaders" Margin="0,50,28,0" 
+            HorizontalAlignment="Right" VerticalAlignment="Top" FontSize="10" Click="btnRunUploaders_Click"/>
+
+    </Grid>
+</Window>

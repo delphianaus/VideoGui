@@ -1,0 +1,40 @@
+﻿<Window x:Class="VideoGui.AutoCancel"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:VideoGui"
+        mc:Ignorable="d"  WindowStyle="None" AllowsTransparency="true" Background="Transparent"
+        WindowStartupLocation="CenterOwner" ResizeMode="NoResize" Cursor="" ShowInTaskbar="False"
+        Loaded="Window_Loaded" Closing='Window_Closing'
+        Title="AutoCancel" Height="120" Width="475" HorizontalAlignment="Left" VerticalAlignment="Top">
+    <Grid>
+        <Border CornerRadius="15" BorderThickness="6" BorderBrush="#FF46433E">
+            <Border CornerRadius="10" BorderThickness="6" Margin="0,4,0,4">
+                <Border.BorderBrush>
+                    <LinearGradientBrush StartPoint="0,1" EndPoint="1,1">
+                        <GradientStop Color="#FFAEA741" Offset="0.0"/>
+                        <GradientStop Color="#FFCA9122" Offset="0.3"/>
+                        <GradientStop Color="#FF37312F" Offset="0.6"/>
+                    </LinearGradientBrush>
+                </Border.BorderBrush>
+                <Grid Margin="0,4,0,4">
+                    <Grid.Background>
+                        <LinearGradientBrush StartPoint="0,1" EndPoint="1,2">
+                            <GradientStop Color="#FF4F578E" Offset="0.0"/>
+                            <GradientStop Color="#FF4E525F" Offset="0.3"/>
+                            <GradientStop Color="#FF69321C" Offset="0.7"/>
+                        </LinearGradientBrush>
+                    </Grid.Background>
+                    <Label Name="lblYouTubeHelper" Content="Conversion Finished Close Progress Panel  ?" FontSize="20" FontStyle="Italic" Margin="0,5,0,0" FontFamily="Maiandra GD" FontWeight="SemiBold"  HorizontalAlignment="Center" Padding="0,-1,0,5" VerticalContentAlignment="Center" Height="24" Width="432" HorizontalContentAlignment="Center" VerticalAlignment="Top" Foreground="#FFFF0F0F" />
+                    <Label x:Name="lblTime" Content="30" FontSize="14" FontStyle="Italic" Margin="183,32,0,0" FontFamily="Maiandra GD" FontWeight="SemiBold" Foreground="Wheat" HorizontalAlignment="Left" Padding="-2,0,5,0" Height="28" VerticalContentAlignment="Center" Width="33" HorizontalContentAlignment="Center" VerticalAlignment="Top" IsEnabled="False"/>
+                    <Label x:Name="lbsSeconds" Content="Seconds" FontSize="14" FontStyle="Italic" Margin="216,32,0,0" FontFamily="Maiandra GD" FontWeight="SemiBold" Foreground="Wheat" HorizontalAlignment="Left" Padding="-2,0,5,0" Height="28" VerticalContentAlignment="Center" Width="64" HorizontalContentAlignment="Center" VerticalAlignment="Top" IsEnabled="False"/>
+                    <Button Content="Close" HorizontalAlignment="Left" Margin="356,32,0,0" VerticalAlignment="Top" Height="28" Width="75"/>
+                    <Button Content="Close" HorizontalAlignment="Left" Margin="356,32,0,0" VerticalAlignment="Top" Height="28" Width="75" RenderTransformOrigin="-0.328,0.719" Click="Button_Click"/>
+                    <Button Content="Open" HorizontalAlignment="Left" Margin="20,32,0,0" VerticalAlignment="Top" Height="28" Width="76" RenderTransformOrigin="-0.328,0.719" Click="Button_Click_1"/>
+                    <Label x:Name="lblDestName" Content="Conversion Finished Close Progress Panel  ?" FontSize="16" FontStyle="Italic" Margin="0,56,0,0" FontFamily="Maiandra GD" FontWeight="SemiBold"  HorizontalAlignment="Center" Padding="0,-1,0,5" VerticalContentAlignment="Center" Height="24" Width="432" HorizontalContentAlignment="Center" VerticalAlignment="Top" Foreground="#FFFF0F0F" />
+                </Grid>
+            </Border>
+        </Border>
+    </Grid>
+</Window>
