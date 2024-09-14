@@ -11,13 +11,13 @@
 using System;
 using System.Reflection;
 
-[assembly: System.Reflection.AssemblyCompanyAttribute("NotifyIconWpf")]
+[assembly: System.Reflection.AssemblyCompanyAttribute("VideoGui")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
-[assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
+[assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.308")]
 [assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+cd6d294f2fd34fe2537a8e651285b1b7f94d210e")]
-[assembly: System.Reflection.AssemblyProductAttribute("NotifyIconWpf")]
-[assembly: System.Reflection.AssemblyTitleAttribute("NotifyIconWpf")]
-[assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
+[assembly: System.Reflection.AssemblyProductAttribute("VideoGui")]
+[assembly: System.Reflection.AssemblyTitleAttribute("VideoGui")]
+[assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.308")]
 [assembly: System.Runtime.Versioning.TargetPlatformAttribute("Windows7.0")]
 [assembly: System.Runtime.Versioning.SupportedOSPlatformAttribute("Windows7.0")]
 
