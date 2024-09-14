@@ -16,5 +16,5 @@ C:\VideoGui\src\Videogui\App.xaml
 2631728104395
 AudioJoiner.xaml;AutoCancel.xaml;ComplexSchedular.xaml;ConfigurationSettings.xaml;ConverterProgressInfo.xaml;CustomStringEntry.xaml;DefaultDirectories.xaml;DialogAges.xaml;FinalMatchWindow.xaml;MainWindow.xaml;MatchedShowsVerifier.xaml;MediaImporter.xaml;ProgressWIndow.xaml;SchedulingSelectEditor.xaml;ScraperModule.xaml;SelectEditProfile.xaml;SelectReleaseSchedule.xaml;SelectShortUpload.xaml;ShortsCreator.xaml;ShowMatcher.xaml;SourceDestComp.xaml;SplashScreenWindow.xaml;Themes\Generic.xaml;VideoCardSelector.xaml;VideoCutsEditor.xaml;VideoSizeChecker.xaml;
 
-True
+False
 
