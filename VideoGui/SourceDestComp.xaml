@@ -1,0 +1,77 @@
+﻿<Window x:Class="VideoGui.SourceDestComp"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:VideoGui"
+        Title="Compair Source Files To Destination Files" Height="500" Width="800" WindowStartupLocation="CenterScreen" ResizeMode="NoResize" WindowStyle="ToolWindow" Closing="Window_Closing">
+    <Viewbox Name="ViewBix2"  Focusable="True">
+        <Grid x:Name="MainGrid" HorizontalAlignment="Left" Width="819" Height="500">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="89*"/>
+                <RowDefinition Height="11*"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="102"/>
+                <ColumnDefinition Width="297"/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <ListBox x:Name="LstBoxFiles" HorizontalContentAlignment="Stretch" Margin="2,0,10,0"   
+                     VerticalAlignment="Center" AllowDrop="True" Background="Silver"
+                     IsTabStop="True" Height="438" Grid.ColumnSpan="3" RenderTransformOrigin="0.5,0.5">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Margin="0,2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="200*"/>
+                                <ColumnDefinition Width="34"/>
+                                <ColumnDefinition Width="34"/>
+                                <ColumnDefinition Width="13"/>
+
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Name="SourceFile" Tag ="1" Grid.Column="0" Text="{Binding SourceFile}"/>
+                            <TextBlock Name="SourceLength" Tag ="2" Grid.Column="1">
+                                <TextBlock.Text>
+                                    <MultiBinding Converter="{StaticResource CompareConverter}">
+                                        <Binding Mode="OneWay" Path="Items" RelativeSource="{RelativeSource FindAncestor, AncestorType={x:Type ListBox}}"/>
+                                        <Binding ElementName ="SourceFile" Path="Text" />
+                                        <Binding ElementName ="SourceLength" Path="Tag" />
+                                    </MultiBinding>
+                                </TextBlock.Text>
+                            </TextBlock>
+                            <TextBlock Name="DestLength" Tag ="3" Grid.Column="2">
+                                <TextBlock.Text>
+                                    <MultiBinding Converter="{StaticResource CompareConverter}">
+                                        <Binding Mode="OneWay" Path="Items" RelativeSource="{RelativeSource FindAncestor, AncestorType={x:Type ListBox}}"/>
+                                        <Binding ElementName ="SourceFile" Path="Text" />
+                                        <Binding ElementName ="DestLength" Path="Tag" />
+                                    </MultiBinding>
+                                </TextBlock.Text>
+
+                            </TextBlock>
+                            <CheckBox Name="TimesMatch" Tag ="4" Grid.Column="3">
+                                <CheckBox.IsChecked>
+                                    <MultiBinding Converter="{StaticResource CompareConverter}">
+                                        <Binding Mode="OneWay" Path="Items" RelativeSource="{RelativeSource FindAncestor, AncestorType={x:Type ListBox}}"/>
+                                        <Binding ElementName ="SourceFile" Path="Text" />
+                                        <Binding ElementName ="TimesMatch" Path="Tag" />
+                                    </MultiBinding>
+                                </CheckBox.IsChecked>
+                            </CheckBox>
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+            <Button x:Name="btnscan" Content="Scan Source" HorizontalAlignment="Left" Height="29" Margin="2,6,0,0" VerticalAlignment="Top" Width="70" Click="Btnscan_Click" RenderTransformOrigin="0.713,0.795" Grid.Row="1"/>
+            <Button x:Name="Btncompfiles" Content="Check Completed" HorizontalAlignment="Left" Height="29" Margin="77,6,0,0" VerticalAlignment="Top" Width="100" Grid.Row="1" Grid.ColumnSpan="2"/>
+            <Button x:Name="BtnPurge" Content="Purge Files" HorizontalAlignment="Left" Height="29" Margin="80,6,0,0" VerticalAlignment="Top" Width="64" Grid.Row="1" Grid.Column="1" Click="BtnPurge_Click"/>
+            <Button x:Name="btnRemoveBadDest" Content="Remove !Dest" HorizontalAlignment="Left" Height="29" Margin="149,6,0,0" VerticalAlignment="Top" Width="82" Grid.Row="1" Grid.Column="1" Click="btnRemoveBadDest_Click"/>
+            <Label x:Name="lblCurrent" Content="" Grid.Column="2" HorizontalAlignment="Left" Height="27" Margin="312,8,0,0" Grid.Row="1" VerticalAlignment="Top" Width="36"/>
+            <Label Content="/" Grid.Column="2" HorizontalAlignment="Left" Height="27" Margin="345,8,0,0" Grid.Row="1" VerticalAlignment="Top" Width="20"/>
+            <Label x:Name="lblMax" Content="" Grid.Column="2" HorizontalAlignment="Left" Height="27" Margin="361,8,0,0" Grid.Row="1" VerticalAlignment="Top" Width="47"/>
+            <Button x:Name="BtnRemoveSource" Content="Remove !Source" Height="29" Margin="236,6,390,0" VerticalAlignment="Top" Grid.Row="1" Grid.Column="1" Click="BtnRemoveSource_Click" Grid.ColumnSpan="2"/>
+
+        </Grid>
+    </Viewbox>
+</Window>

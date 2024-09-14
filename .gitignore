@@ -1,0 +1,8 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs
+/ToggleClass/obj
+/VideoGui/.vs
+/VideoGui/obj/x64/Debug/net8.0-windows

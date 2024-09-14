@@ -1,0 +1,72 @@
+﻿<Window x:Name="mainwindow" x:Class="VideoGui.ScraperModule"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:VideoGui" 
+        xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+        mc:Ignorable="d" ResizeMode="CanResize" 
+        WindowStartupLocation="CenterScreen" WindowStyle="ToolWindow" 
+        Title="YouTube Scraper Test" Height="450" Width="800" Loaded="Window_Loaded" 
+        SizeChanged="Window_SizeChanged">
+    <Grid UseLayoutRounding="True" x:Name="gridmain">
+        <Border x:Name="brdmain" BorderBrush="Black" BorderThickness="3" Margin="2,1,3,40" AllowDrop="True"
+                VerticalAlignment="Top" >
+            <wv2:WebView2 x:Name="wv2" Margin="3,3,3,3" ZoomFactor="0.5" MouseMove="wv2_MouseMove" 
+                          NavigationCompleted="wv2_NavigationCompleted" />
+        </Border>
+        <Border x:Name="brdmainA1" VerticalAlignment="Bottom" BorderThickness="3" BorderBrush="Black" Margin="2,2,2,121" Height="300">
+            <wv2:WebView2 x:Name="wv2A1" Height="0" NavigationCompleted="Wv2s_NavigationCompleted"/>
+        </Border>
+        <Border x:Name="brdmainA2" VerticalAlignment="Top">
+            <wv2:WebView2 x:Name="wv2A2" Height="0" AllowDrop="True" NavigationCompleted="Wv2s_NavigationCompleted"/>
+        </Border>
+        <Border x:Name="brdmainA3" VerticalAlignment="Top">
+            <wv2:WebView2 x:Name="wv2A3" Height="0" AllowDrop="True" NavigationCompleted="Wv2s_NavigationCompleted"/>
+        </Border>
+        <Border x:Name="brdmainA4" VerticalAlignment="Top">
+            <wv2:WebView2 x:Name="wv2A4" Height="0" AllowDrop="True" NavigationCompleted="Wv2s_NavigationCompleted"/>
+        </Border>
+        <Border x:Name="brdmainA5" VerticalAlignment="Top">
+            <wv2:WebView2 x:Name="wv2A5" Height="0" AllowDrop="True" NavigationCompleted="Wv2s_NavigationCompleted"/>
+        </Border>
+        <Border x:Name="brdmainA6" VerticalAlignment="Top">
+            <wv2:WebView2 x:Name="wv2A6" Height="0" AllowDrop="True" NavigationCompleted="Wv2s_NavigationCompleted"/>
+        </Border>
+        <Border x:Name="brdmainA7" VerticalAlignment="Top">
+            <wv2:WebView2 x:Name="wv2A7" Height="0" AllowDrop="True" NavigationCompleted="Wv2s_NavigationCompleted"/>
+        </Border>
+        <Border x:Name="brdmainA8" VerticalAlignment="Top">
+            <wv2:WebView2 x:Name="wv2A8" Height="0" AllowDrop="True" NavigationCompleted="Wv2s_NavigationCompleted"/>
+        </Border>
+        <Border x:Name="brdmainA9" VerticalAlignment="Top">
+            <wv2:WebView2 x:Name="wv2A9" Height="0" AllowDrop="True" NavigationCompleted="Wv2s_NavigationCompleted"/>
+        </Border>
+        <Border x:Name="brdmainA10" VerticalAlignment="Top">
+            <wv2:WebView2 x:Name="wv2A10" Height="0" AllowDrop="True" NavigationCompleted="Wv2s_NavigationCompleted"/>
+        </Border>
+        <Border x:Name="brdInfo" BorderBrush="Black" BorderThickness="2" Margin="2,1,3,42" 
+                VerticalAlignment="Bottom" >
+            <ListBox x:Name="lstMain" HorizontalAlignment="Left" 
+                     VerticalAlignment="Center" 
+                     MinHeight="100" MinWidth="799" 
+                     Margin="1,0,0,0" IsSynchronizedWithCurrentItem="False" Padding="0,5,0,5" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto" Height="70" Width="782"/>
+        </Border>
+        <StatusBar Name="StatusBar" HorizontalAlignment="Left" 
+                   VerticalAlignment="Bottom" Height="37" Background="#FFEBCACA" Width="795" Margin="5,0,3,2">
+            <Label x:Name="lblLastNode" Content="Initializing..."  Margin="0,0,0,0" VerticalAlignment="Bottom" Padding="0,2,24,0"/>
+            <Label Name="lblInsert" Content="Total Uploads : " Width="81" VerticalAlignment="Center"/>
+            <Label x:Name="lblTotal" Width="25" Content="" VerticalAlignment="Center"/>
+            <Label x:Name="lblUp" Width="69" Content="Uploading : " VerticalAlignment="Center"/>
+            <Label x:Name="lblUploading" Width="20" Content="" VerticalAlignment="Center"/>
+            <Label Name="lblInsertId4" Width="68" Content="Uploaded : " VerticalAlignment="Center"/>
+            <Label x:Name="lblUploaded" Content="" VerticalAlignment="Center" Width="20"/>
+            <Label Name="lblInsertId5" Width="68" Content="Waiting : " VerticalAlignment="Center" HorizontalAlignment="Left"/>
+            <Label x:Name="lblWaiting" Content="" VerticalAlignment="Center"  Width="20"/>
+            <Button Name="btnClickUpload" Content="Click Upload" VerticalAlignment="Top"
+                    Height="32" Width="75" HorizontalAlignment="Right" Click="btnClickUpload_Click" Margin="121,0,0,0"/>
+            <Button Name="btnClose" Content="Close" VerticalAlignment="Center"
+           Height="32" Width="75" HorizontalAlignment="Right" Margin="1,0,0,0" MinWidth="3" Click="btnClose_Click" HorizontalContentAlignment="Center"/>
+        </StatusBar>
+    </Grid>
+</Window>

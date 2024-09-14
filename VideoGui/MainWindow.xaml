@@ -1,0 +1,248 @@
+﻿<Window x:Class="VideoGui.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:tb="http://www.hardcodet.net/taskbar"
+        mc:Ignorable="d"
+        Title="Video Procesor" Name="MainWindowX" Closing="Window_Closing" 
+        WindowStyle="ToolWindow" WindowStartupLocation="CenterOwner" 
+        ResizeMode="CanResize" 
+        SizeToContent="Manual"
+        Icon="/icons/computer.ico" Height="auto" Width="Auto" 
+        Loaded="MainWindowX_Loaded" 
+        StateChanged="MainWindowX_StateChanged"
+        IsVisibleChanged="MainWindowX_IsVisibleChanged" 
+        SizeChanged="MainWindowX_SizeChanged" 
+        FocusableChanged="Window_FocusableChanged"
+        
+        AutomationProperties.IsColumnHeader="True" GotFocus="MainWindowX_GotFocus">
+    <Window.Resources>
+        <BitmapImage x:Key="GEN" UriSource="icons/GPUEncode.png"></BitmapImage>
+        <BitmapImage x:Key="CEN" UriSource="icons/CPUEncode.png"></BitmapImage>
+        <BitmapImage x:Key="X264" UriSource="icons/OutputX264.png"></BitmapImage>
+        <BitmapImage x:Key="X265" UriSource="icons/OutputX265.png"></BitmapImage>
+        <BitmapImage x:Key="FishEyeKeep" UriSource="icons/FisheyeKeep.png"></BitmapImage>
+        <BitmapImage x:Key="FishEyeRemoval" UriSource="icons/FisheyeRemoval.png"></BitmapImage>
+        <Style x:Key="ToggleStyle1" TargetType="{x:Type ToggleButton}">
+            <Setter Property="MaxHeight" Value="28"></Setter>
+            <Setter Property="MaxWidth" Value="100"></Setter>
+            <Setter Property="MinHeight" Value="28"></Setter>
+            <Setter Property="MinWidth" Value="100"></Setter>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ToggleButton}">
+                        <Image x:Name="PART_Image"  />
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="true">
+                                <Setter TargetName="PART_Image" Property="Source" Value="{StaticResource X265}"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="False">
+                                <Setter TargetName="PART_Image" Property="Source" Value="{StaticResource X264}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="ToggleStyle2" TargetType="{x:Type ToggleButton}">
+            <Setter Property="MaxHeight" Value="28"></Setter>
+            <Setter Property="MaxWidth" Value="100"></Setter>
+            <Setter Property="MinHeight" Value="28"></Setter>
+            <Setter Property="MinWidth" Value="100"></Setter>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ToggleButton}">
+                        <Image x:Name="PART_Image2"  />
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="true">
+                                <Setter TargetName="PART_Image2" Property="Source" Value="{StaticResource CEN}"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="False">
+                                <Setter TargetName="PART_Image2" Property="Source" Value="{StaticResource GEN}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="ToggleStyle3" TargetType="{x:Type ToggleButton}">
+            <Setter Property="MaxHeight" Value="28"></Setter>
+            <Setter Property="MaxWidth" Value="100"></Setter>
+            <Setter Property="MinHeight" Value="28"></Setter>
+            <Setter Property="MinWidth" Value="100"></Setter>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ToggleButton}">
+                        <Image x:Name="PART_Image3"  />
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="true">
+                                <Setter TargetName="PART_Image3" Property="Source" Value="{StaticResource FishEyeKeep}"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="False">
+                                <Setter TargetName="PART_Image3" Property="Source" Value="{StaticResource FishEyeRemoval}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+    <Grid x:Name="Grid1" Focusable="True">
+        <tb:TaskbarIcon x:Name="trayicon"  IconSource="/Icons/computer.ico"
+                ToolTipText="Video Gui" Visibility="Collapsed" TrayMouseDoubleClick="Restore_Click">
+            <tb:TaskbarIcon.ContextMenu>
+                <ContextMenu  Background="LightCoral">
+                    <MenuItem Header="Restore" Click="Restore_Click"/>
+                    <MenuItem Header="Configuration" Click="Show_Config"/>
+                    <MenuItem Header="Update" Click="Update_Click" />
+                    <MenuItem Header="Open Log File" Click="OpenLogFile_Click"/>
+                    <MenuItem Header="Diretory/Thread Settings" Click="DirectoryThreads_Click"/>
+                    <MenuItem Header="Bitrate Settings" Click="Settings_Click"/>
+                    <MenuItem Header="Clear Probe Date" Click="MenuItem_Click_1" />
+                    <MenuItem Header="Close" Click="Close_Click" />
+                </ContextMenu>
+            </tb:TaskbarIcon.ContextMenu>
+        </tb:TaskbarIcon>
+
+
+        <Button x:Name="btnstart" Content="Start" HorizontalAlignment="Left" Height="22" Margin="26,0,0,141" VerticalAlignment="Bottom" Click="Btnstart_Click" Width="42"/>
+        <ProgressBar x:Name="Progressbar1" HorizontalAlignment="Left" Height="18" Margin="132,0,0,118" VerticalAlignment="Bottom" Width="882" />
+        <ProgressBar x:Name="Progressbar2" HorizontalAlignment="Left" Height="18" Margin="132,0,0,144" VerticalAlignment="Bottom" Width="881" />
+        <Border x:Name="brdlstbox" BorderThickness="2" BorderBrush="Black" Margin="5,5,5,215" VerticalAlignment="Top" Height="490" HorizontalAlignment="Left">
+            <ListBox x:Name="lstBoxJobs" Margin="1,1,1,1"
+                 AllowDrop="True" 
+                DragEnter="lstBoxJobs_DragEnter" 
+                Drop="lstBoxJobs_Drop" 
+                DragOver="lstBoxJobs_DragOver"
+                IsTabStop="True" Background="{x:Null}" SelectionChanged="lstBoxJobs_SelectionChanged" Width="1099"  
+                 VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch" ClipToBounds="True" >
+                <ListBox.Resources>
+                    <!--Defines a context menu-->
+                    <ContextMenu x:Key="MyElementMenu">
+                        <MenuItem Header="Process as X264" Click="MenuItem_Click" MouseDown="MenuItem_MouseDown"   
+                              MouseUp="MenuItem_MouseUp" />
+                        <MenuItem Header="Skip Current File" Click="DeleteFile_Click"/>
+                        <MenuItem Header="Open Log File" Click="OpenLogFile_Click"/>
+
+                        <MenuItem Header="Reset Errored Files" Name="ResetErrored" Click="ResetErrored_Click"/>
+                        <MenuItem Header="Scan Source Directory" Name="ScanSource" Click="ScanSource_Click" />
+                        <MenuItem Header="View Convert Progress Output" Name="ViewOutput" Click="ViewOutput_Click"/>
+                    </ContextMenu>
+                    <!--Sets a context menu for each ListBoxItem in the current ListBox-->
+                    <Style TargetType="{x:Type ListBoxItem}">
+                        <Setter Property="ContextMenu" Value="{StaticResource MyElementMenu}"/>
+                    </Style>
+                </ListBox.Resources>
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Margin="5,2,5,2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="40" />
+                                <ColumnDefinition Width="145"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock x:Name ="Title" Tag ="0" Text="{Binding Title}">
+                                <TextBlock.FontStyle>
+                                    <MultiBinding Converter="{StaticResource BooleanToColorConverter}">
+                                        <Binding Mode="OneWay" Path="Items" RelativeSource="{RelativeSource FindAncestor, AncestorType={x:Type ListBox}}"/>
+                                        <Binding ElementName ="Title" Path="Text" />
+                                        <Binding ElementName ="Title" Path="Tag" />
+                                    </MultiBinding>
+                                </TextBlock.FontStyle>
+                            </TextBlock>
+                            <TextBlock x:Name="FileInfo" Tag ="1" Text="{Binding Fileinfo}"   HorizontalAlignment ="Right" />
+                            <ProgressBar Grid.Column="8" Tag ="2" Minimum="0"   x:Name="SubProgressBar"  Maximum="100" 
+                                Value="{Binding Progress}" Margin="5,0,5,0" >
+                                <ProgressBar.Foreground>
+                                    <MultiBinding Converter="{StaticResource BooleanToColorConverter}">
+                                        <Binding Mode="OneWay" Path="Items" RelativeSource="{RelativeSource FindAncestor, AncestorType={x:Type ListBox}}"/>
+                                        <Binding ElementName ="Title" Path="Text" />
+                                        <Binding ElementName ="SubProgressBar" Path="Tag" />
+                                    </MultiBinding>
+                                </ProgressBar.Foreground>
+                            </ProgressBar>
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Border>
+
+        <Label x:Name="TxtAudioMode" Content="Audio Mode" HorizontalAlignment="Left" Height="26" Margin="358,0,0,78" VerticalAlignment="Bottom" Width="76"/>
+        <ComboBox x:Name="cmbaudiomode" HorizontalAlignment="Left" Height="28" Margin="436,0,0,77" VerticalAlignment="Bottom" Width="78" SelectionChanged="Cmbaudiomode_SelectionChanged">
+            <ComboBoxItem Content="Copy"/>
+            <ComboBoxItem Content="=&gt; cbr mp3"/>
+            <ComboBoxItem Content="=&gt; aac 128k"/>
+        </ComboBox>
+        <Button x:Name="btnselect" Content="Select" HorizontalAlignment="Left" Height="22" Margin="73,0,0,141" VerticalAlignment="Bottom" Width="50" Click="Button_ClickAsync" />
+        <ToggleButton x:Name="GPUEncode" Style="{DynamicResource ToggleStyle1}" Margin="921,0,7,76" Height="24" Width="Auto" HorizontalAlignment="Left" VerticalAlignment="Bottom" IsChecked="False"/>
+        <ToggleButton x:Name="X265Output" Style="{DynamicResource ToggleStyle2}"  Margin="816,0,96,76" Height="24" Width="Auto" HorizontalAlignment="Left" VerticalAlignment="Bottom"/>
+        <ToggleButton x:Name="Fisheye" Style="{DynamicResource ToggleStyle3}"  Margin="1025,0,7,76" Height="24"  Width="Auto" HorizontalAlignment="Left" VerticalAlignment="Bottom"/>
+
+        <Button x:Name="btnConfig" Content="Configuration" HorizontalAlignment="Left" Height="22" Margin="26,0,0,113" VerticalAlignment="Bottom" Click="BtnConfig_Click" Width="97"/>
+        <CheckBox x:Name="ChkDropFormat" Content="Drop As X265" HorizontalAlignment="Left" Margin="26,0,0,175" VerticalAlignment="Bottom" IsChecked="True" Width="97"/>
+        <CheckBox x:Name="ChkAudioConversion" Content="Convert If AC-3 -&gt; AAC" HorizontalAlignment="Left" Margin="302,0,0,173" VerticalAlignment="Bottom" IsChecked="True" Width="147" />
+        <Label Content="Drop X264 Format" HorizontalAlignment="Left" Height="28" Margin="130,0,0,168" VerticalAlignment="Bottom" Width="114"/>
+        <ComboBox x:Name="cmbH64Target" HorizontalAlignment="Left" Height="28" Margin="238,0,0,167" VerticalAlignment="Bottom" Width="60" SelectedIndex="1">
+            <ComboBoxItem Content="AVC"/>
+            <ComboBoxItem Content="ASP"/>
+            <ComboBoxItem Content="H264"/>
+        </ComboBox>
+        <Button x:Name="BtnCompare" Content="File Compare" HorizontalAlignment="Left" Height="26" Margin="847,0,0,169" VerticalAlignment="Bottom" Click="BtnCompare_Click" Width="78" RenderTransformOrigin="0.475,1.233"/>
+        <Button x:Name="DeleteSel"  HorizontalAlignment="Left" Height="26" Margin="1098,0,0,170" VerticalAlignment="Bottom" Width="24" Click="DeleteSel_Click">
+            <Image Source="/Icons/cancel.png" VerticalAlignment="Bottom"/>
+        </Button>
+        <ComboBox x:Name="CmbScanDirectory" HorizontalAlignment="Left" Margin="931,0,0,172" VerticalAlignment="Bottom" Width="164" LostFocus="CmbScanDirectory_LostFocus" KeyUp="CmbScanDirectory_KeyUp"/>
+        <Button Content="" HorizontalAlignment="Left" Height="26" Margin="817,0,0,169" VerticalAlignment="Bottom" Width="26" Click="Button_Click"/>
+        <Button x:Name="BtnBitRateSettings" Content="Bitrate Settings" HorizontalAlignment="Left" Height="30" Margin="26,0,0,76" VerticalAlignment="Bottom" Click="BtnBitRateSettings_Click" Width="89" />
+        <Button x:Name="BtnViewLog" Content="View Log" HorizontalAlignment="Left" Height="30" Margin="267,0,0,76" VerticalAlignment="Bottom" Click="BtnViewLog_Click" Width="89" />
+        <Button x:Name="BtnDirThreads" Content="Directory/Thread Settings" HorizontalAlignment="Left" Height="30" Margin="120,0,0,76" VerticalAlignment="Bottom" Width="142" Click="BtnDirThreads_Click"/>
+        <StatusBar x:Name="statusbar1" Height="34" Margin="25,0,0,0" VerticalAlignment="Bottom">
+            <Label x:Name="lblTotalStatus" Background="#FFBFBFBF" Width="62" Height="34" Content="Total Time" FontSize="11"/>
+            <Label x:Name="LblTotalTIMEAll" Content="" HorizontalAlignment="Left" Height="28" VerticalAlignment="Center" Width="47"/>
+            <Label x:Name="lblPassFailStatus" Background="#FFBFBFBF" Width="51" Height="34" Content="Pass/Fail" FontSize="11"/>
+            <Label x:Name="lblFailpass" Content="" HorizontalAlignment="Left" Height="28" VerticalAlignment="Center" Width="51"/>
+            <Label x:Name="lblQueStatus" Background="#FFBFBFBF" Width="42" Height="34" Content="Que" FontSize="11"/>
+            <Label x:Name="lblQueInfo" HorizontalAlignment="Left" Height="28" VerticalAlignment="Center" Width="45"/>
+            <Label x:Name="lblAccelStatus" Background="#FFBFBFBF" Width="67" Height="34" Content="Accel HW" FontSize="11"/>
+            <Label x:Name="lbAccelHW" Content="" HorizontalAlignment="Left" Height="28" VerticalAlignment="Center" Width="80"/>
+            <Button x:Name="btnRunTest" Content="Audio Joiner" HorizontalAlignment="Left" Height="28" VerticalAlignment="Center" Width="70" Click="btnRunTest_Click"/>
+            <Button x:Name="btnScriptEditor" Content="Script Injector" HorizontalAlignment="Left" Height="28" VerticalAlignment="Center" Width="77" Click="btnScriptEditor_Click"/>
+            <Button x:Name="btnMediaImporter" Content="Import Footage" HorizontalAlignment="Left" Height="28" VerticalAlignment="Center" Width="89" Click="btnMediaImporter_Click"/>
+            <Button x:Name="btnShortsCreator" Content="Create Shorts" HorizontalAlignment="Left" Height="28" VerticalAlignment="Top" Width="74" Click="btnShortsCreator_Click"/>
+            <Button x:Name="btnVIdeoEdit" Content="Edit Points" HorizontalAlignment="Center" Height="28" VerticalAlignment="Center" Width="63" Click="btnVIdeoEdit_Click"/>
+            <Button x:Name="btnScraperDraft" Content="Scrape Draft" HorizontalAlignment="Center" Height="28" VerticalAlignment="Center" Width="88" 
+                    Click="btnScraperDraft_Click"/>
+            <Button x:Name="btnSetupload" Content="Uploads Directory" HorizontalAlignment="Center" Height="28" VerticalAlignment="Center" Width="110" 
+                Click="btnSetupload_Click"/>
+        </StatusBar>
+
+        <StatusBar x:Name="statusbar2" Height="34" Margin="26,0,10,34" VerticalAlignment="Bottom">
+            <Label x:Name="lblSpeedStatus" Background="#FFBFBFBF" Width="64" Height="34" Content="Speed" MouseDoubleClick="Label_MouseDoubleClick" FontSize="11" HorizontalAlignment="Left"/>
+            <Label x:Name="lblSpeed" Content="" HorizontalAlignment="Left" Height="28" VerticalAlignment="Center" Width="47" RenderTransformOrigin="-2.468,3.693"/>
+            <Label x:Name="lblCurrentFrameStatus" Background="#FFBFBFBF" Width="81" Height="34" Content="Current Frame" FontSize="11"/>
+            <Label x:Name="lblCurrentFrames" Content="" HorizontalAlignment="Left" Height="28" VerticalAlignment="Center" Width="38"/>
+            <Label x:Name="lblFramesStatus" Background="#FFBFBFBF" Width="51" Height="34" Content="Frames" FontSize="11"/>
+            <Label x:Name="lblFrames" Content="" HorizontalAlignment="Left" Height="28" VerticalAlignment="Center" Width="78"/>
+            <Label x:Name="lblBitrateStatus" Background="#FFBFBFBF" Width="42" Height="34" Content="Bitrate" FontSize="11"/>
+            <Label x:Name="lblBitrate" Content="" HorizontalAlignment="Left" Height="28" VerticalAlignment="Center" Width="88"/>
+            <Label x:Name="lblDurationStatus" Background="#FFBFBFBF" Width="60" Height="34" Content="Processed" FontSize="11"/>
+            <Label x:Name="lblDuration" Content="" HorizontalAlignment="Left" Height="28" VerticalAlignment="Center" Width="59"/>
+            <Label x:Name="lblETAStatus" Background="#FFBFBFBF" Width="27" Height="34" Content="ETA" FontSize="11"/>
+            <Label x:Name="lblEta" Content="" HorizontalAlignment="Left" Height="28" VerticalAlignment="Center" Width="39"/>
+            <Label x:Name="lblTotalTimeStatus" Background="#FFBFBFBF" Width="43" Height="34" Content="Time" FontSize="11"/>
+            <Label x:Name="lblTotalTime" HorizontalAlignment="Left" Height="28" VerticalAlignment="Center" Width="33"/>
+            <Label x:Name="lblPercentStatus" Background="#FFBFBFBF" Width="53" Height="34" Content="Percent" FontSize="11"/>
+            <Label x:Name="lblPercent" HorizontalAlignment="Left" Height="28" VerticalAlignment="Center" Width="54"/>
+
+        </StatusBar>
+        <CheckBox x:Name="ChkAutoAAC" Content="Auto -&gt; AAC" HorizontalAlignment="Left" Margin="442,0,0,173" VerticalAlignment="Bottom" Width="90" />
+        <CheckBox x:Name="ChkChangeOutputname" Content="Change Output Name" HorizontalAlignment="Left" Margin="612,0,0,84" VerticalAlignment="Bottom" Width="141" />
+        <CheckBox x:Name="ChkReEncode" Content="Re Encode" HorizontalAlignment="Left" Margin="528,0,0,84" VerticalAlignment="Bottom" Width="87" />
+        <Button x:Name="BtnFileFixer" Content="File Fixer" HorizontalAlignment="Left" Height="24" Margin="758,0,0,170" VerticalAlignment="Bottom" Width="53" Click="BtnFileFixer_Click"/>
+        <Button x:Name="BtnVideoCardDetails" Content="" HorizontalAlignment="Left" Height="30" Margin="758,0,0,75" VerticalAlignment="Bottom" Width="41" Click="BtnVideoCardDetails_Click"/>
+        <Label Content="Max Shorts" HorizontalAlignment="Left" Height="28" Margin="537,0,0,167" VerticalAlignment="Bottom" Width="65"/>
+        <TextBox x:Name="txtMaxShorts" HorizontalAlignment="Left" Margin="610,0,0,171" TextWrapping="Wrap" Text="80" VerticalAlignment="Bottom" Width="48" FontSize="14"/>
+    </Grid>
+
+</Window>

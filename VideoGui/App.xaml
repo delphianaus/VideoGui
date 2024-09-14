@@ -1,0 +1,12 @@
+﻿<Application x:Class="VideoGui.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:VideoGui"
+             StartupUri="SplashScreenWindow.xaml">
+    <Application.Resources>
+        <local:BooleanToColorConverter x:Key="BooleanToColorConverter"/>
+        <local:CompareConverter x:Key="CompareConverter"/>
+        <local:VideoSizeConverter x:Key="VideoSizeConverter"/>
+        <local:VideoDetailsConverter x:Key="VideoDetailsConverter"/>
+    </Application.Resources>
+</Application>
