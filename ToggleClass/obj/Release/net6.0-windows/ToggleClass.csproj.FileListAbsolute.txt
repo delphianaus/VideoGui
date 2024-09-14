@@ -1,9 +1,0 @@
-C:\VideoGui\src\ToggleClass\bin\Release\net6.0-windows\ToggleClass.deps.json
-C:\VideoGui\src\ToggleClass\bin\Release\net6.0-windows\ToggleClass.dll
-C:\VideoGui\src\ToggleClass\obj\Release\net6.0-windows\ToggleClass.GeneratedMSBuildEditorConfig.editorconfig
-C:\VideoGui\src\ToggleClass\obj\Release\net6.0-windows\ToggleClass.AssemblyInfoInputs.cache
-C:\VideoGui\src\ToggleClass\obj\Release\net6.0-windows\ToggleClass.AssemblyInfo.cs
-C:\VideoGui\src\ToggleClass\obj\Release\net6.0-windows\ToggleClass.csproj.CoreCompileInputs.cache
-C:\VideoGui\src\ToggleClass\obj\Release\net6.0-windows\ToggleClass.dll
-C:\VideoGui\src\ToggleClass\obj\Release\net6.0-windows\refint\ToggleClass.dll
-C:\VideoGui\src\ToggleClass\obj\Release\net6.0-windows\ref\ToggleClass.dll
