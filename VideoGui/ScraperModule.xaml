@@ -1,4 +1,4 @@
-﻿<Window x:Class="VideoGui.ScraperModule"
+﻿<Window x:Name="mainwindow" x:Class="VideoGui.ScraperModule"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -53,14 +53,20 @@
                      Margin="1,0,0,0" IsSynchronizedWithCurrentItem="False" Padding="0,5,0,5" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto" Height="70" Width="782"/>
         </Border>
         <StatusBar Name="StatusBar" HorizontalAlignment="Left" 
-                   VerticalAlignment="Bottom" Height="40" Background="#FFEBCACA" Width="795" Margin="0,0,0,2">
+                   VerticalAlignment="Bottom" Height="37" Background="#FFEBCACA" Width="795" Margin="5,0,3,2">
             <Label x:Name="lblLastNode" Content="Initializing..."  Margin="0,0,0,0" VerticalAlignment="Bottom" Padding="0,2,24,0"/>
-            <Label Name="lblInsert" Content="" Width="214" VerticalAlignment="Center"/>
-            <Label Name="lblInsertId" Content="" Margin="0,0,0,0" VerticalAlignment="Bottom"/>
+            <Label Name="lblInsert" Content="Total Uploads : " Width="81" VerticalAlignment="Center"/>
+            <Label x:Name="lblTotal" Width="25" Content="" VerticalAlignment="Center"/>
+            <Label x:Name="lblUp" Width="69" Content="Uploading : " VerticalAlignment="Center"/>
+            <Label x:Name="lblUploading" Width="20" Content="" VerticalAlignment="Center"/>
+            <Label Name="lblInsertId4" Width="68" Content="Uploaded : " VerticalAlignment="Center"/>
+            <Label x:Name="lblUploaded" Content="" VerticalAlignment="Center" Width="20"/>
+            <Label Name="lblInsertId5" Width="68" Content="Waiting : " VerticalAlignment="Center" HorizontalAlignment="Left"/>
+            <Label x:Name="lblWaiting" Content="" VerticalAlignment="Center"  Width="20"/>
             <Button Name="btnClickUpload" Content="Click Upload" VerticalAlignment="Top"
-                    Height="32" Width="75" HorizontalAlignment="Right" Margin="419,0,0,0" Click="btnClickUpload_Click"/>
+                    Height="32" Width="75" HorizontalAlignment="Right" Click="btnClickUpload_Click" Margin="121,0,0,0"/>
             <Button Name="btnClose" Content="Close" VerticalAlignment="Center"
-           Height="32" Width="75" HorizontalAlignment="Right" Margin="2,0,0,0" MinWidth="3" Click="btnClose_Click"/>
+           Height="32" Width="75" HorizontalAlignment="Right" Margin="1,0,0,0" MinWidth="3" Click="btnClose_Click" HorizontalContentAlignment="Center"/>
         </StatusBar>
     </Grid>
 </Window>

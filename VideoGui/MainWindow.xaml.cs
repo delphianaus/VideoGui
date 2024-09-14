@@ -155,16 +155,14 @@ namespace VideoGui
         public CollectionViewSource HistoricCollectionViewSource = new CollectionViewSource();
         public CollectionViewSource CurrentCollectionViewSource = new CollectionViewSource();
         public CollectionViewSource ImportCollectionViewSource = new CollectionViewSource();
-        ObservableCollection<ScheduleMapNames> SchedulingNamesList = new ObservableCollection<ScheduleMapNames>();
         public MediaImporter GoProMediaImporter = null;
-        ObservableCollection<ScheduleMapItem> SchedulingItemsList = new ObservableCollection<ScheduleMapItem>();
         public ObservableCollection<ComplexJobList> ComplexProcessingJobList = new ObservableCollection<ComplexJobList>();
         public ObservableCollection<ComplexJobHistory> ComplexProcessingJobHistory = new ObservableCollection<ComplexJobHistory>();
         public ObservableCollection<FileInfoGoPro> FileRenamer = new ObservableCollection<FileInfoGoPro>();
 
         public ObservableCollection<PlanningQue> PlanningQueList = new ObservableCollection<PlanningQue>();
         public ObservableCollection<PlanningCuts> PlanningCutsList = new ObservableCollection<PlanningCuts>();
-        ObservableCollectionFilters ColectionFilter;
+
         public List<ShortsProcessor> ShortsProcessors = new List<ShortsProcessor>();
 
         VideoCutsEditor frmVCE = null;
@@ -337,16 +335,6 @@ namespace VideoGui
                             selectShortUpload_Handler(ThisForm, tld);
                             break;
                         }
-                    case SelectReleaseSchedule SelectReleaseSchedulefrm:
-                        {
-                            formObjectHandler_SelectReleaseSchedule(tld, SelectReleaseSchedulefrm);
-                            break;
-                        }
-                    case SchedulingSelectEditor ScheduleingItemsEditorfrm:
-                        {
-                            formObjectHandler_SchedulingItemsEditor(tld, ScheduleingItemsEditorfrm);
-                            break;
-                        }
 
                 }
             }
@@ -356,362 +344,7 @@ namespace VideoGui
             }
 
         }
-        private int GetSelectedSchedules()
-        {
-            try
-            {
-                int res = -1;
-                RegistryKey key = "SOFTWARE\\VideoGui".OpenSubKey(Registry.CurrentUser);
-                res = key.GetValueInt("SelectedScheduleId", -1);
-                bool IsUseNewStart = key.GetValueBool("UseNewStart", false);
-                //chkUseStartTimes.IsChecked = IsUseNewStart;
-                key?.Close();
-                return res;
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite($"GetSelectedSchedules {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
-                return -1;
-            }
-            return 0;
-        }
-        private void formObjectHandler_SchedulingItemsEditor(object tld, SchedulingSelectEditor scheduleingItemsEditorfrm)
-        {
-            try
-            {
-                if (tld is null)
-                {
-                    scheduleingItemsEditorfrm.lstTitles.Items.Clear();
-                    scheduleingItemsEditorfrm.lstTitles.ItemsSource = ColectionFilter.SchedulingItemsView.View;
-                    int SchedulingId = GetSelectedSchedules();
-                    scheduleingItemsEditorfrm.txtTitle.Text = "";
-                    if (SchedulingId != -1)
-                    {
-                        foreach (var cp in SchedulingNamesList.Where(cp => cp.Id == SchedulingId))
-                        {
-                            scheduleingItemsEditorfrm.txtTitle.Text = cp.Name;
-                            scheduleingItemsEditorfrm.TitleId = SchedulingId;
-                            ColectionFilter.SetSchedulingTag(SchedulingId);
-                            ColectionFilter.SchedulingItemsView.View.Refresh();
-                            break;
-                        }
-                    }
-                }
-                else if (tld is CustomParams_AddTimeSpanEntries cp_ATSE)
-                {
-                    var Id = scheduleingItemsEditorfrm.TitleId;
-                    AddTimeSpansToSchedulingItemsList(cp_ATSE.Start, cp_ATSE.End, cp_ATSE.Gap, Id);
-                }
-                else if (tld is CustomParams_RemoveTimeSpans cp_RMTSE)
-                {
-                    RemoveTimeSpansFromSchedulingItemsList(cp_RMTSE.id, cp_RMTSE.RemoveAll);
-                }
-                else if (tld is CustomParams_EditTimeSpans cp_ETSE)
-                {
-                    EditTimeSpansFromSchedulingItemsList(cp_ETSE.id, cp_ETSE.Start, cp_ETSE.End, cp_ETSE.Gap);
-                }
-                else if (tld is CustomParams_Refresh cpRefresh)
-                {
-                    int id = ColectionFilter.GetSchedulingTag();
-                    if (id != -1)
-                    {
-                        foreach (var _item in SchedulingNamesList.Where(i => i.Id == id))
-                        {
-                            scheduleingItemsEditorfrm.txtTitle.Text = _item.Name;
-                            scheduleingItemsEditorfrm.TitleId = id;
-                            ColectionFilter.SetSchedulingTag(id);
-                            break;
-                        }
-                    }
-                    SetSelectedSchedules();
-                }
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite($"formObjectHandler_SchedulingItemsEditor {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
-            }
-        }
-        private void EditTimeSpansFromSchedulingItemsList(int id, TimeSpan start, TimeSpan end, int gap)
-        {
-            try
-            {
-                string sql = "UPDATE SCHEDULINGITEMS SET SSTART = @inputValue1, " +
-                    "SEND = @inputValue2, GAP = @inputValue3 WHERE ID = @inputValue4";
 
-                using (var connection = new FbConnection(connectionString))
-                {
-                    connection.Open();
-                    using (var command = new FbCommand(sql, connection))
-                    {
-                        command.Parameters.Clear();
-                        command.Parameters.AddWithValue("@inputValue1", start);
-                        command.Parameters.AddWithValue("@inputValue2", end);
-                        command.Parameters.AddWithValue("@inputValue3", gap);
-                        command.Parameters.AddWithValue("@inputValue4", id);
-                        command.ExecuteNonQuery();
-                    }
-                    connection.Close();
-                }
-                foreach (var item in SchedulingItemsList.Where(item => item.Id == id))
-                {
-                    item.Start = start;
-                    item.End = end;
-                    item.Gap = gap;
-                    break;
-                }
-                //ColectionFilter.SchedulingItemsView.View.Refresh();
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite($"EditTimeSpansFromSchedulingItemsList {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
-            }
-        }
-        private void RemoveTimeSpansFromSchedulingItemsList(int id, bool All = false)
-        {
-            try
-            {
-                string sql = $"DELETE FROM SCHEDULINGITEMS WHERE {(All ? "SCHEDULINGID" : "ID")} = @inputValue";
-                using (var connection = new FbConnection(connectionString))
-                {
-                    connection.Open();
-                    using (var command = new FbCommand(sql, connection))
-                    {
-                        command.Parameters.Clear();
-                        command.Parameters.AddWithValue("@inputValue", id);
-                        command.ExecuteNonQuery();
-                    }
-                    connection.Close();
-                }
-
-                foreach (var item in SchedulingItemsList.Where(item => item.Id == id))
-                {
-                    SchedulingItemsList.Remove(item);
-                    break;
-                }
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite($"RemoveTimeSpansFromSchedulingItemsList {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
-            }
-        }
-
-        public void AddTimeSpansToSchedulingItemsList(TimeSpan Start, TimeSpan End, int Gap, int SchId)
-        {
-            try
-            {
-                bool found = false;
-                string sql = "SELECT ID FROM SCHEDULINGITEMS WHERE @inputValue BETWEEN SSTART AND SEND AND SCHEDULINGID = @SCHEDULEID";
-
-                using (var connection = new FbConnection(connectionString))
-                {
-                    connection.Open();
-                    using (var command = new FbCommand(sql, connection))
-                    {
-                        command.Parameters.Clear();
-                        command.Parameters.AddWithValue("@inputValue", Start.Add(TimeSpan.FromSeconds(1)));
-                        command.Parameters.AddWithValue("@SCHEDULEID", SchId);
-
-                        List<string> ids = command.ExecuteReader()
-                         .Cast<DbDataRecord>().Select(record => record.GetValue(0).ToString()).ToList();
-                        if (ids is not null)
-                        {
-                            found = ids.IsNullOrEmpty() ? false : true;
-                        }
-                    }
-                    connection.Close();
-                }
-                if (!found)
-                {
-                    int idx = -1, SchedulingId = ColectionFilter.GetSchedulingTag();
-
-                    string sqlx = "INSERT INTO SCHEDULINGITEMS(SSTART,SEND,Gap,SCHEDULINGID) VALUES(@START,@END,@GAP,@SCHEDULINGID) RETURNING ID;";
-                    using (var connection = new FbConnection(connectionString))
-                    {
-                        connection.Open();
-                        using (var command = new FbCommand(sqlx, connection))
-                        {
-                            command.Parameters.Clear();
-                            command.Parameters.AddWithValue("@START", Start);
-                            command.Parameters.AddWithValue("@END", End);
-                            command.Parameters.AddWithValue("@GAP", Gap);
-                            command.Parameters.AddWithValue("@SCHEDULINGID", SchedulingId);
-                            var res = command.ExecuteScalar();
-                            idx = (res is int idxx) ? idxx : idx;
-                        }
-                        connection.Close();
-                        if (idx != -1)
-                        {
-                            connectionString.ExecuteReader($"SELECT * FROM SCHEDULINGITEMS WHERE ID = {idx}",
-                                        OnReadSchedulingItems);
-                        }
-                    }
-                }
-                else
-                {
-                    System.Windows.MessageBox.Show("Time Span Already Exists");
-                }
-
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite($"AddTimeSpansToSchedulingItemsList {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
-            }
-        }
-       
-
-
-        private void OnReadSchedulingItems(FbDataReader reader)
-        {
-            try
-            {
-                SchedulingItemsList.Add(new ScheduleMapItem(reader));
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite($"OnReadSchedulingItems FbDataReader {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
-            }
-        }
-        private void formObjectHandler_SelectReleaseSchedule(object tld, SelectReleaseSchedule selectReleaseSchedulefrm)
-        {
-            try
-            {
-                if (tld is null)
-                {
-                    selectReleaseSchedulefrm.lstMainSchedules.ItemsSource = SchedulingNamesList;
-                }
-                else if (tld is CustomParams_Save cpSave)
-                {
-                    if (cpSave.id != -1)
-                    {
-                        string sql = "update SCHEDULINGNAMES set " +
-                            "NAME = @inputValue where ID = @inputValue2";
-                        using (var connection = new FbConnection(connectionString))
-                        {
-                            connection.Open();
-                            using (var command = new FbCommand(sql, connection))
-                            {
-                                command.Parameters.Clear();
-                                command.Parameters.AddWithValue("@inputValue", cpSave.Name);
-                                command.Parameters.AddWithValue("@inputValue2", cpSave.id);
-                                command.ExecuteNonQuery();
-                            }
-                            connection.Close();
-                        }
-                        SchedulingListUpdate(cpSave.id, false, cpSave.Name);
-                    }
-                    else
-                    {
-                        AddSchedulingName(cpSave.Name);
-                    }
-                }
-                else if (tld is CustomParams_Delete cpDel)
-                {
-                    if (cpDel.Id != -1)
-                    {
-                        string sql = "delete from SCHEDULINGNAMES where ID = @inputValue";
-                        using (var connection = new FbConnection(connectionString))
-                        {
-                            connection.Open();
-                            using (var command = new FbCommand(sql, connection))
-                            {
-                                command.Parameters.Clear();
-                                command.Parameters.AddWithValue("@inputValue", cpDel.Id);
-                                command.ExecuteNonQuery();
-                            }
-                            connection.Close();
-                        }
-                        SchedulingListUpdate(cpDel.Id, true, "");
-                    }
-                }
-                else if (tld is CustomParams_Add cpAdd)
-                {
-                    AddSchedulingName(cpAdd.Name);
-                }
-                else if (tld is CustomParams_Select cpSelect)
-                {
-                    SetSelectedSchedules();
-                    ColectionFilter.SetSchedulingTag(cpSelect.Id);
-                    ColectionFilter.SchedulingItemsView.View.Refresh();
-                }
-
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite($"formObjectHandler_SelectReleaseSchedule {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
-            }
-        }
-
-        private void AddSchedulingName(string name)
-        {
-            try
-            {
-                string sql = "insert into SCHEDULINGNAMES(NAME) values(@inputValue) returning ID;";
-                int idx = -1;
-                using (var connection = new FbConnection(connectionString))
-                {
-                    connection.Open();
-                    using (var command = new FbCommand(sql, connection))
-                    {
-                        command.Parameters.Clear();
-                        command.Parameters.AddWithValue("@inputValue", name);
-                        var r = command.ExecuteScalar();
-                        idx = (r is int res) ? res : idx;
-                    }
-                    connection.Close();
-                }
-                if (idx != -1)
-                {
-                    SchedulingNamesList.Add(new ScheduleMapNames(name, idx));
-                    ColectionFilter.SetSchedulingTag(idx);
-                }
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite($"AddSchedulingName {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
-            }
-        }
-        private void SetSelectedSchedules()
-        {
-            try
-            {
-                int ScheduleId = ColectionFilter.GetSchedulingTag();
-                RegistryKey key = "SOFTWARE\\VideoGui".OpenSubKey(Registry.CurrentUser);
-                //key.SetValue("UseNewStart", chkUseStartTimes.IsChecked);
-                key.SetValue("SelectedScheduleId", ScheduleId);
-                key?.Close();
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite($"SetSelectedSchedules {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
-            }
-        }
-        private void SchedulingListUpdate(int id, bool remove = true, string name = "")
-        {
-            try
-            {
-                for (int i = SchedulingNamesList.Count - 1; i >= 0; i--)
-                {
-                    if (SchedulingNamesList[i].Id == id)
-                    {
-                        if (remove)
-                        {
-                            SchedulingNamesList.RemoveAt(i);
-                            ColectionFilter.SetSchedulingTag(-1);
-
-                        }
-                        else
-                        {
-                            SchedulingNamesList[i].Name = name;
-                        }
-                        break;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite($"RemoveFromSchedulingList {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
-            }
-        }
         private void selectShortUpload_Handler(object thisForm, object tld)
         {
             if (tld is CustomParams_GetConnectionString CGCS)
@@ -1244,9 +877,6 @@ namespace VideoGui
 
                 sqlstring = $"create table MonitoredDeletion({Id},DestinationFile varchar(500))";
                 connectionString.CreateTableIfNotExists(sqlstring);
-                
-                sqlstring = $"CREATE TABLE SCHEDULINGNAMES({Id},NAME VARCHAR(250));";
-                connectionString.CreateTableIfNotExists(sqlstring);
 
                 sqlstring = $"create table UPLOADSRECORD({Id},UPLOADFILE varchar(256), UPLOAD_DATE DATE, UPLOAD_TIME TIME)";
                 connectionString.CreateTableIfNotExists(sqlstring);
@@ -1261,6 +891,10 @@ namespace VideoGui
 
 
                 sqlstring = $"create table ProcessingLog({Id},Source varchar(500),Destination varchar(500),InProcess SmallInt);";
+                connectionString.CreateTableIfNotExists(sqlstring);
+
+
+                sqlstring = $"create table SHORTSDIRECTORY({Id},DIRECTORYNAME varchar(500));";
                 connectionString.CreateTableIfNotExists(sqlstring);
 
                 sqlstring = $"create table AutoEdits({Id},Source varchar(500),Destination varchar(500),Threshhold varchar(255)," +
@@ -1378,15 +1012,6 @@ namespace VideoGui
         {
             try
             {
-                SchedulingNamesList.Clear();
-                SchedulingItemsList.Clear();
-                string Id = "id integer generated by default as identity primary key".ToUpper();
-                string sqlstring = $"CREATE TABLE SCHEDULINGITEMS({Id},SCHEDULINGID INTEGER,SSTART TIME,SEND TIME,GAP INTEGER);";
-                connectionString.CreateTableIfNotExists(sqlstring);
-                sqlstring = $"CREATE TABLE SCHEDULINGNAMES({Id},NAME VARCHAR(250));";
-                connectionString.CreateTableIfNotExists(sqlstring);
-                connectionString.ExecuteReader("SELECT * FROM SCHEDULINGNAMES", OnReadSchedulingNames);
-                connectionString.ExecuteReader("SELECT * FROM SCHEDULINGITEMS", OnReadSchedulingItems);
                 connectionString.ExecuteReader("SELECT * FROM AUTOINSERT", OnReadAutoInsert);
                 connectionString.ExecuteReader("SELECT * FROM AUTOINSERTHISTORY Order By DELETIONDATE desc", OnReadAutoInsertHistory);
                 connectionString.ExecuteReader("SELECT * FROM PLANINGQUES", OnReadPlanningQues);
@@ -1397,18 +1022,6 @@ namespace VideoGui
             catch (Exception ex)
             {
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
-            }
-        }
-
-        private void OnReadSchedulingNames(FbDataReader reader)
-        {
-            try
-            {
-                SchedulingNamesList.Add(new ScheduleMapNames(reader));
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite($"OnReadSchedulingItems FbDataReader {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
             }
         }
 
@@ -1830,12 +1443,7 @@ namespace VideoGui
                 Loadsettings();
                 DbInit();
 
-                string UploadPath = @"d:\shorts\VLINE Southern Cross To Swanhill 270624";
-                var Files = Directory.EnumerateFiles(UploadPath, "*.mp4", SearchOption.AllDirectories).Take(5).ToList();
-                foreach ( var rfile in Files )
-                {
-                    //File.Delete(rfile);
-                }
+                
 
                 this.httpClientFactory = httpClientFactory;
                 Task.Run(() => { KillOrphanProcess(); });

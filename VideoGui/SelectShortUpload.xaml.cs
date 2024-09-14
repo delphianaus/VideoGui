@@ -1,4 +1,4 @@
-﻿using FirebirdSql.Data.FirebirdClient;
+﻿ing FirebirdSql.Data.FirebirdClient;
 using FolderBrowserEx;
 using Microsoft.Win32;
 using System;
@@ -59,6 +59,7 @@ namespace VideoGui
                     var p = new CustomParams_GetConnectionString();
                     dbInit?.Invoke(this, p);
                     int res = -1;
+                    string ThisDir = ofg.SelectedFolder.Split(@"\").ToList().LastOrDefault();
                     if (p.ConnectionString is not null && p.ConnectionString.Length > 0)
                     {
                         string connectionString = p.ConnectionString;
@@ -69,12 +70,9 @@ namespace VideoGui
                             using (var command = new FbCommand(sql.ToUpper(), connection))
                             {
                                 command.Parameters.Clear();
-                                command.Parameters.AddWithValue("@p0", ofg.SelectedFolder.ToUpper());
+                                command.Parameters.AddWithValue("@P0", ThisDir.ToUpper());
                                 object result = command.ExecuteScalar();
-                                if (result is Int16 idxx)
-                                {
-                                    res = idxx;
-                                }
+                                res = result.ToInt(-1);
                             }
                             if (res == -1)
                             {
@@ -82,9 +80,9 @@ namespace VideoGui
                                 using (var command = new FbCommand(sql.ToUpper(), connection))
                                 {
                                     command.Parameters.Clear();
-                                    command.Parameters.AddWithValue("@p0", ofg.SelectedFolder.ToUpper());
+                                    command.Parameters.AddWithValue("@p0", ThisDir.ToUpper());
                                     object result = command.ExecuteScalar();
-                                    if (result is Int16 idxx)
+                                    if (result is int idxx)
                                     {
                                         res = idxx;
                                     }
@@ -108,7 +106,10 @@ namespace VideoGui
                     List<string> files = Directory.EnumerateFiles(ofg.SelectedFolder, "*.mp4", SearchOption.AllDirectories).ToList();
                     foreach (var filename in files.Where(filename => !filename.Contains("_") && res != -1))
                     {
-                        string newfile = System.IO.Path.GetFileNameWithoutExtension(filename) + $"_{res}{Path.GetExtension(filename)}";
+                        string fnx = filename.Split(@"\").ToList().LastOrDefault();
+                        string drx = filename.Replace(fnx, "");
+                        string newfile = drx +System.IO.Path.GetFileNameWithoutExtension(filename) + $"_{res}{Path.GetExtension(filename)}";
+
                         File.Move(filename, newfile);
                     }
                     lblShortNo.Content = files.Count.ToString();

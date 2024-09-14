@@ -505,6 +505,7 @@ namespace VideoGui
                 }
             ";
 
+                int Uploading = 0;
                 if (!rentry)
                 {
                     string _dest = UploadPath, defaultpath = Environment.SystemDirectory;
@@ -522,18 +523,24 @@ namespace VideoGui
                     using (var connection = new FbConnection(connectionStr))
                     {
                         connection.Open();
-                        string sql = "select * from UPLOADSRECORD WHERE UPLOAD_DATE = @P0";
+                        string sql = "select count(Id) from UPLOADSRECORD WHERE UPLOAD_DATE = @P0";
                         using (var command = new FbCommand(sql.ToUpper(), connection))
                         {
                             command.Parameters.Clear();
                             command.Parameters.AddWithValue("@p0", DateTime.Now.Date);
-                            using (var reader = command.ExecuteReader())
+                            object res = command.ExecuteScalar();
+                            if (res is long resxx)
+                            {
+                                TotalScheduled = resxx.ToInt();
+                                lblTotal.Content = TotalScheduled.ToString();
+                            }
+                            /*using (var reader = command.ExecuteReader())
                             {
                                 while (reader.Read())
                                 {
                                     TotalScheduled++;
                                 }
-                            }
+                            }*/
                         }
                         connection.Close();
                     }
@@ -542,7 +549,7 @@ namespace VideoGui
                     {
                         max++;
                         //if (((TotalScheduled+max) > MaxUploads)) break;
-                        lblInsert.Content = $"Scheduling {TotalScheduled + max} of {MaxUploads}";
+                        lblTotal.Content = $"{TotalScheduled}";
                         SendKeysString += "\"" + @"Z:\" + new DirectoryInfo(Path.GetDirectoryName(f)).Name + "\\" + Path.GetFileName(f) + "\" ";
                     }
                     if (SendKeysString.Trim() != "")
@@ -578,6 +585,7 @@ namespace VideoGui
                         while (true)
                         {
                             if (ExitDialog) return;
+                            NodeUpdate(Span_Name, ScheduledGet);
                             var html = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
                             bool found = false;
                             List<HtmlNode> Nodes = GetNodes(html, Span_Name);
@@ -586,7 +594,12 @@ namespace VideoGui
                                 Thread.Sleep(250);
                                 continue;
                             }
+                            Uploading = 0;
                             bool waitingcnt = Nodes.Count > 0 && Nodes.Where(nodex => nodex.InnerText.Contains("Waiting")).Count() > 0;
+                            //Uploading += Nodes.Where(node => !node.InnerText.Contains("100%") && !node.InnerText.Contains("Waiting")
+                            //&& !node.InnerText.Contains("Daily") && !node.InnerText.Contains("Uploaded")).Count();
+                            //lblUploading.Content = $"{Uploading}/{Nodes.Count}";
+                            
                             if (waitingcnt)
                             {
                                 html = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
@@ -605,6 +618,7 @@ namespace VideoGui
                             int CompleteCnt = 0;
                             if (Nodes.Count > 0)
                             {
+                                NodeUpdate(Span_Name, ScheduledGet);
                                 for (int i = 0; i < Nodes.Count; i++)
                                 {
                                     if (ExitDialog)
@@ -636,7 +650,7 @@ namespace VideoGui
                                                 var htmlcheck = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
                                                 if (htmlcheck is not null)
                                                 {
-                                                    if (Regex.IsMatch(htmlcheck, @"Uploads complete|Daily limit"))
+                                                    if (Regex.IsMatch(htmlcheck, @"Upload Complete|Daily limit|Processing will begin shortly"))
                                                     {
                                                         break;
                                                     }
@@ -659,6 +673,7 @@ namespace VideoGui
                                                 Thread.Sleep(100);
                                             }
                                             html = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
+                                            Nodes = GetNodes(html, Span_Name);
                                             if (Regex.IsMatch(html.ToLower(), @"saving|save and close|title-row style-scope ytcp-uploads-dialog|daily limit"))
                                             {
                                                 Thread.Sleep(300);
@@ -673,9 +688,12 @@ namespace VideoGui
                             {
                                 break;
                             }
+                            NodeUpdate(Span_Name, ScheduledGet);
+
                             if (found) continue;// gets next html and looks for waiting video
                         }
                         if (ExitDialog) return;
+                        NodeUpdate(Span_Name, ScheduledGet);
                         var html1 = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
                         List<HtmlNode> Nodes1 = GetNodes(html1, Span_Name);
                         int finishedz = 0;
@@ -690,15 +708,16 @@ namespace VideoGui
                             {
                                 if (Nodes1[i].InnerText.ToLower().Contains("100% uploaded"))
                                 {
-                                    int start = Nodes1[1].InnerText.IndexOf("\n") + 1;
-                                    int end = Nodes1[1].InnerText.IndexOf("\n", start);
-                                    string filename1 = Nodes1[1].InnerText.Substring(start, end - start).Trim();
+                                    int start = Nodes1[i].InnerText.IndexOf("\n") + 1;
+                                    int end = Nodes1[i].InnerText.IndexOf("\n", start);
+                                    string filename1 = Nodes1[i].InnerText.Substring(start, end - start).Trim();
                                     if (filename1 != "" && ScheduledOk.IndexOf(filename1) == -1)
                                     {
                                         string[] files = Directory.GetFiles("Z:\\", filename1, SearchOption.AllDirectories);
                                         foreach (string file in files)
                                         {
                                             File.Delete(file);
+                                            NodeUpdate(Span_Name, ScheduledGet);
                                             lstMain.Items.Insert(0, $"{file} Deleted");
                                             int res = -1;
                                             using (var connection = new FbConnection(connectStr))
@@ -717,11 +736,13 @@ namespace VideoGui
                                                 }
                                                 if (res == -1)
                                                 {
-                                                    sql = "INSERT INTO UPLOADSRECORD(UPLOADFILE) VALUES (@P0) RETURNING ID";
+                                                    sql = "INSERT INTO UPLOADSRECORD(UPLOADFILE, UPLOAD_DATE, UPLOAD_TIME) VALUES (@P0,@P1,@P2) RETURNING ID";
                                                     using (var command = new FbCommand(sql.ToUpper(), connection))
                                                     {
                                                         command.Parameters.Clear();
                                                         command.Parameters.AddWithValue("@p0", file);
+                                                        command.Parameters.AddWithValue("@p1", DateTime.Now.Date);
+                                                        command.Parameters.AddWithValue("@p2", DateTime.Now.TimeOfDay);
                                                         object result = command.ExecuteScalar();
                                                         if (result is Int16 idxx)
                                                         {
@@ -729,16 +750,36 @@ namespace VideoGui
                                                         }
                                                     }
                                                 }
+                                                else
+                                                {
+                                                    sql = "UPDATE UPLOADSRECORD SET UPLOAD_DATE = @P1, UPLOAD_TIME = @P2 WHERE ID = @P0";
+                                                    using (var command = new FbCommand(sql.ToUpper(), connection))
+                                                    {
+                                                        command.Parameters.Clear();
+                                                        command.Parameters.AddWithValue("@p0", res);
+                                                        command.Parameters.AddWithValue("@p1", DateTime.Now.Date);
+                                                        command.Parameters.AddWithValue("@p2", DateTime.Now.TimeOfDay);
+                                                        command.ExecuteNonQuery();
+                                                    }
+                                                }
                                                 connection.Close();
                                             }
                                             ScheduledOk.Add(filename1);
+                                            TotalScheduled++;
                                         }
                                     }
                                 }
                             }
                         }
-                        if (finishedz == Nodes1.Count)
+                        if (finishedz == Nodes1.Count && Nodes1.Count > 0)
                         {
+                            var cts = new CancellationTokenSource();
+                            cts.CancelAfter(TimeSpan.FromSeconds(4));
+                            while (!cts.IsCancellationRequested)
+                            {
+                                Thread.Sleep(10);
+                            }
+
                             Close();
                         }
 
@@ -784,6 +825,55 @@ namespace VideoGui
             }
         }
 
+        private int ScheduledGet()
+        {
+            return TotalScheduled;
+        }
+
+        private async Task<bool> NodeUpdate(string Span_Name, GetTotalScheduled ScheduledGet )
+        {
+            try
+            {
+                string html = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
+                var Nodes = GetNodes(html, Span_Name);
+                int waiting = 0;
+                int Uploaded = 0;
+                int Uploading = 0;
+                foreach (var node in Nodes)
+                {
+                    if (node.InnerText.ToLower().Contains("waiting"))
+                    {
+                        waiting++;
+                    }
+                    else if (node.InnerText.ToLower().Contains("100%") || node.InnerText.ToLower().Contains("100 %"))
+                    {
+                        Uploaded++;
+                    }
+                    else if (node.InnerText.ToLower().Contains("uploaded"))
+                    {
+                        Uploading++;
+                    }
+                }
+                if (ScheduledGet is not null)
+                {
+                    int Scheduled = ScheduledGet.Invoke();
+                    Dispatcher.Invoke(() =>
+                    {
+                        lblWaiting.Content = waiting.ToString();
+                        lblTotal.Content = Scheduled.ToString();
+                        lblUploading.Content = Uploading.ToString();
+                        lblUploaded.Content = Uploaded.ToString();
+                    });
+                    return true;
+                }
+                return false;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"NodeUpdate {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+                return false;
+            }
+        }
 
 
         private void SendKeys_Tick(object? sender, EventArgs e)
@@ -822,6 +912,9 @@ namespace VideoGui
                 Width = (ActualWidth != _width && _width != 0) ? _width : Width;
                 Height = (ActualHeight != _height && _height != 0) ? _height : Height;
                 lstMain.Width = Width - 5;
+                var thick = new Thickness(0, 0, 0, 0);
+                thick.Left = Width - 190;
+                //btnClickUpload.Margin = thick; 
                 key?.Close();
                 wv2.CoreWebView2InitializationCompleted += Wv2_CoreWebView2InitializationCompleted;
                 Dispatcher.Invoke(() =>
@@ -1204,7 +1297,7 @@ namespace VideoGui
                                         files++;
                                         if (files > 0)
                                         {
-                                            lblInsertId.Content = $"Files Inserted : {files}";
+                                            lblLastNode.Content = $"{files} Inserted";
                                         }
                                     });
                                 }
@@ -1213,7 +1306,7 @@ namespace VideoGui
                                     files++;
                                     if (files > 0)
                                     {
-                                        lblInsertId.Content = $"Files Inserted : {files}";
+                                        lblLastNode.Content = $"{files} Inserted";
                                     }
                                     for (int ix = 0; ix < lstMain.Items.Count; i++)
                                     {
@@ -1536,7 +1629,7 @@ namespace VideoGui
                     ActiveWebView[1].Width = brdmain.Width - 10;
                     ActiveWebView[1].Height = brdmain.Height - 13;
                     var p = new Thickness(0, 0, 0, 0);
-                    p.Left = Width - 394;
+                    p.Left = Width - 692;
                     btnClickUpload.Margin = p;
 
                     lstMain.Width = Width - 25;
@@ -1621,7 +1714,7 @@ namespace VideoGui
                 {
                     if (files > 0)
                     {
-                        lblInsertId.Content = $"Files Inserted : {files}";
+                        lblLastNode.Content = $"{files} Inserted";
                     }
                 });
 

@@ -16,13 +16,12 @@ namespace VideoGui
         public CollectionViewSource HistoricCollectionViewSource = new CollectionViewSource();
         public CollectionViewSource CurrentCollectionViewSource = new CollectionViewSource();
         public CollectionViewSource ImportCollectionViewSource = new CollectionViewSource();
-        public CollectionViewSource SchedulingItemsView = new CollectionViewSource();
 
         public bool ActiveCurrentCollection = false, ActiveHistoricCollection = false, ImportHistoricCollection = false;
 
         private GetListDelegate OnGetLists;
 
-        private int HistoricMinAge = -1, HistoricMaxAge = -1, FilterBySchedelingNameId = -1;
+        private int HistoricMinAge = -1, HistoricMaxAge = -1;
         public string HistoricContainsSourceDirectory = "", HistoricContainsPath = "", HistoricContainsFileName = "";
         public string CurrentContainsSourceDirectory = "", CurrentContainsPath = "", CurrentContainsFileName = "";
         public TimeSpan FromTime = TimeSpan.Zero;
@@ -41,26 +40,7 @@ namespace VideoGui
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
             }
         }
-        private void OnSchedulingItemsViewFilter(object sender, FilterEventArgs e)
-        {
-            try
-            {
-                if (e.Item is ScheduleMapItem SCHI && SchedulingItemsView.View is not null)
-                {
-                    if (FilterBySchedelingNameId != -1)
-                    {
-                        e.Accepted = (SCHI.ScheduleId == FilterBySchedelingNameId);
-                    }
-                    else e.Accepted = true;
-                }
-                else e.Accepted = false;
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite($"OnSchedulingItemsViewFilter {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
-                e.Accepted = false;
-            }
-        }
+
         public void SetToTimeSpan(TimeSpan time)
         {
             try
@@ -74,17 +54,7 @@ namespace VideoGui
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
             }
         }
-        public void SetSchedulingTag(int SchedulingTag)
-        {
-            try
-            {
-                FilterBySchedelingNameId = SchedulingTag;
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite($"SetSchedulingTag {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
-            }
-        }
+
         public void ClearImportTimes()
         {
             try
@@ -238,18 +208,7 @@ namespace VideoGui
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
             }
         }
-        public int GetSchedulingTag()
-        {
-            try
-            {
-                return FilterBySchedelingNameId;
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite($"GetSchedulingTag {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
-                return -1;
-            }
-        }
+
         public ObservableCollectionFilters()
         {
             try
@@ -259,7 +218,7 @@ namespace VideoGui
                 ImportCollectionViewSource.Filter += new FilterEventHandler(OnImportCollectionFilter);
                 HistoricCollectionViewSource.IsLiveFilteringRequested = true;
                 CurrentCollectionViewSource.IsLiveFilteringRequested = true;
-                SchedulingItemsView.Filter += new FilterEventHandler(OnSchedulingItemsViewFilter);
+
             }
             catch (Exception ex)
             {
