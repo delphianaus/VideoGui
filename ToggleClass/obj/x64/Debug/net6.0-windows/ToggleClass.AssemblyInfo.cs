@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ToggleClass")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a0b26530653216af5f110564943e6ecbad8b6021")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+67f22a0f7ed0ae890d6c931209c0848a20ac1928")]
 [assembly: System.Reflection.AssemblyProductAttribute("ToggleClass")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ToggleClass")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

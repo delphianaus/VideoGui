@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("NotifyIconWpf")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9832da913c2c9378c83f3551a0e1aa341b425d35")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+67f22a0f7ed0ae890d6c931209c0848a20ac1928")]
 [assembly: System.Reflection.AssemblyProductAttribute("NotifyIconWpf")]
 [assembly: System.Reflection.AssemblyTitleAttribute("NotifyIconWpf")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
