@@ -894,8 +894,11 @@ namespace VideoGui
                 connectionString.CreateTableIfNotExists(sqlstring);
 
 
-                sqlstring = $"create table SHORTSDIRECTORY({Id},DIRECTORYNAME varchar(500));";
+                sqlstring = $"create table SHORTSDIRECTORY({Id},DIRECTORYNAME varchar(500), TITLEID INTEGER);";
                 connectionString.CreateTableIfNotExists(sqlstring);
+
+                connectionString.AddFieldToTable("SHORTSDIRECTORY", "TITLEID", "INTEGER", -1);
+
 
                 sqlstring = $"create table AutoEdits({Id},Source varchar(500),Destination varchar(500),Threshhold varchar(255)," +
                     "Segment varchar(255),Target varchar(255));".ToUpper();

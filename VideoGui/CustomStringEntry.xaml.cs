@@ -26,7 +26,8 @@ namespace VideoGui
     {
         OnKeyPressEvent DoOnKeyPressEvent;
         OnFinish DoOnFinish;
-
+        public bool IsClosed = false;
+        public bool IsClosing = false;
         public string GetData()
         {
             try
@@ -44,6 +45,8 @@ namespace VideoGui
             try
             {
                 InitializeComponent();
+                Closing += (s, e) => { IsClosing = true; };
+                Closed += (s, e) => { IsClosed = true; _OnFinish?.Invoke(); };
                 Title = value;
                 txtData.Text = Filter;
                 DoOnKeyPressEvent = _KeyPress;

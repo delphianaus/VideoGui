@@ -5,5 +5,8 @@
     <Page Update="SelectReleaseSchedule.xaml">
       <SubType>Designer</SubType>
     </Page>
+    <Page Update="TitleSelectFrm.xaml">
+      <SubType>Designer</SubType>
+    </Page>
   </ItemGroup>
 </Project>

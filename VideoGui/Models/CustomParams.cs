@@ -79,7 +79,84 @@ namespace VideoGui.Models
         }
     }
 
+    public class CustomParams_Get
+    {
+        public dataUpdatType dataUpdatType { get; set; } = dataUpdatType.Get;
+        public string data_string { get; set; } = "";
+        public int Id { get; set; } = -1;
 
+        public int Idx { get; set; } = -1;
+        public CustomParams_Get(int _id, string datastring, int _idx = -1)
+        {
+            data_string = datastring;
+            Id = _id;
+            Idx = _idx;
+        }
+
+        
+        public CustomParams_Get()
+        {
+
+        }
+    }
+
+    public class CustomParams_EditName
+    {
+        public string name { get; set; } = "";
+        public int id { get; set; } = -1;
+
+        public CustomParams_EditName(int _id, string _name)
+        {
+            id = _id;
+            name = _name;
+        }
+    }
+
+    public class CustomParams_Initialize
+    {
+        bool IsUploads { get; set; }
+
+        public CustomParams_Initialize(bool _IsUploads = false)
+        {
+            IsUploads = _IsUploads;
+        }
+    }
+    public class CustomParams_Remove
+    {
+        public string Name { get; set; } = "";
+        public dataUpdatType dataUpdatType { get; set; } = dataUpdatType.Remove;
+        public int id { get; set; } = -1;
+        string data_string { get; set; } = "";
+        public int TitleLength { get; set; } = -1;
+        public CustomParams_Remove(int _id, string datastring = "")
+        {
+            id = _id;
+            data_string = datastring;
+        }
+    }
+
+    public enum updatetype { Title, Description, Tag };
+    public class CustomParams_Update
+    {
+        public int id { get; set; }
+        public updatetype updatetype { get; set; } = updatetype.Title;
+        public CustomParams_Update(int _id, updatetype _updatetype = updatetype.Title)
+        {
+            id = _id;
+            updatetype = _updatetype;
+        }
+    }
+    public class CustomParams_Add
+    {
+        public string Name { get; set; } = "";
+        public dataUpdatType dataUpdatType { get; set; } = dataUpdatType.Add;
+        public string data_string { get; set; } = "";
+        public CustomParams_Add(string _Name, string datastring)
+        {
+            Name = _Name;
+            data_string = datastring;
+        }
+    }
     public class CustomParams_Refresh
     {
     }

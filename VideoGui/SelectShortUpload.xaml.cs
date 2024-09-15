@@ -31,6 +31,7 @@ namespace VideoGui
     {
         databasehook<object> dbInit = null;
         public bool IsClosing = false, IsClosed = false;
+        public TitleSelectFrm DoTitleSelectFrm = null;
         public SelectShortUpload(databasehook<object> _dbInit, OnFinish _DoOnFinished)
         {
             InitializeComponent();
@@ -117,7 +118,57 @@ namespace VideoGui
                 ex.LogWrite($"btnSelectSourceDir_Click {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
         }
-        
+        public void DoTitleSelectCreate()
+        {
+            try
+            {
+
+                if (DoTitleSelectFrm is not null)
+                {
+                    if (!DoTitleSelectFrm.IsClosing && !DoTitleSelectFrm.IsClosed)
+                    {
+                        DoTitleSelectFrm.Close();
+                        DoTitleSelectFrm = new TitleSelectFrm(DoOnFinishTitleSelect, dbInit, true);
+                        Hide();
+                        DoTitleSelectFrm.Show();
+                    }
+                }
+                else
+                {
+                    DoTitleSelectFrm = new TitleSelectFrm(DoOnFinishTitleSelect, dbInit, true);
+                    Hide();
+                    DoTitleSelectFrm.Show();
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"{this} DoTitleSelectCreate {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
+
+        private void DoOnFinishTitleSelect()
+        {
+            try
+            {
+                if (DoTitleSelectFrm is not null)
+                {
+                    if (DoTitleSelectFrm.IsTitleChanged)
+                    {
+                        dbInit?.Invoke(this, new CustomParams_Update(DoTitleSelectFrm.TitleId, updatetype.Title));
+                    }
+                    if (DoTitleSelectFrm.IsClosed)
+                    {
+                        DoTitleSelectFrm = null;
+                    }
+                }
+                Show();
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"{this} DoOnFinishTitleSelect {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
+
         private void doOnFinish()
         {
             try
@@ -249,6 +300,18 @@ namespace VideoGui
             catch (Exception ex)
             {
                 ex.LogWrite($"txtMaxUpload_LostFocus {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
+            }
+        }
+
+        private void btnEditTitle_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                DoTitleSelectCreate();
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"btnEditTitle_Click {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
         }
 
