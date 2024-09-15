@@ -50,6 +50,18 @@ namespace VideoGui
             }
         }
 
+        public class CustomParams_Add
+        {
+            public string Name { get; set; } = "";
+            public dataUpdatType dataUpdatType { get; set; } = dataUpdatType.Add;
+            public string data_string { get; set; } = "";
+            public CustomParams_Add(string _Name, string datastring)
+            {
+                Name = _Name;
+                data_string = datastring;
+            }
+        }
+
         private void mnuSave_Click(object sender, RoutedEventArgs e)
         {
             try

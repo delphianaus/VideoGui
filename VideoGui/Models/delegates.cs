@@ -18,6 +18,7 @@ namespace VideoGui.Models.delegates
     public enum TitleDesc { TITLE, DESCRIPTION };
     public enum ViewType { LESS_EQUAL, GREATER_EQUAL };
     public enum dataFormName { MasterTagSelect, TagSelecteditor };
+    public enum dataUpdatType { Add, Remove, Edit, Change, Delete, Insert, Get };
     public enum MadeForKids { MFK_SET_BY_YOU, MFK_SET_BY_YOUTUBE, NOT_MADE_FOR_KIDS, NO_SELECTION };
     public delegate void _StatsHandlerDateTimeSetter(string filename, DateTime start);
     public delegate DateTime _StatsHandlerDateTimeGetter(string filename);

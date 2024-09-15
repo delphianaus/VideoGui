@@ -4,9 +4,42 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using VideoGui.Models.delegates;
 
 namespace VideoGui.Models
 {
+
+    public class CustomParams_Select
+    {
+        public int Id { get; set; } = -1;
+        public CustomParams_Select(int _id)
+        {
+            Id = _id;
+        }
+    }
+    public class CustomParams_Save
+    {
+        public int id { get; set; } = -1;
+        public string Name { get; set; } = "";
+        public CustomParams_Save(string name, int _id = -1)
+        {
+            id = _id;
+            Name = name;
+        }
+    }
+    public class CustomParams_Delete
+    {
+        public string Name { get; set; } = "";
+        public dataUpdatType dataUpdatType { get; set; } = dataUpdatType.Delete;
+        public int Id { get; set; } = -1;
+        public CustomParams_Delete(int _id, string _Name)
+        {
+            Name = _Name;
+            Id = _id;
+        }
+    }
+
+
     public class CustomParams_GetVideoFileName
     {
         public string id = "";
