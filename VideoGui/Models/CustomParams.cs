@@ -134,7 +134,18 @@ namespace VideoGui.Models
             data_string = datastring;
         }
     }
-
+    public class CustomParams_AddDescription
+    {
+        public int Id { get; set; } = -1;
+        public string Name { get; set; } = "";
+        public string Description { get; set; } = "";
+        public CustomParams_AddDescription(int _id, string _Name, string _Description)
+        {
+            Id = _id;
+            Name = _Name;
+            Description = _Description;
+        }
+    }
     public enum UpdateType { Title, Description, Tag };
     public class CustomParams_Update
     {
