@@ -135,12 +135,12 @@ namespace VideoGui.Models
         }
     }
 
-    public enum updatetype { Title, Description, Tag };
+    public enum UpdateType { Title, Description, Tag };
     public class CustomParams_Update
     {
         public int id { get; set; }
-        public updatetype updatetype { get; set; } = updatetype.Title;
-        public CustomParams_Update(int _id, updatetype _updatetype = updatetype.Title)
+        public UpdateType updatetype { get; set; } = UpdateType.Title;
+        public CustomParams_Update(int _id, UpdateType _updatetype = UpdateType.Title)
         {
             id = _id;
             updatetype = _updatetype;

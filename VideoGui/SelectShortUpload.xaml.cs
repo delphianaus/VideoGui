@@ -156,7 +156,7 @@ namespace VideoGui
                 {
                     if (DoTitleSelectFrm.IsTitleChanged)
                     {
-                        dbInit?.Invoke(this, new CustomParams_Update(DoTitleSelectFrm.TitleId, updatetype.Title));
+                        dbInit?.Invoke(this, new CustomParams_Update(DoTitleSelectFrm.TitleId, UpdateType.Title));
                     }
                     if (DoTitleSelectFrm.IsClosed)
                     {
