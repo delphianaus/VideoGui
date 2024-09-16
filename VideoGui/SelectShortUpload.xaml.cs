@@ -32,10 +32,12 @@ namespace VideoGui
         databasehook<object> dbInit = null;
         public bool IsClosing = false, IsClosed = false;
         public TitleSelectFrm DoTitleSelectFrm = null;
-        public SelectShortUpload(databasehook<object> _dbInit, OnFinish _DoOnFinished)
+        public SetLists ConnnectLists = null;
+        public SelectShortUpload(databasehook<object> _dbInit, OnFinish _DoOnFinished, SetLists _SetLists)
         {
             InitializeComponent();
             dbInit = _dbInit;
+            ConnnectLists = _SetLists;
             Closing += (s, e) => { IsClosing = true; };
             Closed += (s, e) => { IsClosed = true; _DoOnFinished?.Invoke(); };
         }
@@ -128,14 +130,14 @@ namespace VideoGui
                     if (!DoTitleSelectFrm.IsClosing && !DoTitleSelectFrm.IsClosed)
                     {
                         DoTitleSelectFrm.Close();
-                        DoTitleSelectFrm = new TitleSelectFrm(DoOnFinishTitleSelect, dbInit, true);
+                        DoTitleSelectFrm = new TitleSelectFrm(DoOnFinishTitleSelect, dbInit, ConnnectLists, true);
                         Hide();
                         DoTitleSelectFrm.Show();
                     }
                 }
                 else
                 {
-                    DoTitleSelectFrm = new TitleSelectFrm(DoOnFinishTitleSelect, dbInit, true);
+                    DoTitleSelectFrm = new TitleSelectFrm(DoOnFinishTitleSelect, dbInit, ConnnectLists, true);
                     Hide();
                     DoTitleSelectFrm.Show();
                 }
@@ -324,6 +326,7 @@ namespace VideoGui
                 string uploadsnumber = key.GetValueStr("UploadNumber", "5");
                 string MaxUploads = key.GetValueStr("MaxUploads", "100");
                 key?.Close();
+                ConnnectLists?.Invoke(3);
                 txtsrcdir.Text = (rootfolder != "" && Directory.Exists(rootfolder)) ? rootfolder : txtsrcdir.Text;
                 txtMaxUpload.Text = (uploadsnumber != "") ? uploadsnumber : txtMaxUpload.Text;
                 txtTotalUploads.Text = (MaxUploads != "") ? MaxUploads : txtTotalUploads.Text;

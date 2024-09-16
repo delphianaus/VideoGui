@@ -24,8 +24,10 @@ namespace VideoGui
         string Title = "";
         string TagTitle = "";
         public string BaseTitle = "";
+
         bool IsUploadsBuilder = false;
-        public TitleSelectFrm(OnFinish __ShowEditor, databasehook<Object> dbhook, bool _IsUploadsBuilder = false)
+        public TitleSelectFrm(OnFinish __ShowEditor, databasehook<Object> dbhook,
+            SetLists _SetLists,bool _IsUploadsBuilder = false)
         {
             try
             {

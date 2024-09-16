@@ -8,8 +8,8 @@
     <StartupObject>VideoGui.App</StartupObject>
     <ApplicationIcon>Properties\computer.ico</ApplicationIcon>
     <Platforms>x64</Platforms>
-    <AssemblyVersion>1.0.0.309</AssemblyVersion>
-    <FileVersion>1.0.0.309</FileVersion>
+    <AssemblyVersion>1.0.0.310</AssemblyVersion>
+    <FileVersion>1.0.0.310</FileVersion>
     <Nullable>annotations</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <UseWindowsForms>True</UseWindowsForms>
