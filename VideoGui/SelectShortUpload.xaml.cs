@@ -32,6 +32,7 @@ namespace VideoGui
         databasehook<object> dbInit = null;
         public bool IsClosing = false, IsClosed = false;
         public TitleSelectFrm DoTitleSelectFrm = null;
+        public DescSelectFrm DoDescSelectFrm = null;
         public SetLists ConnnectLists = null;
         public SelectShortUpload(databasehook<object> _dbInit, OnFinish _DoOnFinished, SetLists _SetLists)
         {
@@ -87,6 +88,13 @@ namespace VideoGui
                                     object result = command.ExecuteScalar();
                                     res = result.ToInt(-1);
                                 }
+                                btnEditTitle.IsChecked = false;
+                                btnEditDesc.IsChecked = false;
+                            }
+                            else
+                            {
+                                dbInit?.Invoke(this, new CustomParams_Select(res));
+                                connectionString.ExecuteReader($"SELECT * FROM SHORTSDIRECTORY WHERE ID {res}", OnReadShorts);
                             }
                             connection.Close();
                         }
@@ -114,6 +122,44 @@ namespace VideoGui
                     }
                     lblShortNo.Content = files.Count.ToString();
                 }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"btnSelectSourceDir_Click {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
+            }
+        }
+
+        private void OnReadShorts(FbDataReader reader)
+        {
+            try
+            {
+                int titleid = reader["TITLEID"].ToInt(-1);
+                int descid = reader["DESCID"].ToInt(-1);
+                btnEditTitle.IsChecked = titleid != -1;
+                btnEditDesc.IsChecked = descid != -1;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"btnSelectSourceDir_Click {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
+            }
+        }
+
+        public void UpdateDescId(int Id)
+        {
+            try
+            {
+                btnEditDesc.IsChecked = Id != -1;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"btnSelectSourceDir_Click {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
+            }
+        }
+        public void UpdateTitleId(int Id)
+        {
+            try
+            {
+                btnEditTitle.IsChecked = Id != -1;
             }
             catch (Exception ex)
             {
@@ -317,6 +363,56 @@ namespace VideoGui
             }
         }
 
+        private void btnEditDesc_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                try
+                {
+                    if (DoDescSelectFrm is not null && DoDescSelectFrm.IsActive)
+                    {
+                        DoDescSelectFrm.Close();
+                        DoDescSelectFrm = null;
+                    }
+
+                    DoDescSelectFrm = new DescSelectFrm(OnSelectFormClose, dbInit, true);
+                    Hide();
+                    DoDescSelectFrm.Show();
+                }
+                catch (Exception ex)
+                {
+                    ex.LogWrite($"{this} DoDescSelectCreate {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"btnEditTitle_Click {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
+            }
+        }
+
+        private void OnSelectFormClose()
+        {
+            try
+            {
+                if (DoDescSelectFrm is not null)
+                {
+                    if (DoDescSelectFrm.IsDescChanged)
+                    {
+                        dbInit?.Invoke(this, new CustomParams_Update(DoDescSelectFrm.TitleTagId, UpdateType.Description));
+                    }
+                    if (DoDescSelectFrm.IsClosed)
+                    {
+                        DoDescSelectFrm = null;
+                    }
+                }
+                Show();
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"{this} OnSelectFormClose {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
+
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             try
@@ -327,6 +423,8 @@ namespace VideoGui
                 string MaxUploads = key.GetValueStr("MaxUploads", "100");
                 key?.Close();
                 ConnnectLists?.Invoke(3);
+                var p = new CustomParams_GetConnectionString();
+                dbInit?.Invoke(this, p);
                 txtsrcdir.Text = (rootfolder != "" && Directory.Exists(rootfolder)) ? rootfolder : txtsrcdir.Text;
                 txtMaxUpload.Text = (uploadsnumber != "") ? uploadsnumber : txtMaxUpload.Text;
                 txtTotalUploads.Text = (MaxUploads != "") ? MaxUploads : txtTotalUploads.Text;
@@ -336,6 +434,46 @@ namespace VideoGui
                     lblShortNo.Content = cnt.ToString();
                 }
                 else lblShortNo.Content = "N/A";
+                if (rootfolder != "")
+                {
+                    string ThisDir = rootfolder.Split(@"\").ToList().LastOrDefault();
+                    if (p.ConnectionString is not null && p.ConnectionString.Length > 0)
+                    {
+                        string connectionString = p.ConnectionString;
+                        using (var connection = new FbConnection(connectionString))
+                        {
+                            int res = -1;
+                            connection.Open();
+                            string sql = "select * from SHORTSDIRECTORY WHERE DIRECTORYNAME = @P0";
+                            using (var command = new FbCommand(sql.ToUpper(), connection))
+                            {
+                                command.Parameters.Clear();
+                                command.Parameters.AddWithValue("@P0", ThisDir.ToUpper());
+                                object result = command.ExecuteScalar();
+                                res = result.ToInt(-1);
+                            }
+                            if (res == -1)
+                            {
+                                sql = "INSERT INTO SHORTSDIRECTORY(DIRECTORYNAME) VALUES (@P0) RETURNING ID";
+                                using (var command = new FbCommand(sql.ToUpper(), connection))
+                                {
+                                    command.Parameters.Clear();
+                                    command.Parameters.AddWithValue("@p0", ThisDir.ToUpper());
+                                    object result = command.ExecuteScalar();
+                                    res = result.ToInt(-1);
+                                }
+                                btnEditTitle.IsChecked = false;
+                                btnEditDesc.IsChecked = false;
+                            }
+                            else
+                            {
+                                dbInit?.Invoke(this, new CustomParams_Select(res));
+                                connectionString.ExecuteReader($"SELECT * FROM SHORTSDIRECTORY WHERE ID {res}", OnReadShorts);
+                            }
+                            connection.Close();
+                        }
+                    }
+                }
             }
             catch (Exception ex)
             {

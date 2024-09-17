@@ -211,7 +211,7 @@ namespace VideoGui
         {
 
         }
-        
+
         public class ProgressForegroundConverter : IValueConverter
         {
             public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
@@ -335,7 +335,7 @@ namespace VideoGui
                 }
                 WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
                 string gUrl = webAddressBuilder.Dashboard().Address;
-                
+
                 RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                 string uploadsnumber = key.GetValueStr("UploadNumber", "5");
                 string MaxUploads = key.GetValueStr("MaxUploads", "100");
@@ -358,7 +358,7 @@ namespace VideoGui
         {
             try
             {
-                switch(ThisForm)
+                switch (ThisForm)
                 {
                     case TitleSelectFrm frmTitleSelect:
                         {
@@ -399,6 +399,47 @@ namespace VideoGui
             {
                 switch (tld)
                 {
+                    case CustomParams_Update:
+                        {
+                            if (tld is CustomParams_Update p && p is not null)
+                            {
+                                RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                                string rootfolder = key.GetValueStr("UploadPath", @"D:\shorts\");
+                                key?.Close();
+                                string ThisDir = rootfolder.Split(@"\").ToList().LastOrDefault();
+                                if (ThisDir != "")
+                                {
+                                    int res = -1;
+                                    using (var connection = new FbConnection(connectionString))
+                                    {
+                                        connection.Open();
+                                        string sql = "select * from SHORTSDIRECTORY WHERE DIRECTORYNAME = @P0";
+                                        using (var command = new FbCommand(sql.ToUpper(), connection))
+                                        {
+                                            command.Parameters.Clear();
+                                            command.Parameters.AddWithValue("@P0", ThisDir.ToUpper());
+                                            object result = command.ExecuteScalar();
+                                            res = result.ToInt(-1);
+                                        }
+                                        if (res != -1)
+                                        {
+                                            sql = "UPDATE SHORTSDIRECTORY SET DESCID = @P1 WHERE ID = @P0";
+                                            using (var command = new FbCommand(sql.ToUpper(), connection))
+                                            {
+                                                command.Parameters.Clear();
+                                                command.Parameters.AddWithValue("@P0", res);
+                                                command.Parameters.AddWithValue("@P1", p.id);
+                                                object result = command.ExecuteScalar();
+                                                res = result.ToInt(-1);
+                                            }
+                                        }
+                                        connection.Close();
+                                    }
+                                    selectShortUpload.UpdateDescId(p.id);
+                                }
+                            }
+                            break;
+                        }
                     case CustomParams_Initialize cpInit:
                         {
                             frmDescSelectFrm.lstAllDescriptions.ItemsSource = DescriptionsList;
@@ -755,13 +796,57 @@ namespace VideoGui
             {
                 switch (tld)
                 {
+                    case CustomParams_Update:
+                        {
+                            if (tld is CustomParams_Update p && p is not null)
+                            {
+
+                                RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                                string rootfolder = key.GetValueStr("UploadPath", @"D:\shorts\");
+                                key?.Close();
+                                string ThisDir = rootfolder.Split(@"\").ToList().LastOrDefault();
+                                if (ThisDir != "")
+                                {
+                                    int res = -1;
+                                    using (var connection = new FbConnection(connectionString))
+                                    {
+                                        connection.Open();
+                                        string sql = "select * from SHORTSDIRECTORY WHERE DIRECTORYNAME = @P0";
+                                        using (var command = new FbCommand(sql.ToUpper(), connection))
+                                        {
+                                            command.Parameters.Clear();
+                                            command.Parameters.AddWithValue("@P0", ThisDir.ToUpper());
+                                            object result = command.ExecuteScalar();
+                                            res = result.ToInt(-1);
+                                        }
+                                        if (res != -1)
+                                        {
+                                            sql = "UPDATE SHORTSDIRECTORY SET TITLEID = @P1 WHERE ID = @P0";
+                                            using (var command = new FbCommand(sql.ToUpper(), connection))
+                                            {
+                                                command.Parameters.Clear();
+                                                command.Parameters.AddWithValue("@P0", res);
+                                                command.Parameters.AddWithValue("@P1", p.id);
+                                                object result = command.ExecuteScalar();
+                                                res = result.ToInt(-1);
+                                            }
+                                        }
+                                        connection.Close();
+                                    }
+                                    selectShortUpload.UpdateTitleId(p.id);
+                                }
+
+
+                            }
+                            break;
+                        }
                     case CustomParams_Initialize:
                         {
                             var _title = "";
                             string BaseTitle = "", xx = "", part = "";
                             int index = -1;// UploadReleasesBuilderIndex;
-                            
-                            
+
+
                             /*foreach (var item in UploadReleases.Where(item => item.Id == ShortsDirectoryIndex))
                             {
                                 xx = (item.ReleaseFiles.Count > 9) ? "XX" : "X";
@@ -1102,7 +1187,7 @@ namespace VideoGui
                                     ObservableCollectionFilter.TitleTagSelectorView.View.Refresh();
                                     ObservableCollectionFilter.TitleTagAvailableView.View.Refresh();
                                 }
-                                
+
                             }
                         }
                     }
@@ -1148,7 +1233,7 @@ namespace VideoGui
                             ObservableCollectionFilter.TitleTagSelectorView.View.Refresh();
                             ObservableCollectionFilter.TitleTagAvailableView.View.Refresh();
                         }
-                        
+
                     }
                     else if ((dt == dataUpdatType.Edit))
                     {
@@ -1183,7 +1268,7 @@ namespace VideoGui
                         UpdateTitleTagDesc(SelectedTagId, ThisForm);
                     }
                 }
-                
+
 
             }
             catch (Exception ex)
@@ -1247,6 +1332,10 @@ namespace VideoGui
             {
                 CGCS.ConnectionString = GetConectionString();
             }
+            else if (tld is CustomParams_Select SPS)
+            {
+                ShortsDirectoryIndex = SPS.Id;
+            }
         }
 
         public string OnGetAllTags(int Id)
@@ -1292,7 +1381,7 @@ namespace VideoGui
             try
             {
                 Show();
-                
+
                 Task.Run(() =>
                 {
                     while (true)
@@ -1760,16 +1849,26 @@ namespace VideoGui
                 }
                 string Id = "id integer generated by default as identity primary key";
                 string sqlstring = $"create table AutoInsert({Id},srcdir varchar(500), destfname varchar(500),StartPos BIGINT,Duration BIGINT,b720p SMALLINT," +
-                    "bShorts SMALLINT,bEncodeTrim SMALLINT,bCutTrim SMALLINT,bMonitoredSource SMALLINT,bPersistentJob SMALLINT, RUNID INTEGER,"+
+                    "bShorts SMALLINT,bEncodeTrim SMALLINT,bCutTrim SMALLINT,bMonitoredSource SMALLINT,bPersistentJob SMALLINT, RUNID INTEGER," +
                      "ISMUXED SMALLINT, MUXDATA VARCHAR(256)); ";
 
                 connectionString.CreateTableIfNotExists(sqlstring);
-                connectionString.AddFieldToTable("AutoInsert", "ISMUXED","SMALLINT", 0);
+                connectionString.AddFieldToTable("AutoInsert", "ISMUXED", "SMALLINT", 0);
                 connectionString.AddFieldToTable("AutoInsert", "MUXDATA", "VARCHAR(256)", "");
 
 
+                /*
+          selectedTagsList , availableTagsList , TitleTagsList, DescriptionsList
+          TitlesList,TitlesList2 - Tables, Loaders todo.
+          // linking in ConnectT(). 
+          // Todo SelectShortsUpload Loaded - ids for Tag & Dir Name off last id.
+             And Set index too in here.
+        */
+
+
+
                 sqlstring = $"create table AutoInsertHistory({Id},srcdir varchar(500), destfname varchar(500),StartPos BIGINT,Duration BIGINT,b720p SMALLINT," +
-                    "bShorts SMALLINT,bEncodeTrim SMALLINT,bCutTrim SMALLINT,bMonitoredSource SMALLINT,bPersistentJob SMALLINT, RUNID INTEGER,"+
+                    "bShorts SMALLINT,bEncodeTrim SMALLINT,bCutTrim SMALLINT,bMonitoredSource SMALLINT,bPersistentJob SMALLINT, RUNID INTEGER," +
                     "ISMUXED SMALLINT, MUXDATA VARCHAR(256)); ";
 
                 connectionString.CreateTableIfNotExists(sqlstring);
@@ -1824,6 +1923,7 @@ namespace VideoGui
                 connectionString.CreateTableIfNotExists(sqlstring);
 
                 connectionString.AddFieldToTable("SHORTSDIRECTORY", "TITLEID", "INTEGER", -1);
+                connectionString.AddFieldToTable("SHORTSDIRECTORY", "DESCID", "INTEGER", -1);
 
 
                 sqlstring = $"create table AutoEdits({Id},Source varchar(500),Destination varchar(500),Threshhold varchar(255)," +
@@ -1832,6 +1932,17 @@ namespace VideoGui
 
                 sqlstring = $"delete from ProcessingLog where InProcess = 1;";
                 sqlstring.ExecuteNonQuery(connectionString);
+                sqlstring = $"CREATE TABLE AVAILABLETAGS({Id},TAG VARCHAR(500));";
+                connectionString.CreateTableIfNotExists(sqlstring);
+                sqlstring = $"CREATE TABLE SELECTEDTAGS({Id},SELECTEDTAG INTEGER, GROUPTAGID INTEGER);";
+                connectionString.CreateTableIfNotExists(sqlstring);
+                sqlstring = $"CREATE TABLE TITLETAGS({Id},TAGID INTEGER, GROUPID INTEGER);";
+                connectionString.CreateTableIfNotExists(sqlstring);
+                sqlstring = $"CREATE TABLE TITLES({Id},DESCRIPTION VARCHAR(500), TITLETAGID INTEGER);";
+                connectionString.CreateTableIfNotExists(sqlstring);
+                sqlstring = $"CREATE TABLE DESCRIPTIONS({Id},NAME VARCHAR(250),DESCRIPTION VARCHAR(2500),TITLETAGID INTEGER, ISSHORTVIDEO SMALLINT, ISTAG SMALLINT);";
+                connectionString.CreateTableIfNotExists(sqlstring);
+                connectionString.AddFieldToTable("DESCRIPTIONS", "ISTAG", "SMALLINT", 0);
 
                 connectionString.CreateTableIfNotExists($"CREATE TABLE RUNNINGID({Id}, ACTIVE SMALLINT)");
                 sqlstring = $"INSERT INTO RUNNINGID(ACTIVE) VALUES(0) RETURNING ID;";
@@ -1947,12 +2058,80 @@ namespace VideoGui
                 connectionString.ExecuteReader("SELECT * FROM PLANINGCUTS", OnReadPlanningCuts);
                 var sql = "DELETE FROM UPLOADSRECORD WHERE UPLOAD_DATE <> CAST(GETDATE() AS DATE);";
                 connectionString.ExecuteNonQuery(sql);
+
+                /*   selectedTagsList , availableTagsList , TitleTagsList, 
+                     DescriptionsList,  TitlesList,TitlesList2 - Tables, Loaders todo.
+                // linking in ConnectT(). 
+                // Todo SelectShortsUpload Loaded - ids for Tag & Dir Name off last id.
+                And Set index too in here*/
+                connectionString.ExecuteReader("SELECT * FROM AVAILABLETAGS", OnReadAvailableTags);
+                connectionString.ExecuteReader("SELECT * FROM SELECTEDTAGS S INNER JOIN AVAILABLETAGS T ON T.ID = S.SELECTEDTAG", OnReadSelectedTags);
+                //connectionString.ExecuteReader("SELECT * FROM MASTERTAGTABLE", OnReadMasterTagTable);
+                connectionString.ExecuteReader("SELECT * FROM TITLETAGS T INNER JOIN AVAILABLETAGS S ON T.TAGID = S.ID", OnReadTitlesTags);
+                connectionString.ExecuteReader("SELECT * FROM TITLES", OnReadTitles);
+                connectionString.ExecuteReader("SELECT * FROM DESCRIPTIONS", OnReadDescriptions);
+
             }
             catch (Exception ex)
             {
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
             }
         }
+        private void OnReadDescriptions(FbDataReader reader)
+        {
+            try
+            {
+                DescriptionsList.Add(new Descriptions(reader, OnGetTitle));
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"OnReadDescriptions {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
+
+        public string OnGetTitle(int id)
+        {
+            try
+            {
+                foreach (var tag in TitlesList)
+                {
+                    if (tag.Id == id)
+                    {
+                        return tag.Description;
+                    }
+                }
+                return "";
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"OnGetAllTags {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+                return "";
+            }
+        }
+
+        private void OnReadTitles(FbDataReader reader)
+        {
+            try
+            {
+                TitlesList.Add(new Titles(reader, OnGetAllTags));
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"OnReadTitles {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
+        private void OnReadAvailableTags(FbDataReader reader)
+        {
+            try
+            {
+                availableTagsList.Add(new AvailableTags(reader));
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"OnReadSelectedTags {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
+
 
         private void OnReadPlanningCuts(FbDataReader reader)
         {
@@ -2036,7 +2215,7 @@ namespace VideoGui
                     {
                         int iddx = -1;
                         iddx = ModifyRecordInDb(jp.Id.ToInt(), jp.SourceDirectory, jp.DestinationDirectory, jp.Start, jp.Duration,
-                            jp.Is720p, jp.IsShorts, jp.IsCreateShorts, jp.IsEncodeTrim, jp.IsCutTrim, jp.IsDeleteMonitoredSource, 
+                            jp.Is720p, jp.IsShorts, jp.IsCreateShorts, jp.IsEncodeTrim, jp.IsCutTrim, jp.IsDeleteMonitoredSource,
                             jp.IsPersistentJob, jp.IsMuxed, jp.MuxData);
                         jp.Id = (iddx != -1) ? iddx.ToString() : jp.Id;
                         string Title = Path.GetFileName(destFilename);
@@ -2339,8 +2518,8 @@ namespace VideoGui
         {
             try
             {
-                Closing += (s, e) => 
-                { 
+                Closing += (s, e) =>
+                {
                     IsClosing = true;
                     DoOnFinish?.Invoke();
                 };
@@ -2372,7 +2551,7 @@ namespace VideoGui
                 Loadsettings();
                 DbInit();
 
-                
+
 
                 this.httpClientFactory = httpClientFactory;
                 Task.Run(() => { KillOrphanProcess(); });
@@ -2938,7 +3117,7 @@ namespace VideoGui
                                 }
                                 //(Stats_Handler.count720p, Stats_Handler.count1080p, Stats_Handler.count4k)
                                 if (((Job.Is1080p || Job.IsTwitchOut) && (_1080PFiles.Count >= total1080ptasks)) ||
-                                    ((Job.Is4K||Job.IsMuxed) && (_4KFiles.Count >= total4kTasks)) ||
+                                    ((Job.Is4K || Job.IsMuxed) && (_4KFiles.Count >= total4kTasks)) ||
                                     ((!Job.Is720P) && (_720PFiles.Count >= totaltasks)))
                                 {
                                     Thread.Sleep(200);
@@ -2956,7 +3135,7 @@ namespace VideoGui
                                     }
                                     else continue;
                                 }
-                                if ((Job.Is4K||Job.IsMuxed) && (_4KFiles.Count < total4kTasks))
+                                if ((Job.Is4K || Job.IsMuxed) && (_4KFiles.Count < total4kTasks))
                                 {
                                     break;
                                 }
@@ -3080,7 +3259,7 @@ namespace VideoGui
                                 string dfile = Path.GetDirectoryName(zprocessingfile);
                                 string ff = dfile.Split('\\').ToList().LastOrDefault();
                                 string newd = dfile.Replace(ff, "Filtered");
-                                DestFile = Path.Combine(newd, Path.GetFileNameWithoutExtension(zprocessingfile)+".mp4");
+                                DestFile = Path.Combine(newd, Path.GetFileNameWithoutExtension(zprocessingfile) + ".mp4");
                             }
 
                             else
@@ -3333,9 +3512,9 @@ namespace VideoGui
                     }
                     bool Found = false;
                     LineNum = 11;
-                    string processingfile = (Job.IsMuxed) ? Job.MultiSourceDir : 
+                    string processingfile = (Job.IsMuxed) ? Job.MultiSourceDir :
                         (Job.IsMulti) ? Job.DestMFile : Job.SourcePath + "\\" + Job.SourceFile;
-                    
+
                     if (Job.IsMulti && !Job.IsMuxed)
                     {
                         bool passed = true;
@@ -3553,7 +3732,7 @@ namespace VideoGui
                         {
                             string destpath = Path.GetDirectoryName(DestFile);
                         }
-                        
+
                         LineNum = 43;
                         isRe = (ThreadStatsHandlerBool?.Invoke(0, Job.FileNoExt));
                         isOK = isRe.HasValue && isRe.Value;
@@ -3564,7 +3743,7 @@ namespace VideoGui
                             TimeSpan probedatse = Job.ProbeDate - DateTime.Now;
                             double TotalDays = probedatse.TotalDays;
                             bool founxd = false, InProcess = false;
-                            string JobHandle = "", srfilex = (Job.IsMuxed) ? Job.MultiSourceDir: Job.SourcePath + "\\" + Job.FileNoExt + Job.FileExt;
+                            string JobHandle = "", srfilex = (Job.IsMuxed) ? Job.MultiSourceDir : Job.SourcePath + "\\" + Job.FileNoExt + Job.FileExt;
                             if (Job.IsMulti && !Job.IsMuxed) srfilex = Job.DestMFile;
                             LineNum = 45;
                             if (!Job.IsMulti && !Job.IsCST)
@@ -4411,7 +4590,7 @@ namespace VideoGui
                 {
                     FileQueChecker.Interval = (int)new TimeSpan(0, 1, 0).TotalMilliseconds;
                     FileQueChecker.Start();
-                    
+
                 });
             }
         }
@@ -5482,7 +5661,7 @@ namespace VideoGui
                             string md = Path.GetDirectoryName(jo.MultiSourceDir);
                             string fd = md.Split('\\').ToList().LastOrDefault();
                             string np = md.Replace(fd, "Filtered");
-                            fn = Path.Combine(np,Path.GetFileNameWithoutExtension(jo.MultiSourceDir))+".mp4";
+                            fn = Path.Combine(np, Path.GetFileNameWithoutExtension(jo.MultiSourceDir)) + ".mp4";
                         }
                         LinePos = 3;
                         var cts2 = new CancellationTokenSource();
@@ -5619,8 +5798,8 @@ namespace VideoGui
 
                         }
 
-                        
-                        if (!jo.IsShorts|| jo.IsMuxed)
+
+                        if (!jo.IsShorts || jo.IsMuxed)
                         {
                             DoAsyncFinish(jo.FileNoExt, newdest, Totals, fs, fs2, fps, filename, jo.IsComplex || jo.IsCST, jo.IsTwitchStream, jo.IsMuxed).ConfigureAwait(false);
                         }
@@ -5717,7 +5896,7 @@ namespace VideoGui
                 return Task.CompletedTask;
             }
         }
-        public async Task DoAsyncFinish(string sourcefile, string destfile, double TotalSeconds, 
+        public async Task DoAsyncFinish(string sourcefile, string destfile, double TotalSeconds,
             int fs, int fs2, string fps, string filename, bool _IsComplex, bool isTwitchStream, bool IsMuxed)
         {
             try
@@ -5735,7 +5914,7 @@ namespace VideoGui
                     _TotalSeconds = (double)FileIndexer.GetDuration().TotalSeconds;
                     FileIndexer = null;
                 }
-                if ((IsMuxed||isTwitchStream) || (Math.Round(_TotalSeconds) == Math.Truncate(TotalSeconds)) || (_IsComplex) || Math.Round(TotalSeconds * 0.98) < (Math.Round(_TotalSeconds)))
+                if ((IsMuxed || isTwitchStream) || (Math.Round(_TotalSeconds) == Math.Truncate(TotalSeconds)) || (_IsComplex) || Math.Round(TotalSeconds * 0.98) < (Math.Round(_TotalSeconds)))
                 {
                     Passed++;
                     lblFailpass.AutoSizeLabel(Passed.ToString() + "/" + failed.ToString());
@@ -5760,7 +5939,7 @@ namespace VideoGui
                     bool IsTwitchActive = false, KeepSource = false, Is1080p = false, IsComplex = false, Is4K = false, IsSrc = false, IsMulti = false, IsAdobe = false;
                     List<string> Cuts = new List<string>();
                     string SourceFileIs = "", destmfile = "", Multifile = "", DestMFile = "", Title = "";
-                    bool IsNVM = false, IsMonitoredSource = false, bIsMuxed = false ;
+                    bool IsNVM = false, IsMonitoredSource = false, bIsMuxed = false;
                     int ID = -1;
                     for (int jindex = 0; jindex < ProcessingJobs.Count(); jindex++)
                     {
@@ -5800,7 +5979,7 @@ namespace VideoGui
                             {
                                 if (fs2 > 0)
                                 {
-                                    if (bIsMuxed) 
+                                    if (bIsMuxed)
                                     {
                                         info = "Muxed Ok";
                                         ProcessingJobs[jindex].Fileinfo = $"[{ProcessingJobs[jindex].VideoInfo}][{fs}M]{info}";// OK]"; 
@@ -5852,10 +6031,10 @@ namespace VideoGui
                             DeleteFromDeletionTable(SourceFileIs);
                         }
                     }
-                     
+
                     if (IsMuxed)
                     {
-                        DeleteFromAutoInsertTable(ID); 
+                        DeleteFromAutoInsertTable(ID);
                     }
                     else if (IsSrc)
                     {
@@ -7041,15 +7220,15 @@ namespace VideoGui
                                     }
                                     break;
                                 }*/
-                           /* case "ChkResize1080p":
-                                {
-                                    if (LoadedKey) key.SetValue("resize1080p", CompChecked);
-                                    if (CompChecked)
-                                    {
-                                        ChkResize1080shorts.IsChecked = false;
-                                    }
-                                    break;
-                                }*/
+                            /* case "ChkResize1080p":
+                                 {
+                                     if (LoadedKey) key.SetValue("resize1080p", CompChecked);
+                                     if (CompChecked)
+                                     {
+                                         ChkResize1080shorts.IsChecked = false;
+                                     }
+                                     break;
+                                 }*/
                             case "chk480400fix":
                                 {
                                     if (LoadedKey) key.SetValue("fix480to400", CompChecked);
@@ -7525,7 +7704,7 @@ namespace VideoGui
 
                 ShowScraper();
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 ex.LogWrite($"btnScraperDraft_Click {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
@@ -8527,8 +8706,8 @@ namespace VideoGui
                         lstBoxJobs.Width = lstBoxJobs.MinWidth;
                         Progressbar1.Width = lstBoxJobs.Width - 120;
                         Progressbar2.Width = Progressbar1.Width;
-                      //  statusbar1.Width = MainWindowX.Width - 20;
-                       // statusbar2.Width = statusbar1.Width;
+                        //  statusbar1.Width = MainWindowX.Width - 20;
+                        // statusbar2.Width = statusbar1.Width;
 
 
                     }

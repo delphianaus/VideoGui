@@ -11,7 +11,7 @@
         <BitmapImage x:Key="EDIT" UriSource="icons/Edit.png"></BitmapImage>
         <Style x:Key="ToggleStyle1" TargetType="{x:Type ToggleButton}">
             <Setter Property="MinHeight" Value="28"/>
-            <Setter Property="MinWidth" Value="50"/>
+            <Setter Property="MinWidth" Value="40"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="{x:Type ToggleButton}">
@@ -33,29 +33,32 @@
         <Border x:Name="brdFileInfo" BorderThickness="2" BorderBrush="Black" Height="78" Margin="4,4,5,0" MinHeight="84" VerticalAlignment="Top">
             <Canvas x:Name="CnvMedialElements" Margin="1,2,1,2">
                 <Label Content="Source File" HorizontalAlignment="Center" VerticalAlignment="Top" Height="26" Canvas.Left="9" Canvas.Top="9"/>
-                <TextBox x:Name="txtsrcdir" HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Center" Width="453" Canvas.Left="120" Canvas.Top="13"/>
-                <Button x:Name="btnSelectSourceDir" HorizontalAlignment="Center" VerticalAlignment="Top" Width="20" Height="20" Canvas.Left="578" Canvas.Top="11" Click="btnSelectSourceDir_Click" RenderTransformOrigin="-13.634,1.02" />
-                <Label Content="Number Of Shorts" Height="26" Canvas.Left="9" Canvas.Top="40" HorizontalAlignment="Center" VerticalAlignment="Top"/>
-                <Label x:Name="lblShortNo" Content="x" Height="26" Canvas.Left="108" Canvas.Top="40" HorizontalAlignment="Left" VerticalAlignment="Center" Width="29"/>
-                <Label Content="Uploads Per Slot" Height="26" Canvas.Left="161" Canvas.Top="40" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                <TextBox x:Name="txtMaxUpload" Text="5" HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Center" 
-                         Width="40" Canvas.Left="261" Canvas.Top="45" KeyDown="txtMaxUpload_KeyDown" LostFocus="txtMaxUpload_LostFocus"/>
-                <Label Content="Max Uploads" Height="26" Canvas.Left="312" Canvas.Top="40" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                <TextBox x:Name="txtsrcdir" HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Center" Width="499" Canvas.Left="120" Canvas.Top="13"/>
+                <Button x:Name="btnSelectSourceDir" HorizontalAlignment="Left" VerticalAlignment="Top" Width="20" Height="20" Canvas.Left="624" Canvas.Top="12" Click="btnSelectSourceDir_Click" RenderTransformOrigin="-13.634,1.02" />
+                <Label Content="Number Of Shorts" Height="26" Canvas.Left="9" Canvas.Top="40" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                <Label x:Name="lblShortNo" Content="x" Height="26" Canvas.Left="108" Canvas.Top="40" HorizontalAlignment="Center" VerticalAlignment="Center" Width="29"/>
+                <Label Content="Uploads Per Slot" Height="26" Canvas.Left="144" Canvas.Top="40" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                <TextBox x:Name="txtMaxUpload" Text="5" HorizontalAlignment="Center" TextWrapping="Wrap" VerticalAlignment="Top" 
+                         Width="36" Canvas.Left="244" Canvas.Top="44" KeyDown="txtMaxUpload_KeyDown" LostFocus="txtMaxUpload_LostFocus"/>
+                <Label Content="Max Uploads" Height="26" Canvas.Left="283" Canvas.Top="40" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 <TextBox x:Name="txtTotalUploads" Text="100" TextWrapping="Wrap" 
-                    Width="40" Canvas.Left="385" Canvas.Top="45" HorizontalAlignment="Left" VerticalAlignment="Center" KeyDown="txtTotalUploads_KeyDown"/>
-
+                    Width="32" Canvas.Left="356" Canvas.Top="44" HorizontalAlignment="Center" VerticalAlignment="Top" KeyDown="txtTotalUploads_KeyDown"/>
+                <ToggleButton x:Name="btnEditTitle" Style="{DynamicResource ToggleStyle1}" 
+                      Height="24" Width="40" HorizontalAlignment="Left" Click="btnEditTitle_Click"
+                  VerticalAlignment="Center" Canvas.Left="427" Canvas.Top="40"/>
+                <Label Content="Title" Canvas.Left="392" Canvas.Top="40" HorizontalAlignment="Left" VerticalAlignment="Center" Width="33"/>
+                <ToggleButton x:Name="btnEditDesc" Style="{DynamicResource ToggleStyle1}" 
+                    Height="24" Width="40" Click="btnEditDesc_Click" Canvas.Left="512" 
+                    Canvas.Top="40" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                <Label Content="Desc" Canvas.Left="472" Canvas.Top="40" HorizontalAlignment="Left" 
+                       VerticalAlignment="Center" />
             </Canvas>
         </Border>
         <Button x:Name="btnClose" Height="35" Width="123" Content="Close" Margin="0,93,5,0" 
                 HorizontalAlignment="Right" VerticalAlignment="Top" Click="btnClose_Click"/>
-        <Button x:Name="btnRunUploaders" Height="24" Width="100" Content="Run Uploaders" Margin="0,50,24,0" 
+        <Button x:Name="btnRunUploaders" Height="24" Width="86" Content="Run Uploaders" Margin="0,50,24,0" 
             HorizontalAlignment="Right" VerticalAlignment="Top" FontSize="10" Click="btnRunUploaders_Click"/>
-        <ToggleButton x:Name="btnEditTitle" Style="{DynamicResource ToggleStyle1}" 
-                      Height="24" Width="34" Margin="0,15,17,0" 
-            HorizontalAlignment="Right" Click="btnEditTitle_Click"
-            VerticalAlignment="Top">
-            
-        </ToggleButton>
+
 
     </Grid>
 </Window>
