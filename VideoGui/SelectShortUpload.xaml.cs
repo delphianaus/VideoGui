@@ -116,7 +116,14 @@ namespace VideoGui
                     {
                         string fnx = filename.Split(@"\").ToList().LastOrDefault();
                         string drx = filename.Replace(fnx, "");
-                        string newfile = drx +System.IO.Path.GetFileNameWithoutExtension(filename) + $"_{res}{Path.GetExtension(filename)}";
+
+                        string frr = System.IO.Path.GetFileNameWithoutExtension(filename);
+                        int fr = System.IO.Path.GetFileNameWithoutExtension(filename).ToInt(-1);
+                        if (fr != -1)
+                        {
+                            frr = fr.ToString("X");
+                        }
+                        string newfile = drx + frr + $"_{res}{Path.GetExtension(filename)}";
 
                         File.Move(filename, newfile);
                     }

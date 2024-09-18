@@ -56,7 +56,7 @@
         </Border>
         <Button x:Name="btnClose" Height="35" Width="123" Content="Close" Margin="0,93,5,0" 
                 HorizontalAlignment="Right" VerticalAlignment="Top" Click="btnClose_Click"/>
-        <Button x:Name="btnRunUploaders" Height="24" Width="86" Content="Run Uploaders" Margin="0,50,24,0" 
+        <Button x:Name="btnRunUploaders" Height="24" Width="78" Content="Run Uploaders" Margin="0,50,18,0" 
             HorizontalAlignment="Right" VerticalAlignment="Top" FontSize="10" Click="btnRunUploaders_Click"/>
 
 

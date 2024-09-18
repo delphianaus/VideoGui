@@ -318,7 +318,7 @@ namespace VideoGui
                     }
                     else cp = 1;
                     int iir = rnd.Next(list.Count);
-                    string destDir = Path.Combine(subp, "" + (cp), $"{list[iir]}.mp4");
+                    string destDir = Path.Combine(subp, "" + (cp), $"{list[iir].ToInt().ToString("X")}.mp4");
                     string oldfile = Path.Combine(subp, $"{list[iir]}.mp4");
                     if (oldfile != destDir)
                     {
@@ -346,8 +346,9 @@ namespace VideoGui
                             DirectoryToUse = directory;
                         }
                     }
-                    string gp = Path.GetFileName(LastFile);
-                    string destDir = Path.Combine(subp, DirectoryToUse, $"{gp}");
+                    string gp = Path.GetFileNameWithoutExtension(LastFile);
+                    string ext = Path.GetExtension(LastFile);
+                    string destDir = Path.Combine(subp, DirectoryToUse, $"{gp.ToInt().ToString("X")}{ext}");
                     File.Move(LastFile, destDir);
                 }
                 MessageBox.Show("Shorts Created");
