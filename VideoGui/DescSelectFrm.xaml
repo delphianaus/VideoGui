@@ -1,0 +1,69 @@
+﻿<Window x:Class="VideoGui.DescSelectFrm"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:VideoGui"  WindowStyle="ToolWindow" 
+        ResizeMode="NoResize" WindowStartupLocation="CenterScreen"  
+        mc:Ignorable="d" Loaded="Window_Loaded" Closing="Window_Closing"
+        Title="Description Selection Editor" Height="440" Width="833" IsManipulationEnabled="True">
+    <Grid ScrollViewer.VerticalScrollBarVisibility="Disabled" Width="821" Margin="2,2,2,2" Focusable="True" IsManipulationEnabled="True">
+        <Border x:Name="brdDesc" BorderThickness="2" BorderBrush="Black" Margin="7,33,7,0" 
+                VerticalAlignment="Top" Height="96">
+            <TextBox x:Name="txtDesc" IsManipulationEnabled="True" AcceptsReturn="True"/>
+        </Border>
+        <Border x:Name="brdDescName" BorderThickness="2" BorderBrush="Black" Margin="169,140,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Width="610">
+            <TextBox x:Name="txtDescName" Margin="1,0,1,0" Width="596"  />
+        </Border>
+        <Border x:Name="brdAllDescs" BorderBrush="Black" BorderThickness="2" Margin="7,172,7,38">
+            <ListBox x:Name="lstAllDescriptions" 
+                ScrollViewer.HorizontalScrollBarVisibility="Disabled" SelectionMode="Multiple" 
+                ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Visible" Margin="4,4,4,4">
+                <ListBox.Resources>
+                    <!--Defines a context menu-->
+                    <ContextMenu x:Key="MyElementMenu">
+                        <MenuItem Name="mnuNewItem" Header="New Item" Click="mnuNewItem_Click"/>
+                        <MenuItem Name="mnuEditItem" Header="Edit Item" Click="mnuEditItem_Click"/>
+                        <Separator/>
+                        <MenuItem Name="mnuDeleteItem" Header="Delete Item" Click="mnuDeleteItem_Click"/>
+                    </ContextMenu>
+                    <!--Sets a context menu for each ListBoxItem in the current ListBox-->
+                    <Style TargetType="{x:Type ListBoxItem}">
+                        <Setter Property="ContextMenu" Value="{StaticResource MyElementMenu}"/>
+                    </Style>
+                </ListBox.Resources>
+
+                <ListBox.ItemTemplate>
+                    <DataTemplate x:Name="GridControlsA" >
+                        <Grid Margin="0,2" x:Name="gridwidths">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition x:Name="col1" Width="0"/>
+                                <ColumnDefinition x:Name="col2" Width="28" />
+                                <ColumnDefinition x:Name="col3" Width="280*" />
+                                <ColumnDefinition x:Name="col4" Width="280" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock x:Name="Id" Grid.Column="0" Margin="4,0,0,0" Width="0" Text="{Binding Id}"/>
+                            <CheckBox x:Name="IsVideoShort" Grid.Column="1" Margin="4,0,0,0" IsChecked="{Binding IsVideoShort}"/>
+                            <TextBlock x:Name="DescriptionName" Grid.Column="2" Margin="4,0,0,0" Text="{Binding Description}"/>
+                            <TextBlock x:Name="TitleTag" Grid.Column="3" Margin="4,0,0,0" Text="{Binding TitleTag}"/>
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Border>
+        <Button x:Name="btnSelect" Click="btnSelect_Click" HorizontalAlignment="Left" 
+                 VerticalAlignment="Top" Width="24" Height="24" Margin="784,140,0,0" ScrollViewer.VerticalScrollBarVisibility="Disabled" UseLayoutRounding="False">
+            <Image Name="ImgSelect" Source="/Icons/SelectDown.png"
+                   HorizontalAlignment="Left" VerticalAlignment="Top" Height="20" Width="18" ScrollViewer.VerticalScrollBarVisibility="Disabled" Focusable="True"/>
+        </Button>
+        <Button x:Name="btnClose" Width="90" Height="24" Content="Close" Click="btnClose_Click" 
+                VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,11,7">
+        </Button>
+        <Label x:Name="lblDescName" Content="Video Description Name" HorizontalAlignment="Left" Margin="10,137,0,0" 
+            VerticalAlignment="Top" Width="157"/>
+        <Label x:Name="lblDesc" Content="Video Description" HorizontalAlignment="Left" Margin="2,4,0,0" 
+              VerticalAlignment="Top" Width="128"/>
+        <CheckBox x:Name="chkIsShortVideo" Content="Is Short Video" HorizontalAlignment="Right" 
+                  VerticalAlignment="Top" Margin="0,6,10,0"/>
+    </Grid>
+</Window>

@@ -73,6 +73,7 @@ using Nancy.TinyIoc;
 using System.Xml.Linq;
 using System.Collections.Immutable;
 using System.Windows.Media.Imaging;
+using System.Runtime.InteropServices.Marshalling;
 
 
 namespace VideoGui
@@ -118,12 +119,25 @@ namespace VideoGui
         public VideoCardSelector videoCardDetailsSelector;
         public ScraperModule scraperModule = null;
         public SelectShortUpload selectShortUpload = null;
+        public MasterTagSelectForm MasterTagSelectFrm = null;
         public ShowMatcher Swm;
+        /*
+           selectedTagsList , availableTagsList , TitleTagsList, DescriptionsList
+           TitlesList,TitlesList2 - Tables, Loaders todo.
+           // linking in ConnectT(). 
+           // Todo SelectShortsUpload Loaded - ids for Tag & Dir Name off last id.
+              And Set index too in here.
+         */
+        ObservableCollection<Descriptions> DescriptionsList = new ObservableCollection<Descriptions>();
+        ObservableCollection<SelectedTags> selectedTagsList = new ObservableCollection<SelectedTags>();
+        ObservableCollection<AvailableTags> availableTagsList = new ObservableCollection<AvailableTags>();
+        ObservableCollection<TitleTags> TitleTagsList = new ObservableCollection<TitleTags>();
         CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
         CancellationTokenSource ProcessingCancellationTokenSource = new CancellationTokenSource();
         double frames, LRF, RRF, LLC, RLC;
         DateTime totaltimeprocessed = DateTime.Now;
         object lookuplocked = new object();
+        int SelectedTagId = -1;
         private System.Object thisLock = new Object();
         private Object thisfLock = new Object();
         private Object thispLock = new Object();
@@ -149,6 +163,8 @@ namespace VideoGui
         DateTime ProcessingTime;
         System.Windows.Forms.Timer FileQueChecker, FormResizerEvent;
         DispatcherTimer TrayIcon;
+        ObservableCollection<Titles> TitlesList = new ObservableCollection<Titles>();
+        ObservableCollection<Titles> TitlesList2 = new ObservableCollection<Titles>();
         public ConverterProgressInfo frmConverterProgressInfo = null;
         public ObservableCollection<JobListDetails> ProcessingJobs = new ObservableCollection<JobListDetails>();
         public ObservableCollection<SourceFileCache> SourceFileInfos = new ObservableCollection<SourceFileCache>();
@@ -195,6 +211,7 @@ namespace VideoGui
         {
 
         }
+
         public class ProgressForegroundConverter : IValueConverter
         {
             public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
@@ -251,7 +268,25 @@ namespace VideoGui
             }
         }
 
-
+        public async Task<bool> ConnectT()
+        {
+            try
+            {
+                bool res = false;
+                if (ObservableCollectionFilter is not null)
+                {
+                    // link Available and title tables.
+                    //ObservableCollectionFilter.ImportCollectionViewSource.Source = FileRenamer;
+                    //ObservableCollectionFilter.ImportCollectionViewSource.View.Refresh();
+                }
+                return res;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+                return false;
+            }
+        }
         public async Task<bool> ConnectI()
         {
             try
@@ -300,7 +335,7 @@ namespace VideoGui
                 }
                 WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
                 string gUrl = webAddressBuilder.Dashboard().Address;
-                
+
                 RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                 string uploadsnumber = key.GetValueStr("UploadNumber", "5");
                 string MaxUploads = key.GetValueStr("MaxUploads", "100");
@@ -323,8 +358,13 @@ namespace VideoGui
         {
             try
             {
-                switch(ThisForm)
+                switch (ThisForm)
                 {
+                    case TitleSelectFrm frmTitleSelect:
+                        {
+                            formObjectHandler_TitleSelect(ThisForm, tld, frmTitleSelect);
+                            break;
+                        }
                     case ScraperModule scraperModule:
                         {
                             scraperModule_Handler(ThisForm, tld);
@@ -335,7 +375,16 @@ namespace VideoGui
                             selectShortUpload_Handler(ThisForm, tld);
                             break;
                         }
-
+                    case MasterTagSelectForm frmMasterTagSelectForm:
+                        {
+                            formObjectHandler_MasterTagSelect(tld, frmMasterTagSelectForm);
+                            break;
+                        }
+                    case DescSelectFrm frmDescSelectFrm:
+                        {
+                            formObjectHandler_DescSelect(tld, frmDescSelectFrm);
+                            break;
+                        }
                 }
             }
             catch (Exception ex)
@@ -344,12 +393,971 @@ namespace VideoGui
             }
 
         }
+        private void formObjectHandler_DescSelect(object tld, DescSelectFrm frmDescSelectFrm, bool IsShort = false)
+        {
+            try
+            {
+                switch (tld)
+                {
+                    case CustomParams_Update:
+                        {
+                            if (tld is CustomParams_Update p && p is not null)
+                            {
+                                RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                                string rootfolder = key.GetValueStr("UploadPath", @"D:\shorts\");
+                                key?.Close();
+                                string ThisDir = rootfolder.Split(@"\").ToList().LastOrDefault();
+                                if (ThisDir != "")
+                                {
+                                    int res = -1;
+                                    using (var connection = new FbConnection(connectionString))
+                                    {
+                                        connection.Open();
+                                        string sql = "select * from SHORTSDIRECTORY WHERE DIRECTORYNAME = @P0";
+                                        using (var command = new FbCommand(sql.ToUpper(), connection))
+                                        {
+                                            command.Parameters.Clear();
+                                            command.Parameters.AddWithValue("@P0", ThisDir.ToUpper());
+                                            object result = command.ExecuteScalar();
+                                            res = result.ToInt(-1);
+                                        }
+                                        if (res != -1)
+                                        {
+                                            sql = "UPDATE SHORTSDIRECTORY SET DESCID = @P1 WHERE ID = @P0";
+                                            using (var command = new FbCommand(sql.ToUpper(), connection))
+                                            {
+                                                command.Parameters.Clear();
+                                                command.Parameters.AddWithValue("@P0", res);
+                                                command.Parameters.AddWithValue("@P1", p.id);
+                                                object result = command.ExecuteScalar();
+                                                res = result.ToInt(-1);
+                                            }
+                                        }
+                                        connection.Close();
+                                    }
+                                    selectShortUpload.UpdateDescId(p.id);
+                                }
+                            }
+                            break;
+                        }
+                    case CustomParams_Initialize cpInit:
+                        {
+                            frmDescSelectFrm.lstAllDescriptions.ItemsSource = DescriptionsList;
+                            frmDescSelectFrm.chkIsShortVideo.IsChecked = IsShort;
+                            frmDescSelectFrm.IsShortVideo = IsShort;
+                            frmDescSelectFrm.Id = ShortsDirectoryIndex;
+                            bool Found = false;
+                            foreach (var item in DescriptionsList.Where(s => s.IsShortVideo == IsShort && s.TitleTagId == ShortsDirectoryIndex))
+                            {
+                                frmDescSelectFrm.txtDesc.Text = item.Description;
+                                frmDescSelectFrm.Desc = item.Description;
+                                frmDescSelectFrm.txtDescName.Text = item.Name;
+                                frmDescSelectFrm.chkIsShortVideo.IsChecked = item.IsShortVideo;
+                                frmDescSelectFrm.IsShortVideo = item.IsShortVideo;
+                                frmDescSelectFrm.TitleTagId = item.TitleTagId;
+                                Found = true;
+                                break;
+                            }
+                            if (!Found)
+                            {
+                                string vpart = (IsShort) ? "" : " {VPARTID}" + Environment.NewLine + Environment.NewLine;
+                                /*foreach (var itemr in UploadReleases.Where(s => s.Id == ShortsDirectoryIndex))
+                                {
+                                    frmDescSelectFrm.txtDesc.Text = itemr.DisplayUploadBaseFileName + vpart;
+                                    frmDescSelectFrm.txtDescName.Text = itemr.DisplayUploadBaseFileName;
+                                    frmDescSelectFrm.TitleTagId = UploadReleasesBuilderIndex;
+                                    Found = true;
+                                    break;
+                                }  todo */
+                            }
+                            break;
+                        }
+                    case null:
+                        {
+                            frmDescSelectFrm.lstAllDescriptions.ItemsSource = DescriptionsList;
+                            break;
+                        }
+                    case CustomParams_Remove cpRemove:
+                        {
+                            string sql = $"SELECT * FROM DESCRIPTIONS WHERE ID = {cpRemove.id} RETURNING ID;";
+                            int idx = connectionString.RunExecuteScalar(sql, -1);
+                            if (idx != -1)
+                            {
+                                for (int i = 0; i < DescriptionsList.Count; i--)
+                                {
+                                    if (DescriptionsList[i].Id == cpRemove.id)
+                                    {
+                                        DescriptionsList.RemoveAt(i);
+                                        break;
+                                    }
+                                }
+                            }
+                            break;
+                        }
+                    case CustomParams_AddDescription cpAdd:
+                        {
+                            int idx = -1;
+                            string sql = $"SELECT ID FROM DESCRIPTIONS WHERE TITLETAGID = @TID";
+                            using (var connection = new FbConnection(connectionString))
+                            {
+                                connection.Open();
+                                using (var command = new FbCommand(sql, connection))
+                                {
+                                    command.Parameters.Clear();
+                                    command.Parameters.AddWithValue("@TID", cpAdd.Id);
+                                    var obj = command.ExecuteScalar();
+                                    idx = (obj is int resx) ? resx : -1;
+                                }
+                                connection.Close();
+                            }
+                            if (idx == -1)
+                            {
+                                sql = $"INSERT INTO DESCRIPTIONS(DESCRIPTION,TITLETAGID,NAME,ISSHORTVIDEO, ISTAG)" +
+                                    $" VALUES(@DESC,@TITLETAG,@NAME,@IsShortVideo,@IsTag) RETURNING ID;";
+                                using (var connection = new FbConnection(connectionString))
+                                {
+                                    connection.Open();
+                                    using (var command = new FbCommand(sql, connection))
+                                    {
+                                        command.Parameters.Clear();
+                                        command.Parameters.AddWithValue("@NAME", cpAdd.Name);
+                                        command.Parameters.AddWithValue("@DESC", cpAdd.Description);
+                                        command.Parameters.AddWithValue("@TITLETAG", cpAdd.Id);
+                                        command.Parameters.AddWithValue("@IsTag", false);
+                                        command.Parameters.AddWithValue("@IsShortVideo", frmDescSelectFrm.IsShortVideo);
+                                        var obj = command.ExecuteScalar();
+                                        idx = (obj is int resx) ? resx : -1;
+                                    }
+                                    connection.Close();
+                                }
+                                if (idx != -1)
+                                {
+                                    frmDescSelectFrm.IsDescChanged = true;
+                                    frmDescSelectFrm.LinkedId = idx;
+                                    DescriptionsList.Add(new Descriptions(idx, cpAdd.Description,
+                                        frmDescSelectFrm.IsShortVideo, "", cpAdd.Name));
+                                    // todo UpdateReleasesList(cpAdd.Id, idx);
+                                }
+                            }
+                            else
+                            {
+                                sql = $"UPDATE DESCRIPTIONS SET DESCRIPTION=@DESC, NAME=@NAME WHERE " +
+                                    "TITLETAGID = @TITLETAGID AND ISTAG = @ISTAG RETURNING ID;";
+                                using (var connection = new FbConnection(connectionString))
+                                {
+                                    connection.Open();
+                                    using (var command = new FbCommand(sql, connection))
+                                    {
+                                        command.Parameters.Clear();
+                                        command.Parameters.AddWithValue("@NAME", cpAdd.Name);
+                                        command.Parameters.AddWithValue("@DESC", cpAdd.Description);
+                                        command.Parameters.AddWithValue("@TITLETAGID", cpAdd.Id);
+                                        command.Parameters.AddWithValue("@ISTAG", false);
+                                        var obj = command.ExecuteScalar();
+                                        idx = (obj is int resx) ? resx : -1;
+                                    }
+                                    connection.Close();
+                                }
+                                for (int i = 0; i < DescriptionsList.Count; i--)
+                                {
+                                    if (DescriptionsList[i].TitleTagId == cpAdd.Id)
+                                    {
+                                        DescriptionsList[i].Description = cpAdd.Description;
+                                        DescriptionsList[i].Name = cpAdd.Name;
+                                        break;
+                                    }
+                                }
+                                // todo UpdateReleasesList(cpAdd.Id, idx);
 
+
+                            }
+                            break;
+                        }
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"ObjectHandler - {this} {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
+
+        private void formObjectHandler_MasterTagSelect(object tld, MasterTagSelectForm frmMasterTagSelectForm)
+        {
+            try
+            {
+                string sql = "";
+                switch (tld)
+                {
+                    case CustomParams_Get cpGet:
+                        {
+                            int id = cpGet.Id;
+                            if (frmMasterTagSelectForm.IsTitleTag)
+                            {
+                                foreach (var item in TitleTagsList.Where(idx => idx.GroupId == frmMasterTagSelectForm.ParentId))
+                                {
+                                    sql = "DELETE FROM TITLETAGS WHERE ID = @ID";
+                                    using (var connection = new FbConnection(connectionString))
+                                    {
+                                        connection.Open();
+                                        using (var command = new FbCommand(sql, connection))
+                                        {
+                                            command.Parameters.Clear();
+                                            command.Parameters.AddWithValue("@ID", item.Id);
+                                            var res = command.ExecuteNonQuery();
+                                        }
+                                        connection.Close();
+                                    }
+                                    for (int i = TitleTagsList.Count - 1; i >= 0; i--)
+                                    {
+                                        if (TitleTagsList[i].Id == item.Id)
+                                        {
+                                            TitleTagsList.RemoveAt(i);
+                                        }
+                                    }
+                                }
+                                ObservableCollection<TitleTags> TitleTagsList1 = new();
+                                foreach (var tags in TitleTagsList.Where(avi => avi.GroupId == cpGet.Id))
+                                {
+                                    int idx = -1;
+                                    sql = "INSERT INTO TITLETAGS(TAGID, GROUPID) VALUES(@TAGID, @GROUPID) RETURNING ID;";
+                                    using (var connection = new FbConnection(connectionString))
+                                    {
+                                        connection.Open();
+                                        using (var command = new FbCommand(sql, connection))
+                                        {
+                                            command.Parameters.Clear();
+                                            command.Parameters.AddWithValue("@TAGID", tags.TagId);
+                                            command.Parameters.AddWithValue("@GROUPID", frmMasterTagSelectForm.ParentId);
+                                            var res = command.ExecuteScalar();
+                                            idx = (res is int resx) ? resx : -1;
+                                        }
+                                        connection.Close();
+                                    }
+                                }
+                                sql = $"SELECT * FROM TITLETAGS T INNER JOIN AVAILABLETAGS S ON T.TAGID = S.ID WHERE GROUPID = {frmMasterTagSelectForm.ParentId}";
+                                connectionString.ExecuteReader(sql, OnReadTitlesTags);
+                                frmMasterTagSelectForm.TagSetChanged = true;
+                                break;
+
+                            }
+                            else
+                            {
+                                sql = "DELETE FROM SELECTEDTAGS WHERE GROUPTAGID = @TAGID";
+                                using (var connection = new FbConnection(connectionString))
+                                {
+                                    connection.Open();
+                                    using (var command = new FbCommand(sql, connection))
+                                    {
+                                        command.Parameters.Clear();
+                                        command.Parameters.AddWithValue("@TAGID", frmMasterTagSelectForm.ParentId);
+                                        var res = command.ExecuteNonQuery();
+                                    }
+                                    connection.Close();
+                                }
+                                for (int i = selectedTagsList.Count - 1; i >= 0; i--)
+                                {
+                                    if (selectedTagsList[i].GroupTagId == frmMasterTagSelectForm.ParentId)
+                                    {
+                                        selectedTagsList.RemoveAt(i);
+                                    }
+                                }
+                                ObservableCollection<SelectedTags> selectedTagsList1 = new();
+                                foreach (var tags in selectedTagsList.Where(avi => avi.GroupTagId == id))
+                                {
+                                    int idxx = -1;
+                                    sql = "INSERT INTO SELECTEDTAGS(SELECTEDTAG, GROUPTAGID) VALUES(@SELECTEDTAG, @GRP) RETURNING ID;";
+                                    using (var connection = new FbConnection(connectionString))
+                                    {
+                                        connection.Open();
+                                        using (var command = new FbCommand(sql, connection))
+                                        {
+                                            command.Parameters.Clear();
+                                            command.Parameters.AddWithValue("@SELECTEDTAG", tags.SelectedTagId);
+                                            command.Parameters.AddWithValue("@GRP", frmMasterTagSelectForm.ParentId);
+                                            var res = command.ExecuteScalar();
+                                            idxx = (res is int resx) ? resx : -1;
+                                        }
+                                        connection.Close();
+                                    }
+                                    if (idxx != -1)
+                                    {
+                                        selectedTagsList1.Add(new SelectedTags(idxx, tags.SelectedTagId, frmMasterTagSelectForm.ParentId, tags.Description));
+                                    }
+                                }
+                                foreach (var x in selectedTagsList1)
+                                {
+                                    selectedTagsList.Add(x);
+                                }
+                                frmMasterTagSelectForm.TagSetChanged = true;
+
+                            }
+                            break;
+                        }
+                    case CustomParams_Select cpSelect:
+                        {
+                            int id = cpSelect.Id;
+                            string TagList = "";
+                            if (frmMasterTagSelectForm.IsTitleTag)
+                            {
+                                foreach (var item in TitleTagsList.Where(idx => idx.GroupId == id))
+                                {
+                                    if (TagList == "")
+                                    {
+                                        TagList = $"#{item.Description}";
+                                    }
+                                    else
+                                    {
+                                        TagList += $" #{item.Description}";
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                foreach (var itemx in selectedTagsList.Where(idxx => idxx.GroupTagId == id))
+                                {
+                                    if (TagList == "")
+                                    {
+                                        TagList = $"#{itemx.Description}";
+                                    }
+                                    else
+                                    {
+                                        TagList += $" #{itemx.Description}";
+                                    }
+                                }
+                            }
+                            TagList = TagList.Trim();
+
+                            frmMasterTagSelectForm.txtTags.Text = TagList;
+
+
+                            break;
+                        }
+                    case CustomParams_Initialize:
+                        {
+                            TitlesList2.Clear();
+                            sql = "SELECT DISTINCT TF.ID,TF.DESCRIPTION FROM TITLES TF LEFT JOIN TITLETAGS TT ON " +
+                                "TF.ID = TT.GROUPID LEFT JOIN SELECTEDTAGS ST ON TF.ID = ST.GROUPTAGID";
+                            connectionString.ExecuteReader(sql, OnReadTitlesTags2);
+
+                            frmMasterTagSelectForm.lstDescriptions.ItemsSource =
+                                TitlesList2.Where(idx => idx.Id != frmMasterTagSelectForm.ParentId);//.Where(ind => ind.IsTag = frmMasterTagSelectForm.IsTitleTag);
+                            break;
+                        }
+                    case null:
+                        {
+                            frmMasterTagSelectForm.lstDescriptions.ItemsSource = TitlesList.Where(ind => ind.IsTag);
+                            break;
+                        }
+                    case CustomParams_Add cpAdd:
+                        {
+                            int idx = -1;
+                            string Sql = $"INSERT INTO DESCRIPTIONS(DESCRIPTION,ISTAG) VALUES(@Name,@istag) RETURNG ID;";
+                            using (var connection = new FbConnection(connectionString))
+                            {
+                                connection.Open();
+                                using (var command = new FbCommand(Sql, connection))
+                                {
+                                    command.Parameters.Clear();
+                                    command.Parameters.AddWithValue("@name", cpAdd.Name);
+                                    command.Parameters.AddWithValue("@istag", true);
+                                    var obj = command.ExecuteScalar();
+                                    idx = (obj is int resx) ? resx : -1;
+                                }
+                                connection.Close();
+                            }
+                            if (idx != -1)
+                            {
+                                DescriptionsList.Add(new Descriptions(idx, cpAdd.Name, false, "", cpAdd.Name, true));
+                            }
+                            break;
+                        }
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"ObjectHandler - {this} {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
+        private void OnReadTitlesTags2(FbDataReader reader)
+        {
+            try
+            {
+                TitlesList2.Add(new Titles(reader));
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"OnReadTitlesTags {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
+        int ShortsDirectoryIndex = -1;
+        private void formObjectHandler_TitleSelect(object FormObject, object tld, TitleSelectFrm frmTitleSelect)
+        {
+            try
+            {
+                switch (tld)
+                {
+                    case CustomParams_Update:
+                        {
+                            if (tld is CustomParams_Update p && p is not null)
+                            {
+
+                                RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                                string rootfolder = key.GetValueStr("UploadPath", @"D:\shorts\");
+                                key?.Close();
+                                string ThisDir = rootfolder.Split(@"\").ToList().LastOrDefault();
+                                if (ThisDir != "")
+                                {
+                                    int res = -1;
+                                    using (var connection = new FbConnection(connectionString))
+                                    {
+                                        connection.Open();
+                                        string sql = "select * from SHORTSDIRECTORY WHERE DIRECTORYNAME = @P0";
+                                        using (var command = new FbCommand(sql.ToUpper(), connection))
+                                        {
+                                            command.Parameters.Clear();
+                                            command.Parameters.AddWithValue("@P0", ThisDir.ToUpper());
+                                            object result = command.ExecuteScalar();
+                                            res = result.ToInt(-1);
+                                        }
+                                        if (res != -1)
+                                        {
+                                            sql = "UPDATE SHORTSDIRECTORY SET TITLEID = @P1 WHERE ID = @P0";
+                                            using (var command = new FbCommand(sql.ToUpper(), connection))
+                                            {
+                                                command.Parameters.Clear();
+                                                command.Parameters.AddWithValue("@P0", res);
+                                                command.Parameters.AddWithValue("@P1", p.id);
+                                                object result = command.ExecuteScalar();
+                                                res = result.ToInt(-1);
+                                            }
+                                        }
+                                        connection.Close();
+                                    }
+                                    selectShortUpload.UpdateTitleId(p.id);
+                                }
+
+
+                            }
+                            break;
+                        }
+                    case CustomParams_Initialize:
+                        {
+                            var _title = "";
+                            string BaseTitle = "", xx = "", part = "";
+                            int index = -1;// UploadReleasesBuilderIndex;
+
+
+                            /*foreach (var item in UploadReleases.Where(item => item.Id == ShortsDirectoryIndex))
+                            {
+                                xx = (item.ReleaseFiles.Count > 9) ? "XX" : "X";
+                                part = $" PART {xx}";
+                                BaseTitle = item.DisplayUploadBaseFileName;
+                                if (item.TitleId != -1)
+                                {
+                                    foreach (var t in TitlesList.Where(i => i.GroupId == ShortsDirectoryIndex && !i.IsTag))
+                                    {
+                                        BaseTitle = t.Description;
+                                        index = t.Id;
+                                        ObservableCollectionFilter.SetTitlesTag(t.Id);
+                                        frmTitleSelect.SetTitleTag(t.Id);
+                                        break;
+                                    }
+                                }
+                                string vid = $"{BaseTitle}{part}";
+                                frmTitleSelect.BaseTitle = vid;
+                                frmTitleSelect.txtBaseTitle.Content = vid;
+                                break;
+                            }
+                            */
+                            ObservableCollectionFilter.TitleTagSelectorView.View.Refresh();
+
+                            if (index == -1)
+                            {
+                                string BaseStrX = frmTitleSelect.BaseTitle;
+                                string sql = "SELECT ID FROM TITLES WHERE DESCRIPTION = @name AND ISTAG = @ISTAG AND GROUPID = @GROUPID;";
+                                using (var connection = new FbConnection(connectionString))
+                                {
+                                    connection.Open();
+                                    using (var command = new FbCommand(sql, connection))
+                                    {
+                                        command.Parameters.Clear();
+                                        command.Parameters.AddWithValue("@name", BaseTitle);
+                                        command.Parameters.AddWithValue("@ISTAG", false);
+                                        command.Parameters.AddWithValue("@GROUPID", ShortsDirectoryIndex);
+                                        var obj = command.ExecuteScalar();
+                                        index = (obj is int resx) ? resx : -1;
+                                    }
+                                    connection.Close();
+                                }
+                                if (index == -1)
+                                {
+                                    sql = "INSERT INTO TITLES(DESCRIPTION,ISTAG,GROUPID) " +
+                                        "VALUES(@name,@ISTAG,@GROUPID) RETURNING ID;";
+                                    using (var connection = new FbConnection(connectionString))
+                                    {
+                                        connection.Open();
+                                        using (var command = new FbCommand(sql, connection))
+                                        {
+                                            command.Parameters.Clear();
+                                            command.Parameters.AddWithValue("@name", BaseTitle);
+                                            command.Parameters.AddWithValue("@ISTAG", false);
+                                            command.Parameters.AddWithValue("@GROUPID", ShortsDirectoryIndex);
+                                            var obj = command.ExecuteScalar();
+                                            index = (obj is int resx) ? resx : -1;
+                                        }
+                                        connection.Close();
+                                    }
+                                }
+                                if (index != -1)
+                                {
+                                    sql = "UPDATE UPLOADRELEASESBUILDER SET TITLEID = @TITLEID WHERE ID = @id;";
+                                    using (var connection = new FbConnection(connectionString))
+                                    {
+                                        connection.Open();
+                                        using (var command = new FbCommand(sql, connection))
+                                        {
+                                            command.Parameters.Clear();
+                                            command.Parameters.AddWithValue("@TITLEID", index);
+                                            command.Parameters.AddWithValue("@id", ShortsDirectoryIndex);
+                                            command.ExecuteScalar();
+                                        }
+                                        connection.Close();
+                                    }
+                                    /*foreach (var item in UploadReleasesBuillderList.
+                                        Where(item => item.Id == ShortsDirectoryIndex))
+                                    {
+                                        item.TitleId = index;
+                                        break;
+                                    }*/
+                                }
+                            }
+
+                            ObservableCollectionFilter.SetTitlesTag(index);
+                            frmTitleSelect.TitleId = index;
+                            string BaseStr = frmTitleSelect.BaseTitle + " ";
+
+
+                            foreach (var item in TitleTagsList.Where(s => s.GroupId == index))
+                            {
+                                if (!BaseStr.Contains($"#{item.Description}"))
+                                {
+                                    BaseStr += $"#{item.Description} ";
+                                }
+                            }
+                            BaseStr = BaseStr.Trim();
+                            frmTitleSelect.txtTitle.Text = BaseStr.Trim();
+                            frmTitleSelect.lblTitleLength.Content = BaseStr.Trim().Length;
+                            frmTitleSelect.TagsGrp.ItemsSource = ObservableCollectionFilter.TitleTagSelectorView.View;
+                            frmTitleSelect.TagAvailable.ItemsSource = ObservableCollectionFilter.TitleTagAvailableView.View;
+                            ObservableCollectionFilter.TitleTagSelectorView.View.Refresh();
+                            ObservableCollectionFilter.TitleTagAvailableView.View.Refresh();
+                            break;
+                        }
+                    case CustomParams_Refresh:
+                        {
+                            ObservableCollectionFilter.TitleTagSelectorView.View.Refresh();
+                            string BaseStr = frmTitleSelect.BaseTitle + " ";
+                            foreach (var item in ObservableCollectionFilter.TitleTagSelectorView.View)
+                            {
+                                if (!BaseStr.Contains($"#{(item as TitleTags).Description}"))
+                                {
+                                    BaseStr += $"#{(item as TitleTags).Description} ";
+                                }
+                            }
+                            frmTitleSelect.txtTitle.Text = BaseStr.Trim();
+                            frmTitleSelect.lblTitleLength.Content = BaseStr.Trim().Length;
+                            break;
+                        }
+                    case CustomParams_InsertWithId cpInsert:
+                        {
+                            //remove from Selected Tags for titles.
+                            TagUpdate(dataUpdatType.Insert, cpInsert.id, cpInsert.Groupid, FormObject);
+                            ObservableCollectionFilter.TitleTagSelectorView.View.Refresh();
+                            ObservableCollectionFilter.TitleTagAvailableView.View.Refresh();
+                            string x = OnGetAllTags(frmTitleSelect.GetTitleTag());
+                            string xx = "", part = "";
+                            /*foreach (var item in UploadReleases.Where(item => item.Id == ShortsDirectoryIndex))
+                            {
+                                xx = (item.ReleaseFiles.Count > 9) ? "XX" : "X";
+                                part = $" PART {xx}";
+                            }*/
+                            //cpInsert.TitleLength = x.Length + part.Length;
+                            break;
+                        }
+                    case CustomParams_Remove cpRemove:
+                        {
+                            TagUpdate(dataUpdatType.Remove, cpRemove.id, -1, FormObject, cpRemove.Name);
+                            string x = OnGetAllTags(frmTitleSelect.GetTitleTag());
+                            cpRemove.TitleLength = x.Length;
+                            break;
+                        }
+                    case CustomParams_Add cpAdd:
+                        {
+                            AddAvailableTag(cpAdd.data_string, FormObject);
+                            break;
+                        }
+                    case CustomParams_EditName cp_Update:
+                        {
+                            bool found = false;
+                            foreach (var item in TitlesList.Where(ik => ik.Id == cp_Update.id && !ik.IsTag))
+                            {
+                                item.Description = cp_Update.name;
+                                found = true;
+                            }
+                            if (found)
+                            {
+                                string sql = "UPDATE TITLES SET DESCRIPTION = @name WHERE ID = @id;";
+                                using (var connection = new FbConnection(connectionString))
+                                {
+                                    connection.Open();
+                                    using (var command = new FbCommand(sql, connection))
+                                    {
+                                        command.Parameters.Clear();
+                                        command.Parameters.AddWithValue("@name", cp_Update.name);
+                                        command.Parameters.AddWithValue("@id", cp_Update.id);
+                                        command.ExecuteScalar();
+                                    }
+                                    connection.Close();
+                                }
+                            }
+                            break;
+                        }
+                    case CustomParams_Get cpGet:
+                        {
+                            int id = cpGet.Id;
+                            if (MasterTagSelectFrm is null)
+                            {
+                                frmTitleSelect.Hide();
+                                MasterTagSelectFrm = new MasterTagSelectForm(frmTitleSelect.IsShorts,
+                                    () => { frmTitleSelect.Show(); DoMasterTagClose(); }, ModuleCallback, true, frmTitleSelect.TitleId);
+                                MasterTagSelectFrm.ParentId = frmTitleSelect.TitleId;
+                                MasterTagSelectFrm.Show();
+                            }
+                            break;
+                        }
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"ObjectHandler - {this} {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
+
+        public void AddAvailableTag(string tagdescription, object ThisForm)
+        {
+            try
+            {
+                if (ThisForm is TitleSelectFrm)
+                {
+                    bool found = false;
+                    foreach (var _ in availableTagsList.Where(tg => tg.Tag == tagdescription).Select(tg => new { }))
+                    {
+                        found = true;
+                        break;
+                    }
+
+                    if (!found)
+                    {
+                        int idx = -1;
+                        string Sql = $"insert into AVAILABLETAGS(TAG) VALUES(@tagdescription) RETURNING ID;";
+                        using (var connection = new FbConnection(connectionString))
+                        {
+                            connection.Open();
+                            using (var command = new FbCommand(Sql, connection))
+                            {
+                                command.Parameters.Clear();
+                                command.Parameters.AddWithValue("@tagdescription", tagdescription);
+                                var obj = command.ExecuteScalar();
+                                idx = (obj is int resx) ? resx : -1;
+                            }
+                            connection.Close();
+                        }
+                        if (idx != -1)
+                        {
+                            availableTagsList.Add(new AvailableTags(tagdescription, idx));
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"AddAvailableTag {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
+        private void DoMasterTagClose()
+        {
+            try
+            {
+                if (MasterTagSelectFrm is not null)
+                {
+                    if (MasterTagSelectFrm.TagSetChanged)
+                    {
+                        /*if (ReleaseBuilder is not null)
+                        {
+                            string BaseStr = ReleaseBuilder.DoTitleSelectFrm.BaseTitle + " ";
+                            foreach (var item in ColectionFilter.TitleTagSelectorView.View)
+                            {
+                                if (!BaseStr.Contains($"#{(item as TitleTags).Description}"))
+                                {
+                                    BaseStr += $"#{(item as TitleTags).Description} ";
+                                }
+                            }
+                            BaseStr = BaseStr.Trim();
+                            ReleaseBuilder.DoTitleSelectFrm.txtTitle.Text = BaseStr.Trim();
+                            ReleaseBuilder.DoTitleSelectFrm.lblTitleLength.Content = BaseStr.Trim().Length;
+                            ColectionFilter.TitleTagSelectorView.View.Refresh();
+                            ColectionFilter.TagSelectorView.View.Refresh();
+                            ColectionFilter.TagAvailableView.View.Refresh();
+                            ColectionFilter.TitleTagAvailableView.View.Refresh();
+                        }*/
+                    }
+                    if (MasterTagSelectFrm.IsClosing)
+                    {
+                        var cts = new CancellationTokenSource();
+                        cts.CancelAfter(1500);
+                        if (true && !cts.IsCancellationRequested)
+                        {
+                            Thread.Sleep(100);
+                            System.Windows.Forms.Application.DoEvents();
+                        }
+                        MasterTagSelectFrm = null;
+                    }
+                }
+
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"ObjectHandler - {this} {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
+        public void TagUpdate(dataUpdatType dt, int id, int GroupId, object ThisForm, string Desc = "")
+        {
+            try
+            {
+                string Sql = "";
+                bool found = false;
+                if (ThisForm is TitleSelectFrm frmTitleSelect)
+                {
+                    if ((dt == dataUpdatType.Insert))
+                    {
+                        int idx = -1;
+                        //TAGID INTEGER, TITLEID INTEGER)
+                        string TableName = (ThisForm is TitleSelectFrm) ? "TITLETAGS" : "SELECTEDTAGS";
+                        string TagID = ThisForm is TitleSelectFrm ? "TAGID" : "SELECTEDTAG";
+                        string TitleID = ThisForm is TitleSelectFrm ? "GROUPID" : "GROUPTAGID";
+                        Sql = $"SELECT ID FROM {TableName} WHERE {TagID} = @TAGID AND {TitleID} = @GROUPID";
+                        using (var connection = new FbConnection(connectionString))
+                        {
+                            connection.Open();
+                            using (var command = new FbCommand(Sql, connection))
+                            {
+                                command.Parameters.Clear();
+                                command.Parameters.AddWithValue("@GROUPID", GroupId);
+                                command.Parameters.AddWithValue("@TAGID", id);
+                                var obj = command.ExecuteScalar();
+                                idx = (obj is int resx) ? resx : -1;
+                            }
+                            connection.Close();
+                        }
+                        if (idx == -1)
+                        {
+                            idx = -1;
+                            Sql = $"INSERT INTO {TableName}({TagID}, {TitleID}) VALUES(@TAGID, @GROUPID) RETURNING ID";
+                            using (var connection = new FbConnection(connectionString))
+                            {
+                                connection.Open();
+                                using (var command = new FbCommand(Sql, connection))
+                                {
+                                    command.Parameters.Clear();
+                                    command.Parameters.AddWithValue("@GROUPID", GroupId);
+                                    command.Parameters.AddWithValue("@TAGID", id);
+                                    var obj = command.ExecuteScalar();
+                                    idx = (obj is int resx) ? resx : -1;
+                                }
+                                connection.Close();
+                            }
+
+                            if (idx != -1)
+                            {
+                                //T.TAGID = S.ID
+                                string SQL = $"Select * FROM {TableName} T INNER JOIN AVAILABLETAGS S ON S.ID = T.TAGID WHERE T.ID = {idx}";
+                                if (ThisForm is TitleSelectFrm)
+                                {
+                                    connectionString.ExecuteReader(SQL, OnReadTitlesTags);
+                                    ObservableCollectionFilter.TitleTagSelectorView.View.Refresh();
+                                    ObservableCollectionFilter.TitleTagAvailableView.View.Refresh();
+                                }
+
+                            }
+                        }
+                    }
+                    if ((dt == dataUpdatType.Add))
+                    {
+                        int idx = -1;
+                        Sql = $"INSERT INTO TITLES(DESCRIPTION) VALUES(@description) RETURNING ID";
+                        using (var connection = new FbConnection(connectionString))
+                        {
+                            connection.Open();
+                            using (var command = new FbCommand(Sql, connection))
+                            {
+                                command.Parameters.Clear();
+                                command.Parameters.AddWithValue("@description", Desc);
+                                var obj = command.ExecuteScalar();
+                                idx = (obj is int resx) ? resx : -1;
+                            }
+                            connection.Close();
+                        }
+                        SelectedTagId = (idx != -1) ? idx : SelectedTagId;
+                        if (ThisForm is TitleSelectFrm frmTitleSelect1)
+                        {
+                            frmTitleSelect1.SetTitleTag(SelectedTagId);
+                        }
+                        UpdateTitleTagDesc(SelectedTagId, ThisForm);
+                    }
+                    else if ((dt == dataUpdatType.Remove))
+                    {
+                        string TableName = (ThisForm is TitleSelectFrm) ? "TITLETAGS" : "SELECTEDTAGS";
+                        Sql = $"DELETE FROM {TableName} WHERE ID = {id}";
+                        Sql.RunExecuteScalar(connectionString);
+                        SelectedTagId = (SelectedTagId == id) ? -1 : SelectedTagId;
+                        if (ThisForm is TitleSelectFrm)
+                        {
+                            for (int i = 0; i < TitleTagsList.Count; i++)
+                            {
+                                if (TitleTagsList[i].Id == id)
+                                {
+                                    TitleTagsList.RemoveAt(i);
+                                    break;
+                                }
+                            }
+                            ObservableCollectionFilter.TitleTagSelectorView.View.Refresh();
+                            ObservableCollectionFilter.TitleTagAvailableView.View.Refresh();
+                        }
+
+                    }
+                    else if ((dt == dataUpdatType.Edit))
+                    {
+                        int idx = -1;
+                        Sql = $"UPDATE TITLES SET DESCRIPTION = @description WHERE ID = @id";
+                        using (var connection = new FbConnection(connectionString))
+                        {
+                            connection.Open();
+                            using (var command = new FbCommand(Sql, connection))
+                            {
+                                command.Parameters.Clear();
+                                command.Parameters.AddWithValue("@description", Desc);
+                                command.Parameters.AddWithValue("@id", id);
+                                var obj = command.ExecuteScalar();
+                                idx = (obj is int resx) ? resx : -1;
+                            }
+                            connection.Close();
+                        }
+                        if (ThisForm is TitleSelectFrm frmTitleSelect2)
+                        {
+                            frmTitleSelect2.SetTitleTag(SelectedTagId);
+                        }
+                        UpdateTitleTagDesc(SelectedTagId, ThisForm);
+                    }
+                    else if ((dt == dataUpdatType.Change))
+                    {
+                        SelectedTagId = id;
+                        if (ThisForm is TitleSelectFrm frmTitleSelect3)
+                        {
+                            frmTitleSelect3.SetTitleTag(SelectedTagId);
+                        }
+                        UpdateTitleTagDesc(SelectedTagId, ThisForm);
+                    }
+                }
+
+
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite(MethodBase.GetCurrentMethod().Name + " " + ex.Message);
+            }
+        }
+
+        private void OnReadTitlesTags(FbDataReader reader)
+        {
+            try
+            {
+                TitleTagsList.Add(new TitleTags(reader));
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"OnReadTitlesTags {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
+
+        public void UpdateTitleTagDesc(int id, object ThisForm)
+        {
+            try
+            {
+                int TitleTag = -1;
+                if (ThisForm is TitleSelectFrm frmTitleSelect)
+                {
+                    int TitleId = frmTitleSelect.GetTitleTag();
+                    var TagDescriptions = OnGetAllTags(TitleTag);
+                    int idx = -1;
+                    foreach (var p in TitlesList.Where(p => p.Id == TitleId))
+                    {
+                        idx = TitlesList.IndexOf(p);
+                        break;
+                    }
+                    if (idx == -1)
+                    {
+                        TitlesList[idx].VisualDescription = TitlesList[idx].Description + TagDescriptions;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite(MethodBase.GetCurrentMethod().Name + " " + ex.Message);
+            }
+        }
+        private void OnReadSelectedTags(FbDataReader reader)
+        {
+            try
+            {
+                selectedTagsList.Add(new SelectedTags(reader));
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"OnReadSelectedTags {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
         private void selectShortUpload_Handler(object thisForm, object tld)
         {
             if (tld is CustomParams_GetConnectionString CGCS)
             {
                 CGCS.ConnectionString = GetConectionString();
+            }
+            else if (tld is CustomParams_Select SPS)
+            {
+                ShortsDirectoryIndex = SPS.Id;
+            }
+        }
+
+        public string OnGetAllTags(int Id)
+        {
+            try
+            {
+                string res = "";
+                if (Id != -1)
+                {
+                    foreach (var tag in TitleTagsList)
+                    {
+                        res += $"|{tag.Description}";
+                        break;
+
+                    }
+                }
+                return res;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"OnGetAllTags {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+                return "";
             }
         }
 
@@ -373,7 +1381,7 @@ namespace VideoGui
             try
             {
                 Show();
-                
+
                 Task.Run(() =>
                 {
                     while (true)
@@ -453,12 +1461,19 @@ namespace VideoGui
                         {
                             ConnectH().ConfigureAwait(false);
                             break;
+
                         }
                     case 2:
                         {
                             ConnectI().ConfigureAwait(false);
                             break;
                         }
+                    case 3:
+                        {
+                            ConnectT().ConfigureAwait(false);
+                            break;
+                        }
+
                 }
             }
             catch (Exception ex)
@@ -834,16 +1849,26 @@ namespace VideoGui
                 }
                 string Id = "id integer generated by default as identity primary key";
                 string sqlstring = $"create table AutoInsert({Id},srcdir varchar(500), destfname varchar(500),StartPos BIGINT,Duration BIGINT,b720p SMALLINT," +
-                    "bShorts SMALLINT,bEncodeTrim SMALLINT,bCutTrim SMALLINT,bMonitoredSource SMALLINT,bPersistentJob SMALLINT, RUNID INTEGER,"+
+                    "bShorts SMALLINT,bEncodeTrim SMALLINT,bCutTrim SMALLINT,bMonitoredSource SMALLINT,bPersistentJob SMALLINT, RUNID INTEGER," +
                      "ISMUXED SMALLINT, MUXDATA VARCHAR(256)); ";
 
                 connectionString.CreateTableIfNotExists(sqlstring);
-                connectionString.AddFieldToTable("AutoInsert", "ISMUXED","SMALLINT", 0);
+                connectionString.AddFieldToTable("AutoInsert", "ISMUXED", "SMALLINT", 0);
                 connectionString.AddFieldToTable("AutoInsert", "MUXDATA", "VARCHAR(256)", "");
 
 
+                /*
+          selectedTagsList , availableTagsList , TitleTagsList, DescriptionsList
+          TitlesList,TitlesList2 - Tables, Loaders todo.
+          // linking in ConnectT(). 
+          // Todo SelectShortsUpload Loaded - ids for Tag & Dir Name off last id.
+             And Set index too in here.
+        */
+
+
+
                 sqlstring = $"create table AutoInsertHistory({Id},srcdir varchar(500), destfname varchar(500),StartPos BIGINT,Duration BIGINT,b720p SMALLINT," +
-                    "bShorts SMALLINT,bEncodeTrim SMALLINT,bCutTrim SMALLINT,bMonitoredSource SMALLINT,bPersistentJob SMALLINT, RUNID INTEGER,"+
+                    "bShorts SMALLINT,bEncodeTrim SMALLINT,bCutTrim SMALLINT,bMonitoredSource SMALLINT,bPersistentJob SMALLINT, RUNID INTEGER," +
                     "ISMUXED SMALLINT, MUXDATA VARCHAR(256)); ";
 
                 connectionString.CreateTableIfNotExists(sqlstring);
@@ -894,8 +1919,12 @@ namespace VideoGui
                 connectionString.CreateTableIfNotExists(sqlstring);
 
 
-                sqlstring = $"create table SHORTSDIRECTORY({Id},DIRECTORYNAME varchar(500));";
+                sqlstring = $"create table SHORTSDIRECTORY({Id},DIRECTORYNAME varchar(500), TITLEID INTEGER);";
                 connectionString.CreateTableIfNotExists(sqlstring);
+
+                connectionString.AddFieldToTable("SHORTSDIRECTORY", "TITLEID", "INTEGER", -1);
+                connectionString.AddFieldToTable("SHORTSDIRECTORY", "DESCID", "INTEGER", -1);
+
 
                 sqlstring = $"create table AutoEdits({Id},Source varchar(500),Destination varchar(500),Threshhold varchar(255)," +
                     "Segment varchar(255),Target varchar(255));".ToUpper();
@@ -903,6 +1932,17 @@ namespace VideoGui
 
                 sqlstring = $"delete from ProcessingLog where InProcess = 1;";
                 sqlstring.ExecuteNonQuery(connectionString);
+                sqlstring = $"CREATE TABLE AVAILABLETAGS({Id},TAG VARCHAR(500));";
+                connectionString.CreateTableIfNotExists(sqlstring);
+                sqlstring = $"CREATE TABLE SELECTEDTAGS({Id},SELECTEDTAG INTEGER, GROUPTAGID INTEGER);";
+                connectionString.CreateTableIfNotExists(sqlstring);
+                sqlstring = $"CREATE TABLE TITLETAGS({Id},TAGID INTEGER, GROUPID INTEGER);";
+                connectionString.CreateTableIfNotExists(sqlstring);
+                sqlstring = $"CREATE TABLE TITLES({Id},DESCRIPTION VARCHAR(500), TITLETAGID INTEGER);";
+                connectionString.CreateTableIfNotExists(sqlstring);
+                sqlstring = $"CREATE TABLE DESCRIPTIONS({Id},NAME VARCHAR(250),DESCRIPTION VARCHAR(2500),TITLETAGID INTEGER, ISSHORTVIDEO SMALLINT, ISTAG SMALLINT);";
+                connectionString.CreateTableIfNotExists(sqlstring);
+                connectionString.AddFieldToTable("DESCRIPTIONS", "ISTAG", "SMALLINT", 0);
 
                 connectionString.CreateTableIfNotExists($"CREATE TABLE RUNNINGID({Id}, ACTIVE SMALLINT)");
                 sqlstring = $"INSERT INTO RUNNINGID(ACTIVE) VALUES(0) RETURNING ID;";
@@ -1018,12 +2058,80 @@ namespace VideoGui
                 connectionString.ExecuteReader("SELECT * FROM PLANINGCUTS", OnReadPlanningCuts);
                 var sql = "DELETE FROM UPLOADSRECORD WHERE UPLOAD_DATE <> CAST(GETDATE() AS DATE);";
                 connectionString.ExecuteNonQuery(sql);
+
+                /*   selectedTagsList , availableTagsList , TitleTagsList, 
+                     DescriptionsList,  TitlesList,TitlesList2 - Tables, Loaders todo.
+                // linking in ConnectT(). 
+                // Todo SelectShortsUpload Loaded - ids for Tag & Dir Name off last id.
+                And Set index too in here*/
+                connectionString.ExecuteReader("SELECT * FROM AVAILABLETAGS", OnReadAvailableTags);
+                connectionString.ExecuteReader("SELECT * FROM SELECTEDTAGS S INNER JOIN AVAILABLETAGS T ON T.ID = S.SELECTEDTAG", OnReadSelectedTags);
+                //connectionString.ExecuteReader("SELECT * FROM MASTERTAGTABLE", OnReadMasterTagTable);
+                connectionString.ExecuteReader("SELECT * FROM TITLETAGS T INNER JOIN AVAILABLETAGS S ON T.TAGID = S.ID", OnReadTitlesTags);
+                connectionString.ExecuteReader("SELECT * FROM TITLES", OnReadTitles);
+                connectionString.ExecuteReader("SELECT * FROM DESCRIPTIONS", OnReadDescriptions);
+
             }
             catch (Exception ex)
             {
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
             }
         }
+        private void OnReadDescriptions(FbDataReader reader)
+        {
+            try
+            {
+                DescriptionsList.Add(new Descriptions(reader, OnGetTitle));
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"OnReadDescriptions {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
+
+        public string OnGetTitle(int id)
+        {
+            try
+            {
+                foreach (var tag in TitlesList)
+                {
+                    if (tag.Id == id)
+                    {
+                        return tag.Description;
+                    }
+                }
+                return "";
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"OnGetAllTags {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+                return "";
+            }
+        }
+
+        private void OnReadTitles(FbDataReader reader)
+        {
+            try
+            {
+                TitlesList.Add(new Titles(reader, OnGetAllTags));
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"OnReadTitles {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
+        private void OnReadAvailableTags(FbDataReader reader)
+        {
+            try
+            {
+                availableTagsList.Add(new AvailableTags(reader));
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"OnReadSelectedTags {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
+
 
         private void OnReadPlanningCuts(FbDataReader reader)
         {
@@ -1107,7 +2215,7 @@ namespace VideoGui
                     {
                         int iddx = -1;
                         iddx = ModifyRecordInDb(jp.Id.ToInt(), jp.SourceDirectory, jp.DestinationDirectory, jp.Start, jp.Duration,
-                            jp.Is720p, jp.IsShorts, jp.IsCreateShorts, jp.IsEncodeTrim, jp.IsCutTrim, jp.IsDeleteMonitoredSource, 
+                            jp.Is720p, jp.IsShorts, jp.IsCreateShorts, jp.IsEncodeTrim, jp.IsCutTrim, jp.IsDeleteMonitoredSource,
                             jp.IsPersistentJob, jp.IsMuxed, jp.MuxData);
                         jp.Id = (iddx != -1) ? iddx.ToString() : jp.Id;
                         string Title = Path.GetFileName(destFilename);
@@ -1410,8 +2518,8 @@ namespace VideoGui
         {
             try
             {
-                Closing += (s, e) => 
-                { 
+                Closing += (s, e) =>
+                {
                     IsClosing = true;
                     DoOnFinish?.Invoke();
                 };
@@ -1443,7 +2551,7 @@ namespace VideoGui
                 Loadsettings();
                 DbInit();
 
-                
+
 
                 this.httpClientFactory = httpClientFactory;
                 Task.Run(() => { KillOrphanProcess(); });
@@ -2009,7 +3117,7 @@ namespace VideoGui
                                 }
                                 //(Stats_Handler.count720p, Stats_Handler.count1080p, Stats_Handler.count4k)
                                 if (((Job.Is1080p || Job.IsTwitchOut) && (_1080PFiles.Count >= total1080ptasks)) ||
-                                    ((Job.Is4K||Job.IsMuxed) && (_4KFiles.Count >= total4kTasks)) ||
+                                    ((Job.Is4K || Job.IsMuxed) && (_4KFiles.Count >= total4kTasks)) ||
                                     ((!Job.Is720P) && (_720PFiles.Count >= totaltasks)))
                                 {
                                     Thread.Sleep(200);
@@ -2027,7 +3135,7 @@ namespace VideoGui
                                     }
                                     else continue;
                                 }
-                                if ((Job.Is4K||Job.IsMuxed) && (_4KFiles.Count < total4kTasks))
+                                if ((Job.Is4K || Job.IsMuxed) && (_4KFiles.Count < total4kTasks))
                                 {
                                     break;
                                 }
@@ -2151,7 +3259,7 @@ namespace VideoGui
                                 string dfile = Path.GetDirectoryName(zprocessingfile);
                                 string ff = dfile.Split('\\').ToList().LastOrDefault();
                                 string newd = dfile.Replace(ff, "Filtered");
-                                DestFile = Path.Combine(newd, Path.GetFileNameWithoutExtension(zprocessingfile)+".mp4");
+                                DestFile = Path.Combine(newd, Path.GetFileNameWithoutExtension(zprocessingfile) + ".mp4");
                             }
 
                             else
@@ -2404,9 +3512,9 @@ namespace VideoGui
                     }
                     bool Found = false;
                     LineNum = 11;
-                    string processingfile = (Job.IsMuxed) ? Job.MultiSourceDir : 
+                    string processingfile = (Job.IsMuxed) ? Job.MultiSourceDir :
                         (Job.IsMulti) ? Job.DestMFile : Job.SourcePath + "\\" + Job.SourceFile;
-                    
+
                     if (Job.IsMulti && !Job.IsMuxed)
                     {
                         bool passed = true;
@@ -2624,7 +3732,7 @@ namespace VideoGui
                         {
                             string destpath = Path.GetDirectoryName(DestFile);
                         }
-                        
+
                         LineNum = 43;
                         isRe = (ThreadStatsHandlerBool?.Invoke(0, Job.FileNoExt));
                         isOK = isRe.HasValue && isRe.Value;
@@ -2635,7 +3743,7 @@ namespace VideoGui
                             TimeSpan probedatse = Job.ProbeDate - DateTime.Now;
                             double TotalDays = probedatse.TotalDays;
                             bool founxd = false, InProcess = false;
-                            string JobHandle = "", srfilex = (Job.IsMuxed) ? Job.MultiSourceDir: Job.SourcePath + "\\" + Job.FileNoExt + Job.FileExt;
+                            string JobHandle = "", srfilex = (Job.IsMuxed) ? Job.MultiSourceDir : Job.SourcePath + "\\" + Job.FileNoExt + Job.FileExt;
                             if (Job.IsMulti && !Job.IsMuxed) srfilex = Job.DestMFile;
                             LineNum = 45;
                             if (!Job.IsMulti && !Job.IsCST)
@@ -3482,7 +4590,7 @@ namespace VideoGui
                 {
                     FileQueChecker.Interval = (int)new TimeSpan(0, 1, 0).TotalMilliseconds;
                     FileQueChecker.Start();
-                    
+
                 });
             }
         }
@@ -4553,7 +5661,7 @@ namespace VideoGui
                             string md = Path.GetDirectoryName(jo.MultiSourceDir);
                             string fd = md.Split('\\').ToList().LastOrDefault();
                             string np = md.Replace(fd, "Filtered");
-                            fn = Path.Combine(np,Path.GetFileNameWithoutExtension(jo.MultiSourceDir))+".mp4";
+                            fn = Path.Combine(np, Path.GetFileNameWithoutExtension(jo.MultiSourceDir)) + ".mp4";
                         }
                         LinePos = 3;
                         var cts2 = new CancellationTokenSource();
@@ -4690,8 +5798,8 @@ namespace VideoGui
 
                         }
 
-                        
-                        if (!jo.IsShorts|| jo.IsMuxed)
+
+                        if (!jo.IsShorts || jo.IsMuxed)
                         {
                             DoAsyncFinish(jo.FileNoExt, newdest, Totals, fs, fs2, fps, filename, jo.IsComplex || jo.IsCST, jo.IsTwitchStream, jo.IsMuxed).ConfigureAwait(false);
                         }
@@ -4788,7 +5896,7 @@ namespace VideoGui
                 return Task.CompletedTask;
             }
         }
-        public async Task DoAsyncFinish(string sourcefile, string destfile, double TotalSeconds, 
+        public async Task DoAsyncFinish(string sourcefile, string destfile, double TotalSeconds,
             int fs, int fs2, string fps, string filename, bool _IsComplex, bool isTwitchStream, bool IsMuxed)
         {
             try
@@ -4806,7 +5914,7 @@ namespace VideoGui
                     _TotalSeconds = (double)FileIndexer.GetDuration().TotalSeconds;
                     FileIndexer = null;
                 }
-                if ((IsMuxed||isTwitchStream) || (Math.Round(_TotalSeconds) == Math.Truncate(TotalSeconds)) || (_IsComplex) || Math.Round(TotalSeconds * 0.98) < (Math.Round(_TotalSeconds)))
+                if ((IsMuxed || isTwitchStream) || (Math.Round(_TotalSeconds) == Math.Truncate(TotalSeconds)) || (_IsComplex) || Math.Round(TotalSeconds * 0.98) < (Math.Round(_TotalSeconds)))
                 {
                     Passed++;
                     lblFailpass.AutoSizeLabel(Passed.ToString() + "/" + failed.ToString());
@@ -4831,7 +5939,7 @@ namespace VideoGui
                     bool IsTwitchActive = false, KeepSource = false, Is1080p = false, IsComplex = false, Is4K = false, IsSrc = false, IsMulti = false, IsAdobe = false;
                     List<string> Cuts = new List<string>();
                     string SourceFileIs = "", destmfile = "", Multifile = "", DestMFile = "", Title = "";
-                    bool IsNVM = false, IsMonitoredSource = false, bIsMuxed = false ;
+                    bool IsNVM = false, IsMonitoredSource = false, bIsMuxed = false;
                     int ID = -1;
                     for (int jindex = 0; jindex < ProcessingJobs.Count(); jindex++)
                     {
@@ -4871,7 +5979,7 @@ namespace VideoGui
                             {
                                 if (fs2 > 0)
                                 {
-                                    if (bIsMuxed) 
+                                    if (bIsMuxed)
                                     {
                                         info = "Muxed Ok";
                                         ProcessingJobs[jindex].Fileinfo = $"[{ProcessingJobs[jindex].VideoInfo}][{fs}M]{info}";// OK]"; 
@@ -4923,10 +6031,10 @@ namespace VideoGui
                             DeleteFromDeletionTable(SourceFileIs);
                         }
                     }
-                     
+
                     if (IsMuxed)
                     {
-                        DeleteFromAutoInsertTable(ID); 
+                        DeleteFromAutoInsertTable(ID);
                     }
                     else if (IsSrc)
                     {
@@ -6112,15 +7220,15 @@ namespace VideoGui
                                     }
                                     break;
                                 }*/
-                           /* case "ChkResize1080p":
-                                {
-                                    if (LoadedKey) key.SetValue("resize1080p", CompChecked);
-                                    if (CompChecked)
-                                    {
-                                        ChkResize1080shorts.IsChecked = false;
-                                    }
-                                    break;
-                                }*/
+                            /* case "ChkResize1080p":
+                                 {
+                                     if (LoadedKey) key.SetValue("resize1080p", CompChecked);
+                                     if (CompChecked)
+                                     {
+                                         ChkResize1080shorts.IsChecked = false;
+                                     }
+                                     break;
+                                 }*/
                             case "chk480400fix":
                                 {
                                     if (LoadedKey) key.SetValue("fix480to400", CompChecked);
@@ -6596,7 +7704,7 @@ namespace VideoGui
 
                 ShowScraper();
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 ex.LogWrite($"btnScraperDraft_Click {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
@@ -6638,7 +7746,8 @@ namespace VideoGui
                 if (selectShortUpload is null)
                 {
                     Hide();
-                    selectShortUpload = new SelectShortUpload(ModuleCallback, SelectShortUpload_onFinish);
+                    selectShortUpload = new SelectShortUpload(ModuleCallback,
+                        SelectShortUpload_onFinish, ConnnectLists);
                     selectShortUpload.ShowActivated = true;
                     selectShortUpload.ShowDialog();
                 }
@@ -7597,8 +8706,8 @@ namespace VideoGui
                         lstBoxJobs.Width = lstBoxJobs.MinWidth;
                         Progressbar1.Width = lstBoxJobs.Width - 120;
                         Progressbar2.Width = Progressbar1.Width;
-                      //  statusbar1.Width = MainWindowX.Width - 20;
-                       // statusbar2.Width = statusbar1.Width;
+                        //  statusbar1.Width = MainWindowX.Width - 20;
+                        // statusbar2.Width = statusbar1.Width;
 
 
                     }

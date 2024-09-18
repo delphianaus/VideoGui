@@ -2,7 +2,16 @@
 <Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup />
   <ItemGroup>
+    <Page Update="DescSelectFrm.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="MasterTagSelectForm.xaml">
+      <SubType>Designer</SubType>
+    </Page>
     <Page Update="SelectReleaseSchedule.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="TitleSelectFrm.xaml">
       <SubType>Designer</SubType>
     </Page>
   </ItemGroup>

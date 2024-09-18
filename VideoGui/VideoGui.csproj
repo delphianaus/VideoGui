@@ -8,8 +8,8 @@
     <StartupObject>VideoGui.App</StartupObject>
     <ApplicationIcon>Properties\computer.ico</ApplicationIcon>
     <Platforms>x64</Platforms>
-    <AssemblyVersion>1.0.0.309</AssemblyVersion>
-    <FileVersion>1.0.0.309</FileVersion>
+    <AssemblyVersion>1.0.0.310</AssemblyVersion>
+    <FileVersion>1.0.0.310</FileVersion>
     <Nullable>annotations</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <UseWindowsForms>True</UseWindowsForms>
@@ -49,6 +49,7 @@
     <None Remove="Icons\CPUEncode.png" />
     <None Remove="Icons\Current.png" />
     <None Remove="Icons\downArrow.png" />
+    <None Remove="Icons\edit.png" />
     <None Remove="Icons\FisheyeKeep.png" />
     <None Remove="Icons\FisheyeRemoval.png" />
     <None Remove="Icons\GPUEncode.png" />
@@ -57,6 +58,7 @@
     <None Remove="Icons\Historic.png" />
     <None Remove="Icons\OutputX265.png" />
     <None Remove="Icons\OutputX264.png" />
+    <None Remove="Icons\set.png" />
     <None Remove="Icons\upArrow.png" />
   </ItemGroup>
 
@@ -101,6 +103,9 @@
     <Resource Include="Icons\CPUEncode.png" />
     <Resource Include="Icons\Current.png" />
     <Resource Include="Icons\downArrow.png" />
+    <Resource Include="Icons\edit.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
     <Resource Include="Icons\FisheyeKeep.png" />
     <Resource Include="Icons\FisheyeRemoval.png" />
     <Resource Include="Icons\GPUEncode.png" />
@@ -122,6 +127,10 @@
 
     <Resource Include="Icons\computer5.ico">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+
+    <Resource Include="Icons\set.png">
+      <CopyToOutputDirectory>f</CopyToOutputDirectory>
     </Resource>
 
     <Resource Include="Icons\upArrow.png" />

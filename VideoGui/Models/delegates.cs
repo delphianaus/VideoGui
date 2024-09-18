@@ -19,6 +19,7 @@ namespace VideoGui.Models.delegates
     public enum ViewType { LESS_EQUAL, GREATER_EQUAL };
     public enum dataFormName { MasterTagSelect, TagSelecteditor };
     public enum dataUpdatType { Add, Remove, Edit, Change, Delete, Insert, Get };
+
     public enum MadeForKids { MFK_SET_BY_YOU, MFK_SET_BY_YOUTUBE, NOT_MADE_FOR_KIDS, NO_SELECTION };
     public delegate void _StatsHandlerDateTimeSetter(string filename, DateTime start);
     public delegate DateTime _StatsHandlerDateTimeGetter(string filename);
@@ -32,6 +33,7 @@ namespace VideoGui.Models.delegates
     public delegate void _StatsHandler(int mode, string filename);
     public delegate void CompairFinished();
     public delegate void ComplexFinished();
+    public delegate string OnGetTagIds(int id);
     public delegate void AudioJoinerOnClose();
     public delegate void AddressUpdate(string address);
     public delegate void AddressUpdateId(string address, string id);
@@ -68,6 +70,7 @@ namespace VideoGui.Models.delegates
     public delegate void SetFilterString(string Filter, FilterTypes FilterType, FilterClass FilterClassIs);
     public delegate void OnFirebirdReader(FbDataReader reader);
     public delegate void databasehook<T>(object ThisForm, T tld);
+    public delegate void dataupdate(dataUpdatType dt, int id, string description, object ThisForm);
 
 
 
