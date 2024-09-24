@@ -3,6 +3,7 @@ using FolderBrowserEx;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Numerics;
@@ -117,15 +118,22 @@ namespace VideoGui
                         string fnx = filename.Split(@"\").ToList().LastOrDefault();
                         string drx = filename.Replace(fnx, "");
 
-                        string frr = System.IO.Path.GetFileNameWithoutExtension(filename);
-                        int fr = System.IO.Path.GetFileNameWithoutExtension(filename).ToInt(-1);
+                        string frr = System.IO.Path.GetFileNameWithoutExtension(fnx);
+                        int fr = System.IO.Path.GetFileNameWithoutExtension(fnx).ToInt(-1);
                         if (fr != -1)
                         {
-                            frr = fr.ToString("X");
+                            frr = fr.ToString();// "X");
                         }
                         string newfile = drx + frr + $"_{res}{Path.GetExtension(filename)}";
-
-                        File.Move(filename, newfile);
+                        if (filename != newfile)
+                        {
+                            
+                            if (File.Exists(newfile))
+                            {
+                                File.Delete(newfile);
+                            }
+                            File.Move(filename, newfile);
+                        }
                     }
                     lblShortNo.Content = files.Count.ToString();
                 }
@@ -248,7 +256,12 @@ namespace VideoGui
                         scraperModule = new ScraperModule(dbInit, doOnFinish, gUrl, false, true, Maxuploads, UploadsPerSlot);
                         scraperModule.ShowActivated = true;
                         scraperModule.ScheduledOk.AddRange(filesdone);
-                        Hide();
+                        Hide(); 
+                        Process[] webView2Processes = Process.GetProcessesByName("MicrosoftEdgeWebview2");
+                        foreach (Process process in webView2Processes)
+                        {
+                            process.Kill();
+                        }
                         scraperModule.Show();
                         return;
                     }
@@ -295,7 +308,11 @@ namespace VideoGui
                     }
                     scraperModule = new ScraperModule(dbInit, doOnFinish, gUrl, false, true, Maxuploads, UploadsPerSlot);
                     scraperModule.ShowActivated = true;
-                    Hide();
+                    Hide(); Process[] webView2Processes = Process.GetProcessesByName("MicrosoftEdgeWebview2");
+                    foreach (Process process in webView2Processes)
+                    {
+                        process.Kill();
+                    }
                     scraperModule.Show();
                 }
             }
