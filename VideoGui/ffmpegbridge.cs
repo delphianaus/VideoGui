@@ -93,7 +93,7 @@ namespace VideoGui
                         {
                             string Language = mw1.Get(StreamKind.Audio, i, "Language");
                             if (Language == "en") Language += "g";
-                            if (Language == "eng" || (Language == "" && astrcnt==1))
+                            if (Language == "eng" || (Language == "" && astrcnt==1)|| astrcnt == 1)
                             {
                                 string Codec = mw1.Get(MediaInfo.StreamKind.Audio, i, "Format").Replace("-", "").ToLower();
                                 TimeSpan Duration = TimeSpan.FromMilliseconds(mw1.Get(StreamKind.Audio, i, "Duration").ToDouble());

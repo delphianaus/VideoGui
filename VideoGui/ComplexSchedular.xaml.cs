@@ -1075,7 +1075,7 @@ namespace VideoGui
                     var processingfiles = Directory.EnumerateFiles(root, "*.mp4", SearchOption.AllDirectories).ToList();
                     var processedfiles = Directory.EnumerateFiles(newdir, "*.mp4", SearchOption.AllDirectories).ToList();
                     List<string> pf = processedfiles.Select(file => Path.GetFileNameWithoutExtension(file)).ToList();
-                    foreach (var file in processingfiles.Where(file => !pf.Contains(Path.GetFileNameWithoutExtension(file))))
+                    foreach (var file in processingfiles)
                     {
                         string dir = Path.GetDirectoryName(file);
                         string fileb = Path.Combine(dir, Path.GetFileNameWithoutExtension(file) + "b.mp3");

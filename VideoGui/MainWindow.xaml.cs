@@ -275,6 +275,8 @@ namespace VideoGui
                 bool res = false;
                 if (ObservableCollectionFilter is not null)
                 {
+
+                    ObservableCollectionFilter.TitleTagSelectorView.Source = TitleTagsList;
                     // link Available and title tables.
                     //ObservableCollectionFilter.ImportCollectionViewSource.Source = FileRenamer;
                     //ObservableCollectionFilter.ImportCollectionViewSource.View.Refresh();
@@ -845,8 +847,19 @@ namespace VideoGui
                             var _title = "";
                             string BaseTitle = "", xx = "", part = "";
                             int index = -1;// UploadReleasesBuilderIndex;
-
-
+                                           //ConnectT().ConfigureAwait(false);
+                            if (selectShortUpload is not null)
+                            {
+                                string ABaseTitle = selectShortUpload.txtsrcdir.Text;
+                                string pp = ABaseTitle.Split("\\").LastOrDefault();
+                                if (pp != "")
+                                {
+                                    BaseTitle = pp;
+                                    frmTitleSelect.BaseTitle = BaseTitle;
+                                    frmTitleSelect.txtTitle.Text = BaseTitle;
+                                    frmTitleSelect.txtBaseTitle.Content = BaseTitle;
+                                }
+                            }
                             /*foreach (var item in UploadReleases.Where(item => item.Id == ShortsDirectoryIndex))
                             {
                                 xx = (item.ReleaseFiles.Count > 9) ? "XX" : "X";
@@ -5361,7 +5374,7 @@ namespace VideoGui
             }
             catch (Exception ex)
             {
-                ex.LogWrite($"RunConversion LineNum {LineNum} {MethodBase.GetCurrentMethod().Name}");
+                    ex.LogWrite($"RunConversion LineNum {LineNum} {MethodBase.GetCurrentMethod().Name}");
             }
         }
 

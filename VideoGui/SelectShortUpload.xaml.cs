@@ -437,6 +437,11 @@ namespace VideoGui
             }
         }
 
+        private void btnEditTitle_Checked(object sender, RoutedEventArgs e)
+        {
+
+        }
+
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             try
