@@ -465,7 +465,7 @@ namespace VideoGui
                 if (html is not null && html.Contains(Span_Name))
                 {
                     HtmlDocument doc = new HtmlDocument();
-                    doc.LoadHtml(html);
+                    0doc.LoadHtml(html);
                     return doc.DocumentNode.SelectNodes($"//li[@class='{Span_Name}']").ToList();
                 }
                 else return new List<HtmlNode>();
