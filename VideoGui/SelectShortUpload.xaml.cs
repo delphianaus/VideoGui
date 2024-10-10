@@ -144,6 +144,22 @@ namespace VideoGui
             }
         }
 
+        public int GetFileCount(string Folder)
+        {
+            try
+            {
+                int res = 0;
+                List<string> files = Directory.EnumerateFiles(Folder, "*.mp4", SearchOption.AllDirectories).ToList();
+                res += files.Where(filename => filename.Contains("_")).Count();
+                lblShortNo.Content = res;
+                return res;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite();
+                return -1;
+            }
+        }
         private void OnReadShorts(FbDataReader reader)
         {
             try
@@ -249,7 +265,8 @@ namespace VideoGui
                     bool Exc = scraperModule.Exceeded;
                     filesdone.AddRange(scraperModule.ScheduledOk);    
                     int Uploaded = scraperModule.TotalScheduled;
-                    if (!Exc && Uploaded < txtTotalUploads.Text.ToInt())
+                    int shortsleft = GetFileCount(rootfolder);
+                    if (!Exc && shortsleft > 0 && Uploaded < txtTotalUploads.Text.ToInt())
                     {
                         int Maxuploads = (txtTotalUploads.Text != "") ? txtTotalUploads.Text.ToInt(100) : 100;
                         int UploadsPerSlot = (txtMaxUpload.Text != "") ? txtMaxUpload.Text.ToInt(5) : 5;

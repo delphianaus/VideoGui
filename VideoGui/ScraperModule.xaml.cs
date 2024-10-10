@@ -401,7 +401,7 @@ namespace VideoGui
                         SendMessage(hWnd, 0x000C, IntPtr.Zero, SendKeysString);
                         List<string> keys = SendKeysString.Split(' ').ToList().Where(s => s != "").ToList();
                         for (int i = 0; i < keys.Count; i++)
-                        {
+                        { 
                             keys[i] = keys[i].Replace("\"", "");
                         }
                         Thread.Sleep(50);
@@ -465,7 +465,7 @@ namespace VideoGui
                 if (html is not null && html.Contains(Span_Name))
                 {
                     HtmlDocument doc = new HtmlDocument();
-                    0doc.LoadHtml(html);
+                    doc.LoadHtml(html);
                     return doc.DocumentNode.SelectNodes($"//li[@class='{Span_Name}']").ToList();
                 }
                 else return new List<HtmlNode>();
@@ -563,10 +563,16 @@ namespace VideoGui
                         foreach (string k in keys)
                         {
                             var nm = k.Split(@"\").ToList().LastOrDefault();
-                            r = r + nm + " ";
+                            string newfile = nm.Replace("\"", "");
+                            if (newfile.Contains("."))
+                            {
+                                newfile = newfile.Substring(0, newfile.IndexOf("."));
+                            }
+
+                            r = r + newfile + " ";
                         }
 
-                        lstMain.Items.Insert(0, $"{max} {r}");
+                        lstMain.Items.Insert(0, $"Inserting {max} Files {r}");
                         await ActiveWebView[1].CoreWebView2.ExecuteScriptAsync("document.getElementById('upload-icon').click();");
                         await ActiveWebView[1].CoreWebView2.ExecuteScriptAsync("document.getElementById('stroke').click();");
                         HasExited = true;
@@ -659,8 +665,13 @@ namespace VideoGui
                                         {
                                             clicks.Add(new Uploads(filenameMatch.Groups[1].Value, "Waiting"));
                                             var filename = filenameMatch.Groups[1].Value.Trim();
+                                            string newfile = filename.Replace("\"", "");
+                                            if (newfile.Contains("."))
+                                            {
+                                                newfile = newfile.Substring(0, newfile.IndexOf("."));
+                                            }
                                             var buttonLabel = $"Edit video {filename}";
-                                            lstMain.Items.Insert(0, filename + " = " + buttonLabel);
+                                            lstMain.Items.Insert(0, $"Getting Edit Window For {newfile} = {buttonLabel}");
                                             await ActiveWebView[1].ExecuteScriptAsync($"document.querySelector('button[aria-label=\"{buttonLabel}\"]').click()");
                                             var cts = new CancellationTokenSource();
                                             while (!cts.IsCancellationRequested)
