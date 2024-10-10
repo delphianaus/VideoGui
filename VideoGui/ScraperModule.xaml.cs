@@ -671,7 +671,7 @@ namespace VideoGui
                                                 newfile = newfile.Substring(0, newfile.IndexOf("."));
                                             }
                                             var buttonLabel = $"Edit video {filename}";
-                                            lstMain.Items.Insert(0, $"Getting Edit Window For {newfile} = {buttonLabel}");
+                                            lstMain.Items.Insert(0, $"Getting Edit Window For {newfile}");
                                             await ActiveWebView[1].ExecuteScriptAsync($"document.querySelector('button[aria-label=\"{buttonLabel}\"]').click()");
                                             var cts = new CancellationTokenSource();
                                             while (!cts.IsCancellationRequested)
