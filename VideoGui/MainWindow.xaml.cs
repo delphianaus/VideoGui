@@ -3054,6 +3054,10 @@ namespace VideoGui
                             }
                         }
                     }
+                    else
+                    {
+                        trayicon.ToolTipText = "Idle";
+                    }
                     LineNum = 3;
                     NewProcessingList.Clear();
                     NewProcessingListTemp.Clear();
@@ -7997,6 +8001,30 @@ namespace VideoGui
             catch (Exception ex)
             {
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+            }
+        }
+
+        public bool HideWindow()
+        {
+            try
+            {
+                if (!canclose)
+                {
+                    trayicon.Visibility = Visibility.Visible;
+                    InTray = true;
+                    TrayIcon = new DispatcherTimer();
+                    TrayIcon.Tick += (ChangeIcon);
+                    TrayIcon.Interval = new TimeSpan(0, 0, 23);
+                    TrayIcon.Start();
+                    Hide();
+                    return false;
+                }
+                else return true;
+            }
+            catch(Exception ex)
+            {
+                ex.LogWrite($"HideWindow {this} {MethodBase.GetCurrentMethod().Name}");
+                return true;
             }
         }
         private void ChangeIcon(object sender, EventArgs e)
