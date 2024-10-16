@@ -74,6 +74,7 @@ using System.Xml.Linq;
 using System.Collections.Immutable;
 using System.Windows.Media.Imaging;
 using System.Runtime.InteropServices.Marshalling;
+using System.ComponentModel;
 
 
 namespace VideoGui
@@ -132,8 +133,14 @@ namespace VideoGui
         ObservableCollection<SelectedTags> selectedTagsList = new ObservableCollection<SelectedTags>();
         ObservableCollection<AvailableTags> availableTagsList = new ObservableCollection<AvailableTags>();
         ObservableCollection<TitleTags> TitleTagsList = new ObservableCollection<TitleTags>();
+        ObservableCollection<VideoSchedules> VideoSchedulesList = new ObservableCollection<VideoSchedules>();
+        ObservableCollection<VideoSchedule> VideoScheduleList = new ObservableCollection<VideoSchedule>();
+        ObservableCollection<AppliedSchedules> AppliedSchedulesList = new ObservableCollection<AppliedSchedules>();
+        ObservableCollection<AppliedSchedule> AppliedScheduleList = new ObservableCollection<AppliedSchedule>();
         CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
         CancellationTokenSource ProcessingCancellationTokenSource = new CancellationTokenSource();
+       
+
         double frames, LRF, RRF, LLC, RLC;
         DateTime totaltimeprocessed = DateTime.Now;
         object lookuplocked = new object();
@@ -637,7 +644,10 @@ namespace VideoGui
                                     }
                                 }
                                 sql = $"SELECT * FROM TITLETAGS T INNER JOIN AVAILABLETAGS S ON T.TAGID = S.ID WHERE GROUPID = {frmMasterTagSelectForm.ParentId}";
-                                connectionString.ExecuteReader(sql, OnReadTitlesTags);
+                                connectionString.ExecuteReader(sql, (FbDataReader r) =>
+                                {
+                                    TitleTagsList.Add(new TitleTags(r));
+                                });
                                 frmMasterTagSelectForm.TagSetChanged = true;
                                 break;
 
@@ -1196,7 +1206,10 @@ namespace VideoGui
                                 string SQL = $"Select * FROM {TableName} T INNER JOIN AVAILABLETAGS S ON S.ID = T.TAGID WHERE T.ID = {idx}";
                                 if (ThisForm is TitleSelectFrm)
                                 {
-                                    connectionString.ExecuteReader(SQL, OnReadTitlesTags);
+                                    connectionString.ExecuteReader(SQL, (FbDataReader r) =>
+                                    {
+                                        TitleTagsList.Add(new TitleTags(r));
+                                    });
                                     ObservableCollectionFilter.TitleTagSelectorView.View.Refresh();
                                     ObservableCollectionFilter.TitleTagAvailableView.View.Refresh();
                                 }
@@ -1290,17 +1303,7 @@ namespace VideoGui
             }
         }
 
-        private void OnReadTitlesTags(FbDataReader reader)
-        {
-            try
-            {
-                TitleTagsList.Add(new TitleTags(reader));
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite($"OnReadTitlesTags {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
-            }
-        }
+       
 
         public void UpdateTitleTagDesc(int id, object ThisForm)
         {
@@ -1328,17 +1331,7 @@ namespace VideoGui
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name + " " + ex.Message);
             }
         }
-        private void OnReadSelectedTags(FbDataReader reader)
-        {
-            try
-            {
-                selectedTagsList.Add(new SelectedTags(reader));
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite($"OnReadSelectedTags {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
-            }
-        }
+        
         private void selectShortUpload_Handler(object thisForm, object tld)
         {
             if (tld is CustomParams_GetConnectionString CGCS)
@@ -2083,42 +2076,76 @@ namespace VideoGui
         {
             try
             {
-                connectionString.ExecuteReader("SELECT * FROM AUTOINSERT", OnReadAutoInsert);
-                connectionString.ExecuteReader("SELECT * FROM AUTOINSERTHISTORY Order By DELETIONDATE desc", OnReadAutoInsertHistory);
-                connectionString.ExecuteReader("SELECT * FROM PLANINGQUES", OnReadPlanningQues);
-                connectionString.ExecuteReader("SELECT * FROM PLANINGCUTS", OnReadPlanningCuts);
+                connectionString.ExecuteReader("SELECT * FROM AUTOINSERT", (FbDataReader r) =>
+                {
+                    ComplexProcessingJobList.Add(new ComplexJobList(r));
+                    var InMemoryJob = new JobListDetails(r, ProcessingJobs.Count + 1);
+                    if (InMemoryJob.IsMulti && InMemoryJob.GetCutList().Count > 0)
+                    {
+
+                        if (InMemoryJob.GetCutList().Count > 0)
+                        {
+                            ProcessingJobs.Add(InMemoryJob);
+                        }
+                    }
+                });
+                connectionString.ExecuteReader("SELECT * FROM AUTOINSERTHISTORY Order By DELETIONDATE desc", (FbDataReader r) =>
+                {
+                    ComplexProcessingJobHistory.Add(new ComplexJobHistory(r));
+                });
+                connectionString.ExecuteReader("SELECT * FROM PLANINGQUES", (FbDataReader r) =>
+                {
+                    PlanningQueList.Add(new PlanningQue(r));
+                });
+                connectionString.ExecuteReader("SELECT * FROM PLANINGCUTS", (FbDataReader r) =>
+                {
+                    PlanningCutsList.Add(new PlanningCuts(r));
+                });
+                connectionString.ExecuteReader("SELECT * FROM VIDEOSCHEDULES", (FbDataReader r) =>
+                {
+                    VideoSchedulesList.Add(new VideoSchedules(r));
+                });
+                connectionString.ExecuteReader("SELECT * FROM VIDEOSCHEDULE", (FbDataReader r) =>
+                {
+                    VideoScheduleList.Add(new VideoSchedule(r));
+                });
+                connectionString.ExecuteReader("SELECT * FROM APPLIEDSCHEDULES", (FbDataReader r) =>
+                {
+                    AppliedSchedulesList.Add(new AppliedSchedules(r));
+                });
+                connectionString.ExecuteReader("SELECT * FROM APPLIEDSCHEDULE", (FbDataReader r) =>
+                {
+                    AppliedScheduleList.Add(new AppliedSchedule(r));
+                });
                 var sql = "DELETE FROM UPLOADSRECORD WHERE UPLOAD_DATE <> CAST(GETDATE() AS DATE);";
                 connectionString.ExecuteNonQuery(sql);
-
-                /*   selectedTagsList , availableTagsList , TitleTagsList, 
-                     DescriptionsList,  TitlesList,TitlesList2 - Tables, Loaders todo.
-                // linking in ConnectT(). 
-                // Todo SelectShortsUpload Loaded - ids for Tag & Dir Name off last id.
-                And Set index too in here*/
-                connectionString.ExecuteReader("SELECT * FROM AVAILABLETAGS", OnReadAvailableTags);
-                connectionString.ExecuteReader("SELECT * FROM SELECTEDTAGS S INNER JOIN AVAILABLETAGS T ON T.ID = S.SELECTEDTAG", OnReadSelectedTags);
-                //connectionString.ExecuteReader("SELECT * FROM MASTERTAGTABLE", OnReadMasterTagTable);
-                connectionString.ExecuteReader("SELECT * FROM TITLETAGS T INNER JOIN AVAILABLETAGS S ON T.TAGID = S.ID", OnReadTitlesTags);
-                connectionString.ExecuteReader("SELECT * FROM TITLES", OnReadTitles);
-                connectionString.ExecuteReader("SELECT * FROM DESCRIPTIONS", OnReadDescriptions);
-
+                connectionString.ExecuteReader("SELECT * FROM AVAILABLETAGS", (FbDataReader r) =>
+                {
+                    availableTagsList.Add(new AvailableTags(r));
+                });
+                connectionString.ExecuteReader("SELECT * FROM SELECTEDTAGS S INNER JOIN AVAILABLETAGS T ON T.ID = S.SELECTEDTAG", (FbDataReader r) =>
+                {
+                    selectedTagsList.Add(new SelectedTags(r));
+                });
+                connectionString.ExecuteReader("SELECT * FROM TITLETAGS T INNER JOIN AVAILABLETAGS S ON T.TAGID = S.ID", (FbDataReader r) =>
+                { 
+                    TitleTagsList.Add(new TitleTags(r)); 
+                });
+                connectionString.ExecuteReader("SELECT * FROM TITLES", (FbDataReader r) =>
+                {
+                    TitlesList.Add(new Titles(r, OnGetAllTags));
+                });
+                connectionString.ExecuteReader("SELECT * FROM DESCRIPTIONS", (FbDataReader r) =>
+                {
+                    DescriptionsList.Add(new Descriptions(r, OnGetTitle));
+                });
             }
             catch (Exception ex)
             {
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
             }
         }
-        private void OnReadDescriptions(FbDataReader reader)
-        {
-            try
-            {
-                DescriptionsList.Add(new Descriptions(reader, OnGetTitle));
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite($"OnReadDescriptions {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
-            }
-        }
+        
 
         public string OnGetTitle(int id)
         {
@@ -2140,67 +2167,14 @@ namespace VideoGui
             }
         }
 
-        private void OnReadTitles(FbDataReader reader)
-        {
-            try
-            {
-                TitlesList.Add(new Titles(reader, OnGetAllTags));
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite($"OnReadTitles {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
-            }
-        }
-        private void OnReadAvailableTags(FbDataReader reader)
-        {
-            try
-            {
-                availableTagsList.Add(new AvailableTags(reader));
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite($"OnReadSelectedTags {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
-            }
-        }
+       
+        
 
 
-        private void OnReadPlanningCuts(FbDataReader reader)
-        {
-            PlanningCutsList.Add(new PlanningCuts(reader));
-        }
 
-        private void OnReadPlanningQues(FbDataReader reader)
-        {
-            PlanningQueList.Add(new PlanningQue(reader));
-        }
+   
 
-        private void OnReadAutoInsertHistory(FbDataReader reader)
-        {
-            ComplexProcessingJobHistory.Add(new ComplexJobHistory(reader));
-        }
-
-        private void OnReadAutoInsert(FbDataReader reader)
-        {
-            try
-            {
-                ComplexProcessingJobList.Add(new ComplexJobList(reader));
-
-                var InMemoryJob = new JobListDetails(reader, ProcessingJobs.Count + 1);
-                if (InMemoryJob.IsMulti && InMemoryJob.GetCutList().Count > 0)
-                {
-
-                    if (InMemoryJob.GetCutList().Count > 0)
-                    {
-                        ProcessingJobs.Add(InMemoryJob);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite($"{this} {MethodBase.GetCurrentMethod().Name}");
-            }
-        }
-
+       
 
         public void AddRecord(bool IsElapsed, bool Is720P, bool IsShorts, bool IsCreateShorts,
         bool IsTrimEncode, bool IsCutEncode, bool IsDeleteMonitored, bool IsPersistantSource,
