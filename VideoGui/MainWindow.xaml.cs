@@ -1955,8 +1955,26 @@ namespace VideoGui
                 connectionString.CreateTableIfNotExists(sqlstring);
                 sqlstring = $"CREATE TABLE DESCRIPTIONS({Id},NAME VARCHAR(250),DESCRIPTION VARCHAR(2500),TITLETAGID INTEGER, ISSHORTVIDEO SMALLINT, ISTAG SMALLINT);";
                 connectionString.CreateTableIfNotExists(sqlstring);
-                connectionString.AddFieldToTable("DESCRIPTIONS", "ISTAG", "SMALLINT", 0);
 
+                sqlstring = $"CREATE TABLE SCHEDULEDPOOL({Id},NAME VARCHAR(250));";
+                connectionString.CreateTableIfNotExists(sqlstring);
+                sqlstring = $"CREATE TABLE SCHEDULEDPOOLS({Id},POOLID INTEGER, DIRECTORY VARCHAR(512));";
+                connectionString.CreateTableIfNotExists(sqlstring);
+                sqlstring = $"CREATE TABLE SCHEDULEUPLOADS({Id},POOLID INTEGER, DAY SMALLINT, UPLOADTIME TIME, MAX SMALLINT);";
+                connectionString.CreateTableIfNotExists(sqlstring);
+
+
+                sqlstring = $"CREATE TABLE VIDEOSCHEDULES({Id},NAME VARCHAR(250),DAYS INTEGER);";
+                connectionString.CreateTableIfNotExists(sqlstring);
+                sqlstring = $"CREATE TABLE VIDEOSCHEDULE({Id},SCHEDULEID INTEGER, SCHEDULETIME TIME);";
+                connectionString.CreateTableIfNotExists(sqlstring);
+                sqlstring = $"CREATE TABLE APPLIEDSCHEDULES({Id},NAME VARCHAR(250),DAYS INTEGER);";
+                connectionString.CreateTableIfNotExists(sqlstring);
+                sqlstring = $"CREATE TABLE APPLIEDSCHEDULE({Id},SCHEDULEID INTEGER, STARTHOUR SMALLINT,ENDHOUR SMALLINT,GAP SMALLINT);";
+                connectionString.CreateTableIfNotExists(sqlstring);
+
+
+                connectionString.AddFieldToTable("DESCRIPTIONS", "ISTAG", "SMALLINT", 0);
                 connectionString.CreateTableIfNotExists($"CREATE TABLE RUNNINGID({Id}, ACTIVE SMALLINT)");
                 sqlstring = $"INSERT INTO RUNNINGID(ACTIVE) VALUES(0) RETURNING ID;";
                 int idx = sqlstring.RunExecuteScalar(connectionString, -1);
@@ -3056,7 +3074,10 @@ namespace VideoGui
                     }
                     else
                     {
-                        trayicon.ToolTipText = "Idle";
+                        Dispatcher.Invoke(() =>
+                        {
+                            trayicon.ToolTipText = "Idle";
+                        });
                     }
                     LineNum = 3;
                     NewProcessingList.Clear();
