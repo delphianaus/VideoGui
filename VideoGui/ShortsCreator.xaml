@@ -19,7 +19,8 @@
                 <Label x:Name="lblDuration" Content="00:00:00" Height="26" Canvas.Left="251" Canvas.Top="40" HorizontalAlignment="Left" VerticalAlignment="Center"/>
                 <Label x:Name="lblShortNo" Content="" Height="26" Canvas.Left="108" Canvas.Top="40" HorizontalAlignment="Left" VerticalAlignment="Top"/>
                 <Label x:Name="lblProgress" Content="Progress : " Height="26" Canvas.Left="306" Canvas.Top="40" HorizontalAlignment="Left" VerticalAlignment="Center" Width="59"/>
-                <ProgressBar x:Name="pg1" Height="19" Canvas.Left="370" Canvas.Top="43" Width="267" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                <ProgressBar x:Name="pg1" Height="19" Canvas.Left="387" Canvas.Top="43" Width="250" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                <Label x:Name="lblPercent" Content="0" Height="26" Canvas.Left="358" Canvas.Top="40" HorizontalAlignment="Left" VerticalAlignment="Center" Width="28"/>
             </Canvas>
         </Border>
         <Button x:Name="btnClose" Height="35" Width="123" Content="Close" Margin="0,97,8,0" HorizontalAlignment="Right" VerticalAlignment="Top" Click="btnClose_Click"/>

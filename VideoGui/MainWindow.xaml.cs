@@ -121,6 +121,7 @@ namespace VideoGui
         public ScraperModule scraperModule = null;
         public SelectShortUpload selectShortUpload = null;
         public MasterTagSelectForm MasterTagSelectFrm = null;
+        public SelectReleaseSchedule SelectReleaseScheduleFrm = null;
         public ShowMatcher Swm;
         /*
            selectedTagsList , availableTagsList , TitleTagsList, DescriptionsList
@@ -139,7 +140,7 @@ namespace VideoGui
         ObservableCollection<AppliedSchedule> AppliedScheduleList = new ObservableCollection<AppliedSchedule>();
         CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
         CancellationTokenSource ProcessingCancellationTokenSource = new CancellationTokenSource();
-       
+
 
         double frames, LRF, RRF, LLC, RLC;
         DateTime totaltimeprocessed = DateTime.Now;
@@ -1303,7 +1304,7 @@ namespace VideoGui
             }
         }
 
-       
+
 
         public void UpdateTitleTagDesc(int id, object ThisForm)
         {
@@ -1331,7 +1332,7 @@ namespace VideoGui
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name + " " + ex.Message);
             }
         }
-        
+
         private void selectShortUpload_Handler(object thisForm, object tld)
         {
             if (tld is CustomParams_GetConnectionString CGCS)
@@ -1957,13 +1958,11 @@ namespace VideoGui
                 connectionString.CreateTableIfNotExists(sqlstring);
 
 
-                sqlstring = $"CREATE TABLE VIDEOSCHEDULES({Id},NAME VARCHAR(250),DAYS INTEGER);";
+                sqlstring = $"CREATE TABLE SCHEDULES({Id},NAME VARCHAR(250), ISSCHEDULE SMALLINT);";
                 connectionString.CreateTableIfNotExists(sqlstring);
-                sqlstring = $"CREATE TABLE VIDEOSCHEDULE({Id},SCHEDULEID INTEGER, SCHEDULETIME TIME);";
+                sqlstring = $"CREATE TABLE VIDEOSCHEDULE({Id},SCHEDULEID INTEGER, SCHEDULETIME TIME,DAYS INTEGER);";
                 connectionString.CreateTableIfNotExists(sqlstring);
-                sqlstring = $"CREATE TABLE APPLIEDSCHEDULES({Id},NAME VARCHAR(250),DAYS INTEGER);";
-                connectionString.CreateTableIfNotExists(sqlstring);
-                sqlstring = $"CREATE TABLE APPLIEDSCHEDULE({Id},SCHEDULEID INTEGER, STARTHOUR SMALLINT,ENDHOUR SMALLINT,GAP SMALLINT);";
+                sqlstring = $"CREATE TABLE APPLIEDSCHEDULE({Id},SCHEDULEID INTEGER, STARTHOUR SMALLINT,ENDHOUR SMALLINT,GAP SMALLINT,DAYS INTEGER);";
                 connectionString.CreateTableIfNotExists(sqlstring);
 
 
@@ -1979,7 +1978,6 @@ namespace VideoGui
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
             }
         }
-
         public void DeleteFromAutoInsertTable(int filename)
         {
             try
@@ -2101,7 +2099,7 @@ namespace VideoGui
                 {
                     PlanningCutsList.Add(new PlanningCuts(r));
                 });
-                connectionString.ExecuteReader("SELECT * FROM VIDEOSCHEDULES", (FbDataReader r) =>
+                connectionString.ExecuteReader("SELECT * FROM SCHEDULES WHERE ISSCHEDULER = 0", (FbDataReader r) =>
                 {
                     VideoSchedulesList.Add(new VideoSchedules(r));
                 });
@@ -2109,7 +2107,7 @@ namespace VideoGui
                 {
                     VideoScheduleList.Add(new VideoSchedule(r));
                 });
-                connectionString.ExecuteReader("SELECT * FROM APPLIEDSCHEDULES", (FbDataReader r) =>
+                connectionString.ExecuteReader("SELECT * FROM SCHEDULES WHERE ISSCHEDULER = 1", (FbDataReader r) =>
                 {
                     AppliedSchedulesList.Add(new AppliedSchedules(r));
                 });
@@ -2117,8 +2115,7 @@ namespace VideoGui
                 {
                     AppliedScheduleList.Add(new AppliedSchedule(r));
                 });
-                var sql = "DELETE FROM UPLOADSRECORD WHERE UPLOAD_DATE <> CAST(GETDATE() AS DATE);";
-                connectionString.ExecuteNonQuery(sql);
+                connectionString.ExecuteNonQuery("DELETE FROM UPLOADSRECORD WHERE UPLOAD_DATE <> CAST(GETDATE() AS DATE);");
                 connectionString.ExecuteReader("SELECT * FROM AVAILABLETAGS", (FbDataReader r) =>
                 {
                     availableTagsList.Add(new AvailableTags(r));
@@ -2128,8 +2125,8 @@ namespace VideoGui
                     selectedTagsList.Add(new SelectedTags(r));
                 });
                 connectionString.ExecuteReader("SELECT * FROM TITLETAGS T INNER JOIN AVAILABLETAGS S ON T.TAGID = S.ID", (FbDataReader r) =>
-                { 
-                    TitleTagsList.Add(new TitleTags(r)); 
+                {
+                    TitleTagsList.Add(new TitleTags(r));
                 });
                 connectionString.ExecuteReader("SELECT * FROM TITLES", (FbDataReader r) =>
                 {
@@ -2145,7 +2142,7 @@ namespace VideoGui
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
             }
         }
-        
+
 
         public string OnGetTitle(int id)
         {
@@ -2167,14 +2164,14 @@ namespace VideoGui
             }
         }
 
-       
-        
 
 
 
-   
 
-       
+
+
+
+
 
         public void AddRecord(bool IsElapsed, bool Is720P, bool IsShorts, bool IsCreateShorts,
         bool IsTrimEncode, bool IsCutEncode, bool IsDeleteMonitored, bool IsPersistantSource,
@@ -5373,7 +5370,7 @@ namespace VideoGui
             }
             catch (Exception ex)
             {
-                    ex.LogWrite($"RunConversion LineNum {LineNum} {MethodBase.GetCurrentMethod().Name}");
+                ex.LogWrite($"RunConversion LineNum {LineNum} {MethodBase.GetCurrentMethod().Name}");
             }
         }
 
@@ -7804,6 +7801,73 @@ namespace VideoGui
             }
         }
 
+        private void btnYTSchedule_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+
+
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"YT SChedule Click {this} {MethodBase.GetCurrentMethod().Name}");
+            }
+        }
+
+        private void btnAppliedSchedule_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                //  VideoSchedules 
+                //  Consists of Name , Day , ID 
+                // Schedule - ID & ID of VideoSchedules
+                RegistryKey key = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\VideoProcessor", true);
+                string AppliedSchedules = key.GetValueStr("AppliedSchedules", "");
+                if (AppliedSchedules != "" || AppliedSchedulesList.Count == 0)
+                {
+                    if (SelectReleaseScheduleFrm is not null && !SelectReleaseScheduleFrm.IsClosed)
+                    {
+                        if (SelectReleaseScheduleFrm.IsClosing) SelectReleaseScheduleFrm.Close();
+                        while (!SelectReleaseScheduleFrm.IsClosed)
+                        {
+                            Thread.Sleep(100);
+                        }
+                        SelectReleaseScheduleFrm.Close();
+                        SelectReleaseScheduleFrm = null;
+                    }
+                    SelectReleaseScheduleFrm = new SelectReleaseSchedule(ScheduleOnFinish, ModuleCallback, false);
+
+                }
+                key?.Close();
+
+
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"Upload Schedule Click {this} {MethodBase.GetCurrentMethod().Name}");
+            }
+        }
+
+        private void ScheduleOnFinish()
+        {
+            try
+            {
+                Show();
+                if (SelectReleaseScheduleFrm is not null)
+                {
+                    if (SelectReleaseScheduleFrm.IsClosed)
+                    {
+                        SelectReleaseScheduleFrm = null;
+                    }
+                }
+               
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"ScheduleOnFinish {this} {MethodBase.GetCurrentMethod().Name}");
+            }
+        }
+
         private void btnVIdeoEdit_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -7834,12 +7898,10 @@ namespace VideoGui
 
         private void Cmbaudiomode_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            try
-            {
+            try            {
                 RegistryKey key = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\VideoProcessor", true);
-                bool LoadedKey = (key != null);
-                if (LoadedKey) key.SetValue("Audiomode", cmbaudiomode.SelectedIndex);
-                if (LoadedKey) key.Close();
+                key?.SetValue("Audiomode", cmbaudiomode.SelectedIndex);
+                key?.Close();
             }
             catch (Exception ex)
             {
@@ -8016,7 +8078,7 @@ namespace VideoGui
                 }
                 else return true;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 ex.LogWrite($"HideWindow {this} {MethodBase.GetCurrentMethod().Name}");
                 return true;

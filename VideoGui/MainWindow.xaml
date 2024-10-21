@@ -218,11 +218,11 @@
         </StatusBar>
 
         <StatusBar x:Name="statusbar2" Height="34" Margin="26,0,10,34" VerticalAlignment="Bottom">
-            <Label x:Name="lblSpeedStatus" Background="#FFBFBFBF" Width="64" Height="34" Content="Speed" MouseDoubleClick="Label_MouseDoubleClick" FontSize="11" HorizontalAlignment="Left"/>
+            <Label x:Name="lblSpeedStatus" Background="#FFBFBFBF" Width="40" Height="34" Content="Speed" MouseDoubleClick="Label_MouseDoubleClick" FontSize="11" HorizontalAlignment="Left"/>
             <Label x:Name="lblSpeed" Content="" HorizontalAlignment="Left" Height="28" VerticalAlignment="Center" Width="47" RenderTransformOrigin="-2.468,3.693"/>
-            <Label x:Name="lblCurrentFrameStatus" Background="#FFBFBFBF" Width="81" Height="34" Content="Current Frame" FontSize="11"/>
+            <Label x:Name="lblCurrentFrameStatus" Background="#FFBFBFBF" Width="80" Height="34" Content="Current Frame" FontSize="11"/>
             <Label x:Name="lblCurrentFrames" Content="" HorizontalAlignment="Left" Height="28" VerticalAlignment="Center" Width="38"/>
-            <Label x:Name="lblFramesStatus" Background="#FFBFBFBF" Width="51" Height="34" Content="Frames" FontSize="11"/>
+            <Label x:Name="lblFramesStatus" Background="#FFBFBFBF" Width="44" Height="34" Content="Frames" FontSize="11"/>
             <Label x:Name="lblFrames" Content="" HorizontalAlignment="Left" Height="28" VerticalAlignment="Center" Width="78"/>
             <Label x:Name="lblBitrateStatus" Background="#FFBFBFBF" Width="42" Height="34" Content="Bitrate" FontSize="11"/>
             <Label x:Name="lblBitrate" Content="" HorizontalAlignment="Left" Height="28" VerticalAlignment="Center" Width="88"/>
@@ -230,10 +230,21 @@
             <Label x:Name="lblDuration" Content="" HorizontalAlignment="Left" Height="28" VerticalAlignment="Center" Width="59"/>
             <Label x:Name="lblETAStatus" Background="#FFBFBFBF" Width="27" Height="34" Content="ETA" FontSize="11"/>
             <Label x:Name="lblEta" Content="" HorizontalAlignment="Left" Height="28" VerticalAlignment="Center" Width="39"/>
-            <Label x:Name="lblTotalTimeStatus" Background="#FFBFBFBF" Width="43" Height="34" Content="Time" FontSize="11"/>
+            <Label x:Name="lblTotalTimeStatus" Background="#FFBFBFBF" Width="35" Height="34" Content="Time" FontSize="11"/>
             <Label x:Name="lblTotalTime" HorizontalAlignment="Left" Height="28" VerticalAlignment="Center" Width="33"/>
-            <Label x:Name="lblPercentStatus" Background="#FFBFBFBF" Width="53" Height="34" Content="Percent" FontSize="11"/>
-            <Label x:Name="lblPercent" HorizontalAlignment="Left" Height="28" VerticalAlignment="Center" Width="54"/>
+            <Label x:Name="lblPercentStatus" Background="#FFBFBFBF" Width="47" Height="34" Content="Percent" FontSize="11"/>
+            <Label x:Name="lblPercent" HorizontalAlignment="Left" Height="28" VerticalAlignment="Center" Width="78"/>
+            <Button x:Name="btnAppliedSchedule" Content="Upload Schedule" HorizontalAlignment="Center" Height="28" VerticalAlignment="Center" Width="88" RenderTransformOrigin="0.5,0.5" Click="btnAppliedSchedule_Click">
+                <Button.RenderTransform>
+                    <TransformGroup>
+                        <ScaleTransform/>
+                        <SkewTransform/>
+                        <RotateTransform Angle="0.382"/>
+                        <TranslateTransform/>
+                    </TransformGroup>
+                </Button.RenderTransform>
+            </Button>
+            <Button x:Name="btnYTSchedule" Content="YT Schedule" HorizontalAlignment="Center" Height="28" VerticalAlignment="Center" Width="70" Click="btnYTSchedule_Click"/>
 
         </StatusBar>
         <CheckBox x:Name="ChkAutoAAC" Content="Auto -&gt; AAC" HorizontalAlignment="Left" Margin="442,0,0,173" VerticalAlignment="Bottom" Width="90" />

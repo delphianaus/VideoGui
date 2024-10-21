@@ -23,14 +23,18 @@ namespace VideoGui
     public partial class SelectReleaseSchedule : Window
     {
         OnFinish DoOnFinish = null;
+        public bool IsApplied = false,  IsClosing = false, IsClosed = false;
         databasehook<object> dbInitialzer = null;
-        public SelectReleaseSchedule(OnFinish _OnFinish, databasehook<object> _dbInitialzer)
+        public SelectReleaseSchedule(OnFinish _OnFinish, databasehook<object> _dbInitialzer, bool Is_Applied = false)
         {
             try
             {
                 InitializeComponent();
+                IsApplied = Is_Applied;
                 DoOnFinish = _OnFinish;
                 dbInitialzer = _dbInitialzer;
+                Closing += (s, e) => { IsClosing = true; };
+                Closed += (s, e) => { IsClosed = true; _OnFinish?.Invoke(); };
             }
             catch (Exception ex)
             {
@@ -52,12 +56,14 @@ namespace VideoGui
 
         public class CustomParams_Add
         {
+            public bool Is_Applied = false;
             public string Name { get; set; } = "";
             public dataUpdatType dataUpdatType { get; set; } = dataUpdatType.Add;
             public string data_string { get; set; } = "";
-            public CustomParams_Add(string _Name, string datastring)
+            public CustomParams_Add(string _Name, string datastring, bool IsApplied = false)
             {
                 Name = _Name;
+                Is_Applied = IsApplied;
                 data_string = datastring;
             }
         }
@@ -66,7 +72,7 @@ namespace VideoGui
         {
             try
             {
-                dbInitialzer?.Invoke(this, new CustomParams_Add(txtScheduleName.Text, ""));
+                dbInitialzer?.Invoke(this, new CustomParams_Add(txtScheduleName.Text, "", IsApplied));
             }
             catch (Exception ex)
             {
