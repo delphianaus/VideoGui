@@ -83,6 +83,9 @@
             <summary>
             WebView2 enables you to host web content using the latest Microsoft Edge browser and web technology.
             </summary>
+            <summary>
+            WebView2 enables you to host web content using the latest Microsoft Edge browser and web technology.
+            </summary>
         </member>
         <member name="M:Microsoft.Web.WebView2.Core.CoreWebView2.CreateFromComICoreWebView2(System.IntPtr)">
             <summary>
@@ -410,7 +413,7 @@
         </member>
         <member name="E:Microsoft.Web.WebView2.Core.CoreWebView2.WebResourceRequested">
             <summary>
-            WebResourceRequested is raised when the WebView is performing a URL request to a matching URL and resource context filter that was added with <see cref="M:Microsoft.Web.WebView2.Core.CoreWebView2.AddWebResourceRequestedFilter(System.String,Microsoft.Web.WebView2.Core.CoreWebView2WebResourceContext)"/>.
+            WebResourceRequested is raised when the WebView is performing a URL request to a matching URL and resource context filter that was added with <see cref="M:Microsoft.Web.WebView2.Core.CoreWebView2.AddWebResourceRequestedFilter(System.String,Microsoft.Web.WebView2.Core.CoreWebView2WebResourceContext,Microsoft.Web.WebView2.Core.CoreWebView2WebResourceRequestSourceKinds)"/>.
             </summary>
             <remarks>
             At least one filter must be added for the event to be raised.
@@ -420,7 +423,7 @@
             
             This event is by default raised for file, http, and https URI schemes. This is also raised for registered custome URI schemes. See <see cref="T:Microsoft.Web.WebView2.Core.CoreWebView2CustomSchemeRegistration"/> for more details.
             </remarks>
-            <seealso cref="M:Microsoft.Web.WebView2.Core.CoreWebView2.AddWebResourceRequestedFilter(System.String,Microsoft.Web.WebView2.Core.CoreWebView2WebResourceContext)"/>
+            <seealso cref="M:Microsoft.Web.WebView2.Core.CoreWebView2.AddWebResourceRequestedFilter(System.String,Microsoft.Web.WebView2.Core.CoreWebView2WebResourceContext,Microsoft.Web.WebView2.Core.CoreWebView2WebResourceRequestSourceKinds)"/>
         </member>
         <member name="E:Microsoft.Web.WebView2.Core.CoreWebView2.WindowCloseRequested">
             <summary>
@@ -823,107 +826,13 @@
             </remarks>
         </member>
         <member name="M:Microsoft.Web.WebView2.Core.CoreWebView2.AddWebResourceRequestedFilter(System.String,Microsoft.Web.WebView2.Core.CoreWebView2WebResourceContext)">
-            <summary>
-            Adds a URI and resource context filter for the <see cref="E:Microsoft.Web.WebView2.Core.CoreWebView2.WebResourceRequested"/> event.
-            </summary>
-            <param name="uri">An URI to be added to the <see cref="E:Microsoft.Web.WebView2.Core.CoreWebView2.WebResourceRequested"/> event.</param>
-            <param name="ResourceContext">A resource context filter to be added to the <see cref="E:Microsoft.Web.WebView2.Core.CoreWebView2.WebResourceRequested"/> event.</param>
-            <remarks>
-            A web resource request with a resource context that matches this filter's resource context and a URI that matches this filter's URI wildcard string will be raised via the <see cref="E:Microsoft.Web.WebView2.Core.CoreWebView2.WebResourceRequested"/> event.
             
-            The <c>uri</c> parameter value is a wildcard string matched against the URI of the web resource request. This is a glob style wildcard string in which a <c>*</c> matches zero or more characters and a <c>?</c> matches exactly one character.
-            These wildcard characters can be escaped using a backslash just before the wildcard character in order to represent the literal <c>*</c> or <c>?</c>.
-            
-            The matching occurs over the URI as a whole string and not limiting wildcard matches to particular parts of the URI.
-            The wildcard filter is compared to the URI after the URI has been normalized, any URI fragment has been removed, and non-ASCII hostnames have been converted to punycode.
-            
-            Specifying a <c>nullptr</c> for the uri is equivalent to an empty string which matches no URIs.
-            
-            For more information about resource context filters, navigate to <see cref="T:Microsoft.Web.WebView2.Core.CoreWebView2WebResourceContext"/>.
-            
-            <list type="table">
-            <listheader>
-            <description>URI Filter String</description>
-            <description>Request URI</description>
-            <description>Match</description>
-            <description>Notes</description>
-            </listheader>
-            <item>
-            <description><c>*</c></description>
-            <description><c>https://contoso.com/a/b/c</c></description>
-            <description>Yes</description>
-            <description>A single * will match all URIs</description>
-            </item>
-            <item>
-            <description><c>*://contoso.com/*</c></description>
-            <description><c>https://contoso.com/a/b/c</c></description>
-            <description>Yes</description>
-            <description>Matches everything in contoso.com across all schemes</description>
-            </item>
-            <item>
-            <description><c>*://contoso.com/*</c></description>
-            <description><c>https://example.com/?https://contoso.com/</c></description>
-            <description>Yes</description>
-            <description>But also matches a URI with just the same text anywhere in the URI</description>
-            </item>
-            <item>
-            <description><c>example</c></description>
-            <description><c>https://contoso.com/example</c></description>
-            <description>No</description>
-            <description>The filter does not perform partial matches</description>
-            </item>
-            <item>
-            <description><c>*example</c></description>
-            <description><c>https://contoso.com/example</c></description>
-            <description>Yes</description>
-            <description>The filter matches across URI parts </description>
-            </item>
-            <item>
-            <description><c>*example</c></description>
-            <description><c>https://contoso.com/path/?example</c></description>
-            <description>Yes</description>
-            <description>The filter matches across URI parts</description>
-            </item>
-            <item>
-            <description><c>*example</c></description>
-            <description><c>https://contoso.com/path/?query#example</c></description>
-            <description>No</description>
-            <description>The filter is matched against the URI with no fragment</description>
-            </item>
-            <item>
-            <description><c>*example</c></description>
-            <description><c>https://example</c></description>
-            <description>No</description>
-            <description>The URI is normalized before filter matching so the actual URI used for comparison is <c>https://example.com/</c></description>
-            </item>
-            <item>
-            <description><c>*example/</c></description>
-            <description><c>https://example</c></description>
-            <description>Yes</description>
-            <description>Just like above, but this time the filter ends with a / just like the normalized URI</description>
-            </item>
-            <item>
-            <description><c>https://xn--qei.example/</c></description>
-            <description><c>https://&#x2764;.example/</c></description>
-            <description>Yes</description>
-            <description>Non-ASCII hostnames are normalized to punycode before wildcard comparison</description>
-            </item>
-            <item>
-            <description><c>https://&#x2764;.example/</c></description>
-            <description><c>https://xn--qei.example/</c></description>
-            <description>No</description>
-            <description>Non-ASCII hostnames are normalized to punycode before wildcard comparison</description>
-            </item>
-            </list>
-            </remarks>
-            <seealso cref="M:Microsoft.Web.WebView2.Core.CoreWebView2.RemoveWebResourceRequestedFilter(System.String,Microsoft.Web.WebView2.Core.CoreWebView2WebResourceContext)"/>
-            <seealso cref="T:Microsoft.Web.WebView2.Core.CoreWebView2WebResourceContext"/>
-            <seealso cref="E:Microsoft.Web.WebView2.Core.CoreWebView2.WebResourceRequested"/>
         </member>
         <member name="M:Microsoft.Web.WebView2.Core.CoreWebView2.RemoveWebResourceRequestedFilter(System.String,Microsoft.Web.WebView2.Core.CoreWebView2WebResourceContext)">
             <summary>
-            Removes a matching WebResource filter that was previously added for the <see cref="E:Microsoft.Web.WebView2.Core.CoreWebView2.WebResourceRequested"/> event.
+            Warning: This method and <see cref="M:Microsoft.Web.WebView2.Core.CoreWebView2.AddWebResourceRequestedFilter(System.String,Microsoft.Web.WebView2.Core.CoreWebView2WebResourceContext)"/> are deprecated.
             </summary>
+            Removes a matching WebResource filter that was previously added for the <see cref="E:Microsoft.Web.WebView2.Core.CoreWebView2.WebResourceRequested"/> event.
             <param name="uri">An URI to at which a web resource filter was added.</param>
             <param name="ResourceContext">A previously added resource context filter to be removed.</param>
             <exception cref="T:System.ArgumentException">A filter that was never added.</exception>
@@ -1609,6 +1518,38 @@
             </remarks>
             
         </member>
+        <member name="E:Microsoft.Web.WebView2.Core.CoreWebView2.SaveFileSecurityCheckStarting">
+            <summary>
+            This event will be raised during system FileTypePolicy checking the dangerous file extension list.
+            </summary>
+            <remarks>
+            Developers can specify their own logic for determining whether to allow a particular type of file to be saved from the document origin URI. Developers can also determine the save decision based on other criteria. Here are two properties in <see cref="T:Microsoft.Web.WebView2.Core.CoreWebView2SaveFileSecurityCheckStartingEventArgs"/> to manage the decision, <see cref="P:Microsoft.Web.WebView2.Core.CoreWebView2SaveFileSecurityCheckStartingEventArgs.CancelSave"/> and <see cref="P:Microsoft.Web.WebView2.Core.CoreWebView2SaveFileSecurityCheckStartingEventArgs.SuppressDefaultPolicy"/>.
+            Table of Properties' value and result:
+            
+            <list type="table">
+            <listheader>
+            <description>CancelSave</description>
+            <description>SuppressDefaultPolicy</description>
+            <description>Result</description>
+            </listheader>
+            <item>
+            <description>False</description>
+            <description>False</description>
+            <description>Perform the default policy check. It may show the security warning UI if the file extension is dangerous.</description>
+            </item>
+            <item>
+            <description>False</description>
+            <description>True</description>
+            <description>Skip the default policy check and the possible security warning. Start saving or downloading.</description>
+            </item>
+            <item>
+            <description>True</description>
+            <description>Any</description>
+            <description>Skip the default policy check and the possible security warning. Abort save or download.</description>
+            </item>
+            </list>
+            </remarks>
+        </member>
         <member name="T:Microsoft.Web.WebView2.Core.CoreWebView2Certificate">
             <summary>
             Represents a certificate. Gives access to a certificate's metadata.
@@ -2252,8 +2193,8 @@
             cref="E:Microsoft.Web.WebView2.Core.CoreWebView2.WebResourceRequested"/> event, the cases of request
             URIs and filter URIs with custom schemes will be normalized according to
             generic URI syntax rules. Any non-ASCII characters will be preserved. The
-            registered custom schemes also participate in [CORS](https://developer.mozilla.org/docs/Web/HTTP/CORS) and adheres to 
-            [CSP](https://developer.mozilla.org/docs/Web/HTTP/CSP). The app needs to 
+            registered custom schemes also participate in [CORS](https://developer.mozilla.org/docs/Web/HTTP/CORS) and adheres to
+            [CSP](https://developer.mozilla.org/docs/Web/HTTP/CSP). The app needs to
             set the appropriate access headers in its <see
             cref="E:Microsoft.Web.WebView2.Core.CoreWebView2.WebResourceRequested"/> event handler to allow CORS
             requests.
@@ -2340,8 +2281,8 @@
              a string in the format of <c>scheme://host:port</c>. The origins are
              string pattern matched with <c>*</c> (matches 0 or more characters) and
              <c>?</c> (matches 0 or 1 character) wildcards just like the URI matching
-             in the <see cref="M:Microsoft.Web.WebView2.Core.CoreWebView2.AddWebResourceRequestedFilter(System.String,Microsoft.Web.WebView2.Core.CoreWebView2WebResourceContext)"/> API. For example,
-             <c>http://*.example.com:80</c>.
+             in the <see cref="M:Microsoft.Web.WebView2.Core.CoreWebView2.AddWebResourceRequestedFilter(System.String,Microsoft.Web.WebView2.Core.CoreWebView2WebResourceContext,Microsoft.Web.WebView2.Core.CoreWebView2WebResourceRequestSourceKinds)"/>
+             API. For example, <c>http://*.example.com:80</c>.
             
              Here's a set of examples of what is allowed or not:
             
@@ -6952,6 +6893,45 @@
             <remarks>
             Use this to <see cref="M:Microsoft.Web.WebView2.Core.CoreWebView2Deferral.Complete"/> the event at a later time.
             </remarks>
+        </member>
+        <member name="T:Microsoft.Web.WebView2.Core.CoreWebView2SaveFileSecurityCheckStartingEventArgs">
+            <summary>
+            Event args for the <see cref="E:Microsoft.Web.WebView2.Core.CoreWebView2.SaveFileSecurityCheckStarting"/> event.
+            </summary>
+        </member>
+        <member name="P:Microsoft.Web.WebView2.Core.CoreWebView2SaveFileSecurityCheckStartingEventArgs.CancelSave">
+            <summary>
+            Set if cancel the upcoming save/download.
+            </summary>
+        </member>
+        <member name="P:Microsoft.Web.WebView2.Core.CoreWebView2SaveFileSecurityCheckStartingEventArgs.DocumentOriginUri">
+            <summary>
+            Get the document origin URI of this file save operation.
+            </summary>
+        </member>
+        <member name="P:Microsoft.Web.WebView2.Core.CoreWebView2SaveFileSecurityCheckStartingEventArgs.FileExtension">
+            <summary>
+            Get the extension of file to be saved.
+            </summary>
+        </member>
+        <member name="P:Microsoft.Web.WebView2.Core.CoreWebView2SaveFileSecurityCheckStartingEventArgs.FilePath">
+            <summary>
+            Get the full path of file to be saved. This includes the file name and extension.
+            </summary>
+        </member>
+        <member name="P:Microsoft.Web.WebView2.Core.CoreWebView2SaveFileSecurityCheckStartingEventArgs.SuppressDefaultPolicy">
+            <summary>
+            Set if the default policy checking and security warning will be suppressed.
+            </summary>
+        </member>
+        <member name="M:Microsoft.Web.WebView2.Core.CoreWebView2SaveFileSecurityCheckStartingEventArgs.GetDeferral">
+            <summary>
+            Returns a <see cref="T:Microsoft.Web.WebView2.Core.CoreWebView2Deferral"/> object.
+            </summary>
+            <remarks>
+            It will put the event into a deferred state. The default policy checking and any default UI will be blocked temporarily, saving file to local won't start, until the deferral is completed.
+            </remarks>
+            
         </member>
         <member name="T:Microsoft.Web.WebView2.Core.CoreWebView2SaveAsUIShowingEventArgs">
             <summary>
