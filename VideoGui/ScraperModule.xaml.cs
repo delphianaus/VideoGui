@@ -545,12 +545,20 @@ namespace VideoGui
                         connection.Close();
                     }
                     ts = TotalScheduled;
-                    foreach (string f in Files.Where(f => File.Exists(f)).Take(SlotsPerUpload))
+                    if (ts < MaxUploads)
                     {
-                        max++;
-                        //if (((TotalScheduled+max) > MaxUploads)) break;
-                        lblTotal.Content = $"{TotalScheduled}";
-                        SendKeysString += "\"" + @"Z:\" + new DirectoryInfo(Path.GetDirectoryName(f)).Name + "\\" + Path.GetFileName(f) + "\" ";
+                        int r = 0;
+                        foreach (string f in Files.Where(f => File.Exists(f)).Take(SlotsPerUpload))
+                        {
+                            max++;
+                            r++;
+                            if (ts + r < MaxUploads)
+                            {
+                                //if (((TotalScheduled+max) > MaxUploads)) break;
+                                lblTotal.Content = $"{TotalScheduled}";
+                                SendKeysString += "\"" + @"Z:\" + new DirectoryInfo(Path.GetDirectoryName(f)).Name + "\\" + Path.GetFileName(f) + "\" ";
+                            }
+                        }
                     }
                     if (SendKeysString.Trim() != "")
                     {
@@ -599,7 +607,7 @@ namespace VideoGui
                             //Uploading += Nodes.Where(node => !node.InnerText.Contains("100%") && !node.InnerText.Contains("Waiting")
                             //&& !node.InnerText.Contains("Daily") && !node.InnerText.Contains("Uploaded")).Count();
                             //lblUploading.Content = $"{Uploading}/{Nodes.Count}";
-                            
+
                             if (waitingcnt)
                             {
                                 html = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
@@ -625,9 +633,11 @@ namespace VideoGui
                                     {
                                         return;
                                     }
-                                    if (Regex.IsMatch(Nodes[i].InnerText, @"Complete|100% uploaded"))
+                                    if (Regex.IsMatch(Nodes[i].InnerText.ToLower(), @"100% uploaded"))
                                     {
                                         CompleteCnt++;
+
+                                        // do scheduled task
                                     }
                                     if (Regex.IsMatch(Nodes[i].InnerText, @"Waiting"))
                                     {
@@ -830,7 +840,7 @@ namespace VideoGui
             return TotalScheduled;
         }
 
-        private async Task<bool> NodeUpdate(string Span_Name, GetTotalScheduled ScheduledGet )
+        private async Task<bool> NodeUpdate(string Span_Name, GetTotalScheduled ScheduledGet)
         {
             try
             {
