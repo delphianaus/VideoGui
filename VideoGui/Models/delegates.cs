@@ -19,7 +19,10 @@ namespace VideoGui.Models.delegates
     public enum ViewType { LESS_EQUAL, GREATER_EQUAL };
     public enum dataFormName { MasterTagSelect, TagSelecteditor };
     public enum dataUpdatType { Add, Remove, Edit, Change, Delete, Insert, Get };
-
+    //
+    // Summary:
+    //     Specifies the day of the week.
+    public enum EventTypes {VideoUpload = 0, ShortsSchedule = 1, FullSchedule = 2,ScapeSchedule = 3};
     public enum MadeForKids { MFK_SET_BY_YOU, MFK_SET_BY_YOUTUBE, NOT_MADE_FOR_KIDS, NO_SELECTION };
     public delegate void _StatsHandlerDateTimeSetter(string filename, DateTime start);
     public delegate DateTime _StatsHandlerDateTimeGetter(string filename);
@@ -34,8 +37,11 @@ namespace VideoGui.Models.delegates
     public delegate void CompairFinished();
     public delegate void ComplexFinished();
     public delegate string OnGetTagIds(int id);
+    public delegate void GetNextNode();
+    public delegate void ReportVideoScheduled(DateTime dateTime, string id, string title);
     public delegate void AudioJoinerOnClose();
     public delegate void AddressUpdate(string address);
+    public delegate bool NodeUpdate(string Id, string Title, string Desc, string FileName, string status, Nullable<DateTime> dateTime);
     public delegate void AddressUpdateId(string address, string id);
     public delegate void AddRecordDelegate(bool IsElapsed,bool Is720P, bool IsShorts, bool IsCreateShorts,bool IsTrimEncode, bool IsCutEncode, 
           bool IsDeleteMonitored, bool IsPersistantSource, bool IsAdobe, string textstart, string textduration, string sourcedirectory, 

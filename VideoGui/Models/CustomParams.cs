@@ -79,6 +79,17 @@ namespace VideoGui.Models
         }
     }
 
+    public class CustomParams_SetTimeSpans
+    {
+        public Nullable<DateTime> Start { get; set; }
+        public Nullable<DateTime> End { get; set; }
+        public CustomParams_SetTimeSpans(Nullable<DateTime> _Start, Nullable<DateTime> _End)
+        {
+            Start = _Start;
+            End = _End;
+        }
+    }
+
     public class CustomParams_Get
     {
         public dataUpdatType dataUpdatType { get; set; } = dataUpdatType.Get;
@@ -171,6 +182,11 @@ namespace VideoGui.Models
     public class CustomParams_Refresh
     {
     }
+
+    public class CustomParams_Wait
+    {
+
+    }
     public class CustomParams_AddTimeSpanEntries
     {
         public TimeSpan Start { get; set; }
@@ -208,6 +224,17 @@ namespace VideoGui.Models
             unlisted = _unlisted;
         }
 
+    }
+
+    public class CustomParams_InsertIntoTable
+    {
+        public string id = "";
+        public string filename = "";
+        public CustomParams_InsertIntoTable(string _id, string _filename)
+        {
+            id = _id;
+            filename = _filename;
+        }
     }
 
     public class CustomParams_InsertWithId

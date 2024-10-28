@@ -284,9 +284,10 @@ namespace VideoGui
                 MaxFile = 0;
                 foreach (var f in MediaInfoTimes)
                 {
-                    while (MaxFile >= 10)
+                    while (MaxFile >= 4)
                     {
                         Thread.Sleep(250);
+                        System.Windows.Forms.Application.DoEvents();
                     }
                     MaxFile++;
                     var NewFileName = txtDestDir.Text + "\\" + Path.GetFileNameWithoutExtension(f.FileName) + ".mp4";

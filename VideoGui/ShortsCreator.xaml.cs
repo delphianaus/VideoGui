@@ -261,6 +261,8 @@ namespace VideoGui
                                         // Dispatcher.Invoke(() =>
                                         //  {
                                         pg1.Value = percentdone;
+                                        lblPercent.Content = percentdone.ToString((percentdone < 1) ? "0.0" : "0") + "%";
+                                        
                                         //  });
                                     }
                                 }
@@ -318,7 +320,7 @@ namespace VideoGui
                     }
                     else cp = 1;
                     int iir = rnd.Next(list.Count);
-                    string destDir = Path.Combine(subp, "" + (cp), $"{list[iir]}.mp4");
+                    string destDir = Path.Combine(subp, "" + (cp), $"{list[iir].ToInt().ToString("X")}.mp4");
                     string oldfile = Path.Combine(subp, $"{list[iir]}.mp4");
                     if (oldfile != destDir)
                     {
@@ -346,8 +348,9 @@ namespace VideoGui
                             DirectoryToUse = directory;
                         }
                     }
-                    string gp = Path.GetFileName(LastFile);
-                    string destDir = Path.Combine(subp, DirectoryToUse, $"{gp}");
+                    string gp = Path.GetFileNameWithoutExtension(LastFile);
+                    string ext = Path.GetExtension(LastFile);
+                    string destDir = Path.Combine(subp, DirectoryToUse, $"{gp.ToInt().ToString("X")}{ext}");
                     File.Move(LastFile, destDir);
                 }
                 MessageBox.Show("Shorts Created");
@@ -361,6 +364,7 @@ namespace VideoGui
         {
             try
             {
+                // upgraded to new shorts length
                 source = await AddLogo(shortsfile, @"C:\videogui\logo.png");
 
                 EData.Clear();
@@ -379,16 +383,18 @@ namespace VideoGui
                     "",
                     "segid = 1",
                     "segsizeid = 1",
-                    "segmentsize = 31000000",
-                    "segsize1 = 20000000",
-                    "segsize2 = 23000000",
-                    "segsize3 = 32000000",
-                    "segsize4 = 21000000",
-                    "segsize5 = 37000000",
-                    "seggap = 3000000",
-                    "seggap2 = 3000000",
-                    "seggap1 = 1000000",
-                    "seggap4 = 3000000",
+                    $"segmentsize = {TimeSpan.FromMinutes(2.4).TotalMicroseconds}" ,
+                    $"segsize1 = {TimeSpan.FromMinutes(2.05).TotalMicroseconds}",
+                    $"segsize2 = {TimeSpan.FromMinutes(1.25).TotalMicroseconds}",
+                    $"segsize3 = {TimeSpan.FromSeconds(45).TotalMicroseconds}",
+                    $"segsize4 = {TimeSpan.FromSeconds(45).TotalMicroseconds}",
+                    $"segsize5 = {TimeSpan.FromSeconds(35).TotalMicroseconds}",
+                    $"segsize6 = {TimeSpan.FromSeconds(25).TotalMicroseconds}",
+                    $"segsize7 = {TimeSpan.FromSeconds(25).TotalMicroseconds}",
+                    "seggap = 2000000",
+                    "seggap2 = 1500000",
+                    "seggap1 = 100000",
+                    "seggap4 = 1000000",
                     "seggap3 = 100000",
                     "startseg = 0",
                     "adm = Avidemux()",
@@ -428,7 +434,7 @@ namespace VideoGui
                     "    segsizeid += 1",
                     "    if (segid > 4):",
                     "       segid = 1",
-                    "    if (segsizeid > 5):",
+                    "    if (segsizeid > 7):",
                     "       segsizeid = 1",
                     "    if (segsizeid == 1):",
                     "       segmentsize = segsize1",
@@ -440,6 +446,10 @@ namespace VideoGui
                     "       segmentsize = segsize4",
                     "    if (segsizeid == 5):",
                     "       segmentsize = segsize5",
+                    "    if (segsizeid == 6):",
+                    "       segmentsize = segsize6",
+                    "    if (segsizeid == 7):",
+                    "       segmentsize = segsize7",
                     "    if (segid==1):",
                     "      seggap = seggap1",
                     "    if (segid==2):",

@@ -3,6 +3,7 @@ using FolderBrowserEx;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Numerics;
@@ -116,9 +117,23 @@ namespace VideoGui
                     {
                         string fnx = filename.Split(@"\").ToList().LastOrDefault();
                         string drx = filename.Replace(fnx, "");
-                        string newfile = drx +System.IO.Path.GetFileNameWithoutExtension(filename) + $"_{res}{Path.GetExtension(filename)}";
 
-                        File.Move(filename, newfile);
+                        string frr = System.IO.Path.GetFileNameWithoutExtension(fnx);
+                        int fr = System.IO.Path.GetFileNameWithoutExtension(fnx).ToInt(-1);
+                        if (fr != -1)
+                        {
+                            frr = fr.ToString();// "X");
+                        }
+                        string newfile = drx + frr + $"_{res}{Path.GetExtension(filename)}";
+                        if (filename != newfile)
+                        {
+                            
+                            if (File.Exists(newfile))
+                            {
+                                File.Delete(newfile);
+                            }
+                            File.Move(filename, newfile);
+                        }
                     }
                     lblShortNo.Content = files.Count.ToString();
                 }
@@ -129,6 +144,22 @@ namespace VideoGui
             }
         }
 
+        public int GetFileCount(string Folder)
+        {
+            try
+            {
+                int res = 0;
+                List<string> files = Directory.EnumerateFiles(Folder, "*.mp4", SearchOption.AllDirectories).ToList();
+                res += files.Where(filename => filename.Contains("_")).Count();
+                lblShortNo.Content = res;
+                return res;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite();
+                return -1;
+            }
+        }
         private void OnReadShorts(FbDataReader reader)
         {
             try
@@ -234,14 +265,20 @@ namespace VideoGui
                     bool Exc = scraperModule.Exceeded;
                     filesdone.AddRange(scraperModule.ScheduledOk);    
                     int Uploaded = scraperModule.TotalScheduled;
-                    if (!Exc && Uploaded < txtTotalUploads.Text.ToInt())
+                    int shortsleft = GetFileCount(rootfolder);
+                    if (!Exc && shortsleft > 0 && Uploaded < txtTotalUploads.Text.ToInt())
                     {
                         int Maxuploads = (txtTotalUploads.Text != "") ? txtTotalUploads.Text.ToInt(100) : 100;
                         int UploadsPerSlot = (txtMaxUpload.Text != "") ? txtMaxUpload.Text.ToInt(5) : 5;
                         scraperModule = new ScraperModule(dbInit, doOnFinish, gUrl, false, true, Maxuploads, UploadsPerSlot);
                         scraperModule.ShowActivated = true;
                         scraperModule.ScheduledOk.AddRange(filesdone);
-                        Hide();
+                        Hide(); 
+                        Process[] webView2Processes = Process.GetProcessesByName("MicrosoftEdgeWebview2");
+                        foreach (Process process in webView2Processes)
+                        {
+                            process.Kill();
+                        }
                         scraperModule.Show();
                         return;
                     }
@@ -288,7 +325,11 @@ namespace VideoGui
                     }
                     scraperModule = new ScraperModule(dbInit, doOnFinish, gUrl, false, true, Maxuploads, UploadsPerSlot);
                     scraperModule.ShowActivated = true;
-                    Hide();
+                    Hide(); Process[] webView2Processes = Process.GetProcessesByName("MicrosoftEdgeWebview2");
+                    foreach (Process process in webView2Processes)
+                    {
+                        process.Kill();
+                    }
                     scraperModule.Show();
                 }
             }
@@ -411,6 +452,11 @@ namespace VideoGui
             {
                 ex.LogWrite($"{this} OnSelectFormClose {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
             }
+        }
+
+        private void btnEditTitle_Checked(object sender, RoutedEventArgs e)
+        {
+
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
