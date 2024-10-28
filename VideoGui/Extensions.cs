@@ -65,8 +65,19 @@ namespace VideoGui
         {
             return new JavaScriptSerializer().Deserialize<List<T>>(tt);
         }
-
-        public static bool ContainsAll(this string data, string[] containsall)
+        public static bool IsBetween(this DateTime thisDateTime, DateTime from, DateTime to)
+        {
+            try
+            {
+                return (thisDateTime >= from && thisDateTime <= to);
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"IsBetween {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+                return false;
+            }
+        }
+        public static bool ContainsAll(this string   data, string[] containsall)
         {
             bool res = false;
             res = containsall.All(s => data.Contains(s));

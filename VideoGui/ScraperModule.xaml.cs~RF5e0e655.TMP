@@ -642,7 +642,7 @@ namespace VideoGui
                                 {
                                     dbInitializer?.Invoke(this, new CustomParams_Wait());
                                     var htmlx = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
-                                    File.WriteAllLines($"E:\\gopro9\\ScraperLog_{ct++}.txt", new string[] { htmlx });
+                                    File.WriteAllLines($"E:\\gopro9\\ScraperLog_{DateTime.Now}.txt", new string[] { htmlx });
                                     
                                     Close();
                                 }
@@ -821,7 +821,7 @@ namespace VideoGui
                                 Thread.Sleep(100);
                             }
                             var htmlx = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
-                            File.WriteAllLines($"E:\\gopro9\\ScraperLog_{ct++}.txt", new string[] { htmlx });
+                            File.WriteAllLines($"E:\\gopro9\\ScraperLog_{DateTime.Now}.txt", new string[] { htmlx });
                             Close();
                         }
                     }
@@ -834,12 +834,12 @@ namespace VideoGui
             finally
             {
                 var htmlx = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
-                File.WriteAllLines($"E:\\gopro9\\ScraperLog_{ct++}.txt", new string[] { htmlx });
+                File.WriteAllLines($"E:\\gopro9\\ScraperLog_{DateTime.Now}.txt", new string[] { htmlx });
                 HasExited = true;
 
             }
         }
-        int ct = 0;
+
         private void UploadedHandler(string Span_Name, string connectStr, string filename1)
         {
             try
