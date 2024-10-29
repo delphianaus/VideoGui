@@ -643,7 +643,7 @@ namespace VideoGui
                                     dbInitializer?.Invoke(this, new CustomParams_Wait());
                                     var htmlx = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
                                     File.WriteAllLines($"E:\\gopro9\\ScraperLog_{ct++}.txt", new string[] { htmlx });
-                                    
+
                                     Close();
                                 }
                             }
@@ -1036,7 +1036,7 @@ namespace VideoGui
                         HtmlNode targetSpan = doc.DocumentNode.SelectSingleNode($"//span[@class='{Span_Name}']");
                         if (targetSpan is not null && targetSpan.InnerText is not null && targetSpan.InnerText != "")
                         {
-                            ProcessNode(doc, targetSpan);
+                            ProcessNode(doc, targetSpan, sender);
                         }
                         else
                         {
@@ -1064,11 +1064,43 @@ namespace VideoGui
         bool DoNextNode = true;
         public List<string> nodeslist = new List<string>();
         public AddressUpdate DoVideoLookUp = null;
-        public NodeUpdate DoNodeUpdate = null;
-        GetNextNode DoGetNextNode = null;
-        AddressUpdate DoLastNodeUpdate = null;
-
-        private void ProcessNode(HtmlDocument doc, HtmlNode targetSpan)
+        //public NodeUpdate DoNodeUpdate = null;
+        StatusTypes VStatusType = StatusTypes.PRIVATE;
+        List<string> titles = new List<string>();
+        private bool DoNodeScrapeUpdate(string Id, string Title, string Desc, string FileName, string status, DateTime? dateTime)
+        {
+            try
+            {
+                string t = $"{Title.Replace("\n", "").Replace("\r", "").Trim()} {Id}";
+                lstMain.Items.Insert(0, t);
+                string newtitle = Title.Replace("\n", "").Replace("\r", "").Trim();
+                var spliter = newtitle.Split(' ').ToList();
+                foreach (var item in spliter)
+                {
+                    if (item.StartsWith("#"))
+                    {
+                        newtitle = newtitle.Replace(item, "");
+                    }
+                }
+                newtitle = newtitle.Trim();
+                titles.Add(newtitle);
+                Ids.Insert(0, Id);
+                dbInitializer?.Invoke(this, new CustomParams_AddVideoInfo(null, VStatusType, Id, Title,
+                FileName, -1, false));
+                if (Id.Contains("webp/"))
+                {
+                    Id = Id.Replace("webp/", "");
+                }
+                webAddressBuilder.ScopeVideo(Id, true);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"DoNodeScrapeUpdate {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+                return true;
+            }
+        }
+        private void ProcessNode(HtmlDocument doc, HtmlNode targetSpan,object sender = null)
         {
             try
             {
@@ -1085,7 +1117,10 @@ namespace VideoGui
                             MaxNodes = (nodesinfo.LastOrDefault() is string sp) ? sp.ToInt() : -1;
                         }
                     }
-                    DoLastNodeUpdate?.Invoke(LastNode);
+                    Dispatcher.Invoke(() =>
+                    {
+                        lblLastNode.Content = LastNode;
+                    });
                     string divclassname = "right-section style-scope ytcp-video-list-cell-video";
                     string idclass = "style-scope ytcp-img-with-fallback";
                     string idNode = "style-scope ytcp-img-with-fallback";
@@ -1155,20 +1190,20 @@ namespace VideoGui
                             IdNodes.Add(Id);
                             string StatusStr = StatusNode[i].InnerText.Trim();
                             Nullable<DateTime> dateTime = null;
-                            if (DoNodeUpdate is not null && DoNextNode)
+                            if (IsSchedulingShorts)
                             {
-                                DoNextNode = DoNodeUpdate.Invoke(Id, Title, Desc, "", StatusStr, dateTime);
+                                directshortsScheduler?.ScheduleVideo(Id, Title, true);
                             }
-                            if (DoNextNode)
+                            else
                             {
-                                DoVideoLookUp?.Invoke(Id);
-                            }
-                        }
-                        else
-                        {
-                            if (true)
-                            {
-
+                                if (DoNextNode)
+                                {
+                                    DoNextNode = DoNodeScrapeUpdate(Id, Title, Desc, "", StatusStr, dateTime);
+                                }
+                                if (DoNextNode && Id != "")
+                                {
+                                    webAddressBuilder.ScopeVideo(Id, true);
+                                }
                             }
                         }
                     }
@@ -1198,9 +1233,25 @@ namespace VideoGui
                         if (processnextnode && DoNextNode)
                         {
                             int nodesc = 0;
-
                             nodeslist.Clear();
-                            DoGetNextNode?.Invoke();
+                            bool Allow = true;
+                            if (directshortsScheduler is not null)
+                            {
+                                if (directshortsScheduler.ScheduleNumber >= directshortsScheduler.MaxNumberSchedules)
+                                {
+                                    Allow = false;
+                                }
+                            }
+                            if (Allow)
+                            {
+                                btnNext_Task(sender);
+                                for (int i = 0; i < 50; i++)
+                                {
+                                    Thread.Sleep(100);
+                                    System.Windows.Forms.Application.DoEvents();
+                                }
+
+                            }
                         }
                     }
                 }
@@ -1209,9 +1260,29 @@ namespace VideoGui
             {
                 ex.LogWrite($"ProcessNode {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
-            
-        }
 
+        }
+        private async Task btnNext_Task(object sender)
+        {
+            try
+            {
+
+                string script = @"
+        var nextButton = document.getElementById('navigate-after');
+        if (nextButton) {
+            nextButton.addEventListener('click', function() {
+                window.chrome.webview.postMessage(JSON.stringify({ type: 'buttonClick' }));
+            });
+            nextButton.click();
+        }
+    ";
+                (sender as WebView2).CoreWebView2.ExecuteScriptAsync(script).ConfigureAwait(true);
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"btnNext_Task {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
         private async void ProcessWV2Completed(string html, object sender)
         {
             try
@@ -1728,9 +1799,9 @@ namespace VideoGui
                 }
                 else
                 {
-                    KilledUploads = true; 
+                    KilledUploads = true;
                     //var htmlx = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
-                   // File.WriteAllLines($"E:\\gopro9\\ScraperLog_{DateTime.Now}.txt", new string[] { htmlx });
+                    // File.WriteAllLines($"E:\\gopro9\\ScraperLog_{DateTime.Now}.txt", new string[] { htmlx });
                     Close();
                 }
             }

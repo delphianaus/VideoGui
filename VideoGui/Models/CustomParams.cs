@@ -145,6 +145,26 @@ namespace VideoGui.Models
             data_string = datastring;
         }
     }
+
+    public class CustomParams_AddVideoInfo
+    {
+
+        public int id = -1, groupid = -1;
+        public bool isfixed = false;
+        public StatusTypes Status { get; set; } = StatusTypes.PRIVATE;
+        public string videoid = "", filename = "", title = "";
+        public CustomParams_AddVideoInfo(Nullable<int> _id, StatusTypes _status, string _videoid, string _title, string _filename, int _groupid, bool _isfixed)
+        {
+            id = (_id.HasValue) ? _id.Value : id;
+            groupid = _groupid;
+            Status = _status;
+            title = _title;
+            filename = _filename;
+            videoid = _videoid;
+            isfixed = _isfixed;
+        }
+
+    }
     public class CustomParams_AddDescription
     {
         public int Id { get; set; } = -1;
