@@ -754,11 +754,12 @@ namespace VideoGui
 
         private void DoOnFinish()
         {
-            if (MainAppWindow.HideWindow())
+            if (MainAppWindow.canclose)
             {
                 lblStatus.Content = "Status : Shutting Down App";
                 Terminate();
             }
+            else MainAppWindow.HideWindow();
         }
 
        

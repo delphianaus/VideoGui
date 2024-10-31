@@ -88,7 +88,7 @@ namespace VideoGui
         int MaxUploads = 0, recs = 0, gmaxrecs = 0, files = 0, max = 0, SlotsPerUpload = 0;
         public int TotalScheduled = 0;
         public List<ShortsDirectory> ShortsDirectories = new(); // <shortname>
-        public bool IsSchedulingShorts = false;
+       // public bool IsSchedulingShorts = false;
         public List<ListScheduleItems> listSchedules = new List<ListScheduleItems>();
         DirectshortsScheduler directshortsScheduler = null;
 
@@ -110,6 +110,7 @@ namespace VideoGui
         TaskCompletionSource<bool> tcs = new TaskCompletionSource<bool>();
         public Nullable<DateTime> ReleaseDate = null;
         public Nullable<DateTime> ReleaseEndDate = null;
+        public EventTypes ScraperType = EventTypes.VideoUpload;
         public ScraperModule(databasehook<object> _dbInit, OnFinish _OnFinish, string _Default_url, bool DashboardMode = false,
             string _Title = "", string _Desc = "")
         {
@@ -1190,17 +1191,17 @@ namespace VideoGui
                             IdNodes.Add(Id);
                             string StatusStr = StatusNode[i].InnerText.Trim();
                             Nullable<DateTime> dateTime = null;
-                            if (IsSchedulingShorts)
+                            if (ScraperType == EventTypes.ShortsSchedule)
                             {
                                 directshortsScheduler?.ScheduleVideo(Id, Title, true);
                             }
                             else
                             {
-                                if (DoNextNode)
+                                if (DoNextNode && ScraperType == EventTypes.ShortsSchedule)
                                 {
                                     DoNextNode = DoNodeScrapeUpdate(Id, Title, Desc, "", StatusStr, dateTime);
                                 }
-                                if (DoNextNode && Id != "")
+                                else if (DoNextNode && Id != "" && ScraperType == EventTypes.ScapeSchedule)
                                 {
                                     webAddressBuilder.ScopeVideo(Id, true);
                                 }
@@ -1396,7 +1397,7 @@ namespace VideoGui
                     }
                     else if (ehtml is not null && ehtml.Contains("Channel dashboard"))
                     {
-                        if (clickupload && !IsSchedulingShorts)
+                        if (clickupload && ScraperType != EventTypes.ShortsSchedule)
                         {
                             wv2.AllowDrop = true;
                             clickupload = false;
@@ -1407,7 +1408,7 @@ namespace VideoGui
                             UploadPath = _dest;
                             var UploadTask = UploadV2Files(false);
                         }
-                        else if (IsTitleEditor && !IsSchedulingShorts)
+                        else if (IsTitleEditor && ScraperType != EventTypes.ScapeSchedule)
                         {
                             ContentClick();
                             var cts = new CancellationTokenSource();
@@ -1521,7 +1522,7 @@ namespace VideoGui
                 if (sender is WebView2 webView2Instance)
                 {
                     var task = webView2Instance.ExecuteScriptAsync("document.body.innerHTML");
-                    if (!IsSchedulingShorts)
+                    if (ScraperType != EventTypes.ShortsSchedule)
                     {
                         task.ContinueWith(x => { ProcessWV2Completed(x.Result, sender); }, TaskScheduler.FromCurrentSynchronizationContext());
                     }
@@ -1955,7 +1956,7 @@ namespace VideoGui
             {
                 if (webAddressBuilder is not null)
                 {
-                    if (IsSchedulingShorts && directshortsScheduler is null)
+                    if (ScraperType == EventTypes.ShortsSchedule && directshortsScheduler is null)
                     {
                         DateTime StartDate = ReleaseDate.HasValue ? ReleaseDate.Value : DateTime.Now;
                         DateTime CDate = StartDate.Date.AddDays(1);

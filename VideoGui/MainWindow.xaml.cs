@@ -1368,7 +1368,7 @@ namespace VideoGui
 
                         if (tld is CustomParams_SetTimeSpans STT)
                         {
-                            scs.IsSchedulingShorts = true;
+                            scs.ScraperType = EventTypes.ShortsSchedule;
                         }
                     }
                     else if (tld is CustomParams_InsertIntoTable cit)
@@ -1842,7 +1842,7 @@ namespace VideoGui
                         scraperModule.ShowActivated = true;
                         scraperModule.ReleaseDate = Start;
                         scraperModule.ReleaseDate = End;
-                        scraperModule.IsSchedulingShorts = true;
+                        scraperModule.ScraperType = EventTypes.ShortsSchedule;
                         scraperModule.listSchedules.Clear();
                         scraperModule.listSchedules.AddRange(ScheduleListItems);
                     }

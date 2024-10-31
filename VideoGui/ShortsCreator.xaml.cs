@@ -360,6 +360,124 @@ namespace VideoGui
                 ex.LogWrite($"{this} {MethodBase.GetCurrentMethod().Name}");
             }
         }
+        public async Task CreateShortsv(string source, OnFinish DoOnFinish)
+        {
+            try
+            {
+                source = await AddLogo(shortsfile, @"C:\videogui\logo.png");
+
+                EData.Clear();
+                Data.Clear();
+                var qs = "\"";
+                var fname = System.IO.Path.GetFileName(source);
+                var fnamex = System.IO.Path.GetFileNameWithoutExtension(source);
+                var dir = System.IO.Path.GetDirectoryName(source);
+                var fnmp3 = System.IO.Path.Combine(dir, fname);
+                var sx = $"{qs}{source.Replace("\\", "/")}{qs}";
+                fnmp3 = $"{qs}{fnmp3.Replace("\\", "/")}{qs}";
+                var py = System.IO.Path.Combine(dir, fnamex) + "1.py";
+                List<string> convert = new List<string>() {
+                    "#--automatically built--",
+                    "filecounter = 1","" +
+                    "",
+                    "segid = 1",
+                    "segsizeid = 1",
+                    "segmentsize = 31000000",
+                    "segsize1 = 20000000",
+                    "segsize2 = 23000000",
+                    "segsize3 = 32000000",
+                    "segsize4 = 21000000",
+                    "segsize5 = 37000000",
+                    "seggap = 3000000",
+                    "seggap2 = 3000000",
+                    "seggap1 = 1000000",
+                    "seggap4 = 3000000",
+                    "seggap3 = 100000",
+                    "startseg = 0",
+                    "adm = Avidemux()",
+                    "ed = Editor()",
+                   // "gui = Gui()",
+                    "filename = "+sx,
+                    "fname = basename(filename.replace(\" (shorts_logo)\",\"\").replace(\".mkv\",\"\").replace(\".mp4\",\"\"))",
+                    "dir = dirname(filename)",
+                //    "",
+                    "adm.loadVideo(filename)",
+                //    "    raise(filename)",
+                    "endseg = adm.markerB",
+                    "adm.clearSegments()",
+                    "while (startseg + segmentsize) <= endseg:",
+                    "    adm.clearSegments()",
+                    "    adm.addSegment(0, 0, endseg)",
+                    "    adm.markerA = startseg",
+                    "    adm.markerB = startseg + segmentsize",
+                    "    adm.setHDRConfig(1, 1, 1, 1, 0)",
+                    "    adm.videoCodec(\"Copy\")",
+                    "    adm.audioClearTracks()",
+                    "    adm.setSourceTrackLanguage(0,\"eng\")",
+                    "    if adm.audioTotalTracksCount() <= 0:",
+                    "      raise(\"Cannot add audio track 0, total tracks: \" + str(adm.audioTotalTracksCount()))",
+                    "    adm.audioAddTrack(0)",
+                    "    adm.audioCodec(0, \"copy\")",
+                    "    adm.audioSetDrc2(0, 0, 1, 0.001, 0.2, 1, 2, -12)",
+                    "    adm.audioSetEq(0, 0, 0, 0, 0, 880, 5000)",
+                    "    adm.audioSetChannelGains(0, 0, 0, 0, 0, 0, 0, 0, 0, 0)",
+                    "    adm.audioSetChannelDelays(0, 0, 0, 0, 0, 0, 0, 0, 0, 0)",
+                    "    adm.audioSetChannelRemap(0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8)",
+                    "    adm.audioSetShift(0, 0, 0)",
+                    "    adm.setContainer(\"MP4\", \"forceAspectRatio=False\", \"displayWidth=1280\", \"displayAspectRatio=2\", \"addColourInfo=False\", \"colMatrixCoeff=2\", \"colRange=0\", \"colTransfer=2\", \"colPrimaries=2\")",
+                    "    adm.save(dir + fname + \"/\" +str(filecounter) + \".MP4\")",
+                    "    filecounter+=1",
+                    "    segid += 1",
+                    "    segsizeid += 1",
+                    "    if (segid > 4):",
+                    "       segid = 1",
+                    "    if (segsizeid > 5):",
+                    "       segsizeid = 1",
+                    "    if (segsizeid == 1):",
+                    "       segmentsize = segsize1",
+                    "    if (segsizeid == 2):",
+                    "       segmentsize = segsize2",
+                    "    if (segsizeid == 3):",
+                    "       segmentsize = segsize3",
+                    "    if (segsizeid == 4):",
+                    "       segmentsize = segsize4",
+                    "    if (segsizeid == 5):",
+                    "       segmentsize = segsize5",
+                    "    if (segid==1):",
+                    "      seggap = seggap1",
+                    "    if (segid==2):",
+                    "      seggap = seggap2",
+                    "    if (segid==3):",
+                    "      seggap = seggap3",
+                    "    if (segid==4):",
+                    "      seggap = seggap4",
+                    "    startseg += seggap + segmentsize",
+                    "    if (startseg + segmentsize > endseg):",
+                    "         segentsize = (segmentsize+startseg) - endseg",
+                    "##########" };
+
+                if (File.Exists($"{py}"))
+                {
+                    File.Delete($"{py}");
+                }
+                using (StreamWriter txtWriter = File.AppendText(py))
+                {
+                    foreach (var c in convert)
+                    {
+                        txtWriter.Write($"{c}\r\n", "");
+                    }
+                }
+                dir = "C:\\VideoGui";
+                string FileToWrite = $"C:\\Program Files\\Avidemux 2.8 VC++ 64bits\\avidemux_cli.exe";
+
+                Task.Run(() => { RunProces(FileToWrite, py); });
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+            }
+
+        }
         public async Task CreateShorts(string source, OnFinish DoOnFinish)
         {
             try
