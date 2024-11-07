@@ -270,7 +270,7 @@ namespace VideoGui
                     {
                         int Maxuploads = (txtTotalUploads.Text != "") ? txtTotalUploads.Text.ToInt(100) : 100;
                         int UploadsPerSlot = (txtMaxUpload.Text != "") ? txtMaxUpload.Text.ToInt(5) : 5;
-                        scraperModule = new ScraperModule(dbInit, doOnFinish, gUrl, false, true, Maxuploads, UploadsPerSlot);
+                        scraperModule = new ScraperModule(dbInit, doOnFinish, gUrl, Maxuploads, UploadsPerSlot);
                         scraperModule.ShowActivated = true;
                         scraperModule.ScheduledOk.AddRange(filesdone);
                         Hide(); 
@@ -323,7 +323,7 @@ namespace VideoGui
                     {
                         Maxuploads = lblShortNo.Content.ToInt();
                     }
-                    scraperModule = new ScraperModule(dbInit, doOnFinish, gUrl, false, true, Maxuploads, UploadsPerSlot);
+                    scraperModule = new ScraperModule(dbInit, doOnFinish, gUrl, Maxuploads, UploadsPerSlot);
                     scraperModule.ShowActivated = true;
                     Hide(); Process[] webView2Processes = Process.GetProcessesByName("MicrosoftEdgeWebview2");
                     foreach (Process process in webView2Processes)

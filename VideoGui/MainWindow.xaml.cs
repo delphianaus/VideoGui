@@ -76,6 +76,7 @@ using System.Windows.Media.Imaging;
 using System.Runtime.InteropServices.Marshalling;
 using System.ComponentModel;
 using Nancy;
+using Microsoft.Extensions.Logging;
 
 
 namespace VideoGui
@@ -336,7 +337,7 @@ namespace VideoGui
                 int MaxShorts = MaxUploads.ToInt(80);
                 int MaxPerSlot = uploadsnumber.ToInt(100);
                 scraperModule = new ScraperModule(ModuleCallback, FinishScraper,
-                    gUrl, false, true, MaxShorts, MaxPerSlot);
+                    gUrl, MaxShorts, MaxPerSlot);
                 Hide();
                 scraperModule.ShowActivated = true;
                 scraperModule.Show();
@@ -1419,7 +1420,7 @@ namespace VideoGui
                                 connection.Close();
                             }
                         }
-                    }    
+                    }
                 }
 
 
@@ -1647,6 +1648,63 @@ namespace VideoGui
         {
             try
             {
+                //event id => ScrapeInfoTable.Id
+                //ScrapeType Int
+                //ScrapeCustomCommand String , ie Title="TEMPLATE"
+                //ScrapeTableDestination string
+                bool ready = true ;
+                int ScrapeType = -1;
+                string ScrapeCustomCommand = "", TableDestination = "";
+                string sql = $"SELECT * FROM SCRAPETABLEINFO WHERE EVENTID = {eventdef.Id}";
+                connectionString.ExecuteReader(sql, (FbDataReader r) =>
+                {
+                    if (ready)
+                    {
+                        ScrapeType = (r["SCRAPETYPE"] is int i) ? i : 0;
+                        ScrapeCustomCommand = (r["SCRAPECOMMAND"] is string s) ? s : "";
+                        TableDestination = (r["TABLEDESTINATION"] is string ss) ? ss : "";
+                        ready = false;
+                    }
+                });
+
+                bool IsTitle = false, IsDesc = false;
+                string Title = "", Desc = "";
+                if (ScrapeCustomCommand != "" && ScrapeCustomCommand.Contains("|"))
+                {
+                    List<string> ScrapeList = ScrapeCustomCommand.Split('|').ToList();
+                    foreach (string s in ScrapeList)
+                    {
+                        if (s.Contains("title="))
+                        {
+                            IsTitle = true;
+                            Title = s.Replace("title=", "");
+                        }
+                        if (s.Contains("desc="))
+                        {
+                            IsDesc = true;
+                            Desc = s.Replace("desc=", "");
+                        }
+                    }
+                }
+                WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
+                if (IsTitle) webAddressBuilder = webAddressBuilder.AddFilterByTitle(Title,false);
+                if (IsDesc) webAddressBuilder = webAddressBuilder.AddFilterByDesc(Desc, false);
+                //ScrapeType == 1 Shorts Draft
+                //ScrapeType == 2 Shorts UnListed
+                //ScrapeType == 3 Shorts D & U
+                //ScrapeType == 4 Shorts Scheduled
+                //ScrapeType == 5 Full videos DRAFT
+                //ScrapeType == 6 Full videos UnListed
+                //ScrapeType == 7 Full videos D & U
+                //ScrapeType == 8 Full videos Scheduled
+                // BIT 0 = Shorts
+                // BIT 1 = Full Videos
+                // BIT 2 = DRAFT 
+                // BIT 3 = UNLISTED
+                // BIT 4 = SCHEDULED
+                // BIT 5 = PRIVATE
+                // BIT 6 = PUBLIC
+
 
             }
             catch (Exception ex)
@@ -1704,7 +1762,8 @@ namespace VideoGui
                     WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
                     string gUrl = webAddressBuilder.Dashboard().Address;
                     MaxUploads = eventdef.Max;
-                    scraperModule = new ScraperModule(ModuleCallback, uploadonfinish, gUrl, false, true, MaxUploads, 15);
+                    var id = eventdef.Id;
+                    scraperModule = new ScraperModule(ModuleCallback, uploadonfinish, gUrl, MaxUploads, 15);
                     scraperModule.ShowActivated = true;
                     Hide();
                     UploadWaitTime = TimeSpan.Zero;
@@ -1739,7 +1798,7 @@ namespace VideoGui
                 return -1;
             }
         }
-        private void uploadonfinish()
+        private void uploadonfinish(int id)
         {
             try
             {
@@ -1758,7 +1817,7 @@ namespace VideoGui
                     int shortsleft = GetFileCount(rootfolder);
                     if (!Exc && shortsleft > 0 && Uploaded < MaxUploads)
                     {
-                        scraperModule = new ScraperModule(ModuleCallback, uploadonfinish, gUrl, false, true, MaxUploads, 15);
+                        scraperModule = new ScraperModule(ModuleCallback, uploadonfinish, gUrl, MaxUploads, 15);
                         scraperModule.ShowActivated = true;
                         scraperModule.ScheduledOk.AddRange(filesdone);
                         Hide();
@@ -1773,6 +1832,11 @@ namespace VideoGui
                 }
 
                 Show();
+                if (id != -1)
+                {
+                    string sql = $"DELETE FROM EVENTS WHERE ID = {id};";
+                    connectionString.ExecuteNonQuery(sql);
+                }
                 IsUploading = false;
             }
             catch (Exception ex)
@@ -1838,15 +1902,11 @@ namespace VideoGui
                         End = SEnd.Value.ToDateTime(EEnd);
                         WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
                         string gUrl = webAddressBuilder.AddFilterByDraftShorts().Address;
-                        scraperModule = new ScraperModule(ModuleCallback, ShortsScheduler_OnFinish, gUrl, false, true, 0, 0);
+                        scraperModule = new ScraperModule(ModuleCallback, ShortsScheduler_OnFinish,
+                            gUrl, Start, End, ScheduleListItems, eventdef.Id);//, false, true, 0, 0);
                         scraperModule.ShowActivated = true;
-                        scraperModule.ReleaseDate = Start;
-                        scraperModule.ReleaseDate = End;
-                        scraperModule.ScraperType = EventTypes.ShortsSchedule;
-                        scraperModule.listSchedules.Clear();
-                        scraperModule.listSchedules.AddRange(ScheduleListItems);
                     }
-                        
+
                 }
 
             }
@@ -1856,9 +1916,21 @@ namespace VideoGui
             }
         }
 
-        private void ShortsScheduler_OnFinish()
+        private void ShortsScheduler_OnFinish(int id)
         {
-            throw new NotImplementedException();
+            try
+            {
+                if (id != -1)
+                {
+                    string sql = $"DELETE FROM EVENTS WHERE ID = {id};";
+                    connectionString.ExecuteNonQuery(sql);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"ShortsScheduler_OnFinish {MethodBase.GetCurrentMethod().Name} {this} {id} {ex.Message}");
+            }
         }
 
         private void SetupTicker()
@@ -2317,7 +2389,8 @@ namespace VideoGui
                 connectionString.CreateTableIfNotExists(sqlstring);
                 sqlstring = $"CREATE TABLE APPLIEDSCHEDULE({Id},SCHEDULEID INTEGER, STARTHOUR SMALLINT,ENDHOUR SMALLINT,GAP SMALLINT,DAYS INTEGER);";
                 connectionString.CreateTableIfNotExists(sqlstring);
-
+                sqlstring = $"CREATE TABLE SCRAPEINFOTABLE({Id},EVENTID INTEGER, SCRAPETYPE INTEGER, SCRAPECOMMAND VARCHAR(255), TABLEDESTINATION VARCHAR(255));";
+                connectionString.CreateTableIfNotExists(sqlstring);
 
                 connectionString.AddFieldToTable("DESCRIPTIONS", "ISTAG", "SMALLINT", 0);
                 connectionString.CreateTableIfNotExists($"CREATE TABLE RUNNINGID({Id}, ACTIVE SMALLINT)");

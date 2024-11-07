@@ -706,7 +706,7 @@ namespace VideoGui
                 RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                 string Root = key.GetValueStr("ShortsFile", @"c:\");
                 key?.Close();
-
+                NumberShorts = 0;
                 var fld = new OpenFileDialog();
                 fld.Filter = "mp4|*.mp4";
                 fld.DefaultExt = "*.mp4";

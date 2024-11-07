@@ -86,9 +86,9 @@ namespace VideoGui
     {
         object lockobj = new object();
         int MaxUploads = 0, recs = 0, gmaxrecs = 0, files = 0, max = 0, SlotsPerUpload = 0;
-        public int TotalScheduled = 0;
+        public int EventId , TotalScheduled = 0;
         public List<ShortsDirectory> ShortsDirectories = new(); // <shortname>
-       // public bool IsSchedulingShorts = false;
+                                                                // public bool IsSchedulingShorts = false;
         public List<ListScheduleItems> listSchedules = new List<ListScheduleItems>();
         DirectshortsScheduler directshortsScheduler = null;
 
@@ -99,10 +99,10 @@ namespace VideoGui
         List<string> nextaddress = new(), Ids = new(), Idx = new(), ufiles = new(), Files = new();// DoneFiles = new();
         WebAddressBuilder webAddressBuilder = null;
         databasehook<object> dbInitializer = null;
-        OnFinish DoOnFinish = null;
+        OnFinishId DoOnFinish = null;
         int swap = 1;
         bool SwapEnabled = false, IsTitleEditor = false;
-        string Title = "", Desc = "";
+        //string Title = "", Desc = "";
         string SendKeysString = "", UploadPath = "", LastNode = "", DefaultUrl = "", LastValidFileName = "";
         Dictionary<int, WebView2> wv2Dictionary = new Dictionary<int, WebView2>();
         Dictionary<int, WebView2> ActiveWebView = new Dictionary<int, WebView2>();
@@ -111,55 +111,63 @@ namespace VideoGui
         public Nullable<DateTime> ReleaseDate = null;
         public Nullable<DateTime> ReleaseEndDate = null;
         public EventTypes ScraperType = EventTypes.VideoUpload;
-        public ScraperModule(databasehook<object> _dbInit, OnFinish _OnFinish, string _Default_url, bool DashboardMode = false,
-            string _Title = "", string _Desc = "")
+
+        public ScraperModule(databasehook<object> _dbInit, OnFinishId _OnFinish, string _Default_url, Nullable<DateTime> Start,
+            Nullable<DateTime> End, List<ListScheduleItems> _listSchedules, int _eventid )
         {
             try
             {
+                ScraperType = EventTypes.ShortsSchedule;
+                EventId = _eventid;
+                listSchedules = _listSchedules;
+                ReleaseDate = Start;
+                ReleaseEndDate = End;
                 DoOnFinish = _OnFinish;
                 DefaultUrl = _Default_url;
-                IsDashboardMode = DashboardMode;
-                Title = _Title;
-                Desc = _Desc;
-                IsTitleEditor = true;
+                IsDashboardMode = true;
                 dbInitializer = _dbInit;
                 InitializeComponent();
                 Closing += (s, e) => { IsClosing = true; };
                 Closed += (s, e) =>
                 {
                     IsClosed = true;
-                    DoOnFinish?.Invoke();
+                    DoOnFinish?.Invoke(EventId);
                 };
                 webAddressBuilder = new WebAddressBuilder(null, null, "UCdMH7lMpKJRGbbszk5AUc7w");
-
+                wv2Dictionary.Add(1, wv2A1);//20
+                wv2Dictionary.Add(2, wv2A2);//30
+                wv2Dictionary.Add(3, wv2A3);//40
             }
             catch (Exception ex)
             {
-                ex.LogWrite($"Constructor {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
 
             }
         }
 
-        public ScraperModule(databasehook<object> _dbInit, OnFinish _OnFinish, string _Default_url,
-            bool _isUnlisted = false, bool DashboardMode = false,
-            int maxuploads = 100, int slotsperupload = 5, bool enabledswap = false)
+
+
+
+        public ScraperModule(databasehook<object> _dbInit, OnFinishId _OnFinish, string _Default_url,
+            int maxuploads = 100, int slotsperupload = 5, int _EventId = -1)
         {
             try
             {
-                SwapEnabled = enabledswap;
+                SwapEnabled = false;
+                EventId = _EventId;
+                ScraperType = EventTypes.VideoUpload;
                 MaxUploads = maxuploads;
                 DoOnFinish = _OnFinish;
                 DefaultUrl = _Default_url;
-                IsDashboardMode = DashboardMode;
+                IsDashboardMode = true;
                 dbInitializer = _dbInit;
-                IsUnlisted = _isUnlisted;
+                IsUnlisted = false;
                 SlotsPerUpload = slotsperupload;
                 InitializeComponent();
                 Closing += (s, e) => { IsClosing = true; };
                 Closed += (s, e) =>
                 {
                     IsClosed = true;
-                    DoOnFinish?.Invoke();
+                    DoOnFinish?.Invoke(EventId);
                 };
                 webAddressBuilder = new WebAddressBuilder(null, null, "UCdMH7lMpKJRGbbszk5AUc7w");
                 wv2Dictionary.Add(1, wv2A1);//20
@@ -1101,7 +1109,7 @@ namespace VideoGui
                 return true;
             }
         }
-        private void ProcessNode(HtmlDocument doc, HtmlNode targetSpan,object sender = null)
+        private void ProcessNode(HtmlDocument doc, HtmlNode targetSpan, object sender = null)
         {
             try
             {
