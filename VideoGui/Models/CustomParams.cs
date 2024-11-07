@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -152,13 +153,15 @@ namespace VideoGui.Models
         public int id = -1, groupid = -1;
         public bool isfixed = false;
         public StatusTypes Status { get; set; } = StatusTypes.PRIVATE;
-        public string videoid = "", filename = "", title = "";
-        public CustomParams_AddVideoInfo(Nullable<int> _id, StatusTypes _status, string _videoid, string _title, string _filename, int _groupid, bool _isfixed)
+        public string videoid = "", filename = "", title = "", TableName = "";
+        public CustomParams_AddVideoInfo(Nullable<int> _id, StatusTypes _status, string _videoid, string _title, 
+            string _filename, int _groupid, bool _isfixed, string _TablwName= "")
         {
             id = (_id.HasValue) ? _id.Value : id;
             groupid = _groupid;
             Status = _status;
             title = _title;
+            TableName = _TablwName;
             filename = _filename;
             videoid = _videoid;
             isfixed = _isfixed;

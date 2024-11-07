@@ -101,7 +101,6 @@ namespace VideoGui
         databasehook<object> dbInitializer = null;
         OnFinishId DoOnFinish = null;
         int swap = 1;
-        string TableDestination = "";
         bool SwapEnabled = false, IsTitleEditor = false;
         //string Title = "", Desc = "";
         string SendKeysString = "", UploadPath = "", LastNode = "", DefaultUrl = "", LastValidFileName = "";
@@ -113,44 +112,6 @@ namespace VideoGui
         public Nullable<DateTime> ReleaseEndDate = null;
         public EventTypes ScraperType = EventTypes.VideoUpload;
 
-        public ScraperModule(databasehook<object> _dbInit, OnFinishId _OnFinish, string _Default_url,
-               string TableDest, int _EventId)
-        {
-            try
-            {
-                ScraperType = EventTypes.ScapeSchedule;
-                _dbInit = _dbInit;
-                _OnFinish = _OnFinish;
-                _Default_url = _Default_url;
-                TableDestination = TableDest;
-                EventId = _EventId;
-                IsDashboardMode = true;
-                dbInitializer = _dbInit;
-                InitializeComponent();
-                Closing += (s, e) => { IsClosing = true; };
-                Closed += (s, e) =>
-                {
-                    IsClosed = true;
-                    DoOnFinish?.Invoke(EventId);
-                };
-                webAddressBuilder = new WebAddressBuilder(null, null, "UCdMH7lMpKJRGbbszk5AUc7w");
-                wv2Dictionary.Add(1, wv2A1);//20
-                wv2Dictionary.Add(2, wv2A2);//30
-                wv2Dictionary.Add(3, wv2A3);//40
-                wv2Dictionary.Add(4, wv2A4);//50
-                wv2Dictionary.Add(5, wv2A5);//60
-                wv2Dictionary.Add(6, wv2A6);//70
-                wv2Dictionary.Add(7, wv2A7);//80
-                wv2Dictionary.Add(8, wv2A8);//90
-                wv2Dictionary.Add(9, wv2A9);//100
-                wv2Dictionary.Add(10, wv2A10);
-                ActiveWebView.Add(1, wv2);
-            }
-            catch(Exception ex)
-            {
-                ex.LogWrite($"Constructor Scraper.Schedule {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
-            }
-        }
         public ScraperModule(databasehook<object> _dbInit, OnFinishId _OnFinish, string _Default_url, Nullable<DateTime> Start,
             Nullable<DateTime> End, List<ListScheduleItems> _listSchedules, int _eventid )
         {
@@ -176,20 +137,15 @@ namespace VideoGui
                 wv2Dictionary.Add(1, wv2A1);//20
                 wv2Dictionary.Add(2, wv2A2);//30
                 wv2Dictionary.Add(3, wv2A3);//40
-                wv2Dictionary.Add(4, wv2A4);//50
-                wv2Dictionary.Add(5, wv2A5);//60
-                wv2Dictionary.Add(6, wv2A6);//70
-                wv2Dictionary.Add(7, wv2A7);//80
-                wv2Dictionary.Add(8, wv2A8);//90
-                wv2Dictionary.Add(9, wv2A9);//100
-                wv2Dictionary.Add(10, wv2A10);
-                ActiveWebView.Add(1, wv2);
             }
             catch (Exception ex)
             {
-                ex.LogWrite($"Constructor Shorts.Schedule {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+
             }
         }
+
+
+
 
         public ScraperModule(databasehook<object> _dbInit, OnFinishId _OnFinish, string _Default_url,
             int maxuploads = 100, int slotsperupload = 5, int _EventId = -1)
@@ -228,7 +184,7 @@ namespace VideoGui
             }
             catch (Exception ex)
             {
-                ex.LogWrite($"Constructor VideoUploader {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+                ex.LogWrite($"Constructor {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
 
@@ -693,6 +649,8 @@ namespace VideoGui
                                 if (uploaded < 100)
                                 {
                                     dbInitializer?.Invoke(this, new CustomParams_Wait());
+                                    //var htmlx = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
+                                    //F/ile.WriteAllLines($"E:\\gopro9\\ScraperLog_{ct++}.txt", new string[] { htmlx });
                                     Close();
                                 }
                             }
@@ -828,6 +786,7 @@ namespace VideoGui
                                 break;
                             }
                             NodeUpdate(Span_Name, ScheduledGet);
+
                             if (found) continue;// gets next html and looks for waiting video
                         }
                         if (ExitDialog) return;
@@ -849,6 +808,7 @@ namespace VideoGui
                                     int start = Nodes1[i].InnerText.IndexOf("\n") + 1;
                                     int end = Nodes1[i].InnerText.IndexOf("\n", start);
                                     string filename1 = Nodes1[i].InnerText.Substring(start, end - start).Trim();
+
                                     UploadedHandler(Span_Name, connectStr, filename1);
                                 }
                             }
