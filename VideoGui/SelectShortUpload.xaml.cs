@@ -248,7 +248,7 @@ namespace VideoGui
             }
         }
 
-        private void doOnFinish()
+        private void doOnFinish(int id)
         {
             try
             {
