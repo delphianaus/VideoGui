@@ -195,8 +195,30 @@ namespace VideoGui
                 {
                     var fname = System.IO.Path.GetFileNameWithoutExtension(file);
                     var dir = System.IO.Path.GetDirectoryName(file);
+                    string ddir = txtDestDir.Text;
+                    string destfname = System.IO.Path.Combine(ddir, fname) + ".mp4";
                     var fnmp3 = System.IO.Path.Combine(dir, fname) + ".mp3";
-                    if (File.Exists(fnmp3))
+                    var bridge = new ffmpegbridge();
+                    await bridge.ReadFile(fname);
+                    var SRC_TIME = bridge.GetDuration();
+                    var bridge2 = new ffmpegbridge();
+                    bool skip = false;
+                    if (File.Exists(destfname))
+                    {
+                        await bridge2.ReadFile(destfname);
+                        var SRC_TIME2 = bridge.GetDuration();
+                        TimeSpan S1 = SRC_TIME.Subtract(TimeSpan.FromSeconds(15));
+                        TimeSpan S2 = SRC_TIME.Add(TimeSpan.FromSeconds(15));
+                        if (SRC_TIME2.IfBetweenTimeSpans(S1, S2))
+                        {
+                            skip = true;
+                        }
+                    }
+
+
+
+
+                    if (!skip && File.Exists(fnmp3))
                     {
                         while (MaxFile > 16)
                         {
