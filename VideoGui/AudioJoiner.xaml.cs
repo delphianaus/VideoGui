@@ -206,7 +206,7 @@ namespace VideoGui
                     if (File.Exists(destfname))
                     {
                         await bridge2.ReadFile(destfname);
-                        var SRC_TIME2 = bridge.GetDuration();
+                        var SRC_TIME2 = bridge2.GetDuration();
                         TimeSpan S1 = SRC_TIME.Subtract(TimeSpan.FromSeconds(15));
                         TimeSpan S2 = SRC_TIME.Add(TimeSpan.FromSeconds(15));
                         if (SRC_TIME2.IfBetweenTimeSpans(S1, S2))
