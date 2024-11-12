@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Controls;
 using VideoGuiNetCore.Properties;
 
 namespace VideoGui.Models
@@ -16,11 +17,11 @@ namespace VideoGui.Models
     {
         private TimeSpan _Start, _Duration;
         private string _RTMP, _SourceDirectory, _DestinationDirectory, _Filename;
-        private bool _IsTwitchStream ,_Is720p, _IsShorts, _IsCutTrim, _IsEncodeTrim, _IsCreateShorts,
+        private bool _IsTwitchStream ,_Is720p, _IsShorts, _IsCutTrim, _IsEncodeTrim,
               _IsDeleteMonitoredSource, _IsPersistentJob, _IsLocked,_IsMuxed;
         private string _Id,_MuxData;
         private Nullable<DateTime> _TwitchSchedule;
-        
+        private int _IsCreateShorts = -1;
 
 
         public string Id { get => _Id; set { _Id = value; OnPropertyChanged(); } }
@@ -55,7 +56,7 @@ namespace VideoGui.Models
         public bool IsLocked { get => _IsLocked; set { _IsLocked = value; OnPropertyChanged(); } }
         public bool Is720p { get => _Is720p; set { _Is720p = value; OnPropertyChanged(); } }
         public bool IsShorts { get => _IsShorts; set { _IsShorts = value; OnPropertyChanged(); } }
-        public bool IsCreateShorts { get => _IsCreateShorts; set { _IsCreateShorts = value; OnPropertyChanged(); } }
+        public int IsCreateShorts { get => _IsCreateShorts; set { _IsCreateShorts = value; OnPropertyChanged(); } }
         public bool IsCutTrim { get => _IsCutTrim; set { _IsCutTrim = value; OnPropertyChanged(); } }
         public bool IsEncodeTrim { get => _IsEncodeTrim; set { _IsEncodeTrim = value; OnPropertyChanged(); } }
         public bool IsDeleteMonitoredSource { get => _IsDeleteMonitoredSource; set { _IsDeleteMonitoredSource = value; OnPropertyChanged(); } }
@@ -73,7 +74,7 @@ namespace VideoGui.Models
             {
                 IsLocked = false;
                 IsShorts = false;
-                IsCreateShorts = false;
+                IsCreateShorts = -1 ;
                 IsCutTrim = false;
                 IsEncodeTrim = false;
                 Id = reader["Id"].ToString();
@@ -85,7 +86,7 @@ namespace VideoGui.Models
                 MuxData = (reader["MuxData"] is string _MuxData) ? _MuxData : "";
                 Is720p = (reader["B720P"] is Int16 _is720p) ? _is720p == 1 : false;
                 IsShorts = (reader["BSHORTS"] is Int16 _isShorts) ? (Int16)_isShorts == 1 : false;
-                IsCreateShorts = (reader["BCREATESHORTS"] is Int16 _isCreateShorts) ? (Int16)_isCreateShorts == 1 : false;
+                IsCreateShorts = (reader["BCREATESHORTS"] is Int16 _isCreateShorts) ? (Int16)_isCreateShorts : -1;
                 IsEncodeTrim = (reader["BENCODETRIM"] is Int16 _isEncodeTrim) ? (Int16)_isEncodeTrim == 1 : false;
                 IsCutTrim = (reader["BCUTTRIM"] is Int16 _isCutTrim) ? (Int16)_isCutTrim == 1 : false;
                 IsDeleteMonitoredSource = (reader["BMONITOREDSOURCE"] is Int16 _isMonitoredSource) ? (Int16)_isMonitoredSource == 1 : false;
@@ -110,10 +111,7 @@ namespace VideoGui.Models
                 //
                 TimeSpan ST1 = TimeSpan.FromMilliseconds(start);
                 TimeSpan Dur = TimeSpan.FromMilliseconds(end);
-                //
-
-                
-
+                var stype = (IsCreateShorts == 1) ? "Short FMT " : (IsCreateShorts ==2) ? "Long FMT " : "";
                 var StartPos = ((!Is720p) && (!IsShorts)) ? TimeSpan.FromMilliseconds(start) : TimeSpan.Zero;
                 var Durationcut = ((!Is720p) && (!IsShorts)) ? TimeSpan.FromMilliseconds(end) : TimeSpan.Zero;
                 Start = StartPos != TimeSpan.Zero ? StartPos : TimeSpan.Zero;
@@ -124,7 +122,7 @@ namespace VideoGui.Models
                 Times = (!Is720p && !IsShorts) ? $"{StartTime}-{EndTime}" : "";
                 ProceessingType = (Is720p) ? "720p Edit File" : (IsShorts) ? "Shorts Master File" :
                     (IsCutTrim) ? "Non Encoded Trim" : (IsEncodeTrim) ? "Encoded Trim" : (IsMuxed) ? "Muxing Job" : "";
-                ProcessingActions = (IsCreateShorts) ? "Creating Shorts" : (IsShorts) ? "Creating Shorts Master" : 
+                ProcessingActions = (IsCreateShorts > 0) ? $"Creating {stype}Shorts" : (IsShorts) ? "Creating Shorts Master" : 
                     (IsPersistentJob && IsDeleteMonitoredSource) ? "Monitored Persistent Job" :
                     (IsPersistentJob) ? "Persistent Job" : (IsDeleteMonitoredSource) ? "Monitored Source" : 
                     (IsMuxed) ? "Muxing Action" :"Standard Actions";
@@ -138,7 +136,7 @@ namespace VideoGui.Models
             }
         }
         public ComplexJobList(string srcdir, string destfname,TimeSpan StartPos, TimeSpan Durationcut, 
-            bool  b720p, bool bShorts, bool bCreateShorts, bool bEncodeTrim, bool bCutTrim, bool bMonitoredSource, 
+            bool  b720p, bool bShorts, int bCreateShorts, bool bEncodeTrim, bool bCutTrim, bool bMonitoredSource, 
             bool bPersistentJob, int id, bool _IsMuxed, string _MuxData)
         {
             try

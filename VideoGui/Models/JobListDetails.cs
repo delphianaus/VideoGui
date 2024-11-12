@@ -26,11 +26,11 @@ namespace VideoGui
         private bool _IsTwitchStream,_Is5K,_Is4kAdobe, _IsCET, _IsMSJ, _IsNVM, _Complete, _ConversionStarted, _ProbePassed, _IsCST, _KeepSource, _IsMulti,
             _fisheye, _processed, _X264Override, _ComplexMode, _Is720p,
             _Is48K, _IsComplex, _ProbeLock, _IsAc3_2Channel, _IsAc3_6Channel, _InProcess, _IsSkipped,
-            _IsShorts, _IsCreateShorts,
+            _IsShorts,
             _Mpeg4ASP, _Mpeg4AVC, _Is1080p, _Is4K, _IsEdt, _IsInterlaced, _ProbeStarted, _IsMuxed;
         private FontStyle _ItemFontStyle;
         private Color _ForegroundColor;
-
+        private int _IsCreateShorts = -1;
         private Nullable<DateTime> _twitchschedule;
         private DateTime _JobDate, _ProbeDate, _LastProgressEvent;
         private List<string> ComplexCutList = new List<string>();
@@ -97,7 +97,7 @@ namespace VideoGui
 
 
         public bool IsShorts { get => _IsShorts; set { _IsShorts = value; OnPropertyChanged(); } }
-        public bool IsCreateShorts { get => _IsCreateShorts; set { _IsCreateShorts = value; OnPropertyChanged(); } }
+        public int IsCreateShorts { get => _IsCreateShorts; set { _IsCreateShorts = value; OnPropertyChanged(); } }
 
         public bool Is4KAdobe { get => _Is4kAdobe; set { _Is4kAdobe = value; OnPropertyChanged(); } }
 
@@ -162,7 +162,7 @@ namespace VideoGui
                 IsShorts = (reader["BSHORTS"] is Int16 _isShorts) ? (Int16)_isShorts == 1 : false;
                 IsMuxed = (reader["ISMUXED"] is Int16 _isMux) ? (Int16)_isMux == 1 : false;
                 MuxData  = (reader["MUXDATA"] is string _isMuxData) ? _isMuxData : "";
-                IsCreateShorts = (reader["BCREATESHORTS"] is Int16 _isCShorts) ? (Int16)_isCShorts == 1 : false;
+                IsCreateShorts = (reader["BCREATESHORTS"] is Int16 _isCShorts) ? (Int16)_isCShorts  : -1; ;
                 var IsEncodeTrim = (reader["BENCODETRIM"] is Int16 _isEncodeTrim) ? (Int16)_isEncodeTrim == 1 : false;
                 IsTwitchStream = (reader["BTWITCHSTREAM"] is Int16 _isTwitchStream) ? (Int16)_isTwitchStream == 1 : false;
                 Nullable<DateTime> TwitchDateOnly = (reader["TWITCHDATE"] is DateTime _TwitchDate) ? (DateTime)_TwitchDate  : null;
@@ -195,7 +195,7 @@ namespace VideoGui
                 if (IsShorts) ScriptType = 0;
                 if (IsCutTrim) ScriptType = 1;
                 if (IsEncodeTrim) ScriptType = 3;
-                if (IsCreateShorts) ScriptType = 4;
+                if (IsCreateShorts != 0) ScriptType = 4;
                 if (IsTwitchStream) ScriptType = 5;
                 if (IsMuxed) ScriptType = 6;
                 string CutFrames = (_Duration != TimeSpan.Zero) ?
@@ -254,7 +254,7 @@ namespace VideoGui
         }
         public JobListDetails(string _Title, int _SourceFileIndex, int _Autoinssertid, string _ScriptFile,
             int _ScriptType, bool _Is1080p = false, bool _Is4Kp = false, bool _ISMJS = false,
-            bool __Is4KAdobe = false, bool __IsShorts = false, bool __IsCreateShorts = false,
+            bool __Is4KAdobe = false, bool __IsShorts = false, int __IsCreateShorts = 0,
             string _FIleInfo = "", bool __IsMuxed = false, string __muxdata = "")
         {
             // _ScriptType - 0 = src, 1 cst, 2 edt
@@ -274,7 +274,7 @@ namespace VideoGui
             _IsCET = _ScriptType == 3;// IsEncodeTrim
             _IsEdt = _ScriptType == 2;// Is720p
             IsShorts = __IsShorts | _ScriptType == 0 || _ScriptType == 4;
-            IsCreateShorts = _ScriptType == 4 || _IsCreateShorts;
+            IsCreateShorts = _IsCreateShorts;
             Is4K = (Is4KAdobe|| IsShorts|| IsCET || IsCST || IsEdt) ? true : Is4KAdobe ;
             List<string> Commands = _ScriptFile.Split('|').ToList();
             string ks = Commands.FirstOrDefault();

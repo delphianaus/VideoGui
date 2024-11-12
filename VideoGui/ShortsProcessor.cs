@@ -21,11 +21,13 @@ namespace VideoGui
         bool ProcessStarted = false;
         CancellationTokenSource cancellationToken = new CancellationTokenSource();
         int NumberShorts = 0;
-        public ShortsProcessor(string _SourceFile, _StatsHandler _DoOnStats, _StatsHandler _DoOnFinish)
+        bool ShortType = false;
+        public ShortsProcessor(string _SourceFile, _StatsHandler _DoOnStats, _StatsHandler _DoOnFinish, int _ShortType)
         {
             SourceFile = _SourceFile;
             DoOnFinish = _DoOnFinish;
             DoOnStats = _DoOnStats;
+            ShortType = (_ShortType == 1) ? true : (_ShortType == 2) ? false: false;
             Task.Run(() => { CreateShorts(_SourceFile); });
         }
         public async Task CreateShorts(string source)
@@ -41,7 +43,29 @@ namespace VideoGui
                 string pr2 = source.Substring(0, pr.Length);
                 var sx = $"{qs}{source.Replace("\\", "/")}{qs}";
                 fnmp3 = $"{qs}{fnmp3.Replace("\\", "/")}{qs}";
-                
+                if (Directory.Exists(pr2))
+                {
+                    foreach (var filex in Directory.EnumerateFiles(pr2, "*.*", SearchOption.AllDirectories))
+                    {
+                        File.Delete(filex);
+                    }
+
+                    Directory.Delete(pr2, true);
+                }
+
+                TimeSpan  SegmentSize = (ShortType) ? TimeSpan.FromMinutes(2.0) :
+                                                      TimeSpan.FromSeconds(57);
+                TimeSpan SegSize1 = (ShortType) ? TimeSpan.FromMinutes(2.1):
+                                                  TimeSpan.FromSeconds(42);
+                TimeSpan SegSize2 = (ShortType) ? TimeSpan.FromMinutes(1.3) :
+                                             TimeSpan.FromSeconds(32);
+                TimeSpan SegSize3 = (ShortType) ? TimeSpan.FromSeconds(60) :
+                                             TimeSpan.FromSeconds(22);
+                TimeSpan SegSize4 = (ShortType) ? TimeSpan.FromSeconds(45) :
+                                             TimeSpan.FromSeconds(52);
+                TimeSpan SegSize5 = (ShortType) ? TimeSpan.FromSeconds(25) :
+                                             TimeSpan.FromSeconds(38);
+
                 Directory.CreateDirectory(pr2); 
                 var py = System.IO.Path.Combine(dir, fnamex) + ".py";
                 List<string> convert = new List<string>() {
@@ -50,12 +74,12 @@ namespace VideoGui
                     "",
                     "segid = 1",
                     "segsizeid = 1",
-                    $"segmentsize = {TimeSpan.FromMinutes(2.0).TotalMicroseconds}" ,
-                    $"segsize1 = {TimeSpan.FromMinutes(2.1).TotalMicroseconds}",
-                    $"segsize2 = {TimeSpan.FromMinutes(1.3).TotalMicroseconds}",
-                    $"segsize3 = {TimeSpan.FromSeconds(60).TotalMicroseconds}",
-                    $"segsize4 = {TimeSpan.FromSeconds(45).TotalMicroseconds}",
-                    $"segsize5 = {TimeSpan.FromSeconds(25).TotalMicroseconds}",
+                    $"segmentsize = {SegmentSize.TotalMicroseconds}" ,
+                    $"segsize1 = {SegSize1.TotalMicroseconds}",
+                    $"segsize2 = {SegSize2.TotalMicroseconds}",
+                    $"segsize3 = {SegSize3.TotalMicroseconds}",
+                    $"segsize4 = {SegSize4.TotalMicroseconds}",
+                    $"segsize5 = {SegSize5.TotalMicroseconds}",
                     "seggap = 3000000",
                     "seggap2 = 3000000",
                     "seggap1 = 1000000",

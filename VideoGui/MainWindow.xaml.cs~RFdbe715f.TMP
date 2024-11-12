@@ -6266,8 +6266,7 @@ namespace VideoGui
                                 }
                                 if (IsCreateShorts > 0)
                                 {
-                                    ShortsProcessors.Add(new ShortsProcessor(mdir.Replace("(shorts)", "(shorts_logo)"), DoOnNewShort, 
-                                        DoOnShortsDone, 1));
+                                    ShortsProcessors.Add(new ShortsProcessor(mdir.Replace("(shorts)", "(shorts_logo)"), DoOnNewShort, DoOnShortsDone));
                                 }
                             }
                         }
