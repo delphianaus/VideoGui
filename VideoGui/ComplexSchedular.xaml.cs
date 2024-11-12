@@ -90,20 +90,19 @@ namespace VideoGui
             {
                 chkDeleteMonitored.MouseLeave += MouseLeaveEventHander;
                 chkPersistantSource.MouseLeave += MouseLeaveEventHander;
+                ComboShortType.MouseLeave += MouseLeaveEventHander;
                 Chk720P.Click += OnMouseClick;
                 ChkCut.Click += OnMouseClick;
                 ChkEnableTrim.Click += OnMouseClick;
                 ChkShorts.Click += OnMouseClick;
                 ChkTwitch.Click += OnMouseClick;
                 ChkMuxer.Click += OnMouseClick;
-                chkCreateShorts.Click += OnMouseClick;
                 ChkElapsed.Click += OnMouseClick;
                 txtdestdir.KeyUp += keyupEventHandler;
                 txtDuration.KeyUp += keyupEventHandler;
                 txtsrcdir.KeyUp += keyupEventHandler;
                 txtStart.KeyUp += keyupEventHandler;
                 txtMuxExt.KeyUp += keyupEventHandler;
-
                 DataObject.AddPastingHandler(txtStart, OntextPaste);
                 DataObject.AddPastingHandler(txtDuration, OntextPaste);
 
@@ -300,7 +299,7 @@ namespace VideoGui
                                 List<string> timespans = time.Split("-").ToList();
                                 TimeSpan Start = timespans.FirstOrDefault().FromStrToTimeSpan();
                                 TimeSpan End = timespans.LastOrDefault().FromStrToTimeSpan() - Start;
-                                DoAddRecord?.Invoke(true, false, false, false, true, false, false, false,
+                                DoAddRecord?.Invoke(true, false, false, 0, true, false, false, false,
                                      true, Start.ToFFmpeg(), End.ToFFmpeg(), txtsrcdir.Text,
                                      txtdestdir.Text + "\\" + txtFilename.Text + $" {RecNum++}");
 
@@ -539,6 +538,11 @@ namespace VideoGui
                     (CompName, CompChecked) = (FormCheckBox.Name, FormCheckBox.IsChecked.Value);
                     switch (CompName)
                     {
+                        case "ComboShortType":
+                            {
+                                //no event needed
+                                break;
+                            }
                         case "Chk720P":
                             {
                                 bool IsChecked = ChkShorts.IsChecked.Value || CompChecked;
@@ -555,7 +559,7 @@ namespace VideoGui
                             {
                                 bool IsChecked = Chk720P.IsChecked.Value || CompChecked;
                                 SetEditboxes(!IsChecked);
-                                chkCreateShorts.IsChecked = (!IsChecked) ? false : chkCreateShorts.IsChecked;
+                                ComboShortType.SelectedIndex = (!IsChecked) ? -1 : ComboShortType.SelectedIndex;
 
                                 if (CompChecked)
                                 {
@@ -661,7 +665,7 @@ namespace VideoGui
                 {
                     Chk720P.IsChecked = item2.Is720p;
                     ChkEnableTrim.IsChecked = item2.IsEncodeTrim;
-                    ChkShorts.IsChecked = item2.IsCreateShorts;
+                    ComboShortType.SelectedIndex = item2.IsCreateShorts;
                     ChkCut.IsChecked = item2.IsCutTrim;
                     chkDeleteMonitored.IsChecked = item2.IsDeleteMonitoredSource;
                     chkPersistantSource.IsChecked = item2.IsPersistentJob;
@@ -814,7 +818,7 @@ namespace VideoGui
                 Nullable<DateTime> twitchdata = null;
                 twitchdata = (ReleaseDate.Value.HasValue) ? ReleaseDate.Value.Value : null;
                 DoAddRecord?.Invoke(ChkElapsed.IsChecked.Value, Chk720P.IsChecked.Value,
-                    ChkShorts.IsChecked.Value, chkCreateShorts.IsChecked.Value,
+                    ChkShorts.IsChecked.Value, ComboShortType.SelectedIndex,
                     ChkEnableTrim.IsChecked.Value, ChkCut.IsChecked.Value,
                     chkDeleteMonitored.IsChecked.Value,
                     chkPersistantSource.IsChecked.Value,
@@ -1089,7 +1093,7 @@ namespace VideoGui
                     foreach (var tbpfile in tobeprocessed)
                     {
                         DoAddRecord?.Invoke(ChkElapsed.IsChecked.Value, Chk720P.IsChecked.Value,
-                            ChkShorts.IsChecked.Value, chkCreateShorts.IsChecked.Value,
+                            ChkShorts.IsChecked.Value, ComboShortType.SelectedIndex,
                             ChkEnableTrim.IsChecked.Value, ChkCut.IsChecked.Value,
                             chkDeleteMonitored.IsChecked.Value, chkPersistantSource.IsChecked.Value,
                             false, txtStart.Text, "", tbpfile,
@@ -1128,7 +1132,7 @@ namespace VideoGui
                                 txtMuxExt.Visibility = (IsCheckedMux) ? Visibility.Visible : Visibility.Hidden;
                                 lblmux.Visibility = txtMuxExt.Visibility;
                                 btnAddMux.Visibility = txtMuxExt.Visibility;
-                                chkCreateShorts.IsChecked = false;
+                                ComboShortType.SelectedIndex = -1;
                                 Chk720P.IsChecked = false;
                                 ChkEnableTrim.IsChecked = false;
                                 ChkCut.IsChecked = false;
@@ -1156,7 +1160,7 @@ namespace VideoGui
                         case "ChkShorts":
                             {
                                 bool IsChecked = Chk720P.IsChecked.Value || CompChecked;
-                                chkCreateShorts.IsChecked = (!IsChecked) ? false : chkCreateShorts.IsChecked;
+                                ComboShortType.SelectedIndex = (!IsChecked) ? -1 : ComboShortType.SelectedIndex;
                                 SetEditboxes(IsChecked);
                                 if (CompChecked)
                                 {
@@ -1166,7 +1170,7 @@ namespace VideoGui
                                     Chk720P.IsChecked = false;
                                     ChkEnableTrim.IsChecked = false;
                                     ChkCut.IsChecked = false;
-                                    chkCreateShorts.IsChecked = true;
+                                    ComboShortType.SelectedIndex = 1;
                                     txtdestdir.Text = destinationdir;
                                 }
                                 break;
@@ -1178,7 +1182,7 @@ namespace VideoGui
                                 lblmux.Visibility = txtMuxExt.Visibility;
 
                                 SetEditboxes(IsChecked);
-                                chkCreateShorts.IsChecked = (!IsChecked) ? false : chkCreateShorts.IsChecked;
+                                ComboShortType.SelectedIndex = (!IsChecked) ? -1 : ComboShortType.SelectedIndex;
                                 break;
                             }
 
@@ -1188,7 +1192,7 @@ namespace VideoGui
                                 {
                                     txtMuxExt.Visibility = (!CompChecked) ? Visibility.Visible : Visibility.Hidden;
                                     lblmux.Visibility = txtMuxExt.Visibility;
-                                    chkCreateShorts.IsChecked = false;
+                                    ComboShortType.SelectedIndex = -1;// IsChecked = false;
                                     Chk720P.IsChecked = false;
                                     ChkEnableTrim.IsChecked = false;
                                     ChkCut.IsChecked = false;

@@ -19,11 +19,11 @@ namespace VideoGui.Models
         private TimeSpan _Start, _Duration;
         private DateOnly _DateOfRecord;
         private string _RTMP, _SourceDirectory, _DestinationDirectory, _Filename;
-        private bool _IsTwitchStream, _Is720p, _IsShorts, _IsCreateShorts, _IsCutTrim, _IsEncodeTrim, _IsDeleteMonitoredSource, 
+        private bool _IsTwitchStream, _Is720p, _IsShorts, _IsCutTrim, _IsEncodeTrim, _IsDeleteMonitoredSource, 
             _IsPersistentJob, _IsLocked, _IsMuxed;
         private string _Id, _MuxData;
         private Nullable<DateTime> _TwitchSchedule;
-
+        private int _IsCreateShorts = -1;
         public string Id { get => _Id; set { _Id = value; OnPropertyChanged(); } }
         public string MuxData { get => _MuxData; set { _MuxData = value; OnPropertyChanged(); } }
         public bool IsMuxed { get => _IsMuxed; set { _IsMuxed = value; OnPropertyChanged(); } }
@@ -53,7 +53,7 @@ namespace VideoGui.Models
         public bool IsLocked { get => _IsLocked; set { _IsLocked = value; OnPropertyChanged(); } }
         public bool Is720p { get => _Is720p; set { _Is720p = value; OnPropertyChanged(); } }
         public bool IsShorts { get => _IsShorts; set { _IsShorts = value; OnPropertyChanged(); } }
-        public bool IsCreateShorts { get => _IsCreateShorts; set { _IsCreateShorts = value; OnPropertyChanged(); } }
+        public int IsCreateShorts { get => _IsCreateShorts; set { _IsCreateShorts = value; OnPropertyChanged(); } }
         public bool IsCutTrim { get => _IsCutTrim; set { _IsCutTrim = value; OnPropertyChanged(); } }
         public bool IsEncodeTrim { get => _IsEncodeTrim; set { _IsEncodeTrim = value; OnPropertyChanged(); } }
         public bool IsDeleteMonitoredSource { get => _IsDeleteMonitoredSource; set { _IsDeleteMonitoredSource = value; OnPropertyChanged(); } }
@@ -111,7 +111,7 @@ namespace VideoGui.Models
                 var destfname = (reader["DESTFNAME"] is string dfname) ? dfname : "";
                 _Is720p = (reader["B720P"] is Int16 _is720p) ? (Int16)_is720p == 1 : false;
                 IsShorts = (reader["BSHORTS"] is Int16 _isShorts) ? (Int16)_isShorts == 1 : false;
-                IsCreateShorts = (reader["BCREATESHORTS"] is Int16 _isCreateShorts) ? (Int16)_isCreateShorts == 1 : false;
+                IsCreateShorts = (reader["BCREATESHORTS"] is Int16 _isCreateShorts) ? (Int16)_isCreateShorts  : -1;
                 IsLocked = false;
                 DateOfRecord = DTS;
                 DestinationDirectory = Path.GetDirectoryName(destfname);
@@ -119,12 +119,13 @@ namespace VideoGui.Models
                 Start = StartPos != TimeSpan.Zero ? StartPos : TimeSpan.Zero;
                 Duration = DurationX != TimeSpan.Zero ? DurationX : TimeSpan.Zero;
                 string StartTime = "", EndTime = "";
+                string stype = (IsCreateShorts == 1) ? "Short FMT " : (IsCreateShorts == 2) ? "Long FMT " : "";
                 StartTime = (!Is720p && !IsShorts) ? Start.ToFFmpeg().Replace(".000", "") : "";
                 EndTime = (Duration != TimeSpan.Zero && !Is720p && !IsShorts) ? Duration.ToFFmpeg().Replace(".000", "") : "";
                 Times = (!Is720p && !IsShorts) ? $"{StartTime}-{EndTime}" : "";
                 ProceessingType = (Is720p) ? "720p Edit File" : (IsShorts) ? "Shorts Master File" :
                     (IsCutTrim) ? "Non Encoded Trim" : (IsEncodeTrim) ? "Encoded Trim" : (IsMuxed) ? "Muxing Job" :"";
-                ProcessingActions = (IsCreateShorts) ? "Creating Shorts" : (IsShorts) ? "Creating Shorts Master" :
+                ProcessingActions = (IsCreateShorts > -1) ? $"Creating {stype}Shorts" : (IsShorts && IsCreateShorts == 0) ? "Creating Shorts Master" :
                    (IsPersistentJob && IsDeleteMonitoredSource) ? "Monitored Persistent Job" :
                   (IsPersistentJob) ? "Persistent Job" : (IsDeleteMonitoredSource) ? "Monitored Source" : 
                   (IsMuxed) ? "Muxing Action" : "Standard Actions";
@@ -139,7 +140,7 @@ namespace VideoGui.Models
             }
         }
         public ComplexJobHistory(string srcdir, string destfname, TimeSpan StartPos, TimeSpan Durationcut, DateOnly RecordDate, bool b720p,
-            bool bShorts, bool bCreateShorts, bool bEncodeTrim, bool bCutTrim, bool bMonitoredSource, bool bPersistentJob, int id,
+            bool bShorts, int bCreateShorts, bool bEncodeTrim, bool bCutTrim, bool bMonitoredSource, bool bPersistentJob, int id,
             bool isMuxed , string muxData)
         {
             try

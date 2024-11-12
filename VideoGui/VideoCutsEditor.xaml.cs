@@ -366,7 +366,7 @@ namespace VideoGui
                 string TwitchDir = key.GetValueStr("DestDirectoryTwitch");
                 string destdir = (chkExportForTwitch.IsChecked.Value) ? TwitchDir : txxtEditDirectory.Text;
                 key?.Close();
-                DoAddRecord?.Invoke(true, false, false, false, true, false, false, false,
+                DoAddRecord?.Invoke(true, false, false, -1, true, false, false, false,
                                         true, ctv.TimeFrom.ToFFmpeg(), (ctv.TimeTo - ctv.TimeFrom).ToFFmpeg()
                                         , txtsrcdir.Text,
                                         destdir + "\\" + ctv.FileName + $"part {ctv._CutNo}.mp4",

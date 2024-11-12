@@ -495,20 +495,38 @@ namespace VideoGui
                 var sx = $"{qs}{source.Replace("\\", "/")}{qs}";
                 fnmp3 = $"{qs}{fnmp3.Replace("\\", "/")}{qs}";
                 var py = System.IO.Path.Combine(dir, fnamex) + ".py";
+                bool ShortType = chkFormat.IsChecked.Value; 
+                TimeSpan SegmentSize = (ShortType) ? TimeSpan.FromMinutes(2.4) :
+                                                      TimeSpan.FromSeconds(57);
+                TimeSpan SegSize1 = (ShortType) ? TimeSpan.FromMinutes(2.05) :
+                                                  TimeSpan.FromSeconds(42);
+                TimeSpan SegSize2 = (ShortType) ? TimeSpan.FromMinutes(1.25) :
+                                             TimeSpan.FromSeconds(32);
+                TimeSpan SegSize3 = (ShortType) ? TimeSpan.FromSeconds(45) :
+                                             TimeSpan.FromSeconds(22);
+                TimeSpan SegSize4 = (ShortType) ? TimeSpan.FromSeconds(40) :
+                                             TimeSpan.FromSeconds(52);
+                TimeSpan SegSize5 = (ShortType) ? TimeSpan.FromSeconds(35) :
+                                             TimeSpan.FromSeconds(38);
+                TimeSpan SegSize6 = (ShortType) ? TimeSpan.FromSeconds(25) :
+                                             TimeSpan.FromSeconds(45);
+                TimeSpan SegSize7 = (ShortType) ? TimeSpan.FromSeconds(20) :
+                                             TimeSpan.FromSeconds(30);
+
                 List<string> convert = new List<string>() {
                     "#--automatically built--",
                     "filecounter = 1","" +
                     "",
                     "segid = 1",
                     "segsizeid = 1",
-                    $"segmentsize = {TimeSpan.FromMinutes(2.4).TotalMicroseconds}" ,
-                    $"segsize1 = {TimeSpan.FromMinutes(2.05).TotalMicroseconds}",
-                    $"segsize2 = {TimeSpan.FromMinutes(1.25).TotalMicroseconds}",
-                    $"segsize3 = {TimeSpan.FromSeconds(45).TotalMicroseconds}",
-                    $"segsize4 = {TimeSpan.FromSeconds(45).TotalMicroseconds}",
-                    $"segsize5 = {TimeSpan.FromSeconds(35).TotalMicroseconds}",
-                    $"segsize6 = {TimeSpan.FromSeconds(25).TotalMicroseconds}",
-                    $"segsize7 = {TimeSpan.FromSeconds(25).TotalMicroseconds}",
+                    $"segmentsize = {SegmentSize.TotalMicroseconds}" ,
+                    $"segsize1 = {SegSize1.TotalMicroseconds}",
+                    $"segsize2 = {SegSize2.TotalMicroseconds}",
+                    $"segsize3 = {SegSize3.TotalMicroseconds}",
+                    $"segsize4 = {SegSize4.TotalMicroseconds}",
+                    $"segsize5 = {SegSize5.TotalMicroseconds}",
+                    $"segsize6 = {SegSize6.TotalMicroseconds}",
+                    $"segsize7 = {SegSize7.TotalMicroseconds}",
                     "seggap = 2000000",
                     "seggap2 = 1500000",
                     "seggap1 = 100000",

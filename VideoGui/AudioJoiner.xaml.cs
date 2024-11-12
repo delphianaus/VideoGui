@@ -201,12 +201,12 @@ namespace VideoGui
                     var bridge = new ffmpegbridge();
                     await bridge.ReadFile(fname);
                     var SRC_TIME = bridge.GetDuration();
-                    var bridge2 = new ffmpegbridge();
                     bool skip = false;
                     if (File.Exists(destfname))
                     {
+                        var bridge2 = new ffmpegbridge();
                         await bridge2.ReadFile(destfname);
-                        var SRC_TIME2 = bridge.GetDuration();
+                        var SRC_TIME2 = bridge2.GetDuration();
                         TimeSpan S1 = SRC_TIME.Subtract(TimeSpan.FromSeconds(15));
                         TimeSpan S2 = SRC_TIME.Add(TimeSpan.FromSeconds(15));
                         if (SRC_TIME2.IfBetweenTimeSpans(S1, S2))
@@ -214,9 +214,6 @@ namespace VideoGui
                             skip = true;
                         }
                     }
-
-
-
 
                     if (!skip && File.Exists(fnmp3))
                     {

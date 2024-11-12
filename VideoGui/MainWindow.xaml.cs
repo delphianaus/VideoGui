@@ -1701,7 +1701,7 @@ namespace VideoGui
                 //ScrapeType Int
                 //ScrapeCustomCommand String , ie Title="TEMPLATE"
                 //ScrapeTableDestination string
-                bool ready = true ;
+                bool ready = true;
                 int ScrapeType = -1;
                 string ScrapeCustomCommand = "", TableDestination = "";
                 string sql = $"SELECT * FROM SCRAPETABLEINFO WHERE EVENTID = {eventdef.Id}";
@@ -1724,11 +1724,11 @@ namespace VideoGui
                     {
                         if (s.Contains("title="))
                         {
-                            (IsTitle, Title) = (true,s.Replace("title=", ""));
+                            (IsTitle, Title) = (true, s.Replace("title=", ""));
                         }
                         if (s.Contains("desc="))
                         {
-                            (IsDesc,Desc) = (true, s.Replace("desc=", ""));
+                            (IsDesc, Desc) = (true, s.Replace("desc=", ""));
                         }
                     }
                 }
@@ -1737,7 +1737,7 @@ namespace VideoGui
                 bool IsShorts = (ScrapeType & 1) == 1;
                 bool IsFullVideos = (ScrapeType & 2) == 2;
                 WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
-                if (IsTitle) webAddressBuilder = webAddressBuilder.AddFilterByTitle(Title,false);
+                if (IsTitle) webAddressBuilder = webAddressBuilder.AddFilterByTitle(Title, false);
                 if (IsDesc) webAddressBuilder = webAddressBuilder.AddFilterByDesc(Desc, false);
                 List<StatusTypes> statusTypes = new List<StatusTypes>();
                 if ((ScrapeType & 4) == 4) statusTypes.Add(StatusTypes.DRAFT);
@@ -1750,7 +1750,7 @@ namespace VideoGui
                 string url = webAddressBuilder.Finalize().Address;
                 if (TableDestination != "")
                 {
-                    scraperModule = new ScraperModule(ModuleCallback,ScraperSchedule_OnFinish, 
+                    scraperModule = new ScraperModule(ModuleCallback, ScraperSchedule_OnFinish,
                         url, TableDestination, eventdef.Id);
                     Hide();
                     scraperModule.ShowActivated = true;
@@ -1784,7 +1784,7 @@ namespace VideoGui
                     scraperModule = null;
                 }
                 // event updater
-               
+
             }
             catch (Exception ex)
             {
@@ -1936,7 +1936,7 @@ namespace VideoGui
                 // Get ScheduleID from EventID
                 // get ScheduleMap From ScheduleiD
                 // Scrape Draft Videos from shortfeed & Schedule Each 
-                string sql = "SELECCT APS.STARTHOUR,APS.ENDHOUR, APS.GAP, APS.DAYS , ESD.SCHEDULEDATE FROM EVENTSCHEDULES ES JOIN SCHEDULES SP ON ES.EVENTID = SP.ID " +
+                string sql = "SELECT APS.STARTHOUR,APS.ENDHOUR, APS.GAP, APS.DAYS , ESD.SCHEDULEDATE FROM EVENTSCHEDULES ES JOIN SCHEDULES SP ON ES.EVENTID = SP.ID " +
                     $" JOIN APPLIEDSCHEDULE APS ON SP.ID = APS.SCHEDULEID WHERE EVENTID = {eventdef.Id} AND SP.ISSCHEDULE = 1;";
                 bool UseThis = false;
                 ScheduleListItems.Clear();
@@ -2194,7 +2194,7 @@ namespace VideoGui
             }
         }
         public int ModifyRecordInDb(int idx, string SourceDir, string DestinationFName, TimeSpan StartPos, TimeSpan Duration,
-                                     bool Is720p, bool IsShorts, bool IsCreateShorts, bool IsEncodeTrim, bool IsCutTrim, bool IsMonitoredSource,
+                                     bool Is720p, bool IsShorts, int IsCreateShorts, bool IsEncodeTrim, bool IsCutTrim, bool IsMonitoredSource,
                                      bool IsPersisentJob, bool ismuxed, string muxdata)
         {
             try
@@ -2277,7 +2277,7 @@ namespace VideoGui
         }
 
         public int InsertRecordIntoDb(string SourceDir, string DestinationFName, TimeSpan StartPos, TimeSpan Duration,
-                                     bool Is720p, bool IsShorts, bool IsCreateShorts, bool IsEncodeTrim, bool IsCutTrim, bool IsMonitoredSource,
+                                     bool Is720p, bool IsShorts, int IsCreateShorts, bool IsEncodeTrim, bool IsCutTrim, bool IsMonitoredSource,
                                      bool IsPersisentJob, Nullable<DateTime> TwitchSchedule = null,
                                      string RTMP = "", bool IsTwitchStream = false, bool IsMuxed = false, string MuxData = "")
         {
@@ -2453,11 +2453,6 @@ namespace VideoGui
                 connectionString.CreateTableIfNotExists(sqlstring);
                 sqlstring = $"CREATE TABLE SCHEDULEUPLOADS({Id},POOLID INTEGER, DAY SMALLINT, UPLOADTIME TIME, MAX SMALLINT);";
                 connectionString.CreateTableIfNotExists(sqlstring);
-                sqlstring = $"CREATE TABLE EVENTSDEFINITIONS({Id},DAYOFWEEK SMALLINT,EVENTSTART TIME, EVENTEND TIME, EVENTTYPE SMALLINT, RETRIES SMALLINT);";
-                connectionString.CreateTableIfNotExists(sqlstring);
-
-
-
                 sqlstring = $"CREATE TABLE EVENTSCHEDULES({Id},EVENTID INTEGER, SCHEDULEID INTEGER);";
                 connectionString.CreateTableIfNotExists(sqlstring);
                 sqlstring = $"CREATE TABLE EVENTSCHEDULEDATE({Id},EVENTID INTEGER, START DATE, END DATE, STARTTIME TIME, ENDTIME TIME);";
@@ -2685,7 +2680,7 @@ namespace VideoGui
 
 
 
-        public void AddRecord(bool IsElapsed, bool Is720P, bool IsShorts, bool IsCreateShorts,
+        public void AddRecord(bool IsElapsed, bool Is720P, bool IsShorts, int IsCreateShorts,
         bool IsTrimEncode, bool IsCutEncode, bool IsDeleteMonitored, bool IsPersistantSource,
         bool IsAdobe, string textstart, string textduration, string sourcedirectory, string destFilename,
            Nullable<DateTime> twitchschedule = null, string RTMP = "", bool IsTwitchStream = false,
@@ -2736,7 +2731,7 @@ namespace VideoGui
                         int ScriptType = 0;
                         if (Is720P) ScriptType = 2;
                         if (IsShorts) ScriptType = 0;
-                        if (IsCreateShorts) ScriptType = 4;
+                        if (IsCreateShorts != -1) ScriptType = 4;
                         if (IsTwitchStream) ScriptType = 5;
                         if (ismuxed) ScriptType = 6;
                         TimeSpan Final = TimeSpan.Zero;
@@ -2809,7 +2804,7 @@ namespace VideoGui
                         int ScriptType = 0;
                         if (Is720P) ScriptType = 2;
                         if (IsShorts) ScriptType = 0;
-                        if (IsCreateShorts) ScriptType = 4;
+                        if (IsCreateShorts != -1) ScriptType = 4;
                         if (IsCutEncode) ScriptType = 1;
                         if (IsTrimEncode) ScriptType = 3;
                         if (IsTwitchStream) ScriptType = 5;
@@ -6155,7 +6150,8 @@ namespace VideoGui
                 }
                 lock (thisfLock)
                 {
-                    bool found = false, IsMSJ = false, IsNVM = false, IsCreateShorts = false;
+                    bool found = false, IsMSJ = false, IsNVM = false;
+                    int IsCreateShorts = -1;
                     foreach (var jo in ProcessingJobs.Where(jo => !jo.Complete && jo.FileNoExt == Path.GetFileNameWithoutExtension(filename)))
                     {
                         found = true;
@@ -6268,9 +6264,10 @@ namespace VideoGui
                                 {
                                     DeleteIfExists(jo.SourceFile);
                                 }
-                                if (IsCreateShorts)
+                                if (IsCreateShorts > 0)
                                 {
-                                    ShortsProcessors.Add(new ShortsProcessor(mdir.Replace("(shorts)", "(shorts_logo)"), DoOnNewShort, DoOnShortsDone));
+                                    ShortsProcessors.Add(new ShortsProcessor(mdir.Replace("(shorts)", "(shorts_logo)"), DoOnNewShort, 
+                                        DoOnShortsDone, 1));
                                 }
                             }
                         }

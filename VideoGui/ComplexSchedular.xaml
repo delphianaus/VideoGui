@@ -63,7 +63,7 @@
             </StackPanel>
             <StackPanel>
                 <Border x:Name="brdFileInfo" BorderThickness="2" BorderBrush="Black" Height="136" Margin="2,0,2,0">
-                    <Canvas x:Name="CnvMedialElements" Margin="1,6,-2,-6">
+                    <Canvas x:Name="CnvMedialElements" Margin="1,6,-2,-6" Focusable="True">
                         <Label Content="Source Directory" HorizontalAlignment="Center" VerticalAlignment="Center" Height="26" Canvas.Left="9" Canvas.Top="5"/>
                         <TextBox x:Name="txtsrcdir" HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Center" Width="710" Canvas.Left="145" Canvas.Top="9"/>
                         <Label Content="Destination Directory" HorizontalAlignment="Center" VerticalAlignment="Center" Height="26" Canvas.Left="9" Canvas.Top="29"/>
@@ -73,6 +73,14 @@
                         <TextBox x:Name="txtdestdir" HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Center" Width="710" Canvas.Left="145" Canvas.Top="33" />
                         <Button x:Name="btnSelectSourceDir" HorizontalAlignment="Right" VerticalAlignment="Center" Width="20" Height="20" Canvas.Left="865" Canvas.Top="8" Click="btnSelectSourceDir_Click" />
                         <CheckBox x:Name="chkDeleteMonitored" Content="Delete Monitored Source" HorizontalAlignment="Center" VerticalAlignment="Top" Canvas.Left="13" Canvas.Top="94"/>
+                        <ComboBox x:Name="ComboShortType" HorizontalAlignment="Left" VerticalAlignment="Center" 
+                                  Canvas.Left="288" Canvas.Top="92" Width="166" Height="20" 
+                                  AllowDrop="True" SelectedIndex="0" Panel.ZIndex="3" MinWidth="1" 
+                                  Visibility="Hidden">
+                            <ComboBoxItem Content="Master Only"/>
+                            <ComboBoxItem Content="Use Short Format"/>
+                            <ComboBoxItem Content="Use Long Format"/>
+                        </ComboBox>
                         <CheckBox x:Name="chkPersistantSource" Content="Persistant Job" HorizontalAlignment="Center" VerticalAlignment="Top" Canvas.Left="181" Canvas.Top="94"/>
                         <Button x:Name="btnInject" Width="56" Height="41" HorizontalAlignment="Left" VerticalAlignment="Center" Content="Inject" Canvas.Top="80" Canvas.Left="746" Click="btnInject_Click"/>
                         <Button x:Name="btnNew" Width="68" HorizontalAlignment="Center" VerticalAlignment="Center" Content="New" Canvas.Top="80" Canvas.Left="665" Height="41" Click="btnNew_Click"/>
@@ -86,11 +94,11 @@
                                       Checked="tglflip_Checked" 
                                       Canvas.Left="812" 
                                       Canvas.Top="63"/>
-                        <CheckBox x:Name="chkCreateShorts" Content="Create Shorts" Canvas.Left="284" Canvas.Top="94" HorizontalAlignment="Center" VerticalAlignment="Top"/>
                         <xctk:DateTimePicker Name="ReleaseDate" Format="Custom" Visibility="Hidden"
                                                    FormatString="MM-dd-yy hh:mm:ss tt" TimeFormat="Custom" TimeFormatString="hh:mm:ss tt"  
                                                    MinWidth="195" Value="{Binding ReleaseDate}" HorizontalAlignment="Left" 
-                                                   VerticalAlignment="Center" Focusable="True" Canvas.Left="466" Canvas.Top="80" Height="42" AutoCloseCalendar="True" Width="122"   />
+                                                   VerticalAlignment="Center" Focusable="True" Canvas.Left="466" Canvas.Top="80" 
+                                             Height="42" AutoCloseCalendar="True" Width="122"   />
                         <TextBox x:Name="txtMuxExt" Canvas.Left="461" TextWrapping="Wrap" 
                                  Text="b,p,o" Canvas.Top="105" Width="188" Visibility="Hidden" 
                                  HorizontalAlignment="Left" VerticalAlignment="Center"/>
