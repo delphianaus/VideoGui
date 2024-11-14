@@ -91,6 +91,7 @@ namespace VideoGui
                 chkDeleteMonitored.MouseLeave += MouseLeaveEventHander;
                 chkPersistantSource.MouseLeave += MouseLeaveEventHander;
                 ComboShortType.MouseLeave += MouseLeaveEventHander;
+                ChkShorts.MouseLeave += MouseLeaveEventHander;
                 Chk720P.Click += OnMouseClick;
                 ChkCut.Click += OnMouseClick;
                 ChkEnableTrim.Click += OnMouseClick;
@@ -552,6 +553,7 @@ namespace VideoGui
                                     ChkShorts.IsChecked = false;
                                     ChkEnableTrim.IsChecked = false;
                                     ChkCut.IsChecked = false;
+                                    ComboShortType.Visibility = Visibility.Hidden;
                                 }
                                 break;
                             }
@@ -566,6 +568,7 @@ namespace VideoGui
                                     Chk720P.IsChecked = false;
                                     ChkEnableTrim.IsChecked = false;
                                     ChkCut.IsChecked = false;
+                                    ComboShortType.Visibility = Visibility.Visible;
                                 }
                                 break;
                             }
@@ -579,6 +582,7 @@ namespace VideoGui
                                     Chk720P.IsChecked = false;
                                     ChkShorts.IsChecked = false;
                                     ChkCut.IsChecked = false;
+                                    ComboShortType.Visibility = Visibility.Hidden;
                                 }
                                 break;
                             }
@@ -615,6 +619,7 @@ namespace VideoGui
                                     Chk720P.IsChecked = false;
                                     ChkShorts.IsChecked = false;
                                     ChkEnableTrim.IsChecked = false;
+                                    ComboShortType.Visibility = Visibility.Hidden;
                                 }
                                 break;
                             }
@@ -1138,6 +1143,7 @@ namespace VideoGui
                                 ChkCut.IsChecked = false;
                                 ChkShorts.IsChecked = false;
                                 ChkTwitch.IsChecked = false;
+                                ComboShortType.Visibility = Visibility.Hidden;
                                 break;
                             }
                         case "Chk720P":
@@ -1154,6 +1160,7 @@ namespace VideoGui
                                     ChkEnableTrim.IsChecked = false;
                                     ChkCut.IsChecked = false;
                                     txtdestdir.Text = destinationdir;
+                                    ComboShortType.Visibility = Visibility.Hidden;
                                 }
                                 break;
                             }
@@ -1172,6 +1179,7 @@ namespace VideoGui
                                     ChkCut.IsChecked = false;
                                     ComboShortType.SelectedIndex = 1;
                                     txtdestdir.Text = destinationdir;
+                                    ComboShortType.Visibility = Visibility.Visible;
                                 }
                                 break;
                             }
@@ -1196,6 +1204,7 @@ namespace VideoGui
                                     Chk720P.IsChecked = false;
                                     ChkEnableTrim.IsChecked = false;
                                     ChkCut.IsChecked = false;
+                                    ComboShortType.Visibility = Visibility.Hidden;
                                 }
 
                                 ReleaseDate.Visibility = CompChecked ? Visibility.Visible : Visibility.Hidden;
@@ -1216,6 +1225,7 @@ namespace VideoGui
                                     ChkShorts.IsChecked = false;
                                     ChkCut.IsChecked = false;
                                     txtdestdir.Text = adobedir;
+                                    ComboShortType.Visibility = Visibility.Hidden;
                                 }
                                 break;
                             }
