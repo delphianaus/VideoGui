@@ -207,14 +207,35 @@ namespace VideoGui
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
             }
         }
+
+        public bool isLoggedOn()
+        {
+            try
+            {
+                Process[] pname = Process.GetProcessesByName("winlogon");
+                return (pname.Length == 0) ? false : true;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+                return false;
+            }
+
+        }
         private void DbLayerInitiateTimer_Tick(object sender, EventArgs e)
         {
             try
             {
                 DbLayerInitiateTimer.Stop();
-                RunMainApp();
-
-
+                if (isLoggedOn())
+                {
+                    RunMainApp();
+                }
+                else
+                {
+                    DbLayerInitiateTimer.Interval = (int)new TimeSpan(0, 0, 15).TotalMilliseconds;
+                    DbLayerInitiateTimer.Start();
+                }
             }
             catch (Exception ex)
             {
@@ -754,7 +775,7 @@ namespace VideoGui
 
         private void DoOnFinish()
         {
-            if (MainAppWindow.canclose)
+            if (MainAppWindow.canclose || MainAppWindow.ShiftActiveWindowClosing)
             {
                 lblStatus.Content = "Status : Shutting Down App";
                 Terminate();

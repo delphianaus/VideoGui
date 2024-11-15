@@ -151,7 +151,7 @@ namespace VideoGui
         public int LockedDeviceID = 0, SourceIndex = 0;
         public object StatsLock = new();
         List<Task> PageDownloadTasks = new();
-        public bool canclose = false;
+        public bool canclose = false, ShiftActiveWindowClosing= false;
         int failed = 0, Passed = 0, InitTitleLength = 0, cnt4K = 0, cnt = 0, cnt1080p = 0, currentjob = 0, trayiconnum = 0;
         private string[] FilesInProcess = Array.Empty<string>();
         string DestFile, filename_pegpeg, link, ProbeData, Root, ffmpeg_ver = "", ffmpeg_gitver = "", un = "", up = "";
@@ -185,7 +185,7 @@ namespace VideoGui
         string ErrorDirectory = string.Empty, SourceDirectory4K = string.Empty, SourceDirectoryAdobe4K = string.Empty, SourceDirectory1080p = string.Empty, SourceDirectory720p = string.Empty;
         TimeSpan ProcessingTimeGlobal;
         DateTime StartTime = DateTime.Now, Start2 = DateTime.Now, Start3 = DateTime.Now;
-        bool ffmpegready = false, usetorrents = true, CanUpdate = true, ShowAudioControlDialog = true, UseFisheyeRemoval, ShiftActiveWindowClosing = false;
+        bool ffmpegready = false, usetorrents = true, CanUpdate = true, ShowAudioControlDialog = true, UseFisheyeRemoval = false;
         int totaltasks = 4, total1080ptasks = 2, total4kTasks = 3, CurrentDbId = -1;
         string backupserver = "", backupDone1080p = "", backupDone = "", backupCompleted = "", connectionString = "";
         string txtDestPath = "", txtDonepath = "", txtErrorPath = "", CurrentLogFile = "", defaultprogramlocation = "";

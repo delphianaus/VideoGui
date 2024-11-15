@@ -11,9 +11,9 @@
     <Grid>
         <Border x:Name="brdFileInfo" BorderThickness="2" BorderBrush="Black" Height="78" Margin="4,4,5,50" MinHeight="84" VerticalAlignment="Top">
             <Canvas x:Name="CnvMedialElements" Margin="1,2,1,2">
-                <Label Content="Source File" HorizontalAlignment="Center" VerticalAlignment="Top" Height="26" Canvas.Left="9" Canvas.Top="9"/>
-                <TextBox x:Name="txtsrcdir" HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Center" Width="492" Canvas.Left="120" Canvas.Top="13"/>
-                <Button x:Name="btnSelectSourceDir" HorizontalAlignment="Left" VerticalAlignment="Center" Width="20" Height="20" Canvas.Left="617" Canvas.Top="13" Click="btnSelectSourceDir_Click" RenderTransformOrigin="-13.634,1.02" />
+                <Label Content="Source File" HorizontalAlignment="Center" VerticalAlignment="Top" Height="26" Canvas.Left="9" Canvas.Top="10"/>
+                <TextBox x:Name="txtsrcdir" HorizontalAlignment="Center" TextWrapping="Wrap" VerticalAlignment="Top" Width="422" Canvas.Left="84" Canvas.Top="15"/>
+                <Button x:Name="btnSelectSourceDir" HorizontalAlignment="Center" VerticalAlignment="Center" Width="20" Height="20" Canvas.Left="617" Canvas.Top="13" Click="btnSelectSourceDir_Click" RenderTransformOrigin="-13.634,1.02" />
                 <Label Content="Short Number:" Height="26" Canvas.Left="9" Canvas.Top="40" HorizontalAlignment="Center" VerticalAlignment="Top"/>
                 <Label Content="Duration :" Height="26" Canvas.Left="184" Canvas.Top="40" HorizontalAlignment="Left" VerticalAlignment="Center"/>
                 <Label x:Name="lblDuration" Content="00:00:00" Height="26" Canvas.Left="251" Canvas.Top="40" HorizontalAlignment="Left" VerticalAlignment="Center"/>
@@ -21,7 +21,7 @@
                 <Label x:Name="lblProgress" Content="Progress : " Height="26" Canvas.Left="306" Canvas.Top="40" HorizontalAlignment="Left" VerticalAlignment="Center" Width="59"/>
                 <ProgressBar x:Name="pg1" Height="19" Canvas.Left="387" Canvas.Top="43" Width="250" HorizontalAlignment="Left" VerticalAlignment="Center"/>
                 <Label x:Name="lblPercent" Content="0" Height="26" Canvas.Left="358" Canvas.Top="40" HorizontalAlignment="Left" VerticalAlignment="Center" Width="28"/>
-                <CheckBox x:Name="chkFormat" Content="Long/Short FMT" Canvas.Left="5" Canvas.Top="100" Height="33"/>
+                <CheckBox x:Name="chkFormat" Content="Long/Short FMT" Canvas.Left="511" Canvas.Top="15" HorizontalAlignment="Center" VerticalAlignment="Center"/>
             </Canvas>
         </Border>
         <Button x:Name="btnClose" Height="35" Width="123" Content="Close" Margin="0,97,8,0" HorizontalAlignment="Right" VerticalAlignment="Top" Click="btnClose_Click"/>
