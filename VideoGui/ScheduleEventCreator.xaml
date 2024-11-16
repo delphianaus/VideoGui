@@ -6,22 +6,22 @@
         xmlns:local="clr-namespace:VideoGui" IsManipulationEnabled="True"
         xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
         Title="Schedule Event Creator" mc:Ignorable="d" Loaded="Window_Loaded" 
-        Closing="Window_Closing" Height="450" Width="800"
+        Closing="Window_Closing" Height="450" Width="1028"
         ResizeMode="CanResizeWithGrip" WindowStartupLocation="CenterScreen"  WindowStyle="ToolWindow" >
     <Grid Margin="0,0,0,9">
         <StackPanel x:Name="stkmain" Orientation="Vertical">
             <StackPanel>
-                <Border x:Name="brdFileInfo" BorderThickness="2" BorderBrush="Black" Height="141" Margin="2,5,2,0">
-                    <Canvas x:Name="CnvMedialElements" Margin="3,3,3,3">
+                <Border x:Name="brdFileInfo" BorderThickness="2" BorderBrush="Black" Height="374" Margin="2,5,2,0">
+                    <Canvas x:Name="CnvMedialElements" Margin="0,2,0,2">
                         <xctk:DateTimePicker x:Name="ReleaseDate" Format="Custom" 
                             FormatString="MM-dd-yy hh:mm:ss tt" TimeFormat="Custom" TimeFormatString="hh:mm:ss tt"  
-                            MinWidth="195" Focusable="True" Width="201" HorizontalAlignment="Center" Canvas.Left="94" Canvas.Top="10" VerticalAlignment="Center" />
+                            MinWidth="195" Focusable="True" Width="201" HorizontalAlignment="Center" Canvas.Left="74" Canvas.Top="10" VerticalAlignment="Center" />
                         <xctk:DateTimePicker x:Name="ReleaseEndDate" Format="Custom" 
                             FormatString="MM-dd-yy hh:mm:ss tt" TimeFormat="Custom" TimeFormatString="hh:mm:ss tt"  
-                            MinWidth="195" Focusable="True" Width="201" HorizontalAlignment="Left" Canvas.Left="391" Canvas.Top="10" VerticalAlignment="Top" />
-                        <Label x:Name="lblstatus" Content="Start Date" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Top" Canvas.Top="4"/>
-                        <Label x:Name="lblstatus_Copy" Content="End Date" FontSize="18" Canvas.Top="4" HorizontalAlignment="Left" VerticalAlignment="Center" Canvas.Left="304"/>
-                        <Border x:Name="brd2" BorderThickness="2" BorderBrush="Black" Canvas.Left="2" Canvas.Top="41" Width="784">
+                            MinWidth="195" Focusable="True" Width="201" HorizontalAlignment="Center" Canvas.Left="349" Canvas.Top="10" VerticalAlignment="Center" />
+                        <Label x:Name="lblStartDate" Content="Start Date" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center" Canvas.Top="6"/>
+                        <Label x:Name="lblEndDate" Content="End Date" FontSize="14" Canvas.Top="6" HorizontalAlignment="Center" VerticalAlignment="Center" Canvas.Left="280"/>
+                        <Border x:Name="brd2" BorderThickness="2" BorderBrush="Black" Canvas.Left="2" Canvas.Top="41" Width="971" HorizontalAlignment="Center" Height="147" VerticalAlignment="Top">
                             <StackPanel Orientation="Vertical">
                                 <StackPanel Height="30">
                                     <ListBox x:Name="lstItems" 
@@ -33,41 +33,107 @@
                                                     <Grid DockPanel.Dock="Top" Height="30" >
                                                         <Grid.ColumnDefinitions>
                                                             <ColumnDefinition x:Name="title0" Width="0"/>
-                                                            <ColumnDefinition x:Name="title1" Width="200"/>
-                                                            <ColumnDefinition x:Name="title2" Width="240"/>
-                                                            <ColumnDefinition x:Name="title3" Width="107"/>
-                                                            <ColumnDefinition x:Name="title4" Width="107"/>
+                                                            <ColumnDefinition x:Name="title1" Width="140"/>
+                                                            <ColumnDefinition x:Name="title2" Width="140"/>
+                                                            <ColumnDefinition x:Name="title3" Width="80"/>
+                                                            <ColumnDefinition x:Name="title4" Width="140"/>
+                                                            <ColumnDefinition x:Name="title5" Width="80"/>
+                                                            <ColumnDefinition x:Name="title6" Width="80"/>
                                                         </Grid.ColumnDefinitions>
-                                                        <Label Grid.Column="1" Content="Start Hour"/>
-                                                        <Label Grid.Column="2" Content="End Hour"/>
-                                                        <Label Grid.Column="3" Content="Day Of Week"/>
-                                                        <Label Grid.Column="4" Content="Gap"/>
+                                                        <Label Grid.Column="1" Content="Event Start Date"/>
+                                                        <Label Grid.Column="2" Content="Event End Date" Grid.ColumnSpan="2"/>
+                                                        <Label Grid.Column="3" Content="Day Of Week" Margin="7,0,0,0"/>
+                                                        <Label Grid.Column="4" Content="Source" Margin="7,0,0,0"/>
+                                                        <Label Grid.Column="5" Content="Max Daily" Margin="7,0,0,0"/>
+                                                        <Label Grid.Column="6" Content="Max Event" Margin="7,0,0,0"/>
                                                     </Grid>
                                                     <ItemsPresenter></ItemsPresenter>
                                                 </DockPanel>
                                             </ControlTemplate>
                                         </ListBox.Template>
-                                        
                                     </ListBox>
                                 </StackPanel>
                                 <StackPanel ScrollViewer.VerticalScrollBarVisibility="Disabled" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                                     <ScrollViewer >
                                         <StackPanel ScrollViewer.VerticalScrollBarVisibility="Disabled" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                                             <ListBox Name="lstSchedules"  MouseDoubleClick="lstSchedules_MouseDoubleClick_1"
-                           ScrollViewer.CanContentScroll="True"
-                    ScrollViewer.VerticalScrollBarVisibility="Visible" 
-                       ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                       Padding="0,0,0,2" VerticalContentAlignment="Stretch" Height="55">
-                                               
+                                                ScrollViewer.CanContentScroll="True"  ScrollViewer.VerticalScrollBarVisibility="Visible" 
+                                                ScrollViewer.HorizontalScrollBarVisibility="Disabled" Padding="0,0,0,2" VerticalContentAlignment="Stretch" Height="107">
                                                 <ListBox.ItemTemplate>
                                                     <DataTemplate x:Name="GridControlsB">
                                                         <Grid Margin="0,2" x:Name="gridwidths" >
                                                             <Grid.ColumnDefinitions>
                                                                 <ColumnDefinition x:Name="col0" Width="0"/>
-                                                                <ColumnDefinition x:Name="col1" Width ="200"/>
+                                                                <ColumnDefinition x:Name="col1" Width="140"/>
+                                                                <ColumnDefinition x:Name="col2" Width="140" />
+                                                                <ColumnDefinition x:Name="col3" Width="80"/>
+                                                                <ColumnDefinition x:Name="col4" Width="140"/>
+                                                                <ColumnDefinition x:Name="col5" Width="80"/>
+                                                                <ColumnDefinition x:Name="col6" Width="80"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            <TextBlock Name="Idx" Tag ="0" Grid.Column="0" Text="{Binding Id}" Width="0"/>
+                                                            <TextBlock Name="SRC" Tag ="1" Grid.Column="1" Text="{Binding START}"/>
+                                                            <TextBlock Name="DEST" Tag ="2" Grid.Column="2" Text="{Binding END}" HorizontalAlignment="Left" VerticalAlignment="Top" />
+                                                            <TextBlock Name="T2" Tag ="4" Grid.Column="3" Text="{Binding DOW}" Width="107" Margin="7,0,0,0"/>
+                                                            <TextBlock Name="T3" Tag ="5" Grid.Column="4" Text="{Binding Source}" Width="107" Margin="7,0,0,0"/>
+                                                            <TextBlock Name="T4" Tag ="6" Grid.Column="5" Text="{Binding MaxDaily}" Width="107" Margin="7,0,0,0"/>
+                                                            <TextBlock Name="T5" Tag ="7" Grid.Column="6" Text="{Binding MaxEvent}" Width="107" Margin="7,0,0,0"/>
+                                                        </Grid>
+                                                    </DataTemplate>
+                                                </ListBox.ItemTemplate>
+                                            </ListBox>
+                                        </StackPanel>
+                                    </ScrollViewer>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                        <Border BorderThickness="2" BorderBrush="Black" Width="971" Height="164" 
+                                Canvas.Top="198" HorizontalAlignment="Center" VerticalAlignment="Top" Canvas.Left="2">
+                            <StackPanel Orientation="Vertical">
+                                <StackPanel Height="30">
+                                    <ListBox x:Name="lstItemsSchdule" 
+Width="706" Height="27" HorizontalAlignment="Left" Canvas.Top="2" 
+  IsSynchronizedWithCurrentItem="True"  IsManipulationEnabled="True">
+                                        <ListBox.Template>
+                                            <ControlTemplate x:Name="GridControlss">
+                                                <DockPanel LastChildFill="True" Margin="0,0,0,0" >
+                                                    <Grid DockPanel.Dock="Top" Height="30" >
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition x:Name="title0" Width="0"/>
+                                                            <ColumnDefinition x:Name="title1" Width="200"/>
+                                                            <ColumnDefinition x:Name="title2" Width="240"/>
+                                                            <ColumnDefinition x:Name="title3" Width="107"/>
+                                                            <ColumnDefinition x:Name="title4" Width="30"/>
+                                                            <ColumnDefinition x:Name="title5" Width="100"/>
+                                                            <ColumnDefinition x:Name="title6" Width="110"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <Label Grid.Column="1" Content="Start Hour"/>
+                                                        <Label Grid.Column="2" Content="End Hour"/>
+                                                        <Label Grid.Column="3" Content="Gap"/>
+                                                    </Grid>
+                                                    <ItemsPresenter></ItemsPresenter>
+                                                </DockPanel>
+                                            </ControlTemplate>
+                                        </ListBox.Template>
+                                    </ListBox>
+                                </StackPanel>
+                                <StackPanel ScrollViewer.VerticalScrollBarVisibility="Disabled" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                    <ScrollViewer >
+                                        <StackPanel ScrollViewer.VerticalScrollBarVisibility="Disabled" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                            <ListBox Name="lstSchedules2"  MouseDoubleClick="lstSchedules_MouseDoubleClick" 
+               ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Visible" 
+               ScrollViewer.HorizontalScrollBarVisibility="Disabled" Padding="0,0,0,2" VerticalContentAlignment="Stretch" Height="124">
+                                                <ListBox.ItemTemplate>
+                                                    <DataTemplate x:Name="GridControlsB">
+                                                        <Grid Margin="0,2" x:Name="gridwidths22" >
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition x:Name="col0" Width="0"/>
+                                                                <ColumnDefinition x:Name="col1" Width ="200"  />
                                                                 <ColumnDefinition x:Name="col2" Width="240" />
                                                                 <ColumnDefinition x:Name="col3" Width="107"/>
-                                                                <ColumnDefinition x:Name="col4" Width="107"/>
+                                                                <ColumnDefinition x:Name="col4" Width="30"/>
+                                                                <ColumnDefinition x:Name="col5" Width="100"/>
+                                                                <ColumnDefinition x:Name="col6" Width="110"/>
                                                             </Grid.ColumnDefinitions>
                                                             <TextBlock Name="Idx" Tag ="1" Grid.Column="0" Text="{Binding Id}" Width="0"/>
                                                             <TextBlock Name="SRC" Tag ="1" Grid.Column="1" Text="{Binding SRC}"/>
@@ -85,80 +151,60 @@
                                 </StackPanel>
                             </StackPanel>
                         </Border>
-
+                        <Label x:Name="lblEndDate_Copy" Content="DOW" FontSize="14" Canvas.Top="6" Canvas.Left="555" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                        <ComboBox Canvas.Left="603" Canvas.Top="9" Width="61" HorizontalAlignment="Left" VerticalAlignment="Center">
+                            <ComboBoxItem Content="M"/>
+                            <ComboBoxItem Content="Tu"/>
+                            <ComboBoxItem Content="W"/>
+                            <ComboBoxItem Content="Th"/>
+                            <ComboBoxItem Content="F"/>
+                            <ComboBoxItem Content="Sat"/>
+                            <ComboBoxItem Content="Sun"/>
+                        </ComboBox>
+                        <Label x:Name="lblEndDate_Copy1" Content="DOW" FontSize="14" Canvas.Top="6" Canvas.Left="555" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <ComboBox Canvas.Left="603" Canvas.Top="10" Width="61" HorizontalAlignment="Center" VerticalAlignment="Top">
+                            <ComboBoxItem Content="M"/>
+                            <ComboBoxItem Content="Tu"/>
+                            <ComboBoxItem Content="W"/>
+                            <ComboBoxItem Content="Th"/>
+                            <ComboBoxItem Content="F"/>
+                            <ComboBoxItem Content="Sat"/>
+                            <ComboBoxItem Content="Sun"/>
+                        </ComboBox>
+                        <Label x:Name="lblSRC" Content="SRC" FontSize="14" Canvas.Top="6" Canvas.Left="670" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <ComboBox Canvas.Left="709" Canvas.Top="10" Width="37" HorizontalAlignment="Center" VerticalAlignment="Top">
+                            <ComboBoxItem Content="F"/>
+                            <ComboBoxItem Content="D"/>
+                        </ComboBox>
+                        <Button Canvas.Left="755" HorizontalAlignment="Center" VerticalAlignment="Top" 
+                                Width="24" Height="24" Canvas.Top="9">
+                            <Image Source="/Icons/plus.png"/>
+                        </Button>
+                        <Button x:Name="btnAddSchedule" Canvas.Left="985" 
+                            Width="24" Height="24" Canvas.Top="199" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Image Source="/Icons/plus.png"/>
+                        </Button>
+                        <Button x:Name="BtnRemoveSchedue" Canvas.Left="985" 
+                            Width="24" Height="24" Canvas.Top="229" HorizontalAlignment="Center" VerticalAlignment="Top">
+                            <Image Source="/Icons/Cancel.png"/>
+                        </Button>
+                        <Button x:Name="btnAddEvent" Canvas.Left="985" 
+                           Width="24" Height="24" Canvas.Top="43" HorizontalAlignment="Center" 
+                                VerticalAlignment="Center">
+                            <Image Source="/Icons/plus.png"/>
+                        </Button>
+                        <Button x:Name="BtnRemoveEvent" Canvas.Left="985" 
+                              Width="24" Height="24" Canvas.Top="77" HorizontalAlignment="Center" VerticalAlignment="Top">
+                            <Image Source="/Icons/Cancel.png"/>
+                        </Button>
+                        <Label x:Name="lblMax" Content="MAX (Daily/Event)" FontSize="14" Canvas.Top="6" Canvas.Left="784" HorizontalAlignment="Center" VerticalAlignment="Top"/>
+                        <TextBox x:Name="txtMax" Canvas.Left="911" TextWrapping="Wrap" Canvas.Top="10" Width="41" HorizontalAlignment="Center" VerticalAlignment="Top" RenderTransformOrigin="2.965,-3.235" FontSize="14" TextChanged="txtMax_TextChanged"/>
+                        <Label x:Name="lblMax_Copy" Content=":" FontSize="14" Canvas.Top="6" Canvas.Left="952" HorizontalAlignment="Center" VerticalAlignment="Top"/>
+                        <TextBox x:Name="txtMaxEvent" Canvas.Left="965" TextWrapping="Wrap" Canvas.Top="10" Width="41" RenderTransformOrigin="2.965,-3.235" FontSize="14" TextChanged="txtMax_TextChanged" HorizontalAlignment="Center" VerticalAlignment="Top"/>
                     </Canvas>
                 </Border>
             </StackPanel>
-            <StackPanel Width="792" Margin="7,0,2,0">
-                <Border x:Name="brd1" Margin="2,2,2,2" BorderThickness="2" BorderBrush="Black">
-                    <StackPanel Orientation="Vertical">
-                        <StackPanel Height="30">
-                            <ListBox x:Name="lstItemsSchdule" 
-                        Width="777" Height="27" HorizontalAlignment="Left" Canvas.Top="2" 
-                          IsSynchronizedWithCurrentItem="True"  IsManipulationEnabled="True">
-                                <ListBox.Template>
-                                    <ControlTemplate x:Name="GridControlss">
-                                        <DockPanel LastChildFill="True" Margin="0,0,0,0" >
-                                            <Grid DockPanel.Dock="Top" Height="30" >
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition x:Name="title0" Width="0"/>
-                                                    <ColumnDefinition x:Name="title1" Width="200"/>
-                                                    <ColumnDefinition x:Name="title2" Width="240"/>
-                                                    <ColumnDefinition x:Name="title3" Width="107"/>
-                                                    <ColumnDefinition x:Name="title4" Width="30"/>
-                                                    <ColumnDefinition x:Name="title5" Width="100"/>
-                                                    <ColumnDefinition x:Name="title6" Width="110"/>
-                                                </Grid.ColumnDefinitions>
-                                                <Label Grid.Column="1" Content="Event Start Date"/>
-                                                <Label Grid.Column="2" Content="Event End Date"/>
-                                                <Label Grid.Column="3" Content="Day Of Week" Margin="7,0,0,0"/>
-                                            </Grid>
-                                            <ItemsPresenter></ItemsPresenter>
-                                        </DockPanel>
-                                    </ControlTemplate>
-                                </ListBox.Template>
-                               
-                            </ListBox>
-                        </StackPanel>
-                        <StackPanel ScrollViewer.VerticalScrollBarVisibility="Disabled" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-                            <ScrollViewer >
-                                <StackPanel ScrollViewer.VerticalScrollBarVisibility="Disabled" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-                                    <ListBox Name="lstSchedules2"  MouseDoubleClick="lstSchedules_MouseDoubleClick" 
-                                          ScrollViewer.CanContentScroll="True"
-                                   ScrollViewer.VerticalScrollBarVisibility="Visible" 
-                                      ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                                      Padding="0,0,0,2" VerticalContentAlignment="Stretch" Height="183">
-                                        
-                                        <ListBox.ItemTemplate>
-                                            <DataTemplate x:Name="GridControlsB">
-                                                <Grid Margin="0,2" x:Name="gridwidths22" >
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition x:Name="col0" Width="0"/>
-                                                        <ColumnDefinition x:Name="col1" Width ="200"  />
-                                                        <ColumnDefinition x:Name="col2" Width="240" />
-                                                        <ColumnDefinition x:Name="col3" Width="107"/>
-                                                        <ColumnDefinition x:Name="col4" Width="30"/>
-                                                        <ColumnDefinition x:Name="col5" Width="100"/>
-                                                        <ColumnDefinition x:Name="col6" Width="110"/>
-                                                    </Grid.ColumnDefinitions>
-                                                    <TextBlock Name="Idx" Tag ="1" Grid.Column="0" Text="{Binding Id}" Width="0"/>
-                                                    <TextBlock Name="SRC" Tag ="1" Grid.Column="1" Text="{Binding SRC}"/>
-                                                    <TextBlock Name="DEST" Tag ="2" Grid.Column="2" Text="{Binding DEST}" HorizontalAlignment="Left" VerticalAlignment="Top" />
-                                                    <TextBlock Name="Times" Tag ="3" Grid.Column="3" Text="{Binding Times}" Width="107" Margin="7,0,0,0"/>
-                                                    <TextBlock Name="RecordAge" Tag ="4" Grid.Column="4" Text="{Binding RecordAge}" Width="30"/>
-                                                    <TextBlock Name="ProcessingType" Tag ="5" Grid.Column="5" Text="{Binding ProceessingType}" Width="110"/>
-                                                    <TextBlock Name="ProcessingActions" Tag ="6" Grid.Column="6" Text="{Binding ProcessingActions}" Width="100"/>
-                                                </Grid>
-                                            </DataTemplate>
-                                        </ListBox.ItemTemplate>
-                                    </ListBox>
-                                </StackPanel>
-                            </ScrollViewer>
-                        </StackPanel>
-                    </StackPanel>
-                </Border>
-            </StackPanel>
-            <StackPanel Height="117">
+            <StackPanel Height="80">
                 <Button x:Name="btnCloe" HorizontalAlignment="Right" Content="Close" Width="90" Margin="0,8,9,0" Height="30" Click="btnCloe_Click"/>
             </StackPanel>
         </StackPanel>

@@ -93,6 +93,11 @@ namespace VideoGui
 
         }
 
+        private void txtMax_TextChanged(object sender, TextChangedEventArgs e)
+        {
+
+        }
+
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             try
