@@ -166,8 +166,8 @@
                                 FormatString="MM-dd-yy hh:mm:ss tt" TimeFormat="Custom" TimeFormatString="hh:mm:ss tt"  
                                MinWidth="195" Focusable="True" Width="201" HorizontalAlignment="Center" VerticalAlignment="Top" Canvas.Left="10" Canvas.Top="21" Height="16" />
                                 <Button x:Name="btnEventCheck" Canvas.Left="225" 
-                                    Width="40" Height="40" Canvas.Top="7" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                    <Image Source="/Icons/Update.png"/>
+                                    Width="40" Height="40" Canvas.Top="3" HorizontalAlignment="Center" VerticalAlignment="Top">
+                                    <Image Source="/Icons/UpdateCircle.png"/>
                                 </Button>
                                 <TextBox x:Name="txtEventName" Canvas.Left="10" Canvas.Top="41" 
                                          TextWrapping="Wrap" Width="201" 

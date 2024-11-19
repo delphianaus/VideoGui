@@ -61,6 +61,8 @@
     <None Remove="Icons\set.png" />
     <None Remove="Icons\upArrow.png" />
     <None Remove="Icons\update.png" />
+    <None Remove="Icons\UpdateCircle.png" />
+    <None Remove="Icons\UpdateNew.png" />
   </ItemGroup>
 
   <ItemGroup>
@@ -140,6 +142,14 @@
     <Resource Include="Icons\upArrow.png" />
 
     <Resource Include="Icons\update.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+
+    <Resource Include="Icons\UpdateCircle.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+
+    <Resource Include="Icons\UpdateNew.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
   </ItemGroup>
