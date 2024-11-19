@@ -40,6 +40,7 @@ namespace VideoGui
                 InitializeComponent();
                 DoOnFinish = _DoOnFinish;
                 ModuleCallBack = _DoDbHook;
+                EnableDisableDataEntry(false);
 
                 Closing += (s, e) => { IsClosing = true; };
                 Closed += (s, e) => { IsClosed = true; _DoOnFinish?.Invoke(); };
@@ -61,10 +62,34 @@ namespace VideoGui
         /// 
 
 
-        
+        string sql = "SELECT SP.NAME,ESD.START,ESD.END,ESD.STARTTIME,ESD.ENDTIME,SD.START,SD.END,SD.STARTTIME,SD.ENDTIME FROM "+
+              "EVENTSCHEDULES ES  "+
+              "INNER JOIN EVENTSCHEDULEDATE ESD ON ESD.EVENTID = ES.EVENTID "+
+              "INNER JOIN SCHEDULEDATE SD ON SD.EVENTID = ES.EVENTID "
+              "INNER JOIN SCHEDULES SP ON SP.ID = ES.SCHEDULEID "
+              "INNER JOIN SCHEDULEDPOOL SP ON SP.ID = ES.SCHEDULEID " +
+              $"WHERE ES.EVENTID = {EventId} AND SP.ISSCHEDULE = 1;"
 
+             // source , max daily , maxevent
 
          */
+
+        public void EnableDisableDataEntry(bool Enable)
+        {
+            try
+            {
+                grp1.IsEnabled = Enable;
+                grp2.IsEnabled = Enable;
+                btnAddEvent.IsEnabled = Enable;
+                btnAddSchedule.IsEnabled = Enable;
+                BtnRemoveEvent.IsEnabled = Enable;
+                BtnRemoveSchedule.IsEnabled = Enable;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"EnableDisableDataEntry {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
@@ -78,10 +103,7 @@ namespace VideoGui
             }
         }
 
-        private void btnCloe_Click(object sender, RoutedEventArgs e)
-        {
-
-        }
+        
 
         private void lstSchedules_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
@@ -98,6 +120,18 @@ namespace VideoGui
 
         }
 
+        private void btnClose_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                Close();
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"btnClose_Click {MethodBase.GetCurrentMethod()?.Name} {this} {ex.Message}");
+            }
+        }
+
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             try
@@ -107,6 +141,14 @@ namespace VideoGui
                 key?.Close();
                 //txtdestdir.Text = rootfolder;
                 //DoSetLists?.Invoke(0);// Set to true for Current
+                ModuleCallBack?.Invoke(this, new CustomParams_Initialize());
+                // callback Module Init - Get Lists for both listbox sources
+                // Get Current Evenet Start and EndDate and populate and enable 
+                // other query data 
+                /*
+                 EVENTSCHEDULES
+                 * 
+                 * */
             }
             catch (Exception ex)
             {

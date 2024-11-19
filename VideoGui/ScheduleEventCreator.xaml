@@ -19,7 +19,7 @@
                         <Border x:Name="brd2" BorderThickness="2" BorderBrush="Black" Canvas.Left="2" Canvas.Top="81" Width="971" HorizontalAlignment="Center" Height="115" VerticalAlignment="Top">
                             <StackPanel Orientation="Vertical">
                                 <StackPanel Height="30">
-                                    <ListBox x:Name="lstItems" Width="788" Height="20" HorizontalAlignment="Left" Canvas.Top="2" 
+                                    <ListBox x:Name="lstItems" Width="965" Height="20" HorizontalAlignment="Left" Canvas.Top="2" 
                                         IsSynchronizedWithCurrentItem="True" IsManipulationEnabled="True">
                                         <ListBox.Template>
                                             <ControlTemplate x:Name="GridControlss">
@@ -27,13 +27,13 @@
                                                     <Grid DockPanel.Dock="Top" Height="30" >
                                                         <Grid.ColumnDefinitions>
                                                             <ColumnDefinition x:Name="title0" Width="0"/>
-                                                            <ColumnDefinition x:Name="title1" Width="120"/>
-                                                            <ColumnDefinition x:Name="title2" Width="120"/>
-                                                            <ColumnDefinition x:Name="title3" Width="120"/>
-                                                            <ColumnDefinition x:Name="title4" Width="120"/>
+                                                            <ColumnDefinition x:Name="title1" Width="130"/>
+                                                            <ColumnDefinition x:Name="title2" Width="130"/>
+                                                            <ColumnDefinition x:Name="title3" Width="130"/>
+                                                            <ColumnDefinition x:Name="title4" Width="130"/>
                                                             <ColumnDefinition x:Name="title6" Width="140"/>
-                                                            <ColumnDefinition x:Name="title7" Width="60"/>
-                                                            <ColumnDefinition x:Name="title8" Width="60"/>
+                                                            <ColumnDefinition x:Name="title7" Width="90"/>
+                                                            <ColumnDefinition x:Name="title8" Width="90"/>
                                                         </Grid.ColumnDefinitions>
                                                         <Label Grid.Column="1" Content="Event Start Date"/>
                                                         <Label Grid.Column="2" Content="Event End Date" Grid.ColumnSpan="2"/>
@@ -59,23 +59,23 @@
                                                     <DataTemplate x:Name="GridControlsB">
                                                         <Grid Margin="0,2" x:Name="gridwidths" >
                                                             <Grid.ColumnDefinitions>
-                                                                <ColumnDefinition x:Name="col0" Width="0"/>
-                                                                <ColumnDefinition x:Name="col1" Width="120"/>
-                                                                <ColumnDefinition x:Name="col2" Width="120"/>
-                                                                <ColumnDefinition x:Name="col3" Width="120"/>
-                                                                <ColumnDefinition x:Name="col4" Width="120"/>
-                                                                <ColumnDefinition x:Name="col5" Width="140"/>
-                                                                <ColumnDefinition x:Name="col6" Width="60"/>
-                                                                <ColumnDefinition x:Name="col7" Width="60"/>
+                                                                <ColumnDefinition x:Name="title0" Width="0"/>
+                                                                <ColumnDefinition x:Name="title1" Width="130"/>
+                                                                <ColumnDefinition x:Name="title2" Width="130"/>
+                                                                <ColumnDefinition x:Name="title3" Width="130"/>
+                                                                <ColumnDefinition x:Name="title4" Width="130"/>
+                                                                <ColumnDefinition x:Name="title6" Width="140"/>
+                                                                <ColumnDefinition x:Name="title7" Width="90"/>
+                                                                <ColumnDefinition x:Name="title8" Width="90"/>
                                                             </Grid.ColumnDefinitions>
                                                             <TextBlock Name="Idx" Grid.Column="0" Text="{Binding Id}" Width="0"/>
-                                                            <TextBlock Name="Start"  Grid.Column="1" Text="{Binding START}"/>
-                                                            <TextBlock Name="End" Grid.Column="2" Text="{Binding END}" HorizontalAlignment="Left" VerticalAlignment="Top" />
-                                                            <TextBlock Name="SchStart"  Grid.Column="3" Text="{Binding START}"/>
-                                                            <TextBlock Name="SchEnd"  Grid.Column="4" Text="{Binding END}" HorizontalAlignment="Left" VerticalAlignment="Top" />
-                                                            <TextBlock Name="T3" Tag ="4" Grid.Column="6" Text="{Binding Source}" Width="107" Margin="7,0,0,0"/>
-                                                            <TextBlock Name="T4" Tag ="5" Grid.Column="7" Text="{Binding MaxDaily}" Width="107" Margin="7,0,0,0"/>
-                                                            <TextBlock Name="T5" Tag ="6" Grid.Column="8" Text="{Binding MaxEvent}" Width="107" Margin="7,0,0,0"/>
+                                                            <TextBlock Name="Start"  Grid.Column="1" Text="{Binding EventStart}"/>
+                                                            <TextBlock Name="End" Grid.Column="2" Text="{Binding EventEnd}" HorizontalAlignment="Left" VerticalAlignment="Top" />
+                                                            <TextBlock Name="SchStart"  Grid.Column="3" Text="{Binding ScheduleStart}"/>
+                                                            <TextBlock Name="SchEnd"  Grid.Column="4" Text="{Binding ScheduleEnd}" HorizontalAlignment="Left" VerticalAlignment="Top" />
+                                                            <TextBlock Name="Soource" Tag ="5" Grid.Column="5" Text="{Binding Source}" Width="107" Margin="7,0,0,0"/>
+                                                            <TextBlock Name="MaxDaily" Tag ="6" Grid.Column="6" Text="{Binding MaxDaily}" Width="107" Margin="7,0,0,0"/>
+                                                            <TextBlock Name="MaxEvent" Tag ="7" Grid.Column="7" Text="{Binding MaxEvent}" Width="107" Margin="7,0,0,0"/>
                                                         </Grid>
                                                     </DataTemplate>
                                                 </ListBox.ItemTemplate>
@@ -97,12 +97,9 @@
                                                     <Grid DockPanel.Dock="Top" Height="30" >
                                                         <Grid.ColumnDefinitions>
                                                             <ColumnDefinition x:Name="title0" Width="0"/>
-                                                            <ColumnDefinition x:Name="title1" Width="200"/>
-                                                            <ColumnDefinition x:Name="title2" Width="240"/>
-                                                            <ColumnDefinition x:Name="title3" Width="107"/>
-                                                            <ColumnDefinition x:Name="title4" Width="30"/>
-                                                            <ColumnDefinition x:Name="title5" Width="100"/>
-                                                            <ColumnDefinition x:Name="title6" Width="110"/>
+                                                            <ColumnDefinition x:Name="title1" Width="130"/>
+                                                            <ColumnDefinition x:Name="title2" Width="130"/>
+                                                            <ColumnDefinition x:Name="title3" Width="110"/>
                                                         </Grid.ColumnDefinitions>
                                                         <Label Grid.Column="1" Content="Start Hour"/>
                                                         <Label Grid.Column="2" Content="End Hour"/>
@@ -125,20 +122,14 @@
                                                         <Grid Margin="0,2" x:Name="gridwidths22" >
                                                             <Grid.ColumnDefinitions>
                                                                 <ColumnDefinition x:Name="col0" Width="0"/>
-                                                                <ColumnDefinition x:Name="col1" Width ="200"  />
-                                                                <ColumnDefinition x:Name="col2" Width="240" />
-                                                                <ColumnDefinition x:Name="col3" Width="107"/>
-                                                                <ColumnDefinition x:Name="col4" Width="30"/>
-                                                                <ColumnDefinition x:Name="col5" Width="100"/>
-                                                                <ColumnDefinition x:Name="col6" Width="110"/>
+                                                                <ColumnDefinition x:Name="col1" Width="130"/>
+                                                                <ColumnDefinition x:Name="col2" Width="130"/>
+                                                                <ColumnDefinition x:Name="col3" Width="110"/>
                                                             </Grid.ColumnDefinitions>
                                                             <TextBlock Name="Idx" Tag ="1" Grid.Column="0" Text="{Binding Id}" Width="0"/>
-                                                            <TextBlock Name="SRC" Tag ="1" Grid.Column="1" Text="{Binding SRC}"/>
-                                                            <TextBlock Name="DEST" Tag ="2" Grid.Column="2" Text="{Binding DEST}" HorizontalAlignment="Left" VerticalAlignment="Top" />
-                                                            <TextBlock Name="Times" Tag ="3" Grid.Column="3" Text="{Binding Times}" Width="107" Margin="7,0,0,0"/>
-                                                            <TextBlock Name="RecordAge" Tag ="4" Grid.Column="4" Text="{Binding RecordAge}" Width="30"/>
-                                                            <TextBlock Name="ProcessingType" Tag ="5" Grid.Column="5" Text="{Binding ProceessingType}" Width="110"/>
-                                                            <TextBlock Name="ProcessingActions" Tag ="6" Grid.Column="6" Text="{Binding ProcessingActions}" Width="100"/>
+                                                            <TextBlock Name="SRC" Tag ="1" Grid.Column="1" Text="{Binding StartHour}"/>
+                                                            <TextBlock Name="DEST" Tag ="2" Grid.Column="2" Text="{Binding EndHour}" HorizontalAlignment="Left" VerticalAlignment="Top" />
+                                                            <TextBlock Name="Times" Tag ="3" Grid.Column="3" Text="{Binding Gap}" Width="107" Margin="7,0,0,0"/>
                                                         </Grid>
                                                     </DataTemplate>
                                                 </ListBox.ItemTemplate>
@@ -148,16 +139,11 @@
                                 </StackPanel>
                             </StackPanel>
                         </Border>
-                        <Label x:Name="lblSRC" Content="Video Type" FontSize="14" Canvas.Top="6" Canvas.Left="560" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                        <ComboBox Canvas.Left="642" Canvas.Top="10" Width="74" HorizontalAlignment="Left" VerticalAlignment="Center">
-                            <ComboBoxItem Content="F"/>
-                            <ComboBoxItem Content="D"/>
-                        </ComboBox>
                         <Button x:Name="btnAddSchedule" Canvas.Left="985" 
                             Width="24" Height="24" Canvas.Top="199" HorizontalAlignment="Center" VerticalAlignment="Center">
                             <Image Source="/Icons/plus.png"/>
                         </Button>
-                        <Button x:Name="BtnRemoveSchedue" Canvas.Left="985" 
+                        <Button x:Name="BtnRemoveSchedule" Canvas.Left="985" 
                             Width="24" Height="24" Canvas.Top="229" HorizontalAlignment="Center" VerticalAlignment="Top">
                             <Image Source="/Icons/Cancel.png"/>
                         </Button>
@@ -170,37 +156,56 @@
                               Width="24" Height="24" Canvas.Top="115" HorizontalAlignment="Center" VerticalAlignment="Top">
                             <Image Source="/Icons/Cancel.png"/>
                         </Button>
-                        <Label x:Name="lblMax" Content="MAX (Daily/Event)" FontSize="14" Canvas.Top="40" Canvas.Left="560" HorizontalAlignment="Left" VerticalAlignment="Top"/>
-                        <TextBox x:Name="txtMax" Canvas.Left="687" TextWrapping="Wrap" Canvas.Top="44" Width="41" HorizontalAlignment="Left" VerticalAlignment="Top" RenderTransformOrigin="2.965,-3.235" FontSize="14" TextChanged="txtMax_TextChanged"/>
-                        <Label x:Name="lblMax_Copy" Content=":" FontSize="14" Canvas.Top="40" Canvas.Left="728" HorizontalAlignment="Left" VerticalAlignment="Top"/>
-                        <TextBox x:Name="txtMaxEvent" Canvas.Left="741" TextWrapping="Wrap" Canvas.Top="44" Width="41" RenderTransformOrigin="2.965,-3.235" FontSize="14" TextChanged="txtMax_TextChanged" HorizontalAlignment="Left" VerticalAlignment="Top"/>
-                        <GroupBox Height="75" Header="Event (Start/End)" Width="234" Background="Aquamarine"
-                                  HorizontalAlignment="Center" VerticalAlignment="Top">
+                        <GroupBox Height="75" Header="Event (Start/End)" Width="279" Background="WhiteSmoke"
+                                  HorizontalAlignment="Center" VerticalAlignment="Center" Name="grp0">
                             <Canvas x:Name="CnvEvent">
-                                <xctk:DateTimePicker x:Name="ReleaseDate_Copy" Format="Custom" 
+                                <xctk:DateTimePicker x:Name="EventStart" Format="Custom" 
                                FormatString="MM-dd-yy hh:mm:ss tt" TimeFormat="Custom" TimeFormatString="hh:mm:ss tt"  
-                                MinWidth="195" Focusable="True" Width="201" HorizontalAlignment="Center" VerticalAlignment="Top" Canvas.Left="10" Canvas.Top="8" Height="15" />
-                                <xctk:DateTimePicker x:Name="ReleaseEndDate_Copy" Format="Custom" 
+                                MinWidth="195" Focusable="True" Width="201" HorizontalAlignment="Center" VerticalAlignment="Top" Canvas.Left="10" Canvas.Top="3" Height="15" />
+                                <xctk:DateTimePicker x:Name="EventEnd" Format="Custom"
                                 FormatString="MM-dd-yy hh:mm:ss tt" TimeFormat="Custom" TimeFormatString="hh:mm:ss tt"  
-                               MinWidth="195" Focusable="True" Width="201" HorizontalAlignment="Center" VerticalAlignment="Top" Canvas.Left="10" Canvas.Top="30" Height="16" />
+                               MinWidth="195" Focusable="True" Width="201" HorizontalAlignment="Center" VerticalAlignment="Top" Canvas.Left="10" Canvas.Top="21" Height="16" />
+                                <Button x:Name="btnEventCheck" Canvas.Left="225" 
+                                    Width="40" Height="40" Canvas.Top="7" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <Image Source="/Icons/Update.png"/>
+                                </Button>
+                                <TextBox x:Name="txtEventName" Canvas.Left="10" Canvas.Top="41" 
+                                         TextWrapping="Wrap" Width="201" 
+                                         FontSize="12" TextChanged="txtEventName_TextChanged" 
+                                         HorizontalAlignment="Center" VerticalAlignment="Top"/>
                             </Canvas>
                         </GroupBox>
-                        <GroupBox Height="75" Header="Schedule  (Start/End)" Width="234" Background="Aquamarine"
-                                  HorizontalAlignment="Left" VerticalAlignment="Center" Canvas.Left="239">
+                        <GroupBox Height="75" Header="Schedule  (Start/End)" Width="234" Background="WhiteSmoke"
+                                  HorizontalAlignment="Left" VerticalAlignment="Center" Canvas.Left="287" Name="grp1">
                             <Canvas x:Name="CnvEvent1">
-                                <xctk:DateTimePicker x:Name="ReleaseDate_Copy1" Format="Custom" 
+                                <xctk:DateTimePicker x:Name="ScheduleStart" Format="Custom"
                                     FormatString="MM-dd-yy hh:mm:ss tt" TimeFormat="Custom" TimeFormatString="hh:mm:ss tt"  
                                     MinWidth="195" Focusable="True" Width="201" HorizontalAlignment="Center" VerticalAlignment="Top" Canvas.Left="10" Canvas.Top="8" Height="15" />
-                                <xctk:DateTimePicker x:Name="ReleaseEndDate_Copy1" Format="Custom" 
+                                <xctk:DateTimePicker x:Name="ScheduleEnd" Format="Custom"
                                     FormatString="MM-dd-yy hh:mm:ss tt" TimeFormat="Custom" TimeFormatString="hh:mm:ss tt"  
                                     MinWidth="195" Focusable="True" Width="201" HorizontalAlignment="Center" VerticalAlignment="Top" Canvas.Left="10" Canvas.Top="30" Height="16" />
+                            </Canvas>
+                        </GroupBox>
+                        <GroupBox Height="75" Header="YouTube API Data" Width="440" Background="WhiteSmoke" Name="grp2"
+                            Canvas.Left="530" HorizontalAlignment="Left" VerticalAlignment="Center">
+                            <Canvas Margin="0,0,0,0">
+                                <Label x:Name="lblSRC" Content="Video Type" FontSize="14" Canvas.Top="11" 
+                                 Canvas.Left="21" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                                <ComboBox Canvas.Left="104" Canvas.Top="14" Width="74" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                    <ComboBoxItem Content="F"/>
+                                    <ComboBoxItem Content="D"/>
+                                </ComboBox>
+                                <Label x:Name="lblMax" Content="MAX (Daily / Event)" FontSize="14" Canvas.Top="11" Canvas.Left="192" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                                <TextBox x:Name="txtMax" Canvas.Left="325" TextWrapping="Wrap" Canvas.Top="15" Width="41" RenderTransformOrigin="2.965,-3.235" FontSize="14" TextChanged="txtMax_TextChanged" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                                <Label x:Name="lblMax_Copy" Content=":" FontSize="14" Canvas.Top="11" Canvas.Left="366" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                                <TextBox x:Name="txtMaxEvent" Canvas.Left="379" TextWrapping="Wrap" Canvas.Top="15" Width="41" RenderTransformOrigin="2.965,-3.235" FontSize="14" TextChanged="txtMax_TextChanged" HorizontalAlignment="Left" VerticalAlignment="Center"/>
                             </Canvas>
                         </GroupBox>
                     </Canvas>
                 </Border>
             </StackPanel>
             <StackPanel Height="53">
-                <Button x:Name="btnCloe" HorizontalAlignment="Right" Content="Close" Width="90" Margin="0,8,9,0" Height="30" Click="btnCloe_Click"/>
+                <Button x:Name="btnClose" HorizontalAlignment="Right" Content="Close" Width="90" Margin="0,8,9,0" Height="30" Click="btnClose_Click"/>
             </StackPanel>
         </StackPanel>
     </Grid>

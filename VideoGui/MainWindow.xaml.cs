@@ -77,6 +77,7 @@ using System.Runtime.InteropServices.Marshalling;
 using System.ComponentModel;
 using Nancy;
 using Microsoft.Extensions.Logging;
+using Google.Apis.YouTube.v3.Data;
 
 
 namespace VideoGui
@@ -151,7 +152,7 @@ namespace VideoGui
         public int LockedDeviceID = 0, SourceIndex = 0;
         public object StatsLock = new();
         List<Task> PageDownloadTasks = new();
-        public bool canclose = false, ShiftActiveWindowClosing= false;
+        public bool canclose = false, ShiftActiveWindowClosing = false;
         int failed = 0, Passed = 0, InitTitleLength = 0, cnt4K = 0, cnt = 0, cnt1080p = 0, currentjob = 0, trayiconnum = 0;
         private string[] FilesInProcess = Array.Empty<string>();
         string DestFile, filename_pegpeg, link, ProbeData, Root, ffmpeg_ver = "", ffmpeg_gitver = "", un = "", up = "";
@@ -177,6 +178,7 @@ namespace VideoGui
         public ObservableCollection<FileInfoGoPro> FileRenamer = new ObservableCollection<FileInfoGoPro>();
         public ObservableCollection<PlanningQue> PlanningQueList = new ObservableCollection<PlanningQue>();
         public ObservableCollection<PlanningCuts> PlanningCutsList = new ObservableCollection<PlanningCuts>();
+        public ObservableCollection<EditableScheduleEvent> EditableScheduleEventsList = new ObservableCollection<EditableScheduleEvent>();
         public List<ShortsProcessor> ShortsProcessors = new List<ShortsProcessor>();
         VideoCutsEditor frmVCE = null;
         public List<string> ComparitorList = new();
@@ -379,6 +381,11 @@ namespace VideoGui
                             formObjectHandler_DescSelect(tld, frmDescSelectFrm);
                             break;
                         }
+                    case ScheduleEventCreator scheduleEventCreatorFrm:
+                        {
+                            formObjectHandler_scheduleEventCreator(tld, scheduleEventCreatorFrm);
+                            break;
+                        }
                 }
             }
             catch (Exception ex)
@@ -387,6 +394,40 @@ namespace VideoGui
             }
 
         }
+
+        public Nullable<int> EventId = null;
+
+        private void formObjectHandler_scheduleEventCreator(object tld, ScheduleEventCreator scheduleEventCreatorFrm)
+        {
+            try
+            {
+                if (tld is CustomParams_Initialize cpi)
+                {
+                    string sql = "SELECT SP.SOURCE,SP.MAXDAILY,SP.MAXEVENT,SP.NAME,ESD.START,ESD.END,ESD.STARTTIME,ESD.ENDTIME,SD.START,SD.END,SD.STARTTIME,SD.ENDTIME FROM " +
+                          "EVENTSCHEDULES ES  " +
+                          "INNER JOIN EVENTSCHEDULEDATE ESD ON ESD.EVENTID = ES.EVENTID " +
+                          "INNER JOIN SCHEDULEDATE SD ON SD.EVENTID = ES.EVENTID " +
+                          "INNER JOIN SCHEDULES SP ON SP.ID = ES.SCHEDULEID " +
+                          "INNER JOIN SCHEDULEDPOOL SP ON SP.ID = ES.SCHEDULEID " +
+                         $"WHERE SP.ISSCHEDULE = 1;";
+                    connectionString.ExecuteReader(sql, (FbDataReader r) =>
+                    {
+                        var Edit = new EditableScheduleEvent(r);
+                        if (Edit.Name != "")
+                        {
+                            EditableScheduleEventsList.Add(Edit);
+                        }
+                    });
+                    scheduleEventCreatorFrm.lstSchedules.ItemsSource = EditableScheduleEventsList;
+
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"formObjectHandler_scheduleEventCreator {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+        }
+
         private void formObjectHandler_DescSelect(object tld, DescSelectFrm frmDescSelectFrm, bool IsShort = false)
         {
             try
@@ -2457,9 +2498,21 @@ namespace VideoGui
                 connectionString.CreateTableIfNotExists(sqlstring);
                 sqlstring = $"CREATE TABLE EVENTSCHEDULEDATE({Id},EVENTID INTEGER, START DATE, END DATE, STARTTIME TIME, ENDTIME TIME);";
                 connectionString.CreateTableIfNotExists(sqlstring);
-
-                sqlstring = $"CREATE TABLE SCHEDULES({Id},NAME VARCHAR(250), ISSCHEDULE SMALLINT);";
+                sqlstring = $"CREATE TABLE SCHEDULEDATE({Id},EVENTID INTEGER, START DATE, END DATE, STARTTIME TIME, ENDTIME TIME);";
                 connectionString.CreateTableIfNotExists(sqlstring);
+                sqlstring = $"CREATE TABLE SCHEDULES({Id},NAME VARCHAR(250), ISSCHEDULE SMALLINT, SCHEDULEID INTEGER);";
+                connectionString.CreateTableIfNotExists(sqlstring);
+
+                connectionString.AddFieldToTable("SCHEDULES", "SCHEDULEID", "INTEGER", -1);
+                connectionString.CreateTableIfNotExists(sqlstring);
+                connectionString.AddFieldToTable("SCHEDULES", "SOURCE", "INTEGER", -1);
+                connectionString.CreateTableIfNotExists(sqlstring);
+                connectionString.AddFieldToTable("SCHEDULES", "MAXDAILY", "INTEGER", -1);
+                connectionString.CreateTableIfNotExists(sqlstring);
+                connectionString.AddFieldToTable("SCHEDULES", "MAXEVENT", "INTEGER", -1);
+                connectionString.CreateTableIfNotExists(sqlstring);
+
+
                 sqlstring = $"CREATE TABLE VIDEOSCHEDULE({Id},SCHEDULEID INTEGER, SCHEDULETIME TIME,DAYS INTEGER);";
                 connectionString.CreateTableIfNotExists(sqlstring);
                 sqlstring = $"CREATE TABLE APPLIEDSCHEDULE({Id},SCHEDULEID INTEGER, STARTHOUR SMALLINT,ENDHOUR SMALLINT,GAP SMALLINT,DAYS INTEGER);";
@@ -6266,7 +6319,7 @@ namespace VideoGui
                                 }
                                 if (IsCreateShorts > 0)
                                 {
-                                    ShortsProcessors.Add(new ShortsProcessor(mdir.Replace("(shorts)", "(shorts_logo)"), DoOnNewShort, 
+                                    ShortsProcessors.Add(new ShortsProcessor(mdir.Replace("(shorts)", "(shorts_logo)"), DoOnNewShort,
                                         DoOnShortsDone, 1));
                                 }
                             }

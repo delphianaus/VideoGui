@@ -60,6 +60,7 @@
     <None Remove="Icons\OutputX264.png" />
     <None Remove="Icons\set.png" />
     <None Remove="Icons\upArrow.png" />
+    <None Remove="Icons\update.png" />
   </ItemGroup>
 
   <ItemGroup>
@@ -137,6 +138,10 @@
     </Resource>
 
     <Resource Include="Icons\upArrow.png" />
+
+    <Resource Include="Icons\update.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
 
   <ItemGroup>
