@@ -165,8 +165,8 @@
                                 <xctk:DateTimePicker x:Name="EventEnd" Format="Custom"
                                 FormatString="MM-dd-yy hh:mm:ss tt" TimeFormat="Custom" TimeFormatString="hh:mm:ss tt"  
                                MinWidth="195" Focusable="True" Width="201" HorizontalAlignment="Center" VerticalAlignment="Top" Canvas.Left="10" Canvas.Top="21" Height="16" />
-                                <Button x:Name="btnEventCheck" Canvas.Left="225" 
-                                    Width="40" Height="40" Canvas.Top="3" HorizontalAlignment="Center" VerticalAlignment="Top">
+                                <Button x:Name="btnEventCheck" Canvas.Left="216" 
+                                    Width="52" Height="52" Canvas.Top="5" HorizontalAlignment="Left" VerticalAlignment="Center">
                                     <Image Source="/Icons/UpdateCircle.png"/>
                                 </Button>
                                 <TextBox x:Name="txtEventName" Canvas.Left="10" Canvas.Top="41" 
