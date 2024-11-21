@@ -8,6 +8,29 @@
         Title="Schedule Event Creator" mc:Ignorable="d" Loaded="Window_Loaded" 
         Closing="Window_Closing" Height="450" Width="1028"
         ResizeMode="CanResizeWithGrip" WindowStartupLocation="CenterScreen"  WindowStyle="ToolWindow" >
+    <Window.Resources>
+        <BitmapImage x:Key="Circle" UriSource="pack://application:,,,/Icons/UpdateCircle.png"/>
+        <BitmapImage x:Key="Update" UriSource="pack://application:,,,/Icons/UpdateNew.png"/>
+        <Style x:Key="ToggleButtonStyle" TargetType="{x:Type ToggleButton}">
+            <Setter Property="MinHeight" Value="28"/>
+            <Setter Property="MinWidth" Value="28"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ToggleButton}">
+                        <Image x:Name="PART_Image"  />
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="true">
+                                <Setter TargetName="PART_Image" Property="Source" Value="{StaticResource Circle}"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="False">
+                                <Setter TargetName="PART_Image" Property="Source" Value="{StaticResource Update}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
     <Grid Margin="0,0,0,9">
         <StackPanel x:Name="stkmain" Orientation="Vertical">
             <StackPanel>
@@ -145,7 +168,7 @@
                         </Button>
                         <Button x:Name="BtnRemoveSchedule" Canvas.Left="985" 
                             Width="24" Height="24" Canvas.Top="229" HorizontalAlignment="Center" VerticalAlignment="Top">
-                            <Image Source="/Icons/Cancel.png"/>
+                            <Image Source="/Icons/Cancel.png" Tag="0"/>
                         </Button>
                         <Button x:Name="btnAddEvent" Canvas.Left="985" 
                            Width="24" Height="24" Canvas.Top="83" HorizontalAlignment="Center" 
@@ -165,13 +188,11 @@
                                 <xctk:DateTimePicker x:Name="EventEnd" Format="Custom"
                                 FormatString="MM-dd-yy hh:mm:ss tt" TimeFormat="Custom" TimeFormatString="hh:mm:ss tt"  
                                MinWidth="195" Focusable="True" Width="201" HorizontalAlignment="Center" VerticalAlignment="Top" Canvas.Left="10" Canvas.Top="21" Height="16" />
-                                <Button x:Name="btnEventCheck" Canvas.Left="216" 
-                                    Width="52" Height="52" Canvas.Top="5" HorizontalAlignment="Left" VerticalAlignment="Center">
-                                    <Image Source="/Icons/UpdateCircle.png"/>
-                                </Button>
+                                <ToggleButton x:Name="btnEventCheck" Canvas.Left="216" Style="{DynamicResource ToggleButtonStyle}" IsChecked="False"
+                                    Width="52" Height="52" HorizontalAlignment="Center" VerticalAlignment="Top" Canvas.Top="-2"/>
                                 <TextBox x:Name="txtEventName" Canvas.Left="10" Canvas.Top="41" 
                                          TextWrapping="Wrap" Width="201" 
-                                         FontSize="12" TextChanged="txtEventName_TextChanged" 
+                                         FontSize="12" 
                                          HorizontalAlignment="Center" VerticalAlignment="Top"/>
                             </Canvas>
                         </GroupBox>
@@ -191,7 +212,7 @@
                             <Canvas Margin="0,0,0,0">
                                 <Label x:Name="lblSRC" Content="Video Type" FontSize="14" Canvas.Top="11" 
                                  Canvas.Left="21" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                                <ComboBox Canvas.Left="104" Canvas.Top="14" Width="74" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                <ComboBox Name="cbxVideoType" Canvas.Left="104" Canvas.Top="14" Width="74" HorizontalAlignment="Left" VerticalAlignment="Center">
                                     <ComboBoxItem Content="F"/>
                                     <ComboBoxItem Content="D"/>
                                 </ComboBox>

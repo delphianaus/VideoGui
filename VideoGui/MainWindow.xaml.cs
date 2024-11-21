@@ -403,7 +403,8 @@ namespace VideoGui
             {
                 if (tld is CustomParams_Initialize cpi)
                 {
-                    string sql = "SELECT SP.SOURCE,SP.MAXDAILY,SP.MAXEVENT,SP.NAME,ESD.START,ESD.END,ESD.STARTTIME,ESD.ENDTIME,SD.START,SD.END,SD.STARTTIME,SD.ENDTIME FROM " +
+                    string sql = "SELECT ES.EVENTID,SP.SOURCE,SP.MAXDAILY,SP.MAXEVENT,SP.NAME,ESD.START,ESD.END,ESD.STARTTIME,ESD.ENDTIME," +
+                          "SD.START,SD.END,SD.STARTTIME,SD.ENDTIME FROM " +
                           "EVENTSCHEDULES ES  " +
                           "INNER JOIN EVENTSCHEDULEDATE ESD ON ESD.EVENTID = ES.EVENTID " +
                           "INNER JOIN SCHEDULEDATE SD ON SD.EVENTID = ES.EVENTID " +
@@ -419,7 +420,94 @@ namespace VideoGui
                         }
                     });
                     scheduleEventCreatorFrm.lstSchedules.ItemsSource = EditableScheduleEventsList;
+                    sql = "SELECT SETTING FROM SETTINGS WHERE NAME = @P0";
+                    int res = -1;
+                    using (var connection = new FbConnection(connectionString))
+                    {
+                        connection.Open();
+                        using (var command = new FbCommand(sql.ToUpper(), connection))
+                        {
+                            command.Parameters.Clear();
+                            command.Parameters.AddWithValue("@P0", "EVENTID");
+                            object result = command.ExecuteScalar();
+                            res = result.ToInt(-1);
+                        }
+                        connection.Close();
+                    }
+                    if (res != -1)
+                    {
+                        bool found = true;
+                        foreach (var item in EditableScheduleEventsList.Where(idx => idx.EventId == res).Select(idx => idx))
+                        {
+                            found = true;
+                            scheduleEventCreatorFrm.lstSchedules.SelectedItem = item;
+                            scheduleEventCreatorFrm.txtEventName.Text = item.Name;
+                            scheduleEventCreatorFrm.EventStart.Value = item.EventStart;
+                            scheduleEventCreatorFrm.EventEnd.Value = item.EventEnd;
+                            scheduleEventCreatorFrm.ScheduleStart.Value = item.ScheduleStart;
+                            scheduleEventCreatorFrm.ScheduleEnd.Value = item.ScheduleEnd;
+                            scheduleEventCreatorFrm.txtMax.Text = item.MaxDaily.ToString();
+                            scheduleEventCreatorFrm.txtMaxEvent.Text = item.MaxEvent.ToString();
+                            scheduleEventCreatorFrm.cbxVideoType.SelectedIndex = item.Source;
+                            scheduleEventCreatorFrm.btnEventCheck.IsChecked = true;
+                            break;
+                        }
+                        if (!found)
+                        {
+                            scheduleEventCreatorFrm.btnEventCheck.IsChecked = false;
+                            scheduleEventCreatorFrm.lstSchedules.SelectedItem = null;
+                            scheduleEventCreatorFrm.txtEventName.Text = "";
+                            bool Executed = false;
+                            Nullable<DateOnly> StartDate = null;
+                            Nullable<DateOnly> EndDate = null;
 
+                            Nullable<TimeOnly> StartTime = null;
+                            Nullable<TimeOnly> EndTime = null;
+
+
+                            sql = "SELECT ESD.START,ESD.END,ESD.STARTTIME,ESD.ENDTIME FROM EVENTSCHEDULES ES " +
+                                "INNER JOIN EVENTSCHEDULEDATE ESD ON ESD.EVENTID = ES.EVENTID " +
+                                "INNER JOIN SCHEDULES SP ON SP.ID = ES.SCHEDULEID WHERE ES.EVENTID = @EVENTID AND WHERE SP.ISSCHEDULE = 1;";
+                            connectionString.ExecuteReader(sql, (FbDataReader r) =>
+                            {
+                                if (!Executed)
+                                {
+                                    StartDate = (r[0] is DateOnly) ? (DateOnly)r[0] : null;
+                                    EndDate = (r[1] is DateOnly) ? (DateOnly)r[1] : null;
+                                    StartTime = (r[2] is TimeOnly) ? (TimeOnly)r[2] : null;
+                                    EndTime = (r[3] is TimeOnly) ? (TimeOnly)r[3] : null;
+                                    Executed = true;
+                                }
+                            });
+                            if (StartDate is not null && StartTime is not null)
+                            {
+                                scheduleEventCreatorFrm.btnEventCheck.IsChecked = true;
+                                scheduleEventCreatorFrm.EventStart.Value = StartDate.Value.ToDateTime(StartTime.Value);
+                            }
+                            else
+                            {
+                                scheduleEventCreatorFrm.btnEventCheck.IsChecked = true;
+                                scheduleEventCreatorFrm.EventStart.Value = null;
+                            }
+                            if (EndDate is not null && EndTime is not null)
+                            {
+                                scheduleEventCreatorFrm.btnEventCheck.IsChecked = true;
+                                scheduleEventCreatorFrm.EventEnd.Value = EndDate.Value.ToDateTime(EndTime.Value);
+                            }
+                            else
+                            {
+                                scheduleEventCreatorFrm.btnEventCheck.IsChecked = true;
+                                scheduleEventCreatorFrm.EventEnd.Value = null;
+                            }
+
+                            scheduleEventCreatorFrm.ScheduleStart.Value = null;
+                            scheduleEventCreatorFrm.ScheduleEnd.Value = null;
+                            scheduleEventCreatorFrm.txtMax.Text = "";
+                            scheduleEventCreatorFrm.txtMaxEvent.Text = "";
+                            scheduleEventCreatorFrm.cbxVideoType.SelectedIndex = -1;
+                            scheduleEventCreatorFrm.cbxVideoType.Text = "";
+                        }
+                    }
                 }
             }
             catch (Exception ex)
@@ -2452,6 +2540,10 @@ namespace VideoGui
 
                 sqlstring = $"create table PLANINGQUES({Id},SOURCE varchar(500),SourceDir varchar(500))";
                 connectionString.CreateTableIfNotExists(sqlstring);
+
+                sqlstring = $"create table SETTINGS({Id},SETTINGNAME varchar(250),SETTING varchar(250))";
+                connectionString.CreateTableIfNotExists(sqlstring);
+
 
                 sqlstring = $"create table PLANINGCUTS({Id}, PLANNINGQUEID INTEGER,BIGINT START ,BIGINT END , " +
                     "SMALLINT CUTNO , FILENAME VARCHAR(500))";
