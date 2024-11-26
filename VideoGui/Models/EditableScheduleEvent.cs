@@ -16,6 +16,7 @@ namespace VideoGui.Models
         {
             try
             {
+                EventId = (reader["ES.EVENTID"] is int _id ? _id : -1);
                 Name = (reader["SP.NAME"] is string _nn ? _nn : "");
                 EventStartDate = (reader["ESD.START"] is DateOnly ESD ? ESD : new DateOnly());
                 EventStartTime = (reader["ESD.STARTTIME"] is TimeOnly TSD ? TSD : new TimeOnly());
@@ -35,7 +36,7 @@ namespace VideoGui.Models
             }
         }
         private string _Name = string.Empty;
-        private int _Source = -1, _MaxDaily = -1, _MaxEvent = -1;
+        private int _Source = -1, _MaxDaily = -1, _MaxEvent = -1, _EventId = -1;
         private DateOnly EventStartDate, EventEndDate, ScheduleStartDate, ScheduleEndDate;
         private TimeOnly EventStartTime, EventEndTime, ScheduleStartTime, ScheduleEndTime;
         public DateTime EventStart { get => EventStartDate.ToDateTime(EventStartTime); set { (EventStartDate,EventStartTime) = ConvertDT(value); OnPropertyChanged(); } }
@@ -46,6 +47,8 @@ namespace VideoGui.Models
         public int Source { get => _Source; set { _Source = value; OnPropertyChanged(); } }
         public int MaxEvent { get => _MaxEvent; set { _MaxEvent = value; OnPropertyChanged(); } }
         public int MaxDaily { get => _MaxDaily; set { _MaxDaily = value; OnPropertyChanged(); } }
+
+        public int EventId { get => _EventId; set { _EventId = value; OnPropertyChanged(); } }
 
         public event PropertyChangedEventHandler PropertyChanged;
         protected void OnPropertyChanged([CallerMemberName] string name = null)
