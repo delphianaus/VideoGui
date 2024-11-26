@@ -460,22 +460,21 @@ namespace VideoGui
                             bool Executed = false;
                             Nullable<DateOnly> StartDate = null;
                             Nullable<DateOnly> EndDate = null;
-
                             Nullable<TimeOnly> StartTime = null;
                             Nullable<TimeOnly> EndTime = null;
-
-
-                            sql = "SELECT ESD.START,ESD.END,ESD.STARTTIME,ESD.ENDTIME FROM EVENTSCHEDULES ES " +
+                            string Name = "";
+                            sql = "SELECT ESD.START,ESD.END,ESD.STARTTIME,ESD.ENDTIME,SP.NAME FROM EVENTSCHEDULES ES " +
                                 "INNER JOIN EVENTSCHEDULEDATE ESD ON ESD.EVENTID = ES.EVENTID " +
                                 "INNER JOIN SCHEDULES SP ON SP.ID = ES.SCHEDULEID WHERE ES.EVENTID = @EVENTID AND WHERE SP.ISSCHEDULE = 1;";
                             connectionString.ExecuteReader(sql, (FbDataReader r) =>
                             {
                                 if (!Executed)
                                 {
-                                    StartDate = (r[0] is DateOnly) ? (DateOnly)r[0] : null;
-                                    EndDate = (r[1] is DateOnly) ? (DateOnly)r[1] : null;
-                                    StartTime = (r[2] is TimeOnly) ? (TimeOnly)r[2] : null;
-                                    EndTime = (r[3] is TimeOnly) ? (TimeOnly)r[3] : null;
+                                    StartDate = (r[0] is DateOnly sdd) ? sdd : null;
+                                    EndDate = (r[1] is DateOnly sed) ? sed : null;
+                                    StartTime = (r[2] is TimeOnly sst) ? sst : null;
+                                    EndTime = (r[3] is TimeOnly set) ? set : null;
+                                    Name = (r[4] is string nm ? nm : "");
                                     Executed = true;
                                 }
                             });
@@ -499,13 +498,64 @@ namespace VideoGui
                                 scheduleEventCreatorFrm.btnEventCheck.IsChecked = true;
                                 scheduleEventCreatorFrm.EventEnd.Value = null;
                             }
-
-                            scheduleEventCreatorFrm.ScheduleStart.Value = null;
-                            scheduleEventCreatorFrm.ScheduleEnd.Value = null;
-                            scheduleEventCreatorFrm.txtMax.Text = "";
-                            scheduleEventCreatorFrm.txtMaxEvent.Text = "";
-                            scheduleEventCreatorFrm.cbxVideoType.SelectedIndex = -1;
-                            scheduleEventCreatorFrm.cbxVideoType.Text = "";
+                            if (Name != "")
+                            {
+                                scheduleEventCreatorFrm.btnEventCheck.IsChecked = true;
+                                scheduleEventCreatorFrm.txtEventName.Text = Name;
+                            }
+                            if (scheduleEventCreatorFrm.btnEventCheck.IsChecked.Value)
+                            {
+                                sql = "SELECT SD.START,SD.END,SD.STARTTIME,SD.ENDTIME,SP.SOURCE,SP.MAXDAILY,SP.MAXEVENT,SP.NAME FROM " +
+                                      "EVENTSCHEDULES ES " +
+                                      "INNER JOIN SCHEDULEDATE SD ON SD.EVENTID = ES.EVENTID " +
+                                      "INNER JOIN SCHEDULES SP ON SP.ID = ES.SCHEDULEID " +
+                                     $"WHERE SP.ISSCHEDULE = 1;";
+                                Executed = false;
+                                int src = -1, maxd = -1, maxe = -1;
+                              
+                                connectionString.ExecuteReader(sql, (FbDataReader r) =>
+                                {
+                                    if (!Executed)
+                                    {
+                                        StartDate = (r[0] is DateOnly sdd) ? sdd : null;
+                                        EndDate = (r[1] is DateOnly sed) ? sed : null;
+                                        StartTime = (r[2] is TimeOnly sst) ? sst : null;
+                                        EndTime = (r[3] is TimeOnly set) ? set : null;
+                                        src = (r[4] is int ssrc ? ssrc : -1);
+                                        maxd = (r[5] is int smaxd ? smaxd : -1);
+                                        maxe = (r[6] is int smaxe ? smaxe : -1);
+                                        Executed = true;
+                                    }
+                                });
+                                scheduleEventCreatorFrm.cbxVideoType.SelectedIndex = src;
+                                scheduleEventCreatorFrm.txtMax.Text = (maxd != -1) ? maxd.ToString() : "";
+                                scheduleEventCreatorFrm.txtMaxEvent.Text = (maxe != -1) ? maxe.ToString() : "";
+                                if (StartDate is not null && StartTime is not null)
+                                {
+                                    scheduleEventCreatorFrm.ScheduleStart.Value = StartDate.Value.ToDateTime(StartTime.Value);
+                                }
+                                else
+                                {
+                                    scheduleEventCreatorFrm.ScheduleStart.Value = null;
+                                }
+                                if (EndDate is not null && EndTime is not null)
+                                {
+                                    scheduleEventCreatorFrm.ScheduleEnd.Value = EndDate.Value.ToDateTime(EndTime.Value);
+                                }
+                                else
+                                {
+                                    scheduleEventCreatorFrm.ScheduleEnd.Value = null;
+                                }
+                            }
+                            else
+                            {
+                                scheduleEventCreatorFrm.ScheduleStart.Value = null;
+                                scheduleEventCreatorFrm.ScheduleEnd.Value = null;
+                                scheduleEventCreatorFrm.txtMax.Text = "";
+                                scheduleEventCreatorFrm.txtMaxEvent.Text = "";
+                                scheduleEventCreatorFrm.cbxVideoType.SelectedIndex = -1;
+                                scheduleEventCreatorFrm.cbxVideoType.Text = "";
+                            }
                         }
                     }
                 }
