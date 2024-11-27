@@ -1507,7 +1507,7 @@ namespace VideoGui
 
         }
 
-        public static void ExecuteReader(this string connectionStr, string sql, OnFirebirdReader Reader)
+        public static void ExecuteReader(this string connectionStr, string sql, OnFirebirdReader Reader, bool brk = false)
         {
             try
             {
@@ -1521,6 +1521,7 @@ namespace VideoGui
                             while (cmd.Read())
                             {
                                 Reader?.Invoke(cmd);
+                                if (brk) break;
                             }
                         }
                     }

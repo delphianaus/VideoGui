@@ -17,77 +17,6 @@
         FocusableChanged="Window_FocusableChanged"
         
         AutomationProperties.IsColumnHeader="True" GotFocus="MainWindowX_GotFocus">
-    <Window.Resources>
-        <BitmapImage x:Key="GEN" UriSource="icons/GPUEncode.png"></BitmapImage>
-        <BitmapImage x:Key="CEN" UriSource="icons/CPUEncode.png"></BitmapImage>
-        <BitmapImage x:Key="X264" UriSource="icons/OutputX264.png"></BitmapImage>
-        <BitmapImage x:Key="X265" UriSource="icons/OutputX265.png"></BitmapImage>
-        <BitmapImage x:Key="FishEyeKeep" UriSource="icons/FisheyeKeep.png"></BitmapImage>
-        <BitmapImage x:Key="FishEyeRemoval" UriSource="icons/FisheyeRemoval.png"></BitmapImage>
-        <Style x:Key="ToggleStyle1" TargetType="{x:Type ToggleButton}">
-            <Setter Property="MaxHeight" Value="28"></Setter>
-            <Setter Property="MaxWidth" Value="100"></Setter>
-            <Setter Property="MinHeight" Value="28"></Setter>
-            <Setter Property="MinWidth" Value="100"></Setter>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="{x:Type ToggleButton}">
-                        <Image x:Name="PART_Image"  />
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsChecked" Value="true">
-                                <Setter TargetName="PART_Image" Property="Source" Value="{StaticResource X265}"/>
-                            </Trigger>
-                            <Trigger Property="IsChecked" Value="False">
-                                <Setter TargetName="PART_Image" Property="Source" Value="{StaticResource X264}"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-        <Style x:Key="ToggleStyle2" TargetType="{x:Type ToggleButton}">
-            <Setter Property="MaxHeight" Value="28"></Setter>
-            <Setter Property="MaxWidth" Value="100"></Setter>
-            <Setter Property="MinHeight" Value="28"></Setter>
-            <Setter Property="MinWidth" Value="100"></Setter>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="{x:Type ToggleButton}">
-                        <Image x:Name="PART_Image2"  />
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsChecked" Value="true">
-                                <Setter TargetName="PART_Image2" Property="Source" Value="{StaticResource CEN}"/>
-                            </Trigger>
-                            <Trigger Property="IsChecked" Value="False">
-                                <Setter TargetName="PART_Image2" Property="Source" Value="{StaticResource GEN}"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-        <Style x:Key="ToggleStyle3" TargetType="{x:Type ToggleButton}">
-            <Setter Property="MaxHeight" Value="28"></Setter>
-            <Setter Property="MaxWidth" Value="100"></Setter>
-            <Setter Property="MinHeight" Value="28"></Setter>
-            <Setter Property="MinWidth" Value="100"></Setter>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="{x:Type ToggleButton}">
-                        <Image x:Name="PART_Image3"  />
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsChecked" Value="true">
-                                <Setter TargetName="PART_Image3" Property="Source" Value="{StaticResource FishEyeKeep}"/>
-                            </Trigger>
-                            <Trigger Property="IsChecked" Value="False">
-                                <Setter TargetName="PART_Image3" Property="Source" Value="{StaticResource FishEyeRemoval}"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-    </Window.Resources>
     <Grid x:Name="Grid1" Focusable="True">
         <tb:TaskbarIcon x:Name="trayicon"  IconSource="/Icons/computer.ico"
                 ToolTipText="Video Gui" Visibility="Collapsed" TrayMouseDoubleClick="Restore_Click">
@@ -175,9 +104,9 @@
             <ComboBoxItem Content="=&gt; aac 128k"/>
         </ComboBox>
         <Button x:Name="btnselect" Content="Select" HorizontalAlignment="Left" Height="22" Margin="73,0,0,141" VerticalAlignment="Bottom" Width="50" Click="Button_ClickAsync" />
-        <ToggleButton x:Name="GPUEncode" Style="{DynamicResource ToggleStyle1}" Margin="921,0,7,76" Height="24" Width="Auto" HorizontalAlignment="Left" VerticalAlignment="Bottom" IsChecked="False"/>
-        <ToggleButton x:Name="X265Output" Style="{DynamicResource ToggleStyle2}"  Margin="816,0,96,76" Height="24" Width="Auto" HorizontalAlignment="Left" VerticalAlignment="Bottom"/>
-        <ToggleButton x:Name="Fisheye" Style="{DynamicResource ToggleStyle3}"  Margin="1025,0,7,76" Height="24"  Width="Auto" HorizontalAlignment="Left" VerticalAlignment="Bottom"/>
+        <ToggleButton x:Name="GPUEncode" Style="{StaticResource  ToggleStyle1}" Margin="921,0,7,76" Height="24" Width="Auto" HorizontalAlignment="Left" VerticalAlignment="Bottom" IsChecked="False"/>
+        <ToggleButton x:Name="X265Output" Style="{StaticResource  ToggleStyle2}"  Margin="816,0,96,76" Height="24" Width="98" HorizontalAlignment="Left" VerticalAlignment="Bottom" IsChecked="False"/>
+        <ToggleButton x:Name="Fisheye" Style="{StaticResource  ToggleStyle3}"  Margin="1025,0,7,76" Height="24"  Width="Auto" HorizontalAlignment="Left" VerticalAlignment="Bottom"/>
 
         <Button x:Name="btnConfig" Content="Configuration" HorizontalAlignment="Left" Height="22" Margin="26,0,0,113" VerticalAlignment="Bottom" Click="BtnConfig_Click" Width="97"/>
         <CheckBox x:Name="ChkDropFormat" Content="Drop As X265" HorizontalAlignment="Left" Margin="26,0,0,175" VerticalAlignment="Bottom" IsChecked="True" Width="97"/>
@@ -235,14 +164,7 @@
             <Label x:Name="lblPercentStatus" Background="#FFBFBFBF" Width="47" Height="34" Content="Percent" FontSize="11"/>
             <Label x:Name="lblPercent" HorizontalAlignment="Left" Height="28" VerticalAlignment="Center" Width="78"/>
             <Button x:Name="btnAppliedSchedule" Content="Upload Schedule" HorizontalAlignment="Center" Height="28" VerticalAlignment="Center" Width="88" RenderTransformOrigin="0.5,0.5" Click="btnAppliedSchedule_Click">
-                <Button.RenderTransform>
-                    <TransformGroup>
-                        <ScaleTransform/>
-                        <SkewTransform/>
-                        <RotateTransform Angle="0.382"/>
-                        <TranslateTransform/>
-                    </TransformGroup>
-                </Button.RenderTransform>
+                
             </Button>
             <Button x:Name="btnYTSchedule" Content="YT Schedule" HorizontalAlignment="Center" Height="28" VerticalAlignment="Center" Width="70" Click="btnYTSchedule_Click"/>
 

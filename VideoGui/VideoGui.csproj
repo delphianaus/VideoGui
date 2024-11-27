@@ -56,6 +56,7 @@
     <None Remove="Icons\GPU Encode.png" />
     <None Remove="Icons\CPU Encode.png" />
     <None Remove="Icons\Historic.png" />
+    <None Remove="Icons\No.png" />
     <None Remove="Icons\OutputX265.png" />
     <None Remove="Icons\OutputX264.png" />
     <None Remove="Icons\set.png" />
@@ -63,6 +64,7 @@
     <None Remove="Icons\update.png" />
     <None Remove="Icons\UpdateCircle.png" />
     <None Remove="Icons\UpdateNew.png" />
+    <None Remove="Icons\Yes.png" />
   </ItemGroup>
 
   <ItemGroup>
@@ -113,9 +115,12 @@
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
     <Resource Include="Icons\FisheyeKeep.png" />
-    <Resource Include="Icons\FisheyeRemoval.png" />
+    <Resource Include="Icons\FisheyeRemoval.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
     <Resource Include="Icons\GPUEncode.png" />
     <Resource Include="Icons\Historic.png" />
+    <Resource Include="Icons\No.png" />
     <Resource Include="icons\OutputX265.png" />
     <Resource Include="icons\OutputX264.png" />
 
@@ -146,12 +151,14 @@
     </Resource>
 
     <Resource Include="Icons\UpdateCircle.png">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
 
     <Resource Include="Icons\UpdateNew.png">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
+
+    <Resource Include="Icons\Yes.png" />
   </ItemGroup>
 
   <ItemGroup>

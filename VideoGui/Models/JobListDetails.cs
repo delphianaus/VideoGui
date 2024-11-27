@@ -18,12 +18,12 @@ namespace VideoGui
 {
     public class JobListDetails : INotifyPropertyChanged
     {
-        private string _RTMP,_ScriptFile, _title, _MultiFile, _fileinfo, _sourcePath, _handle, _VideoInfo, _MultiSourceDir,
+        private string _RTMP, _ScriptFile, _title, _MultiFile, _fileinfo, _sourcePath, _handle, _VideoInfo, _MultiSourceDir,
             _SourceFile, _FileNoExt, _FileExt, _DestMFile, _StartPos, _EndPos, _PosMode, _MuxData;
         private int _progress, _OwnedByID, _SourceFileIndex, _DeletionFileHandle;
         private double _TotalSeconds;
         //CET MOD
-        private bool _IsTwitchStream,_Is5K,_Is4kAdobe, _IsCET, _IsMSJ, _IsNVM, _Complete, _ConversionStarted, _ProbePassed, _IsCST, _KeepSource, _IsMulti,
+        private bool _IsTwitchStream, _Is5K, _Is4kAdobe, _IsCET, _IsMSJ, _IsNVM, _Complete, _ConversionStarted, _ProbePassed, _IsCST, _KeepSource, _IsMulti,
             _fisheye, _processed, _X264Override, _ComplexMode, _Is720p,
             _Is48K, _IsComplex, _ProbeLock, _IsAc3_2Channel, _IsAc3_6Channel, _InProcess, _IsSkipped,
             _IsShorts,
@@ -155,20 +155,21 @@ namespace VideoGui
             {
                 Is5K = false;
                 RTMP = "";
+                bool IsComplexYT = false;
                 var srcdir = reader["SRCDIR"].ToString();
                 var destfname = reader["DESTFNAME"].ToString();
                 Title = Path.GetFileName(destfname);
                 Is720P = (reader["B720P"] is Int16 _is720p) ? (Int16)_is720p == 1 : false;
                 IsShorts = (reader["BSHORTS"] is Int16 _isShorts) ? (Int16)_isShorts == 1 : false;
                 IsMuxed = (reader["ISMUXED"] is Int16 _isMux) ? (Int16)_isMux == 1 : false;
-                MuxData  = (reader["MUXDATA"] is string _isMuxData) ? _isMuxData : "";
-                IsCreateShorts = (reader["BCREATESHORTS"] is Int16 _isCShorts) ? (Int16)_isCShorts  : -1; ;
+                MuxData = (reader["MUXDATA"] is string _isMuxData) ? _isMuxData : "";
+                IsCreateShorts = (reader["BCREATESHORTS"] is Int16 _isCShorts) ? (Int16)_isCShorts : -1; ;
                 var IsEncodeTrim = (reader["BENCODETRIM"] is Int16 _isEncodeTrim) ? (Int16)_isEncodeTrim == 1 : false;
                 IsTwitchStream = (reader["BTWITCHSTREAM"] is Int16 _isTwitchStream) ? (Int16)_isTwitchStream == 1 : false;
-                Nullable<DateTime> TwitchDateOnly = (reader["TWITCHDATE"] is DateTime _TwitchDate) ? (DateTime)_TwitchDate  : null;
+                Nullable<DateTime> TwitchDateOnly = (reader["TWITCHDATE"] is DateTime _TwitchDate) ? (DateTime)_TwitchDate : null;
                 Nullable<TimeSpan> TwitchTimeSpan = (reader["TWITCHTIME"] is TimeSpan _TwitchTime) ? (TimeSpan)_TwitchTime : null;
                 twitchschedule = null;
-                if (TwitchDateOnly is not null &&  TwitchTimeSpan is not null)
+                if (TwitchDateOnly is not null && TwitchTimeSpan is not null)
                 {
                     twitchschedule = TwitchDateOnly.Value.AtTime(TimeOnly.FromTimeSpan(TwitchTimeSpan.Value));
                     if (twitchschedule.Value.Year < 1800)
@@ -187,9 +188,11 @@ namespace VideoGui
                 TimeSpan Dur = TimeSpan.FromMilliseconds(end);
                 var _StartPos = ((!Is720P) && (!IsShorts)) ? TimeSpan.FromMilliseconds(start) : TimeSpan.Zero;
                 var Durationcut = ((!Is720P) && (!IsShorts)) ? TimeSpan.FromMilliseconds(end) : TimeSpan.Zero;
-                StartPos = (_StartPos != TimeSpan.Zero) ? StartPos : "";
+                StartPos = (_StartPos != TimeSpan.Zero) ? _StartPos.ToString() : "";
                 var _Duration = Durationcut != TimeSpan.Zero ? Durationcut : TimeSpan.Zero;
 
+
+                if (_Duration != TimeSpan.Zero) IsComplexYT = true;
                 int ScriptType = 0;
                 if (Is720P) ScriptType = 2;
                 if (IsShorts) ScriptType = 0;
@@ -213,6 +216,7 @@ namespace VideoGui
                 _IsCST = ScriptType == 1;// IsCutTrim
                 _IsEdt = ScriptType == 2;// Is720p
                 _IsCET = ScriptType == 3;// IsCutTrim
+
                 IsTwitchStream = ScriptType == 5;
                 Is4K = (Is4KAdobe) ? true : Is4K;
                 List<string> Commands = _ScriptFile.Split('|').ToList();
@@ -233,7 +237,7 @@ namespace VideoGui
                 Commands.RemoveAt(0);
                 string ext = Commands.FirstOrDefault();
                 Commands.RemoveAt(0);
-                if ((Commands.Count >= 2) && (IsCST || IsCET || IsTwitchStream))
+                if ((Commands.Count >= 2) && (IsCST || IsCET || IsTwitchStream || IsComplexYT))
                 {
                     StartPos = Commands.FirstOrDefault();
                     EndPos = Commands[1].ToString();
@@ -275,7 +279,7 @@ namespace VideoGui
             _IsEdt = _ScriptType == 2;// Is720p
             IsShorts = __IsShorts | _ScriptType == 0 || _ScriptType == 4;
             IsCreateShorts = _IsCreateShorts;
-            Is4K = (Is4KAdobe|| IsShorts|| IsCET || IsCST || IsEdt) ? true : Is4KAdobe ;
+            Is4K = (Is4KAdobe || IsShorts || IsCET || IsCST || IsEdt) ? true : Is4KAdobe;
             List<string> Commands = _ScriptFile.Split('|').ToList();
             string ks = Commands.FirstOrDefault();
             KeepSource = false;
@@ -294,7 +298,7 @@ namespace VideoGui
             Commands.RemoveAt(0);
             string ext = Commands.FirstOrDefault();
             Commands.RemoveAt(0);
-            if ((Commands.Count >= 2) && (IsCST || IsCET  || IsTwitchOut))
+            if ((Commands.Count >= 2) && (IsCST || IsCET || IsTwitchOut))
             {
                 StartPos = Commands.FirstOrDefault();
                 EndPos = Commands[1].ToString();
@@ -325,9 +329,9 @@ namespace VideoGui
             }
         }
 
-        public JobListDetails(string _Title, int _SourceFileIndex, bool _Is1080p = false, 
-            bool _Is4Kp = false, bool _Is4KAdobe = false,string _FIleInfo = "", 
-            int _Progress = 0, bool x265Override = false, bool _IsMpeg4ASP = false, 
+        public JobListDetails(string _Title, int _SourceFileIndex, bool _Is1080p = false,
+            bool _Is4Kp = false, bool _Is4KAdobe = false, string _FIleInfo = "",
+            int _Progress = 0, bool x265Override = false, bool _IsMpeg4ASP = false,
             bool _IsMpeg4AVC = false)
         {
             Fileinfo = _FIleInfo;
@@ -450,7 +454,7 @@ namespace VideoGui
                 _Is48K = false;
                 _IsAc3_2Channel = false;
                 _IsAc3_6Channel = false;
-               
+
                 _handle = "";
                 ItemFontStyle = (X264Override) ? System.Windows.FontStyles.Italic : System.Windows.FontStyles.Normal;
                 ForegroundColor = X264Override ? Color.FromScRgb(100, 6, 186, 28) : Color.FromArgb(100, 246, 8, 50);

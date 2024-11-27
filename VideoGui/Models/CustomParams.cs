@@ -28,6 +28,14 @@ namespace VideoGui.Models
             Name = name;
         }
     }
+    public class CustomParams_DescSelect
+    {
+        public ShortsDirectory UploadsReleaseInfo;
+        public CustomParams_DescSelect(ShortsDirectory _UploadsReleaseInfo)
+        {
+            UploadsReleaseInfo = _UploadsReleaseInfo;
+        }
+    }
     public class CustomParams_Delete
     {
         public string Name { get; set; } = "";
@@ -132,6 +140,16 @@ namespace VideoGui.Models
         {
             IsUploads = _IsUploads;
         }
+    }
+
+    public class CustomParams_TitleSelect
+    {
+        public ShortsDirectory UploadsReleaseInfo;
+        public CustomParams_TitleSelect(ShortsDirectory _UploadsReleaseInfo)
+        {
+            UploadsReleaseInfo = _UploadsReleaseInfo;
+        }
+
     }
     public class CustomParams_Remove
     {

@@ -85,15 +85,18 @@ namespace VideoGui
     public partial class ScraperModule : Window
     {
         object lockobj = new object();
-        int MaxUploads = 0, recs = 0, gmaxrecs = 0, files = 0, max = 0, SlotsPerUpload = 0;
+        int MaxNodes = -1,MaxUploads = 0, recs = 0, gmaxrecs = 0, files = 0, max = 0, SlotsPerUpload = 0;
         public int EventId , TotalScheduled = 0;
         public List<ShortsDirectory> ShortsDirectories = new(); // <shortname>
-                                                                // public bool IsSchedulingShorts = false;
         public List<ListScheduleItems> listSchedules = new List<ListScheduleItems>();
         DirectshortsScheduler directshortsScheduler = null;
-
+        List<string> IdNodes = new();
+        List<string> titles = new List<string>();
+        public List<string> nodeslist = new List<string>();
+        public AddressUpdate DoVideoLookUp = null;
+        StatusTypes VStatusType = StatusTypes.PRIVATE;
         bool Valid = false, IsUnlisted = false, IsDashboardMode = false, CanSpool = false, FirstRun = true, done = false;
-        bool finished = false, Uploading = false, NextRecord = false, Processing = false, clickupload = true;
+        bool DoNextNode = true, finished = false, Uploading = false, NextRecord = false, Processing = false, clickupload = true;
         public bool IsClosing = false, IsClosed = false, Exceeded = false;
         List<uploads> uploaded = new();
         List<string> nextaddress = new(), Ids = new(), Idx = new(), ufiles = new(), Files = new();// DoneFiles = new();
@@ -538,6 +541,7 @@ namespace VideoGui
 
         bool ExitDialog = false, HasExited = false;
         public List<string> ScheduledOk = new List<string>();
+        public List<string> VideoFiles = new List<string>();
         int ts = 0;
         public async Task UploadV2Files(bool rentry = false)
         {
@@ -635,7 +639,7 @@ namespace VideoGui
                             {
                                 newfile = newfile.Substring(0, newfile.IndexOf("."));
                             }
-
+                            VideoFiles.Add(newfile);
                             r = r + newfile + " ";
                         }
 
@@ -937,8 +941,14 @@ namespace VideoGui
                             }
                             connection.Close();
                         }
-                        ScheduledOk.Add(filename1);
-                        TotalScheduled++;
+                        if (ScheduledOk.IndexOf(filename1) == -1)
+                        {
+                            ScheduledOk.Add(filename1);
+                            string gUrl = webAddressBuilder.ScopeVideo(filename1,false).ScopeAddress;
+                            nextaddress.Add(gUrl);
+                            VideoFiles.Remove(filename1);
+                            TotalScheduled++;
+                        }
                     }
                 }
             }
@@ -1106,14 +1116,7 @@ namespace VideoGui
             }
         }
 
-        int MaxNodes = -1;
-        List<string> IdNodes = new();
-        bool DoNextNode = true;
-        public List<string> nodeslist = new List<string>();
-        public AddressUpdate DoVideoLookUp = null;
-        //public NodeUpdate DoNodeUpdate = null;
-        StatusTypes VStatusType = StatusTypes.PRIVATE;
-        List<string> titles = new List<string>();
+        
         private bool DoNodeScrapeUpdate(string Id, string Title, string Desc, string FileName, string status, DateTime? dateTime)
         {
             try
@@ -1755,6 +1758,13 @@ namespace VideoGui
             nextButton.click();
         }
     ";
+                for (int i = VideoFiles.Count - 1; i >= 0; i--)
+                {
+                    string filename = VideoFiles[i];
+                    nextaddress.Add(filename);
+                    VideoFiles.RemoveAt(i);
+                }
+
                 await ActiveWebView[1].ExecuteScriptAsync(script);
                 wv2_NavigationCompleted(wv2, null);
             }
@@ -2033,12 +2043,26 @@ namespace VideoGui
 
         private void DoOnScheduleComplete()
         {
-            throw new NotImplementedException();
+            try
+            {
+             
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"DoOnScheduleComplete {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
         }
 
         private void DoReportSchedule(DateTime dateTime, string id, string title)
         {
-            throw new NotImplementedException();
+            try
+            { 
+            
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"DoReportSchedule {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
         }
 
         private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
@@ -2109,6 +2133,37 @@ namespace VideoGui
                                 return;
                             }
                         }
+                        else
+                        {
+                            if (filename.Contains("_") && ScraperType == EventTypes.VideoUpload)
+                            {
+                                int index = filename.IndexOf("_");
+                                string lookup = filename.Substring(index+1, filename.Length - (index + 1)).Trim();
+                                var p1 = new CustomParams_GetConnectionString();
+                                dbInitializer?.Invoke(this, p1);
+                                string DirName = "",connectionStr = p1.ConnectionString;
+                                bool IsDone = false;
+                                int TitleID = -1, DescID = -1;
+                                int lp = Convert.ToInt32(lookup, 16), idx = -1;
+                                connectionStr.ExecuteReader($"SELECT FIRST 1 ID,DIRECTORYNAME,TITLEID,DESCID FROM SHORTSDIRECTORY WHERE ID = {lp}",
+                                    (FbDataReader r) =>
+                                {
+                                    while (!IsDone)
+                                    {
+                                        idx = (r["ID"] is int id1) ? id1 : -1;
+                                        TitleID = (r["TITLEID"] is int titleid) ? titleid : -1;
+                                        DescID = (r["DESCID"] is int descid) ? descid : -1;
+                                        DirName = (r["DIRECTORYNAME"] is string dir) ? dir : "";
+                                        IsDone = true;
+                                    }
+                                });
+                                if (IsDone && DirName != "" && idx != -1 && TitleID != -1 && DescID != -1)
+                                {
+
+                                }
+                            }
+                        }
+
                     }
                 }
 

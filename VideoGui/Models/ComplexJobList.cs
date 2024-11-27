@@ -17,9 +17,9 @@ namespace VideoGui.Models
     {
         private TimeSpan _Start, _Duration;
         private string _RTMP, _SourceDirectory, _DestinationDirectory, _Filename;
-        private bool _IsTwitchStream ,_Is720p, _IsShorts, _IsCutTrim, _IsEncodeTrim,
-              _IsDeleteMonitoredSource, _IsPersistentJob, _IsLocked,_IsMuxed;
-        private string _Id,_MuxData;
+        private bool _IsTwitchStream, _Is720p, _IsShorts, _IsCutTrim, _IsEncodeTrim,
+              _IsDeleteMonitoredSource, _IsPersistentJob, _IsLocked, _IsMuxed;
+        private string _Id, _MuxData;
         private Nullable<DateTime> _TwitchSchedule;
         private int _IsCreateShorts = -1;
 
@@ -36,7 +36,7 @@ namespace VideoGui.Models
 
         public string DestinationFile { get => _DestinationDirectory + "\\" + _Filename; set { _Filename = _Filename; OnPropertyChanged(); } }
 
-        public string _SRC = "" ,_DEST = "",_Times = "", _ProceessingType = "", _ProcessingActions = "", _RecordAge = "";
+        public string _SRC = "", _DEST = "", _Times = "", _ProceessingType = "", _ProcessingActions = "", _RecordAge = "";
 
         public string SRC { get => _SRC; set { _SRC = value; OnPropertyChanged(); } }
         public string DEST { get => _DEST; set { _DEST = value; OnPropertyChanged(); } }
@@ -61,7 +61,7 @@ namespace VideoGui.Models
         public bool IsEncodeTrim { get => _IsEncodeTrim; set { _IsEncodeTrim = value; OnPropertyChanged(); } }
         public bool IsDeleteMonitoredSource { get => _IsDeleteMonitoredSource; set { _IsDeleteMonitoredSource = value; OnPropertyChanged(); } }
         public bool IsPersistentJob { get => _IsPersistentJob; set { _IsPersistentJob = value; OnPropertyChanged(); } }
-        
+
         public event PropertyChangedEventHandler PropertyChanged;
         protected void OnPropertyChanged([CallerMemberName] string name = null)
         {
@@ -74,7 +74,7 @@ namespace VideoGui.Models
             {
                 IsLocked = false;
                 IsShorts = false;
-                IsCreateShorts = -1 ;
+                IsCreateShorts = -1;
                 IsCutTrim = false;
                 IsEncodeTrim = false;
                 Id = reader["Id"].ToString();
@@ -111,7 +111,7 @@ namespace VideoGui.Models
                 //
                 TimeSpan ST1 = TimeSpan.FromMilliseconds(start);
                 TimeSpan Dur = TimeSpan.FromMilliseconds(end);
-                var stype = (IsCreateShorts == 1) ? "Short FMT " : (IsCreateShorts ==2) ? "Long FMT " : "";
+                var stype = (IsCreateShorts == 1) ? "Short FMT " : (IsCreateShorts == 2) ? "Long FMT " : "";
                 var StartPos = ((!Is720p) && (!IsShorts)) ? TimeSpan.FromMilliseconds(start) : TimeSpan.Zero;
                 var Durationcut = ((!Is720p) && (!IsShorts)) ? TimeSpan.FromMilliseconds(end) : TimeSpan.Zero;
                 Start = StartPos != TimeSpan.Zero ? StartPos : TimeSpan.Zero;
@@ -122,21 +122,21 @@ namespace VideoGui.Models
                 Times = (!Is720p && !IsShorts) ? $"{StartTime}-{EndTime}" : "";
                 ProceessingType = (Is720p) ? "720p Edit File" : (IsShorts) ? "Shorts Master File" :
                     (IsCutTrim) ? "Non Encoded Trim" : (IsEncodeTrim) ? "Encoded Trim" : (IsMuxed) ? "Muxing Job" : "";
-                ProcessingActions = (IsCreateShorts > 0) ? $"Creating {stype}Shorts" : (IsShorts) ? "Creating Shorts Master" : 
+                ProcessingActions = (IsCreateShorts > 0) ? $"Creating {stype}Shorts" : (IsShorts) ? "Creating Shorts Master" :
                     (IsPersistentJob && IsDeleteMonitoredSource) ? "Monitored Persistent Job" :
-                    (IsPersistentJob) ? "Persistent Job" : (IsDeleteMonitoredSource) ? "Monitored Source" : 
-                    (IsMuxed) ? "Muxing Action" :"Standard Actions";
+                    (IsPersistentJob) ? "Persistent Job" : (IsDeleteMonitoredSource) ? "Monitored Source" :
+                    (IsMuxed) ? "Muxing Action" : "Standard Actions";
                 SRC = SourceDirectory.Split("\\").ToList().LastOrDefault();
                 DEST = Path.GetFileNameWithoutExtension(Filename);
-                
+
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 ex.LogWrite($"{this} {MethodBase.GetCurrentMethod().Name}");
             }
         }
-        public ComplexJobList(string srcdir, string destfname,TimeSpan StartPos, TimeSpan Durationcut, 
-            bool  b720p, bool bShorts, int bCreateShorts, bool bEncodeTrim, bool bCutTrim, bool bMonitoredSource, 
+        public ComplexJobList(string srcdir, string destfname, TimeSpan StartPos, TimeSpan Durationcut,
+            bool b720p, bool bShorts, int bCreateShorts, bool bEncodeTrim, bool bCutTrim, bool bMonitoredSource,
             bool bPersistentJob, int id, bool _IsMuxed, string _MuxData)
         {
             try
@@ -146,7 +146,7 @@ namespace VideoGui.Models
                 DestinationDirectory = Path.GetDirectoryName(destfname);
                 Filename = Path.GetFileName(destfname);
                 Start = StartPos != TimeSpan.Zero ? StartPos : TimeSpan.Zero;
-                Duration = Durationcut != TimeSpan.Zero ? Durationcut : TimeSpan.Zero; 
+                Duration = Durationcut != TimeSpan.Zero ? Durationcut : TimeSpan.Zero;
                 Is720p = b720p;
                 IsMuxed = _IsMuxed;
                 MuxData = _MuxData;
@@ -157,19 +157,19 @@ namespace VideoGui.Models
                 IsEncodeTrim = bEncodeTrim;
                 IsCutTrim = bCutTrim;
                 Id = (id != -1) ? id.ToString() : "";
-                IsDeleteMonitoredSource = bMonitoredSource; 
+                IsDeleteMonitoredSource = bMonitoredSource;
                 IsPersistentJob = bPersistentJob;
                 IsCreateShorts = bCreateShorts;
                 string StartTime = "", EndTime = "";
                 StartTime = (!Is720p && !IsShorts) ? Start.ToFFmpeg().Replace(".000", "") : "";
                 EndTime = (Duration != TimeSpan.Zero && !Is720p && !IsShorts) ? Duration.ToFFmpeg().Replace(".000", "") : "";
                 Times = (!Is720p && !IsShorts) ? $"{StartTime}-{EndTime}" : "";
-                ProceessingType = (Is720p) ? "720p Edit File" :  (IsShorts) ? "Shorts Master File" : 
-                    (IsCutTrim) ? "Non Encoded Trim" : (IsEncodeTrim) ? "Encoded Trim" : (IsMuxed) ? "Muxing Job" :"";
-                ProcessingActions = (IsPersistentJob && IsDeleteMonitoredSource) ? "Monited Persistent Job" : 
-                    (IsPersistentJob) ? "Persistent Job" : (IsDeleteMonitoredSource) ? "Monitored Source" : 
-                    (IsMuxed) ? "Muxing Action": "Standard Actions";
-               
+                ProceessingType = (Is720p) ? "720p Edit File" : (IsShorts) ? "Shorts Master File" :
+                    (IsCutTrim) ? "Non Encoded Trim" : (IsEncodeTrim) ? "Encoded Trim" : (IsMuxed) ? "Muxing Job" : "";
+                ProcessingActions = (IsPersistentJob && IsDeleteMonitoredSource) ? "Monited Persistent Job" :
+                    (IsPersistentJob) ? "Persistent Job" : (IsDeleteMonitoredSource) ? "Monitored Source" :
+                    (IsMuxed) ? "Muxing Action" : "Standard Actions";
+
                 SRC = SourceDirectory.Split("\\").ToList().LastOrDefault();
                 DEST = Path.GetFileNameWithoutExtension(Filename);
             }

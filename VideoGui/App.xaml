@@ -8,5 +8,120 @@
         <local:CompareConverter x:Key="CompareConverter"/>
         <local:VideoSizeConverter x:Key="VideoSizeConverter"/>
         <local:VideoDetailsConverter x:Key="VideoDetailsConverter"/>
+        <BitmapImage x:Key="Yes" UriSource="/icons/Yes.png"/>
+        <BitmapImage x:Key="No" UriSource="/icons/No.png"/>
+        <BitmapImage x:Key="GEN" UriSource="icons/GPUEncode.png"/>
+        <BitmapImage x:Key="CEN" UriSource="icons/CPUEncode.png"/>
+        <BitmapImage x:Key="X264" UriSource="icons/OutputX264.png"/>
+        <BitmapImage x:Key="X265" UriSource="icons/OutputX265.png"/>
+        <BitmapImage x:Key="FishEyeKeep" UriSource="icons/FisheyeKeep.png"/>
+        <BitmapImage x:Key="FishEyeRemoval" UriSource="icons/FisheyeRemoval.png"/>
+        <BitmapImage x:Key="SET" UriSource="icons/set.png"/>
+        <BitmapImage x:Key="EDIT" UriSource="icons/edit.png"/>
+        <Style x:Key="ToggleSetEditStyleID" TargetType="{x:Type ToggleButton}">
+            <Setter Property="MinHeight" Value="28"/>
+            <Setter Property="MinWidth" Value="50"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ToggleButton}">
+                        <Image x:Name="PART_Image"  />
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="true">
+                                <Setter TargetName="PART_Image" Property="Source" Value="{StaticResource EDIT}"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="False">
+                                <Setter TargetName="PART_Image" Property="Source" Value="{StaticResource SET}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+
+        <Style x:Key="ToggleStyle1" TargetType="{x:Type ToggleButton}">
+            <Setter Property="MaxHeight" Value="28"></Setter>
+            <Setter Property="MaxWidth" Value="100"></Setter>
+            <Setter Property="MinHeight" Value="28"></Setter>
+            <Setter Property="MinWidth" Value="100"></Setter>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ToggleButton}">
+                        <Image x:Name="PART_Image"  />
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="true">
+                                <Setter TargetName="PART_Image" Property="Source" Value="{StaticResource X265}"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="False">
+                                <Setter TargetName="PART_Image" Property="Source" Value="{StaticResource X264}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="ToggleStyle2" TargetType="{x:Type ToggleButton}">
+            <Setter Property="MaxHeight" Value="28"></Setter>
+            <Setter Property="MaxWidth" Value="100"></Setter>
+            <Setter Property="MinHeight" Value="28"></Setter>
+            <Setter Property="MinWidth" Value="100"></Setter>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ToggleButton}">
+                        <Image x:Name="PART_Image2"  />
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="true">
+                                <Setter TargetName="PART_Image2" Property="Source" Value="{StaticResource CEN}"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="False">
+                                <Setter TargetName="PART_Image2" Property="Source" Value="{StaticResource GEN}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="ToggleStyle3" TargetType="{x:Type ToggleButton}">
+            <Setter Property="MaxHeight" Value="28"></Setter>
+            <Setter Property="MaxWidth" Value="100"></Setter>
+            <Setter Property="MinHeight" Value="28"></Setter>
+            <Setter Property="MinWidth" Value="100"></Setter>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ToggleButton}">
+                        <Image x:Name="PART_Image3"  />
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="true">
+                                <Setter TargetName="PART_Image3" Property="Source" Value="{StaticResource FishEyeKeep}"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="False">
+                                <Setter TargetName="PART_Image3" Property="Source" Value="{StaticResource FishEyeRemoval}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="ToggleButtonStyle_Schedule" TargetType="{x:Type ToggleButton}">
+            <Setter Property="MinHeight" Value="50"/>
+            <Setter Property="MinWidth" Value="50"/>
+            <Setter Property="MaxHeight" Value="50"/>
+            <Setter Property="MaxWidth" Value="50"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ToggleButton}">
+                        <Image x:Name="PART_Image"  />
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="true">
+                                <Setter TargetName="PART_Image" Property="Source" Value="{StaticResource Yes}"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="False">
+                                <Setter TargetName="PART_Image" Property="Source" Value="{StaticResource No}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Application.Resources>
 </Application>

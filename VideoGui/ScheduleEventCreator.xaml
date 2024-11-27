@@ -8,6 +8,7 @@
         Title="Schedule Event Creator" mc:Ignorable="d" Loaded="Window_Loaded" 
         Closing="Window_Closing" Height="450" Width="1028"
         ResizeMode="CanResizeWithGrip" WindowStartupLocation="CenterScreen"  WindowStyle="ToolWindow" >
+
     <Grid Margin="0,0,0,9">
         <StackPanel x:Name="stkmain" Orientation="Vertical">
             <StackPanel>
@@ -145,7 +146,7 @@
                         </Button>
                         <Button x:Name="BtnRemoveSchedule" Canvas.Left="985" 
                             Width="24" Height="24" Canvas.Top="229" HorizontalAlignment="Center" VerticalAlignment="Top">
-                            <Image Source="/Icons/Cancel.png"/>
+                            <Image Source="/Icons/Cancel.png" Tag="0"/>
                         </Button>
                         <Button x:Name="btnAddEvent" Canvas.Left="985" 
                            Width="24" Height="24" Canvas.Top="83" HorizontalAlignment="Center" 
@@ -165,13 +166,12 @@
                                 <xctk:DateTimePicker x:Name="EventEnd" Format="Custom"
                                 FormatString="MM-dd-yy hh:mm:ss tt" TimeFormat="Custom" TimeFormatString="hh:mm:ss tt"  
                                MinWidth="195" Focusable="True" Width="201" HorizontalAlignment="Center" VerticalAlignment="Top" Canvas.Left="10" Canvas.Top="21" Height="16" />
-                                <Button x:Name="btnEventCheck" Canvas.Left="216" 
-                                    Width="52" Height="52" Canvas.Top="5" HorizontalAlignment="Left" VerticalAlignment="Center">
-                                    <Image Source="/Icons/UpdateNew.png" x:Name="UpdateImage"/>
-                                </Button>
+                                <ToggleButton x:Name="btnEventCheck" Canvas.Left="216" Height="50" Width="Auto"
+                                     Style="{DynamicResource ToggleButtonStyle_Schedule}" IsChecked="True"
+                                    HorizontalAlignment="Center" VerticalAlignment="Center" />
                                 <TextBox x:Name="txtEventName" Canvas.Left="10" Canvas.Top="41" 
                                          TextWrapping="Wrap" Width="201" 
-                                         FontSize="12" TextChanged="txtEventName_TextChanged" 
+                                         FontSize="12" 
                                          HorizontalAlignment="Center" VerticalAlignment="Top"/>
                             </Canvas>
                         </GroupBox>
@@ -191,7 +191,7 @@
                             <Canvas Margin="0,0,0,0">
                                 <Label x:Name="lblSRC" Content="Video Type" FontSize="14" Canvas.Top="11" 
                                  Canvas.Left="21" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                                <ComboBox Canvas.Left="104" Canvas.Top="14" Width="74" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                <ComboBox Name="cbxVideoType" Canvas.Left="104" Canvas.Top="14" Width="74" HorizontalAlignment="Left" VerticalAlignment="Center">
                                     <ComboBoxItem Content="F"/>
                                     <ComboBoxItem Content="D"/>
                                 </ComboBox>

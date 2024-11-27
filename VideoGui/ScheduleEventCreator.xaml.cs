@@ -11,7 +11,6 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 using VideoGui.Models;
@@ -104,19 +103,7 @@ namespace VideoGui
         }
 
         
-        public void ChangeSource(bool EventPresent)
-        {
-            try
-            {
-                UpdateImage.Source = (EventPresent) ? 
-                    new BitmapImage(new Uri("pack://application:,,,/Icons/UpdateNew.png"))
-                    : new BitmapImage(new Uri("pack://application:,,,/Icons/UpdateCircle.png"));
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite($"ChangeSource {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
-            }
-        }
+        
         private void lstSchedules_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
 

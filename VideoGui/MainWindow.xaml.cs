@@ -448,13 +448,13 @@ namespace VideoGui
                             scheduleEventCreatorFrm.ScheduleEnd.Value = item.ScheduleEnd;
                             scheduleEventCreatorFrm.txtMax.Text = item.MaxDaily.ToString();
                             scheduleEventCreatorFrm.txtMaxEvent.Text = item.MaxEvent.ToString();
-                            scheduleEventCreatorFrm.cbxVideoType.SelectedIndex = item.Source;
-                            scheduleEventCreatorFrm.btnEventCheck.IsChecked = true;
+                            //scheduleEventCreatorFrm.cbxVideoType.SelectedIndex = item.Source;
+                           // scheduleEventCreatorFrm.btnEventCheck.IsChecked = true;
                             break;
                         }
                         if (!found)
                         {
-                            scheduleEventCreatorFrm.btnEventCheck.IsChecked = false;
+                            //scheduleEventCreatorFrm.btnEventCheck.IsChecked = false;
                             scheduleEventCreatorFrm.lstSchedules.SelectedItem = null;
                             scheduleEventCreatorFrm.txtEventName.Text = "";
                             bool Executed = false;
@@ -480,30 +480,30 @@ namespace VideoGui
                             });
                             if (StartDate is not null && StartTime is not null)
                             {
-                                scheduleEventCreatorFrm.btnEventCheck.IsChecked = true;
+                                //scheduleEventCreatorFrm.btnEventCheck.IsChecked = true;
                                 scheduleEventCreatorFrm.EventStart.Value = StartDate.Value.ToDateTime(StartTime.Value);
                             }
                             else
                             {
-                                scheduleEventCreatorFrm.btnEventCheck.IsChecked = true;
+                                //scheduleEventCreatorFrm.btnEventCheck.IsChecked = true;
                                 scheduleEventCreatorFrm.EventStart.Value = null;
                             }
                             if (EndDate is not null && EndTime is not null)
                             {
-                                scheduleEventCreatorFrm.btnEventCheck.IsChecked = true;
+                                //scheduleEventCreatorFrm.btnEventCheck.IsChecked = true;
                                 scheduleEventCreatorFrm.EventEnd.Value = EndDate.Value.ToDateTime(EndTime.Value);
                             }
                             else
                             {
-                                scheduleEventCreatorFrm.btnEventCheck.IsChecked = true;
+                                //scheduleEventCreatorFrm.btnEventCheck.IsChecked = true;
                                 scheduleEventCreatorFrm.EventEnd.Value = null;
                             }
                             if (Name != "")
                             {
-                                scheduleEventCreatorFrm.btnEventCheck.IsChecked = true;
+                                //scheduleEventCreatorFrm.btnEventCheck.IsChecked = true;
                                 scheduleEventCreatorFrm.txtEventName.Text = Name;
                             }
-                            if (scheduleEventCreatorFrm.btnEventCheck.IsChecked.Value)
+                            if (scheduleEventCreatorFrm.btnEventCheck.IsChecked.Value == true)
                             {
                                 sql = "SELECT SD.START,SD.END,SD.STARTTIME,SD.ENDTIME,SP.SOURCE,SP.MAXDAILY,SP.MAXEVENT,SP.NAME FROM " +
                                       "EVENTSCHEDULES ES " +
@@ -1033,6 +1033,10 @@ namespace VideoGui
                                     frmTitleSelect.txtTitle.Text = BaseTitle;
                                     frmTitleSelect.txtBaseTitle.Content = BaseTitle;
                                 }
+                            }
+                            else
+                            {
+                                // get index from lstbox 
                             }
                             /*foreach (var item in UploadReleases.Where(item => item.Id == ShortsDirectoryIndex))
                             {
