@@ -142,7 +142,7 @@
             <Button x:Name="btnVIdeoEdit" Content="Edit Points" HorizontalAlignment="Center" Height="28" VerticalAlignment="Center" Width="63" Click="btnVIdeoEdit_Click"/>
             <Button x:Name="btnScraperDraft" Content="Scrape Draft" HorizontalAlignment="Center" Height="28" VerticalAlignment="Center" Width="88" 
                     Click="btnScraperDraft_Click"/>
-            <Button x:Name="btnSetupload" Content="Uploads Directory" HorizontalAlignment="Center" Height="28" VerticalAlignment="Center" Width="110" 
+            <Button x:Name="btnSetupload" Content="Uploads Directory" HorizontalAlignment="Left" Height="28" VerticalAlignment="Top" Width="110" 
                 Click="btnSetupload_Click"/>
         </StatusBar>
 
@@ -164,7 +164,7 @@
             <Label x:Name="lblPercentStatus" Background="#FFBFBFBF" Width="47" Height="34" Content="Percent" FontSize="11"/>
             <Label x:Name="lblPercent" HorizontalAlignment="Left" Height="28" VerticalAlignment="Center" Width="78"/>
             <Button x:Name="btnAppliedSchedule" Content="Upload Schedule" HorizontalAlignment="Center" Height="28" VerticalAlignment="Center" Width="88" RenderTransformOrigin="0.5,0.5" Click="btnAppliedSchedule_Click">
-                
+
             </Button>
             <Button x:Name="btnYTSchedule" Content="YT Schedule" HorizontalAlignment="Center" Height="28" VerticalAlignment="Center" Width="70" Click="btnYTSchedule_Click"/>
 
@@ -176,6 +176,7 @@
         <Button x:Name="BtnVideoCardDetails" Content="" HorizontalAlignment="Left" Height="30" Margin="758,0,0,75" VerticalAlignment="Bottom" Width="41" Click="BtnVideoCardDetails_Click"/>
         <Label Content="Max Shorts" HorizontalAlignment="Left" Height="28" Margin="537,0,0,167" VerticalAlignment="Bottom" Width="65"/>
         <TextBox x:Name="txtMaxShorts" HorizontalAlignment="Left" Margin="610,0,0,171" TextWrapping="Wrap" Text="80" VerticalAlignment="Bottom" Width="48" FontSize="14"/>
+        <Button x:Name="btnEditDirectories" Content="Edit Dirs" HorizontalAlignment="Left" Height="26" Margin="1025,0,0,136" VerticalAlignment="Bottom" Click="btnEditDirectories_Click" Width="97" RenderTransformOrigin="0.475,1.233"/>
     </Grid>
 
 </Window>

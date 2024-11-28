@@ -202,11 +202,15 @@ namespace VideoGui.Models
     public class CustomParams_Update
     {
         public int id { get; set; }
+
+        public string DirectoryName { get; set; }
+
         public UpdateType updatetype { get; set; } = UpdateType.Title;
-        public CustomParams_Update(int _id, UpdateType _updatetype = UpdateType.Title)
+        public CustomParams_Update(int _id, UpdateType _updatetype = UpdateType.Title, string _DirectoryName = "")
         {
             id = _id;
             updatetype = _updatetype;
+            DirectoryName = _DirectoryName;
         }
     }
     public class CustomParams_Add

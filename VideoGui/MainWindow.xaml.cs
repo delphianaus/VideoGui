@@ -78,6 +78,7 @@ using System.ComponentModel;
 using Nancy;
 using Microsoft.Extensions.Logging;
 using Google.Apis.YouTube.v3.Data;
+using System.Security.Permissions;
 
 
 namespace VideoGui
@@ -124,6 +125,7 @@ namespace VideoGui
         public SelectShortUpload selectShortUpload = null;
         public MasterTagSelectForm MasterTagSelectFrm = null;
         public SelectReleaseSchedule SelectReleaseScheduleFrm = null;
+        public DirectoryTitleDescEditor DirectoryTitleDescEditorFrm = null;
         public ShowMatcher Swm;
         List<ListScheduleItems> ScheduleListItems = new List<ListScheduleItems>();
         ObservableCollection<Descriptions> DescriptionsList = new ObservableCollection<Descriptions>();
@@ -136,12 +138,13 @@ namespace VideoGui
         ObservableCollection<AppliedSchedule> AppliedScheduleList = new ObservableCollection<AppliedSchedule>();
         ObservableCollection<EventDefinition> EventDefinitionsList = new ObservableCollection<EventDefinition>();
         List<ShortsDirectory> shortsDirectoryList = new List<ShortsDirectory>();
+        List<ShortsDirectory> EditableshortsDirectoryList = new List<ShortsDirectory>();
         CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
         CancellationTokenSource ProcessingCancellationTokenSource = new CancellationTokenSource();
         double frames, LRF, RRF, LLC, RLC;
         DateTime totaltimeprocessed = DateTime.Now;
         object lookuplocked = new object();
-        int SelectedTagId = -1, MaxUploads = -1;
+        int SelectedTagId = -1, MaxUploads = -1, TitleId = -1, DescId = -1;
         bool IsUploading = false, SystemSetup = false, InTray = false, ffmpegdone = false, processing = false;
         private System.Object thisLock = new Object();
         private Object thisfLock = new Object();
@@ -200,6 +203,7 @@ namespace VideoGui
         ComplexSchedular complexfrm = null;
         private ConverterProgress ConverterProgressEventHandler = new ConverterProgress();
         private ObservableCollectionFilters ObservableCollectionFilter;
+        public DirectoryTitleDescEditor directoryTitleDescEditor = null;
         //public List<MediaTranscoder?> transcoders = new List<MediaTranscoder?>();
         public class ProgressForegroundConverter2
         {
@@ -262,6 +266,7 @@ namespace VideoGui
             }
         }
 
+
         public async Task<bool> ConnectT()
         {
             try
@@ -271,6 +276,18 @@ namespace VideoGui
                 {
 
                     ObservableCollectionFilter.TitleTagSelectorView.Source = TitleTagsList;
+                    if (TitleId != -1)
+                    {
+                        ObservableCollectionFilter.SetTitlesTag(TitleId);
+                        if (DirectoryTitleDescEditorFrm is not null)
+                        {
+                            DirectoryTitleDescEditorFrm.DoTitleSelectFrm.SetTitleTag(TitleId);
+                        }
+                        else if (selectShortUpload is not null)
+                        {
+                            selectShortUpload.DoTitleSelectFrm.SetTitleTag(TitleId);
+                        }
+                    }
                     // link Available and title tables.
                     //ObservableCollectionFilter.ImportCollectionViewSource.Source = FileRenamer;
                     //ObservableCollectionFilter.ImportCollectionViewSource.View.Refresh();
@@ -386,6 +403,12 @@ namespace VideoGui
                             formObjectHandler_scheduleEventCreator(tld, scheduleEventCreatorFrm);
                             break;
                         }
+
+                    case DirectoryTitleDescEditor directoryTitleDescEditor:
+                        {
+                            formObjectHandler_DirectoryTitleDescEditor(tld, directoryTitleDescEditor);
+                            break;
+                        }
                 }
             }
             catch (Exception ex)
@@ -393,6 +416,102 @@ namespace VideoGui
                 ex.LogWrite($"ModuleCallback {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
 
+        }
+
+        private void formObjectHandler_DirectoryTitleDescEditor(object tld, DirectoryTitleDescEditor directoryTitleDescEditor)
+        {
+            try
+            {
+                if (tld is CustomParams_Select cps)
+                {
+                    ShortsDirectoryIndex = cps.Id;
+                }
+                else if (tld is CustomParams_Initialize cpi)
+                {
+                    directoryTitleDescEditor.lstSchedules.ItemsSource = EditableshortsDirectoryList;
+                }
+                else if (tld is CustomParams_Update cpu)
+                {
+                    if (cpu.updatetype == UpdateType.Title)
+                    {
+
+                        string sql = "UPDATE SHORTSDIRECTORY SET TITLEID = @TID WHERE ID = @ID;";
+                        using (var connection = new FbConnection(connectionString))
+                        {
+                            connection.Open();
+                            using (var command = new FbCommand(sql, connection))
+                            {
+                                command.Parameters.Clear();
+                                command.Parameters.AddWithValue("@ID", ShortsDirectoryIndex);
+                                command.Parameters.AddWithValue("@TID", cpu.id);
+                                command.ExecuteNonQuery();
+                            }
+                            connection.Close();
+                        }
+                        TitleId = cpu.id;
+                    }
+                    else if (cpu.updatetype == UpdateType.Description)
+                    {
+
+                        string sql = "UPDATE SHORTSDIRECTORY SET DESCID = @DID WHERE ID = @ID;";
+                        using (var connection = new FbConnection(connectionString))
+                        {
+                            connection.Open();
+                            using (var command = new FbCommand(sql, connection))
+                            {
+                                command.Parameters.Clear();
+                                command.Parameters.AddWithValue("@ID", ShortsDirectoryIndex);
+                                command.Parameters.AddWithValue("@DID", cpu.id);
+                                command.ExecuteNonQuery();
+                            }
+                            connection.Close();
+                        }
+                        DescId = cpu.id;
+                    }
+                }
+                else if (tld is CustomParams_DescSelect cds)
+                {
+                    int id = -1;
+                    DescId = cds.UploadsReleaseInfo.Id;
+                    directoryTitleDescEditor.DoDescSelectCreate();
+                    string sql = "SELECT DESCID FROM SHORTSDIRECTORY WHERE ID = @ID;";
+                    using (var connection = new FbConnection(connectionString))
+                    {
+                        connection.Open();
+                        using (var command = new FbCommand(sql, connection))
+                        {
+                            command.Parameters.Clear();
+                            command.Parameters.AddWithValue("@ID", cds.UploadsReleaseInfo.Id);
+                            id = command.ExecuteScalar().ToInt(-1);
+                        }
+                        connection.Close();
+                    }
+                    if (id != -1) cds.UploadsReleaseInfo.DescId = DescId;
+                }
+                else if (tld is CustomParams_TitleSelect cts)
+                {
+                    int id = -1;
+                    TitleId = cts.UploadsReleaseInfo.TitleId;
+                    directoryTitleDescEditor.DoTitleSelectCreate();
+                    string sql = "SELECT TITLEID FROM SHORTSDIRECTORY WHERE ID = @ID;";
+                    using (var connection = new FbConnection(connectionString))
+                    {
+                        connection.Open();
+                        using (var command = new FbCommand(sql, connection))
+                        {
+                            command.Parameters.Clear();
+                            command.Parameters.AddWithValue("@ID", cts.UploadsReleaseInfo.Id);
+                            id = command.ExecuteScalar().ToInt(-1);
+                        }
+                        connection.Close();
+                    }
+                    if (id != -1) cts.UploadsReleaseInfo.TitleId = TitleId;
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"formObjectHandler_DirectoryTitleDescEditor {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
         }
 
         public Nullable<int> EventId = null;
@@ -449,7 +568,7 @@ namespace VideoGui
                             scheduleEventCreatorFrm.txtMax.Text = item.MaxDaily.ToString();
                             scheduleEventCreatorFrm.txtMaxEvent.Text = item.MaxEvent.ToString();
                             //scheduleEventCreatorFrm.cbxVideoType.SelectedIndex = item.Source;
-                           // scheduleEventCreatorFrm.btnEventCheck.IsChecked = true;
+                            // scheduleEventCreatorFrm.btnEventCheck.IsChecked = true;
                             break;
                         }
                         if (!found)
@@ -512,7 +631,7 @@ namespace VideoGui
                                      $"WHERE SP.ISSCHEDULE = 1;";
                                 Executed = false;
                                 int src = -1, maxd = -1, maxe = -1;
-                              
+
                                 connectionString.ExecuteReader(sql, (FbDataReader r) =>
                                 {
                                     if (!Executed)
@@ -576,6 +695,42 @@ namespace VideoGui
                         {
                             if (tld is CustomParams_Update p && p is not null)
                             {
+                                if (p.id != -1)
+                                {
+                                    string field = (p.updatetype == UpdateType.Title) ? "TITLEID" : "DESCID";
+                                    var sql = $"UPDATE SHORTSDIRECTORY SET {field} = @P1 WHERE ID = @P0";
+                                    using (var connection = new FbConnection(connectionString))
+                                    {
+                                        connection.Open();
+                                        using (var command = new FbCommand(sql.ToUpper(), connection))
+                                        {
+                                            command.Parameters.Clear();
+                                            command.Parameters.AddWithValue("@P0", p.id);
+                                            command.Parameters.AddWithValue("@P1", (p.updatetype == UpdateType.Title) ? TitleId : DescId);
+                                            command.ExecuteNonQuery();
+                                        }
+                                        connection.Close();
+                                    }
+                                }
+                                else
+                                {
+                                    int id = -1;
+                                    string field = (p.updatetype == UpdateType.Title) ? "TITLEID" : "DESCID";
+                                    var sql = $"INSERT INTO SHORTSDIRECTORY(DIRECTORYNAME) VALUES(@P1) RETURNING ID";
+                                    using (var connection = new FbConnection(connectionString))
+                                    {
+                                        connection.Open();
+                                        using (var command = new FbCommand(sql.ToUpper(), connection))
+                                        {
+                                            command.Parameters.Clear();
+                                            command.Parameters.AddWithValue("@P0", p.DirectoryName);
+                                            id = command.ExecuteScalar().ToInt(-1);
+                                        }
+                                        connection.Close();
+                                    }
+                                    p.id = id;
+                                }
+
                                 RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                                 string rootfolder = key.GetValueStr("UploadPath", @"D:\shorts\");
                                 key?.Close();
@@ -583,6 +738,31 @@ namespace VideoGui
                                 if (ThisDir != "")
                                 {
                                     int res = -1;
+                                    using (var connection = new FbConnection(connectionString))
+                                    {
+                                        connection.Open();
+                                        string sql = "select * from SHORTSDIRECTORY WHERE DIRECTORYNAME = @P0";
+                                        using (var command = new FbCommand(sql.ToUpper(), connection))
+                                        {
+                                            command.Parameters.Clear();
+                                            command.Parameters.AddWithValue("@P0", ThisDir.ToUpper());
+                                            object result = command.ExecuteScalar();
+                                            res = result.ToInt(-1);
+                                        }
+                                        if (res != -1)
+                                        {
+                                            sql = "UPDATE SHORTSDIRECTORY SET DESCID = @P1 WHERE ID = @P0";
+                                            using (var command = new FbCommand(sql.ToUpper(), connection))
+                                            {
+                                                command.Parameters.Clear();
+                                                command.Parameters.AddWithValue("@P0", res);
+                                                command.Parameters.AddWithValue("@P1", p.id);
+                                                object result = command.ExecuteScalar();
+                                                res = result.ToInt(-1);
+                                            }
+                                        }
+                                        connection.Close();
+                                    }
                                     using (var connection = new FbConnection(connectionString))
                                     {
                                         connection.Open();
@@ -2841,6 +3021,13 @@ namespace VideoGui
                 connectionString.ExecuteReader("SELECT * FROM DESCRIPTIONS", (FbDataReader r) =>
                 {
                     DescriptionsList.Add(new Descriptions(r, OnGetTitle));
+                });
+
+
+                //EditableshortsDirectoryList
+                connectionString.ExecuteReader("SELECT * FROM SHORTSDIRECTORY", (FbDataReader r) =>
+                {
+                    EditableshortsDirectoryList.Add(new ShortsDirectory(r));
                 });
             }
             catch (Exception ex)
@@ -8267,6 +8454,58 @@ namespace VideoGui
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name + $" {ex.Message}");
             }
         }
+
+        private void btnEditDirectories_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (directoryTitleDescEditor is not null && !directoryTitleDescEditor.IsClosed)
+                {
+                    if (selectShortUpload.IsClosing) selectShortUpload.Close();
+                    while (!directoryTitleDescEditor.IsClosed)
+                    {
+                        Thread.Sleep(100);
+                    }
+                    directoryTitleDescEditor.Close();
+                    directoryTitleDescEditor = null;
+                }
+                directoryTitleDescEditor = new DirectoryTitleDescEditor(ModuleCallback, directoryEditorOnFinish, ConnnectLists);
+                directoryTitleDescEditor.ShowActivated = true;
+                Hide();
+                directoryTitleDescEditor.Show();
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"btnEditDirectories_Click {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
+            }
+        }
+
+        private void directoryEditorOnFinish()
+        {
+            try
+            {
+                Show();
+                Task.Run(() =>
+                {
+                    if (directoryTitleDescEditor is not null && !directoryTitleDescEditor.IsClosed)
+                    {
+                        if (selectShortUpload.IsClosing) selectShortUpload.Close();
+                        while (!directoryTitleDescEditor.IsClosed)
+                        {
+                            Thread.Sleep(100);
+                        }
+                        directoryTitleDescEditor.Close();
+                        directoryTitleDescEditor = null;
+                    }
+                });
+
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"directoryEditorOnFinish {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
+            }
+        }
+
         private void btnMediaImporter_Click(object sender, RoutedEventArgs e)
         {
             try

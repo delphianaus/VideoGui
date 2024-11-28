@@ -61,6 +61,7 @@ namespace VideoGui
                 if ((sender is ToggleButton cbf) && (cbf.DataContext is ShortsDirectory ReleaseInfo))
                 {
                     cbf.IsChecked = (ReleaseInfo.IsTitleAvailable) ? ReleaseInfo.IsTitleAvailable : cbf.IsChecked;
+                    ModuleCallBack?.Invoke(this, new CustomParams_Select(ReleaseInfo.Id));
                     var p = new CustomParams_TitleSelect(ReleaseInfo);
                     ModuleCallBack?.Invoke(this, p);
                     cbf.IsChecked = (p.UploadsReleaseInfo.IsTitleAvailable);
@@ -173,6 +174,7 @@ namespace VideoGui
                 if ((sender is ToggleButton cbf) && (cbf.DataContext is ShortsDirectory ReleaseInfo))
                 {
                     cbf.IsChecked = (ReleaseInfo.IsDescAvailable) ? ReleaseInfo.IsDescAvailable : cbf.IsChecked;
+                    ModuleCallBack?.Invoke(this, new CustomParams_Select(ReleaseInfo.Id));
                     var p = new CustomParams_DescSelect(ReleaseInfo);
                     ModuleCallBack?.Invoke(this, p);
                     cbf.IsChecked = (p.UploadsReleaseInfo.IsDescAvailable);
