@@ -428,6 +428,8 @@ namespace VideoGui
                 }
                 else if (tld is CustomParams_Initialize cpi)
                 {
+                    ConnnectLists(3);
+                    ConnnectLists(4);
                     directoryTitleDescEditor.lstSchedules.ItemsSource = EditableshortsDirectoryList;
                 }
                 else if (tld is CustomParams_Update cpu)
@@ -695,7 +697,7 @@ namespace VideoGui
                         {
                             if (tld is CustomParams_Update p && p is not null)
                             {
-                                if (p.id != -1)
+                                if (p.id != -1) // always exists.
                                 {
                                     string field = (p.updatetype == UpdateType.Title) ? "TITLEID" : "DESCID";
                                     var sql = $"UPDATE SHORTSDIRECTORY SET {field} = @P1 WHERE ID = @P0";
@@ -712,24 +714,7 @@ namespace VideoGui
                                         connection.Close();
                                     }
                                 }
-                                else
-                                {
-                                    int id = -1;
-                                    string field = (p.updatetype == UpdateType.Title) ? "TITLEID" : "DESCID";
-                                    var sql = $"INSERT INTO SHORTSDIRECTORY(DIRECTORYNAME) VALUES(@P1) RETURNING ID";
-                                    using (var connection = new FbConnection(connectionString))
-                                    {
-                                        connection.Open();
-                                        using (var command = new FbCommand(sql.ToUpper(), connection))
-                                        {
-                                            command.Parameters.Clear();
-                                            command.Parameters.AddWithValue("@P0", p.DirectoryName);
-                                            id = command.ExecuteScalar().ToInt(-1);
-                                        }
-                                        connection.Close();
-                                    }
-                                    p.id = id;
-                                }
+                                
 
                                 RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                                 string rootfolder = key.GetValueStr("UploadPath", @"D:\shorts\");

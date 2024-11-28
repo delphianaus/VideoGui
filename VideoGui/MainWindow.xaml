@@ -117,12 +117,12 @@
             <ComboBoxItem Content="ASP"/>
             <ComboBoxItem Content="H264"/>
         </ComboBox>
-        <Button x:Name="BtnCompare" Content="File Compare" HorizontalAlignment="Left" Height="26" Margin="847,0,0,169" VerticalAlignment="Bottom" Click="BtnCompare_Click" Width="78" RenderTransformOrigin="0.475,1.233"/>
-        <Button x:Name="DeleteSel"  HorizontalAlignment="Left" Height="26" Margin="1098,0,0,170" VerticalAlignment="Bottom" Width="24" Click="DeleteSel_Click">
+        <Button x:Name="BtnCompare" Content="File Compare" HorizontalAlignment="Left" Height="26" Margin="754,0,0,169" VerticalAlignment="Bottom" Click="BtnCompare_Click" Width="78" RenderTransformOrigin="0.475,1.233"/>
+        <Button x:Name="DeleteSel"  HorizontalAlignment="Left" Height="26" Margin="1011,0,0,170" VerticalAlignment="Bottom" Width="24" Click="DeleteSel_Click">
             <Image Source="/Icons/cancel.png" VerticalAlignment="Bottom"/>
         </Button>
-        <ComboBox x:Name="CmbScanDirectory" HorizontalAlignment="Left" Margin="931,0,0,172" VerticalAlignment="Bottom" Width="164" LostFocus="CmbScanDirectory_LostFocus" KeyUp="CmbScanDirectory_KeyUp"/>
-        <Button Content="" HorizontalAlignment="Left" Height="26" Margin="817,0,0,169" VerticalAlignment="Bottom" Width="26" Click="Button_Click"/>
+        <ComboBox x:Name="CmbScanDirectory" HorizontalAlignment="Left" Margin="838,0,0,172" VerticalAlignment="Bottom" Width="164" LostFocus="CmbScanDirectory_LostFocus" KeyUp="CmbScanDirectory_KeyUp"/>
+        <Button Content="" HorizontalAlignment="Left" Height="26" Margin="724,0,0,169" VerticalAlignment="Bottom" Width="26" Click="Button_Click"/>
         <Button x:Name="BtnBitRateSettings" Content="Bitrate Settings" HorizontalAlignment="Left" Height="30" Margin="26,0,0,76" VerticalAlignment="Bottom" Click="BtnBitRateSettings_Click" Width="89" />
         <Button x:Name="BtnViewLog" Content="View Log" HorizontalAlignment="Left" Height="30" Margin="267,0,0,76" VerticalAlignment="Bottom" Click="BtnViewLog_Click" Width="89" />
         <Button x:Name="BtnDirThreads" Content="Directory/Thread Settings" HorizontalAlignment="Left" Height="30" Margin="120,0,0,76" VerticalAlignment="Bottom" Width="142" Click="BtnDirThreads_Click"/>
@@ -172,11 +172,11 @@
         <CheckBox x:Name="ChkAutoAAC" Content="Auto -&gt; AAC" HorizontalAlignment="Left" Margin="442,0,0,173" VerticalAlignment="Bottom" Width="90" />
         <CheckBox x:Name="ChkChangeOutputname" Content="Change Output Name" HorizontalAlignment="Left" Margin="612,0,0,84" VerticalAlignment="Bottom" Width="141" />
         <CheckBox x:Name="ChkReEncode" Content="Re Encode" HorizontalAlignment="Left" Margin="528,0,0,84" VerticalAlignment="Bottom" Width="87" />
-        <Button x:Name="BtnFileFixer" Content="File Fixer" HorizontalAlignment="Left" Height="24" Margin="758,0,0,170" VerticalAlignment="Bottom" Width="53" Click="BtnFileFixer_Click"/>
+        <Button x:Name="BtnFileFixer" Content="File Fixer" HorizontalAlignment="Left" Height="24" Margin="665,0,0,170" VerticalAlignment="Bottom" Width="53" Click="BtnFileFixer_Click"/>
         <Button x:Name="BtnVideoCardDetails" Content="" HorizontalAlignment="Left" Height="30" Margin="758,0,0,75" VerticalAlignment="Bottom" Width="41" Click="BtnVideoCardDetails_Click"/>
         <Label Content="Max Shorts" HorizontalAlignment="Left" Height="28" Margin="537,0,0,167" VerticalAlignment="Bottom" Width="65"/>
         <TextBox x:Name="txtMaxShorts" HorizontalAlignment="Left" Margin="610,0,0,171" TextWrapping="Wrap" Text="80" VerticalAlignment="Bottom" Width="48" FontSize="14"/>
-        <Button x:Name="btnEditDirectories" Content="Edit Dirs" HorizontalAlignment="Left" Height="26" Margin="1025,0,0,136" VerticalAlignment="Bottom" Click="btnEditDirectories_Click" Width="97" RenderTransformOrigin="0.475,1.233"/>
+        <Button x:Name="btnEditDirectories" Content="Edit Dirs" Height="26" Margin="1045,0,10,170" VerticalAlignment="Bottom" HorizontalAlignment="Left" Click="btnEditDirectories_Click" Width="63"/>
     </Grid>
 
 </Window>

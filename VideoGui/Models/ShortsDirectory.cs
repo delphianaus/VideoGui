@@ -40,7 +40,7 @@ namespace VideoGui.Models
             try
             {
                 Id = (reader["ID"] is int ID) ? ID : -1;
-                Directory = (reader["DIRECTORY"] is string DIR) ? DIR : "";
+                Directory = (reader["DIRECTORYNAME"] is string DIR) ? DIR : "";
                 TitleId = (reader["TITLEID"] is int TID) ? TID : -1;
                 DescId = (reader["DESCID"] is int DID) ? DID : -1;
 

@@ -34,6 +34,7 @@ namespace VideoGui
         {
             try
             {
+                
                 ModuleCallBack?.Invoke(this, new CustomParams_Initialize());
             }
             catch (Exception ex)
