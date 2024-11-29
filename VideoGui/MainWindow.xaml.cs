@@ -274,9 +274,8 @@ namespace VideoGui
                 bool res = false;
                 if (ObservableCollectionFilter is not null)
                 {
-
                     ObservableCollectionFilter.TitleTagSelectorView.Source = TitleTagsList;
-                    if (TitleId != -1)
+                    ObservableCollectionFilter.TitleTagAvailableView.Source = availableTagsList;                    if (TitleId != -1)
                     {
                         ObservableCollectionFilter.SetTitlesTag(TitleId);
                         if (DirectoryTitleDescEditorFrm is not null)
@@ -714,7 +713,7 @@ namespace VideoGui
                                         connection.Close();
                                     }
                                 }
-                                
+
 
                                 RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                                 string rootfolder = key.GetValueStr("UploadPath", @"D:\shorts\");
@@ -1186,28 +1185,9 @@ namespace VideoGui
                             var _title = "";
                             string BaseTitle = "", xx = "", part = "";
                             int index = -1;// UploadReleasesBuilderIndex;
-                                           //ConnectT().ConfigureAwait(false);
-                            if (selectShortUpload is not null)
+                            foreach (var item in shortsDirectoryList.Where(item => item.Id == ShortsDirectoryIndex))
                             {
-                                string ABaseTitle = selectShortUpload.txtsrcdir.Text;
-                                string pp = ABaseTitle.Split("\\").LastOrDefault();
-                                if (pp != "")
-                                {
-                                    BaseTitle = pp;
-                                    frmTitleSelect.BaseTitle = BaseTitle;
-                                    frmTitleSelect.txtTitle.Text = BaseTitle;
-                                    frmTitleSelect.txtBaseTitle.Content = BaseTitle;
-                                }
-                            }
-                            else
-                            {
-                                // get index from lstbox 
-                            }
-                            /*foreach (var item in UploadReleases.Where(item => item.Id == ShortsDirectoryIndex))
-                            {
-                                xx = (item.ReleaseFiles.Count > 9) ? "XX" : "X";
-                                part = $" PART {xx}";
-                                BaseTitle = item.DisplayUploadBaseFileName;
+                                BaseTitle = item.Directory;
                                 if (item.TitleId != -1)
                                 {
                                     foreach (var t in TitlesList.Where(i => i.GroupId == ShortsDirectoryIndex && !i.IsTag))
@@ -1219,12 +1199,11 @@ namespace VideoGui
                                         break;
                                     }
                                 }
-                                string vid = $"{BaseTitle}{part}";
-                                frmTitleSelect.BaseTitle = vid;
-                                frmTitleSelect.txtBaseTitle.Content = vid;
+                                frmTitleSelect.BaseTitle = $"{BaseTitle}";
+                                frmTitleSelect.txtBaseTitle.Content = $"{BaseTitle}";
                                 break;
                             }
-                            */
+
                             ObservableCollectionFilter.TitleTagSelectorView.View.Refresh();
 
                             if (index == -1)
@@ -1266,7 +1245,7 @@ namespace VideoGui
                                 }
                                 if (index != -1)
                                 {
-                                    sql = "UPDATE UPLOADRELEASESBUILDER SET TITLEID = @TITLEID WHERE ID = @id;";
+                                    sql = "UPDATE SHORTSDIRECTORY SET TITLEID = @TITLEID WHERE ID = @id;";
                                     using (var connection = new FbConnection(connectionString))
                                     {
                                         connection.Open();
@@ -1279,12 +1258,12 @@ namespace VideoGui
                                         }
                                         connection.Close();
                                     }
-                                    /*foreach (var item in UploadReleasesBuillderList.
+                                    foreach (var item in shortsDirectoryList.
                                         Where(item => item.Id == ShortsDirectoryIndex))
                                     {
                                         item.TitleId = index;
                                         break;
-                                    }*/
+                                    }
                                 }
                             }
 

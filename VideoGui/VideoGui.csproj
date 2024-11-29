@@ -40,6 +40,7 @@
 
 
   <ItemGroup>
+    <None Remove="Icons\Cancel.png" />
     <None Remove="Icons\computer.ico" />
     <None Remove="Icons\computer1.ico" />
     <None Remove="Icons\computer2.ico" />
@@ -56,9 +57,12 @@
     <None Remove="Icons\GPU Encode.png" />
     <None Remove="Icons\CPU Encode.png" />
     <None Remove="Icons\Historic.png" />
+    <None Remove="Icons\LeftArrow.png" />
     <None Remove="Icons\No.png" />
     <None Remove="Icons\OutputX265.png" />
     <None Remove="Icons\OutputX264.png" />
+    <None Remove="Icons\RightArrow..png" />
+    <None Remove="Icons\SelectDown.png" />
     <None Remove="Icons\set.png" />
     <None Remove="Icons\upArrow.png" />
     <None Remove="Icons\update.png" />
@@ -102,6 +106,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Resource Include="Icons\Cancel.png" />
     <Resource Include="Icons\computer.ico">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
@@ -120,6 +125,7 @@
     </Resource>
     <Resource Include="Icons\GPUEncode.png" />
     <Resource Include="Icons\Historic.png" />
+    <Resource Include="Icons\LeftArrow.png" />
     <Resource Include="Icons\No.png" />
     <Resource Include="icons\OutputX265.png" />
     <Resource Include="icons\OutputX264.png" />
@@ -139,6 +145,10 @@
     <Resource Include="Icons\computer5.ico">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
+
+    <Resource Include="Icons\RightArrow..png" />
+
+    <Resource Include="Icons\SelectDown.png" />
 
     <Resource Include="Icons\set.png">
       <CopyToOutputDirectory>f</CopyToOutputDirectory>
