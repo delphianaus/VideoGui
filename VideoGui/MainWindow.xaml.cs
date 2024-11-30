@@ -1405,7 +1405,12 @@ namespace VideoGui
                                 groupTitleTagsList.Add(new GroupTitleTags(r));
                             });
 
-                            frmTitleSelect.lstTitles.ItemsSource = groupTitleTagsList;
+                            if (groupTitleTagsList.Count != 0)
+                            {
+                                frmTitleSelect.lstTitles.Items.Clear();
+                                frmTitleSelect.lstTitles.ItemsSource = null;
+                                frmTitleSelect.lstTitles.ItemsSource = groupTitleTagsList;
+                            }
                             BaseStr = BaseStr.Trim();
                             frmTitleSelect.txtTitle.Text = BaseStr.Trim();
                             frmTitleSelect.lblTitleLength.Content = BaseStr.Trim().Length;
