@@ -21,23 +21,7 @@ namespace VideoGui.Models
         public string TitleTag { get => _TitleTag; set { _TitleTag = value; OnPropertyChanged(); } }
         public bool IsShortVideo { get => _IsShortVideo; set { _IsShortVideo = value; OnPropertyChanged(); } }
 
-        public Descriptions(FbDataReader reader, OnGetTagIds DoOnGetTag)
-        {
-            try
-            {
-                Id = reader["ID"].ToInt();
-                Description = reader["DESCRIPTION"].ToString();
-                TitleTagId = reader["TITLETAGID"].ToInt();
-                Name = reader["NAME"].ToString();
-                TitleTag = reader["NAME"].ToString();
-                IsShortVideo = reader["ISSHORTVIDEO"].ToInt() == 1 ? true : false;
-                IsTag = reader["ISTAG"].ToInt() == 1 ? true : false;
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite($"Descriptions {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
-            }
-        }
+        
 
         public Descriptions(FbDataReader reader)
         {

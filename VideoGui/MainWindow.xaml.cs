@@ -1216,9 +1216,9 @@ namespace VideoGui
                                 {
                                     string sqla = $"INSERT INTO TITLETAGS(GROUPID,TAGID) VALUES({cpInsertTags.GroupId},{item}) RETURNING ID;";
                                     int id = connectionString.RunExecuteScalar(sqla).ToInt(-1);
-                                    if (id != -1)
+                                    if(id != -1)
                                     {
-                                        connectionString.ExecuteReader($"SELECT * FROM TITLETAGS WHERE ID = {id}", OnReadSelectedTags);
+                                        connectionString.ExecuteReader($"SELECT * FROM TITLETAGS T INNER JOIN AVAILABLETAGS S ON T.TAGID = S.ID WHERE T.ID = {id}", OnReadTitlesTags);
                                     }
 
 
@@ -1241,8 +1241,8 @@ namespace VideoGui
                                 BaseStr1 = BaseStr1.Trim();
                                 frmTitleSelect.txtTitle.Text = BaseStr1.Trim();
                                 frmTitleSelect.lblTitleLength.Content = BaseStr1.Trim().Length;
-                                ColectionFilter.TitleTagSelectorView.View.Refresh();
-                                ColectionFilter.TitleTagAvailableView.View.Refresh();
+                                ObservableCollectionFilter.TitleTagSelectorView.View.Refresh();
+                                ObservableCollectionFilter.TitleTagAvailableView.View.Refresh();
                             }
 
                             break;
@@ -1325,11 +1325,11 @@ namespace VideoGui
                             if (index == -1)
                             {
                                 string BaseStrX = frmTitleSelect.BaseTitle;
-                                string sql = "SELECT ID FROM TITLES WHERE DESCRIPTION = @name AND ISTAG = @ISTAG AND GROUPID = @GROUPID;";
+                                string sqla = "SELECT ID FROM TITLES WHERE DESCRIPTION = @name AND ISTAG = @ISTAG AND GROUPID = @GROUPID;";
                                 using (var connection = new FbConnection(connectionString))
                                 {
                                     connection.Open();
-                                    using (var command = new FbCommand(sql, connection))
+                                    using (var command = new FbCommand(sqla, connection))
                                     {
                                         command.Parameters.Clear();
                                         command.Parameters.AddWithValue("@name", BaseTitle);
@@ -1342,12 +1342,12 @@ namespace VideoGui
                                 }
                                 if (index == -1)
                                 {
-                                    sql = "INSERT INTO TITLES(DESCRIPTION,ISTAG,GROUPID) " +
+                                    string sqlb = "INSERT INTO TITLES(DESCRIPTION,ISTAG,GROUPID) " +
                                         "VALUES(@name,@ISTAG,@GROUPID) RETURNING ID;";
                                     using (var connection = new FbConnection(connectionString))
                                     {
                                         connection.Open();
-                                        using (var command = new FbCommand(sql, connection))
+                                        using (var command = new FbCommand(sqlb, connection))
                                         {
                                             command.Parameters.Clear();
                                             command.Parameters.AddWithValue("@name", BaseTitle);
@@ -1361,11 +1361,11 @@ namespace VideoGui
                                 }
                                 if (index != -1)
                                 {
-                                    sql = "UPDATE SHORTSDIRECTORY SET TITLEID = @TITLEID WHERE ID = @id;";
+                                    string sqlc = "UPDATE SHORTSDIRECTORY SET TITLEID = @TITLEID WHERE ID = @id;";
                                     using (var connection = new FbConnection(connectionString))
                                     {
                                         connection.Open();
-                                        using (var command = new FbCommand(sql, connection))
+                                        using (var command = new FbCommand(sqlc, connection))
                                         {
                                             command.Parameters.Clear();
                                             command.Parameters.AddWithValue("@TITLEID", index);
@@ -1508,7 +1508,17 @@ namespace VideoGui
                 ex.LogWrite($"ObjectHandler - {this} {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
             }
         }
-
+        private void OnReadTitlesTags(FbDataReader reader)
+        {
+            try
+            {
+                TitleTagsList.Add(new TitleTags(reader));
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"OnReadTitlesTags {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
         public void AddAvailableTag(string tagdescription, object ThisForm)
         {
             try
@@ -3119,7 +3129,7 @@ namespace VideoGui
                 });
                 connectionString.ExecuteReader("SELECT * FROM DESCRIPTIONS", (FbDataReader r) =>
                 {
-                    DescriptionsList.Add(new Descriptions(r, OnGetTitle));
+                    DescriptionsList.Add(new Descriptions(r));
                 });
 
 

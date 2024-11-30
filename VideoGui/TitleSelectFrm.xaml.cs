@@ -310,9 +310,9 @@ namespace VideoGui
                     List<string> Tags = new List<string>();
                     List<int> Ids = new List<int>();
                     string tags = GTT.Ids;
-                    if (tags.Contains("|"))
+                    if (tags.Contains(","))
                     {
-                        Tags = tags.Split('|').ToArray<string>().ToList<string>();
+                        Tags = tags.Split(',').ToArray<string>().ToList<string>();
                     }
                     for (int i = Tags.Count - 1; i >= 0; i--)
                     {
@@ -322,7 +322,7 @@ namespace VideoGui
                     {
                         Ids.Add(item.ToInt());
                     }
-                    dbhookup?.Invoke(this, new CustomParams_InsertTags(Ids, GTT.GroupId));
+                    dbhookup?.Invoke(this, new CustomParams_InsertTags(Ids, TitleId));
                 }
             }
             catch (Exception ex)
