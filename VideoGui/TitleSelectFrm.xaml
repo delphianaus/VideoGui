@@ -16,10 +16,7 @@
                 <ListBox.Resources>
                     <!--Defines a context menu-->
                     <ContextMenu x:Key="MyElementMenu">
-                        <MenuItem Name="mnuNewItem" Header="New Item" Click="mnuNewItem_Click"/>
-                        <MenuItem Name="mnuEditItem" Header="Edit Item" Click="mnuEditItem_Click"/>
-                        <Separator/>
-                        <MenuItem Name="mnuDeleteItem" Header="Delete Item" Click="mnuDeleteItem_Click"/>
+                        <MenuItem Name="mnuUseTags" Header="Use These Tags" Click="mnuUseTags_Click"/>
                     </ContextMenu>
                     <!--Sets a context menu for each ListBoxItem in the current ListBox-->
                     <Style TargetType="{x:Type ListBoxItem}">

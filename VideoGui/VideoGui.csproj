@@ -40,6 +40,7 @@
 
 
   <ItemGroup>
+    <None Remove="computer.ico" />
     <None Remove="Icons\Cancel.png" />
     <None Remove="Icons\computer.ico" />
     <None Remove="Icons\computer1.ico" />
@@ -106,6 +107,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Resource Include="computer.ico" />
     <Resource Include="Icons\Cancel.png" />
     <Resource Include="Icons\computer.ico">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>

@@ -299,6 +299,11 @@ namespace VideoGui
             }
         }
 
+        private void mnuUseTags_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
         private void txtBaseTitle_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             try
