@@ -274,8 +274,6 @@ namespace VideoGui
                 bool res = false;
                 if (ObservableCollectionFilter is not null)
                 {
-                    ObservableCollectionFilter.TitleTagSelectorView.Source = TitleTagsList;
-                    ObservableCollectionFilter.TitleTagAvailableView.Source = availableTagsList;                    if (TitleId != -1)
                     {
                         ObservableCollectionFilter.SetTitlesTag(TitleId);
                         if (DirectoryTitleDescEditorFrm is not null)
@@ -287,9 +285,6 @@ namespace VideoGui
                             selectShortUpload.DoTitleSelectFrm.SetTitleTag(TitleId);
                         }
                     }
-                    // link Available and title tables.
-                    //ObservableCollectionFilter.ImportCollectionViewSource.Source = FileRenamer;
-                    //ObservableCollectionFilter.ImportCollectionViewSource.View.Refresh();
                 }
                 return res;
             }
@@ -3448,6 +3443,8 @@ namespace VideoGui
                 Thread.Sleep(100);
                 SetupTicker();
                 ObservableCollectionFilter = new ObservableCollectionFilters();
+                ObservableCollectionFilter.TitleTagSelectorView.Source = TitleTagsList;
+                ObservableCollectionFilter.TitleTagAvailableView.Source = availableTagsList;
                 FormResizerEvent = new System.Windows.Forms.Timer();
                 FormResizerEvent.Tick += new EventHandler(FormResizerEvent_Tick);
                 FormResizerEvent.Interval = (int)new TimeSpan(0, 0, 2).TotalSeconds;

@@ -15,7 +15,6 @@
         IsVisibleChanged="MainWindowX_IsVisibleChanged" 
         SizeChanged="MainWindowX_SizeChanged" 
         FocusableChanged="Window_FocusableChanged"
-        
         AutomationProperties.IsColumnHeader="True" GotFocus="MainWindowX_GotFocus">
     <Grid x:Name="Grid1" Focusable="True">
         <tb:TaskbarIcon x:Name="trayicon"  IconSource="/Icons/computer.ico"
