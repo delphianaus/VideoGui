@@ -1215,8 +1215,8 @@ namespace VideoGui
                                 if (!f)
                                 {
                                     string sqla = $"INSERT INTO TITLETAGS(GROUPID,TAGID) VALUES({cpInsertTags.GroupId},{item}) RETURNING ID;";
-                                    int id = sqla.RunExecuteScalar(connectionString).ToInt(-1);
-                                    if (id != -1)
+                                    int id = connectionString.RunExecuteScalar(sqla).ToInt(-1);
+                                    if(id != -1)
                                     {
                                         connectionString.ExecuteReader($"SELECT * FROM TITLETAGS T INNER JOIN AVAILABLETAGS S ON T.TAGID = S.ID WHERE T.ID = {id}", OnReadTitlesTags);
                                     }
@@ -1397,9 +1397,9 @@ namespace VideoGui
                             }
 
                             groupTitleTagsList.Clear();
-                            string sql = "SELECT T.GROUPID, D.NAME, LIST(MT.TAG, '|#') AS TAGS, LIST(T.TAGID, ',') AS IDS FROM TITLETAGS T " +
-                               "INNER JOIN AVAILABLETAGS MT ON T.TAGID = MT.ID INNER JOIN DESCRIPTIONS D ON T.GROUPID = D.TITLETAGID " +
-                               $"WHERE T.GROUPID != {index} AND D.ISTAG = 0 GROUP BY D.NAME,T.GROUPID;";
+                            string sql = "SELECT T.GROUPID, D.NAME, LIST(MT.TAG, '|#') AS TAGS, LIST(T.GROUPID, ',') AS IDS FROM TITLETAGS T " +
+                                "INNER JOIN AVAILABLETAGS MT ON T.TAGID = MT.ID INNER JOIN DESCRIPTIONS D ON T.GROUPID = D.TITLETAGID " +
+                                $"WHERE T.GROUPID != {index} AND D.ISTAG = 0 GROUP BY D.NAME,T.GROUPID;";
                             connectionString.ExecuteReader(sql, (FbDataReader r) =>
                             {
                                 groupTitleTagsList.Add(new GroupTitleTags(r));
