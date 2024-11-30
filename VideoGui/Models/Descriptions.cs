@@ -38,6 +38,24 @@ namespace VideoGui.Models
                 ex.LogWrite($"Descriptions {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
             }
         }
+
+        public Descriptions(FbDataReader reader)
+        {
+            try
+            {
+                Id = reader["ID"].ToInt();
+                Description = reader["DESCRIPTION"].ToString();
+                TitleTagId = reader["TITLETAGID"].ToInt();
+                Name = reader["NAME"].ToString();
+                TitleTag = reader["NAME"].ToString();
+                IsShortVideo = reader["ISSHORTVIDEO"].ToInt() == 1 ? true : false;
+                IsTag = reader["ISTAG"].ToInt() == 1 ? true : false;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"Descriptions {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
         public Descriptions(int _TitleTagId, string _description, bool _IsShortVideo, string _TitleTag = "", string Name = "", bool _IsTag = false)
         {
             try

@@ -97,6 +97,12 @@ namespace VideoGui
         {
             try
             {
+                if (Desc != txtDesc.Text)
+                {
+                    IsDescChanged = true;
+                    var p = new CustomParams_AddDescription(Id, txtDescName.Text, txtDesc.Text);
+                    DoDbHook?.Invoke(this, p);
+                }
                 DoOnFinish?.Invoke();
             }
             catch (Exception ex)

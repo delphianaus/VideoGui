@@ -280,10 +280,6 @@ namespace VideoGui
                         {
                             DirectoryTitleDescEditorFrm.DoTitleSelectFrm.SetTitleTag(TitleId);
                         }
-                        else if (selectShortUpload is not null)
-                        {
-                            selectShortUpload.DoTitleSelectFrm.SetTitleTag(TitleId);
-                        }
                     }
                 }
                 return res;
@@ -445,7 +441,13 @@ namespace VideoGui
                             connection.Close();
                         }
                         TitleId = cpu.id;
+                        foreach(var item in EditableshortsDirectoryList.Where(s => s.Id == ShortsDirectoryIndex))
+                        {
+                            item.TitleId = cpu.id;
+                            break;
+                        }
                     }
+
                     else if (cpu.updatetype == UpdateType.Description)
                     {
 
@@ -463,6 +465,11 @@ namespace VideoGui
                             connection.Close();
                         }
                         DescId = cpu.id;
+                        foreach (var item in EditableshortsDirectoryList.Where(s => s.Id == ShortsDirectoryIndex))
+                        {
+                            item.DescId = cpu.id;
+                            break;
+                        }
                     }
                 }
                 else if (tld is CustomParams_DescSelect cds)
@@ -792,15 +799,59 @@ namespace VideoGui
                             }
                             if (!Found)
                             {
-                                string vpart = (IsShort) ? "" : " {VPARTID}" + Environment.NewLine + Environment.NewLine;
-                                /*foreach (var itemr in UploadReleases.Where(s => s.Id == ShortsDirectoryIndex))
+                                foreach (var itemr in EditableshortsDirectoryList.Where(s => s.Id == ShortsDirectoryIndex))
                                 {
-                                    frmDescSelectFrm.txtDesc.Text = itemr.DisplayUploadBaseFileName + vpart;
-                                    frmDescSelectFrm.txtDescName.Text = itemr.DisplayUploadBaseFileName;
-                                    frmDescSelectFrm.TitleTagId = UploadReleasesBuilderIndex;
+                                    frmDescSelectFrm.txtDesc.Text = itemr.Directory + Environment.NewLine + Environment.NewLine + "Follow me @ twitch.tv/justinstrainclips";
+                                    frmDescSelectFrm.txtDescName.Text = itemr.Directory;
+                                    frmDescSelectFrm.TitleTagId = ShortsDirectoryIndex;
                                     Found = true;
+                                    int idx = -1;
+                                    frmDescSelectFrm.IsDescChanged = false;
+                                    string sql = $"INSERT INTO DESCRIPTIONS(DESCRIPTION,TITLETAGID,NAME,ISSHORTVIDEO, ISTAG)" +
+                                     $" VALUES(@DESC,@TITLETAG,@NAME,@IsShortVideo,@IsTag) RETURNING ID;";
+                                    using (var connection = new FbConnection(connectionString))
+                                    {
+                                        connection.Open();
+                                        using (var command = new FbCommand(sql, connection))
+                                        {
+                                            command.Parameters.Clear();
+                                            command.Parameters.AddWithValue("@NAME", itemr.Directory);
+                                            command.Parameters.AddWithValue("@DESC", frmDescSelectFrm.txtDesc.Text);
+                                            command.Parameters.AddWithValue("@TITLETAG", ShortsDirectoryIndex);
+                                            command.Parameters.AddWithValue("@IsTag", false);
+                                            command.Parameters.AddWithValue("@IsShortVideo", frmDescSelectFrm.IsShortVideo);
+                                            var obj = command.ExecuteScalar();
+                                            idx = (obj is int resx) ? resx : -1;
+                                        }
+                                        connection.Close();
+                                    }
+                                    if (idx != -1)
+                                    {
+                                        sql = $"SELECT * FROM DESCRIPTIONS WHERE ID = {idx}";
+                                        connectionString.ExecuteReader(sql, (dr) =>
+                                        {
+                                            DescriptionsList.Add(new Descriptions(dr));
+                                        });
+                                        sql = "UPDATE SHORTSDIRECTORY SET DESCID = @P1 WHERE ID = @P0";
+                                        using (var connection = new FbConnection(connectionString))
+                                        {
+                                            connection.Open();
+                                            using (var command = new FbCommand(sql.ToUpper(), connection))
+                                            {
+                                                command.Parameters.Clear();
+                                                command.Parameters.AddWithValue("@P0", ShortsDirectoryIndex);
+                                                command.Parameters.AddWithValue("@P1", idx);
+                                                object result = command.ExecuteScalar();
+                                            }
+                                            connection.Close();
+                                        }
+                                        foreach (var item in EditableshortsDirectoryList.Where(s => s.Id == ShortsDirectoryIndex))
+                                        {
+                                            item.DescId = idx;
+                                        }
+                                    }
                                     break;
-                                }  todo */
+                                }
                             }
                             break;
                         }
@@ -868,7 +919,24 @@ namespace VideoGui
                                     frmDescSelectFrm.LinkedId = idx;
                                     DescriptionsList.Add(new Descriptions(idx, cpAdd.Description,
                                         frmDescSelectFrm.IsShortVideo, "", cpAdd.Name));
-                                    // todo UpdateReleasesList(cpAdd.Id, idx);
+                                    foreach(var item in EditableshortsDirectoryList.Where(s=>s.Id == ShortsDirectoryIndex))
+                                    {
+                                        item.DescId = idx;
+                                        sql = "UPDATE SHORTSDIRECTORY SET DESCID = @P1 WHERE ID = @P0";
+                                        using (var connection = new FbConnection(connectionString))
+                                        {
+                                            connection.Open();
+                                            using (var command = new FbCommand(sql.ToUpper(), connection))
+                                            {
+                                                command.Parameters.Clear();
+                                                command.Parameters.AddWithValue("@P0", ShortsDirectoryIndex);
+                                                command.Parameters.AddWithValue("@P1", idx);
+                                                object result = command.ExecuteScalar();
+                                            }
+                                            connection.Close();
+                                        }
+                                        break;
+                                    }
                                 }
                             }
                             else
@@ -890,18 +958,12 @@ namespace VideoGui
                                     }
                                     connection.Close();
                                 }
-                                for (int i = 0; i < DescriptionsList.Count; i--)
+                                foreach(var item in DescriptionsList.Where(s=>s.TitleTagId == cpAdd.Id))
                                 {
-                                    if (DescriptionsList[i].TitleTagId == cpAdd.Id)
-                                    {
-                                        DescriptionsList[i].Description = cpAdd.Description;
-                                        DescriptionsList[i].Name = cpAdd.Name;
-                                        break;
-                                    }
+                                    item.Description = cpAdd.Description;
+                                    item.Name = cpAdd.Name;
+                                    break;
                                 }
-                                // todo UpdateReleasesList(cpAdd.Id, idx);
-
-
                             }
                             break;
                         }
@@ -1180,7 +1242,10 @@ namespace VideoGui
                             var _title = "";
                             string BaseTitle = "", xx = "", part = "";
                             int index = -1;// UploadReleasesBuilderIndex;
-                            foreach (var item in shortsDirectoryList.Where(item => item.Id == ShortsDirectoryIndex))
+                            frmTitleSelect.TagAvailable.ItemsSource = ObservableCollectionFilter.TitleTagAvailableView.View;
+                            frmTitleSelect.TagsGrp.ItemsSource = ObservableCollectionFilter.TitleTagSelectorView.View;
+                            //frmTitleSelect.lstTitles.ItemsSource = EditableshortsDirectoryList;
+                            foreach (var item in EditableshortsDirectoryList.Where(item => item.Id == ShortsDirectoryIndex))
                             {
                                 BaseTitle = item.Directory;
                                 if (item.TitleId != -1)
@@ -1196,6 +1261,7 @@ namespace VideoGui
                                 }
                                 frmTitleSelect.BaseTitle = $"{BaseTitle}";
                                 frmTitleSelect.txtBaseTitle.Content = $"{BaseTitle}";
+                                frmTitleSelect.txtTitle.Text = $"{BaseTitle}";
                                 break;
                             }
 
@@ -1253,7 +1319,7 @@ namespace VideoGui
                                         }
                                         connection.Close();
                                     }
-                                    foreach (var item in shortsDirectoryList.
+                                    foreach (var item in EditableshortsDirectoryList.
                                         Where(item => item.Id == ShortsDirectoryIndex))
                                     {
                                         item.TitleId = index;
@@ -1306,11 +1372,10 @@ namespace VideoGui
                             ObservableCollectionFilter.TitleTagAvailableView.View.Refresh();
                             string x = OnGetAllTags(frmTitleSelect.GetTitleTag());
                             string xx = "", part = "";
-                            /*foreach (var item in UploadReleases.Where(item => item.Id == ShortsDirectoryIndex))
+                            foreach (var item in EditableshortsDirectoryList.Where(item => item.Id == ShortsDirectoryIndex))
                             {
-                                xx = (item.ReleaseFiles.Count > 9) ? "XX" : "X";
-                                part = $" PART {xx}";
-                            }*/
+                                item.DescId = cpInsert.Groupid;
+                            }
                             //cpInsert.TitleLength = x.Length + part.Length;
                             break;
                         }
@@ -2681,6 +2746,7 @@ namespace VideoGui
                 connectionString.AddFieldToTable("AutoInsert", "MUXDATA", "VARCHAR(256)", "");
 
 
+
                 /*
           selectedTagsList , availableTagsList , TitleTagsList, DescriptionsList
           TitlesList,TitlesList2 - Tables, Loaders todo.
@@ -2770,6 +2836,9 @@ namespace VideoGui
                 connectionString.CreateTableIfNotExists(sqlstring);
                 sqlstring = $"CREATE TABLE TITLES({Id},DESCRIPTION VARCHAR(500), TITLETAGID INTEGER);";
                 connectionString.CreateTableIfNotExists(sqlstring);
+                connectionString.AddFieldToTable("TITLES", "GROUPID", "INTEGER", -1);
+                connectionString.AddFieldToTable("TITLES", "ISTAG", "INTEGER", -1);
+
                 sqlstring = $"CREATE TABLE DESCRIPTIONS({Id},NAME VARCHAR(250),DESCRIPTION VARCHAR(2500),TITLETAGID INTEGER, ISSHORTVIDEO SMALLINT, ISTAG SMALLINT);";
                 connectionString.CreateTableIfNotExists(sqlstring);
 
