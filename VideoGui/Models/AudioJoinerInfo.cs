@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 
 namespace VideoGui.Models
 {
-    
     public class AudioJoinerInfo : INotifyPropertyChanged
     {
         string _FileName = "";

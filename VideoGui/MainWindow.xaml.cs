@@ -128,6 +128,7 @@ namespace VideoGui
         public DirectoryTitleDescEditor DirectoryTitleDescEditorFrm = null;
         public ShowMatcher Swm;
         List<ListScheduleItems> ScheduleListItems = new List<ListScheduleItems>();
+        ObservableCollection<GroupTitleTags> groupTitleTagsList = new ObservableCollection<GroupTitleTags>();
         ObservableCollection<Descriptions> DescriptionsList = new ObservableCollection<Descriptions>();
         ObservableCollection<SelectedTags> selectedTagsList = new ObservableCollection<SelectedTags>();
         ObservableCollection<AvailableTags> availableTagsList = new ObservableCollection<AvailableTags>();
@@ -1193,6 +1194,59 @@ namespace VideoGui
             {
                 switch (tld)
                 {
+                    case CustomParams_InsertTags:
+                        {
+                            bool Update = false;
+                            CustomParams_InsertTags cpInsertTags = (CustomParams_InsertTags)tld;
+                            foreach (var (item, found) in from item in cpInsertTags.TagIds
+                                                          let found = false
+                                                          select (item, found))
+                            {
+                                bool f = false;
+                                foreach (var st in TitleTagsList.Where(idx => idx.GroupId == cpInsertTags.GroupId))
+                                {
+                                    if (st.TagId == item)
+                                    {
+                                        f = true;
+                                        break;
+                                    }
+                                }
+
+                                if (!f)
+                                {
+                                    string sqla = $"INSERT INTO TITLETAGS(GROUPID,TAGID) VALUES({cpInsertTags.GroupId},{item}) RETURNING ID;";
+                                    int id = connectionString.RunExecuteScalar(sqla).ToInt(-1);
+                                    if (id != -1)
+                                    {
+                                        connectionString.ExecuteReader($"SELECT * FROM TITLETAGS WHERE ID = {id}", OnReadSelectedTags);
+                                    }
+
+
+                                    Update = true;
+                                }
+                            }
+
+                            if (Update)
+                            {
+                                string BaseStr1 = frmTitleSelect.BaseTitle + " ";
+
+
+                                foreach (var item in TitleTagsList.Where(s => s.GroupId == cpInsertTags.GroupId))
+                                {
+                                    if (!BaseStr1.Contains($"#{item.Description}"))
+                                    {
+                                        BaseStr1 += $"#{item.Description} ";
+                                    }
+                                }
+                                BaseStr1 = BaseStr1.Trim();
+                                frmTitleSelect.txtTitle.Text = BaseStr1.Trim();
+                                frmTitleSelect.lblTitleLength.Content = BaseStr1.Trim().Length;
+                                ColectionFilter.TitleTagSelectorView.View.Refresh();
+                                ColectionFilter.TitleTagAvailableView.View.Refresh();
+                            }
+
+                            break;
+                        }
                     case CustomParams_Update:
                         {
                             if (tld is CustomParams_Update p && p is not null)
@@ -1262,6 +1316,7 @@ namespace VideoGui
                                 frmTitleSelect.BaseTitle = $"{BaseTitle}";
                                 frmTitleSelect.txtBaseTitle.Content = $"{BaseTitle}";
                                 frmTitleSelect.txtTitle.Text = $"{BaseTitle}";
+
                                 break;
                             }
 
@@ -1340,6 +1395,17 @@ namespace VideoGui
                                     BaseStr += $"#{item.Description} ";
                                 }
                             }
+
+                            groupTitleTagsList.Clear();
+                            string sql = "SELECT T.GROUPID, D.NAME, LIST(MT.TAG, '|#') AS TAGS, LIST(T.GROUPID, ',') AS IDS FROM TITLETAGS T " +
+                                "INNER JOIN AVAILABLETAGS MT ON T.TAGID = MT.ID INNER JOIN DESCRIPTIONS D ON T.GROUPID = D.TITLETAGID " +
+                                $"WHERE T.GROUPID != {index} AND D.ISTAG = 0 GROUP BY D.NAME,T.GROUPID;";
+                            connectionString.ExecuteReader(sql, (FbDataReader r) =>
+                            {
+                                groupTitleTagsList.Add(new GroupTitleTags(r));
+                            });
+
+                            frmTitleSelect.lstTitles.ItemsSource = groupTitleTagsList;
                             BaseStr = BaseStr.Trim();
                             frmTitleSelect.txtTitle.Text = BaseStr.Trim();
                             frmTitleSelect.lblTitleLength.Content = BaseStr.Trim().Length;

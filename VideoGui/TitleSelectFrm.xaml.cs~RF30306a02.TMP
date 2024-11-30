@@ -5,8 +5,6 @@ using System.Windows;
 using System.Windows.Input;
 using VideoGui.Models.delegates;
 using VideoGui.Models;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace VideoGui
 {
@@ -120,6 +118,7 @@ namespace VideoGui
         {
             try
             {
+
                 dbhookup?.Invoke(this, new CustomParams_Initialize(IsUploadsBuilder));
                 Thread.Sleep(100);
                 if (TagsGrp.Items.Count > 0)
@@ -302,36 +301,6 @@ namespace VideoGui
         }
 
         private void mnuUseTags_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                if (lstTitles.SelectedItem is GroupTitleTags GTT)
-                {
-                    List<string> Tags = new List<string>();
-                    List<int> Ids = new List<int>();
-                    string tags = GTT.Ids;
-                    if (tags.Contains("|"))
-                    {
-                        Tags = tags.Split('|').ToArray<string>().ToList<string>();
-                    }
-                    for (int i = Tags.Count - 1; i >= 0; i--)
-                    {
-                        if (Tags[i] == "") Tags.RemoveAt(i);
-                    }
-                    foreach (var item in Tags)
-                    {
-                        Ids.Add(item.ToInt());
-                    }
-                    dbhookup?.Invoke(this, new CustomParams_InsertTags(Ids, GTT.GroupId));
-                }
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite($"mnuNewItem_Click {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
-            }
-        }
-
-        private void mnuUseTags_Click_1(object sender, RoutedEventArgs e)
         {
 
         }

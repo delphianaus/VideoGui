@@ -10,6 +10,20 @@ using VideoGui.Models.delegates;
 namespace VideoGui.Models
 {
 
+    public class CustomParams_InsertTags
+    {
+        public List<int> TagIds { get; set; } = new List<int>();
+        public int GroupId { get; set; } = -1;
+        public CustomParams_InsertTags(List<int> _TagIds, int _groupid)
+        {
+            TagIds.AddRange(_TagIds);
+            GroupId = _groupid;
+        }
+        public CustomParams_InsertTags()
+        {
+
+        }
+    }
     public class CustomParams_Select
     {
         public int Id { get; set; } = -1;

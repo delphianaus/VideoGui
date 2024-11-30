@@ -27,11 +27,15 @@
                     <DataTemplate x:Name="GridControlsB" >
                         <Grid Margin="0,2" x:Name="gridwidths">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition x:Name="col1" Width="0"/>
-                                <ColumnDefinition x:Name="col2" Width="280*" />
+                                <ColumnDefinition Width="0"/>
+                                <ColumnDefinition Width="0"/>
+                                <ColumnDefinition Width="70"/>
+                                <ColumnDefinition Width="210*" />
                             </Grid.ColumnDefinitions>
-                            <TextBlock x:Name="Id" Grid.Column="0" Margin="4,0,0,0" Width="0" Text="{Binding Id}"/>
-                            <TextBlock x:Name="Description" Grid.Column="1" Margin="4,0,0,0" Text="{Binding Tag}"/>
+                            <TextBlock x:Name="Id" Grid.Column="0" Margin="4,0,0,0" Width="0" Text="{Binding GroupId}"/>
+                            <TextBlock x:Name="Ids" Grid.Column="0" Margin="4,0,0,0" Width="0" Text="{Binding Ids}"/>
+                            <TextBlock x:Name="Name" Grid.Column="1" Margin="4,0,0,0" Text="{Binding NAME}"/>
+                            <TextBlock x:Name="Tags" Grid.Column="3" Margin="4,0,0,0" Text="{Binding TAGS}"/>
                         </Grid>
                     </DataTemplate>
                 </ListBox.ItemTemplate>
