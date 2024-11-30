@@ -34,13 +34,8 @@ namespace VideoGui
         {
             try
             {
-
+                
                 ModuleCallBack?.Invoke(this, new CustomParams_Initialize());
-                brd1.Width = Width - 16;
-                brd1.Height = Height - 123;
-                lstItems.Width = brd1.Width;
-                lstSchedules.Width = lstItems.Width - 8;
-                lstSchedules.Height = Height - 160;
             }
             catch (Exception ex)
             {
@@ -88,7 +83,7 @@ namespace VideoGui
                     if (!DoTitleSelectFrm.IsClosing && !DoTitleSelectFrm.IsClosed)
                     {
                         DoTitleSelectFrm.Close();
-                        DoTitleSelectFrm = new TitleSelectFrm(DoOnFinishTitleSelect, ModuleCallBack, SetLists, true);
+                        DoTitleSelectFrm = new TitleSelectFrm(DoOnFinishTitleSelect, ModuleCallBack, SetLists,true);
                         Hide();
                         DoTitleSelectFrm.Show();
                     }
@@ -197,11 +192,7 @@ namespace VideoGui
             {
                 if (IsLoaded)
                 {
-                    brd1.Width = e.NewSize.Width - 16;
-                    brd1.Height = e.NewSize.Height - 123;
-                    lstItems.Width = brd1.Width;
-                    lstSchedules.Width = lstItems.Width - 8;
-                    lstSchedules.Height = e.NewSize.Height - 160;
+                    brd1.Width = e.NewSize.Width - 1; 
                 }
             }
             catch (Exception ex)

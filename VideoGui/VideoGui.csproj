@@ -62,6 +62,7 @@
     <None Remove="Icons\No.png" />
     <None Remove="Icons\OutputX265.png" />
     <None Remove="Icons\OutputX264.png" />
+    <None Remove="Icons\plus.png" />
     <None Remove="Icons\RightArrow..png" />
     <None Remove="Icons\SelectDown.png" />
     <None Remove="Icons\set.png" />
@@ -147,6 +148,8 @@
     <Resource Include="Icons\computer5.ico">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
+
+    <Resource Include="Icons\plus.png" />
 
     <Resource Include="Icons\RightArrow..png" />
 

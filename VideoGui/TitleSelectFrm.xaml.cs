@@ -95,7 +95,7 @@ namespace VideoGui
                 {
                     int Id = TGX.Id;
                     var p = new CustomParams_Remove(Id);
-
+                    IsTitleChanged = true;
                     int TextLength = txtTitle.Text.Length + p.TitleLength;
                     lblTitleLength.Content = TextLength.ToString();
                     dbhookup?.Invoke(this, p);
@@ -151,6 +151,7 @@ namespace VideoGui
                 if ((txtTitle.Text != "") && (TagAvailable.SelectedItem is AvailableTags TGX))
                 {
                     int Id = TGX.Id;
+                    IsTitleChanged = true;
                     var p = new CustomParams_InsertWithId(Id, TitleId);
                     dbhookup?.Invoke(this, p);
                     dbhookup?.Invoke(this, new CustomParams_Refresh());
