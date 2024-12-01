@@ -163,7 +163,31 @@ namespace VideoGui.Models
         {
             UploadsReleaseInfo = _UploadsReleaseInfo;
         }
+    }
 
+    public class CustomParams_GetTitle
+    {
+        public string name { get; set; } = "";
+        public int title { get; set; } = -1;
+        public int id { get; set; } = -1;
+
+        public CustomParams_GetTitle(int _id, int _title)
+        {
+            id = _id;
+            title = _title;
+        }
+    }
+    public class CustomParams_GetDesc
+    {
+        public string name { get; set; } = "";
+        public int desc { get; set; } = -1;
+        public int id { get; set; } = -1;
+
+        public CustomParams_GetDesc(int _id, int _desc)
+        {
+            id = _id;
+            desc = _desc;
+        }
     }
     public class CustomParams_Remove
     {

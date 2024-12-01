@@ -94,8 +94,6 @@ namespace VideoGui
                             }
                             else
                             {
-
-
                                 dbInit?.Invoke(this, new CustomParams_Select(res));
                                 connectionString.ExecuteReader($"SELECT * FROM SHORTSDIRECTORY WHERE ID = {res}", OnReadShorts);
                             }

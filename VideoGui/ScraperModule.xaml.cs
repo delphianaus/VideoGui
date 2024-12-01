@@ -64,6 +64,9 @@ using Newtonsoft.Json.Linq;
 using System.Globalization;
 using static System.Windows.Forms.AxHost;
 using FirebirdSql.Data.FirebirdClient;
+using Nancy;
+using FirebirdSql.Data.Isql;
+using Google.Apis.YouTube.v3.Data;
 
 namespace VideoGui
 {
@@ -85,8 +88,8 @@ namespace VideoGui
     public partial class ScraperModule : Window
     {
         object lockobj = new object();
-        int MaxNodes = -1,MaxUploads = 0, recs = 0, gmaxrecs = 0, files = 0, max = 0, SlotsPerUpload = 0;
-        public int EventId , TotalScheduled = 0;
+        int MaxNodes = -1, MaxUploads = 0, recs = 0, gmaxrecs = 0, files = 0, max = 0, SlotsPerUpload = 0;
+        public int EventId, TotalScheduled = 0;
         public List<ShortsDirectory> ShortsDirectories = new(); // <shortname>
         public List<ListScheduleItems> listSchedules = new List<ListScheduleItems>();
         DirectshortsScheduler directshortsScheduler = null;
@@ -149,13 +152,13 @@ namespace VideoGui
                 wv2Dictionary.Add(10, wv2A10);
                 ActiveWebView.Add(1, wv2);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 ex.LogWrite($"Constructor Scraper.Schedule {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
         public ScraperModule(databasehook<object> _dbInit, OnFinishId _OnFinish, string _Default_url, Nullable<DateTime> Start,
-            Nullable<DateTime> End, List<ListScheduleItems> _listSchedules, int _eventid )
+            Nullable<DateTime> End, List<ListScheduleItems> _listSchedules, int _eventid)
         {
             try
             {
@@ -283,7 +286,7 @@ namespace VideoGui
                         IntId = source.Substring(p1 + 6, p2 - p1 - 6);
                     }
                     var task = (sender as WebView2).ExecuteScriptAsync("document.body.innerHTML");
-                    task.ContinueWith(x => { ProcessHTML(x.Result, Id, IntId); },
+                    task.ContinueWith(x => { ProcessHTML(x.Result, Id, IntId, sender); },
                         TaskScheduler.FromCurrentSynchronizationContext());
                 }
             }
@@ -542,6 +545,7 @@ namespace VideoGui
         bool ExitDialog = false, HasExited = false;
         public List<string> ScheduledOk = new List<string>();
         public List<string> VideoFiles = new List<string>();
+        public List<string> ScheduledFiles = new List<string>();
         int ts = 0;
         public async Task UploadV2Files(bool rentry = false)
         {
@@ -618,6 +622,7 @@ namespace VideoGui
                             if (max <= MaxUploads)
                             {
                                 lblTotal.Content = $"{TotalScheduled}";
+                                ScheduledFiles.Add(Path.GetFileName(f));
                                 string news = "\"" + @"Z:\" + new DirectoryInfo(Path.GetDirectoryName(f)).Name + "\\" + Path.GetFileName(f) + "\" ";
                                 if (SendKeysString.Length + news.Length < 255)
                                 {
@@ -697,6 +702,9 @@ namespace VideoGui
                                 if (uploaded < 100)
                                 {
                                     dbInitializer?.Invoke(this, new CustomParams_Wait());
+                                    /// Build FIles
+                                    /// 
+                                    await BuildFiles();
                                     Close();
                                 }
                             }
@@ -873,6 +881,8 @@ namespace VideoGui
                             }
                             var htmlx = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
                             File.WriteAllLines($"E:\\gopro9\\ScraperLog_{ct++}.txt", new string[] { htmlx });
+                            // build files
+                            await BuildFiles();
                             Close();
                         }
                     }
@@ -944,7 +954,7 @@ namespace VideoGui
                         if (ScheduledOk.IndexOf(filename1) == -1)
                         {
                             ScheduledOk.Add(filename1);
-                            string gUrl = webAddressBuilder.ScopeVideo(filename1,false).ScopeAddress;
+                            string gUrl = webAddressBuilder.ScopeVideo(filename1, false).ScopeAddress;
                             nextaddress.Add(gUrl);
                             VideoFiles.Remove(filename1);
                             TotalScheduled++;
@@ -1116,7 +1126,7 @@ namespace VideoGui
             }
         }
 
-        
+
         private bool DoNodeScrapeUpdate(string Id, string Title, string Desc, string FileName, string status, DateTime? dateTime)
         {
             try
@@ -1834,7 +1844,7 @@ namespace VideoGui
             }
         }
         public bool KilledUploads = false;
-        private void btnClose_Click(object sender, RoutedEventArgs e)
+        private async void btnClose_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -1859,12 +1869,49 @@ namespace VideoGui
                     KilledUploads = true;
                     //var htmlx = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
                     // File.WriteAllLines($"E:\\gopro9\\ScraperLog_{DateTime.Now}.txt", new string[] { htmlx });
+                    // build files
+                    await BuildFiles();
                     Close();
                 }
             }
             catch (Exception ex)
             {
                 ex.LogWrite($"btnClose_Click {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+        }
+
+        int LastKey = -1;
+        bool Waiting = false;
+        bool IsVideoLookup = false;
+        public async Task BuildFiles()
+        {
+            try
+            {
+                foreach (var item in ScheduledFiles)
+                {
+                    await ActiveWebView[1].ExecuteScriptAsync($"document.querySelector('button[aria-label=\"{item}\"]').click()");
+                    var html = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
+                    //https://youtube.com/shorts/xYtfpf3CPoc
+                    if (html.Contains("https://youtube.com/shorts/"))
+                    {
+                        var link = Regex.Match(html, "https://youtube.com/shorts/([a-zA-Z0-9\\-_]+)").Groups[1].Value;
+                        if (link is not null && link != "")
+                        {
+                            IsVideoLookup = true;
+                            string gUrl = webAddressBuilder.ScopeVideo(link).ScopeAddress;
+                            DoNewVideoUpdate(gUrl);
+                        }
+                    }
+                }
+                while (Waiting && IsVideoLookup)
+                {
+                    Thread.Sleep(100);
+                    System.Windows.Forms.Application.DoEvents();
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"BuildFiles {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
 
@@ -2045,7 +2092,7 @@ namespace VideoGui
         {
             try
             {
-             
+
             }
             catch (Exception ex)
             {
@@ -2056,8 +2103,8 @@ namespace VideoGui
         private void DoReportSchedule(DateTime dateTime, string id, string title)
         {
             try
-            { 
-            
+            {
+
             }
             catch (Exception ex)
             {
@@ -2096,7 +2143,7 @@ namespace VideoGui
         }
 
 
-        public void ProcessHTML(string html, int id, string IntId)
+        public void ProcessHTML(string html, int id, string IntId, object sender)
         {
             try
             {
@@ -2118,6 +2165,96 @@ namespace VideoGui
                                     index = html.IndexOf("<");
                                     html = html[..(index - 1)];
                                     filename = html.Replace("\n", "").Replace("\r", "").Trim();
+                                    if (filename.Contains("_") && IsVideoLookup)
+                                    {
+                                        string idp = filename.Split("_").ToArray<string>().ToList().LastOrDefault().Trim();
+                                        if (idp is not null && idp != "")
+                                        {
+                                            int TitleId = -1;
+                                            int DescId = -1;
+                                            int Id = -1;
+                                            var p1 = new CustomParams_GetConnectionString();
+                                            dbInitializer?.Invoke(this, p1);
+                                            string connectionStr = p1.ConnectionString;
+                                            string sql = $"SELECT * FROM SHORTSDIRECTORY WHERE ID = {idp}";
+                                            connectionStr.ExecuteReader(sql, (FbDataReader r) =>
+                                            {
+                                                Id = (r["ID"] is Int32 i) ? i : -1;
+                                                TitleId = (r["TITLEID"] is Int16 tid) ? tid : -1;
+                                                DescId = (r["DESCID"] is Int16 did) ? did : -1;
+                                            });
+
+                                            string Title = "", Desc = "";
+                                            if (id != -1)
+                                            {
+                                                if (TitleId != -1)
+                                                {
+                                                    var p = new CustomParams_GetTitle(TitleId, Id);
+                                                    dbInitializer?.Invoke(this, p);
+                                                    Title = p.name;
+                                                }
+                                                if (DescId != -1)
+                                                {
+                                                    var p = new CustomParams_GetDesc(DescId, Id);
+                                                    dbInitializer?.Invoke(this, p);
+                                                    Desc = p.name;
+                                                }
+                                            }
+
+                                            if (Title != "")
+                                            {
+                                                if ((sender as WebView2).CoreWebView2 != null)
+                                                {
+                                                    // Define the JavaScript code to replace the text content
+                                                    string script = "var divElements = document.querySelectorAll('[aria-label=\"Tell viewers about your video (type @ to mention a channel)\"]');" +
+                                                       "divElements.forEach(function(divElement) {" +
+                                                      $"   divElement.textContent = '{Title}';" +
+                                                       "});";
+
+                                                    // Execute the JavaScript code within the WebView2 control
+                                                    (sender as WebView2).CoreWebView2.ExecuteScriptAsync(script);
+
+                                                    
+                                                    
+                                                }
+                                            }
+                                            if (Desc != "")
+                                            {
+                                                string script2 = "var divElements = document.querySelectorAll('[aria-label=\"Add a title that describes your video (type @ to mention a channel)\"]');" +
+                                                       "divElements.forEach(function(divElement) {" +
+                                                      $"   divElement.textContent = '{Desc}';" +
+                                                       "});";
+
+                                                // Execute the JavaScript code within the WebView2 control
+                                                (sender as WebView2).CoreWebView2.ExecuteScriptAsync(script2);
+                                            }
+                                            if (Title != "" || Desc != "")
+                                            {
+                                                if ((sender as WebView2).CoreWebView2 != null)
+                                                {
+                                                    // Define the JavaScript code to click the "Save" button
+                                                    string script1 = "var saveButton = document.querySelector('.ytcp-button-shape-impl__button-text-content');" +
+                                                                   "if (saveButton) {" +
+                                                                   "   saveButton.click();" +
+                                                                   "}";
+
+                                                    // Execute the JavaScript code within the WebView2 control
+                                                    (sender as WebView2).CoreWebView2.ExecuteScriptAsync(script1);
+                                                }
+                                                for (int i = ScheduledFiles.Count - 1; i >= 0; i--)
+                                                {
+                                                    if (ScheduledFiles[i] == filename)
+                                                    {
+                                                        ScheduledFiles.RemoveAt(i);
+                                                    }
+                                                }
+                                                if (ScheduledFiles.Count == 0)
+                                                {
+                                                    Waiting = false;
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -2129,7 +2266,7 @@ namespace VideoGui
                             {
                                 var webView2Instance = wv2Dictionary[id];
                                 var task = webView2Instance.ExecuteScriptAsync("document.body.innerHTML");
-                                task.ContinueWith(x => { ProcessHTML(x.Result, id, IntId); }, TaskScheduler.FromCurrentSynchronizationContext());
+                                task.ContinueWith(x => { ProcessHTML(x.Result, id, IntId, sender); }, TaskScheduler.FromCurrentSynchronizationContext());
                                 return;
                             }
                         }
@@ -2138,10 +2275,10 @@ namespace VideoGui
                             if (filename.Contains("_") && ScraperType == EventTypes.VideoUpload)
                             {
                                 int index = filename.IndexOf("_");
-                                string lookup = filename.Substring(index+1, filename.Length - (index + 1)).Trim();
+                                string lookup = filename.Substring(index + 1, filename.Length - (index + 1)).Trim();
                                 var p1 = new CustomParams_GetConnectionString();
                                 dbInitializer?.Invoke(this, p1);
-                                string DirName = "",connectionStr = p1.ConnectionString;
+                                string DirName = "", connectionStr = p1.ConnectionString;
                                 bool IsDone = false;
                                 int TitleID = -1, DescID = -1;
                                 int lp = Convert.ToInt32(lookup, 16), idx = -1;

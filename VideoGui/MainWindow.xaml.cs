@@ -1840,6 +1840,41 @@ namespace VideoGui
                             scs.ScraperType = EventTypes.ShortsSchedule;
                         }
                     }
+                    else if (tld is CustomParams_GetDesc cgd)
+                    {
+                        foreach (var item in DescriptionsList.Where(s => s.TitleTagId == cgd.id))
+                        {
+                            cgd.name = item.Description;
+                            break;
+                        }
+                    }
+                    else if (tld is CustomParams_GetTitle cgt)
+                    {
+                        foreach (var item in EditableshortsDirectoryList.Where(item => item.Id == cgt.id))
+                        {
+                            string BaseTitle = item.Directory;
+                            if (item.TitleId != -1)
+                            {
+                                foreach (var t in TitlesList.Where(i => i.GroupId == ShortsDirectoryIndex && !i.IsTag))
+                                {
+                                    BaseTitle = t.Description;
+                                    ObservableCollectionFilter.SetTitlesTag(t.Id);
+                                    break;
+                                }
+                            }
+                            string BaseStr = "";
+                            foreach (var item2 in TitleTagsList.Where(s => s.GroupId == cgt.id))
+                            {
+                                if (!BaseStr.Contains($"#{item2.Description}"))
+                                {
+                                    BaseStr += $"#{item2.Description} ";
+                                }
+                            }
+                            BaseStr = BaseStr.Trim();
+                            cgt.name = BaseTitle + " " + BaseStr;
+                            break;
+                        }
+                    }
                     else if (tld is CustomParams_AddVideoInfo avi)
                     {
                         int id = -1;
@@ -3245,7 +3280,8 @@ namespace VideoGui
                         if (IsCutEncode) ScriptType = 1;
                         string CutFrames = ((textstart != "") || (textduration != "")) ? $"|{textstart}|{Final.ToFFmpeg()}|time" : "";
                         string ScriptFile = $"true|{destFilename}|{sourcedirectory}|*.mp4{CutFrames}";
-                        JobListDetails InMemoryJob = new JobListDetails(Title, SourceIndex++, iddx, ScriptFile, ScriptType, false, true,
+                        JobListDetails InMemoryJob = new JobListDetails(Title, SourceIndex++, iddx, ScriptFile,
+                            ScriptType, false, true,
                             IsPersistantSource, IsAdobe, IsShorts, IsCreateShorts, "", ismuxed, muxdata);
                         if (InMemoryJob.GetCutList().Count > 0 || RTMP != "")
                         {

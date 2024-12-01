@@ -823,7 +823,7 @@ namespace VideoGui
                 Nullable<DateTime> twitchdata = null;
                 twitchdata = (ReleaseDate.Value.HasValue) ? ReleaseDate.Value.Value : null;
                 DoAddRecord?.Invoke(ChkElapsed.IsChecked.Value, Chk720P.IsChecked.Value,
-                    ChkShorts.IsChecked.Value, ComboShortType.SelectedIndex,
+                    ChkShorts.IsChecked.Value, ComboShortType.SelectedIndex,  // number 4
                     ChkEnableTrim.IsChecked.Value, ChkCut.IsChecked.Value,
                     chkDeleteMonitored.IsChecked.Value,
                     chkPersistantSource.IsChecked.Value,
