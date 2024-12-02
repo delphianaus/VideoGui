@@ -133,7 +133,16 @@ namespace VideoGui
                 IsDashboardMode = true;
                 dbInitializer = _dbInit;
                 InitializeComponent();
-                Closing += (s, e) => { IsClosing = true; };
+                Closing += (s, e) =>
+                {
+                    var html = wv2.CoreWebView2.ExecuteScriptAsync("document.body.innerHTML").ConfigureAwait(true).GetAwaiter().GetResult();
+                    var ehtml = Regex.Unescape(html);
+                    if (ehtml is not null && ehtml.Contains("Daily upload limit reached"))
+                    {
+                        Exceeded = true;
+                    }
+                    IsClosing = true;
+                };
                 Closed += (s, e) =>
                 {
                     IsClosed = true;
