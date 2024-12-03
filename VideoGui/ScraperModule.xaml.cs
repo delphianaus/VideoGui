@@ -67,6 +67,7 @@ using FirebirdSql.Data.FirebirdClient;
 using Nancy;
 using FirebirdSql.Data.Isql;
 using Google.Apis.YouTube.v3.Data;
+using static System.Windows.Forms.LinkLabel;
 
 namespace VideoGui
 {
@@ -89,6 +90,18 @@ namespace VideoGui
     {
         object lockobj = new object();
         int MaxNodes = -1, MaxUploads = 0, recs = 0, gmaxrecs = 0, files = 0, max = 0, SlotsPerUpload = 0;
+        bool EditDone = false, btndone = false;
+        bool ExitDialog = false, HasExited = false;
+        public List<string> ScheduledOk = new List<string>();
+        public List<string> VideoFiles = new List<string>();
+        public List<VideoIdFileName> ScheduledFiles = new List<VideoIdFileName>();
+        int ts = 0;
+        int LastKey = -1;
+        bool Waiting = false;
+        bool IsVideoLookup = false;
+        public bool KilledUploads = false;
+        DispatcherTimer CloseTimer = new DispatcherTimer();
+        int ct = 0;
         public int EventId, TotalScheduled = 0;
         public List<ShortsDirectory> ShortsDirectories = new(); // <shortname>
         public List<ListScheduleItems> listSchedules = new List<ListScheduleItems>();
@@ -118,7 +131,22 @@ namespace VideoGui
         public Nullable<DateTime> ReleaseDate = null;
         public Nullable<DateTime> ReleaseEndDate = null;
         public EventTypes ScraperType = EventTypes.VideoUpload;
-
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, IntPtr wParam, string lParam);
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
+        [DllImport("user32.dll")]
+        private static extern bool EnumChildWindows(IntPtr hWndParent, EnumWindowProc lpEnumFunc, IntPtr lParam);
+        [DllImport("user32.dll")]
+        private static extern int GetDlgCtrlID(IntPtr hwnd);
+        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        public static extern int GetWindowText(IntPtr hWnd, System.Text.StringBuilder lpString, int nMaxCount);
+        private const int BM_CLICK = 0x00F5;
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern int GetClassName(IntPtr hWnd, System.Text.StringBuilder lpClassName, int nMaxCount);
+        private delegate bool EnumWindowProc(IntPtr hWnd, IntPtr parameter);
         public ScraperModule(databasehook<object> _dbInit, OnFinishId _OnFinish, string _Default_url,
                string TableDest, int _EventId)
         {
@@ -247,6 +275,45 @@ namespace VideoGui
             }
         }
 
+        public ScraperModule(databasehook<object> _dbInit, OnFinishId _OnFinish, string _Default_url)
+        {
+            try
+            {
+                SwapEnabled = false;
+                EventId = -1;
+                ScraperType = EventTypes.UploadTest;
+                MaxUploads = 2;
+                DoOnFinish = _OnFinish;
+                DefaultUrl = _Default_url;
+                IsDashboardMode = true;
+                dbInitializer = _dbInit;
+                IsUnlisted = false;
+                SlotsPerUpload = 2;
+                InitializeComponent();
+                Closing += (s, e) => { IsClosing = true; };
+                Closed += (s, e) =>
+                {
+                    IsClosed = true;
+                    DoOnFinish?.Invoke(EventId);
+                };
+                webAddressBuilder = new WebAddressBuilder(null, null, "UCdMH7lMpKJRGbbszk5AUc7w");
+                wv2Dictionary.Add(1, wv2A1);//20
+                wv2Dictionary.Add(2, wv2A2);//30
+                wv2Dictionary.Add(3, wv2A3);//40
+                wv2Dictionary.Add(4, wv2A4);//50
+                wv2Dictionary.Add(5, wv2A5);//60
+                wv2Dictionary.Add(6, wv2A6);//70
+                wv2Dictionary.Add(7, wv2A7);//80
+                wv2Dictionary.Add(8, wv2A8);//90
+                wv2Dictionary.Add(9, wv2A9);//100
+                wv2Dictionary.Add(10, wv2A10);
+                ActiveWebView.Add(1, wv2);
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"Constructor VideoUploader {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+        }
 
 
 
@@ -418,27 +485,7 @@ namespace VideoGui
             }
         }
 
-        [DllImport("user32.dll", SetLastError = true)]
-        private static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
-        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        private static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, IntPtr wParam, string lParam);
 
-        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        private static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
-
-        [DllImport("user32.dll")]
-        private static extern bool EnumChildWindows(IntPtr hWndParent, EnumWindowProc lpEnumFunc, IntPtr lParam);
-        [DllImport("user32.dll")]
-        private static extern int GetDlgCtrlID(IntPtr hwnd);
-        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
-        public static extern int GetWindowText(IntPtr hWnd, System.Text.StringBuilder lpString, int nMaxCount);
-
-        private const int BM_CLICK = 0x00F5;
-        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        private static extern int GetClassName(IntPtr hWnd, System.Text.StringBuilder lpClassName, int nMaxCount);
-
-
-        private delegate bool EnumWindowProc(IntPtr hWnd, IntPtr parameter);
         public bool CycleThroughChildWindows()
         {
             try
@@ -460,7 +507,7 @@ namespace VideoGui
             }
         }
 
-        bool EditDone = false, btndone = false;
+
         private bool EnumChildWindowCallback(IntPtr hWnd, IntPtr lParam)
         {
             try
@@ -551,11 +598,6 @@ namespace VideoGui
             }
         }
 
-        bool ExitDialog = false, HasExited = false;
-        public List<string> ScheduledOk = new List<string>();
-        public List<string> VideoFiles = new List<string>();
-        public List<string> ScheduledFiles = new List<string>();
-        int ts = 0;
         public async Task UploadV2Files(bool rentry = false)
         {
             try
@@ -631,7 +673,7 @@ namespace VideoGui
                             if (max <= MaxUploads)
                             {
                                 lblTotal.Content = $"{TotalScheduled}";
-                                ScheduledFiles.Add(Path.GetFileName(f));
+                                ScheduledFiles.Add(new VideoIdFileName(Path.GetFileName(f)));
                                 string news = "\"" + @"Z:\" + new DirectoryInfo(Path.GetDirectoryName(f)).Name + "\\" + Path.GetFileName(f) + "\" ";
                                 if (SendKeysString.Length + news.Length < 255)
                                 {
@@ -803,6 +845,12 @@ namespace VideoGui
                                                         {
                                                             int len = "https://youtu.be/".Length;
                                                             string vid = htmlcheck.Substring(index + len, 11);
+                                                            foreach (var item in ScheduledFiles.Where(item => item.FileName == filename))
+                                                            {
+                                                                item.VideoId = vid;
+                                                                break;
+                                                            }
+
                                                             dbInitializer?.Invoke(this, new InsertIntoTable(vid, filename));
                                                         }
                                                     }
@@ -909,7 +957,7 @@ namespace VideoGui
 
             }
         }
-        int ct = 0;
+
         private void UploadedHandler(string Span_Name, string connectStr, string filename1)
         {
             try
@@ -1504,7 +1552,7 @@ namespace VideoGui
                 ex.LogWrite($"ProcessWV2 {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-        DispatcherTimer CloseTimer = new DispatcherTimer();
+
         private void CloseTimer_Tick(object? sender, EventArgs e)
         {
             CloseTimer.Stop();
@@ -1852,7 +1900,7 @@ namespace VideoGui
                 ex.LogWrite($"NextTask {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-        public bool KilledUploads = false;
+
         private async void btnClose_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -1889,27 +1937,41 @@ namespace VideoGui
             }
         }
 
-        int LastKey = -1;
-        bool Waiting = false;
-        bool IsVideoLookup = false;
+
         public async Task BuildFiles()
         {
             try
             {
                 foreach (var item in ScheduledFiles)
                 {
-                    await ActiveWebView[1].ExecuteScriptAsync($"document.querySelector('button[aria-label=\"{item}\"]').click()");
-                    var html = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
-                    //https://youtube.com/shorts/xYtfpf3CPoc
-                    if (html.Contains("https://youtube.com/shorts/"))
+                    if (item.VideoId == "")
                     {
-                        var link = Regex.Match(html, "https://youtube.com/shorts/([a-zA-Z0-9\\-_]+)").Groups[1].Value;
-                        if (link is not null && link != "")
+                        await ActiveWebView[1].ExecuteScriptAsync($"document.querySelector('button[aria-label=\"{item.FileName}\"]').click()");
+                        var html = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
+                        //https://youtube.com/shorts/xYtfpf3CPoc
+                        if (html.Contains("https://youtube.com/shorts/"))
                         {
-                            IsVideoLookup = true;
-                            string gUrl = webAddressBuilder.ScopeVideo(link).ScopeAddress;
-                            DoNewVideoUpdate(gUrl);
+                            var link = Regex.Match(html, "https://youtube.com/shorts/([a-zA-Z0-9\\-_]+)").Groups[1].Value;
+                            if (link is not null && link != "")
+                            {
+                                IsVideoLookup = true;
+                                DoNewVideoUpdate(webAddressBuilder.ScopeVideo(link).ScopeAddress);
+                            }
                         }
+                        else if (html.Contains("https://youtu.be/"))
+                        {
+                            var index = html.IndexOf("https://youtu.be/");
+                            int len = "https://youtu.be/".Length;
+                            string vid = html.Substring(index + len, 11);
+                            DoNewVideoUpdate(webAddressBuilder.ScopeVideo(vid).ScopeAddress);
+                        }
+                    }
+                    else
+                    {
+                        IsVideoLookup = true;
+                        string gUrl = webAddressBuilder.ScopeVideo(item.VideoId).ScopeAddress;
+                        DoNewVideoUpdate(gUrl);
+
                     }
                 }
                 while (Waiting && IsVideoLookup)
@@ -2151,7 +2213,7 @@ namespace VideoGui
             }
         }
 
-        
+
 
         public async Task<ButtonReturnType> IsButtonEnabled(WebView2 webView2)
         {
@@ -2200,7 +2262,7 @@ namespace VideoGui
                                     index = html.IndexOf("<");
                                     html = html[..(index - 1)];
                                     filename = html.Replace("\n", "").Replace("\r", "").Trim();
-                                    if (filename.Contains("_") && IsVideoLookup)
+                                    if (filename.Contains("_") && IsVideoLookup && ScraperType == EventTypes.UploadTest)
                                     {
                                         string idp = filename.Split("_").ToArray<string>().ToList().LastOrDefault().Trim();
                                         if (idp is not null && idp != "")
@@ -2267,13 +2329,13 @@ namespace VideoGui
                                                     while (true)
                                                     {
                                                         var p = IsButtonEnabled((sender as WebView2)).GetAwaiter().GetResult();
-                                                        if ( p == ButtonReturnType.Enabled)
+                                                        if (p == ButtonReturnType.Enabled)
                                                         {
                                                             break;
                                                         }
                                                         Thread.Sleep(100);
                                                     }
-                                                    
+
 
 
                                                     // Define the JavaScript code to click the "Save" button
@@ -2296,7 +2358,7 @@ namespace VideoGui
                                                 }
                                                 for (int i = ScheduledFiles.Count - 1; i >= 0; i--)
                                                 {
-                                                    if (ScheduledFiles[i] == filename)
+                                                    if (ScheduledFiles[i].FileName == filename)
                                                     {
                                                         ScheduledFiles.RemoveAt(i);
                                                     }
@@ -2337,16 +2399,16 @@ namespace VideoGui
                                 int lp = Convert.ToInt32(lookup, 16), idx = -1;
                                 connectionStr.ExecuteReader($"SELECT FIRST 1 ID,DIRECTORYNAME,TITLEID,DESCID FROM SHORTSDIRECTORY WHERE ID = {lp}",
                                     (FbDataReader r) =>
-                                {
-                                    while (!IsDone)
                                     {
-                                        idx = (r["ID"] is int id1) ? id1 : -1;
-                                        TitleID = (r["TITLEID"] is int titleid) ? titleid : -1;
-                                        DescID = (r["DESCID"] is int descid) ? descid : -1;
-                                        DirName = (r["DIRECTORYNAME"] is string dir) ? dir : "";
-                                        IsDone = true;
-                                    }
-                                });
+                                        while (!IsDone)
+                                        {
+                                            idx = (r["ID"] is int id1) ? id1 : -1;
+                                            TitleID = (r["TITLEID"] is int titleid) ? titleid : -1;
+                                            DescID = (r["DESCID"] is int descid) ? descid : -1;
+                                            DirName = (r["DIRECTORYNAME"] is string dir) ? dir : "";
+                                            IsDone = true;
+                                        }
+                                    });
                                 if (IsDone && DirName != "" && idx != -1 && TitleID != -1 && DescID != -1)
                                 {
 
