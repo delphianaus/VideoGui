@@ -2151,6 +2151,32 @@ namespace VideoGui
             }
         }
 
+        
+
+        public async Task<ButtonReturnType> IsButtonEnabled(WebView2 webView2)
+        {
+            try
+            {
+                var res = ButtonReturnType.NotPresent;
+                var html = await webView2.ExecuteScriptAsync("document.body.innerHTML");
+                var ehtml = Regex.Unescape(html);
+                if (ehtml.Contains("<button class=\"ytcp-button-shape-impl ytcp-button-shape-impl--filled ytcp-button-shape-impl--disabled ytcp-button-shape-impl--size-m\" aria-label=\"Save\" title=\"\" disabled=\"\" style=\"\">"))
+                {
+                    return ButtonReturnType.Disabled;
+                }
+                if (ehtml.Contains("<button class=\"ytcp-button-shape-impl ytcp-button-shape-impl--filled ytcp-button-shape-impl--mono ytcp-button-shape-impl--size-m\" aria-label=\"Save\" title=\"\" style=\"\">"))
+                {
+                    return ButtonReturnType.Enabled;
+                }
+                return res;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"IsButtonEnabled {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+                return ButtonReturnType.NotPresent;
+            }
+        }
+
 
         public void ProcessHTML(string html, int id, string IntId, object sender)
         {
@@ -2222,9 +2248,6 @@ namespace VideoGui
 
                                                     // Execute the JavaScript code within the WebView2 control
                                                     (sender as WebView2).CoreWebView2.ExecuteScriptAsync(script);
-
-                                                    
-                                                    
                                                 }
                                             }
                                             if (Desc != "")
@@ -2234,13 +2257,25 @@ namespace VideoGui
                                                       $"   divElement.textContent = '{Desc}';" +
                                                        "});";
 
-                                                // Execute the JavaScript code within the WebView2 control
+                                                // Execute th       e JavaScript code within the WebView2 control
                                                 (sender as WebView2).CoreWebView2.ExecuteScriptAsync(script2);
                                             }
                                             if (Title != "" || Desc != "")
                                             {
                                                 if ((sender as WebView2).CoreWebView2 != null)
                                                 {
+                                                    while (true)
+                                                    {
+                                                        var p = IsButtonEnabled((sender as WebView2)).GetAwaiter().GetResult();
+                                                        if ( p == ButtonReturnType.Enabled)
+                                                        {
+                                                            break;
+                                                        }
+                                                        Thread.Sleep(100);
+                                                    }
+                                                    
+
+
                                                     // Define the JavaScript code to click the "Save" button
                                                     string script1 = "var saveButton = document.querySelector('.ytcp-button-shape-impl__button-text-content');" +
                                                                    "if (saveButton) {" +
@@ -2249,6 +2284,15 @@ namespace VideoGui
 
                                                     // Execute the JavaScript code within the WebView2 control
                                                     (sender as WebView2).CoreWebView2.ExecuteScriptAsync(script1);
+                                                    while (true)
+                                                    {
+                                                        var p = IsButtonEnabled((sender as WebView2)).GetAwaiter().GetResult();
+                                                        if (p == ButtonReturnType.Disabled)
+                                                        {
+                                                            break;
+                                                        }
+                                                        Thread.Sleep(100);
+                                                    }
                                                 }
                                                 for (int i = ScheduledFiles.Count - 1; i >= 0; i--)
                                                 {
