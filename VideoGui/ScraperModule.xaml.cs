@@ -275,7 +275,7 @@ namespace VideoGui
             }
         }
 
-        public ScraperModule(databasehook<object> _dbInit, OnFinishId _OnFinish, string _Default_url)
+        public ScraperModule(databasehook<object> _dbInit, OnFinishId _OnFinish, string _Default_url, WebView2 wb2)
         {
             try
             {
@@ -307,7 +307,7 @@ namespace VideoGui
                 wv2Dictionary.Add(8, wv2A8);//90
                 wv2Dictionary.Add(9, wv2A9);//100
                 wv2Dictionary.Add(10, wv2A10);
-                ActiveWebView.Add(1, wv2);
+                ActiveWebView.Add(1, (wb2 is null) ? wv2 : wb2);
             }
             catch (Exception ex)
             {
@@ -1136,7 +1136,7 @@ namespace VideoGui
         {
             try
             {
-                wv2.Source = new Uri(webAddressBuilder.GetChannelURL().Address);
+                ActiveWebView[1].Source = new Uri(webAddressBuilder.GetChannelURL().Address);
             }
             catch (Exception ex)
             {
@@ -1942,42 +1942,45 @@ namespace VideoGui
         {
             try
             {
-                foreach (var item in ScheduledFiles)
+                if (ScraperType == EventTypes.UploadTest)
                 {
-                    if (item.VideoId == "")
+                    foreach (var item in ScheduledFiles)
                     {
-                        await ActiveWebView[1].ExecuteScriptAsync($"document.querySelector('button[aria-label=\"{item.FileName}\"]').click()");
-                        var html = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
-                        //https://youtube.com/shorts/xYtfpf3CPoc
-                        if (html.Contains("https://youtube.com/shorts/"))
+                        if (item.VideoId == "")
                         {
-                            var link = Regex.Match(html, "https://youtube.com/shorts/([a-zA-Z0-9\\-_]+)").Groups[1].Value;
-                            if (link is not null && link != "")
+                            await ActiveWebView[1].ExecuteScriptAsync($"document.querySelector('button[aria-label=\"{item.FileName}\"]').click()");
+                            var html = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
+                            //https://youtube.com/shorts/xYtfpf3CPoc
+                            if (html.Contains("https://youtube.com/shorts/"))
                             {
-                                IsVideoLookup = true;
-                                DoNewVideoUpdate(webAddressBuilder.ScopeVideo(link).ScopeAddress);
+                                var link = Regex.Match(html, "https://youtube.com/shorts/([a-zA-Z0-9\\-_]+)").Groups[1].Value;
+                                if (link is not null && link != "")
+                                {
+                                    IsVideoLookup = true;
+                                    DoNewVideoUpdate(webAddressBuilder.ScopeVideo(link).ScopeAddress);
+                                }
+                            }
+                            else if (html.Contains("https://youtu.be/"))
+                            {
+                                var index = html.IndexOf("https://youtu.be/");
+                                int len = "https://youtu.be/".Length;
+                                string vid = html.Substring(index + len, 11);
+                                DoNewVideoUpdate(webAddressBuilder.ScopeVideo(vid).ScopeAddress);
                             }
                         }
-                        else if (html.Contains("https://youtu.be/"))
+                        else
                         {
-                            var index = html.IndexOf("https://youtu.be/");
-                            int len = "https://youtu.be/".Length;
-                            string vid = html.Substring(index + len, 11);
-                            DoNewVideoUpdate(webAddressBuilder.ScopeVideo(vid).ScopeAddress);
+                            IsVideoLookup = true;
+                            string gUrl = webAddressBuilder.ScopeVideo(item.VideoId).ScopeAddress;
+                            DoNewVideoUpdate(gUrl);
+
                         }
                     }
-                    else
+                    while (Waiting && IsVideoLookup)
                     {
-                        IsVideoLookup = true;
-                        string gUrl = webAddressBuilder.ScopeVideo(item.VideoId).ScopeAddress;
-                        DoNewVideoUpdate(gUrl);
-
+                        Thread.Sleep(100);
+                        System.Windows.Forms.Application.DoEvents();
                     }
-                }
-                while (Waiting && IsVideoLookup)
-                {
-                    Thread.Sleep(100);
-                    System.Windows.Forms.Application.DoEvents();
                 }
             }
             catch (Exception ex)
@@ -2335,15 +2338,11 @@ namespace VideoGui
                                                         }
                                                         Thread.Sleep(100);
                                                     }
-
-
-
                                                     // Define the JavaScript code to click the "Save" button
                                                     string script1 = "var saveButton = document.querySelector('.ytcp-button-shape-impl__button-text-content');" +
                                                                    "if (saveButton) {" +
                                                                    "   saveButton.click();" +
                                                                    "}";
-
                                                     // Execute the JavaScript code within the WebView2 control
                                                     (sender as WebView2).CoreWebView2.ExecuteScriptAsync(script1);
                                                     while (true)
@@ -2385,41 +2384,9 @@ namespace VideoGui
                                 return;
                             }
                         }
-                        else
-                        {
-                            if (filename.Contains("_") && ScraperType == EventTypes.VideoUpload)
-                            {
-                                int index = filename.IndexOf("_");
-                                string lookup = filename.Substring(index + 1, filename.Length - (index + 1)).Trim();
-                                var p1 = new CustomParams_GetConnectionString();
-                                dbInitializer?.Invoke(this, p1);
-                                string DirName = "", connectionStr = p1.ConnectionString;
-                                bool IsDone = false;
-                                int TitleID = -1, DescID = -1;
-                                int lp = Convert.ToInt32(lookup, 16), idx = -1;
-                                connectionStr.ExecuteReader($"SELECT FIRST 1 ID,DIRECTORYNAME,TITLEID,DESCID FROM SHORTSDIRECTORY WHERE ID = {lp}",
-                                    (FbDataReader r) =>
-                                    {
-                                        while (!IsDone)
-                                        {
-                                            idx = (r["ID"] is int id1) ? id1 : -1;
-                                            TitleID = (r["TITLEID"] is int titleid) ? titleid : -1;
-                                            DescID = (r["DESCID"] is int descid) ? descid : -1;
-                                            DirName = (r["DIRECTORYNAME"] is string dir) ? dir : "";
-                                            IsDone = true;
-                                        }
-                                    });
-                                if (IsDone && DirName != "" && idx != -1 && TitleID != -1 && DescID != -1)
-                                {
-
-                                }
-                            }
-                        }
-
                     }
                 }
-
-
+               
                 filename = System.IO.Path.GetFileNameWithoutExtension(filename.Replace("/n", "").Trim());
                 int index1 = Ids.IndexOf(IntId);
                 if (index1 == -1)
@@ -2438,7 +2405,10 @@ namespace VideoGui
                     }
                 }
                 else lstMain.Items[index1] += $" {filename}";
-                dbInitializer?.Invoke(this, new CustomParams_InsertWithId(IntId, filename, IsUnlisted));
+                if (ScraperType == EventTypes.ScapeSchedule)
+                {
+                    dbInitializer?.Invoke(this, new CustomParams_InsertWithId(IntId, filename, IsUnlisted));
+                }
                 files++;
                 Dispatcher.Invoke(() =>
                 {

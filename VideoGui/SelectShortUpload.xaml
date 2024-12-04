@@ -58,6 +58,7 @@
                 HorizontalAlignment="Right" VerticalAlignment="Top" Click="btnClose_Click"/>
         <Button x:Name="btnRunUploaders" Height="24" Width="78" Content="Run Uploaders" Margin="0,50,18,0" 
             HorizontalAlignment="Right" VerticalAlignment="Top" FontSize="10" Click="btnRunUploaders_Click"/>
+        <CheckBox x:Name="ChkUploadTest" Content="Run Upload Tester" HorizontalAlignment="Left" Margin="4,93,0,0" VerticalAlignment="Top"/>
 
 
     </Grid>

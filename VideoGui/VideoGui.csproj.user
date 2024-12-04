@@ -10,6 +10,9 @@
     <Compile Update="ScheduleEventCreator.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="WebViewDebug.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Page Update="DescSelectFrm.xaml">

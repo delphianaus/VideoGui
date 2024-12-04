@@ -35,6 +35,7 @@ namespace VideoGui
         public TitleSelectFrm DoTitleSelectFrm = null;
         public DescSelectFrm DoDescSelectFrm = null;
         public SetLists ConnnectLists = null;
+        public WebViewDebug webviewDebug = null;
         public SelectShortUpload(databasehook<object> _dbInit, OnFinish _DoOnFinished, SetLists _SetLists)
         {
             InitializeComponent();
@@ -127,7 +128,7 @@ namespace VideoGui
                         string newfile = drx + frr + $"_{res}{Path.GetExtension(filename)}";
                         if (filename != newfile)
                         {
-                            
+
                             if (File.Exists(newfile))
                             {
                                 File.Delete(newfile);
@@ -263,17 +264,17 @@ namespace VideoGui
                 {
                     List<string> filesdone = new List<string>();
                     bool Exc = scraperModule.Exceeded;
-                    filesdone.AddRange(scraperModule.ScheduledOk);    
+                    filesdone.AddRange(scraperModule.ScheduledOk);
                     int Uploaded = scraperModule.TotalScheduled;
                     int shortsleft = GetFileCount(rootfolder);
-                    if (!Exc && shortsleft > 0 && Uploaded < txtTotalUploads.Text.ToInt())
+                    if (!Exc && shortsleft > 0 && Uploaded < txtTotalUploads.Text.ToInt() && ChkUploadTest.IsChecked == true)
                     {
                         int Maxuploads = (txtTotalUploads.Text != "") ? txtTotalUploads.Text.ToInt(100) : 100;
                         int UploadsPerSlot = (txtMaxUpload.Text != "") ? txtMaxUpload.Text.ToInt(5) : 5;
                         scraperModule = new ScraperModule(dbInit, doOnFinish, gUrl, Maxuploads, UploadsPerSlot);
                         scraperModule.ShowActivated = true;
                         scraperModule.ScheduledOk.AddRange(filesdone);
-                        Hide(); 
+                        Hide();
                         Process[] webView2Processes = Process.GetProcessesByName("MicrosoftEdgeWebview2");
                         foreach (Process process in webView2Processes)
                         {
@@ -283,7 +284,7 @@ namespace VideoGui
                         return;
                     }
                 }
-               
+
 
                 Show();
             }
@@ -323,7 +324,29 @@ namespace VideoGui
                     {
                         Maxuploads = lblShortNo.Content.ToInt();
                     }
-                    scraperModule = new ScraperModule(dbInit, doOnFinish, gUrl, Maxuploads, UploadsPerSlot);
+                    if (!ChkUploadTest.IsChecked.Value)
+                    {
+                        if (webviewDebug is not null)
+                        {
+                            if (webviewDebug.IsClosing) webviewDebug.Close();
+                            while (!webviewDebug.IsClosed)
+                            {
+                                Thread.Sleep(100);
+                            }
+                            webviewDebug.Close();
+                            webviewDebug = null;
+                        }
+                        webviewDebug = new WebViewDebug(WebViewDebugOnFinish, gUrl);
+                        while (!webviewDebug.Ready)
+                        {
+                            Thread.Sleep(100);
+                        }
+                        scraperModule = new ScraperModule(dbInit, doOnFinish, gUrl, webviewDebug.GetWebView());
+                    }
+                    else if (btnEditTitle.IsChecked.Value && btnEditDesc.IsChecked.Value)
+                    {
+                        scraperModule = new ScraperModule(dbInit, doOnFinish, gUrl, Maxuploads, UploadsPerSlot);
+                    }
                     scraperModule.ShowActivated = true;
                     Hide(); Process[] webView2Processes = Process.GetProcessesByName("MicrosoftEdgeWebview2");
                     foreach (Process process in webView2Processes)
@@ -336,6 +359,29 @@ namespace VideoGui
             catch (Exception ex)
             {
                 ex.LogWrite($"btnRunUploaders_Click {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
+            }
+        }
+
+        private void WebViewDebugOnFinish()
+        {
+            try
+            {
+                Show();
+                if (webviewDebug is not null && !webviewDebug.IsClosed)
+                {
+                    if (webviewDebug.IsClosing) webviewDebug.Close();
+                    while (!webviewDebug.IsClosed)
+                    {
+                        Thread.Sleep(100);
+                        System.Windows.Forms.Application.DoEvents();
+                    }
+                    webviewDebug.Close();
+                    webviewDebug = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"WebViewDebugOnFinish {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
         }
 
