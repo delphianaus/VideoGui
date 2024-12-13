@@ -401,6 +401,12 @@ namespace VideoGui
                 await wv2A8.EnsureCoreWebView2Async(env);
                 await wv2A9.EnsureCoreWebView2Async(env);
                 await wv2A10.EnsureCoreWebView2Async(env);
+               
+
+                wv2.CoreWebView2.Settings.IsGeneralAutofillEnabled = true; 
+                
+                wv2.CoreWebView2.Settings.IsPasswordAutosaveEnabled = true;
+        
                 await SetupSubstDrive();
             }
             catch (Exception ex)
