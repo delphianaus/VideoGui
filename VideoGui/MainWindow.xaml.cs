@@ -802,7 +802,9 @@ namespace VideoGui
                             {
                                 foreach (var itemr in EditableshortsDirectoryList.Where(s => s.Id == ShortsDirectoryIndex))
                                 {
-                                    frmDescSelectFrm.txtDesc.Text = itemr.Directory + Environment.NewLine + Environment.NewLine + "Follow me @ twitch.tv/justinstrainclips";
+                                    frmDescSelectFrm.txtDesc.Text = itemr.Directory + 
+                                           Environment.NewLine + Environment.NewLine 
+                                           + "Follow me @ twitch.tv/justinstrainclips"; ;
                                     frmDescSelectFrm.txtDescName.Text = itemr.Directory;
                                     frmDescSelectFrm.TitleTagId = ShortsDirectoryIndex;
                                     Found = true;
@@ -1397,8 +1399,7 @@ namespace VideoGui
                             }
 
                             groupTitleTagsList.Clear();
-                            string sql = "SELECT T.GROUPID, D.NAME, LIST(MT.TAG, '|#') AS TAGS, LIST(T.TAGID, ',') AS IDS FROM TITLETAGS T " +
-                               "INNER JOIN AVAILABLETAGS MT ON T.TAGID = MT.ID INNER JOIN DESCRIPTIONS D ON T.GROUPID = D.TITLETAGID " +
+                            string sql = "SELECT T.GROUPID, D.NAME, LIST(MT.TAG, '|#') AS TAGS, LIST(T.TAGID, ',') AS IDS FROM TETAGID " +
                                $"WHERE T.GROUPID != {index} AND D.ISTAG = 0 GROUP BY D.NAME,T.GROUPID;";
                             connectionString.ExecuteReader(sql, (FbDataReader r) =>
                             {
