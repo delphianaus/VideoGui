@@ -401,6 +401,12 @@ namespace VideoGui
                 await wv2A8.EnsureCoreWebView2Async(env);
                 await wv2A9.EnsureCoreWebView2Async(env);
                 await wv2A10.EnsureCoreWebView2Async(env);
+               
+
+                wv2.CoreWebView2.Settings.IsGeneralAutofillEnabled = true; 
+                
+                wv2.CoreWebView2.Settings.IsPasswordAutosaveEnabled = true;
+        
                 await SetupSubstDrive();
             }
             catch (Exception ex)
@@ -727,13 +733,23 @@ namespace VideoGui
                             break;
                         }
                         Thread.Sleep(50);// GET HTML
+
+
+
+
                         while (true)
                         {
                             if (ExitDialog) return;
                             var html = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
+                            if (html is not null && html.Contains("Daily upload limit reached"))
+                            {
+                                Exceeded = true;
+                                finished = true;
+                                ExitDialog = true;
+                                break;
+                            }
                             bool found = false;
                             List<HtmlNode> Nodes = GetNodes(html, Span_Name);
-
                             if (html.ToLower().Contains("daily limit"))
                             {
                                 int uploaded = 0;
@@ -753,8 +769,6 @@ namespace VideoGui
                                 if (uploaded < 100)
                                 {
                                     dbInitializer?.Invoke(this, new CustomParams_Wait());
-                                    /// Build FIles
-                                    /// 
                                     await BuildFiles();
                                     Close();
                                 }
@@ -829,6 +843,13 @@ namespace VideoGui
                                             var cts = new CancellationTokenSource();
                                             while (!cts.IsCancellationRequested)
                                             {
+                                                html = await wv2.CoreWebView2.ExecuteScriptAsync("document.body.innerHTML");
+                                                var ehtml = Regex.Unescape(html);
+                                                if (ehtml is not null && ehtml.Contains("Daily upload limit reached"))
+                                                {
+                                                    Exceeded = true;
+                                                }
+
                                                 if (ExitDialog)
                                                 {
                                                     cts.Cancel();
