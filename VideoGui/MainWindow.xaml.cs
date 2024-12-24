@@ -442,7 +442,7 @@ namespace VideoGui
                             connection.Close();
                         }
                         TitleId = cpu.id;
-                        foreach(var item in EditableshortsDirectoryList.Where(s => s.Id == ShortsDirectoryIndex))
+                        foreach (var item in EditableshortsDirectoryList.Where(s => s.Id == ShortsDirectoryIndex))
                         {
                             item.TitleId = cpu.id;
                             break;
@@ -775,7 +775,14 @@ namespace VideoGui
                                         }
                                         connection.Close();
                                     }
-                                    selectShortUpload.UpdateDescId(p.id);
+                                    string linkeddescids = "";
+                                    string sqla = GetUploadReleaseBuilderSql(res);
+                                    connectionString.ExecuteReader(sqla, (FbDataReader r) =>
+                                    {
+                                        linkeddescids = (r["LINKEDDESCIDS"] is string ldid ? ldid : "");
+                                    });
+
+                                    selectShortUpload.UpdateDescId(p.id, linkeddescids);
                                 }
                             }
                             break;
@@ -802,8 +809,8 @@ namespace VideoGui
                             {
                                 foreach (var itemr in EditableshortsDirectoryList.Where(s => s.Id == ShortsDirectoryIndex))
                                 {
-                                    frmDescSelectFrm.txtDesc.Text = itemr.Directory + 
-                                           Environment.NewLine + Environment.NewLine 
+                                    frmDescSelectFrm.txtDesc.Text = itemr.Directory +
+                                           Environment.NewLine + Environment.NewLine
                                            + "Follow me @ twitch.tv/justinstrainclips"; ;
                                     frmDescSelectFrm.txtDescName.Text = itemr.Directory;
                                     frmDescSelectFrm.TitleTagId = ShortsDirectoryIndex;
@@ -922,7 +929,7 @@ namespace VideoGui
                                     frmDescSelectFrm.LinkedId = idx;
                                     DescriptionsList.Add(new Descriptions(idx, cpAdd.Description,
                                         frmDescSelectFrm.IsShortVideo, "", cpAdd.Name));
-                                    foreach(var item in EditableshortsDirectoryList.Where(s=>s.Id == ShortsDirectoryIndex))
+                                    foreach (var item in EditableshortsDirectoryList.Where(s => s.Id == ShortsDirectoryIndex))
                                     {
                                         item.DescId = idx;
                                         sql = "UPDATE SHORTSDIRECTORY SET DESCID = @P1 WHERE ID = @P0";
@@ -961,7 +968,7 @@ namespace VideoGui
                                     }
                                     connection.Close();
                                 }
-                                foreach(var item in DescriptionsList.Where(s=>s.TitleTagId == cpAdd.Id))
+                                foreach (var item in DescriptionsList.Where(s => s.TitleTagId == cpAdd.Id))
                                 {
                                     item.Description = cpAdd.Description;
                                     item.Name = cpAdd.Name;
@@ -1222,8 +1229,6 @@ namespace VideoGui
                                     {
                                         connectionString.ExecuteReader($"SELECT * FROM TITLETAGS T INNER JOIN AVAILABLETAGS S ON T.TAGID = S.ID WHERE T.ID = {id}", OnReadTitlesTags);
                                     }
-
-
                                     Update = true;
                                 }
                             }
@@ -1231,8 +1236,6 @@ namespace VideoGui
                             if (Update)
                             {
                                 string BaseStr1 = frmTitleSelect.BaseTitle + " ";
-
-
                                 foreach (var item in TitleTagsList.Where(s => s.GroupId == cpInsertTags.GroupId))
                                 {
                                     if (!BaseStr1.Contains($"#{item.Description}"))
@@ -1253,7 +1256,6 @@ namespace VideoGui
                         {
                             if (tld is CustomParams_Update p && p is not null)
                             {
-
                                 RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                                 string rootfolder = key.GetValueStr("UploadPath", @"D:\shorts\");
                                 key?.Close();
@@ -1286,17 +1288,19 @@ namespace VideoGui
                                         }
                                         connection.Close();
                                     }
-                                    selectShortUpload.UpdateTitleId(p.id);
+                                    string linkedtitleids = "";
+                                    connectionString.ExecuteReader(GetUploadReleaseBuilderSql(res), (FbDataReader r) =>
+                                    {
+                                        linkedtitleids = (r["LINKEDTITLEIDS"] is string ldid ? ldid : "");
+                                    });
+                                    selectShortUpload.UpdateTitleId(p.id, linkedtitleids);
                                 }
-
-
                             }
                             break;
                         }
                     case CustomParams_Initialize:
                         {
-                            var _title = "";
-                            string BaseTitle = "", xx = "", part = "";
+                            string _title = "", BaseTitle = "", xx = "", part = "";
                             int index = -1;// UploadReleasesBuilderIndex;
                             frmTitleSelect.TagAvailable.ItemsSource = ObservableCollectionFilter.TitleTagAvailableView.View;
                             frmTitleSelect.TagsGrp.ItemsSource = ObservableCollectionFilter.TitleTagSelectorView.View;
@@ -2325,7 +2329,8 @@ namespace VideoGui
                 // 3 Uopload from List of files in directory using Max Number
 
                 shortsDirectoryList.Clear();
-                string sql = "SELECT SP.ID, SP.DIRECTORY FROM POOLLIST PL JOIN SCHEDULEDPOOLS SP on PL.ID = SP.POOLID where EventID = @P0;";
+                string sql = "SELECT SP.ID, SP.DIRECTORY FROM POOLLIST PL JOIN " +
+                    "SCHEDULEDPOOLS SP on PL.ID = SP.POOLID where EventID = @P0;";
                 connectionString.ExecuteReader(sql, (FbDataReader r) =>
                 {
                     shortsDirectoryList.Add(new(r));
@@ -3170,7 +3175,7 @@ namespace VideoGui
 
 
                 //EditableshortsDirectoryList
-                connectionString.ExecuteReader("SELECT * FROM SHORTSDIRECTORY", (FbDataReader r) =>
+                connectionString.ExecuteReader(GetUploadReleaseBuilderSql(), (FbDataReader r) =>
                 {
                     EditableshortsDirectoryList.Add(new ShortsDirectory(r));
                 });
@@ -3181,6 +3186,25 @@ namespace VideoGui
             }
         }
 
+        public string GetUploadReleaseBuilderSql(int index = -1)
+        {
+            try
+            {
+                // SHORTSDIRECTORY
+                return "SELECT S.ID, S.DIRECTORYNAME, S.TITLEID, S.DESCID, " +
+                       "(SELECT LIST(TAGID, ',') FROM TITLETAGS " +
+                       " WHERE GROUPID = S.TITLEID) AS LINKEDTITLEIDS, " +
+                       " (SELECT LIST(ID,',') FROM DESCRIPTIONS " +
+                       "WHERE TITLETAGID = S.DESCID) AS LINKEDDESCIDS, " +
+                       "FROM SHORTSDIRECTORY S" +
+                (index != -1 ? $" WHERE U.ID = {index} " : "");
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"GetUploadReleaseBuilderSql {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+                return "";
+            }
+        }
 
         public string OnGetTitle(int id)
         {
@@ -3631,7 +3655,10 @@ namespace VideoGui
                 SetupTicker();
                 ObservableCollectionFilter = new ObservableCollectionFilters();
                 ObservableCollectionFilter.TitleTagSelectorView.Source = TitleTagsList;
-                ObservableCollectionFilter.TitleTagAvailableView.Source = availableTagsList;
+                ObservableCollectionFilter.TitleTagAvailableView.Source = availableTagsList.OrderBy(s => s.Tag).ToList();
+                ObservableCollectionFilter.TitleTagAvailableView.SortDescriptions.Add(new SortDescription("Tag", ListSortDirection.Ascending));
+                ObservableCollectionFilter.TitleTagAvailableView.IsLiveSortingRequested = true;
+
                 FormResizerEvent = new System.Windows.Forms.Timer();
                 FormResizerEvent.Tick += new EventHandler(FormResizerEvent_Tick);
                 FormResizerEvent.Interval = (int)new TimeSpan(0, 0, 2).TotalSeconds;

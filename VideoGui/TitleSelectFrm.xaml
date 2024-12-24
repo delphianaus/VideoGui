@@ -10,7 +10,7 @@
         WindowStartupLocation="CenterScreen" ScrollViewer.VerticalScrollBarVisibility="Disabled">
     <Grid ScrollViewer.VerticalScrollBarVisibility="Disabled" HorizontalAlignment="Left" Width="607">
         <Border x:Name="brdShortsVideoCat" BorderThickness="2" BorderBrush="Black" Margin="4,218,15,66">
-            <ListBox x:Name="lstTitles" MinWidth="100" MinHeight="54" Height="128">
+            <ListBox x:Name="lstTitles" MinWidth="100" MinHeight="54" Height="128" MouseDoubleClick="lstTitles_MouseDoubleClick">
                 ScrollViewer.HorizontalScrollBarVisibility="Disabled" SelectionMode="Multiple" 
                    ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Visible" Width="171">
                 <ListBox.Resources>
@@ -52,7 +52,7 @@
                 Height="129" Width="175" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,84,5,0">
             <ListBox x:Name="TagsGrp" 
                 ScrollViewer.HorizontalScrollBarVisibility="Disabled" SelectionMode="Multiple" 
-                ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Visible" IsManipulationEnabled="True">
+                ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Visible" IsManipulationEnabled="True" MouseDoubleClick="TagsGrp_MouseDoubleClick">
                 <ListBox.ItemTemplate>
                     <DataTemplate >
                         <Grid Margin="0,2">
@@ -76,7 +76,7 @@
             Height="94" Width="175" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="229,84,0,0">
             <ListBox x:Name="TagAvailable" 
                 ScrollViewer.HorizontalScrollBarVisibility="Disabled" SelectionMode="Multiple" 
-                ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Visible" Width="171" Height="90" HorizontalAlignment="Left" VerticalAlignment="Top">
+                ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Visible" Width="171" Height="90" HorizontalAlignment="Left" VerticalAlignment="Top" MouseDoubleClick="TagAvailable_MouseDoubleClick">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
                         <Grid Margin="0,2">

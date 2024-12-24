@@ -17,7 +17,8 @@ namespace VideoGui
         bool IsUploadsBuilder = false;
         databasehook<object> DoDbHook;
         public string Desc = "";
-        public bool IsShortVideo = false, IsDescChanged = false, IsClosed = false, IsClosing = false;
+        public bool IsShortVideo = false, IsDescChanged = false, IsClosed = false, 
+            IsClosing = false;
         public int Id = -1, LinkedId = -1, TitleTagId = -1;
         public DescSelectFrm(OnFinish _DoOnFinish, databasehook<Object> _DoDbHook, bool _IsUploadsBuilder = false)
         {
