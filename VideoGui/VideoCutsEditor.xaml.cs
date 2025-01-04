@@ -75,24 +75,10 @@ namespace VideoGui
                     key?.Close();
                     int threash = 70;
                     string id = "";
-                    using (var connection = new FbConnection(ConnectionString))
-                    {
-                        connection.Open(); 
-                        string sql = $"SELECT ID FROM AUTOEDITS WHERE SOURCE = @P0";
-                        using (var command = new FbCommand(sql.ToUpper(), connection))
-                        {
-                            command.Parameters.Clear();
-                            command.Parameters.AddWithValue("@p0", txtsrcdir.Text);
-                            object result = command.ExecuteScalar();
-                            if (result is string idxx)
-                            {
-                                id = ""; 
-                            }
-                        }
-                        connection.Close();
-                    }
+                    string sql = $"SELECT ID FROM AUTOEDITS WHERE SOURCE = @P0";
+                    int idx = ConnectionString.ExecuteScalar(sql, [("@P0", txtsrcdir.Text)]).ToInt(-1);
 
-                    if (id != "")
+                    if (idx != -1)
                     {
                         ConnectionString.ExecuteReader($"SELECT * FROM AUTOEDITS WHERE ID = {id}", OnReadAutoEdit);
                     }
@@ -385,55 +371,21 @@ namespace VideoGui
             {
                 int idx = 0;
                 string sql = $"SELECT ID FROM AUTOEDITS WHERE SOURCE = {txtsrcdir.Text}";
-                var res = ConnectionString.RunExecuteScalar(sql, -1);
+                var res = ConnectionString.ExecuteScalar(sql).ToInt(-1);
                 if (res != -1)
                 {
                     sql = $"UPDATE AUTOEDITS SET DESTINATION = @P1, THRESHHOLD = @P2, TARGET = @P3, " +
                         "SEGMENT = @P4 WHERE ID = @P5";
-                    using (var connection = new FbConnection(ConnectionString))
-                    {
-                        connection.Open();
-                        using (var command = new FbCommand(sql, connection))
-                        {
-                            command.Parameters.Clear();
-                            command.Parameters.AddWithValue("@P1", txxtEditDirectory.Text);
-                            command.Parameters.AddWithValue("@P2", txtThreash.Text);
-                            command.Parameters.AddWithValue("@P3", txtTarget.Text);
-                            command.Parameters.AddWithValue("@P4", txtSegment.Text);
-                            command.Parameters.AddWithValue("@P5", res);
-                            object result = command.ExecuteScalar();
-                            if (result is int idxx)
-                            {
-                                idx = idxx;
-                            }
-                        }
-                        connection.Close();
-                    }
+                    ConnectionString.ExecuteScalar(sql, [("@P1", txxtEditDirectory.Text), ("@P2", txtThreash.Text),
+                        ("@P3", txtTarget.Text), ("@P4", txtSegment.Text), ("@P5", res)]);
                 }
                 else
                 {
                     sql = "INSERT INTO AUTOEDITS" +
                             "(SOURCE,DESTINATION,TARGET,SEGMENT,THRESHHOLD)  " +
                             "VALUES(@P1,@P2,@P3,@P4,@P5) RETURNING ID";
-                    using (var connection = new FbConnection(ConnectionString))
-                    {
-                        connection.Open();
-                        using (var command = new FbCommand(sql, connection))
-                        {
-                            command.Parameters.Clear();
-                            command.Parameters.AddWithValue("@P1", txtsrcdir.Text);
-                            command.Parameters.AddWithValue("@P2", txxtEditDirectory.Text);
-                            command.Parameters.AddWithValue("@P3", txtTarget.Text);
-                            command.Parameters.AddWithValue("@P4", txtSegment.Text);
-                            command.Parameters.AddWithValue("@P5", txtThreash.Text);
-                            object result = command.ExecuteScalar();
-                            if (result is int idxx)
-                            {
-                                idx = idxx;
-                            }
-                        }
-                        connection.Close();
-                    }
+                    idx = ConnectionString.ExecuteScalar(sql, [("@P1", txtsrcdir.Text), ("@P2", txxtEditDirectory.Text),
+                        ("@P3", txtTarget.Text), ("@P4", txtSegment.Text), ("@P5", txtThreash.Text)]).ToInt(-1);
 
                 }
             }

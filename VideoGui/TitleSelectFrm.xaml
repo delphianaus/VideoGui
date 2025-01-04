@@ -51,8 +51,19 @@
         <Border x:Name="brdTags" BorderThickness="2" BorderBrush="Black" 
                 Height="129" Width="175" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,84,5,0">
             <ListBox x:Name="TagsGrp" 
-                ScrollViewer.HorizontalScrollBarVisibility="Disabled" SelectionMode="Multiple" 
+                ScrollViewer.HorizontalScrollBarVisibility="Disabled" SelectionMode="Multiple"
+                PreviewMouseRightButtonDown="TagsGrp_PreviewMouseRightButtonDown"
                 ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Visible" IsManipulationEnabled="True" MouseDoubleClick="TagsGrp_MouseDoubleClick">
+                <ListBox.Resources>
+                    <!--Defines a context menu-->
+                    <ContextMenu x:Key="MyElementMenuTagsGrp">
+                        <MenuItem x:Name="mnuUseRemoveTags" Header="Remove These Tags" Click="btnRemoveTags_Click"/>
+                    </ContextMenu>
+                    <!--Sets a context menu for each ListBoxItem in the current ListBox-->
+                    <Style TargetType="{x:Type ListBoxItem}">
+                        <Setter Property="ContextMenu" Value="{StaticResource MyElementMenuTagsGrp}"/>
+                    </Style>
+                </ListBox.Resources>
                 <ListBox.ItemTemplate>
                     <DataTemplate >
                         <Grid Margin="0,2">
@@ -76,7 +87,20 @@
             Height="94" Width="175" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="229,84,0,0">
             <ListBox x:Name="TagAvailable" 
                 ScrollViewer.HorizontalScrollBarVisibility="Disabled" SelectionMode="Multiple" 
-                ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Visible" Width="171" Height="90" HorizontalAlignment="Left" VerticalAlignment="Top" MouseDoubleClick="TagAvailable_MouseDoubleClick">
+                ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Visible" 
+                     Width="171" Height="90" HorizontalAlignment="Left" 
+                     VerticalAlignment="Top" MouseDoubleClick="TagAvailable_MouseDoubleClick"
+                PreviewMouseRightButtonDown="TagAvailable_PreviewMouseRightButtonDown">
+                <ListBox.Resources>
+                    <!--Defines a context menu-->
+                    <ContextMenu x:Key="MyElementMenuTagAvailable">
+                        <MenuItem x:Name="mnuUseAddTags" Header="Add These Tags" Click="mnuUseAddTags_Click"/>
+                    </ContextMenu>
+                    <!--Sets a context menu for each ListBoxItem in the current ListBox-->
+                    <Style TargetType="{x:Type ListBoxItem}">
+                        <Setter Property="ContextMenu" Value="{StaticResource MyElementMenuTagAvailable}"/>
+                    </Style>
+                </ListBox.Resources>
                 <ListBox.ItemTemplate>
                     <DataTemplate>
                         <Grid Margin="0,2">
@@ -97,13 +121,13 @@
             Margin="419,56,0,0" VerticalAlignment="Top"/>
         <Label x:Name="lblTitleLength" Content="100" HorizontalAlignment="Left" 
             Margin="489,56,0,0" VerticalAlignment="Top"/>
-        <Button x:Name="btnRemTag" Click="btnRemTag_Click" Margin="189,130,308,98" 
+        <Button x:Name="btnRemTag" Click="btnInsertTags_Click" Margin="189,130,308,98" 
                 HorizontalAlignment="Left" 
                 VerticalAlignment="Top" IsEnabled="True" Width="26" Height="26">
             <Image x:Name="ImgAdd" Source="/Icons/LeftArrow.png" IsEnabled="True" Width="22" Height="22" 
                    HorizontalAlignment="Left" VerticalAlignment="Top" />
         </Button>
-        <Button x:Name="btnAddTag" Click="btnAddTag_Click" Margin="189,98,308,130" Width="26" Height="26"
+        <Button x:Name="btnAddTag" Click="btnRemoveTags_Click" Margin="189,98,308,130" Width="26" Height="26"
                 HorizontalAlignment="Left" VerticalAlignment="Top" IsEnabled="True">
             <Image x:Name="ImgRemove" Source="/Icons/RightArrow..png" IsEnabled="True" Width="22" Height="22" HorizontalAlignment="Left" VerticalAlignment="Top"/>
         </Button>

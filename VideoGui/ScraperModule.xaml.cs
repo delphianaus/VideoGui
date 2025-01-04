@@ -401,12 +401,12 @@ namespace VideoGui
                 await wv2A8.EnsureCoreWebView2Async(env);
                 await wv2A9.EnsureCoreWebView2Async(env);
                 await wv2A10.EnsureCoreWebView2Async(env);
-               
 
-                wv2.CoreWebView2.Settings.IsGeneralAutofillEnabled = true; 
-                
+
+                wv2.CoreWebView2.Settings.IsGeneralAutofillEnabled = true;
+
                 wv2.CoreWebView2.Settings.IsPasswordAutosaveEnabled = true;
-        
+
                 await SetupSubstDrive();
             }
             catch (Exception ex)
@@ -652,23 +652,14 @@ namespace VideoGui
                     var p1 = new CustomParams_GetConnectionString();
                     dbInitializer?.Invoke(this, p1);
                     string connectionStr = p1.ConnectionString;
-                    using (var connection = new FbConnection(connectionStr))
+                    string sql = "select count(Id) from UPLOADSRECORD WHERE UPLOAD_DATE = @P0 AND UPLOADTYPE = 0";
+                    object res = connectionStr.ExecuteScalar(sql, [("@p0", DateTime.Now.Date)]);
+                    if (res is long resxx)
                     {
-                        connection.Open();
-                        string sql = "select count(Id) from UPLOADSRECORD WHERE UPLOAD_DATE = @P0 AND UPLOADTYPE = 0";
-                        using (var command = new FbCommand(sql.ToUpper(), connection))
-                        {
-                            command.Parameters.Clear();
-                            command.Parameters.AddWithValue("@p0", DateTime.Now.Date);
-                            object res = command.ExecuteScalar();
-                            if (res is long resxx)
-                            {
-                                TotalScheduled = resxx.ToInt();
-                                lblTotal.Content = TotalScheduled.ToString();
-                            }
-                        }
-                        connection.Close();
+                        TotalScheduled = resxx.ToInt();
+                        lblTotal.Content = TotalScheduled.ToString();
                     }
+
                     max = TotalScheduled;
                     ts = TotalScheduled;
                     if (ts < MaxUploads)
@@ -757,15 +748,7 @@ namespace VideoGui
                                 var p1 = new CustomParams_GetConnectionString();
                                 dbInitializer?.Invoke(this, p1);
                                 string connectionStr = p1.ConnectionString;
-                                using (var connection = new FbConnection(connectionStr))
-                                {
-                                    connection.Open();
-                                    using (var command = new FbCommand(sql, connection))
-                                    {
-                                        command.Parameters.AddWithValue("@P0", DateTime.Now.Date);
-                                        uploaded = command.ExecuteScalar().ToInt(0);
-                                    }
-                                }
+                                uploaded = connectionStr.ExecuteScalar(sql, [("@p0", DateTime.Now.Date)]).ToInt(0);
                                 if (uploaded < 100)
                                 {
                                     dbInitializer?.Invoke(this, new CustomParams_Wait());
@@ -992,42 +975,17 @@ namespace VideoGui
                         NodeUpdate(Span_Name, ScheduledGet);
                         lstMain.Items.Insert(0, $"{file} Deleted");
                         int res = -1;
-                        using (var connection = new FbConnection(connectStr))
+                        string sql = "select ID from UPLOADSRECORD WHERE UPLOADFILE = @P0 AND UPLOADTYPE = 0";
+                        res = connectStr.ExecuteScalar(sql.ToUpper(), [("@P0", filename1)]).ToInt(-1);
+                        if (res == -1)
                         {
-                            connection.Open();
-                            string sql = "select * from UPLOADSRECORD WHERE UPLOADFILE = @P0 AND UPLOADTYPE = 0";
-                            using (var command = new FbCommand(sql.ToUpper(), connection))
-                            {
-                                command.Parameters.Clear();
-                                command.Parameters.AddWithValue("@p0", file);
-                                res = command.ExecuteScalar().ToInt(-1);
-                            }
-                            if (res == -1)
-                            {
-                                sql = "INSERT INTO UPLOADSRECORD(UPLOADFILE, UPLOAD_DATE, UPLOAD_TIME,UPLOADTYPE) VALUES (@P0,@P1,@P2,@P3) RETURNING ID";
-                                using (var command = new FbCommand(sql.ToUpper(), connection))
-                                {
-                                    command.Parameters.Clear();
-                                    command.Parameters.AddWithValue("@p0", file);
-                                    command.Parameters.AddWithValue("@p1", DateTime.Now.Date);
-                                    command.Parameters.AddWithValue("@p2", DateTime.Now.TimeOfDay);
-                                    command.Parameters.AddWithValue("@p3", 0);
-                                    res = command.ExecuteScalar().ToInt(-1);
-                                }
-                            }
-                            else
-                            {
-                                sql = "UPDATE UPLOADSRECORD SET UPLOAD_DATE = @P1, UPLOAD_TIME = @P2 WHERE ID = @P0";
-                                using (var command = new FbCommand(sql.ToUpper(), connection))
-                                {
-                                    command.Parameters.Clear();
-                                    command.Parameters.AddWithValue("@p0", res);
-                                    command.Parameters.AddWithValue("@p1", DateTime.Now.Date);
-                                    command.Parameters.AddWithValue("@p2", DateTime.Now.TimeOfDay);
-                                    command.ExecuteNonQuery();
-                                }
-                            }
-                            connection.Close();
+                            sql = "INSERT INTO UPLOADSRECORD(UPLOADFILE, UPLOAD_DATE, UPLOAD_TIME,UPLOADTYPE) VALUES (@P0,@P1,@P2,@P3) RETURNING ID";
+                            res = connectStr.ExecuteScalar(sql.ToUpper(), [("@P0", filename1), ("@P1", DateTime.Now.Date), ("@P2", DateTime.Now.TimeOfDay), ("@P3", 0)]).ToInt(-1);
+                        }
+                        else
+                        {
+                            sql = "UPDATE UPLOADSRECORD SET UPLOAD_DATE = @P1, UPLOAD_TIME = @P2 WHERE ID = @P0";
+                            connectStr.ExecuteNonQuery(sql.ToUpper(), [("@P0", res), ("@P1", DateTime.Now.Date), ("@P2", DateTime.Now.TimeOfDay)]);
                         }
                         if (ScheduledOk.IndexOf(filename1) == -1)
                         {
@@ -2407,7 +2365,7 @@ namespace VideoGui
                         }
                     }
                 }
-               
+
                 filename = System.IO.Path.GetFileNameWithoutExtension(filename.Replace("/n", "").Trim());
                 int index1 = Ids.IndexOf(IntId);
                 if (index1 == -1)

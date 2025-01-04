@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using FirebirdSql.Data.FirebirdClient;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,7 +30,8 @@ namespace VideoGui
         databasehook<object> ModuleCallBack = null;
         public TitleSelectFrm DoTitleSelectFrm = null;
         public DescSelectFrm DoDescSelectFrm = null;
-        SetLists SetLists = null;
+
+        int ShortsIndex = 0;
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             try
@@ -59,7 +61,7 @@ namespace VideoGui
                 ex.LogWrite($"btnClose_Click {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
         }
-
+        
         private void TitleToggle_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -68,8 +70,7 @@ namespace VideoGui
                 {
                     cbf.IsChecked = (ReleaseInfo.IsTitleAvailable) ? ReleaseInfo.IsTitleAvailable : cbf.IsChecked;
                     ModuleCallBack?.Invoke(this, new CustomParams_Select(ReleaseInfo.Id));
-                    var p = new CustomParams_TitleSelect(ReleaseInfo);
-                    ModuleCallBack?.Invoke(this, p);
+                    ModuleCallBack?.Invoke(this, new CustomParams_TitleSelect(ReleaseInfo));
                 }
             }
             catch (Exception ex)
@@ -78,24 +79,44 @@ namespace VideoGui
             }
         }
 
+        public string GetShortsDirectorySql(int index = -1)
+        {
+            try
+            {
+                return "SELECT S.ID, S.DIRECTORYNAME, S.TITLEID, S.DESCID, " +
+                       "(SELECT LIST(TAGID, ',') FROM TITLETAGS " +
+                       " WHERE GROUPID = S.TITLEID) AS LINKEDTITLEIDS, " +
+                       " (SELECT LIST(ID,',') FROM DESCRIPTIONS " +
+                       "WHERE TITLETAGID = S.DESCID) AS LINKEDDESCIDS " +
+                       "FROM SHORTSDIRECTORY S" +
+                (index != -1 ? $" WHERE S.ID = {index} " : "");
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"{this} GetShortsDirectorySql {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+                return "";
+            }
+        }
         public void DoTitleSelectCreate()
         {
             try
             {
+                var p = new CustomParams_GetConnectionString();
+                dbInit?.Invoke(this, p);
 
                 if (DoTitleSelectFrm is not null)
                 {
                     if (!DoTitleSelectFrm.IsClosing && !DoTitleSelectFrm.IsClosed)
                     {
                         DoTitleSelectFrm.Close();
-                        DoTitleSelectFrm = new TitleSelectFrm(DoOnFinishTitleSelect, ModuleCallBack, SetLists, true);
+                        DoTitleSelectFrm = new TitleSelectFrm(DoOnFinishTitleSelect, ModuleCallBack, true);
                         Hide();
                         DoTitleSelectFrm.Show();
                     }
                 }
                 else
                 {
-                    DoTitleSelectFrm = new TitleSelectFrm(DoOnFinishTitleSelect, ModuleCallBack, SetLists, true);
+                    DoTitleSelectFrm = new TitleSelectFrm(DoOnFinishTitleSelect, ModuleCallBack, true);
                     Hide();
                     DoTitleSelectFrm.Show();
                 }
@@ -130,6 +151,8 @@ namespace VideoGui
         {
             try
             {
+                
+                ModuleCallBack?.Invoke(this, new CustomParams_Update(DoDescSelectFrm.TitleTagId, UpdateType.Description));
                 if (DoDescSelectFrm is not null)
                 {
                     if (DoDescSelectFrm.IsDescChanged)
@@ -153,11 +176,11 @@ namespace VideoGui
         {
             try
             {
+                ModuleCallBack?.Invoke(this, new CustomParams_Update(DoTitleSelectFrm.TitleId, UpdateType.Title));
                 if (DoTitleSelectFrm is not null)
                 {
                     if (DoTitleSelectFrm.IsTitleChanged)
                     {
-                        ModuleCallBack?.Invoke(this, new CustomParams_Update(DoTitleSelectFrm.TitleId, UpdateType.Title));
                         ModuleCallBack?.Invoke(this, new CustomParams_Update(DoTitleSelectFrm.TitleId, UpdateType.Title));
                     }
                     if (DoTitleSelectFrm.IsClosed)
@@ -181,8 +204,7 @@ namespace VideoGui
                 {
                     cbf.IsChecked = (ReleaseInfo.IsDescAvailable) ? ReleaseInfo.IsDescAvailable : cbf.IsChecked;
                     ModuleCallBack?.Invoke(this, new CustomParams_Select(ReleaseInfo.Id));
-                    var p = new CustomParams_DescSelect(ReleaseInfo);
-                    ModuleCallBack?.Invoke(this, p);
+                    ModuleCallBack?.Invoke(this, new CustomParams_DescSelect(ReleaseInfo));
                 }
             }
             catch (Exception ex)
@@ -210,13 +232,12 @@ namespace VideoGui
             }
         }
 
-        public DirectoryTitleDescEditor(databasehook<object> _dbInit, OnFinish _DoOnFinished, SetLists _SetLists)
+        public DirectoryTitleDescEditor(databasehook<object> _dbInit, OnFinish _DoOnFinished)
         {
             try
             {
                 InitializeComponent();
                 ModuleCallBack = _dbInit;
-                SetLists = _SetLists;
                 Closing += (s, e) => { IsClosing = true; };
                 Closed += (s, e) =>
                 {

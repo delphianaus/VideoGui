@@ -276,7 +276,6 @@ namespace VideoGui
                 if (ObservableCollectionFilter is not null)
                 {
                     {
-                        ObservableCollectionFilter.SetTitlesTag(TitleId);
                         if (DirectoryTitleDescEditorFrm is not null)
                         {
                             DirectoryTitleDescEditorFrm.DoTitleSelectFrm.SetTitleTag(TitleId);
@@ -408,7 +407,24 @@ namespace VideoGui
             }
 
         }
-
+        public string GetShortsDirectorySql(int index = -1)
+        {
+            try
+            {
+                return "SELECT S.ID, S.DIRECTORYNAME, S.TITLEID, S.DESCID, " +
+                       "(SELECT LIST(TAGID, ',') FROM TITLETAGS " +
+                       " WHERE GROUPID = S.TITLEID) AS LINKEDTITLEIDS, " +
+                       " (SELECT LIST(ID,',') FROM DESCRIPTIONS " +
+                       "WHERE TITLETAGID = S.DESCID) AS LINKEDDESCIDS " +
+                       "FROM SHORTSDIRECTORY S" +
+                (index != -1 ? $" WHERE S.ID = {index} " : "");
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"{this} GetShortsDirectorySql {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+                return "";
+            }
+        }
         private void formObjectHandler_DirectoryTitleDescEditor(object tld, DirectoryTitleDescEditor directoryTitleDescEditor)
         {
             try
@@ -419,96 +435,65 @@ namespace VideoGui
                 }
                 else if (tld is CustomParams_Initialize cpi)
                 {
-                    ConnnectLists(3);
-                    ConnnectLists(4);
                     directoryTitleDescEditor.lstSchedules.ItemsSource = EditableshortsDirectoryList;
                 }
                 else if (tld is CustomParams_Update cpu)
                 {
+                    ShortsDirectoryIndex = cpu.id;
                     if (cpu.updatetype == UpdateType.Title)
                     {
 
                         string sql = "UPDATE SHORTSDIRECTORY SET TITLEID = @TID WHERE ID = @ID;";
-                        using (var connection = new FbConnection(connectionString))
-                        {
-                            connection.Open();
-                            using (var command = new FbCommand(sql, connection))
-                            {
-                                command.Parameters.Clear();
-                                command.Parameters.AddWithValue("@ID", ShortsDirectoryIndex);
-                                command.Parameters.AddWithValue("@TID", cpu.id);
-                                command.ExecuteNonQuery();
-                            }
-                            connection.Close();
-                        }
+                        connectionString.ExecuteScalar(sql, [("@ID", ShortsDirectoryIndex), ("@TID", cpu.id)]);
                         TitleId = cpu.id;
+                        sql = GetShortsDirectorySql(ShortsDirectoryIndex);
+                        string LinkedTitleIds = "";
+                        connectionString.ExecuteReader(sql, (FbDataReader r) =>
+                        {
+                            LinkedTitleIds = (r["LINKEDTITLEIDS"] is string lkd) ? lkd : "";
+                        });
                         foreach (var item in EditableshortsDirectoryList.Where(s => s.Id == ShortsDirectoryIndex))
                         {
                             item.TitleId = cpu.id;
+                            item.LinkedTitleIds = LinkedTitleIds;
                             break;
                         }
+
                     }
 
                     else if (cpu.updatetype == UpdateType.Description)
                     {
-
                         string sql = "UPDATE SHORTSDIRECTORY SET DESCID = @DID WHERE ID = @ID;";
-                        using (var connection = new FbConnection(connectionString))
-                        {
-                            connection.Open();
-                            using (var command = new FbCommand(sql, connection))
-                            {
-                                command.Parameters.Clear();
-                                command.Parameters.AddWithValue("@ID", ShortsDirectoryIndex);
-                                command.Parameters.AddWithValue("@DID", cpu.id);
-                                command.ExecuteNonQuery();
-                            }
-                            connection.Close();
-                        }
+                        connectionString.ExecuteScalar(sql, [("@ID", ShortsDirectoryIndex), ("@DID", cpu.id)]);
                         DescId = cpu.id;
+                        string LinkedDescIds = "";
+                        sql = GetShortsDirectorySql(ShortsDirectoryIndex);
+                        connectionString.ExecuteReader(sql, (FbDataReader r) =>
+                        {
+                            LinkedDescIds = (r["LINKEDDESCIDS"] is string lkd) ? lkd : "";
+                        });
                         foreach (var item in EditableshortsDirectoryList.Where(s => s.Id == ShortsDirectoryIndex))
                         {
                             item.DescId = cpu.id;
+                            item.LinkedDescIds = LinkedDescIds;
                             break;
                         }
                     }
                 }
                 else if (tld is CustomParams_DescSelect cds)
                 {
-                    int id = -1;
                     DescId = cds.UploadsReleaseInfo.Id;
                     directoryTitleDescEditor.DoDescSelectCreate();
                     string sql = "SELECT DESCID FROM SHORTSDIRECTORY WHERE ID = @ID;";
-                    using (var connection = new FbConnection(connectionString))
-                    {
-                        connection.Open();
-                        using (var command = new FbCommand(sql, connection))
-                        {
-                            command.Parameters.Clear();
-                            command.Parameters.AddWithValue("@ID", cds.UploadsReleaseInfo.Id);
-                            id = command.ExecuteScalar().ToInt(-1);
-                        }
-                        connection.Close();
-                    }
+                    int id = connectionString.ExecuteScalar(sql, [("@ID", cds.UploadsReleaseInfo.Id)]).ToInt(-1);
                     if (id != -1) cds.UploadsReleaseInfo.DescId = DescId;
                 }
                 else if (tld is CustomParams_TitleSelect cts)
                 {
-                    int id = -1;
                     TitleId = cts.UploadsReleaseInfo.TitleId;
                     directoryTitleDescEditor.DoTitleSelectCreate();
                     string sql = "SELECT TITLEID FROM SHORTSDIRECTORY WHERE ID = @ID;";
-                    using (var connection = new FbConnection(connectionString))
-                    {
-                        connection.Open();
-                        using (var command = new FbCommand(sql, connection))
-                        {
-                            command.Parameters.Clear();
-                            command.Parameters.AddWithValue("@ID", cts.UploadsReleaseInfo.Id);
-                            id = command.ExecuteScalar().ToInt(-1);
-                        }
-                        connection.Close();
-                    }
+                    int id = connectionString.ExecuteScalar(sql, [("@ID", cts.UploadsReleaseInfo.Id)]).ToInt(-1);
                     if (id != -1) cts.UploadsReleaseInfo.TitleId = TitleId;
                 }
             }
@@ -544,19 +529,7 @@ namespace VideoGui
                     });
                     scheduleEventCreatorFrm.lstSchedules.ItemsSource = EditableScheduleEventsList;
                     sql = "SELECT SETTING FROM SETTINGS WHERE NAME = @P0";
-                    int res = -1;
-                    using (var connection = new FbConnection(connectionString))
-                    {
-                        connection.Open();
-                        using (var command = new FbCommand(sql.ToUpper(), connection))
-                        {
-                            command.Parameters.Clear();
-                            command.Parameters.AddWithValue("@P0", "EVENTID");
-                            object result = command.ExecuteScalar();
-                            res = result.ToInt(-1);
-                        }
-                        connection.Close();
-                    }
+                    int res = connectionString.ExecuteScalar(sql, [("@P0", "EVENTID")]).ToInt(-1);
                     if (res != -1)
                     {
                         bool found = true;
@@ -703,18 +676,8 @@ namespace VideoGui
                                 {
                                     string field = (p.updatetype == UpdateType.Title) ? "TITLEID" : "DESCID";
                                     var sql = $"UPDATE SHORTSDIRECTORY SET {field} = @P1 WHERE ID = @P0";
-                                    using (var connection = new FbConnection(connectionString))
-                                    {
-                                        connection.Open();
-                                        using (var command = new FbCommand(sql.ToUpper(), connection))
-                                        {
-                                            command.Parameters.Clear();
-                                            command.Parameters.AddWithValue("@P0", p.id);
-                                            command.Parameters.AddWithValue("@P1", (p.updatetype == UpdateType.Title) ? TitleId : DescId);
-                                            command.ExecuteNonQuery();
-                                        }
-                                        connection.Close();
-                                    }
+                                    connectionString.ExecuteScalar(sql, [("@P0", p.id),
+                                        ("@P1", (p.updatetype == UpdateType.Title) ? TitleId : DescId)]);
                                 }
 
 
@@ -724,56 +687,19 @@ namespace VideoGui
                                 string ThisDir = rootfolder.Split(@"\").ToList().LastOrDefault();
                                 if (ThisDir != "")
                                 {
-                                    int res = -1;
-                                    using (var connection = new FbConnection(connectionString))
+                                    string sql = "select ID from SHORTSDIRECTORY WHERE DIRECTORYNAME = @P0";
+                                    int res = connectionString.ExecuteScalar(sql, [("@P0", ThisDir)]).ToInt(-1);
+                                    if (res != -1)
                                     {
-                                        connection.Open();
-                                        string sql = "select * from SHORTSDIRECTORY WHERE DIRECTORYNAME = @P0";
-                                        using (var command = new FbCommand(sql.ToUpper(), connection))
-                                        {
-                                            command.Parameters.Clear();
-                                            command.Parameters.AddWithValue("@P0", ThisDir.ToUpper());
-                                            object result = command.ExecuteScalar();
-                                            res = result.ToInt(-1);
-                                        }
-                                        if (res != -1)
-                                        {
-                                            sql = "UPDATE SHORTSDIRECTORY SET DESCID = @P1 WHERE ID = @P0";
-                                            using (var command = new FbCommand(sql.ToUpper(), connection))
-                                            {
-                                                command.Parameters.Clear();
-                                                command.Parameters.AddWithValue("@P0", res);
-                                                command.Parameters.AddWithValue("@P1", p.id);
-                                                object result = command.ExecuteScalar();
-                                                res = result.ToInt(-1);
-                                            }
-                                        }
-                                        connection.Close();
+                                        sql = "UPDATE SHORTSDIRECTORY SET DESCID = @P1 WHERE ID = @P0";
+                                        connectionString.ExecuteScalar(sql, [("@P0", res), ("@P1", p.id)]);
                                     }
-                                    using (var connection = new FbConnection(connectionString))
+                                    sql = "select ID from SHORTSDIRECTORY WHERE DIRECTORYNAME = @P0";
+                                    res = connectionString.ExecuteScalar(sql, [("@P0", ThisDir)]).ToInt(-1);
+                                    if (res != -1)
                                     {
-                                        connection.Open();
-                                        string sql = "select * from SHORTSDIRECTORY WHERE DIRECTORYNAME = @P0";
-                                        using (var command = new FbCommand(sql.ToUpper(), connection))
-                                        {
-                                            command.Parameters.Clear();
-                                            command.Parameters.AddWithValue("@P0", ThisDir.ToUpper());
-                                            object result = command.ExecuteScalar();
-                                            res = result.ToInt(-1);
-                                        }
-                                        if (res != -1)
-                                        {
-                                            sql = "UPDATE SHORTSDIRECTORY SET DESCID = @P1 WHERE ID = @P0";
-                                            using (var command = new FbCommand(sql.ToUpper(), connection))
-                                            {
-                                                command.Parameters.Clear();
-                                                command.Parameters.AddWithValue("@P0", res);
-                                                command.Parameters.AddWithValue("@P1", p.id);
-                                                object result = command.ExecuteScalar();
-                                                res = result.ToInt(-1);
-                                            }
-                                        }
-                                        connection.Close();
+                                        sql = "UPDATE SHORTSDIRECTORY SET DESCID = @P1 WHERE ID = @P0";
+                                        res = connectionString.ExecuteScalar(sql, [("@P0", res), ("@P1", p.id)]).ToInt(-1);
                                     }
                                     string linkeddescids = "";
                                     string sqla = GetUploadReleaseBuilderSql(res);
@@ -819,22 +745,9 @@ namespace VideoGui
                                     frmDescSelectFrm.IsDescChanged = false;
                                     string sql = $"INSERT INTO DESCRIPTIONS(DESCRIPTION,TITLETAGID,NAME,ISSHORTVIDEO, ISTAG)" +
                                      $" VALUES(@DESC,@TITLETAG,@NAME,@IsShortVideo,@IsTag) RETURNING ID;";
-                                    using (var connection = new FbConnection(connectionString))
-                                    {
-                                        connection.Open();
-                                        using (var command = new FbCommand(sql, connection))
-                                        {
-                                            command.Parameters.Clear();
-                                            command.Parameters.AddWithValue("@NAME", itemr.Directory);
-                                            command.Parameters.AddWithValue("@DESC", frmDescSelectFrm.txtDesc.Text);
-                                            command.Parameters.AddWithValue("@TITLETAG", ShortsDirectoryIndex);
-                                            command.Parameters.AddWithValue("@IsTag", false);
-                                            command.Parameters.AddWithValue("@IsShortVideo", frmDescSelectFrm.IsShortVideo);
-                                            var obj = command.ExecuteScalar();
-                                            idx = (obj is int resx) ? resx : -1;
-                                        }
-                                        connection.Close();
-                                    }
+                                    idx = connectionString.ExecuteScalar(sql, [("@DESC", itemr.Directory),
+                                        ("@TITLETAG", ShortsDirectoryIndex), ("@NAME", itemr.Directory),
+                                        ("@IsShortVideo", frmDescSelectFrm.IsShortVideo), ("@IsTag", false)]).ToInt(-1);
                                     if (idx != -1)
                                     {
                                         sql = $"SELECT * FROM DESCRIPTIONS WHERE ID = {idx}";
@@ -843,18 +756,7 @@ namespace VideoGui
                                             DescriptionsList.Add(new Descriptions(dr));
                                         });
                                         sql = "UPDATE SHORTSDIRECTORY SET DESCID = @P1 WHERE ID = @P0";
-                                        using (var connection = new FbConnection(connectionString))
-                                        {
-                                            connection.Open();
-                                            using (var command = new FbCommand(sql.ToUpper(), connection))
-                                            {
-                                                command.Parameters.Clear();
-                                                command.Parameters.AddWithValue("@P0", ShortsDirectoryIndex);
-                                                command.Parameters.AddWithValue("@P1", idx);
-                                                object result = command.ExecuteScalar();
-                                            }
-                                            connection.Close();
-                                        }
+                                        connectionString.ExecuteScalar(sql, [("@P0", ShortsDirectoryIndex), ("@P1", idx)]);
                                         foreach (var item in EditableshortsDirectoryList.Where(s => s.Id == ShortsDirectoryIndex))
                                         {
                                             item.DescId = idx;
@@ -873,7 +775,7 @@ namespace VideoGui
                     case CustomParams_Remove cpRemove:
                         {
                             string sql = $"SELECT * FROM DESCRIPTIONS WHERE ID = {cpRemove.id} RETURNING ID;";
-                            int idx = connectionString.RunExecuteScalar(sql, -1);
+                            int idx = connectionString.ExecuteScalar(sql).ToInt(-1);
                             if (idx != -1)
                             {
                                 for (int i = 0; i < DescriptionsList.Count; i--)
@@ -891,38 +793,15 @@ namespace VideoGui
                         {
                             int idx = -1;
                             string sql = $"SELECT ID FROM DESCRIPTIONS WHERE TITLETAGID = @TID";
-                            using (var connection = new FbConnection(connectionString))
-                            {
-                                connection.Open();
-                                using (var command = new FbCommand(sql, connection))
-                                {
-                                    command.Parameters.Clear();
-                                    command.Parameters.AddWithValue("@TID", cpAdd.Id);
-                                    var obj = command.ExecuteScalar();
-                                    idx = (obj is int resx) ? resx : -1;
-                                }
-                                connection.Close();
-                            }
+                            idx = connectionString.ExecuteScalar(sql, [("@TID", cpAdd.Id)]).ToInt(-1);
                             if (idx == -1)
                             {
                                 sql = $"INSERT INTO DESCRIPTIONS(DESCRIPTION,TITLETAGID,NAME,ISSHORTVIDEO, ISTAG)" +
                                     $" VALUES(@DESC,@TITLETAG,@NAME,@IsShortVideo,@IsTag) RETURNING ID;";
-                                using (var connection = new FbConnection(connectionString))
-                                {
-                                    connection.Open();
-                                    using (var command = new FbCommand(sql, connection))
-                                    {
-                                        command.Parameters.Clear();
-                                        command.Parameters.AddWithValue("@NAME", cpAdd.Name);
-                                        command.Parameters.AddWithValue("@DESC", cpAdd.Description);
-                                        command.Parameters.AddWithValue("@TITLETAG", cpAdd.Id);
-                                        command.Parameters.AddWithValue("@IsTag", false);
-                                        command.Parameters.AddWithValue("@IsShortVideo", frmDescSelectFrm.IsShortVideo);
-                                        var obj = command.ExecuteScalar();
-                                        idx = (obj is int resx) ? resx : -1;
-                                    }
-                                    connection.Close();
-                                }
+                                idx = connectionString.ExecuteScalar(sql, [("@DESC", cpAdd.Description),
+                                    ("@TITLETAG", cpAdd.Id), ("@NAME", cpAdd.Name),
+                                    ("@IsShortVideo", frmDescSelectFrm.IsShortVideo),
+                                    ("@IsTag", false)]).ToInt(-1);
                                 if (idx != -1)
                                 {
                                     frmDescSelectFrm.IsDescChanged = true;
@@ -933,18 +812,7 @@ namespace VideoGui
                                     {
                                         item.DescId = idx;
                                         sql = "UPDATE SHORTSDIRECTORY SET DESCID = @P1 WHERE ID = @P0";
-                                        using (var connection = new FbConnection(connectionString))
-                                        {
-                                            connection.Open();
-                                            using (var command = new FbCommand(sql.ToUpper(), connection))
-                                            {
-                                                command.Parameters.Clear();
-                                                command.Parameters.AddWithValue("@P0", ShortsDirectoryIndex);
-                                                command.Parameters.AddWithValue("@P1", idx);
-                                                object result = command.ExecuteScalar();
-                                            }
-                                            connection.Close();
-                                        }
+                                        connectionString.ExecuteScalar(sql, [("@P0", ShortsDirectoryIndex), ("@P1", idx)]);
                                         break;
                                     }
                                 }
@@ -953,21 +821,8 @@ namespace VideoGui
                             {
                                 sql = $"UPDATE DESCRIPTIONS SET DESCRIPTION=@DESC, NAME=@NAME WHERE " +
                                     "TITLETAGID = @TITLETAGID AND ISTAG = @ISTAG RETURNING ID;";
-                                using (var connection = new FbConnection(connectionString))
-                                {
-                                    connection.Open();
-                                    using (var command = new FbCommand(sql, connection))
-                                    {
-                                        command.Parameters.Clear();
-                                        command.Parameters.AddWithValue("@NAME", cpAdd.Name);
-                                        command.Parameters.AddWithValue("@DESC", cpAdd.Description);
-                                        command.Parameters.AddWithValue("@TITLETAGID", cpAdd.Id);
-                                        command.Parameters.AddWithValue("@ISTAG", false);
-                                        var obj = command.ExecuteScalar();
-                                        idx = (obj is int resx) ? resx : -1;
-                                    }
-                                    connection.Close();
-                                }
+                                idx = connectionString.ExecuteScalar(sql, [("@DESC", cpAdd.Description),
+                                    ("@NAME", cpAdd.Name), ("@TITLETAGID", cpAdd.Id), ("@ISTAG", false)]).ToInt(-1);
                                 foreach (var item in DescriptionsList.Where(s => s.TitleTagId == cpAdd.Id))
                                 {
                                     item.Description = cpAdd.Description;
@@ -1000,17 +855,7 @@ namespace VideoGui
                                 foreach (var item in TitleTagsList.Where(idx => idx.GroupId == frmMasterTagSelectForm.ParentId))
                                 {
                                     sql = "DELETE FROM TITLETAGS WHERE ID = @ID";
-                                    using (var connection = new FbConnection(connectionString))
-                                    {
-                                        connection.Open();
-                                        using (var command = new FbCommand(sql, connection))
-                                        {
-                                            command.Parameters.Clear();
-                                            command.Parameters.AddWithValue("@ID", item.Id);
-                                            var res = command.ExecuteNonQuery();
-                                        }
-                                        connection.Close();
-                                    }
+                                    connectionString.ExecuteScalar(sql, [("@ID", item.Id)]);
                                     for (int i = TitleTagsList.Count - 1; i >= 0; i--)
                                     {
                                         if (TitleTagsList[i].Id == item.Id)
@@ -1024,19 +869,8 @@ namespace VideoGui
                                 {
                                     int idx = -1;
                                     sql = "INSERT INTO TITLETAGS(TAGID, GROUPID) VALUES(@TAGID, @GROUPID) RETURNING ID;";
-                                    using (var connection = new FbConnection(connectionString))
-                                    {
-                                        connection.Open();
-                                        using (var command = new FbCommand(sql, connection))
-                                        {
-                                            command.Parameters.Clear();
-                                            command.Parameters.AddWithValue("@TAGID", tags.TagId);
-                                            command.Parameters.AddWithValue("@GROUPID", frmMasterTagSelectForm.ParentId);
-                                            var res = command.ExecuteScalar();
-                                            idx = (res is int resx) ? resx : -1;
-                                        }
-                                        connection.Close();
-                                    }
+                                    idx = connectionString.ExecuteScalar(sql, [("@TAGID", tags.TagId),
+                                        ("@GROUPID", frmMasterTagSelectForm.ParentId)]).ToInt(-1);
                                 }
                                 sql = $"SELECT * FROM TITLETAGS T INNER JOIN AVAILABLETAGS S ON T.TAGID = S.ID WHERE GROUPID = {frmMasterTagSelectForm.ParentId}";
                                 connectionString.ExecuteReader(sql, (FbDataReader r) =>
@@ -1050,17 +884,7 @@ namespace VideoGui
                             else
                             {
                                 sql = "DELETE FROM SELECTEDTAGS WHERE GROUPTAGID = @TAGID";
-                                using (var connection = new FbConnection(connectionString))
-                                {
-                                    connection.Open();
-                                    using (var command = new FbCommand(sql, connection))
-                                    {
-                                        command.Parameters.Clear();
-                                        command.Parameters.AddWithValue("@TAGID", frmMasterTagSelectForm.ParentId);
-                                        var res = command.ExecuteNonQuery();
-                                    }
-                                    connection.Close();
-                                }
+                                connectionString.ExecuteScalar(sql, [("@TAGID", frmMasterTagSelectForm.ParentId)]);
                                 for (int i = selectedTagsList.Count - 1; i >= 0; i--)
                                 {
                                     if (selectedTagsList[i].GroupTagId == frmMasterTagSelectForm.ParentId)
@@ -1073,19 +897,8 @@ namespace VideoGui
                                 {
                                     int idxx = -1;
                                     sql = "INSERT INTO SELECTEDTAGS(SELECTEDTAG, GROUPTAGID) VALUES(@SELECTEDTAG, @GRP) RETURNING ID;";
-                                    using (var connection = new FbConnection(connectionString))
-                                    {
-                                        connection.Open();
-                                        using (var command = new FbCommand(sql, connection))
-                                        {
-                                            command.Parameters.Clear();
-                                            command.Parameters.AddWithValue("@SELECTEDTAG", tags.SelectedTagId);
-                                            command.Parameters.AddWithValue("@GRP", frmMasterTagSelectForm.ParentId);
-                                            var res = command.ExecuteScalar();
-                                            idxx = (res is int resx) ? resx : -1;
-                                        }
-                                        connection.Close();
-                                    }
+                                    idxx = connectionString.ExecuteScalar(sql, [("@SELECTEDTAG", tags.SelectedTagId),
+                                        ("@GRP", frmMasterTagSelectForm.ParentId)]).ToInt(-1);
                                     if (idxx != -1)
                                     {
                                         selectedTagsList1.Add(new SelectedTags(idxx, tags.SelectedTagId, frmMasterTagSelectForm.ParentId, tags.Description));
@@ -1159,19 +972,7 @@ namespace VideoGui
                         {
                             int idx = -1;
                             string Sql = $"INSERT INTO DESCRIPTIONS(DESCRIPTION,ISTAG) VALUES(@Name,@istag) RETURNG ID;";
-                            using (var connection = new FbConnection(connectionString))
-                            {
-                                connection.Open();
-                                using (var command = new FbCommand(Sql, connection))
-                                {
-                                    command.Parameters.Clear();
-                                    command.Parameters.AddWithValue("@name", cpAdd.Name);
-                                    command.Parameters.AddWithValue("@istag", true);
-                                    var obj = command.ExecuteScalar();
-                                    idx = (obj is int resx) ? resx : -1;
-                                }
-                                connection.Close();
-                            }
+                            idx = connectionString.ExecuteScalar(Sql, [("@Name", cpAdd.Name), ("@istag", true)]).ToInt(-1);
                             if (idx != -1)
                             {
                                 DescriptionsList.Add(new Descriptions(idx, cpAdd.Name, false, "", cpAdd.Name, true));
@@ -1224,11 +1025,17 @@ namespace VideoGui
                                 if (!f)
                                 {
                                     string sqla = $"INSERT INTO TITLETAGS(GROUPID,TAGID) VALUES({cpInsertTags.GroupId},{item}) RETURNING ID;";
-                                    int id = sqla.RunExecuteScalar(connectionString).ToInt(-1);
+                                    int id = connectionString.ExecuteScalar(sqla).ToInt(-1);
                                     if (id != -1)
                                     {
-                                        connectionString.ExecuteReader($"SELECT * FROM TITLETAGS T INNER JOIN AVAILABLETAGS S ON T.TAGID = S.ID WHERE T.ID = {id}", OnReadTitlesTags);
+                                        connectionString.ExecuteReader($"SELECT * FROM TITLETAGS T INNER JOIN AVAILABLETAGS S " +
+                                            "ON T.TAGID = S.ID WHERE T.ID = {id}", (FbDataReader r) =>
+                                            {
+                                                TitleTagsList.Add(new TitleTags(r));
+                                            });
                                     }
+
+
                                     Update = true;
                                 }
                             }
@@ -1236,18 +1043,15 @@ namespace VideoGui
                             if (Update)
                             {
                                 string BaseStr1 = frmTitleSelect.BaseTitle + " ";
+
                                 foreach (var item in TitleTagsList.Where(s => s.GroupId == cpInsertTags.GroupId))
                                 {
-                                    if (!BaseStr1.Contains($"#{item.Description}"))
-                                    {
-                                        BaseStr1 += $"#{item.Description} ";
-                                    }
+                                    BaseStr1 += (!BaseStr1.Contains($"#{item.Description}")) ? $"#{item.Description} " : "";
                                 }
                                 BaseStr1 = BaseStr1.Trim();
                                 frmTitleSelect.txtTitle.Text = BaseStr1.Trim();
                                 frmTitleSelect.lblTitleLength.Content = BaseStr1.Trim().Length;
-                                ObservableCollectionFilter.TitleTagSelectorView.View.Refresh();
-                                ObservableCollectionFilter.TitleTagAvailableView.View.Refresh();
+
                             }
 
                             break;
@@ -1263,30 +1067,12 @@ namespace VideoGui
                                 if (ThisDir != "")
                                 {
                                     int res = -1;
-                                    using (var connection = new FbConnection(connectionString))
+                                    string sql = "select * from SHORTSDIRECTORY WHERE DIRECTORYNAME = @P0";
+                                    res = connectionString.ExecuteScalar(sql, [("@P0", ThisDir)]).ToInt(-1);
+                                    if (res != -1)
                                     {
-                                        connection.Open();
-                                        string sql = "select * from SHORTSDIRECTORY WHERE DIRECTORYNAME = @P0";
-                                        using (var command = new FbCommand(sql.ToUpper(), connection))
-                                        {
-                                            command.Parameters.Clear();
-                                            command.Parameters.AddWithValue("@P0", ThisDir.ToUpper());
-                                            object result = command.ExecuteScalar();
-                                            res = result.ToInt(-1);
-                                        }
-                                        if (res != -1)
-                                        {
-                                            sql = "UPDATE SHORTSDIRECTORY SET TITLEID = @P1 WHERE ID = @P0";
-                                            using (var command = new FbCommand(sql.ToUpper(), connection))
-                                            {
-                                                command.Parameters.Clear();
-                                                command.Parameters.AddWithValue("@P0", res);
-                                                command.Parameters.AddWithValue("@P1", p.id);
-                                                object result = command.ExecuteScalar();
-                                                res = result.ToInt(-1);
-                                            }
-                                        }
-                                        connection.Close();
+                                        sql = "UPDATE SHORTSDIRECTORY SET TITLEID = @P1 WHERE ID = @P0";
+                                        res = connectionString.ExecuteScalar(sql, [("@P0", res), ("@P1", p.id)]).ToInt(-1);
                                     }
                                     string linkedtitleids = "";
                                     connectionString.ExecuteReader(GetUploadReleaseBuilderSql(res), (FbDataReader r) =>
@@ -1302,23 +1088,35 @@ namespace VideoGui
                         {
                             string _title = "", BaseTitle = "", xx = "", part = "";
                             int index = -1;// UploadReleasesBuilderIndex;
-                            frmTitleSelect.TagAvailable.ItemsSource = ObservableCollectionFilter.TitleTagAvailableView.View;
-                            frmTitleSelect.TagsGrp.ItemsSource = ObservableCollectionFilter.TitleTagSelectorView.View;
                             //frmTitleSelect.lstTitles.ItemsSource = EditableshortsDirectoryList;
                             foreach (var item in EditableshortsDirectoryList.Where(item => item.Id == ShortsDirectoryIndex))
                             {
                                 BaseTitle = item.Directory;
-                                if (item.TitleId != -1)
+                                if (item.TitleId == -1)
                                 {
                                     foreach (var t in TitlesList.Where(i => i.GroupId == ShortsDirectoryIndex && !i.IsTag))
                                     {
                                         BaseTitle = t.Description;
                                         index = t.Id;
-                                        ObservableCollectionFilter.SetTitlesTag(t.Id);
+                                        item.TitleId = t.Id;
+                                        string SQLa = "UPDATE SHORTSDIRECTORY SET TITLEID = @TID WHERE ID = @ID;";
+                                        connectionString.ExecuteScalar(SQLa, [("@ID", ShortsDirectoryIndex),
+                                            ("@TID", t.Id)]);
                                         frmTitleSelect.SetTitleTag(t.Id);
                                         break;
                                     }
                                 }
+                                else
+                                {
+                                    foreach (var t in TitlesList.Where(i => i.Id == item.TitleId && !i.IsTag))
+                                    {
+                                        BaseTitle = t.Description;
+                                        index = t.Id;
+                                        frmTitleSelect.SetTitleTag(t.Id);
+                                        break;
+                                    }
+                                }
+
                                 frmTitleSelect.BaseTitle = $"{BaseTitle}";
                                 frmTitleSelect.txtBaseTitle.Content = $"{BaseTitle}";
                                 frmTitleSelect.txtTitle.Text = $"{BaseTitle}";
@@ -1326,60 +1124,53 @@ namespace VideoGui
                                 break;
                             }
 
-                            ObservableCollectionFilter.TitleTagSelectorView.View.Refresh();
-
                             if (index == -1)
                             {
                                 string BaseStrX = frmTitleSelect.BaseTitle;
-                                string sqla = "SELECT ID FROM TITLES WHERE DESCRIPTION = @name AND ISTAG = @ISTAG AND GROUPID = @GROUPID;";
-                                using (var connection = new FbConnection(connectionString))
+                                if (BaseStrX == "")
                                 {
-                                    connection.Open();
-                                    using (var command = new FbCommand(sqla, connection))
+                                    RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                                    string rootfolder = key.GetValueStr("UploadPath", @"D:\shorts");
+                                    key?.Close();
+                                    BaseStrX = rootfolder.Split(@"\").ToList().LastOrDefault();
+                                    string SQL = "INSERT INTO TITLES(DESCRIPTION,ISTAG,GROUPID) @@VALUES(@DESC,@ISTAG,@GROUPID) RETURNING ID;";
+                                    int id = connectionString.ExecuteScalar(SQL, [("@DESC", BaseStrX),
+                                        ("@ISTAG", false), ("@GROUPID", ShortsDirectoryIndex)]).ToInt(-1);
+                                    if (id != -1)
                                     {
-                                        command.Parameters.Clear();
-                                        command.Parameters.AddWithValue("@name", BaseTitle);
-                                        command.Parameters.AddWithValue("@ISTAG", false);
-                                        command.Parameters.AddWithValue("@GROUPID", ShortsDirectoryIndex);
-                                        var obj = command.ExecuteScalar();
-                                        index = (obj is int resx) ? resx : -1;
+                                        TitlesList.Add(new Titles(id, ShortsDirectoryIndex, BaseStrX, "", false));
                                     }
-                                    connection.Close();
+                                    foreach (var item in EditableshortsDirectoryList.
+                                        Where(item => item.Id == ShortsDirectoryIndex))
+                                    {
+                                        item.TitleId = id;
+
+                                        break;
+                                    }
+
+                                    BaseTitle = BaseStrX;
+                                    frmTitleSelect.BaseTitle = $"{BaseTitle}";
+                                    frmTitleSelect.txtBaseTitle.Content = $"{BaseTitle}";
+                                    frmTitleSelect.txtTitle.Text = $"{BaseTitle}";
+                                    frmTitleSelect.SetTitleTag(id);
+                                    SQL = "UPDATE SHORTSDIRECTORY SET TITLEID = @TID WHERE ID = @ID;";
+                                    connectionString.ExecuteScalar(SQL, [("@ID", ShortsDirectoryIndex), ("@TID", id)]);
                                 }
+
+                                string sqla = "SELECT ID FROM TITLES WHERE DESCRIPTION = @name AND ISTAG = @ISTAG AND GROUPID = @GROUPID;";
+                                index = connectionString.ExecuteScalar(sqla, [("@name", BaseStrX),
+                                    ("@ISTAG", false), ("@GROUPID", ShortsDirectoryIndex)]).ToInt(-1);
                                 if (index == -1)
                                 {
                                     string sqlb = "INSERT INTO TITLES(DESCRIPTION,ISTAG,GROUPID) " +
                                         "VALUES(@name,@ISTAG,@GROUPID) RETURNING ID;";
-                                    using (var connection = new FbConnection(connectionString))
-                                    {
-                                        connection.Open();
-                                        using (var command = new FbCommand(sqlb, connection))
-                                        {
-                                            command.Parameters.Clear();
-                                            command.Parameters.AddWithValue("@name", BaseTitle);
-                                            command.Parameters.AddWithValue("@ISTAG", false);
-                                            command.Parameters.AddWithValue("@GROUPID", ShortsDirectoryIndex);
-                                            var obj = command.ExecuteScalar();
-                                            index = (obj is int resx) ? resx : -1;
-                                        }
-                                        connection.Close();
-                                    }
+                                    index = connectionString.ExecuteScalar(sqlb, [("@name", BaseStrX),
+                                        ("@ISTAG", false), ("@GROUPID", ShortsDirectoryIndex)]).ToInt(-1);
                                 }
                                 if (index != -1)
                                 {
                                     string sqlc = "UPDATE SHORTSDIRECTORY SET TITLEID = @TITLEID WHERE ID = @id;";
-                                    using (var connection = new FbConnection(connectionString))
-                                    {
-                                        connection.Open();
-                                        using (var command = new FbCommand(sqlc, connection))
-                                        {
-                                            command.Parameters.Clear();
-                                            command.Parameters.AddWithValue("@TITLEID", index);
-                                            command.Parameters.AddWithValue("@id", ShortsDirectoryIndex);
-                                            command.ExecuteScalar();
-                                        }
-                                        connection.Close();
-                                    }
+                                    connectionString.ExecuteScalar(sqlc, [("@TITLEID", index), ("@id", ShortsDirectoryIndex)]);
                                     foreach (var item in EditableshortsDirectoryList.
                                         Where(item => item.Id == ShortsDirectoryIndex))
                                     {
@@ -1389,7 +1180,6 @@ namespace VideoGui
                                 }
                             }
 
-                            ObservableCollectionFilter.SetTitlesTag(index);
                             frmTitleSelect.TitleId = index;
                             string BaseStr = frmTitleSelect.BaseTitle + " ";
 
@@ -1419,40 +1209,31 @@ namespace VideoGui
                             BaseStr = BaseStr.Trim();
                             frmTitleSelect.txtTitle.Text = BaseStr.Trim();
                             frmTitleSelect.lblTitleLength.Content = BaseStr.Trim().Length;
-                            frmTitleSelect.TagsGrp.ItemsSource = ObservableCollectionFilter.TitleTagSelectorView.View;
-                            frmTitleSelect.TagAvailable.ItemsSource = ObservableCollectionFilter.TitleTagAvailableView.View;
-                            ObservableCollectionFilter.TitleTagSelectorView.View.Refresh();
-                            ObservableCollectionFilter.TitleTagAvailableView.View.Refresh();
+                            UpdateSelectors(frmTitleSelect);
                             break;
                         }
                     case CustomParams_Refresh:
                         {
-                            ObservableCollectionFilter.TitleTagSelectorView.View.Refresh();
+                            int titleid = frmTitleSelect.TitleId;
                             string BaseStr = frmTitleSelect.BaseTitle + " ";
-                            foreach (var item in ObservableCollectionFilter.TitleTagSelectorView.View)
+                            foreach (var item in TitleTagsList.Where(s => s.GroupId == titleid).ToList())
                             {
-                                if (!BaseStr.Contains($"#{(item as TitleTags).Description}"))
-                                {
-                                    BaseStr += $"#{(item as TitleTags).Description} ";
-                                }
+                                BaseStr += (!BaseStr.Contains($"#{item.Description}")) ? $"#{item.Description} " : "";
                             }
                             frmTitleSelect.txtTitle.Text = BaseStr.Trim();
                             frmTitleSelect.lblTitleLength.Content = BaseStr.Trim().Length;
+                            UpdateSelectors(frmTitleSelect);
                             break;
                         }
                     case CustomParams_InsertWithId cpInsert:
                         {
-                            //remove from Selected Tags for titles.
                             TagUpdate(dataUpdatType.Insert, cpInsert.id, cpInsert.Groupid, FormObject);
-                            ObservableCollectionFilter.TitleTagSelectorView.View.Refresh();
-                            ObservableCollectionFilter.TitleTagAvailableView.View.Refresh();
+                            int titleid = frmTitleSelect.TitleId;
+
                             string x = OnGetAllTags(frmTitleSelect.GetTitleTag());
-                            string xx = "", part = "";
-                            foreach (var item in EditableshortsDirectoryList.Where(item => item.Id == ShortsDirectoryIndex))
-                            {
-                                item.DescId = cpInsert.Groupid;
-                            }
-                            //cpInsert.TitleLength = x.Length + part.Length;
+
+
+                            cpInsert.TitleLength = x.Length;
                             break;
                         }
                     case CustomParams_Remove cpRemove:
@@ -1478,18 +1259,7 @@ namespace VideoGui
                             if (found)
                             {
                                 string sql = "UPDATE TITLES SET DESCRIPTION = @name WHERE ID = @id;";
-                                using (var connection = new FbConnection(connectionString))
-                                {
-                                    connection.Open();
-                                    using (var command = new FbCommand(sql, connection))
-                                    {
-                                        command.Parameters.Clear();
-                                        command.Parameters.AddWithValue("@name", cp_Update.name);
-                                        command.Parameters.AddWithValue("@id", cp_Update.id);
-                                        command.ExecuteScalar();
-                                    }
-                                    connection.Close();
-                                }
+                                connectionString.ExecuteScalar(sql, [("@name", cp_Update.name), ("@id", cp_Update.id)]);
                             }
                             break;
                         }
@@ -1524,6 +1294,29 @@ namespace VideoGui
                 ex.LogWrite($"OnReadTitlesTags {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
             }
         }
+        public void UpdateSelectors(object thisForm)
+        {
+            try
+            {
+                foreach (var item in EditableshortsDirectoryList.Where(s => s.Id == ShortsDirectoryIndex))
+                {
+                    int index = -1;
+                    if (thisForm is TitleSelectFrm frmTitleSelect)
+                    {
+                        index = TitlesList.Where(s => s.Id == item.TitleId).FirstOrDefault().Id;
+                        var titletags = TitleTagsList.Where(s => s.GroupId == index).ToList();
+                        List<AvailableTags> availtags = [.. availableTagsList.Where(t => !titletags.Any(tt => tt.TagId == t.Id))];
+                        frmTitleSelect.TagAvailable.ItemsSource = availtags;
+                        frmTitleSelect.TagsGrp.ItemsSource = titletags;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"UpdateSelectors {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+        }
+
         public void AddAvailableTag(string tagdescription, object ThisForm)
         {
             try
@@ -1541,21 +1334,13 @@ namespace VideoGui
                     {
                         int idx = -1;
                         string Sql = $"insert into AVAILABLETAGS(TAG) VALUES(@tagdescription) RETURNING ID;";
-                        using (var connection = new FbConnection(connectionString))
-                        {
-                            connection.Open();
-                            using (var command = new FbCommand(Sql, connection))
-                            {
-                                command.Parameters.Clear();
-                                command.Parameters.AddWithValue("@tagdescription", tagdescription);
-                                var obj = command.ExecuteScalar();
-                                idx = (obj is int resx) ? resx : -1;
-                            }
-                            connection.Close();
-                        }
+                        idx = connectionString.ExecuteScalar(Sql, [("@tagdescription", tagdescription)]).ToInt(-1);
                         if (idx != -1)
                         {
                             availableTagsList.Add(new AvailableTags(tagdescription, idx));
+                            UpdateSelectors(ThisForm);
+                            (ThisForm as TitleSelectFrm).txtNewTag.Text = "";
+
                         }
                     }
                 }
@@ -1627,141 +1412,71 @@ namespace VideoGui
                         string TagID = ThisForm is TitleSelectFrm ? "TAGID" : "SELECTEDTAG";
                         string TitleID = ThisForm is TitleSelectFrm ? "GROUPID" : "GROUPTAGID";
                         Sql = $"SELECT ID FROM {TableName} WHERE {TagID} = @TAGID AND {TitleID} = @GROUPID";
-                        using (var connection = new FbConnection(connectionString))
-                        {
-                            connection.Open();
-                            using (var command = new FbCommand(Sql, connection))
-                            {
-                                command.Parameters.Clear();
-                                command.Parameters.AddWithValue("@GROUPID", GroupId);
-                                command.Parameters.AddWithValue("@TAGID", id);
-                                var obj = command.ExecuteScalar();
-                                idx = (obj is int resx) ? resx : -1;
-                            }
-                            connection.Close();
-                        }
+                        idx = connectionString.ExecuteScalar(Sql, [("@TAGID", id), ("@GROUPID", GroupId)]).ToInt(-1);
                         if (idx == -1)
                         {
-                            idx = -1;
                             Sql = $"INSERT INTO {TableName}({TagID}, {TitleID}) VALUES(@TAGID, @GROUPID) RETURNING ID";
-                            using (var connection = new FbConnection(connectionString))
-                            {
-                                connection.Open();
-                                using (var command = new FbCommand(Sql, connection))
-                                {
-                                    command.Parameters.Clear();
-                                    command.Parameters.AddWithValue("@GROUPID", GroupId);
-                                    command.Parameters.AddWithValue("@TAGID", id);
-                                    var obj = command.ExecuteScalar();
-                                    idx = (obj is int resx) ? resx : -1;
-                                }
-                                connection.Close();
-                            }
+                            idx = connectionString.ExecuteScalar(Sql, [("@TAGID", id), ("@GROUPID", GroupId)]).ToInt(-1);
 
                             if (idx != -1)
                             {
                                 //T.TAGID = S.ID
                                 string SQL = $"Select * FROM {TableName} T INNER JOIN AVAILABLETAGS S ON S.ID = T.TAGID WHERE T.ID = {idx}";
-                                if (ThisForm is TitleSelectFrm)
+                                connectionString.ExecuteReader(SQL, (FbDataReader r) =>
                                 {
-                                    connectionString.ExecuteReader(SQL, (FbDataReader r) =>
-                                    {
-                                        TitleTagsList.Add(new TitleTags(r));
-                                    });
-                                    ObservableCollectionFilter.TitleTagSelectorView.View.Refresh();
-                                    ObservableCollectionFilter.TitleTagAvailableView.View.Refresh();
-                                }
-
+                                    TitleTagsList.Add(new TitleTags(r));
+                                });
+                                UpdateSelectors(ThisForm);
                             }
+                            else UpdateSelectors(ThisForm);
                         }
                     }
                     if ((dt == dataUpdatType.Add))
                     {
                         int idx = -1;
                         Sql = $"INSERT INTO TITLES(DESCRIPTION) VALUES(@description) RETURNING ID";
-                        using (var connection = new FbConnection(connectionString))
-                        {
-                            connection.Open();
-                            using (var command = new FbCommand(Sql, connection))
-                            {
-                                command.Parameters.Clear();
-                                command.Parameters.AddWithValue("@description", Desc);
-                                var obj = command.ExecuteScalar();
-                                idx = (obj is int resx) ? resx : -1;
-                            }
-                            connection.Close();
-                        }
+                        idx = connectionString.ExecuteScalar(Sql, [("@description", Desc)]).ToInt(-1);
                         SelectedTagId = (idx != -1) ? idx : SelectedTagId;
-                        if (ThisForm is TitleSelectFrm frmTitleSelect1)
-                        {
-                            frmTitleSelect1.SetTitleTag(SelectedTagId);
-                        }
+                        frmTitleSelect.SetTitleTag(SelectedTagId);
                         UpdateTitleTagDesc(SelectedTagId, ThisForm);
                     }
                     else if ((dt == dataUpdatType.Remove))
                     {
                         string TableName = (ThisForm is TitleSelectFrm) ? "TITLETAGS" : "SELECTEDTAGS";
                         Sql = $"DELETE FROM {TableName} WHERE ID = {id}";
-                        Sql.RunExecuteScalar(connectionString);
+                        connectionString.ExecuteScalar(Sql);
                         SelectedTagId = (SelectedTagId == id) ? -1 : SelectedTagId;
-                        if (ThisForm is TitleSelectFrm)
+                        for (int i = 0; i < TitleTagsList.Count; i++)
                         {
-                            for (int i = 0; i < TitleTagsList.Count; i++)
+                            if (TitleTagsList[i].Id == id)
                             {
-                                if (TitleTagsList[i].Id == id)
-                                {
-                                    TitleTagsList.RemoveAt(i);
-                                    break;
-                                }
+                                TitleTagsList.RemoveAt(i);
+                                break;
                             }
-                            ObservableCollectionFilter.TitleTagSelectorView.View.Refresh();
-                            ObservableCollectionFilter.TitleTagAvailableView.View.Refresh();
                         }
+                        UpdateSelectors(ThisForm);
 
                     }
                     else if ((dt == dataUpdatType.Edit))
                     {
-                        int idx = -1;
                         Sql = $"UPDATE TITLES SET DESCRIPTION = @description WHERE ID = @id";
-                        using (var connection = new FbConnection(connectionString))
-                        {
-                            connection.Open();
-                            using (var command = new FbCommand(Sql, connection))
-                            {
-                                command.Parameters.Clear();
-                                command.Parameters.AddWithValue("@description", Desc);
-                                command.Parameters.AddWithValue("@id", id);
-                                var obj = command.ExecuteScalar();
-                                idx = (obj is int resx) ? resx : -1;
-                            }
-                            connection.Close();
-                        }
-                        if (ThisForm is TitleSelectFrm frmTitleSelect2)
-                        {
-                            frmTitleSelect2.SetTitleTag(SelectedTagId);
-                        }
+                        int idx = connectionString.ExecuteScalar(Sql, [("@description", Desc), ("@id", id)]).ToInt(-1);
+                        frmTitleSelect.SetTitleTag(SelectedTagId);
                         UpdateTitleTagDesc(SelectedTagId, ThisForm);
                     }
                     else if ((dt == dataUpdatType.Change))
                     {
                         SelectedTagId = id;
-                        if (ThisForm is TitleSelectFrm frmTitleSelect3)
-                        {
-                            frmTitleSelect3.SetTitleTag(SelectedTagId);
-                        }
+                        frmTitleSelect.SetTitleTag(SelectedTagId);
                         UpdateTitleTagDesc(SelectedTagId, ThisForm);
                     }
                 }
-
-
             }
             catch (Exception ex)
             {
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name + " " + ex.Message);
             }
         }
-
-
 
         public void UpdateTitleTagDesc(int id, object ThisForm)
         {
@@ -1809,10 +1524,9 @@ namespace VideoGui
                 string res = "";
                 if (Id != -1)
                 {
-                    foreach (var tag in TitleTagsList)
+                    foreach (var tag in TitleTagsList.Where(s => s.GroupId == Id))
                     {
                         res += $"|{tag.Description}";
-                        break;
 
                     }
                 }
@@ -1863,7 +1577,6 @@ namespace VideoGui
                                 foreach (var t in TitlesList.Where(i => i.GroupId == ShortsDirectoryIndex && !i.IsTag))
                                 {
                                     BaseTitle = t.Description;
-                                    ObservableCollectionFilter.SetTitlesTag(t.Id);
                                     break;
                                 }
                             }
@@ -1884,98 +1597,32 @@ namespace VideoGui
                     {
                         int id = -1;
                         string sql = $"SELECT ID FROM {avi.TableName} WHERE FILENAME = @FILENAME";
-                        using (var connection = new FbConnection(connectionString))
-                        {
-                            connection.Open();
-                            using (var command = new FbCommand(sql, connection))
-                            {
-                                command.Parameters.Clear();
-                                command.Parameters.AddWithValue("@FILENAME", avi.filename);
-                                id = command.ExecuteScalar().ToInt(-1);
-                            }
-                            connection.Close();
-                        }
+                        id = connectionString.ExecuteScalar(sql, [("@FILENAME", avi.filename)]).ToInt(-1);
                         if (id == -1)
                         {
                             sql = $"INSERT INTO {avi.TableName} (VIDEOID,FILENAME) VALUES (@VIDEOID,@FILENAME)";
-                            using (var connection = new FbConnection(connectionString))
-                            {
-                                connection.Open();
-                                using (var command = new FbCommand(sql, connection))
-                                {
-                                    command.Parameters.Clear();
-                                    command.Parameters.AddWithValue("@FILENAME", avi.filename);
-                                    command.Parameters.AddWithValue("@VIDEOID", avi.id);
-                                    command.ExecuteNonQuery();
-                                }
-                                connection.Close();
-                            }
+                            connectionString.ExecuteScalar(sql, [("@VIDEOID", avi.id), ("@FILENAME", avi.filename)]);
                         }
                         else
                         {
                             sql = $"UPDATE {avi.TableName} SET VIDEOID = @VIDEOID WHERE ID = @ID AND FILENAME = @FILENAME";
-                            using (var connection = new FbConnection(connectionString))
-                            {
-                                connection.Open();
-                                using (var command = new FbCommand(sql, connection))
-                                {
-                                    command.Parameters.Clear();
-                                    command.Parameters.AddWithValue("@ID", id);
-                                    command.Parameters.AddWithValue("@FILENAME", avi.filename);
-                                    command.Parameters.AddWithValue("@VIDEOID", avi.id);
-                                    command.ExecuteNonQuery();
-                                }
-                                connection.Close();
-                            }
+                            connectionString.ExecuteScalar(sql, [("@ID", id), ("@VIDEOID", avi.id), ("@FILENAME", avi.filename)]);
                         }
                     }
                     else if (tld is CustomParams_InsertIntoTable cit)
                     {
                         int id = -1;
                         string sql = "SELECT ID FROM DRAFTSHORTS WHERE FILENAME = @FILENAME";
-                        using (var connection = new FbConnection(connectionString))
-                        {
-                            connection.Open();
-                            using (var command = new FbCommand(sql, connection))
-                            {
-                                command.Parameters.Clear();
-                                command.Parameters.AddWithValue("@FILENAME", cit.filename);
-                                id = command.ExecuteScalar().ToInt(-1);
-                            }
-                            connection.Close();
-                        }
+                        id = connectionString.ExecuteScalar(sql, [("@FILENAME", cit.filename)]).ToInt(-1);
                         if (id == -1)
                         {
                             sql = "INSERT INTO DRAFTSHORTS (VIDEOID,FILENAME) VALUES (@VIDEOID,@FILENAME)";
-                            using (var connection = new FbConnection(connectionString))
-                            {
-                                connection.Open();
-                                using (var command = new FbCommand(sql, connection))
-                                {
-                                    command.Parameters.Clear();
-                                    command.Parameters.AddWithValue("@FILENAME", cit.filename);
-                                    command.Parameters.AddWithValue("@VIDEOID", cit.id);
-                                    command.ExecuteNonQuery();
-                                }
-                                connection.Close();
-                            }
+                            connectionString.ExecuteScalar(sql, [("@VIDEOID", cit.id), ("@FILENAME", cit.filename)]);
                         }
                         else
                         {
                             sql = "UPDATE DRAFTSHORTS SET VIDEOID = @VIDEOID WHERE ID = @ID AND FILENAME = @FILENAME";
-                            using (var connection = new FbConnection(connectionString))
-                            {
-                                connection.Open();
-                                using (var command = new FbCommand(sql, connection))
-                                {
-                                    command.Parameters.Clear();
-                                    command.Parameters.AddWithValue("@ID", id);
-                                    command.Parameters.AddWithValue("@FILENAME", cit.filename);
-                                    command.Parameters.AddWithValue("@VIDEOID", cit.id);
-                                    command.ExecuteNonQuery();
-                                }
-                                connection.Close();
-                            }
+                            connectionString.ExecuteScalar(sql, [("@ID", id), ("@VIDEOID", cit.id), ("@FILENAME", cit.filename)]);
                         }
                     }
                 }
@@ -2146,15 +1793,7 @@ namespace VideoGui
                             {
                                 int uploaded = 0;
                                 string sql = "select count(Id) from UPLOADSRECORD WHERE UPLOAD_DATE = @P0 AND UPLOADTYPE = 1";
-                                using (var connection = new FbConnection(connectionString))
-                                {
-                                    connection.Open();
-                                    using (var command = new FbCommand(sql, connection))
-                                    {
-                                        command.Parameters.AddWithValue("@P0", DateTime.Now.Date);
-                                        uploaded = command.ExecuteScalar().ToInt(0);
-                                    }
-                                }
+                                uploaded = connectionString.ExecuteScalar(sql, [("@P0", DateTime.Now.Date)]).ToInt(0);
                                 MaxUploads = eventdef.Max;
                                 if (uploaded < MaxUploads)
                                 {
@@ -2166,15 +1805,7 @@ namespace VideoGui
                             {
                                 int uploaded = 0;
                                 string sql = "select count(Id) from UPLOADSRECORD WHERE UPLOAD_DATE = @P0 AND UPLOADTYPE = 0";
-                                using (var connection = new FbConnection(connectionString))
-                                {
-                                    connection.Open();
-                                    using (var command = new FbCommand(sql, connection))
-                                    {
-                                        command.Parameters.AddWithValue("@P0", DateTime.Now.Date);
-                                        uploaded = command.ExecuteScalar().ToInt(0);
-                                    }
-                                }
+                                uploaded = connectionString.ExecuteScalar(sql, [("@P0", DateTime.Now.Date)]).ToInt(0);
                                 if (uploaded < MaxUploads && !IsUploading &&
                                   (UploadWaitTime == TimeSpan.Zero || UploadWaitTime >= DateTime.Now.TimeOfDay))
                                 {
@@ -2610,26 +2241,13 @@ namespace VideoGui
         {
             try
             {
-                string res = "";
-
-                using (var connection = new FbConnection(connectionString))
+                string sql = "select Destination from ProcessingLog where Source = @P0";
+                object result = connectionString.ExecuteScalar(sql.ToUpper(), [("p0", Source)]);
+                if (result is string idxx)
                 {
-                    connection.Open();
-                    string sql = "select Destination from ProcessingLog where Source = @P0";
-                    using (var command = new FbCommand(sql.ToUpper(), connection))
-                    {
-                        command.Parameters.Clear();
-                        command.Parameters.AddWithValue("@p0", Source);
-                        object result = command.ExecuteScalar();
-                        if (result is string idxx)
-                        {
-                            return idxx;
-                        }
-                        else return "";
-                    }
-                    connection.Close();
-                    return res;
+                    return idxx;
                 }
+                return "";
             }
             catch (Exception ex)
             {
@@ -2642,27 +2260,9 @@ namespace VideoGui
         {
             try
             {
-                int res = -1;
-
-                using (var connection = new FbConnection(connectionString))
-                {
-                    connection.Open();
-                    string sql = "insert into ProcessingLog(Source,Destination) values(@P0,@p1) returning Id";
-                    using (var command = new FbCommand(sql.ToUpper(), connection))
-                    {
-                        command.Parameters.Clear();
-                        command.Parameters.AddWithValue("@p0", Source);
-                        command.Parameters.AddWithValue("@p1", Destination);
-                        object result = command.ExecuteScalar();
-                        if (result is int idxx)
-                        {
-                            return idxx;
-                        }
-                        else return -1;
-                    }
-                    connection.Close();
-                    return res;
-                }
+                string sql = "insert into ProcessingLog(Source,Destination) values(@P0,@p1) returning Id";
+                int res = connectionString.ExecuteScalar(sql.ToUpper(), [("p0", Source), ("p1", Destination)]).ToInt(-1);
+                return res;
             }
             catch (Exception ex)
             {
@@ -2674,27 +2274,9 @@ namespace VideoGui
         {
             try
             {
-                int res = -1;
-
-                using (var connection = new FbConnection(connectionString))
-                {
-                    connection.Open();
-                    string sql = "Select Id From ProcessingLog where Source = @P0 and Destination = @p1";
-                    using (var command = new FbCommand(sql.ToUpper(), connection))
-                    {
-                        command.Parameters.Clear();
-                        command.Parameters.AddWithValue("@p0", Source);
-                        command.Parameters.AddWithValue("@p1", Destination);
-                        object result = command.ExecuteScalar();
-                        if (result is int idxx)
-                        {
-                            return idxx;
-                        }
-                        else return -1;
-                    }
-                    connection.Close();
-                    return res;
-                }
+                string sql = "Select Id From ProcessingLog where Source = @P0 and Destination = @p1";
+                int res = connectionString.ExecuteScalar(sql.ToUpper(), [("p0", Source), ("p1", Destination)]).ToInt(-1);
+                return res;
             }
             catch (Exception ex)
             {
@@ -2708,41 +2290,13 @@ namespace VideoGui
         {
             try
             {
-                int res = -1;
-
-                using (var connection = new FbConnection(connectionString))
-                {
-                    connection.Open();
-                    string sql = "update AutoInsert set srcdir=@p1, StartPos=@p2, Duration=@p3, b720p=@p4, bShorts=@p5, bCreateShorts=@p6," +
-                            "bEncodeTrim=@p7, bCutTrim=@p8, bMonitoredSource=@p90, bPersistentJob=@p10, RunId=@p11, IsMuxed = @p12, MuxData = @p13) " +
-                            "where Id = @p99 returning Id";
-                    using (var command = new FbCommand(sql, connection))
-                    {
-                        command.Parameters.Clear();
-                        command.Parameters.AddWithValue("@p0", SourceDir);
-                        command.Parameters.AddWithValue("@p2", StartPos.TotalMilliseconds);
-                        command.Parameters.AddWithValue("@p3", Duration.TotalMilliseconds);
-                        command.Parameters.AddWithValue("@p4", Is720p);
-                        command.Parameters.AddWithValue("@p5", IsShorts);
-                        command.Parameters.AddWithValue("@p6", IsCreateShorts);
-                        command.Parameters.AddWithValue("@p7", IsEncodeTrim);
-                        command.Parameters.AddWithValue("@p8", IsCutTrim);
-                        command.Parameters.AddWithValue("@p9", IsMonitoredSource);
-                        command.Parameters.AddWithValue("@p10", IsPersisentJob);
-                        command.Parameters.AddWithValue("@p11", CurrentDbId);
-                        command.Parameters.AddWithValue("@p12", ismuxed);
-                        command.Parameters.AddWithValue("@p13", muxdata);
-                        command.Parameters.AddWithValue("@p99", idx);
-                        object result = command.ExecuteScalar();
-                        if (result is int idxx)
-                        {
-                            return idxx;
-                        }
-                        else return -1;
-                    }
-                    connection.Close();
-                    return res;
-                }
+                string sql = "update AutoInsert set srcdir=@p1, StartPos=@p2, Duration=@p3, b720p=@p4, bShorts=@p5, bCreateShorts=@p6," +
+                           "bEncodeTrim=@p7, bCutTrim=@p8, bMonitoredSource=@p90, bPersistentJob=@p10, RunId=@p11, IsMuxed = @p12, MuxData = @p13) " +
+                           "where Id = @p99 returning Id";
+                int res = connectionString.ExecuteScalar(sql, [("p1", SourceDir), ("p2", StartPos.TotalMilliseconds), ("p3", Duration.TotalMilliseconds),
+                    ("p4", Is720p), ("p5", IsShorts), ("p6", IsCreateShorts), ("p7", IsEncodeTrim), ("p8", IsCutTrim), ("p9", IsMonitoredSource),
+                    ("p10", IsPersisentJob), ("p11", CurrentDbId), ("p12", ismuxed), ("p13", muxdata), ("p99", idx)]).ToInt(-1);
+                return res;
             }
             catch (Exception ex)
             {
@@ -2755,28 +2309,9 @@ namespace VideoGui
         {
             try
             {
-                int res = -1;
-
-                using (var connection = new FbConnection(connectionString))
-                {
-                    connection.Open();
-
-                    string sql = "update AutoInsertHistory set DELETIONDATE=@p0 where Id = @p1 returning Id";
-                    using (var command = new FbCommand(sql, connection))
-                    {
-                        command.Parameters.Clear();
-                        command.Parameters.AddWithValue("@p0", DELETIONDATE);
-                        command.Parameters.AddWithValue("@p1", idx);
-                        object result = command.ExecuteScalar();
-                        if (result is int idxx)
-                        {
-                            return idxx;
-                        }
-                        else return -1;
-                    }
-
-                    return res;
-                }
+                string sql = "update AutoInsertHistory set DELETIONDATE=@p0 where Id = @p1 returning Id";
+                int res = connectionString.ExecuteScalar(sql.ToUpper(), [("p0", DELETIONDATE), ("p1", idx)]).ToInt(-1);
+                return res;
             }
             catch (Exception ex)
             {
@@ -2793,53 +2328,27 @@ namespace VideoGui
             try
             {
                 int res = -1;
-                using (var connection = new FbConnection(connectionString))
-                {
-                    connection.Open();
-                    string sql = "INSERT INTO AUTOINSERT(SRCDIR, DESTFNAME, STARTPOS, DURATION, B720P, BSHORTS, BCREATESHORTS, BENCODETRIM, " +
+                string sql = "INSERT INTO AUTOINSERT(SRCDIR, DESTFNAME, STARTPOS, DURATION, B720P, BSHORTS, BCREATESHORTS, BENCODETRIM, " +
                             "BCUTTRIM, BMONITOREDSOURCE, BPERSISTENTJOB, RUNID, TWITCHDATE, TWITCHTIME, RTMP, BTWITCHSTREAM, ISMUXED,MUXDATA) " +
                             "VALUES(@P0,@P1,@P2,@P3,@P4,@P5,@P6,@P7,@P8,@P9,@P10,@P11,@P12,@P13,@P14,@P15,@P16,@P17) RETURNING ID";
-                    DateTime _TwitchSchedule = DateTime.Now.AddYears(-500);
-                    DateOnly _TwichDate = DateOnly.FromDateTime(_TwitchSchedule);
-                    TimeOnly _TwichTime = TimeOnly.FromDateTime(_TwitchSchedule);
+                DateTime _TwitchSchedule = DateTime.Now.AddYears(-500);
+                DateOnly _TwichDate = DateOnly.FromDateTime(_TwitchSchedule);
+                TimeOnly _TwichTime = TimeOnly.FromDateTime(_TwitchSchedule);
 
-                    if (TwitchSchedule.HasValue)
-                    {
-                        _TwichDate = DateOnly.FromDateTime(TwitchSchedule.Value);
-                        _TwichTime = TimeOnly.FromDateTime((DateTime)TwitchSchedule.Value);
-                    }
-
-                    using (var command = new FbCommand(sql, connection))
-                    {
-                        command.Parameters.AddWithValue("@P0", SourceDir);
-                        command.Parameters.AddWithValue("@P1", DestinationFName);
-                        command.Parameters.AddWithValue("@P2", StartPos.TotalMilliseconds);
-                        command.Parameters.AddWithValue("@P3", Duration.TotalMilliseconds);
-                        command.Parameters.AddWithValue("@P4", Is720p);
-                        command.Parameters.AddWithValue("@P5", IsShorts);
-                        command.Parameters.AddWithValue("@P6", IsCreateShorts);
-                        command.Parameters.AddWithValue("@P7", IsEncodeTrim);
-                        command.Parameters.AddWithValue("@P8", IsCutTrim);
-                        command.Parameters.AddWithValue("@P9", IsMonitoredSource);
-                        command.Parameters.AddWithValue("@P10", IsPersisentJob);
-                        command.Parameters.AddWithValue("@P11", CurrentDbId);
-                        command.Parameters.AddWithValue("@P12", _TwichDate);
-                        command.Parameters.AddWithValue("@P13", _TwichTime);
-                        command.Parameters.AddWithValue("@P14", RTMP);
-                        command.Parameters.AddWithValue("@P15", IsTwitchStream);
-                        command.Parameters.AddWithValue("@P16", IsMuxed);
-                        command.Parameters.AddWithValue("@P17", MuxData);
-
-                        object result = command.ExecuteScalar();
-                        if (result is int idxx)
-                        {
-                            return idxx;
-                        }
-                        else return -1;
-                    }
-                    connection.Close();
-                    return res;
+                if (TwitchSchedule.HasValue)
+                {
+                    _TwichDate = DateOnly.FromDateTime(TwitchSchedule.Value);
+                    _TwichTime = TimeOnly.FromDateTime((DateTime)TwitchSchedule.Value);
                 }
+
+                res = connectionString.ExecuteScalar(sql, [("p0", SourceDir),
+                    ("p1", DestinationFName), ("p2", StartPos.TotalMilliseconds),
+                    ("p3", Duration.TotalMilliseconds), ("p4", Is720p),
+                    ("p5", IsShorts), ("p6", IsCreateShorts), ("p7", IsEncodeTrim),
+                    ("p8", IsCutTrim), ("p9", IsMonitoredSource), ("p10", IsPersisentJob),
+                    ("p11", CurrentDbId), ("p12", _TwichDate), ("p13", _TwichTime),
+                    ("p14", RTMP), ("p15", IsTwitchStream), ("p16", IsMuxed), ("p17", MuxData)]).ToInt(-1);
+                return res;
             }
             catch (Exception ex)
             {
@@ -2895,19 +2404,19 @@ namespace VideoGui
                 {
 
                     sqlstring = $"SELECT RDB$FIELD_NAME AS FIELD_NAME FROM RDB$RELATION_FIELDS WHERE RDB$RELATION_NAME='AUTOINSERT'AND RDB$FIELD_NAME = '{Fields[i]}';";
-                    var tablename = sqlstring.RunExecuteScalar(connectionString);
+                    var tablename = connectionString.ExecuteScalar(sqlstring);
                     if (tablename is null)
                     {
                         sqlstring = $"ALTER TABLE AUTOINSERT ADD {Fields[i]} {FieldType[i]};";
-                        sqlstring.RunExecuteScalar(connectionString);
+                        connectionString.ExecuteScalar(sqlstring);
                     }
 
                     sqlstring = $"SELECT RDB$FIELD_NAME AS FIELD_NAME FROM RDB$RELATION_FIELDS WHERE RDB$RELATION_NAME='AUTOINSERTHISTORY'AND RDB$FIELD_NAME = '{Fields[i]}';";
-                    var xtablename = sqlstring.RunExecuteScalar(connectionString);
+                    var xtablename = connectionString.ExecuteScalar(sqlstring).ToString();
                     if (xtablename is null)
                     {
                         sqlstring = $"ALTER TABLE AUTOINSERTHISTORY ADD {Fields[i]} {FieldType[i]};";
-                        sqlstring.RunExecuteScalar(connectionString);
+                        connectionString.ExecuteScalar(sqlstring);
                     }
                 }
 
@@ -2999,7 +2508,7 @@ namespace VideoGui
                 connectionString.AddFieldToTable("DESCRIPTIONS", "ISTAG", "SMALLINT", 0);
                 connectionString.CreateTableIfNotExists($"CREATE TABLE RUNNINGID({Id}, ACTIVE SMALLINT)");
                 sqlstring = $"INSERT INTO RUNNINGID(ACTIVE) VALUES(0) RETURNING ID;";
-                int idx = sqlstring.RunExecuteScalar(connectionString, -1);
+                int idx = sqlstring.ExecuteScalar(connectionString).ToInt(-1);
                 CurrentDbId = (idx != -1) ? idx : CurrentDbId;
                 LoadFromDb();
             }
@@ -3013,7 +2522,7 @@ namespace VideoGui
             try
             {
                 string sql = $"DELETE FROM AUTOINSERT WHERE ID = {filename};";
-                int idx = sql.RunExecuteScalar(connectionString, -1);
+                int idx = sql.ExecuteScalar(connectionString).ToInt(-1);
             }
             catch (Exception ex)
             {
@@ -3027,7 +2536,7 @@ namespace VideoGui
                 if (!DoesDeletionFileExist(filename))
                 {
                     string sql = $"delete fromm MonitoredDeletion where DestinationFile = {filename};";
-                    int idx = connectionString.RunExecuteScalar(sql, -1);
+                    int idx = connectionString.ExecuteScalar(sql).ToInt(-1);
                 }
             }
             catch (Exception ex)
@@ -3043,7 +2552,7 @@ namespace VideoGui
                 if (!DoesDeletionFileExist(filename))
                 {
                     string sql = $"insert into MonitoredDeletion(DestinationFile) values({filename});";
-                    int idx = connectionString.RunExecuteScalar(sql.ToUpper(), -1);
+                    int idx = connectionString.ExecuteScalar(sql.ToUpper()).ToInt(-1);
                 }
             }
             catch (Exception ex)
@@ -3056,7 +2565,7 @@ namespace VideoGui
             try
             {
                 string sqlstring = $"select Id from MonitoredDeletion where DestinationFile = {filename}";
-                int idx = connectionString.RunExecuteScalar(sqlstring, -1);
+                int idx = connectionString.ExecuteScalar(sqlstring).ToInt(-1);
                 return (idx != -1) ? true : false;
             }
             catch (Exception ex)
@@ -3071,7 +2580,7 @@ namespace VideoGui
             try
             {
                 string sqlstring = $"select Id from AutoInsert where destfname = {filename}";
-                int idx = connectionString.RunExecuteScalar(sqlstring, -1);
+                int idx = connectionString.ExecuteScalar(sqlstring).ToInt(-1);
                 return (idx != -1) ? true : false;
             }
             catch (Exception ex)
@@ -3195,7 +2704,7 @@ namespace VideoGui
                        "(SELECT LIST(TAGID, ',') FROM TITLETAGS " +
                        " WHERE GROUPID = S.TITLEID) AS LINKEDTITLEIDS, " +
                        " (SELECT LIST(ID,',') FROM DESCRIPTIONS " +
-                       "WHERE TITLETAGID = S.DESCID) AS LINKEDDESCIDS, " +
+                       "WHERE TITLETAGID = S.DESCID) AS LINKEDDESCIDS " +
                        "FROM SHORTSDIRECTORY S" +
                 (index != -1 ? $" WHERE U.ID = {index} " : "");
             }
@@ -3654,10 +3163,6 @@ namespace VideoGui
                 Thread.Sleep(100);
                 SetupTicker();
                 ObservableCollectionFilter = new ObservableCollectionFilters();
-                ObservableCollectionFilter.TitleTagSelectorView.Source = TitleTagsList;
-                ObservableCollectionFilter.TitleTagAvailableView.Source = availableTagsList.OrderBy(s => s.Tag).ToList();
-                ObservableCollectionFilter.TitleTagAvailableView.SortDescriptions.Add(new SortDescription("Tag", ListSortDirection.Ascending));
-                ObservableCollectionFilter.TitleTagAvailableView.IsLiveSortingRequested = true;
 
                 FormResizerEvent = new System.Windows.Forms.Timer();
                 FormResizerEvent.Tick += new EventHandler(FormResizerEvent_Tick);
@@ -4237,21 +3742,7 @@ namespace VideoGui
                                 {
                                     string sql = "DELETE FROM AUTOINSERT WHERE BTWITCHSTREAM = 1 AND SRCDIR = @P1";
                                     string SourceDir = Job.MultiSourceDir;
-                                    using (var connection = new FbConnection(connectionString))
-                                    {
-                                        connection.Open();
-                                        using (var command = new FbCommand(sql.ToUpper(), connection))
-                                        {
-                                            command.Parameters.Clear();
-                                            command.Parameters.AddWithValue("@P1", SourceDir);
-                                            object result = command.ExecuteScalar();
-                                            if (result is string idxx)
-                                            {
-
-                                            }
-                                        }
-                                        connection.Close();
-                                    }
+                                    connectionString.ExecuteScalar(sql.ToUpper(), [("p0", SourceDir)]);
                                     break;
                                 }
                                 else continue;
@@ -6391,7 +5882,7 @@ namespace VideoGui
                             if (id != -1)
                             {
                                 sql = $"delete from ProcessingLog where ID = {id}";
-                                sql.ToUpper().RunExecuteScalar(connectionString, -1);
+                                connectionString.ExecuteScalar(sql.ToUpper()).ToInt(-1);
                             }
                             LineNum = 93;
                             id = InsertIntoProcessingLog(SourceFile, DestFile);
@@ -6811,7 +6302,7 @@ namespace VideoGui
                                     $" bMonitoredSource ,bPersistentJob , BTWITCHSTREAM, TWITCHDATE, TWITCHTIME,RUNID,ISMUXED,MUXDATA from AutoInsert where id " +
                                     $"= {jo.DeletionFileHandle} RETURNING ID;";
 
-                                int idxx = sql.RunExecuteScalar(connectionString, -1);
+                                int idxx = sql.ExecuteScalar(connectionString).ToInt(-1);
                                 // Update DeletionDate
                                 if (idxx != -1)
                                 {
@@ -7167,7 +6658,7 @@ namespace VideoGui
                             }
                         }
                         string SQL = $"Delete from ProcessingLog where Source = {SourceFileIs};";
-                        SQL.ToUpper().RunExecuteScalar(connectionString, -1);
+                        connectionString.ExecuteScalar(SQL.ToUpper()).ToInt(-1);
                         if (!isTwitchStream && !IsMuxed)
                         {
                             if ((IsNVM) && (DoesDeletionFileExist(Path.GetFileName(destdir))))
@@ -8644,7 +8135,7 @@ namespace VideoGui
                     directoryTitleDescEditor.Close();
                     directoryTitleDescEditor = null;
                 }
-                directoryTitleDescEditor = new DirectoryTitleDescEditor(ModuleCallback, directoryEditorOnFinish, ConnnectLists);
+                directoryTitleDescEditor = new DirectoryTitleDescEditor(ModuleCallback, directoryEditorOnFinish);
                 directoryTitleDescEditor.ShowActivated = true;
                 Hide();
                 directoryTitleDescEditor.Show();

@@ -77,7 +77,7 @@ namespace VideoGui
                 return false;
             }
         }
-        public static bool ContainsAll(this string   data, string[] containsall)
+        public static bool ContainsAll(this string data, string[] containsall)
         {
             bool res = false;
             res = containsall.All(s => data.Contains(s));
@@ -362,7 +362,7 @@ namespace VideoGui
             return res;
         }
 
-       
+
         public static void SetURL(this WebView2 webview, string URL)
         {
             try
@@ -634,31 +634,28 @@ namespace VideoGui
                 using (var connection = new FbConnection(connectionStr))
                 {
                     connection.Open();
-                    using (var transaction = connection.BeginTransaction())
+                    string tableName = sql.Substring(12, sql.IndexOf("(") - 12);
+                    var sqlx = $"select * from {tableName};";
+                    bool created = true;
+                    using (var command = new FbCommand(sqlx, connection))
                     {
-                        string tableName = sql.Substring(12, sql.IndexOf("(") - 12);
-                        var sqlx = $"select * from {tableName};";
-                        bool created = true;
-                        using (var command = new FbCommand(sqlx, connection, transaction))
+                        try
                         {
-                            try
-                            {
-                                command.ExecuteScalar();
-                            }
-                            catch (Exception exx)
-                            {
-                                created = false;
-                            }
+                            command.ExecuteScalar();
                         }
-                        if (!created)
+                        catch (Exception exx)
                         {
-                            using (var command = new FbCommand(sql, connection, transaction))
-                            {
-                                command.ExecuteScalar();
-                            }
-                            transaction.Commit();
+                            created = false;
                         }
                     }
+                    if (!created)
+                    {
+                        using (var command = new FbCommand(sql, connection))
+                        {
+                            command.ExecuteScalar();
+                        }
+                    }
+
                     connection.Close();
                 }
             }
@@ -668,41 +665,63 @@ namespace VideoGui
             }
         }
 
-        public static FbDataReader ExecuteReader(this string connectionStr, string sql, FbConnection connection)
+        public static void ExecuteReader(this string connectionStr, List<(string, object)>? parameters, string sql, OnFirebirdReader Reader)
         {
             try
             {
-
-                using (var transaction = connection.BeginTransaction())
+                using (var connection = new FbConnection(connectionStr))
                 {
-                    using (var command = new FbCommand(sql, connection, transaction))
+                    connection.Open();
+                    using (var command = new FbCommand(sql, connection))
                     {
-                        return command.ExecuteReader();
+                        parameters?.ForEach(x => command.Parameters.AddWithValue(x.Item1, x.Item2));
+                        using (var cmd = command.ExecuteReader())
+
+                        {
+                            while (cmd.Read())
+                            {
+                                Reader?.Invoke(cmd);
+                            }
+                        }
                     }
+                    connection.Close();
                 }
 
             }
             catch (Exception ex)
             {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
-                return null;
-            }
-        }
-        public static int RunExecuteScalar(this string sql, string connectionStr, int def = -1)
-        {
-            try
-            {
-                var obj = RunExecuteScalar(sql, connectionStr);
-                return (obj is null) ? def : (int)obj;
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
-                return -1;
+                ex.LogWrite($"ExecuteReader {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
             }
         }
 
-        public static object RunExecuteScalar(this string sql, string connectionStr)
+        public static void ExecuteReader(this string connectionStr, string sql, OnFirebirdReader Reader)
+        {
+            try
+            {
+                using (var connection = new FbConnection(connectionStr))
+                {
+                    connection.Open();
+                    using (var command = new FbCommand(sql, connection))
+                    {
+                        using (var cmd = command.ExecuteReader())
+                        {
+                            while (cmd.Read())
+                            {
+                                Reader?.Invoke(cmd);
+                            }
+                        }
+                    }
+                    connection.Close();
+                }
+
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"ExecuteReader {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
+
+        public static object ExecuteScalar(this string connectionStr, string sql, List<(string, object)>? parameters = null)
         {
             try
             {
@@ -712,6 +731,7 @@ namespace VideoGui
                     connection.Open();
                     using (var command = new FbCommand(sql, connection))
                     {
+                        parameters?.ForEach(x => command.Parameters.AddWithValue(x.Item1, x.Item2));
                         res = command.ExecuteScalar();
                     }
                     connection.Close();
@@ -720,10 +740,34 @@ namespace VideoGui
             }
             catch (Exception ex)
             {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+                ex.LogWrite($"ExecuteScalar {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
                 return null;
             }
         }
+
+
+
+        public static void ExecuteNonQuery(this string connectionStr, string sql, List<(string, object)>? parameters = null)
+        {
+            try
+            {
+                using (var connection = new FbConnection(connectionStr))
+                {
+                    connection.Open();
+                    using (var command = new FbCommand(sql, connection))
+                    {
+                        parameters?.ForEach(x => command.Parameters.AddWithValue(x.Item1, x.Item2));
+                        command.ExecuteNonQuery();
+                    }
+                    connection.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"ExecuteNonQuery {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
+
         public static int ExecuteNonQuery(this string sql, string connectionStr)
         {
             try
@@ -743,7 +787,7 @@ namespace VideoGui
             }
             catch (Exception ex)
             {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+                ex.LogWrite($"ExecuteNonQuery {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
                 return 0;
             }
         }

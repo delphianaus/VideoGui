@@ -16,8 +16,6 @@ namespace VideoGui
         public CollectionViewSource HistoricCollectionViewSource = new CollectionViewSource();
         public CollectionViewSource CurrentCollectionViewSource = new CollectionViewSource();
         public CollectionViewSource ImportCollectionViewSource = new CollectionViewSource();
-        public CollectionViewSource TitleTagSelectorView = new CollectionViewSource();
-        public CollectionViewSource TitleTagAvailableView = new CollectionViewSource();
 
         public bool ActiveCurrentCollection = false, ActiveHistoricCollection = false, ImportHistoricCollection = false;
 
@@ -43,28 +41,6 @@ namespace VideoGui
             }
         }
         private int FilterById = -1, FilterByTitleId = -1, FilterBySchedelingNameId = -1;
-        public void SetTitlesTag(int TitleTag)
-        {
-            try
-            {
-                FilterByTitleId = TitleTag;
-                TitleTagSelectorView.View.Refresh();
-                TitleTagAvailableView.View.Refresh();
-                //  unsure if needed TagAvailableView.View.Refresh();
-
-                foreach (TitleTags item in TitleTagSelectorView.View)
-                {
-
-                }
-                if (true)
-                {
-                }
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite($"SetTitlesTag {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
-            }
-        }
         public void SetToTimeSpan(TimeSpan time)
         {
             try
@@ -240,8 +216,6 @@ namespace VideoGui
                 CurrentCollectionViewSource.Filter += new FilterEventHandler(OnCurrentCollectionFilter);
                 HistoricCollectionViewSource.Filter += new FilterEventHandler(OnHistoricCollectionFilter);
                 ImportCollectionViewSource.Filter += new FilterEventHandler(OnImportCollectionFilter);
-                TitleTagAvailableView.Filter += new FilterEventHandler(OnTagTitleAvailableViewFilter);
-                TitleTagSelectorView.Filter += new FilterEventHandler(OnTitleTagViewFilter);
 
                 HistoricCollectionViewSource.IsLiveFilteringRequested = true;
                 CurrentCollectionViewSource.IsLiveFilteringRequested = true;
@@ -282,30 +256,6 @@ namespace VideoGui
             }
         }
 
-        private void OnTagTitleAvailableViewFilter(object sender, FilterEventArgs e)
-        {
-            try
-            {
-                if (e.Item is AvailableTags avtag && TitleTagSelectorView.View is not null)
-                {
-                    bool found = true;
-                    foreach (TitleTags item in TitleTagSelectorView.View)//.Where(s => s.Id == avtag.Id))
-                    {
-                        if (item.GroupId != -1 && item.TagId == avtag.Id)
-                        {
-                            found = false;
-                            break;
-                        }
-                    }
-                    e.Accepted = found;
-                }
-                else e.Accepted = false;
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite($"OnTitleTagAvailableViewFilter {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
-            }
-        }
 
         private void OnImportCollectionFilter(object sender, FilterEventArgs e)
         {

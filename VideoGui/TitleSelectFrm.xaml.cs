@@ -15,8 +15,7 @@ namespace VideoGui
     /// </summary>
     public partial class TitleSelectFrm : Window
     {
-        public bool IsShorts = false;
-        public bool IsClosed = false, IsClosing = false, IsTitleChanged = false;
+        public bool IsShorts = false, IsClosed = false, IsClosing = false, IsTitleChanged = false;
 
         public delegate void ShowEditor();
         public ShowEditor _ShowEditor;
@@ -28,8 +27,7 @@ namespace VideoGui
         public string BaseTitle = "";
 
         bool IsUploadsBuilder = false;
-        public TitleSelectFrm(OnFinish __ShowEditor, databasehook<Object> dbhook,
-            SetLists _SetLists,bool _IsUploadsBuilder = false)
+        public TitleSelectFrm(OnFinish __ShowEditor, databasehook<Object> dbhook,bool _IsUploadsBuilder = false)
         {
             try
             {
@@ -89,26 +87,64 @@ namespace VideoGui
                 ex.LogWrite($"BtnClose_Click {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
             }
         }
-        private void btnAddTag_Click(object sender, RoutedEventArgs e)
+        private void btnRemoveTags_Click(object sender, RoutedEventArgs e)
         {
             try
             {
                 if (txtTitle.Text.Trim() == "") return;
-                List<TitleTags> Tags = new List<TitleTags>();
-                Tags.AddRange(TagsGrp.SelectedItems.Cast<TitleTags>());
-                foreach (var item in Tags)
+                foreach (var st in TagsGrp.SelectedItems.OfType<TitleTags>().ToList())
                 {
-                    var p = new CustomParams_Remove(item.Id);
+                    var p = new CustomParams_Remove(st.Id);
                     int TextLength = txtTitle.Text.Length + p.TitleLength;
                     lblTitleLength.Content = TextLength.ToString();
+
                     dbhookup?.Invoke(this, p);
                     dbhookup?.Invoke(this, new CustomParams_Refresh());
-                    TagsGrp.Items.Refresh();
                 }
             }
             catch (Exception ex)
             {
-                ex.LogWrite($"btnAddTag_Click {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+                ex.LogWrite($"frmTitleEditor_Closing {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
+
+        private void TagAvailable_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            try
+            {
+                if (e.RightButton == MouseButtonState.Pressed)
+                {
+                    e.Handled = true; // Prevent selection change
+                    if (TagsGrp.ContextMenu != null)
+                    {
+                        TagAvailable.ContextMenu.PlacementTarget = TagAvailable;
+                        TagAvailable.ContextMenu.IsOpen = true;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"TagAvailable_PreviewMouseRightButtonDown {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
+
+        private void TagsGrp_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            try
+            {
+                if (e.RightButton == MouseButtonState.Pressed)
+                {
+                    e.Handled = true; // Prevent selection change
+                    if (TagsGrp.ContextMenu != null)
+                    {
+                        TagsGrp.ContextMenu.PlacementTarget = TagsGrp;
+                        TagsGrp.ContextMenu.IsOpen = true;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"TagsGrp_PreviewMouseRightButtonDown {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
             }
         }
 
@@ -141,13 +177,12 @@ namespace VideoGui
             }
         }
 
-        private void btnRemTag_Click(object sender, RoutedEventArgs e)
+        private void btnInsertTags_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                List<AvailableTags> Tags = [.. TagAvailable.SelectedItems.Cast<AvailableTags>()];
                 if (txtTitle.Text.Trim() == "") return;
-                foreach (var item in Tags)
+                foreach (var item in TagAvailable.SelectedItems.OfType<AvailableTags>().ToList())
                 {
                     var p = new CustomParams_InsertWithId(item.Id, TitleId);
                     dbhookup?.Invoke(this, p);
@@ -161,6 +196,9 @@ namespace VideoGui
                     {
                         MessageBox.Show("Title And Tags Exceeds 100 Characters");
                     }
+                    TagsGrp.Items.Refresh();
+                    TagAvailable.Items.Refresh();
+                    dbhookup?.Invoke(this, new CustomParams_Refresh());
                 }
             }
             catch (Exception ex)
@@ -341,7 +379,17 @@ namespace VideoGui
                 ex.LogWrite($"lstTitles_MouseDoubleClick {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
             }
         }
-
+        private void mnuUseAddTags_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                btnInsertTags_Click(sender, e);
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"mnuUseAddTags_Click {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
         private void TagsGrp_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             try
