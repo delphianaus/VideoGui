@@ -1133,7 +1133,7 @@ namespace VideoGui
                                     string rootfolder = key.GetValueStr("UploadPath", @"D:\shorts");
                                     key?.Close();
                                     BaseStrX = rootfolder.Split(@"\").ToList().LastOrDefault();
-                                    string SQL = "INSERT INTO TITLES(DESCRIPTION,ISTAG,GROUPID) @@VALUES(@DESC,@ISTAG,@GROUPID) RETURNING ID;";
+                                    string SQL = "INSERT INTO TITLES(DESCRIPTION,ISTAG,GROUPID) VALUES(@DESC,@ISTAG,@GROUPID) RETURNING ID;";
                                     int id = connectionString.ExecuteScalar(SQL, [("@DESC", BaseStrX),
                                         ("@ISTAG", false), ("@GROUPID", ShortsDirectoryIndex)]).ToInt(-1);
                                     if (id != -1)
@@ -1303,11 +1303,30 @@ namespace VideoGui
                     int index = -1;
                     if (thisForm is TitleSelectFrm frmTitleSelect)
                     {
-                        index = TitlesList.Where(s => s.Id == item.TitleId).FirstOrDefault().Id;
-                        var titletags = TitleTagsList.Where(s => s.GroupId == index).ToList();
-                        List<AvailableTags> availtags = [.. availableTagsList.Where(t => !titletags.Any(tt => tt.TagId == t.Id))];
-                        frmTitleSelect.TagAvailable.ItemsSource = availtags;
-                        frmTitleSelect.TagsGrp.ItemsSource = titletags;
+                        if (TitlesList.Where(s => s.Id == item.TitleId).Count() > 0)
+                        {
+                            index = TitlesList.Where(s => s.Id == item.TitleId).FirstOrDefault().Id;
+                            var titletags = TitleTagsList.Where(s => s.GroupId == index).ToList();
+                            List<AvailableTags> availtags = [.. availableTagsList.Where(t => !titletags.Any(tt => tt.TagId == t.Id))];
+                            frmTitleSelect.TagAvailable.ItemsSource = availtags.OrderBy(s=> s.Tag);
+                            frmTitleSelect.TagsGrp.ItemsSource = titletags;
+                        }
+                        else
+                        {
+                            string SQL = "INSERT INTO TITLES(DESCRIPTION,ISTAG,GROUPID) VALUES(@DESC,@ISTAG,@GROUPID) RETURNING ID;";
+                            int id = connectionString.ExecuteScalar(SQL, [("@DESC", frmTitleSelect.BaseTitle), ("@ISTAG", false),
+                                ("@GROUPID", ShortsDirectoryIndex)]).ToInt(-1);
+                            if (id != -1)
+                            {   
+                                TitlesList.Add(new Titles(id, ShortsDirectoryIndex, frmTitleSelect.BaseTitle, "", false));
+                                item.TitleId = id;
+                                index = TitlesList.Where(s => s.Id == item.TitleId).FirstOrDefault().Id;
+                                var titletags = TitleTagsList.Where(s => s.Id == index).ToList();
+                                List<AvailableTags> availtags = [.. availableTagsList.Where(t => !titletags.Any(tt => tt.TagId == t.Id))];
+                                frmTitleSelect.TagAvailable.ItemsSource = availtags.OrderBy(s => s.Tag);
+                                frmTitleSelect.TagsGrp.ItemsSource = titletags;
+                            }
+                        }
                     }
                 }
             }
@@ -2458,7 +2477,7 @@ namespace VideoGui
                 connectionString.CreateTableIfNotExists(sqlstring);
 
                 sqlstring = $"delete from ProcessingLog where InProcess = 1;";
-                sqlstring.ExecuteNonQuery(connectionString);
+                connectionString.ExecuteNonQuery(sqlstring);
                 sqlstring = $"CREATE TABLE AVAILABLETAGS({Id},TAG VARCHAR(500));";
                 connectionString.CreateTableIfNotExists(sqlstring);
                 sqlstring = $"CREATE TABLE SELECTEDTAGS({Id},SELECTEDTAG INTEGER, GROUPTAGID INTEGER);";
@@ -2508,7 +2527,7 @@ namespace VideoGui
                 connectionString.AddFieldToTable("DESCRIPTIONS", "ISTAG", "SMALLINT", 0);
                 connectionString.CreateTableIfNotExists($"CREATE TABLE RUNNINGID({Id}, ACTIVE SMALLINT)");
                 sqlstring = $"INSERT INTO RUNNINGID(ACTIVE) VALUES(0) RETURNING ID;";
-                int idx = sqlstring.ExecuteScalar(connectionString).ToInt(-1);
+                int idx = connectionString.ExecuteScalar(sqlstring).ToInt(-1);
                 CurrentDbId = (idx != -1) ? idx : CurrentDbId;
                 LoadFromDb();
             }
@@ -8438,7 +8457,23 @@ namespace VideoGui
         {
             try
             {
-
+                if (DirectoryTitleDescEditorFrm is not null)
+                {
+                    if (!DirectoryTitleDescEditorFrm.IsClosed)
+                    {
+                        if (DirectoryTitleDescEditorFrm.IsClosing) DirectoryTitleDescEditorFrm.Close();
+                        while (!DirectoryTitleDescEditorFrm.IsClosed)
+                        {
+                            Thread.Sleep(100);
+                        }
+                        DirectoryTitleDescEditorFrm.Close();
+                        DirectoryTitleDescEditorFrm = null;
+                    }
+                }
+                DirectoryTitleDescEditorFrm = new DirectoryTitleDescEditor(ModuleCallback, directoryEditorOnFinish);
+                DirectoryTitleDescEditorFrm.ShowActivated = true;
+                Hide();
+                DirectoryTitleDescEditorFrm.Show();
 
             }
             catch (Exception ex)

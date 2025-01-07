@@ -165,7 +165,7 @@
             <Button x:Name="btnAppliedSchedule" Content="Upload Schedule" HorizontalAlignment="Center" Height="28" VerticalAlignment="Center" Width="88" RenderTransformOrigin="0.5,0.5" Click="btnAppliedSchedule_Click">
 
             </Button>
-            <Button x:Name="btnYTSchedule" Content="YT Schedule" HorizontalAlignment="Center" Height="28" VerticalAlignment="Center" Width="70" Click="btnYTSchedule_Click"/>
+            <Button x:Name="btnYTSchedule" Content="Uploads Info" HorizontalAlignment="Center" Height="28" VerticalAlignment="Center" Width="70" Click="btnYTSchedule_Click"/>
 
         </StatusBar>
         <CheckBox x:Name="ChkAutoAAC" Content="Auto -&gt; AAC" HorizontalAlignment="Left" Margin="442,0,0,173" VerticalAlignment="Bottom" Width="90" />
