@@ -79,6 +79,7 @@ namespace VideoGui.ffmpeg
         public event ConverterOnProgressEventHandler OnConverterProgress;
         public event ConverterOnSeekEventHandler OnConverterOnSeek;
         public event ConverterOnStoppedEventHandler OnConverterStopped;
+        public event ConverterOnStoppedEventHandler OnConverterDataUpdate;
         public event ConverterOnDataEventHandler OnConverteringData;
 
 
@@ -181,26 +182,12 @@ namespace VideoGui.ffmpeg
                     else if ((mtscnt > 10) && _Is1080p)
                     {
                         cancellation.CancelAfter(TimeSpan.FromSeconds(1));
-                        //List<Process> Processesx = Win32Processes.GetProcessesLockingFile(_src);
-                        //foreach (Process process in Processesx)
-                        // {
-                        //     if (process.MainModule.ModuleName.Contains("ffmpeg"))
-                        //     {
-                        //         process.Kill();
-                        //     }
-                        //     
-                        // }
                         return Task.CompletedTask;
                     }
                 }
                 if (args.Contains("Output #0, null, to") && _Is1080p)
                 {
                     cancellation.CancelAfter(TimeSpan.FromSeconds(1));
-                    //List<Process> Processesx = Win32Processes.GetProcessesLockingFile(_src);
-                    //foreach (Process process in Processesx)
-                    //{
-                    //    process.Kill();
-                    // }
                     return Task.CompletedTask;
                 }
                 if (!args.Contains("Application provided invalid, non monotonically increasing dts to muxer in stream"))
@@ -222,9 +209,6 @@ namespace VideoGui.ffmpeg
         {
             try
             {
-
-
-
                 return Task.CompletedTask;
             }
             catch (Exception ex)
@@ -505,7 +489,7 @@ namespace VideoGui.ffmpeg
                 }
                 _parameterAsstring = "";
                 errn = 4;
-                bool vcopy = false, acopy = false, onseek = false ;
+                bool vcopy = false, acopy = false, onseek = false;
                 if (!IsMuxed)
                 {
                     List<string> argsx = new List<string>();
@@ -828,20 +812,12 @@ namespace VideoGui.ffmpeg
                             {
                                 if (IsLogo && !IsMuxed)
                                 {
+                                    OnConverterDataUpdate?.Invoke(this, _dest.Replace("\"", ""), ProcessID, ExitEvent.ExitCode, ProbeData);
                                     AddLogo();
                                 }
                                 else
                                 {
                                     errn = 12;
-                                    /*if (vcopy || acopy)
-                                    {
-                                    \\    string logfilename = Path.GetFileNameWithoutExtension(_dest);
-                                   \\     logfilename += ".data.txt";
-                                   \\     foreach(string log in ProbeData)
-                                  \\\      {
-                                  \\          log.WriteLog(logfilename);
-                                  \\      }
-                                    }*/
                                     OnConverterStopped?.Invoke(this, _dest.Replace("\"", ""), ProcessID, ExitEvent.ExitCode, ProbeData);
                                 }
                                 break;

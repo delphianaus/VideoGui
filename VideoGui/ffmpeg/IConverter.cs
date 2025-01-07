@@ -19,6 +19,7 @@ namespace VideoGui.ffmpeg
         event ConverterOnStartedEventHandler OnConverterStarted;
         event ConverterOnProgressEventHandler OnConverterProgress;
         event ConverterOnStoppedEventHandler OnConverterStopped;
+        event ConverterOnStoppedEventHandler OnConverterDataUpdate;
         event ConverterOnDataEventHandler OnConverteringData;
         event ConverterOnSeekEventHandler OnConverterOnSeek;
         

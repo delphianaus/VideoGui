@@ -1308,7 +1308,7 @@ namespace VideoGui
                             index = TitlesList.Where(s => s.Id == item.TitleId).FirstOrDefault().Id;
                             var titletags = TitleTagsList.Where(s => s.GroupId == index).ToList();
                             List<AvailableTags> availtags = [.. availableTagsList.Where(t => !titletags.Any(tt => tt.TagId == t.Id))];
-                            frmTitleSelect.TagAvailable.ItemsSource = availtags.OrderBy(s=> s.Tag);
+                            frmTitleSelect.TagAvailable.ItemsSource = availtags.OrderBy(s => s.Tag);
                             frmTitleSelect.TagsGrp.ItemsSource = titletags;
                         }
                         else
@@ -1317,7 +1317,7 @@ namespace VideoGui
                             int id = connectionString.ExecuteScalar(SQL, [("@DESC", frmTitleSelect.BaseTitle), ("@ISTAG", false),
                                 ("@GROUPID", ShortsDirectoryIndex)]).ToInt(-1);
                             if (id != -1)
-                            {   
+                            {
                                 TitlesList.Add(new Titles(id, ShortsDirectoryIndex, frmTitleSelect.BaseTitle, "", false));
                                 item.TitleId = id;
                                 index = TitlesList.Where(s => s.Id == item.TitleId).FirstOrDefault().Id;
@@ -2540,8 +2540,8 @@ namespace VideoGui
         {
             try
             {
-                string sql = $"DELETE FROM AUTOINSERT WHERE ID = {filename};";
-                int idx = sql.ExecuteScalar(connectionString).ToInt(-1);
+                string sql = "DELETE FROM AUTOINSERT WHERE ID = @FILENAME;";
+                int idx = connectionString.ExecuteScalar(sql, [("@FILENAME", filename)]).ToInt(-1);
             }
             catch (Exception ex)
             {
@@ -2554,8 +2554,8 @@ namespace VideoGui
             {
                 if (!DoesDeletionFileExist(filename))
                 {
-                    string sql = $"delete fromm MonitoredDeletion where DestinationFile = {filename};";
-                    int idx = connectionString.ExecuteScalar(sql).ToInt(-1);
+                    string sql = $"delete fromm MonitoredDeletion where DestinationFile = @FILENAME;";
+                    int idx = connectionString.ExecuteScalar(sql, [("@FILENAME", filename)]).ToInt(-1);
                 }
             }
             catch (Exception ex)
@@ -2570,8 +2570,8 @@ namespace VideoGui
             {
                 if (!DoesDeletionFileExist(filename))
                 {
-                    string sql = $"insert into MonitoredDeletion(DestinationFile) values({filename});";
-                    int idx = connectionString.ExecuteScalar(sql.ToUpper()).ToInt(-1);
+                    string sql = "insert into MonitoredDeletion(DestinationFile) values(@FILENAME);";
+                    int idx = connectionString.ExecuteScalar(sql.ToUpper(), [("@FILENAME", filename)]).ToInt(-1);
                 }
             }
             catch (Exception ex)
@@ -2583,8 +2583,8 @@ namespace VideoGui
         {
             try
             {
-                string sqlstring = $"select Id from MonitoredDeletion where DestinationFile = {filename}";
-                int idx = connectionString.ExecuteScalar(sqlstring).ToInt(-1);
+                string sqlstring = "select Id from MonitoredDeletion where DestinationFile = @FILENAME";
+                int idx = connectionString.ExecuteScalar(sqlstring, [("@FILENAME", filename)]).ToInt(-1);
                 return (idx != -1) ? true : false;
             }
             catch (Exception ex)
@@ -2598,8 +2598,8 @@ namespace VideoGui
         {
             try
             {
-                string sqlstring = $"select Id from AutoInsert where destfname = {filename}";
-                int idx = connectionString.ExecuteScalar(sqlstring).ToInt(-1);
+                string sqlstring = $"select Id from AutoInsert where destfname = @FILENAME";
+                int idx = connectionString.ExecuteScalar(sqlstring, [("@FILENAME", filename)]).ToInt(-1);
                 return (idx != -1) ? true : false;
             }
             catch (Exception ex)
@@ -5851,7 +5851,7 @@ namespace VideoGui
                                                      .SetTotalTime(totalseconds)
                                                      .SetSeek(SeekFrom).SetOutputTime(SeekTo)
                                                      .SetMultiModeFile(MMFile)
-                                                     .SetOverlay(@"c:\videogui\logo1.png", job.IsShorts)
+                                                     .SetOverlay(@"c:\videogui\logo1.png", (job.IsShorts && job.IsCreateShorts > 0))
                                                      .SetConcat(job.IsMulti, job.GetCutList())
                                                      .SetMuxing(job.IsMuxed, job.MuxData)
                                                      .UseHardwareAcceleration(_GPUEncode ? HardwareAcceleration : HardwareAccelerator.software, DecoderCodec, Encoder, LockedDeviceID)
@@ -5863,6 +5863,7 @@ namespace VideoGui
                     conversion.OnConverterStopped += new ConverterOnStoppedEventHandler(OnFinished);
                     conversion.OnConverterOnSeek += new ConverterOnSeekEventHandler(OnSeek);
                     conversion.OnConverterStarted += new ConverterOnStartedEventHandler(OnStart);
+                    conversion.OnConverterDataUpdate += new ConverterOnStoppedEventHandler(OnDataUpdate);
                     /*
                      * 
                      * 
@@ -6190,6 +6191,55 @@ namespace VideoGui
                 return -1;
             }
         }
+
+        public void OnDataUpdate(object Sender, string filename, int processid, int ExitCode, List<string> errordetails)
+        {
+
+            int LinePos = 0;
+            try
+            {
+                if (errordetails != null)
+                {
+                    if (ExitCode != 0)
+                    {
+                        errordetails.WriteLog(filename);
+                    }
+                }
+                lock (thisfLock)
+                {
+                    bool found = false, IsMSJ = false, IsNVM = false;
+                    int IsCreateShorts = -1;
+                    foreach (var jo in ProcessingJobs.Where(jo => !jo.Complete && jo.FileNoExt == Path.GetFileNameWithoutExtension(filename)))
+                    {
+                        if (jo.IsMulti)
+                        {
+
+                            string sql = "insert into AutoInsertHistory(srcdir, destfname ,StartPos, Duration , b720p, " +
+                                "bShorts , bCreateShorts, bEncodeTrim ,bCutTrim, bMonitoredSource ,bPersistentJob , " +
+                                "BTWITCHSTREAM, TWITCHDATE, TWITCHTIME,RUNID, ISMUXED,MUXDATA)" +
+                                " select srcdir,destfname ,StartPos, Duration , b720p, bShorts , bCreateShorts, bEncodeTrim ,bCutTrim," +
+                                $" bMonitoredSource ,bPersistentJob , BTWITCHSTREAM, TWITCHDATE, TWITCHTIME,RUNID,ISMUXED,MUXDATA from AutoInsert where id " +
+                                $"= {jo.DeletionFileHandle} RETURNING ID;";
+
+                            int idxx = connectionString.ExecuteScalar(sql).ToInt(-1);
+                            // Update DeletionDate
+                            if (idxx != -1)
+                            {
+                                DateOnly DTS = new DateOnly(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day);
+                                ModifyHistory(idxx, DTS);
+                            }
+                            DeleteRecord(jo.DeletionFileHandle, true);
+                            DeleteFromAutoInsertTable(jo.DeletionFileHandle);
+                            InsertIntoDeletionTable(Path.GetFileName(jo.DestMFile));
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+            }
+        }
         private void OnFinished(object Sender, string filename, int processid, int ExitCode, List<string> errordetails)
         {
             lock (thisfLock)
@@ -6321,7 +6371,7 @@ namespace VideoGui
                                     $" bMonitoredSource ,bPersistentJob , BTWITCHSTREAM, TWITCHDATE, TWITCHTIME,RUNID,ISMUXED,MUXDATA from AutoInsert where id " +
                                     $"= {jo.DeletionFileHandle} RETURNING ID;";
 
-                                int idxx = sql.ExecuteScalar(connectionString).ToInt(-1);
+                                int idxx = connectionString.ExecuteScalar(sql).ToInt(-1);
                                 // Update DeletionDate
                                 if (idxx != -1)
                                 {
@@ -9277,6 +9327,8 @@ namespace VideoGui
             }
         }
         List<(long, long, string)> ComplexData = new List<(long, long, string)>();
+
+
         public unsafe void ProcessMutliFile(string sourcefile, List<(long, long, string)> CutData)
         {
             try
