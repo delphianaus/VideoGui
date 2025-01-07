@@ -17,3 +17,9 @@
 /NotifyIconWpf/bin/x64/Debug/net6.0-windows
 /ToggleClass/bin/x64/Debug/net6.0-windows
 /vg
+/NotifyIconWpf/bin/x64/Release/net6.0-windows/NotifyIconWpf.dll
+/NotifyIconWpf/bin/x64/Release/net6.0-windows/NotifyIconWpf.pdb
+/ToggleClass/bin/x64/Release/net6.0-windows/ToggleClass.dll
+/ToggleClass/bin/x64/Release/net6.0-windows/ToggleClass.pdb
+/VideoGui/bin/x64/Release/net8.0-windows
+/VideoGui/Properties/PublishProfiles/FolderProfile.pubxml.user
