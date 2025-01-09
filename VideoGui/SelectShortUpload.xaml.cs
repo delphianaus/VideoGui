@@ -272,7 +272,7 @@ namespace VideoGui
                 return "";
             }
         }
-        
+
 
         private void doOnFinish(int id)
         {
@@ -292,7 +292,7 @@ namespace VideoGui
                     filesdone.AddRange(scraperModule.ScheduledOk);
                     int Uploaded = scraperModule.TotalScheduled;
                     int shortsleft = GetFileCount(rootfolder);
-                    if (!Exc && shortsleft > 0 && Uploaded < txtTotalUploads.Text.ToInt() && ChkUploadTest.IsChecked == true)
+                    if (!Exc && shortsleft > 0 && Uploaded < txtTotalUploads.Text.ToInt())
                     {
                         int Maxuploads = (txtTotalUploads.Text != "") ? txtTotalUploads.Text.ToInt(100) : 100;
                         int UploadsPerSlot = (txtMaxUpload.Text != "") ? txtMaxUpload.Text.ToInt(5) : 5;
@@ -349,36 +349,16 @@ namespace VideoGui
                     {
                         Maxuploads = lblShortNo.Content.ToInt();
                     }
-                    if (!ChkUploadTest.IsChecked.Value)
-                    {
-                        if (webviewDebug is not null)
-                        {
-                            if (webviewDebug.IsClosing) webviewDebug.Close();
-                            while (!webviewDebug.IsClosed)
-                            {
-                                Thread.Sleep(100);
-                            }
-                            webviewDebug.Close();
-                            webviewDebug = null;
-                        }
-                        webviewDebug = new WebViewDebug(WebViewDebugOnFinish, gUrl);
-                        while (!webviewDebug.Ready)
-                        {
-                            Thread.Sleep(100);
-                        }
-                        scraperModule = new ScraperModule(dbInit, doOnFinish, gUrl, webviewDebug.GetWebView());
-                    }
-                    else if (btnEditTitle.IsChecked.Value && btnEditDesc.IsChecked.Value)
-                    {
-                        scraperModule = new ScraperModule(dbInit, doOnFinish, gUrl, Maxuploads, UploadsPerSlot);
-                    }
+
+                    scraperModule = new ScraperModule(dbInit, doOnFinish, gUrl, Maxuploads, UploadsPerSlot);
+
                     scraperModule.ShowActivated = true;
                     Hide();
-                    Process[] webView2Processes = Process.GetProcessesByName("MicrosoftEdgeWebview2");
-                    foreach (Process process in webView2Processes)
-                    {
-                        process.Kill();
-                    }
+                    // Process[] webView2Processes = Process.GetProcessesByName("MicrosoftEdgeWebview2");
+                    // foreach (Process process in webView2Processes)
+                    //  {
+                    //       process.Kill();
+                    //   }
                     scraperModule.Show();
                 }
             }
@@ -561,7 +541,7 @@ namespace VideoGui
                 string uploadsnumber = key.GetValueStr("UploadNumber", "5");
                 string MaxUploads = key.GetValueStr("MaxUploads", "100");
                 key?.Close();
-                ConnnectLists?.Invoke(3);
+                //ConnnectLists?.Invoke(3);
                 var p = new CustomParams_GetConnectionString();
                 dbInit?.Invoke(this, p);
                 txtsrcdir.Text = (rootfolder != "" && Directory.Exists(rootfolder)) ? rootfolder : txtsrcdir.Text;

@@ -1,8 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <PropertyGroup Label="Globals">
+    <WebView2LoaderPreference>Static</WebView2LoaderPreference>
+  </PropertyGroup>
+
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-	  <TargetFramework>net8.0-windows</TargetFramework>
+	  <TargetFramework>net9.0-windows10.0.17763.0</TargetFramework>
 
     <UseWPF>true</UseWPF>
     <StartupObject>VideoGui.App</StartupObject>
@@ -79,14 +83,14 @@
 
   <ItemGroup>
     <PackageReference Include="AsyncAwaitBestPractices" Version="9.0.0" />
-    <PackageReference Include="CliWrap" Version="3.6.7" />
+    <PackageReference Include="CliWrap" Version="3.7.0" />
     <PackageReference Include="DotNetProjects.Extended.Wpf.Toolkit" Version="5.0.124" />
     <PackageReference Include="FirebirdSql.Data.FirebirdClient" Version="10.3.2" />
     <PackageReference Include="FolderBrowserEx" Version="1.0.1" />
     <PackageReference Include="Google.Apis" Version="1.68.0" />
     <PackageReference Include="Google.Apis.Auth" Version="1.68.0" />
-    <PackageReference Include="Google.Apis.YouTube.v3" Version="1.68.0.3624" />
-    <PackageReference Include="HtmlAgilityPack" Version="1.11.71" />
+    <PackageReference Include="Google.Apis.YouTube.v3" Version="1.68.0.3653" />
+    <PackageReference Include="HtmlAgilityPack" Version="1.11.72" />
     <PackageReference Include="MediaInfo.Wrapper.Core" Version="21.9.3" />
     <PackageReference Include="Microsoft.AspNet.WebApi.Client" Version="6.0.0" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
@@ -101,7 +105,7 @@
     <PackageReference Include="System.Management" Version="9.0.0" />
     <PackageReference Include="System.Net.Http" Version="4.3.4" />
     <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
-    <PackageReference Include="WindowsAPICodePackShellExtensions" Version="8.0.6" />
+    <PackageReference Include="WindowsAPICodePackShellExtensions" Version="8.0.8" />
     <ProjectReference Include="..\ToggleClass\ToggleClass.csproj" />
     <ProjectReference Include="..\NotifyIconWpf\NotifyIconWpf.csproj" />
 
