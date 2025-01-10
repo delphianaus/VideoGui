@@ -300,14 +300,25 @@ namespace VideoGui
                 string np = Path.GetFileName(shortsfile);
                 np = np.Replace("(shorts_logo)", "").Replace("(shorts)", "").Replace(".mp4", "").Trim();
                 string subp = Path.Combine(dir, np);
+                RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                string ShortsDirectory = key.GetValueStr("ShortsDirectory", @"d:\Shorts\");
+                key?.Close();
+                if (!ShortsDirectory.EndsWith(@"\"))
+                {
+                    ShortsDirectory = ShortsDirectory + @"\";
+                }    
+                string ndo = subp.Split(@"\").ToList().LastOrDefault();
+                string newout = Path.Combine(ShortsDirectory, ndo);
+
                 List<int> list = new List<int>();
                 for (int i2 = 0; i2 < NumberShorts - 1; i2++)
                 {
                     list.Add(i2 + 1);
                 }
+                Directory.CreateDirectory(Path.Combine(newout));
                 for (int px = 0; px < r; px++)
                 {
-                    Directory.CreateDirectory(Path.Combine(subp, (px + 1).ToString()));
+                    Directory.CreateDirectory(Path.Combine(newout, (px + 1).ToString()));
                 }
 
                 int cp = 0;
@@ -320,7 +331,7 @@ namespace VideoGui
                     }
                     else cp = 1;
                     int iir = rnd.Next(list.Count);
-                    string destDir = Path.Combine(subp, "" + (cp), $"{list[iir].ToInt().ToString("X")}.mp4");
+                    string destDir = Path.Combine(newout, "" + (cp), $"{list[iir].ToInt().ToString("X")}.mp4");
                     string oldfile = Path.Combine(subp, $"{list[iir]}.mp4");
                     if (oldfile != destDir)
                     {
@@ -328,10 +339,12 @@ namespace VideoGui
                     }
                     list.RemoveAt(iir);
                 }
-                string LastFile = Directory.EnumerateFiles(subp, "*.mp4", SearchOption.TopDirectoryOnly).ToList().FirstOrDefault();
+               
+                string LastFile = Directory.EnumerateFiles(subp, "*.mp4", SearchOption.TopDirectoryOnly).ToList().FirstOrDefault(); 
+                
                 if (File.Exists(LastFile))
                 {
-                    List<string> dirs = Directory.EnumerateDirectories(subp).ToList();
+                    List<string> dirs = Directory.EnumerateDirectories(newout).ToList();
                     int mx, MaxNumber = 0;
                     string dirp = dirs.FirstOrDefault()?.ToString();
                     if (Directory.Exists(dirp))
@@ -350,10 +363,14 @@ namespace VideoGui
                     }
                     string gp = Path.GetFileNameWithoutExtension(LastFile);
                     string ext = Path.GetExtension(LastFile);
-                    string destDir = Path.Combine(subp, DirectoryToUse, $"{gp.ToInt().ToString("X")}{ext}");
+                    string destDir = Path.Combine(newout, DirectoryToUse, $"{gp.ToInt().ToString("X")}{ext}");
                     File.Move(LastFile, destDir);
                 }
-                MessageBox.Show("Shorts Created");
+                if (Directory.EnumerateFiles(subp, "*.mp4", SearchOption.AllDirectories).ToList().Count() == 0)
+                {
+                    Directory.Delete(subp, true);   
+                }
+                
             }
             catch (Exception ex)
             {

@@ -90,7 +90,7 @@ namespace VideoGui
     public partial class ScraperModule : Window
     {
         object lockobj = new object();
-        int MaxNodes = -1, MaxUploads = 0, recs = 0, gmaxrecs = 0, files = 0, max = 0, SlotsPerUpload = 0;
+        int MaxNodes = -1, MaxUploads = 0, recs = 0, gmaxrecs = 0, files = 0, max = 0, SlotsPerUpload = 0, ScheduleMax = 0;
         bool EditDone = false, btndone = false;
         bool ExitDialog = false, HasExited = false;
         public List<string> ScheduledOk = new List<string>();
@@ -196,7 +196,7 @@ namespace VideoGui
             }
         }
         public ScraperModule(databasehook<object> _dbInit, OnFinishId _OnFinish, string _Default_url,
-            Nullable<DateTime> Start, Nullable<DateTime> End, List<ListScheduleItems> _listSchedules, int _eventid)
+            Nullable<DateTime> Start, Nullable<DateTime> End, int MaxUoploads, List<ListScheduleItems> _listSchedules, int _eventid)
         {
             try
             {
@@ -207,6 +207,7 @@ namespace VideoGui
                 ReleaseEndDate = End;
                 DoOnFinish = _OnFinish;
                 DefaultUrl = _Default_url;
+                ScheduleMax = MaxUoploads;
                 IsDashboardMode = true;
                 dbInitializer = _dbInit;
                 InitializeComponent();
@@ -2267,18 +2268,10 @@ namespace VideoGui
             {
                 if (webAddressBuilder is not null)
                 {
-                    if (ScraperType == EventTypes.ShortsSchedule && directshortsScheduler is null)
+                    if (ScraperType == EventTypes.ShortsSchedule && directshortsScheduler is null && ReleaseDate.HasValue && ReleaseEndDate.HasValue)
                     {
-                        DateTime StartDate = ReleaseDate.HasValue ? ReleaseDate.Value : DateTime.Now;
-                        DateTime CDate = StartDate.Date.AddDays(1);
-                        if (ReleaseDate.HasValue && !ReleaseEndDate.HasValue)
-                        {
-                            DateOnly DTP = DateOnly.FromDateTime(StartDate.Date);
-                            CDate = DTP.ToDateTime(listSchedules.LastOrDefault().End);
-                        }
-                        DateTime EndDate = ReleaseEndDate.HasValue ? ReleaseEndDate.Value : CDate;
                         directshortsScheduler = new DirectshortsScheduler(() => { Show(); }, DoOnScheduleComplete, listSchedules,
-                            StartDate, EndDate, DoReportSchedule, 100);
+                            ReleaseDate.Value, ReleaseEndDate.Value, DoReportSchedule, ScheduleMax);
                     }
                     //string URL = webAddressBuilder.AddFiltersByDRAFT_UNLISTED(false).Finalize().Address;
                     if (DefaultUrl is not null && DefaultUrl != "")

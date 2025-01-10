@@ -145,7 +145,7 @@ namespace VideoGui
         double frames, LRF, RRF, LLC, RLC;
         DateTime totaltimeprocessed = DateTime.Now;
         object lookuplocked = new object();
-        int SelectedTagId = -1, MaxUploads = -1, TitleId = -1, DescId = -1;
+        int SelectedTagId = -1, MaxUploads = -1, TitleId = -1, DescId = -1, SchMaxUploads = 0;
         bool IsUploading = false, SystemSetup = false, InTray = false, ffmpegdone = false, processing = false;
         private System.Object thisLock = new Object();
         private Object thisfLock = new Object();
@@ -316,7 +316,8 @@ namespace VideoGui
             }
         }
 
-        public void ShowScraper()
+        public void ShowScraper(Nullable<DateTime> startdate = null, Nullable<DateTime> enddate = null, 
+            List<ListScheduleItems> _listSchedules = null, int SchMaxUploads = 100, int _eventid = 0)
         {
             try
             {
@@ -346,7 +347,7 @@ namespace VideoGui
                 int MaxShorts = MaxUploads.ToInt(80);
                 int MaxPerSlot = uploadsnumber.ToInt(100);
                 scraperModule = new ScraperModule(ModuleCallback, FinishScraper,
-                    gUrl, MaxShorts, MaxPerSlot);
+                    gUrl, startdate, enddate, SchMaxUploads , _listSchedules, _eventid);
                 Hide();
                 scraperModule.ShowActivated = true;
                 scraperModule.Show();
@@ -2142,7 +2143,7 @@ namespace VideoGui
                         WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
                         string gUrl = webAddressBuilder.AddFilterByDraftShorts().Address;
                         scraperModule = new ScraperModule(ModuleCallback, ShortsScheduler_OnFinish,
-                            gUrl, Start, End, ScheduleListItems, eventdef.Id);//, false, true, 0, 0);
+                            gUrl, Start, End, SchMaxUploads, ScheduleListItems, eventdef.Id);//, false, true, 0, 0);
                         scraperModule.ShowActivated = true;
                     }
 
@@ -8412,8 +8413,11 @@ namespace VideoGui
         {
             try
             {
-
-                ShowScraper();
+                Nullable<DateTime> startdate = DateTime.Now, enddate = DateTime.Now.AddHours(10);
+                List<ListScheduleItems> listSchedules2 = new();   
+                int _eventid = 0;
+                SchMaxUploads = 100;
+                ShowScraper(startdate, enddate,  listSchedules2,SchMaxUploads, _eventid);
             }
             catch (Exception ex)
             {
