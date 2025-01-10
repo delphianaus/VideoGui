@@ -68,6 +68,7 @@ using Nancy;
 using FirebirdSql.Data.Isql;
 using Google.Apis.YouTube.v3.Data;
 using static System.Windows.Forms.LinkLabel;
+using WinRT.Interop;
 
 namespace VideoGui
 {
@@ -194,8 +195,8 @@ namespace VideoGui
                 ex.LogWrite($"Constructor Scraper.Schedule {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-        public ScraperModule(databasehook<object> _dbInit, OnFinishId _OnFinish, string _Default_url, Nullable<DateTime> Start,
-            Nullable<DateTime> End, List<ListScheduleItems> _listSchedules, int _eventid)
+        public ScraperModule(databasehook<object> _dbInit, OnFinishId _OnFinish, string _Default_url,
+            Nullable<DateTime> Start, Nullable<DateTime> End, List<ListScheduleItems> _listSchedules, int _eventid)
         {
             try
             {
@@ -1196,6 +1197,7 @@ namespace VideoGui
                 return true;
             }
         }
+        bool WaitingFileName = false;
         private void ProcessNode(HtmlDocument doc, HtmlNode targetSpan, object sender = null)
         {
             try
@@ -1288,7 +1290,27 @@ namespace VideoGui
                             Nullable<DateTime> dateTime = null;
                             if (ScraperType == EventTypes.ShortsSchedule)
                             {
-                                directshortsScheduler?.ScheduleVideo(Id, Title, true);
+                                // grab video filename. await till its got it.
+                                string gUrl2 = $"https://studio.youtube.com/video/{Id}/edit";
+                                WaitingFileName = true;
+                                wv2A10.NavigationCompleted += wv2_NavigationCompleted_GetFileName;
+                                wv2A10.Source = new Uri(gUrl2);
+                                while (WaitingFileName)
+                                {
+                                    Thread.Sleep(200);
+                                    System.Windows.Forms.Application.DoEvents();
+                                    var cys = new CancellationTokenSource();
+                                    cys.CancelAfter(TimeSpan.FromMilliseconds(200));
+                                    while (!cys.IsCancellationRequested)
+                                    {
+                                        Thread.Sleep(20);
+                                        System.Windows.Forms.Application.DoEvents();
+                                    }
+                                }
+                                if (directshortsScheduler is not null)
+                                {
+                                    directshortsScheduler.ScheduleVideo(Id, Title, Desc, false);
+                                }
                             }
                             else
                             {
@@ -1358,6 +1380,7 @@ namespace VideoGui
             }
 
         }
+
         private async Task btnNext_Task(object sender)
         {
             try
@@ -1477,6 +1500,9 @@ namespace VideoGui
                 ex.LogWrite($"ProcessWV2 {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
+
+
+
 
 
         private async void ProcessWV2(string html, object sender)
@@ -1652,6 +1678,135 @@ namespace VideoGui
                 ex.LogWrite($"ProcessWebView {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
         }
+
+        private async void ProcessWebView_Filename(object sender)
+        {
+            try
+            {
+                if (!Dispatcher.CheckAccess())
+                {
+                    ProcessWebView_Filename(sender);
+                    return;
+                }
+                int Id = (sender as WebView2).Name.Replace("wv2A", "").ToInt(-1);
+                string source = (sender as WebView2).Source.AbsoluteUri.ToString(), IntId = "";
+                int p1 = source.IndexOf("video/"), p2 = source.IndexOf("/edit");
+                if (p1 != -1 && p2 != -1)
+                {
+                    IntId = source.Substring(p1 + 6, p2 - p1 - 6);
+                }
+                var task = (sender as WebView2).ExecuteScriptAsync("document.body.innerHTML");
+                task.ContinueWith(x => { ProcessHTML_Filename(x.Result, Id, IntId, sender); },
+                    TaskScheduler.FromCurrentSynchronizationContext());
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"ProcessWebView {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
+            }
+        }
+
+        private void ProcessHTML_Filename(string html, int id, string IntId, object sender)
+        {
+            try
+            {
+                string filename = "";
+                if (html is not null)
+                {
+                    string ehtml = Regex.Unescape(html);
+                    if (ehtml is not null && ehtml != "")
+                    {
+                        if (ehtml.Contains(IntId))
+                        {
+                            string Search = "div id=\"original-filename\" class=\"value style-scope ytcp-video-info\">";
+                            if (ehtml.Contains("div id=\"original-filename\" class=\"value style-scope ytcp-video-info\">"))
+                            {
+                                int index = ehtml.IndexOf("div id=\"original-filename\" class=\"value style-scope ytcp-video-info\">");
+                                html = ehtml.Substring(index + Search.Length, 1500);
+                                if (html.Contains('<'))
+                                {
+                                    index = html.IndexOf("<");
+                                    html = html[..(index - 1)];
+                                    filename = html.Replace("\n", "").Replace("\r", "").Trim();
+                                    if (filename.Contains("_") && IsVideoLookup && ScraperType == EventTypes.UploadTest)
+                                    {
+                                        string idp = filename.Split("_").ToArray<string>().ToList().LastOrDefault().Trim();
+                                        if (idp is not null && idp != "")
+                                        {
+                                            int TitleId = -1;
+                                            int DescId = -1;
+                                            int Id = -1;
+                                            var p1 = new CustomParams_GetConnectionString();
+                                            dbInitializer?.Invoke(this, p1);
+                                            string connectionStr = p1.ConnectionString;
+                                            string sql = $"SELECT * FROM SHORTSDIRECTORY WHERE ID = {idp}";
+                                            connectionStr.ExecuteReader(sql, (FbDataReader r) =>
+                                            {
+                                                Id = (r["ID"] is Int32 i) ? i : -1;
+                                                TitleId = (r["TITLEID"] is Int16 tid) ? tid : -1;
+                                                DescId = (r["DESCID"] is Int16 did) ? did : -1;
+                                            });
+
+                                            string Title = "", Desc = "";
+                                            if (id != -1)
+                                            {
+                                                if (TitleId != -1)
+                                                {
+                                                    var p = new CustomParams_GetTitle(TitleId, Id);
+                                                    dbInitializer?.Invoke(this, p);
+                                                    Title = p.name;
+                                                }
+                                                if (DescId != -1)
+                                                {
+                                                    var p = new CustomParams_GetDesc(DescId, Id);
+                                                    dbInitializer?.Invoke(this, p);
+                                                    Desc = p.name;
+                                                }
+
+                                            }
+                                            WaitingFileName = false;
+                                            return;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if (filename == "")
+                    {
+                        Thread.Sleep(500);
+                        if (wv2Dictionary.ContainsKey(id))
+                        {
+                            var webView2Instance = wv2Dictionary[id];
+                            var task = webView2Instance.ExecuteScriptAsync("document.body.innerHTML");
+                            task.ContinueWith(x => { ProcessHTML_Filename(x.Result, id, IntId, sender); }, TaskScheduler.FromCurrentSynchronizationContext());
+                            return;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"ProcessHTML_Filename {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
+            }
+        }
+
+        private async void wv2_NavigationCompleted_GetFileName(object sender, CoreWebView2NavigationCompletedEventArgs e)
+        {
+            try
+            {
+                if ((e is not null && e.IsSuccess) || e is null)
+                {
+                    NextRecord = false;
+                    ProcessWebView_Filename(sender);
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"wv2_NavigationCompleted_GetFileName {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+        }
+
+
         private async void wv2_NavigationCompleted(object sender, CoreWebView2NavigationCompletedEventArgs e)
         {
             try

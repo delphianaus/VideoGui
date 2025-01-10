@@ -30,7 +30,7 @@ namespace VideoGui
         public DateTime StartDate = DateTime.Now, EndDate = DateTime.Now, LastValidDate = DateTime.Now;
         List<DateTime> AvailableSchedules = new List<DateTime>();
         ReportVideoScheduled DoReportScheduled = null;
-        public int MaxNumberSchedules = 100,  ScheduleNumber = 0;
+        public int MaxNumberSchedules = 100, ScheduleNumber = 0;
         bool setup = false, BeginMode = false, FinishMode = false, FirstTime = false;
         public bool CanSchedule = true;
         public DirectshortsScheduler(OnFinish doOnFinish, OnFinish doOnFinishSchedulesComplete, List<ListScheduleItems> listSchedules,
@@ -102,7 +102,7 @@ namespace VideoGui
                 return "";
             }
         }
-        public async Task<bool> ApplyVideoSchedule(string videoId, string title, DateTime ScheduleAt)
+        public async Task<bool> ApplyVideoSchedule(string videoId, string title, DateTime ScheduleAt, string desc = "")
         {
             try
             {
@@ -141,6 +141,11 @@ namespace VideoGui
                         video.Status.PublishAtDateTimeOffset = publishDateTime;
                         video.Status.PublishAt = publishDateTime;
                         video.Status.PrivacyStatus = "private";
+                        if (desc != "")
+                        {
+                            video.Snippet.Description = desc;
+                            video.Snippet.Title = title;
+                        }
                         var updateRequest = youtubeService.Videos.Update(video, $"Id,snippet,status");
                         if (ScheduleNumber > 118)
                         {
@@ -181,6 +186,30 @@ namespace VideoGui
             }
         }
 
+
+        public void ScheduleVideo(string videoId, string title, string desc, bool UseNewStart)
+        {
+            try
+            {
+                if (CanSchedule)
+                {
+                    if (AvailableSchedules.Count > -1)
+                    {
+                        DoSchedule(videoId, title, UseNewStart, desc);
+                    }
+                    else
+                    {
+                        DateTime newSchedule = AvailableSchedules.FirstOrDefault();
+                        AvailableSchedules.RemoveAt(0);
+                        ApplyVideoSchedule(videoId, title, newSchedule, desc).ConfigureAwait(false);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"ScheduleVideo {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
         public void ScheduleVideo(string videoId, string title, bool UseNewStart)
         {
             try
@@ -205,7 +234,7 @@ namespace VideoGui
             }
         }
 
-        public void DoSchedule(string videoId, string title, bool UseNewStart)
+        public void DoSchedule(string videoId, string title, bool UseNewStart, string desc = "")
         {
             try
             {
