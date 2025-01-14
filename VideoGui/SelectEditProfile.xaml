@@ -14,10 +14,12 @@
                         <StackPanel Height="120" Width="140">
                             <StackPanel Height="40" Margin="0,0,0,0" Orientation="Horizontal" Width="228">
                                 <StackPanel Height="40" Margin="0,0,0,0" HorizontalAlignment="Left" >
-                                    <Label Content="Min" Height="22" Width ="84" HorizontalAlignment="Left" FontSize="14" VerticalAlignment="Top" Padding="0,1,0,2"/>
+                                    <Label Content="Min" Height="22" Width ="84" HorizontalAlignment="Left" 
+                                           FontSize="14" VerticalAlignment="Top" Padding="0,1,0,2"/>
                                 </StackPanel>
                                 <StackPanel Height="40" Margin="0,0,0,0" >
-                                    <TextBox x:Name="txtMin" Text="675K" HorizontalAlignment="Left" Height="28" Margin="0,0,0,0" TextWrapping="Wrap" Width="52" FontSize="14"/>
+                                    <TextBox x:Name="txtMin" Text="675K" HorizontalAlignment="Left" 
+                                             Height="28" Margin="0,0,0,0" TextWrapping="Wrap" Width="52" FontSize="14"/>
                                 </StackPanel>
                             </StackPanel>
                             <StackPanel Height="40" Margin="0,0,0,0" Orientation="Horizontal" Width="228">

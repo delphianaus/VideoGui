@@ -19,8 +19,10 @@ namespace VideoGui
 {
     public class DirectshortsScheduler
     {
-        OnFinish DoOnFinish = null, DoOnFinishSchedulesComplete = null;
-        int ListScheduleIndex = 0, DateIndex = 0;
+        OnFinish DoOnFinish = null;
+        OnFinishBool DoOnFinishSchedulesComplete = null;
+        public int ListScheduleIndex = 0;
+        int DateIndex = 0;
         DateTime LastValidVideoScheduledAt = DateTime.MinValue;
         TimeOnly CurrentTime = new TimeOnly();
         DateOnly CurrentDate = DateOnly.FromDateTime(DateTime.Now);
@@ -33,7 +35,7 @@ namespace VideoGui
         public int MaxNumberSchedules = 100, ScheduleNumber = 0;
         bool setup = false, BeginMode = false, FinishMode = false, FirstTime = false;
         public bool CanSchedule = true;
-        public DirectshortsScheduler(OnFinish doOnFinish, OnFinish doOnFinishSchedulesComplete, List<ListScheduleItems> listSchedules,
+        public DirectshortsScheduler(OnFinish doOnFinish, OnFinishBool doOnFinishSchedulesComplete, List<ListScheduleItems> listSchedules,
             DateTime startDate, DateTime endDate, ReportVideoScheduled doReportSchedule, int maxNumberSchedules)
         {
             try
@@ -72,22 +74,37 @@ namespace VideoGui
                 ex.LogWrite($"DirectshortsScheduler {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
             }
         }
-        private void ProcessNode(string Id, string Title)
+
+        public void ScheduleNewDay(DateTime startDate, DateTime endDate)
         {
             try
             {
-                if (ScheduleNumber < MaxNumberSchedules)
+                StartDate = startDate;
+                EndDate = endDate;
+                DateTime ScheduleStart = DateOnly.FromDateTime(startDate).ToDateTime(ScheduleList.FirstOrDefault().Start);
+                DateTime ScheduleEnd = DateOnly.FromDateTime(EndDate).ToDateTime(ScheduleList.LastOrDefault().End);
+                TimeOnly StartTime = TimeOnly.FromDateTime(startDate);
+                TimeOnly EndTime = TimeOnly.FromDateTime(endDate);
+                if (startDate <= ScheduleStart && endDate <= ScheduleStart)
                 {
-                    ScheduleVideo(Id, Title, false);
+                    BeginMode = true;
                 }
-                else DoOnFinishSchedulesComplete?.Invoke();
+                else if (startDate > endDate && endDate > ScheduleEnd)
+                {
+                    FinishMode = true;
+                }
+                else if (startDate < DateOnly.FromDateTime(startDate).ToDateTime(ScheduleList.FirstOrDefault().Start))
+                {
+                    startDate = DateOnly.FromDateTime(startDate).ToDateTime(ScheduleList.FirstOrDefault().Start);
+                }
+                CurrentTime = TimeOnly.FromDateTime(startDate);
+                CurrentDate = DateOnly.FromDateTime(startDate.Date);
             }
             catch (Exception ex)
             {
-                ex.LogWrite($"ProcessNode {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+                ex.LogWrite($"ScheduleNewDay {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
             }
         }
-
         public string GetExePath()
         {
             try
@@ -210,29 +227,7 @@ namespace VideoGui
                 ex.LogWrite($"ScheduleVideo {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
             }
         }
-        public void ScheduleVideo(string videoId, string title, bool UseNewStart)
-        {
-            try
-            {
-                if (CanSchedule)
-                {
-                    if (AvailableSchedules.Count > -1)
-                    {
-                        DoSchedule(videoId, title, UseNewStart);
-                    }
-                    else
-                    {
-                        DateTime newSchedule = AvailableSchedules.FirstOrDefault();
-                        AvailableSchedules.RemoveAt(0);
-                        ApplyVideoSchedule(videoId, title, newSchedule).ConfigureAwait(false);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite($"ScheduleVideo {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
-            }
-        }
+        
 
         public void DoSchedule(string videoId, string title, bool UseNewStart, string desc = "")
         {

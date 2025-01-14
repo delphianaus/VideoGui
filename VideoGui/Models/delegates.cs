@@ -67,6 +67,7 @@ namespace VideoGui.Models.delegates
     public delegate IEnumerable<string> ListBoxConnect(string name);
     public delegate void OnPercentUpdate(long _percent);
     public delegate void OnFinish();
+    public delegate bool OnFinishBool();
     public delegate void OnFinishId(int id);
 
     public delegate void OnStart(string SourceFileName);

@@ -3174,7 +3174,7 @@ namespace VideoGui
                 LLC = key.GetValueFloat("FisheyeRemoval_LLC", 0.5f);
                 RRF = key.GetValueFloat("FisheyeRemoval_RRF", -0.335f);
                 RLC = key.GetValueFloat("FisheyeRemoval_RLC", 0.097f);
-                txtMaxShorts.Text = key.GetValueStr("MaxShorts", "80");
+                
                 key?.Close();
                 FileQueChecker = new System.Windows.Forms.Timer();
                 FileQueChecker.Tick += new EventHandler(FileQueChecker_Tick);
@@ -7678,20 +7678,13 @@ namespace VideoGui
                     lblEta.Width = this.MeasureString("lblEta", "00:00");
                     lblDuration.Width = this.MeasureString("lblDuration", "00:00");
                     LblTotalTIMEAll.Width = this.MeasureString("LblTotalTIMEAll", "00:00");
-                    ChkDropFormat.Click += new RoutedEventHandler(OnChkButton_Click);
-                    ChkAutoAAC.Click += new RoutedEventHandler(OnChkButton_Click);
                     //ChkResize1080p.Click += new RoutedEventHandler(OnChkButton_Click);
                     //ChkResize1080shorts.Click += new RoutedEventHandler(OnChkButton_Click);
-                    ChkChangeOutputname.Click += new RoutedEventHandler(OnChkButton_Click);
-                    ChkReEncode.Click += new RoutedEventHandler(OnChkButton_Click);
                     Title += " " + Assembly.GetExecutingAssembly().GetName().Version.ToString();
                     X265Output.MouseLeave += new System.Windows.Input.MouseEventHandler(OnFocusChanged);
                     Fisheye.MouseLeave += new System.Windows.Input.MouseEventHandler(OnFocusChanged);
-                    ChkAudioConversion.MouseLeave += new System.Windows.Input.MouseEventHandler(OnFocusChanged);
                     GPUEncode.MouseLeave += new System.Windows.Input.MouseEventHandler(OnFocusChanged);
                     X265Output.MouseLeave += new System.Windows.Input.MouseEventHandler(OnFocusChanged);
-                    cmbH64Target.MouseLeave += new System.Windows.Input.MouseEventHandler(OnFocusChanged);
-                    txtMaxShorts.MouseLeave += new System.Windows.Input.MouseEventHandler(OnFocusChanged);
 
 
                     SystemSetup = false;
@@ -8618,19 +8611,7 @@ namespace VideoGui
 
         }
 
-        private void Cmbaudiomode_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            try
-            {
-                RegistryKey key = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\VideoProcessor", true);
-                key?.SetValue("Audiomode", cmbaudiomode.SelectedIndex);
-                key?.Close();
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
-            }
-        }
+      
 
         private void Window_FocusableChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
@@ -8865,9 +8846,7 @@ namespace VideoGui
                 ConfigurationSettings cd = new ConfigurationSettings();
                 cd.ShowDialog();
                 RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
-                bool LoadedKey = (key != null);
-                usetorrents = (bool)(!LoadedKey || (string)key.GetValue("UseUWebApi", true).ToString() == "True");
-                key.Close();
+                key?.Close();
                 ffmpegready = true;
             }
             catch (Exception ex)
