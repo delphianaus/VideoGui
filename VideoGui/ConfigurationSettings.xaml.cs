@@ -12,11 +12,13 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
+using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using static VideoGui.ffmpeg.Probe.FormatModel;
+using FolderBrowserDialog = FolderBrowserEx.FolderBrowserDialog;
 using Path = System.IO.Path;
 
 
@@ -41,6 +43,9 @@ namespace VideoGui
                 txtMinQ.Text = key.GetValueStr("qmin");//, string.Empty) : string.Empty);
                 txtMaxQ.Text = key.GetValueStr("qmax");// : string.Empty);
                 string defaultdrive = System.IO.Path.GetPathRoot(Process.GetCurrentProcess().MainModule.FileName);
+                this.SetChecked("ChkChangeOutputname", key.GetValueBool("ChangeFileName"));
+                this.SetChecked("ChkDropFormat", key.GetValueBool("DropFormat", true));
+                this.SetChecked("ChkReEncode", key.GetValueBool("reencodefile"));
                 chkmovecompleted.IsChecked = key.GetValueBool("movecompleted", true);
                 ChkMonitorDownloads.IsChecked = key.GetValueBool("MonitorDownloads", true);
                 txtSrc720p.Text = key.GetValueStr("SourceDirectory720p", defaultdrive);
@@ -57,6 +62,9 @@ namespace VideoGui
                 txtDone4KAdobe.Text = key.GetValueStr("DestDirectoryAdobe4k", defaultdrive);
                 txtErrorPath.Text = key.GetValueStr("ErrorDirectory", defaultdrive);
                 txtShortspath.Text = key.GetValueStr("shortsdirectory", defaultdrive);
+                this.SetChecked("ChkAudioConversion", key.GetValueBool("AudioConversionAC3", true));
+                this.SetChecked("ChkAutoAAC", key.GetValueBool("AutoAAC"));
+                this.SetSelectedIndex("cmbaudiomode", key.GetValueInt("Audiomode", 0));
                 txtMin.Text = key.GetValueStr("minbitrate", "675K");
                 txtMax.Text = key.GetValueStr("maxbitrate", "1150K");
                 txtBuffer.Text = key.GetValueStr("buffer", "1200K");
@@ -70,6 +78,7 @@ namespace VideoGui
                 int Max1080p = key.GetValueInt("max1080pthreads", 1);
                 int Max4K = key.GetValueInt("max4Kthreads", 1);
                 int dx = this.GetIndexOf("cmbMaxThreads", Max.ToString());
+                cmbH64Target.SelectedIndex = key.GetValueInt("h264Target",-1);
                 string[] cmbname = { "cmbMaxThreads", "cmbMax1080pThreads", "cmb4KThreads" };
                 foreach (string CmbName in cmbname)
                 {
@@ -222,10 +231,7 @@ namespace VideoGui
                     key.SetValue("DestDirectoryAdobe4k", txtDone4k.Text);
                     key.SetValue("DestDirectory4KAdobe", txtDone4KAdobe.Text);
                     key?.SetValue("ErrorDirectory", txtErrorPath.Text);
-                    key.SetValue("shortsdirectory", txtShortspath.Text );
-                    key?.SetValue("maxthreads", this.GetCmbContentToInt("cmbMaxThreads"));
-                    key?.SetValue("max1080pthreads", this.GetCmbContentToInt("cmbMax1080pThreads"));
-                    key?.SetValue("max4Kthreads", this.GetCmbContentToInt("cmb4KThreads"));
+                  
                     key?.SetValue("movecompleted", chkmovecompleted.IsChecked);
                     key?.Close();
                 }
@@ -412,6 +418,33 @@ namespace VideoGui
             try
             {
                 txtSrc4KAdobe.Text = SelectMasterDir("Select Source 4K Adobe Directory", "SourceDirectory4KAdobe");
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+            }
+        }
+
+        private void grpAppSettings_LostFocus(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (IsLoaded && SettingsLoaded)
+                {
+                    RegistryKey key = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\VideoProcessor", true);
+                    key.SetValue("shortsdirectory", txtShortspath.Text);
+                    key?.SetValue("maxthreads", this.GetCmbContentToInt("cmbMaxThreads"));
+                    key?.SetValue("max1080pthreads", this.GetCmbContentToInt("cmbMax1080pThreads"));
+                    key?.SetValue("max4Kthreads", this.GetCmbContentToInt("cmb4KThreads"));
+                    key?.SetValue("Audiomode", this.GetCmbContentToInt("cmbAudioMode"));
+                    key.SetValue("reencodefile", ChkReEncode.IsChecked);
+                    key.SetValue("DropFormat", ChkDropFormat.IsChecked);
+                    key.SetValue("AudioConversionAC3", ChkAudioConversion.IsChecked);
+                    key.SetValue("AutoAAC", ChkAutoAAC.IsChecked);
+                    key.SetValue("h264Target", cmbH64Target.SelectedIndex);
+                    key.SetValue("ChangeFileName", ChkChangeOutputname.IsChecked);
+                    key.Close();
+                }
             }
             catch (Exception ex)
             {

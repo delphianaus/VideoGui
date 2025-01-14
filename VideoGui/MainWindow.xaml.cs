@@ -3594,6 +3594,8 @@ namespace VideoGui
                 SourceDirectory1080p = key.GetValueStr("SourceDirectory1080p");
                 SourceDirectory720p = key.GetValueStr("SourceDirectory720p");
                 SourceDirectory4K = key.GetValueStr("SourceDirectory4K");
+                bool ChkAutoAAC_IsChecked = key.GetValueBool("ChkAutoAAC", true);
+                bool ChkReEncode_IsChecked = key.GetValueBool("reencodefile", true);
                 SourceDirectoryAdobe4K = key.GetValueStr("SourceDirectory4KAdobe");
                 ErrorDirectory = key.GetValueStr("ErrorDirectory");
                 totaltasks = key.GetValueInt("maxthreads", 10);
@@ -3871,14 +3873,14 @@ namespace VideoGui
 
 
 
-                            if (this.IsChecked("ChkReEncode") && (File.Exists(DestFile)))
+                            if (ChkReEncode_IsChecked && (File.Exists(DestFile)))
                             {
                                 bool doSwap = false;
-                                doSwap = ((this.IsChecked("ChkAutoAAC")) && (!DestFile.EndsWith("[AAC].mkv"))) || doSwap;
-                                doSwap = ((!this.IsChecked("ChkAutoAAC")) && (!DestFile.EndsWith("[NEW].mkv"))) || doSwap;
+                                doSwap = ((ChkAutoAAC_IsChecked) && (!DestFile.EndsWith("[AAC].mkv"))) || doSwap;
+                                doSwap = ((!ChkAutoAAC_IsChecked) && (!DestFile.EndsWith("[NEW].mkv"))) || doSwap;
                                 if (doSwap)
                                 {
-                                    DestFile = this.IsChecked("ChkAutoAAC") ? DestFile.Replace(".mkv", "[AAC].mkv") : DestFile.Replace(".mkv", "[NEW].mkv");
+                                    DestFile = ChkAutoAAC_IsChecked ? DestFile.Replace(".mkv", "[AAC].mkv") : DestFile.Replace(".mkv", "[NEW].mkv");
                                     Job.Title = Path.GetFileName(DestFile);
                                 }
                             }
@@ -4968,16 +4970,15 @@ namespace VideoGui
                 LineNum = 22;
                 this.SetChecked("GPUEncode", key.GetValueBool("GPUEncode", true));
                 this.SetChecked("Fisheye", key.GetValueBool("FishEyeRemoval", false));
-                this.SetChecked("ChkAutoAAC", key.GetValueBool("AutoAAC"));
+                
                 this.SetChecked("ChkResize1080p", key.GetValueBool("resize1080p"));
-                this.SetChecked("ChkChangeOutputname", key.GetValueBool("ChangeFileName"));
-                this.SetChecked("ChkReEncode", key.GetValueBool("reencodefile"));
+              
                 this.SetChecked("X265Output", key.GetValueBool("X265", true));
                 this.SetChecked("ChkAudioConversion", key.GetValueBool("AudioConversionAC3", true));
-                this.SetSelectedIndex("cmbaudiomode", key.GetValueInt("Audiomode", 0));
+                
                 this.SetSelectedIndex("cmbH64Target", key.GetValueInt("h264Target", -1));
                 this.SetChecked("ChkResize1080shorts", key.GetValueBool("Do1080pShorts", false));
-                this.SetChecked("ChkDropFormat", key.GetValueBool("DropFormat", true));
+                
                 LineNum = 24;
                 SystemSetup = false;
                 key.Close();
@@ -5211,15 +5212,21 @@ namespace VideoGui
                 bool _isCopy = false;
                 _StatsHandler _stats_handle = stats_handle;
                 bool overrider = false, chkresized = false;
+                
+                RegistryKey key = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\VideoProcessor", true);
+                int _cmbaudiomodeSelectedIndex = key.GetValueInt("Audiomode", 0);
+                int H264Target = key.GetValueInt("h264Target", -1);
+                bool ChkAutoAAC_IsChecked = key.GetValueBool("ChkAutoAAC", true);
                 bool _GPUEncode = this.IsChecked("GPUEncode"), _X265Output = !this.IsChecked("X265Output");
-                int _cmbaudiomodeSelectedIndex = this.SelectedIndex("cmbaudiomode");
+                key.Close();
+
+                
                 string myStrQuote = "\"";
                 (chkresized, overrider, job.InProcess) = (ResizeEnable, job.X264Override, true);
                 Video = CheckForGraphicsCard();
                 lbAccelHW.AutoSizeLabel(Video);
                 LineNum = 1;
                 ffmpeg.VideoCodec Encoder = ffmpeg.VideoCodec.h264;
-                int H264Target = this.SelectedIndex("cmbH64Target");
                 HardwareAccelerator HardwareAcceleration = HardwareAccelerator.cuda;// "qsv";
                 LineNum = 2;
                 if (Video.Contains("AMD") || Video.Contains("Radeon")) HardwareAcceleration = HardwareAccelerator.vulkan;
@@ -5544,6 +5551,8 @@ namespace VideoGui
                     LineNum = 52;
                 }
                 LineNum = 53;
+
+               
                 ffmpeg.VideoCodec DecoderCodec = ffmpeg.VideoCodec.h264;
                 double aspectratio = -1;
                 LineNum = 54;
@@ -5558,7 +5567,7 @@ namespace VideoGui
                     if (codec == ffmpeg.VideoCodec.mpeg2video.ToString()) DecoderCodec = ffmpeg.VideoCodec.mpeg2video;
                     if (codec == ffmpeg.VideoCodec.msmpeg4v3.ToString()) DecoderCodec = ffmpeg.VideoCodec.msmpeg4v3;
                     double videowidth = videoStream.Width, videoheight = videoStream.Height;
-                    if (this.IsChecked("ChkAutoAAC"))
+                    if (ChkAutoAAC_IsChecked)
                     {
                         LineNum = 56;
                         if (!audioStream.Codec.ToLower().Contains("vorbis") &&
@@ -5672,12 +5681,12 @@ namespace VideoGui
                         if (!job.Is720P)
                         {
                             LineNum = 65;
-                            RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
-                            int CropHeight = key.GetValueInt("CropHeight", 1080);
-                            int CropWidth = key.GetValueInt("CropWidth", 608);
-                            int CropLeft = key.GetValueInt("CropLeft", 0);
-                            int CropTop = key.GetValueInt("CropTop", 0);
-                            key?.Close();
+                            RegistryKey keys = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                            int CropHeight = keys.GetValueInt("CropHeight", 1080);
+                            int CropWidth = keys.GetValueInt("CropWidth", 608);
+                            int CropLeft = keys.GetValueInt("CropLeft", 0);
+                            int CropTop = keys.GetValueInt("CropTop", 0);
+                            keys?.Close();
                             LineNum = 66;
                             audioStream.AAC_VbrMode(5, job.Is48K);
                             if (videowidth > 1080)
@@ -5707,12 +5716,12 @@ namespace VideoGui
                         {
                             if (job.DestMFile.Contains("(shorts)") || job.IsShorts)
                             {
-                                RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
-                                int CropHeight = key.GetValueInt("CropHeight", 1080);
-                                int CropWidth = key.GetValueInt("CropWidth", 608);
-                                int CropLeft = key.GetValueInt("CropLeft", 0);
-                                int CropTop = key.GetValueInt("CropTop", 0);
-                                key?.Close();
+                                RegistryKey keyx = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                                int CropHeight = keyx.GetValueInt("CropHeight", 1080);
+                                int CropWidth = keyx.GetValueInt("CropWidth", 608);
+                                int CropLeft = keyx.GetValueInt("CropLeft", 0);
+                                int CropTop = keyx.GetValueInt("CropTop", 0);
+                                keyx?.Close();
                                 LineNum = 70;
                                 if (videowidth > 1080)
                                 {
@@ -5759,22 +5768,22 @@ namespace VideoGui
                     if (!_GPUEncode)
                     {
                         LineNum = 77;
-                        RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                        RegistryKey keyr = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                         if (Encoder == ffmpeg.VideoCodec.libxvid)
                         {
                             LineNum = 78;
-                            int minQ = key.GetValueInt("minq", 3), maxQ = key.GetValueInt("maxq", 13);
+                            int minQ = keyr.GetValueInt("minq", 3), maxQ = key.GetValueInt("maxq", 13);
                             videoStream.Mpeg4ASP(minQ, maxQ);// ASP Set the video stream params here. -qmin 3 - qmax 5 - vtag = XVID -aspect 4:3
                         }
                         LineNum = 79;
                         if (Encoder == ffmpeg.VideoCodec.mpeg4)
                         {
                             LineNum = 80;
-                            int qscale = key.GetValueInt("qscale", 15);
-                            string vTag = key.GetValueStr("vTag", "XVID");
+                            int qscale = keyr.GetValueInt("qscale", 15);
+                            string vTag = keyr.GetValueStr("vTag", "XVID");
                             videoStream.Mpeg4AVC(qscale, vTag); // AVC / X264 -crf 18 , -preset slow -pix_fmt yuv420p
                         }
-                        key?.Close();
+                        keyr?.Close();
                     }
                     LineNum = 80;
                     if ((DecoderCodec == ffmpeg.VideoCodec.hevc) && (HardwareAcceleration == HardwareAccelerator.qsv) && (Encoder == ffmpeg.VideoCodec.h264_nvenc))
@@ -7836,20 +7845,7 @@ namespace VideoGui
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
             }
         }
-        private void DirectoryThreads_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                OnCompairFinished = new CompairFinished(OnFinishCompair);
-                DefaultDirectories ddthreaew = new(OnCompairFinished);
-                Hide();
-                ddthreaew.Show();
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name.ToString() + " BtnDestPath_Click " + ex.Message);
-            }
-        }
+      
         public void OnChkButton_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -9146,21 +9142,7 @@ namespace VideoGui
         {
             //_shouldStop = true;
         }
-        private void BtnDirThreads_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-
-                OnCompairFinished = new Models.delegates.CompairFinished(OnFinishCompair);
-                DefaultDirectories ddthreaew = new(OnCompairFinished);
-                Hide();
-                ddthreaew.Show();
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name.ToString() + " BtnDestPath_Click " + ex.Message);
-            }
-        }
+      
         private void MainWindowX_StateChanged(object sender, EventArgs e)
         {
             try
@@ -9378,19 +9360,7 @@ namespace VideoGui
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
             }
         }
-        private void BtnBitRateSettings_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                SelectEditProfile selEditProfile = new();
-                selEditProfile.ShowDialog();
-                selEditProfile = null;
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite();
-            }
-        }
+        
         private void BtnCompare_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -9564,24 +9534,7 @@ namespace VideoGui
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
             }
         }
-        private void Settings_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                if (!Dispatcher.CheckAccess())
-                {
-                    Dispatcher.Invoke(() => Settings_Click(sender, e));
-                    return;
-                }
-                SelectEditProfile selEditProfile = new();
-                selEditProfile.ShowDialog();
-                selEditProfile = null;
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
-            }
-        }
+       
         private void CmbScanDirectory_KeyUp(object sender, System.Windows.Input.KeyEventArgs e)
         {
             try

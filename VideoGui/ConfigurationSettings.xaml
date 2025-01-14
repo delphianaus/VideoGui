@@ -155,7 +155,7 @@
             </Canvas>
         </GroupBox>
         <GroupBox x:Name="grpAppSettings" Header="Application Settings" 
-                  VerticalAlignment="Top" Margin="0,444,0,0">
+                  VerticalAlignment="Top" Margin="0,444,0,0" LostFocus="grpAppSettings_LostFocus">
             <Canvas x:Name="cnvAppSettings" Margin="0,0,6,0" Height="100">
                 <Label Content="720p Threads" Height="28" Width="77" HorizontalAlignment="Center" VerticalAlignment="Top" Canvas.Left="253" Canvas.Top="33"/>
                 <ComboBox x:Name="cmbMaxThreads" Width="41"  SelectedIndex="1" HorizontalAlignment="Center" VerticalAlignment="Top" Height="28" Canvas.Left="329" Canvas.Top="33">
