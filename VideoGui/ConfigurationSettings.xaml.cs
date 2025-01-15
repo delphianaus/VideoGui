@@ -46,10 +46,10 @@ namespace VideoGui
                 this.SetChecked("ChkChangeOutputname", key.GetValueBool("ChangeFileName"));
                 this.SetChecked("ChkDropFormat", key.GetValueBool("DropFormat", true));
                 this.SetChecked("ChkReEncode", key.GetValueBool("reencodefile"));
-                txtqScale.Text = key.GetValueInt("qscale", 15);
+                txtqScale.Text = key.GetValueStr("qscale", "15");
                 txtVtag.Text = key.GetValueStr("vTag", "XVID");
-                txtMinQ.Text = key?.GetValueStr("qmin", 3);
-                txtMaxQ.Text = key?.GetValueStr("qmax", 13);
+                txtMinQ.Text = key?.GetValueStr("qmin", "3");
+                txtMaxQ.Text = key?.GetValueStr("qmax", "13");
                 chkmovecompleted.IsChecked = key.GetValueBool("movecompleted", true);
                 ChkMonitorDownloads.IsChecked = key.GetValueBool("MonitorDownloads", true);
                 txtSrc720p.Text = key.GetValueStr("SourceDirectory720p", defaultdrive);
