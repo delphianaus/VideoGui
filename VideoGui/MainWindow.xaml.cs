@@ -205,12 +205,84 @@ namespace VideoGui
         private ConverterProgress ConverterProgressEventHandler = new ConverterProgress();
         private ObservableCollectionFilters ObservableCollectionFilter;
         public DirectoryTitleDescEditor directoryTitleDescEditor = null;
+        SchedulingSelectEditor schedulingSelectEditor = null;
         //public List<MediaTranscoder?> transcoders = new List<MediaTranscoder?>();
         public class ProgressForegroundConverter2
         {
 
         }
 
+        private void EditSchedules()
+        {
+            try
+            {
+                if (schedulingSelectEditor is not null && !schedulingSelectEditor.IsClosed)
+                {
+                    if (!schedulingSelectEditor.IsClosing) schedulingSelectEditor.Close();
+                    while (!schedulingSelectEditor.IsClosed)
+                    {
+                        Thread.Sleep(100);
+                        System.Windows.Forms.Application.DoEvents();
+                    }
+                }
+                if (schedulingSelectEditor is not null && schedulingSelectEditor.IsClosed)
+                {
+                    schedulingSelectEditor = null;
+                }
+
+
+                if (schedulingSelectEditor is null)
+                {
+                    schedulingSelectEditor = new SchedulingSelectEditor(() => { SetSelectedSchedules(); DoCloseScheduling(); }, ModuleCallback);
+                    Hide();
+                    schedulingSelectEditor.Show();
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"btnEditSchedules_Click {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
+
+        private void DoCloseScheduling()
+        {
+            try
+            {
+                if (schedulingSelectEditor is not null && !schedulingSelectEditor.IsClosed)
+                {
+                    if (!schedulingSelectEditor.IsClosing) schedulingSelectEditor.Close();
+                    while (!schedulingSelectEditor.IsClosed)
+                    {
+                        Thread.Sleep(100);
+                        System.Windows.Forms.Application.DoEvents();
+                    }
+                    Show();
+                }
+                if (schedulingSelectEditor is not null && schedulingSelectEditor.IsClosed)
+                {
+                    schedulingSelectEditor = null;
+                }
+
+
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"DoCloseScheduling {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
+
+        private void SetSelectedSchedules()
+        {
+            try
+            {
+                RegistryKey key = "SOFTWARE\\VideoGUI".OpenSubKey(Registry.CurrentUser);
+                key?.Close();
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"SetSelectedSchedules {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
         public class ProgressForegroundConverter : IValueConverter
         {
             public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
@@ -7677,8 +7749,6 @@ namespace VideoGui
                     lblEta.Width = this.MeasureString("lblEta", "00:00");
                     lblDuration.Width = this.MeasureString("lblDuration", "00:00");
                     LblTotalTIMEAll.Width = this.MeasureString("LblTotalTIMEAll", "00:00");
-                    ChkDropFormat.Click += new RoutedEventHandler(OnChkButton_Click);
-                    ChkAutoAAC.Click += new RoutedEventHandler(OnChkButton_Click);
                     //ChkResize1080p.Click += new RoutedEventHandler(OnChkButton_Click);
                     //ChkResize1080shorts.Click += new RoutedEventHandler(OnChkButton_Click);
                     ChkChangeOutputname.Click += new RoutedEventHandler(OnChkButton_Click);
@@ -7686,10 +7756,8 @@ namespace VideoGui
                     Title += " " + Assembly.GetExecutingAssembly().GetName().Version.ToString();
                     X265Output.MouseLeave += new System.Windows.Input.MouseEventHandler(OnFocusChanged);
                     Fisheye.MouseLeave += new System.Windows.Input.MouseEventHandler(OnFocusChanged);
-                    ChkAudioConversion.MouseLeave += new System.Windows.Input.MouseEventHandler(OnFocusChanged);
                     GPUEncode.MouseLeave += new System.Windows.Input.MouseEventHandler(OnFocusChanged);
                     X265Output.MouseLeave += new System.Windows.Input.MouseEventHandler(OnFocusChanged);
-                    cmbH64Target.MouseLeave += new System.Windows.Input.MouseEventHandler(OnFocusChanged);
                     txtMaxShorts.MouseLeave += new System.Windows.Input.MouseEventHandler(OnFocusChanged);
 
 
@@ -8239,6 +8307,11 @@ namespace VideoGui
             {
                 ex.LogWrite($"directoryEditorOnFinish {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
+        }
+
+        private void btnEditSchedules_Click(object sender, RoutedEventArgs e)
+        {
+            EditSchedules();
         }
 
         private void btnMediaImporter_Click(object sender, RoutedEventArgs e)
