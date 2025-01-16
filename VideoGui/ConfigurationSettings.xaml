@@ -4,34 +4,218 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:VideoGui"
-        mc:Ignorable="d"
-        Title="User Configuration Settings" Height="328" Width="337">
-    <Grid Margin="0,0,10,7">
-        <CheckBox x:Name="ChkAutoUpdate" Content="Enable Auto Update" HorizontalAlignment="Left" Height="25" Margin="10,10,0,0" VerticalAlignment="Top" Width="140" IsChecked="True"/>
-        <CheckBox x:Name="ChkUtorrentIntegration" Content="Enable uTorrent Integration" HorizontalAlignment="Left" Height="25" Margin="10,40,0,0" VerticalAlignment="Top" Width="182" IsChecked="True" Click="ChkUtorrentIntegration_Click"/>
-        <Label x:Name="label" Content="web Api Username" HorizontalAlignment="Left" Height="26" Margin="24,109,0,0" VerticalAlignment="Top" Width="112"/>
-        <Label x:Name="label_Copy" Content="web Api Password" HorizontalAlignment="Left" Height="26" Margin="24,139,0,0" VerticalAlignment="Top" Width="112" RenderTransformOrigin="0.499,1.719"/>
-        <TextBox x:Name="txtWebApiUsername" HorizontalAlignment="Left" Height="22" Margin="141,113,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="165"/>
-        <PasswordBox x:Name="txtWebApiPassword"  Margin="141,141,22,0" VerticalAlignment="Top" Width="165" 
-         Background="LightBlue" Foreground="DarkBlue"  MaxLength="25" PasswordChar="*" Password="Encoding.ASCII.G" SelectionOpacity="-1"/>
-        <CheckBox x:Name="ChkEncryptData" Content="Encrypt User Data" HorizontalAlignment="Left" Height="25" Margin="181,11,0,0" VerticalAlignment="Top" Width="141" IsChecked="True"/>
-        <CheckBox x:Name="ChkShowUserPassword" Content="Show User Password" HorizontalAlignment="Left" Height="25" Margin="181,40,0,0" VerticalAlignment="Top" Width="140" IsChecked="True" RenderTransformOrigin="0.475,0.919" Click="ChkShowUserPassword_Click" Checked="ChkShowUserPassword_Checked"/>
-        <Button x:Name="button" Content="Close" HorizontalAlignment="Left" Height="27" Margin="211,267,0,0" VerticalAlignment="Top" Width="95" Click="button_Click" RenderTransformOrigin="0.483,-1.59"/>
-        <TextBox x:Name="TxtWebApiPort" HorizontalAlignment="Left" Height="22" Margin="141,164,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="165"/>
-        <Label x:Name="label_Copy1" Content="web Api Port&#xD;&#xA;" HorizontalAlignment="Left" Height="26" Margin="24,162,0,0" VerticalAlignment="Top" Width="112"/>
-        <Label x:Name="label_Copy2" Content="Web API IP" HorizontalAlignment="Left" Height="26" Margin="24,82,0,0" VerticalAlignment="Top" Width="112"/>
-        <TextBox x:Name="txtWebApiIP" HorizontalAlignment="Left" Height="22" Margin="141,86,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="165"/>
-        <TextBox x:Name="txtpasswordshow" HorizontalAlignment="Left" Height="22" Margin="141,141,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="165" Visibility="Collapsed"   />
-        <TextBox x:Name="txtMinQ" HorizontalAlignment="Left" Height="22" Margin="181,197,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="23" Text="3"/>
-        <Label x:Name="label_Copy3" Content="Mpeg4 ASP" HorizontalAlignment="Left" Height="26" Margin="24,195,0,0" VerticalAlignment="Top" Width="88"/>
-        <TextBox x:Name="txtMaxQ" HorizontalAlignment="Left" Height="22" Margin="279,197,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="27" Text="5"/>
-        <Label x:Name="label_Copy4" Content="Min Q" HorizontalAlignment="Left" Height="26" Margin="120,195,0,0" VerticalAlignment="Top" Width="56"/>
-        <Label x:Name="label_Copy5" Content="Max Q" HorizontalAlignment="Left" Height="26" Margin="211,195,0,0" VerticalAlignment="Top" Width="56"/>
-        <TextBox x:Name="txtqScale" HorizontalAlignment="Left" Height="22" Margin="181,228,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="23" Text="12" TextChanged="TxtWebApiPort_Copy2_TextChanged"/>
-        <Label x:Name="label_Copy6" Content="Mpeg4 AVC" HorizontalAlignment="Left" Height="26" Margin="24,226,0,0" VerticalAlignment="Top" Width="88"/>
-        <TextBox x:Name="txtVtag" HorizontalAlignment="Left" Height="22" Margin="258,228,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="48" Text="XVID"/>
-        <Label x:Name="label_Copy7" Content="qscale" HorizontalAlignment="Left" Height="26" Margin="120,226,0,0" VerticalAlignment="Top" Width="56"/>
-        <Label x:Name="label_Copy8" Content="vTag" HorizontalAlignment="Left" Height="26" Margin="211,226,0,0" VerticalAlignment="Top" Width="41"/>
-
+        mc:Ignorable="d" Loaded="ConfigSettingsWindow_Loaded" SizeToContent="Manual" WindowStyle="ToolWindow" 
+        WindowStartupLocation="CenterScreen" ScrollViewer.VerticalScrollBarVisibility="Disabled"
+        Title="User Configuration Settings" Height="634" Width="784">
+    <Grid Margin="0,0,0,0">
+        <GroupBox x:Name="grpMpg4" Header="Mpeg4 Encoder Settings" HorizontalAlignment="Center" Height="56" VerticalAlignment="Top" Width="778" LostFocus="grpMpg4_LostFocus">
+            <Canvas x:Name="CanvasMpeg4" Height="68" Margin="0,0,0,0" Width="770">
+                <TextBox x:Name="txtMinQ" HorizontalAlignment="Center" Height="22" TextWrapping="Wrap" VerticalAlignment="Top" Width="23" Text="3" Canvas.Left="167" Canvas.Top="11"/>
+                <Label x:Name="LblMpg4ASP" Content="Mpeg4 ASP" HorizontalAlignment="Center" Height="26" VerticalAlignment="Top" Width="88" Canvas.Left="10" Canvas.Top="9"/>
+                <TextBox x:Name="txtMaxQ" HorizontalAlignment="Center" Height="22" TextWrapping="Wrap" VerticalAlignment="Top" Width="27" Text="5" Canvas.Left="265" Canvas.Top="11"/>
+                <Label x:Name="lblMinQ" Content="Min Q" HorizontalAlignment="Center" Height="26" VerticalAlignment="Top" Width="56" Canvas.Left="106" Canvas.Top="9"/>
+                <Label x:Name="lblMaxQ" Content="Max Q" HorizontalAlignment="Center" Height="26" VerticalAlignment="Top" Width="56" Canvas.Left="197" Canvas.Top="9"/>
+                <TextBox x:Name="txtqScale" HorizontalAlignment="Left" Height="22" TextWrapping="Wrap" VerticalAlignment="Top" Width="23" Text="12" Canvas.Left="465" Canvas.Top="10"/>
+                <Label x:Name="lblMp4AVC" Content="Mpeg4 AVC" HorizontalAlignment="Left" Height="26" VerticalAlignment="Top" Width="88" Canvas.Left="308" Canvas.Top="8"/>
+                <TextBox x:Name="txtVtag" HorizontalAlignment="Left" Height="22" TextWrapping="Wrap" VerticalAlignment="Top" Width="48" Text="XVID" Canvas.Left="542" Canvas.Top="10"/>
+                <Label x:Name="LblqScale" Content="qscale" HorizontalAlignment="Left" Height="26" VerticalAlignment="Top" Width="56" Canvas.Left="404" Canvas.Top="8"/>
+                <Label x:Name="lblVtag" Content="vTag" HorizontalAlignment="Left" Height="26" VerticalAlignment="Top" Width="41" Canvas.Left="495" Canvas.Top="8"/>
+            </Canvas>
+        </GroupBox>
+        <GroupBox x:Name="grpEncoderSettings" Header="Encoder Settings" VerticalAlignment="Top"
+                  Height="61" Margin="0,62,0,0" LostFocus="grpEncoderSettings_LostFocus">
+            <Canvas x:Name="CanvasEncoderSettings" Width="773">
+                <Label Content="Min :" Height="22" HorizontalAlignment="Center" 
+                       FontSize="14" VerticalAlignment="Top" Padding="0,1,0,2" Canvas.Top="10" Canvas.Left="9" Width="31"/>
+                <TextBox x:Name="txtMin" Text="675K" HorizontalAlignment="Center" Canvas.Left="48"
+                   Height="22" TextWrapping="Wrap" Width="52" FontSize="14" Canvas.Top="10" VerticalAlignment="Top"/>
+                <Label Content="Max :" Height="22" Width ="46" 
+                    FontSize="14" Padding="0,1,0,2" Canvas.Top="10" Canvas.Left="105" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                <TextBox x:Name="txtMax" Text="1150K" Canvas.Left="144"
+                    Height="22" TextWrapping="Wrap" Width="52" FontSize="14" Canvas.Top="10" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                <Label Content="Buffer :" Height="22" Width ="46" 
+                    FontSize="14" Padding="0,1,0,2" Canvas.Top="10" Canvas.Left="197" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                <TextBox x:Name="txtBuffer" Text="1200K" Canvas.Left="236"
+                    Height="22" TextWrapping="Wrap" Width="52" FontSize="14" Canvas.Top="10" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                <CheckBox x:Name="chkResize" Content="Resize Enabled" HorizontalAlignment="Left" VerticalAlignment="Center" Canvas.Left="291" Canvas.Top="15"/>
+                <CheckBox x:Name="ChkVSYNC" Content="VSYNC Enabled" HorizontalAlignment="Left" VerticalAlignment="Center" Canvas.Left="386" Canvas.Top="15"/>
+                <CheckBox x:Name="ChkARScaling" Content="AR Scaling" HorizontalAlignment="Left" VerticalAlignment="Center" Canvas.Left="485" Canvas.Top="15"/>
+                <CheckBox x:Name="ChkRounding" Content="AR Rounding" HorizontalAlignment="Left" VerticalAlignment="Center" Canvas.Left="644" Canvas.Top="15"/>
+                <TextBox x:Name="txtRounding" Text="16" Canvas.Left="733" Height="22" TextWrapping="Wrap" Width="25" FontSize="14" Canvas.Top="12" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                <TextBox x:Name="txtWidth" Text="720" Canvas.Left="606" Height="22" TextWrapping="Wrap" Width="31" FontSize="14" Canvas.Top="12" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                <Label Content="Width:" Height="22" 
+                    FontSize="14" Padding="0,1,0,2" Canvas.Top="12" Canvas.Left="560" Width="41" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+            </Canvas>
+        </GroupBox>
+        <GroupBox x:Name="grpDirectorySettings" Header="Directory Settings"
+                  VerticalAlignment="Top" Margin="2,118,1,0" Width="781" LostFocus="grpDirectorySettings_LostFocus" Height="323">
+            <Canvas x:Name="CanvasDirectorySettings" Margin="0,5,6,-5">
+                <Label Content="Output 720p" Height="22" Width ="83" HorizontalAlignment="Center" 
+                       FontSize="14" Padding="0,1,0,2" Canvas.Left="8" Canvas.Top="90" VerticalAlignment="Top"/>
+                <TextBox x:Name="txtDone720p" Text="Done720p" HorizontalAlignment="Center" Height="28" TextWrapping="Wrap" Width="248" FontSize="14" Canvas.Left="110" Canvas.Top="87" VerticalAlignment="Top"/>
+                <Button x:Name="btnDoneSelectDir" Width="30" Height="30"
+                   Click="btnDoneSelectDir_Click" HorizontalAlignment="Center" Canvas.Left="360" VerticalAlignment="Top" Canvas.Top="86"/>
+                <Label Content="Error" Height="22" Width ="67" HorizontalAlignment="Center" 
+                     FontSize="14" Padding="0,1,0,2" Canvas.Left="8" Canvas.Top="167" VerticalAlignment="Top"/>
+                <TextBox x:Name="txtErrorPath" Text="Error" HorizontalAlignment="Center" 
+                         Height="28" TextWrapping="Wrap" Width="589" 
+                         FontSize="14" Canvas.Left="110" Canvas.Top="164" 
+                         VerticalAlignment="Top"/>
+                <Button x:Name="btnErrorSelectDir" Width="30" Height="30"
+                   Click="btnErrorSelectDir_Click" HorizontalAlignment="Center" 
+                        Canvas.Left="705" VerticalAlignment="Top" Canvas.Top="163"/>
+                <Label Content="Finished 720p" Height="22" Width ="92" 
+                    FontSize="14" Padding="0,1,0,2" Canvas.Left="9" Canvas.Top="203" 
+                       HorizontalAlignment="Center" VerticalAlignment="Top"/>
+                <TextBox x:Name="txtComp720p" Text="Completed720p" 
+                    Height="28" TextWrapping="Wrap" Width="250" 
+                    FontSize="14" Canvas.Left="110" Canvas.Top="200" 
+                         HorizontalAlignment="Center" VerticalAlignment="Top"/>
+                <Button x:Name="BtnCompleted" Width="30" Height="30" 
+                    Canvas.Left="360" Canvas.Top="199" HorizontalAlignment="Center" 
+                        VerticalAlignment="Top" Click="BtnCompleted_Click"/>
+                <CheckBox x:Name="chkmovecompleted" Content="Auto Move" Canvas.Left="677" 
+                          Canvas.Top="278" HorizontalAlignment="Center" 
+                          VerticalAlignment="Top" IsChecked="True"/>
+                <Label Content="1080p" Height="22" Width ="49" 
+                    FontSize="14" Padding="0,1,0,2" Canvas.Left="401" Canvas.Top="204" 
+                       HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                <TextBox x:Name="txtComp1080p" Text="Completed1080p" 
+                    Height="28" TextWrapping="Wrap" Width="250" 
+                    FontSize="14" Canvas.Left="454" Canvas.Top="201" 
+                         HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                <Label Content="Finished 4K" Height="22" Width ="82" 
+                    FontSize="14" Padding="0,1,0,2" Canvas.Left="9" Canvas.Top="243"
+                       HorizontalAlignment="Center" VerticalAlignment="Top"/>
+                <TextBox x:Name="txtComp4K" Text="Completed4K" 
+                    Height="28" TextWrapping="Wrap" Width="250" 
+                    FontSize="14" Canvas.Left="110" Canvas.Top="240" 
+                         HorizontalAlignment="Center" VerticalAlignment="Top"/>
+                <Button x:Name="btnCompleted720p" Width="30" Height="30" 
+                    Canvas.Left="705" Canvas.Top="200" Click="btnCompleted720p_Click" 
+                        HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                <Button x:Name="BtnCompleted4k" Width="30" Height="30" 
+                    Canvas.Left="360" Canvas.Top="238" Click="BtnCompleted4k_Click" 
+                        HorizontalAlignment="Center" VerticalAlignment="Top"/>
+                <Label Content="1080p" Height="22" Width ="50" 
+                    FontSize="14" Padding="0,1,0,2" Canvas.Left="404" Canvas.Top="90" 
+                       HorizontalAlignment="Center" VerticalAlignment="Top"/>
+                <TextBox x:Name="txtDone1080p" Text="Done1080p" Height="28" TextWrapping="Wrap" 
+                         Width="250" FontSize="14" Canvas.Left="454" Canvas.Top="87" HorizontalAlignment="Center" 
+                         VerticalAlignment="Top"/>
+                <Button x:Name="btnDoneSelectDir1080p" Width="30" Height="30"
+                    Click="btnDoneSelectDir1080p_Click" Canvas.Left="705" Canvas.Top="86" HorizontalAlignment="Center" 
+                        VerticalAlignment="Top"/>
+                <Label Content="Output 4k" Height="22" Width ="67" 
+                    FontSize="14" Padding="0,1,0,2" Canvas.Left="8" Canvas.Top="129" HorizontalAlignment="Center" VerticalAlignment="Top"/>
+                <TextBox x:Name="txtDone4k" Text="Done4K" Height="28" TextWrapping="Wrap" Width="250" FontSize="14"
+                         Canvas.Left="110" Canvas.Top="126" HorizontalAlignment="Center" VerticalAlignment="Top"/>
+                <Button x:Name="btnDoneSelectDir4K" Width="30" Height="30"
+                    Click="btnDoneSelectDir4K_Click" Canvas.Left="360" Canvas.Top="125" HorizontalAlignment="Center" VerticalAlignment="Top"/>
+                <Label Content="Adobe" Height="22" Width ="50" 
+                    FontSize="14" Padding="0,1,0,2" Canvas.Left="403" Canvas.Top="240" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                <TextBox x:Name="txtComp4KAdobe" Text="Completed4KAdobe" 
+                    Height="28" TextWrapping="Wrap" Width="250" 
+                    FontSize="14" Canvas.Left="454" Canvas.Top="237" 
+                         HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                <Button x:Name="BtnCompleted4KAdobe" Width="30" Height="30" 
+                    Canvas.Left="705" Canvas.Top="235" Click="BtnCompleted4KAdobe_Click" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                <Label Content="Adobe" Height="22" Width ="71" 
+                    FontSize="14" Padding="0,1,0,2" Canvas.Left="406" Canvas.Top="129" HorizontalAlignment="Center" VerticalAlignment="Top"/>
+                <TextBox x:Name="txtDone4KAdobe" Text="Done4KAdobe&#xD;&#xA;" Height="28" TextWrapping="Wrap" Width="246"
+                         FontSize="14" Canvas.Left="454" Canvas.Top="126" HorizontalAlignment="Center" VerticalAlignment="Top"/>
+                <Button x:Name="btnDoneSelectDir4KAdobe" Width="30" Height="30"
+                    Click="btnDoneSelectDir4KAdobe_Click" Canvas.Left="705" Canvas.Top="125" HorizontalAlignment="Center" VerticalAlignment="Top"/>
+                <Label Content="Source 720p" Height="22" Width ="83" 
+                    FontSize="14" Padding="0,1,0,2" Canvas.Left="8" Canvas.Top="13" HorizontalAlignment="Center" VerticalAlignment="Top"/>
+                <TextBox x:Name="txtSrc720p" Text="720p" Height="28" TextWrapping="Wrap" Width="248" FontSize="14" Canvas.Left="110" Canvas.Top="10" HorizontalAlignment="Center" VerticalAlignment="Top"/>
+                <Button x:Name="btnSrc720p" Width="30" Height="30"
+                    Click="btnSrc720p_Click" Canvas.Left="360" Canvas.Top="9" HorizontalAlignment="Center" VerticalAlignment="Top"/>
+                <Label Content="1080p" Height="22" Width ="50" 
+                    FontSize="14" Padding="0,1,0,2" Canvas.Left="404" Canvas.Top="13" 
+                       HorizontalAlignment="Center" VerticalAlignment="Top"/>
+                <TextBox x:Name="txtSrc1080p" Text="1080p" Height="28" TextWrapping="Wrap" 
+                    Width="250" FontSize="14" Canvas.Left="454" Canvas.Top="10" HorizontalAlignment="Center" VerticalAlignment="Top"/>
+                <Button x:Name="btnSrc1080p" Width="30" Height="30"
+                    Click="btnSrc1080p_Click" Canvas.Left="705" Canvas.Top="9" HorizontalAlignment="Center" VerticalAlignment="Top"/>
+                <Label Content="Source 4k" Height="22" Width ="67" 
+                    FontSize="14" Padding="0,1,0,2" Canvas.Left="8" Canvas.Top="52" HorizontalAlignment="Center" VerticalAlignment="Top"/>
+                <TextBox x:Name="txtSrc4K" Text="4K" Height="28" TextWrapping="Wrap" Width="250" FontSize="14"
+                    Canvas.Left="110" Canvas.Top="49" HorizontalAlignment="Center" VerticalAlignment="Top"/>
+                <Button x:Name="btnSrc4K" Width="30" Height="30"
+                    Click="btnSrc4K_Click" Canvas.Left="360" Canvas.Top="48" HorizontalAlignment="Center" VerticalAlignment="Top"/>
+                <Label Content="Adobe" Height="22" Width ="71" 
+                    FontSize="14" Padding="0,1,0,2" Canvas.Left="406" Canvas.Top="52" HorizontalAlignment="Center" VerticalAlignment="Top"/>
+                <TextBox x:Name="txtSrc4KAdobe" Text="4KAdobe&#xA;" Height="28" TextWrapping="Wrap" Width="246"
+                    FontSize="14" Canvas.Left="454" Canvas.Top="49" HorizontalAlignment="Center" VerticalAlignment="Top"/>
+                <Button x:Name="btnSrc4KAdobe" Width="30" Height="30"
+                    Click="btnSrc4KAdobe_Click" Canvas.Left="705" Canvas.Top="48" HorizontalAlignment="Center" VerticalAlignment="Top"/>
+                <CheckBox x:Name="ChkMonitorDownloads" Content="Monitor Downloads Directory" Canvas.Left="8" 
+                    Canvas.Top="278" HorizontalAlignment="Left" VerticalAlignment="Center" Width="187" IsChecked="True"/>
+            </Canvas>
+        </GroupBox>
+        <GroupBox x:Name="grpAppSettings" Header="Application Settings" 
+                  VerticalAlignment="Top" Margin="0,444,0,0" LostFocus="grpAppSettings_LostFocus">
+            <Canvas x:Name="cnvAppSettings" Margin="0,0,6,0" Height="100">
+                <Label Content="720p Threads" Height="28" Width="77" HorizontalAlignment="Center" VerticalAlignment="Top" Canvas.Left="253" Canvas.Top="33"/>
+                <ComboBox x:Name="cmbMaxThreads" Width="41"  SelectedIndex="1" HorizontalAlignment="Center" VerticalAlignment="Top" Height="28" Canvas.Left="329" Canvas.Top="33">
+                    <ComboBoxItem Content="1" />
+                    <ComboBoxItem Content="2"/>
+                    <ComboBoxItem Content="3"/>
+                    <ComboBoxItem Content="4"/>
+                </ComboBox>
+                <Label Content="1080P Threads" Height="28" Width="81" HorizontalAlignment="Center" VerticalAlignment="Top" Canvas.Left="125" Canvas.Top="33"/>
+                <ComboBox x:Name="cmbMax1080pThreads" Width="40"  SelectedIndex="1" HorizontalAlignment="Center" VerticalAlignment="Top" Height="28" Canvas.Left="208" Canvas.Top="33">
+                    <ComboBoxItem Content="1" />
+                    <ComboBoxItem Content="2"/>
+                    <ComboBoxItem Content="3"/>
+                    <ComboBoxItem Content="4"/>
+                </ComboBox>
+                <Label Content="4k Threads" Height="28" Width="81" HorizontalAlignment="Center" VerticalAlignment="Top" Canvas.Left="12" Canvas.Top="33"/>
+                <ComboBox x:Name="cmb4KThreads" Width="40"  SelectedIndex="1" HorizontalAlignment="Center" VerticalAlignment="Top" Height="28" Canvas.Left="80" Canvas.Top="33">
+                    <ComboBoxItem Content="1" />
+                    <ComboBoxItem Content="2"/>
+                    <ComboBoxItem Content="3"/>
+                    <ComboBoxItem Content="4"/>
+                </ComboBox>
+                <Label Content="Shorts Directory Output" Height="28" Width="129" Canvas.Left="12" Canvas.Top="65" HorizontalAlignment="Center" VerticalAlignment="Top"/>
+                <TextBox x:Name="txtShortspath" Text="Done" HorizontalAlignment="Center" Height="28" TextWrapping="Wrap" Width="564" FontSize="14" Canvas.Left="146" Canvas.Top="65" VerticalAlignment="Top"/>
+                <Button x:Name="btnShortsSelectDir" Width="30" Height="30"
+                        HorizontalAlignment="Center" 
+                        Canvas.Left="716" VerticalAlignment="Top" Click="btnShortsSelectDir_Click" RenderTransformOrigin="0.47,2.508" Canvas.Top="64"/>
+                <CheckBox x:Name="ChkDropFormat" Content="Drop As X265" IsChecked="True" Width="97" 
+                          HorizontalAlignment="Center" Canvas.Left="383" VerticalAlignment="Top" Canvas.Top="39" RenderTransformOrigin="0.438,2.756"/>
+                <Label Content="Drop X264 Format" Height="28" Width="114" HorizontalAlignment="Left"
+                        VerticalAlignment="Bottom" Canvas.Left="480" Canvas.Top="31"/>
+                <ComboBox x:Name="cmbH64Target" Height="28" Width="60" SelectedIndex="1" HorizontalAlignment="Left" Canvas.Left="585" VerticalAlignment="Bottom" Canvas.Top="31">
+                    <ComboBoxItem Content="AVC"/>
+                    <ComboBoxItem Content="ASP"/>
+                    <ComboBoxItem Content="H264"/>
+                </ComboBox>
+                <CheckBox x:Name="ChkAudioConversion" Content="Convert If AC-3 -&gt; AAC" 
+                          IsChecked="True" Width="148" HorizontalAlignment="Center" Canvas.Top="8" 
+                          VerticalAlignment="Top" Canvas.Left="12" />
+                <CheckBox x:Name="ChkAutoAAC" Content="Auto -&gt; AAC" Width="90" 
+                          HorizontalAlignment="Center" Canvas.Left="171" Canvas.Top="8"
+                        VerticalAlignment="Center" />
+                <Label x:Name="TxtAudioMode" Content="Audio Mode" Height="26" Width="76" 
+                       HorizontalAlignment="Center" Canvas.Left="269" Canvas.Top="2"
+                       VerticalAlignment="Center" RenderTransformOrigin="2.718,1.261"/>
+                <ComboBox x:Name="cmbaudiomode" Height="19" Width="78" 
+                          HorizontalAlignment="Center" Canvas.Left="345" Canvas.Top="6" 
+                          VerticalAlignment="Center">
+                    <ComboBoxItem Content="Copy"/>
+                    <ComboBoxItem Content="=&gt; cbr mp3"/>
+                    <ComboBoxItem Content="=&gt; aac 128k"/>
+                </ComboBox>
+                <CheckBox x:Name="ChkChangeOutputname" Content="Change Output Name" 
+                          Width="141" HorizontalAlignment="Center" Canvas.Left="433" 
+                          Canvas.Top="8" VerticalAlignment="Top" />
+                <CheckBox x:Name="ChkReEncode" Content="Re Encode" Width="87" 
+                          HorizontalAlignment="Center" Canvas.Left="575"
+                          Canvas.Top="9" VerticalAlignment="Top" />
+            </Canvas>
+        </GroupBox>
+        <Button x:Name="btnClose" Content="Close" HorizontalAlignment="Left" Margin="715,0,0,10" VerticalAlignment="Bottom" Height="25" Width="53" Click="btnClose_Click"/>
     </Grid>
 </Window>

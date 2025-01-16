@@ -90,47 +90,37 @@ namespace VideoGui
     public partial class ScraperModule : Window
     {
         object lockobj = new object();
-        int MaxNodes = -1, MaxUploads = 0, recs = 0, gmaxrecs = 0, files = 0, max = 0, SlotsPerUpload = 0;
-        bool EditDone = false, btndone = false;
-        bool ExitDialog = false, HasExited = false;
-        public List<string> ScheduledOk = new List<string>();
-        public List<string> VideoFiles = new List<string>();
-        public List<VideoIdFileName> ScheduledFiles = new List<VideoIdFileName>();
-        int ts = 0;
-        int LastKey = -1;
-        bool Waiting = false;
-        bool IsVideoLookup = false;
-        public bool KilledUploads = false;
-        DispatcherTimer CloseTimer = new DispatcherTimer();
-        int ct = 0;
         public int EventId, TotalScheduled = 0;
+        int swap = 1, ct = 0, MaxNodes = -1, MaxUploads = 0, recs = 0, gmaxrecs = 0, files = 0, max = 0, SlotsPerUpload = 0,
+            ScheduleMax = 0, ts = 0, LastKey = -1, Days = 1, CurrentDay = 1;
+        bool EditDone = false, btndone = false, ExitDialog = false, Waiting = false, IsVideoLookup = false, WaitingFileName = false;
+        bool Valid = false, IsUnlisted = false, IsDashboardMode = false, CanSpool = false, FirstRun = true, done = false, HasExited = false;
+        bool DoNextNode = true, finished = false, TimedOut = false, Uploading = false, NextRecord = false, Processing = false, clickupload = true;
+        public bool IsClosing = false, IsClosed = false, Exceeded = false, KilledUploads = false, SwapEnabled = false, IsTitleEditor = false;
+        string SendKeysString = "", UploadPath = "", LastNode = "", DefaultUrl = "", LastValidFileName = "", TableDestination = "";
+        List<uploads> uploaded = new();
+        List<string> IdNodes = new(), titles = new List<string>(), nextaddress = new(), Ids = new(), Idx = new(), ufiles = new(), Files = new();// DoneFiles = new();
+        public List<string> ScheduledOk = new List<string>(), VideoFiles = new List<string>(), nodeslist = new List<string>();
         public List<ShortsDirectory> ShortsDirectories = new(); // <shortname>
         public List<ListScheduleItems> listSchedules = new List<ListScheduleItems>();
+        public List<VideoIdFileName> ScheduledFiles = new List<VideoIdFileName>();
+        DispatcherTimer CloseTimer = new DispatcherTimer();
         DirectshortsScheduler directshortsScheduler = null;
-        List<string> IdNodes = new();
-        List<string> titles = new List<string>();
-        public List<string> nodeslist = new List<string>();
         public AddressUpdate DoVideoLookUp = null;
         StatusTypes VStatusType = StatusTypes.PRIVATE;
-        bool Valid = false, IsUnlisted = false, IsDashboardMode = false, CanSpool = false, FirstRun = true, done = false;
-        bool DoNextNode = true, finished = false, Uploading = false, NextRecord = false, Processing = false, clickupload = true;
-        public bool IsClosing = false, IsClosed = false, Exceeded = false;
-        List<uploads> uploaded = new();
-        List<string> nextaddress = new(), Ids = new(), Idx = new(), ufiles = new(), Files = new();// DoneFiles = new();
         WebAddressBuilder webAddressBuilder = null;
         databasehook<object> dbInitializer = null;
         OnFinishId DoOnFinish = null;
-        int swap = 1;
-        string TableDestination = "";
-        bool SwapEnabled = false, IsTitleEditor = false;
+        TimeOnly CurrentTime = new TimeOnly();
+        DateOnly CurrentDate = DateOnly.FromDateTime(DateTime.Now);
+        public DateTime StartDate = DateTime.Now, EndDate = DateTime.Now, LastValidDate = DateTime.Now;
+
         //string Title = "", Desc = "";
-        string SendKeysString = "", UploadPath = "", LastNode = "", DefaultUrl = "", LastValidFileName = "";
         Dictionary<int, WebView2> wv2Dictionary = new Dictionary<int, WebView2>();
         Dictionary<int, WebView2> ActiveWebView = new Dictionary<int, WebView2>();
         DispatcherTimer InternalTimer = new DispatcherTimer();
         TaskCompletionSource<bool> tcs = new TaskCompletionSource<bool>();
-        public Nullable<DateTime> ReleaseDate = null;
-        public Nullable<DateTime> ReleaseEndDate = null;
+        public Nullable<DateTime> ReleaseDate = null, ReleaseEndDate = null;
         public EventTypes ScraperType = EventTypes.VideoUpload;
         [DllImport("user32.dll", SetLastError = true)]
         private static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
@@ -196,7 +186,7 @@ namespace VideoGui
             }
         }
         public ScraperModule(databasehook<object> _dbInit, OnFinishId _OnFinish, string _Default_url,
-            Nullable<DateTime> Start, Nullable<DateTime> End, List<ListScheduleItems> _listSchedules, int _eventid)
+            Nullable<DateTime> Start, Nullable<DateTime> End, int MaxUoploads, List<ListScheduleItems> _listSchedules, int _eventid)
         {
             try
             {
@@ -207,6 +197,7 @@ namespace VideoGui
                 ReleaseEndDate = End;
                 DoOnFinish = _OnFinish;
                 DefaultUrl = _Default_url;
+                ScheduleMax = MaxUoploads;
                 IsDashboardMode = true;
                 dbInitializer = _dbInit;
                 InitializeComponent();
@@ -317,7 +308,6 @@ namespace VideoGui
         }
 
 
-
         private void DoNewVideoUpdate(string address)
         {
             try
@@ -403,10 +393,6 @@ namespace VideoGui
                 await wv2A9.EnsureCoreWebView2Async(env);
                 await wv2A10.EnsureCoreWebView2Async(env);
 
-
-                wv2.CoreWebView2.Settings.IsGeneralAutofillEnabled = true;
-
-                wv2.CoreWebView2.Settings.IsPasswordAutosaveEnabled = true;
 
                 await SetupSubstDrive();
             }
@@ -1116,7 +1102,10 @@ namespace VideoGui
         {
             try
             {
+                wv2.CoreWebView2.Settings.IsGeneralAutofillEnabled = true;
+                wv2.CoreWebView2.Settings.IsPasswordAutosaveEnabled = true;
                 ActiveWebView[1].Source = new Uri(webAddressBuilder.GetChannelURL().Address);
+
             }
             catch (Exception ex)
             {
@@ -1197,7 +1186,6 @@ namespace VideoGui
                 return true;
             }
         }
-        bool WaitingFileName = false;
         private void ProcessNode(HtmlDocument doc, HtmlNode targetSpan, object sender = null)
         {
             try
@@ -1231,6 +1219,7 @@ namespace VideoGui
                     string aclassname = " remove-default-style  style-scope ytcp-video-list-cell-video";
                     for (int i = 0; i < targetSpanList.Count; i++)
                     {
+                        if (TimedOut) break;
                         var item = targetSpanList[i];
                         string fid = "";
                         foreach (var attr in item.ChildNodes.Where(child => child.Name == "h3").
@@ -1295,7 +1284,10 @@ namespace VideoGui
                                 WaitingFileName = true;
                                 wv2A10.NavigationCompleted += wv2_NavigationCompleted_GetFileName;
                                 wv2A10.Source = new Uri(gUrl2);
-                                while (WaitingFileName)
+                                var cts = new CancellationTokenSource();
+                                cts.CancelAfter(TimeSpan.FromSeconds(300));
+                                TimedOut = false;
+                                while (WaitingFileName && !cts.IsCancellationRequested)
                                 {
                                     Thread.Sleep(200);
                                     System.Windows.Forms.Application.DoEvents();
@@ -1307,9 +1299,16 @@ namespace VideoGui
                                         System.Windows.Forms.Application.DoEvents();
                                     }
                                 }
-                                if (directshortsScheduler is not null)
+                                if (directshortsScheduler is not null && !cts.IsCancellationRequested)
                                 {
                                     directshortsScheduler.ScheduleVideo(Id, Title, Desc, false);
+                                    DoNextNode = true;
+                                }
+                                else if (directshortsScheduler is not null && cts.IsCancellationRequested)
+                                {
+                                    TimedOut = true;
+                                    lstMain.Items.Insert(0, $"Timeout on Scheduling Detected.");
+                                    DoNextNode = false;
                                 }
                             }
                             else
@@ -1356,6 +1355,10 @@ namespace VideoGui
                             if (directshortsScheduler is not null)
                             {
                                 if (directshortsScheduler.ScheduleNumber >= directshortsScheduler.MaxNumberSchedules)
+                                {
+                                    Allow = false;
+                                }
+                                if (TimedOut)
                                 {
                                     Allow = false;
                                 }
@@ -2267,18 +2270,10 @@ namespace VideoGui
             {
                 if (webAddressBuilder is not null)
                 {
-                    if (ScraperType == EventTypes.ShortsSchedule && directshortsScheduler is null)
+                    if (ScraperType == EventTypes.ShortsSchedule && directshortsScheduler is null && ReleaseDate.HasValue && ReleaseEndDate.HasValue)
                     {
-                        DateTime StartDate = ReleaseDate.HasValue ? ReleaseDate.Value : DateTime.Now;
-                        DateTime CDate = StartDate.Date.AddDays(1);
-                        if (ReleaseDate.HasValue && !ReleaseEndDate.HasValue)
-                        {
-                            DateOnly DTP = DateOnly.FromDateTime(StartDate.Date);
-                            CDate = DTP.ToDateTime(listSchedules.LastOrDefault().End);
-                        }
-                        DateTime EndDate = ReleaseEndDate.HasValue ? ReleaseEndDate.Value : CDate;
                         directshortsScheduler = new DirectshortsScheduler(() => { Show(); }, DoOnScheduleComplete, listSchedules,
-                            StartDate, EndDate, DoReportSchedule, 100);
+                            ReleaseDate.Value, ReleaseEndDate.Value, DoReportSchedule, ScheduleMax);
                     }
                     //string URL = webAddressBuilder.AddFiltersByDRAFT_UNLISTED(false).Finalize().Address;
                     if (DefaultUrl is not null && DefaultUrl != "")
@@ -2296,15 +2291,43 @@ namespace VideoGui
             }
         }
 
-        private void DoOnScheduleComplete()
+        private bool DoOnScheduleComplete()
         {
             try
             {
-
+                if (!TimedOut)
+                {
+                    bool res = false;
+                    int r = directshortsScheduler.ScheduleNumber;
+                    lstMain.Items.Insert(0, $"{r} Schedules Complete");
+                    if (Days > 1)
+                    {
+                        if (CurrentDay > Days - 1) return false;
+                        if (directshortsScheduler is not null)
+                        {
+                            directshortsScheduler.ListScheduleIndex = 0;
+                            DateTime StartDate = ReleaseDate.HasValue ? ReleaseDate.Value : DateTime.Now;
+                            DateOnly SDate = DateOnly.FromDateTime(StartDate.Date).AddDays(CurrentDay);
+                            TimeOnly STime = TimeOnly.FromDateTime(StartDate);
+                            DateTime sDateTime = new DateTime(SDate, STime);
+                            DateTime EndDate = ReleaseEndDate.HasValue ? ReleaseEndDate.Value : DateTime.Now;
+                            DateOnly eDate = DateOnly.FromDateTime(EndDate.Date).AddDays(CurrentDay);
+                            TimeOnly eTime = TimeOnly.FromDateTime(EndDate);
+                            DateTime eDateTime = new DateTime(eDate, eTime);
+                            directshortsScheduler?.ScheduleNewDay(sDateTime, eDateTime);
+                            CurrentDay++;
+                            return true;
+                        }
+                        return res;
+                    }
+                    return res;
+                }
+                return false;
             }
             catch (Exception ex)
             {
                 ex.LogWrite($"DoOnScheduleComplete {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+                return false;
             }
         }
 
