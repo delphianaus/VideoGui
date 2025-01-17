@@ -126,8 +126,11 @@ namespace VideoGui
         public MasterTagSelectForm MasterTagSelectFrm = null;
         public SelectReleaseSchedule SelectReleaseScheduleFrm = null;
         public DirectoryTitleDescEditor DirectoryTitleDescEditorFrm = null;
+        public SchedulingSelectEditor schedulingSelectEditor = null;
         public ShowMatcher Swm;
         List<ListScheduleItems> ScheduleListItems = new List<ListScheduleItems>();
+        List<ListScheduleItems> ScheduleListedItems = new List<ListScheduleItems>();
+
         ObservableCollection<GroupTitleTags> groupTitleTagsList = new ObservableCollection<GroupTitleTags>();
         ObservableCollection<Descriptions> DescriptionsList = new ObservableCollection<Descriptions>();
         ObservableCollection<SelectedTags> selectedTagsList = new ObservableCollection<SelectedTags>();
@@ -138,6 +141,8 @@ namespace VideoGui
         ObservableCollection<AppliedSchedules> AppliedSchedulesList = new ObservableCollection<AppliedSchedules>();
         ObservableCollection<AppliedSchedule> AppliedScheduleList = new ObservableCollection<AppliedSchedule>();
         ObservableCollection<EventDefinition> EventDefinitionsList = new ObservableCollection<EventDefinition>();
+        ObservableCollection<ScheduleMapNames> SchedulingNamesList = new ObservableCollection<ScheduleMapNames>();
+        ObservableCollection<ScheduleMapItem> SchedulingItemsList = new ObservableCollection<ScheduleMapItem>();
         List<ShortsDirectory> shortsDirectoryList = new List<ShortsDirectory>();
         List<ShortsDirectory> EditableshortsDirectoryList = new List<ShortsDirectory>();
         CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
@@ -400,6 +405,17 @@ namespace VideoGui
                             formObjectHandler_DirectoryTitleDescEditor(tld, directoryTitleDescEditor);
                             break;
                         }
+                    case SelectReleaseSchedule selectReleaseSchedule:
+                        {
+
+                            break;
+                        }
+                    case SchedulingSelectEditor schedulingSelectEditor:
+                        {
+                            formObjectHandler_SchedulingSelectEditor(tld, schedulingSelectEditor);
+                            break;
+                        }
+                   
                 }
             }
             catch (Exception ex)
@@ -408,6 +424,187 @@ namespace VideoGui
             }
 
         }
+
+        private void AddSchedulingName(string name)
+        {
+            try
+            {
+                string sql = "insert into SCHEDULINGNAMES(NAME) values(@inputValue) returning ID;";
+                int idx = connectionString.ExecuteScalar(sql, [("@inputValue", name)]).ToInt(-1);
+                if (idx != -1)
+                {
+                    SchedulingNamesList.Add(new ScheduleMapNames(name, idx));
+                    string sqla = "SELECT ID FROM SETTINGS WHERE SETTINGNAME = @P0";
+                    int id = connectionString.ExecuteScalar(sqla, [("@P0", "CURRENTSCHEDULINGID")]).ToInt(-1);
+                    if (id == -1)
+                    {
+                        sqla = "INSERT INTO SETTINGS(SETTINGNAME,SETTING) VALUES(@P1,@P2) RETURNING ID:";
+                        id = connectionString.ExecuteScalar(sqla, [("@P1", "CURRENTSCHEDULINGID"), ("@P2", idx)]).ToInt(-1);
+                    }
+                    else
+                    {
+                        sqla = "UPDATE SETTINGS SET SETTING = @P1 WHERE ID = @P2";
+                        sqla.ExecuteScalar(sqla, [("@P1", idx), ("@P2", id)]);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"AddSchedulingName {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
+
+        private void SchedulingListUpdate(int id, bool remove = true, string name = "")
+        {
+            try
+            {
+                for (int i = SchedulingNamesList.Count - 1; i >= 0; i--)
+                {
+                    if (SchedulingNamesList[i].Id == id)
+                    {
+                        if (remove)
+                        {
+                            SchedulingNamesList.RemoveAt(i);
+                            string sqla = "SELECT ID FROM SETTINGS WHERE SETTINGNAME = @P0";
+                            int idx = connectionString.ExecuteScalar(sqla, [("@P0", "CURRENTSCHEDULINGID")]).ToInt(-1);
+                            if (idx == -1)
+                            {
+                                sqla = "INSERT INTO SETTINGS(SETTINGNAME,SETTING) VALUES(@P1,@P2) RETURNING ID:";
+                                idx = connectionString.ExecuteScalar(sqla, [("@P1", "CURRENTSCHEDULINGID"), ("@P2", -1)]).ToInt(-1);
+                            }
+                            else
+                            {
+                                sqla = "UPDATE SETTINGS SET SETTING = @P1 WHERE ID = @P2";
+                                sqla.ExecuteScalar(sqla, [("@P1", -1), ("@P2", idx)]);
+                            }
+                            //ColectionFilter.SetSchedulingTag(-1);
+                        }
+                        else
+                        {
+                            SchedulingNamesList[i].Name = name;
+                        }
+                        break;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"RemoveFromSchedulingList {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
+        private void formObjectHandler_SchedulingSelectEditor(object tld, SchedulingSelectEditor schedulingSelectEditor)
+        {
+            try
+            {
+                if (tld is CustomParams_Initialize cpi)
+                {
+
+                }
+                else if (tld is CustomParams_Finish cpFinish)
+                {
+                    bool found = false;
+                    int id = -1;
+                    foreach(var item in SchedulingNamesList.Where(s=>s.Name == cpFinish.name))
+                    {
+                        found = true;
+                        id = item.Id;
+                        break;
+                    }
+                    if (found)
+                    {
+                        string sqla1 = "SELECT ID FROM SETTINGS WHERE SETTINGNAME = @P0";
+                        int idx1 = connectionString.ExecuteScalar(sqla1, [("@P0", "CURRENTSCHEDULINGID")]).ToInt(-1);
+                        if (idx1 == -1)
+                        {
+                            sqla1 = "INSERT INTO SETTINGS(SETTINGNAME,SETTING) VALUES(@P1,@P2) RETURNING ID:";
+                            idx1 = connectionString.ExecuteScalar(sqla1, [("@P1", "CURRENTSCHEDULINGID"), ("@P2", id)]).ToInt(-1);
+                        }
+                        else
+                        {
+                            sqla1 = "UPDATE SETTINGS SET SETTING = @P1 WHERE ID = @ID";
+                            connectionString.ExecuteScalar(sqla1, [("@ID", id), ("@P1", id)]).ToInt(-1);
+                        }
+                    }
+                    else
+                    {
+                        string sqlxx = "INSERT INTO SCHEDULINGNAMES(NAME) VALUES(@NAMES) REURTING ID;";
+                        int idxp = connectionString.ExecuteScalar(sqlxx, [("@NAMES", cpFinish.name)]).ToInt(-1);
+                        if (idxp != -1)
+                        {
+                            SchedulingNamesList.Add(new ScheduleMapNames(cpFinish.name, idxp));
+                            string sqla2 = "SELECT ID FROM SETTINGS WHERE SETTINGNAME = @P0";
+                            int idx2 = connectionString.ExecuteScalar(sqla2, [("@P0", "CURRENTSCHEDULINGID")]).ToInt(-1);
+                            if (idx2 == -1)
+                            {
+                                sqla2 = "INSERT INTO SETTINGS(SETTINGNAME,SETTING) VALUES(@P1,@P2) RETURNING ID:";
+                                idx2 = connectionString.ExecuteScalar(sqla2, [("@P1", "CURRENTSCHEDULINGID"), ("@P2", id)]).ToInt(-1);
+                            }
+                            else
+                            {
+                                sqla2 = "UPDATE SETTINGS SET SETTING = @P1 WHERE ID = @ID";
+                                connectionString.ExecuteScalar(sqla2, [("@ID", id), ("@P1", id)]).ToInt(-1);
+                            }
+                        }
+                    }
+                }
+                else if (tld is CustomParams_Select spSelect)
+                {
+                    string sqla = "SELECT ID FROM SETTINGS WHERE SETTINGNAME = @P0";
+                    int idx = connectionString.ExecuteScalar(sqla, [("@P0", "CURRENTSCHEDULINGID")]).ToInt(-1);
+                    if (idx == -1)
+                    {
+                        sqla = "INSERT INTO SETTINGS(SETTINGNAME,SETTING) VALUES(@P1,@P2) RETURNING ID:";
+                        idx = connectionString.ExecuteScalar(sqla, [("@P1", "CURRENTSCHEDULINGID"), ("@P2", spSelect.Id)]).ToInt(-1);
+                    }
+                    else
+                    {
+                        sqla = "UPDATE SETTINGS SET SETTING = @P1 WHERE ID = @ID";
+                        connectionString.ExecuteScalar(sqla, [("@ID", idx), ("@P1", spSelect.Id)]).ToInt(-1);
+                    }
+
+                }
+                else if (tld is CustomParams_Save cpSave)
+                {
+                    if (cpSave.id != -1)
+                    {
+                        string sql = "update SCHEDULINGNAMES set " +
+                            "NAME = @inputValue where ID = @inputValue2";
+                        connectionString.ExecuteNonQuery(sql, [("@inputValue", cpSave.Name), ("@inputValue2", cpSave.id)]);
+                        SchedulingListUpdate(cpSave.id, false, cpSave.Name);
+                    }
+                    else
+                    {
+                        AddSchedulingName(cpSave.Name);
+                    }
+                }
+                else if (tld is CustomParams_Delete cpd)
+                {
+                    string sql = "DELETE FROM SCHEDULES WHERE ID = @P0";
+                    connectionString.ExecuteScalar(sql, [("@P0", cpd.Id)]);
+                    foreach (var item in VideoSchedulesList.Where(s => s.Id == cpd.Id))
+                    {
+                        VideoSchedulesList.Remove(item);
+                        break;
+                    }
+                }
+
+                else if (tld is CustomParams_Update cpu)
+                {
+                    string sql = "UPDATE SCHEDULES SET NAME = @P1 WHERE ID = @P0";
+                    connectionString.ExecuteScalar(sql, [("@P0", cpu.id), ("@P1", cpu.DirectoryName)]);
+                    foreach (var item in VideoSchedulesList.Where(s => s.Id == cpu.id))
+                    {
+                        item.Name = cpu.DirectoryName;
+                        break;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"formObjectHandler_SchedulingSelectEditor {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+        }
+
         public string GetShortsDirectorySql(int index = -1)
         {
             try
@@ -2528,6 +2725,12 @@ namespace VideoGui
                 connectionString.AddFieldToTable("DESCRIPTIONS", "ISTAG", "SMALLINT", 0);
                 connectionString.CreateTableIfNotExists($"CREATE TABLE RUNNINGID({Id}, ACTIVE SMALLINT)");
                 sqlstring = $"INSERT INTO RUNNINGID(ACTIVE) VALUES(0) RETURNING ID;";
+
+                sqlstring = $"CREATE TABLE SCHEDULINGITEMS({Id},SCHEDULINGID INTEGER,SSTART TIME,SEND TIME,GAP INTEGER);";
+                connectionString.CreateTableIfNotExists(sqlstring);
+                sqlstring = $"CREATE TABLE SCHEDULINGNAMES({Id},NAME VARCHAR(250));";
+                connectionString.CreateTableIfNotExists(sqlstring);
+
                 int idx = connectionString.ExecuteScalar(sqlstring).ToInt(-1);
                 CurrentDbId = (idx != -1) ? idx : CurrentDbId;
                 LoadFromDb();
@@ -2700,6 +2903,14 @@ namespace VideoGui
                 connectionString.ExecuteReader("SELECT * FROM DESCRIPTIONS", (FbDataReader r) =>
                 {
                     DescriptionsList.Add(new Descriptions(r));
+                });
+                connectionString.ExecuteReader("SELECT * FROM SCHEDULINGNAMES", (FbDataReader r) =>
+                {
+                    SchedulingNamesList.Add(new ScheduleMapNames(r));
+                });
+                connectionString.ExecuteReader("SELECT * FROM SCHEDULINGITEMS", (FbDataReader r) =>
+                {
+                    SchedulingItemsList.Add(new ScheduleMapItem(r));
                 });
 
 
@@ -8139,6 +8350,59 @@ namespace VideoGui
             catch (Exception ex)
             {
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+            }
+        }
+
+        private void btnEditSchedules_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (schedulingSelectEditor is not null)
+                {
+                    if (schedulingSelectEditor.IsClosing) schedulingSelectEditor.Close();
+                    while (!schedulingSelectEditor.IsClosed)
+                    {
+                        Thread.Sleep(100);
+                        System.Windows.Forms.Application.DoEvents();
+                    }
+                    schedulingSelectEditor.Close();
+                    schedulingSelectEditor = null;
+                }
+
+                schedulingSelectEditor = new SchedulingSelectEditor(SchedulingEditorOnFinish, ModuleCallback);
+                schedulingSelectEditor.ShowActivated = true;
+                Hide();
+                schedulingSelectEditor.Show();
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite(MethodBase.GetCurrentMethod().Name + $" {ex.Message}");
+            }
+        }
+
+        private void SchedulingEditorOnFinish()
+        {
+            try
+            {
+                Show();
+                Task.Run(() =>
+                {
+                    if (schedulingSelectEditor is not null && !schedulingSelectEditor.IsClosed)
+                    {
+                        if (schedulingSelectEditor.IsClosing) schedulingSelectEditor.Close();
+                        while (!schedulingSelectEditor.IsClosed)
+                        {
+                            Thread.Sleep(100);
+                        }
+                        schedulingSelectEditor.Close();
+                        schedulingSelectEditor = null;
+                    }
+                });
+            }
+            catch(Exception ex)
+            {
+                ex.LogWrite(MethodBase.GetCurrentMethod().Name + $" {ex.Message}");
+
             }
         }
 

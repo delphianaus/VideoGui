@@ -9,7 +9,7 @@ using VideoGui.Models.delegates;
 
 namespace VideoGui.Models
 {
-
+    
     public class CustomParams_InsertTags
     {
         public List<int> TagIds { get; set; } = new List<int>();
@@ -162,6 +162,14 @@ namespace VideoGui.Models
         public CustomParams_TitleSelect(ShortsDirectory _UploadsReleaseInfo)
         {
             UploadsReleaseInfo = _UploadsReleaseInfo;
+        }
+    }
+    public class CustomParams_Finish
+    {
+        public string name { get; set; } = "";
+        public CustomParams_Finish(string name)
+        {
+            this.name = name;
         }
     }
 

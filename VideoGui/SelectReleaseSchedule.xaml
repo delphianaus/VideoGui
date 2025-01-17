@@ -45,7 +45,6 @@
                                     <ListBox.Resources>
                                         <!--Defines a context menu-->
                                         <ContextMenu x:Key="MyElementMenu">
-                                            <MenuItem Name="mnuSave" Header="Save" Click="mnuSave_Click"/>
                                             <MenuItem Name="mnuEdit" Header="Edit" Click="mnuEdit_Click"/>
                                             <Separator/>
                                             <MenuItem Name="mnuNew" Header="New" Click="mnuNew_Click"/>

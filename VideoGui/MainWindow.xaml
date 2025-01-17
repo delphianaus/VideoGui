@@ -98,13 +98,13 @@
         <ToggleButton x:Name="Fisheye" Style="{StaticResource  ToggleStyle3}"  Margin="1025,0,7,76" Height="24"  Width="Auto" HorizontalAlignment="Left" VerticalAlignment="Bottom"/>
 
         <Button x:Name="btnConfig" Content="Configuration" HorizontalAlignment="Left" Height="22" Margin="26,0,0,113" VerticalAlignment="Bottom" Click="BtnConfig_Click" Width="97"/>
-        <Button x:Name="BtnCompare" Content="File Compare" HorizontalAlignment="Left" Height="26" Margin="118,0,0,80" VerticalAlignment="Bottom" Click="BtnCompare_Click" Width="78" RenderTransformOrigin="0.475,1.233"/>
+        <Button x:Name="BtnCompare" Content="File Compare" HorizontalAlignment="Left" Height="26" Margin="118,0,0,81" VerticalAlignment="Bottom" Click="BtnCompare_Click" Width="78" RenderTransformOrigin="0.475,1.233"/>
         <Button x:Name="DeleteSel"  HorizontalAlignment="Left" Height="26" Margin="440,0,0,79" VerticalAlignment="Bottom" Width="24" Click="DeleteSel_Click">
             <Image Source="/Icons/cancel.png" VerticalAlignment="Bottom"/>
         </Button>
-        <ComboBox x:Name="CmbScanDirectory" HorizontalAlignment="Left" Margin="271,0,0,83" VerticalAlignment="Bottom" Width="164" LostFocus="CmbScanDirectory_LostFocus" KeyUp="CmbScanDirectory_KeyUp"/>
-        <Button Content="" HorizontalAlignment="Left" Height="26" Margin="87,0,0,80" VerticalAlignment="Bottom" Width="26" Click="Button_Click"/>
-        <Button x:Name="BtnViewLog" Content="View Log" HorizontalAlignment="Left" Height="30" Margin="201,0,0,78" VerticalAlignment="Bottom" Click="BtnViewLog_Click" Width="57" />
+        <ComboBox x:Name="CmbScanDirectory" HorizontalAlignment="Left" Margin="271,0,0,82" VerticalAlignment="Bottom" Width="164" LostFocus="CmbScanDirectory_LostFocus" KeyUp="CmbScanDirectory_KeyUp"/>
+        <Button Content="" HorizontalAlignment="Left" Height="26" Margin="87,0,0,81" VerticalAlignment="Bottom" Width="26" Click="Button_Click"/>
+        <Button x:Name="BtnViewLog" Content="View Log" HorizontalAlignment="Left" Height="30" Margin="201,0,0,79" VerticalAlignment="Bottom" Click="BtnViewLog_Click" Width="57" />
         <StatusBar x:Name="statusbar1" Height="34" Margin="25,0,0,0" VerticalAlignment="Bottom">
             <Label x:Name="lblTotalStatus" Background="#FFBFBFBF" Width="62" Height="34" Content="Total Time" FontSize="11"/>
             <Label x:Name="LblTotalTIMEAll" Content="" HorizontalAlignment="Left" Height="28" VerticalAlignment="Center" Width="47"/>
@@ -148,9 +148,10 @@
             <Button x:Name="btnYTSchedule" Content="Uploads Info" HorizontalAlignment="Center" Height="28" VerticalAlignment="Center" Width="70" Click="btnYTSchedule_Click"/>
 
         </StatusBar>
-        <Button x:Name="BtnFileFixer" Content="File Fixer" HorizontalAlignment="Left" Height="24" Margin="26,0,0,81" VerticalAlignment="Bottom" Width="53" Click="BtnFileFixer_Click"/>
-        <Button x:Name="BtnVideoCardDetails" Content="" HorizontalAlignment="Left" Height="30" Margin="758,0,0,75" VerticalAlignment="Bottom" Width="41" Click="BtnVideoCardDetails_Click"/>
-        <Button x:Name="btnEditDirectories" Content="Edit Dirs" Height="26" Margin="469,0,0,77" VerticalAlignment="Bottom" HorizontalAlignment="Left" Click="btnEditDirectories_Click" Width="63"/>
+        <Button x:Name="BtnFileFixer" Content="File Fixer" HorizontalAlignment="Left" Height="24" Margin="26,0,0,82" VerticalAlignment="Bottom" Width="53" Click="BtnFileFixer_Click"/>
+        <Button x:Name="BtnVideoCardDetails" Content="" HorizontalAlignment="Left" Height="30" Margin="469,0,0,79" VerticalAlignment="Bottom" Width="40" Click="BtnVideoCardDetails_Click" RenderTransformOrigin="-0.864,0.693"/>
+        <Button x:Name="btnEditDirectories" Content="Edit Dirs" Height="26" Margin="515,0,0,81" VerticalAlignment="Bottom" HorizontalAlignment="Left" Click="btnEditDirectories_Click" Width="64"/>
+        <Button x:Name="btnEditSchedules" Content="Edit Schedules" Height="26" Margin="584,0,0,81" VerticalAlignment="Bottom" HorizontalAlignment="Left" Click="btnEditSchedules_Click" Width="119"/>
     </Grid>
 
 </Window>

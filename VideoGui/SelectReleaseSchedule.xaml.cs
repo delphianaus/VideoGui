@@ -54,32 +54,9 @@ namespace VideoGui
             }
         }
 
-        public class CustomParams_Add
-        {
-            public bool Is_Applied = false;
-            public string Name { get; set; } = "";
-            public dataUpdatType dataUpdatType { get; set; } = dataUpdatType.Add;
-            public string data_string { get; set; } = "";
-            public CustomParams_Add(string _Name, string datastring, bool IsApplied = false)
-            {
-                Name = _Name;
-                Is_Applied = IsApplied;
-                data_string = datastring;
-            }
-        }
+        
 
-        private void mnuSave_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                dbInitialzer?.Invoke(this, new CustomParams_Add(txtScheduleName.Text, "", IsApplied));
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite($"mnuNew_Click {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
-            }
-        }
-
+        
         private void mnuEdit_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -114,6 +91,7 @@ namespace VideoGui
         {
             try
             {
+                dbInitialzer?.Invoke(this, new CustomParams_Finish(txtScheduleName.Text));
                 DoOnFinish?.Invoke();
             }
             catch (Exception ex)
@@ -126,6 +104,7 @@ namespace VideoGui
         {
             try
             {
+
                 dbInitialzer?.Invoke(this, null);
             }
             catch (Exception ex)
