@@ -429,7 +429,11 @@ namespace VideoGui
         {
             try
             {
-                if (tld is CustomParams_Save cpSave)
+                if (tld is CustomParams_Initialize cpInit)
+                {
+                    selectReleaseSchedule.lstMainSchedules.ItemsSource = SchedulingNamesList;
+                }
+                else if (tld is CustomParams_Save cpSave)
                 {
                     if (cpSave.id != -1)
                     {
@@ -459,7 +463,7 @@ namespace VideoGui
                     int idx = connectionString.ExecuteScalar(sqla, [("@P0", "CURRENTSCHEDULINGID")]).ToInt(-1);
                     if (idx == -1)
                     {
-                        sqla = "INSERT INTO SETTINGS(SETTINGNAME,SETTING) VALUES(@P1,@P2) RETURNING ID:";
+                        sqla = "INSERT INTO SETTINGS(SETTINGNAME,SETTING) VALUES(@P1,@P2) RETURNING ID;";
                         idx = connectionString.ExecuteScalar(sqla, [("@P1", "CURRENTSCHEDULINGID"), ("@P2", spSelect.Id)]).ToInt(-1);
                     }
                     else
@@ -485,7 +489,7 @@ namespace VideoGui
                         int idx1 = connectionString.ExecuteScalar(sqla1, [("@P0", "CURRENTSCHEDULINGID")]).ToInt(-1);
                         if (idx1 == -1)
                         {
-                            sqla1 = "INSERT INTO SETTINGS(SETTINGNAME,SETTING) VALUES(@P1,@P2) RETURNING ID:";
+                            sqla1 = "INSERT INTO SETTINGS(SETTINGNAME,SETTING) VALUES(@P1,@P2) RETURNING ID;";
                             idx1 = connectionString.ExecuteScalar(sqla1, [("@P1", "CURRENTSCHEDULINGID"), ("@P2", id)]).ToInt(-1);
                         }
                         else
@@ -600,20 +604,30 @@ namespace VideoGui
                     int idx = connectionString.ExecuteScalar(sqla, [("@P0", "CURRENTSCHEDULINGID")]).ToInt(-1);
                     if (idx != -1)
                     {
-                        schedulingSelectEditor.lstTitles.ItemsSource = SchedulingItemsList.Where(s => s.ScheduleId == idx);
+                        foreach (var cp in SchedulingNamesList.Where(cp => cp.Id == idx))
+                        {
+                            schedulingSelectEditor.txtTitle.Text = cp.Name;
+                            break;
+                        }
+                   
+                        schedulingSelectEditor.lstTitles.ItemsSource = SchedulingItemsList.Where(s => s.ScheduleId == idx).ToList();
+                        schedulingSelectEditor.TitleId = idx;
                     }
                     else
                     {
                         schedulingSelectEditor.lstTitles.ItemsSource = null;
+                        schedulingSelectEditor.TitleId = -1;
                     }
                 }
                 else if (tld is CustomParams_RemoveTimeSpans cp_RMTSE)
                 {
                     RemoveTimeSpansFromSchedulingItemsList(cp_RMTSE.id, cp_RMTSE.RemoveAll);
+                    schedulingSelectEditor.lstTitles.ItemsSource = SchedulingItemsList.Where(s => s.ScheduleId == schedulingSelectEditor.TitleId).ToList();
                 }
                 else if (tld is CustomParams_EditTimeSpans cp_ETSE)
                 {
-                    EditTimeSpansFromSchedulingItemsList(cp_ETSE.id, cp_ETSE.Start, cp_ETSE.End, cp_ETSE.Gap);
+                    EditTimeSpansFromSchedulingItemsList(cp_ETSE.id, cp_ETSE.Start, cp_ETSE.End, cp_ETSE.Gap); 
+                    schedulingSelectEditor.lstTitles.ItemsSource = SchedulingItemsList.Where(s => s.ScheduleId == schedulingSelectEditor.TitleId).ToList();
                 }
                 else if (tld is CustomParams_Refresh cR)
                 {
@@ -621,17 +635,27 @@ namespace VideoGui
                     int idx = connectionString.ExecuteScalar(sqla, [("@P0", "CURRENTSCHEDULINGID")]).ToInt(-1);
                     if (idx != -1)
                     {
-                        schedulingSelectEditor.lstTitles.ItemsSource = SchedulingItemsList.Where(s => s.ScheduleId == idx);
+                        foreach (var cp in SchedulingNamesList.Where(cp => cp.Id == idx))
+                        {
+                            schedulingSelectEditor.txtTitle.Text = cp.Name;
+                            schedulingSelectEditor.TitleId = idx;
+                            break;
+                        }
+                        schedulingSelectEditor.lstTitles.ItemsSource = null;
+                        schedulingSelectEditor.lstTitles.ItemsSource = SchedulingItemsList.Where(s => s.ScheduleId == idx).ToList();
+                        schedulingSelectEditor.TitleId = idx;
                     }
                     else
                     {
                         schedulingSelectEditor.lstTitles.ItemsSource = null;
+                        schedulingSelectEditor.TitleId = -1;
                     }
                 }
                 else if (tld is CustomParams_AddTimeSpanEntries cp_ATSE)
                 {
                     var Id = schedulingSelectEditor.TitleId;
                     AddTimeSpansToSchedulingItemsList(cp_ATSE.Start, cp_ATSE.End, cp_ATSE.Gap, Id);
+                    schedulingSelectEditor.lstTitles.ItemsSource = SchedulingItemsList.Where(s => s.ScheduleId == schedulingSelectEditor.TitleId).ToList();
                 }
                 else if (tld is CustomParams_Update cpu)
                 {
@@ -655,9 +679,15 @@ namespace VideoGui
             try
             {
                 bool found = false;
-                string sql = "SELECT ID FROM SCHEDULINGITEMS WHERE @inputValue BETWEEN SSTART AND SEND AND SCHEDULINGID = @SCHEDULEID";
-                int idx1 = connectionString.ExecuteScalar(sql, [("@inputValue", Start), ("@SCHEDULEID", SchId)]).ToInt(-1);
-                if (idx1 == -1)
+                foreach (var _ in SchedulingItemsList.Where(times => (Start > times.Start && Start < times.End) || (End > times.Start && End < times.End)).Select(times => new { }))
+                {
+                    found = true;
+                    break;
+                }
+
+                string sql = "";
+                //int idx1 = connectionString.ExecuteScalar(sql, [("@inputValue", Start), ("@SCHEDULEID", SchId)]).ToInt(-1);
+                if (!found)
                 {
                     int idx = -1;
                     string sqla = "SELECT ID FROM SETTINGS WHERE SETTINGNAME = @P0";

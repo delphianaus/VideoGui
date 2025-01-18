@@ -68,10 +68,12 @@
     <None Remove="Icons\OutputX264.png" />
     <None Remove="Icons\plus.png" />
     <None Remove="Icons\RightArrow..png" />
+    <None Remove="Icons\save.png" />
     <None Remove="Icons\SelectDown.png" />
     <None Remove="Icons\set.png" />
     <None Remove="Icons\upArrow.png" />
     <None Remove="Icons\update.png" />
+    <None Remove="Icons\update2.png" />
     <None Remove="Icons\UpdateCircle.png" />
     <None Remove="Icons\UpdateNew.png" />
     <None Remove="Icons\Yes.png" />
@@ -157,6 +159,10 @@
 
     <Resource Include="Icons\RightArrow..png" />
 
+    <Resource Include="Icons\save.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+
     <Resource Include="Icons\SelectDown.png" />
 
     <Resource Include="Icons\set.png">
@@ -166,6 +172,10 @@
     <Resource Include="Icons\upArrow.png" />
 
     <Resource Include="Icons\update.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+
+    <Resource Include="Icons\update2.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
 

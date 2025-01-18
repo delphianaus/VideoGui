@@ -104,8 +104,7 @@ namespace VideoGui
         {
             try
             {
-
-                dbInitialzer?.Invoke(this, null);
+                dbInitialzer?.Invoke(this, new CustomParams_Initialize());
             }
             catch (Exception ex)
             {
@@ -116,6 +115,18 @@ namespace VideoGui
         private void btnClose_Click(object sender, RoutedEventArgs e)
         {
             Close();
+        }
+
+        private void txtScheduleName_LostFocus(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                dbInitialzer?.Invoke(this, new CustomParams_Finish(txtScheduleName.Text));
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"txtScheduleName_LostFocus {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
         }
 
         private void btnSave_Click(object sender, RoutedEventArgs e)
