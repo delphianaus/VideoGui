@@ -407,7 +407,7 @@ namespace VideoGui
                         }
                     case SelectReleaseSchedule selectReleaseSchedule:
                         {
-
+                            formObjectHandler_SelectReleaseSchedule(tld, selectReleaseSchedule);
                             break;
                         }
                     case SchedulingSelectEditor schedulingSelectEditor:
@@ -423,6 +423,104 @@ namespace VideoGui
                 ex.LogWrite($"ModuleCallback {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
 
+        }
+
+        private void formObjectHandler_SelectReleaseSchedule(object tld, SelectReleaseSchedule selectReleaseSchedule)
+        {
+            try
+            {
+                if (tld is CustomParams_Save cpSave)
+                {
+                    if (cpSave.id != -1)
+                    {
+                        string sql = "update SCHEDULINGNAMES set " +
+                            "NAME = @inputValue where ID = @inputValue2";
+                        connectionString.ExecuteNonQuery(sql, [("@inputValue", cpSave.Name), ("@inputValue2", cpSave.id)]);
+                        SchedulingListUpdate(cpSave.id, false, cpSave.Name);
+                    }
+                    else
+                    {
+                        AddSchedulingName(cpSave.Name);
+                    }
+                }
+                else if (tld is CustomParams_Delete cpd)
+                {
+                    string sql = "DELETE FROM SCHEDULES WHERE ID = @P0";
+                    connectionString.ExecuteScalar(sql, [("@P0", cpd.Id)]);
+                    foreach (var item in VideoSchedulesList.Where(s => s.Id == cpd.Id))
+                    {
+                        VideoSchedulesList.Remove(item);
+                        break;
+                    }
+                }
+                else if (tld is CustomParams_Select spSelect)
+                {
+                    string sqla = "SELECT ID FROM SETTINGS WHERE SETTINGNAME = @P0";
+                    int idx = connectionString.ExecuteScalar(sqla, [("@P0", "CURRENTSCHEDULINGID")]).ToInt(-1);
+                    if (idx == -1)
+                    {
+                        sqla = "INSERT INTO SETTINGS(SETTINGNAME,SETTING) VALUES(@P1,@P2) RETURNING ID:";
+                        idx = connectionString.ExecuteScalar(sqla, [("@P1", "CURRENTSCHEDULINGID"), ("@P2", spSelect.Id)]).ToInt(-1);
+                    }
+                    else
+                    {
+                        sqla = "UPDATE SETTINGS SET SETTING = @P1 WHERE ID = @ID";
+                        connectionString.ExecuteScalar(sqla, [("@ID", idx), ("@P1", spSelect.Id)]).ToInt(-1);
+                    }
+
+                }
+                else if (tld is CustomParams_Finish cpFinish)
+                {
+                    bool found = false;
+                    int id = -1;
+                    foreach (var item in SchedulingNamesList.Where(s => s.Name == cpFinish.name))
+                    {
+                        found = true;
+                        id = item.Id;
+                        break;
+                    }
+                    if (found)
+                    {
+                        string sqla1 = "SELECT ID FROM SETTINGS WHERE SETTINGNAME = @P0";
+                        int idx1 = connectionString.ExecuteScalar(sqla1, [("@P0", "CURRENTSCHEDULINGID")]).ToInt(-1);
+                        if (idx1 == -1)
+                        {
+                            sqla1 = "INSERT INTO SETTINGS(SETTINGNAME,SETTING) VALUES(@P1,@P2) RETURNING ID:";
+                            idx1 = connectionString.ExecuteScalar(sqla1, [("@P1", "CURRENTSCHEDULINGID"), ("@P2", id)]).ToInt(-1);
+                        }
+                        else
+                        {
+                            sqla1 = "UPDATE SETTINGS SET SETTING = @P1 WHERE ID = @ID";
+                            connectionString.ExecuteScalar(sqla1, [("@ID", id), ("@P1", id)]).ToInt(-1);
+                        }
+                    }
+                    else
+                    {
+                        string sqlxx = "INSERT INTO SCHEDULINGNAMES(NAME) VALUES(@NAMES) REURTING ID;";
+                        int idxp = connectionString.ExecuteScalar(sqlxx, [("@NAMES", cpFinish.name)]).ToInt(-1);
+                        if (idxp != -1)
+                        {
+                            SchedulingNamesList.Add(new ScheduleMapNames(cpFinish.name, idxp));
+                            string sqla2 = "SELECT ID FROM SETTINGS WHERE SETTINGNAME = @P0";
+                            int idx2 = connectionString.ExecuteScalar(sqla2, [("@P0", "CURRENTSCHEDULINGID")]).ToInt(-1);
+                            if (idx2 == -1)
+                            {
+                                sqla2 = "INSERT INTO SETTINGS(SETTINGNAME,SETTING) VALUES(@P1,@P2) RETURNING ID:";
+                                idx2 = connectionString.ExecuteScalar(sqla2, [("@P1", "CURRENTSCHEDULINGID"), ("@P2", id)]).ToInt(-1);
+                            }
+                            else
+                            {
+                                sqla2 = "UPDATE SETTINGS SET SETTING = @P1 WHERE ID = @ID";
+                                connectionString.ExecuteScalar(sqla2, [("@ID", id), ("@P1", id)]).ToInt(-1);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"formObjectHandler_SelectReleaseSchedule {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
         }
 
         private void AddSchedulingName(string name)
@@ -498,96 +596,43 @@ namespace VideoGui
             {
                 if (tld is CustomParams_Initialize cpi)
                 {
-
-                }
-                else if (tld is CustomParams_Finish cpFinish)
-                {
-                    bool found = false;
-                    int id = -1;
-                    foreach(var item in SchedulingNamesList.Where(s=>s.Name == cpFinish.name))
+                    string sqla = "SELECT ID FROM SETTINGS WHERE SETTINGNAME = @P0";
+                    int idx = connectionString.ExecuteScalar(sqla, [("@P0", "CURRENTSCHEDULINGID")]).ToInt(-1);
+                    if (idx != -1)
                     {
-                        found = true;
-                        id = item.Id;
-                        break;
-                    }
-                    if (found)
-                    {
-                        string sqla1 = "SELECT ID FROM SETTINGS WHERE SETTINGNAME = @P0";
-                        int idx1 = connectionString.ExecuteScalar(sqla1, [("@P0", "CURRENTSCHEDULINGID")]).ToInt(-1);
-                        if (idx1 == -1)
-                        {
-                            sqla1 = "INSERT INTO SETTINGS(SETTINGNAME,SETTING) VALUES(@P1,@P2) RETURNING ID:";
-                            idx1 = connectionString.ExecuteScalar(sqla1, [("@P1", "CURRENTSCHEDULINGID"), ("@P2", id)]).ToInt(-1);
-                        }
-                        else
-                        {
-                            sqla1 = "UPDATE SETTINGS SET SETTING = @P1 WHERE ID = @ID";
-                            connectionString.ExecuteScalar(sqla1, [("@ID", id), ("@P1", id)]).ToInt(-1);
-                        }
+                        schedulingSelectEditor.lstTitles.ItemsSource = SchedulingItemsList.Where(s => s.ScheduleId == idx);
                     }
                     else
                     {
-                        string sqlxx = "INSERT INTO SCHEDULINGNAMES(NAME) VALUES(@NAMES) REURTING ID;";
-                        int idxp = connectionString.ExecuteScalar(sqlxx, [("@NAMES", cpFinish.name)]).ToInt(-1);
-                        if (idxp != -1)
-                        {
-                            SchedulingNamesList.Add(new ScheduleMapNames(cpFinish.name, idxp));
-                            string sqla2 = "SELECT ID FROM SETTINGS WHERE SETTINGNAME = @P0";
-                            int idx2 = connectionString.ExecuteScalar(sqla2, [("@P0", "CURRENTSCHEDULINGID")]).ToInt(-1);
-                            if (idx2 == -1)
-                            {
-                                sqla2 = "INSERT INTO SETTINGS(SETTINGNAME,SETTING) VALUES(@P1,@P2) RETURNING ID:";
-                                idx2 = connectionString.ExecuteScalar(sqla2, [("@P1", "CURRENTSCHEDULINGID"), ("@P2", id)]).ToInt(-1);
-                            }
-                            else
-                            {
-                                sqla2 = "UPDATE SETTINGS SET SETTING = @P1 WHERE ID = @ID";
-                                connectionString.ExecuteScalar(sqla2, [("@ID", id), ("@P1", id)]).ToInt(-1);
-                            }
-                        }
+                        schedulingSelectEditor.lstTitles.ItemsSource = null;
                     }
                 }
-                else if (tld is CustomParams_Select spSelect)
+                else if (tld is CustomParams_RemoveTimeSpans cp_RMTSE)
+                {
+                    RemoveTimeSpansFromSchedulingItemsList(cp_RMTSE.id, cp_RMTSE.RemoveAll);
+                }
+                else if (tld is CustomParams_EditTimeSpans cp_ETSE)
+                {
+                    EditTimeSpansFromSchedulingItemsList(cp_ETSE.id, cp_ETSE.Start, cp_ETSE.End, cp_ETSE.Gap);
+                }
+                else if (tld is CustomParams_Refresh cR)
                 {
                     string sqla = "SELECT ID FROM SETTINGS WHERE SETTINGNAME = @P0";
                     int idx = connectionString.ExecuteScalar(sqla, [("@P0", "CURRENTSCHEDULINGID")]).ToInt(-1);
-                    if (idx == -1)
+                    if (idx != -1)
                     {
-                        sqla = "INSERT INTO SETTINGS(SETTINGNAME,SETTING) VALUES(@P1,@P2) RETURNING ID:";
-                        idx = connectionString.ExecuteScalar(sqla, [("@P1", "CURRENTSCHEDULINGID"), ("@P2", spSelect.Id)]).ToInt(-1);
+                        schedulingSelectEditor.lstTitles.ItemsSource = SchedulingItemsList.Where(s => s.ScheduleId == idx);
                     }
                     else
                     {
-                        sqla = "UPDATE SETTINGS SET SETTING = @P1 WHERE ID = @ID";
-                        connectionString.ExecuteScalar(sqla, [("@ID", idx), ("@P1", spSelect.Id)]).ToInt(-1);
+                        schedulingSelectEditor.lstTitles.ItemsSource = null;
                     }
-
                 }
-                else if (tld is CustomParams_Save cpSave)
+                else if (tld is CustomParams_AddTimeSpanEntries cp_ATSE)
                 {
-                    if (cpSave.id != -1)
-                    {
-                        string sql = "update SCHEDULINGNAMES set " +
-                            "NAME = @inputValue where ID = @inputValue2";
-                        connectionString.ExecuteNonQuery(sql, [("@inputValue", cpSave.Name), ("@inputValue2", cpSave.id)]);
-                        SchedulingListUpdate(cpSave.id, false, cpSave.Name);
-                    }
-                    else
-                    {
-                        AddSchedulingName(cpSave.Name);
-                    }
+                    var Id = schedulingSelectEditor.TitleId;
+                    AddTimeSpansToSchedulingItemsList(cp_ATSE.Start, cp_ATSE.End, cp_ATSE.Gap, Id);
                 }
-                else if (tld is CustomParams_Delete cpd)
-                {
-                    string sql = "DELETE FROM SCHEDULES WHERE ID = @P0";
-                    connectionString.ExecuteScalar(sql, [("@P0", cpd.Id)]);
-                    foreach (var item in VideoSchedulesList.Where(s => s.Id == cpd.Id))
-                    {
-                        VideoSchedulesList.Remove(item);
-                        break;
-                    }
-                }
-
                 else if (tld is CustomParams_Update cpu)
                 {
                     string sql = "UPDATE SCHEDULES SET NAME = @P1 WHERE ID = @P0";
@@ -605,6 +650,79 @@ namespace VideoGui
             }
         }
 
+        public void AddTimeSpansToSchedulingItemsList(TimeSpan Start, TimeSpan End, int Gap, int SchId)
+        {
+            try
+            {
+                bool found = false;
+                string sql = "SELECT ID FROM SCHEDULINGITEMS WHERE @inputValue BETWEEN SSTART AND SEND AND SCHEDULINGID = @SCHEDULEID";
+                int idx1 = connectionString.ExecuteScalar(sql, [("@inputValue", Start), ("@SCHEDULEID", SchId)]).ToInt(-1);
+                if (idx1 == -1)
+                {
+                    int idx = -1;
+                    string sqla = "SELECT ID FROM SETTINGS WHERE SETTINGNAME = @P0";
+                    int SchedulingId = connectionString.ExecuteScalar(sqla, [("@P0", "CURRENTSCHEDULINGID")]).ToInt(-1);
+
+                    string sqlx = "INSERT INTO SCHEDULINGITEMS(SSTART,SEND,Gap,SCHEDULINGID) VALUES(@START,@END,@GAP,@SCHEDULINGID) RETURNING ID;";
+                    idx = connectionString.ExecuteScalar(sqlx, [("@START", Start), ("@END", End), ("@GAP", Gap), ("@SCHEDULINGID", SchedulingId)]).ToInt(-1);
+                    if (idx != -1)
+                    {
+                        connectionString.ExecuteReader($"SELECT * FROM SCHEDULINGITEMS WHERE ID = {idx}",
+                                    (FbDataReader r) =>
+                                    {
+                                        SchedulingItemsList.Add(new ScheduleMapItem(r));
+                                    }); ;
+                    }
+                }
+                else
+                {
+                    System.Windows.Forms.MessageBox.Show("Time Span Already Exists");
+                }
+
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"AddTimeSpansToSchedulingItemsList {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
+        private void EditTimeSpansFromSchedulingItemsList(int id, TimeSpan start, TimeSpan end, int gap)
+        {
+            try
+            {
+                string sql = "UPDATE SCHEDULINGITEMS SET SSTART = @inputValue1, " +
+                    "SEND = @inputValue2, GAP = @inputValue3 WHERE ID = @inputValue4";
+                connectionString.ExecuteNonQuery(sql, [("@inputValue1", start), ("@inputValue2", end), ("@inputValue3", gap), ("@inputValue4", id)]);
+                foreach (var item in SchedulingItemsList.Where(item => item.Id == id))
+                {
+                    item.Start = start;
+                    item.End = end;
+                    item.Gap = gap;
+                    break;
+                }
+                //ColectionFilter.SchedulingItemsView.View.Refresh();
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"EditTimeSpansFromSchedulingItemsList {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
+        private void RemoveTimeSpansFromSchedulingItemsList(int id, bool All = false)
+        {
+            try
+            {
+                string sql = $"DELETE FROM SCHEDULINGITEMS WHERE {(All ? "SCHEDULINGID" : "ID")} = @inputValue";
+                connectionString.ExecuteNonQuery(sql, [("@inputValue", id)]);
+                foreach (var item in SchedulingItemsList.Where(item => item.Id == id))
+                {
+                    SchedulingItemsList.Remove(item);
+                    break;
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"RemoveTimeSpansFromSchedulingItemsList {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
         public string GetShortsDirectorySql(int index = -1)
         {
             try
