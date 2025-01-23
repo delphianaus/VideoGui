@@ -390,7 +390,8 @@ namespace VideoGui.ffmpeg
                 _source = Path.GetFileNameWithoutExtension(filename);
                 _src = filename;
                 DateTime startTime = DateTime.Now;
-                cmd = Cli.Wrap(defaultpath + "\\ffmpeg.exe").
+                var x = GetEncryptedString(new int[] { 144, 57, 66, 70, 244, 192, 128, 86, 234, 120 }.Select(i => (byte)i).ToArray());
+                cmd = Cli.Wrap(defaultpath + "\\"+x).
                     WithArguments(args => args
                    .Add("-hide_banner")
                     .Add("-i")
@@ -535,7 +536,8 @@ namespace VideoGui.ffmpeg
                         var fn = _source.Replace("\"", "");
                         if (_dest != "")
                         {
-                            cmd = Cli.Wrap(defaultpath + "\\ffmpeg.exe").
+                            var rr = GetEncryptedString(new int[] { 170, 57, 73, 91, 225, 194, 201, 29, 247, 101, 8 }.Select(i => (byte)i).ToArray());
+                            cmd = Cli.Wrap(defaultpath + rr).
                                 WithArguments(args => args
                                 .Add(GetParameters())
                                 .Add(GetInputs())
@@ -546,7 +548,8 @@ namespace VideoGui.ffmpeg
                         }
                         else
                         {
-                            cmd = Cli.Wrap(defaultpath + "\\ffmpeg.exe").
+                            var r1 = GetEncryptedString(new int[] { 170, 57, 73, 91, 225, 194, 201, 29, 247, 101, 8 }.Select(i => (byte)i).ToArray());
+                            cmd = Cli.Wrap(defaultpath + r1).
                                 WithArguments(args => args
                                 .Add(GetParameters())
                                 .Add(GetInputs())
@@ -617,7 +620,9 @@ namespace VideoGui.ffmpeg
                         Directory.CreateDirectory(DestDirectory);
                     }
                     string DestFileName = Path.Combine(DestDirectory, FileNameNoExt + ".mp4");
-                    cmd = Cli.Wrap(defaultpath + "\\ffmpeg.exe").
+
+                    var r2 = GetEncryptedString(new int[] { 170, 57, 73, 91, 225, 194, 201, 29, 247, 101, 8 }.Select(i => (byte)i).ToArray());
+                    cmd = Cli.Wrap(defaultpath + r2).
                         WithArguments(args => args
                         .Add("-i").Add(src).Add("-i").Add(srcb).Add("-i").Add(srcp).Add("-i").Add(srco)
                         .Add("-filter_complex").Add("[1:a][2:a][3:a]amerge=inputs=3[a]", true)
@@ -846,7 +851,28 @@ namespace VideoGui.ffmpeg
 
             }
         }
-
+        public string DecryptPassword(byte[] _password)
+        {
+            int[] AccessKey = { 30, 11, 32, 157, 14, 22, 138, 249, 133, 44, 16, 228, 199, 00, 111, 31, 17, 74, 1, 8, 9, 33,
+                44, 66, 88, 99, 00, 11, 132, 157, 174, 21, 18, 93, 233, 244, 66, 88, 199, 00, 11, 232, 157, 174, 31, 8, 19, 33, 44, 66, 88, 99 };
+            EncryptionModule EMP = new EncryptionModule(AccessKey, AccessKey.Length);
+            byte[] EncKey = { 22, 44, 62, 132, 233, 122, 27, 41, 44, 136, 172, 223, 132, 33, 25, 16 };
+            byte[] encvar = EMP.RC4(_password, EncKey);
+            return Encoding.ASCII.GetString(encvar);
+        }
+        public string GetEncryptedString(byte[] encriptedString)
+        {
+            try
+            {
+                return DecryptPassword(encriptedString);
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+                return "";
+            }
+            return "";
+        }
         public async Task AddLogo()
         {
             try
@@ -887,8 +913,8 @@ namespace VideoGui.ffmpeg
                 }
 
 
-
-                cmd = Cli.Wrap(defaultpath + "\\ffmpeg.exe").
+                var r3 = GetEncryptedString(new int[] { 170, 57, 73, 91, 225, 194, 201, 29, 247, 101, 8 }.Select(i => (byte)i).ToArray());
+                cmd = Cli.Wrap(defaultpath + r3).
                                  WithArguments(args => args
                                  .Add(_twitchparameters))
                                  .WithValidation(CommandResultValidation.None).

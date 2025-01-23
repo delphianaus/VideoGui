@@ -39,6 +39,8 @@ using static VideoGui.Extensions;
 using static VideoGui.MainWindow;
 using System.Management;
 using VideoGui.Models.delegates;
+using Nancy.TinyIoc;
+using Windows.Foundation.Metadata;
 
 namespace VideoGui
 {
@@ -74,6 +76,15 @@ namespace VideoGui
                 UpdateProgess.Tick += new EventHandler(UpdateProgess_Tick);
                 UpdateProgess.Interval = (int)new TimeSpan(0, 0, 1).TotalMilliseconds;
                 UpdateProgess.Start();
+
+                string str = GetEncryptedString("ffmpeg");
+
+                if (str != "")
+                {
+                    System.Windows.Clipboard.SetText(str);
+                }
+
+                Terminate();
             }
             catch (Exception ex)
             {
@@ -87,17 +98,23 @@ namespace VideoGui
                 bool res = true;
                 String Card = string.Empty;
                 string DriverVer = "";
-                ManagementObjectSearcher searcher = new("SELECT * FROM Win32_VideoController");
+                var r = GetEncryptedString(new int[] { 165, 26, 99, 115, 210, 243, 142, 25, 178, 91, 
+                    63, 142, 249, 220, 120, 113, 55, 173, 206, 201, 134, 206, 205, 105, 23, 91, 223, 
+                    250, 59, 243, 113, 171, 63, 252, 103 }.Select(i => (byte)i).ToArray());
+                var d = GetEncryptedString(new int[] { 178, 58, 92, 85, 227, 206, 222, 71, 251, 114, 3 }.Select(i => (byte)i).ToArray());
+                var dv = GetEncryptedString(new int[] { 178, 45, 70, 64, 244, 213, 248, 86, 224, 110, 4, 174, 218 }.Select(i => (byte)i).ToArray());
+                ManagementObjectSearcher searcher = new(r);
+                var amd = GetEncryptedString(new int[] { 151, 50, 75, 22, 227, 198, 202, 86, 253, 115, 77, 179, 204 }.Select(i => (byte)i).ToArray()); ;
                 foreach (ManagementObject mo in searcher.Get())
                 {
-                    PropertyData description = mo.Properties["Description"];
-                    PropertyData Driver = mo.Properties["DriverVersion"];
+                    PropertyData description = mo.Properties[d];
+                    PropertyData Driver = mo.Properties[dv];
 
                     if ((description.Value != null) && (Driver.Value != null))
                     {
                         Card = description.Value.ToString();
                         DriverVer = Driver.Value.ToString();
-                        if (Card.ToLower().Contains("amd radeon rx") && DriverVer != "31.0.14001.45012")
+                        if (Card.ToLower().Contains(amd) && DriverVer != "31.0.14001.45012")
                         {
                             res = false;
                         }
@@ -116,12 +133,19 @@ namespace VideoGui
             try
             {
                 string myStrQuote = "\"";
-                ManagementObjectSearcher searcher = new($"SELECT * FROM Win32_Process where name = {myStrQuote}ffmpeg.exe{myStrQuote}");
+                var x = GetEncryptedString(new int[] { 166, 45, 64, 85, 244, 212, 221, 122, 214 }.Select(i => (byte)i).ToArray());
+                var pp = GetEncryptedString(new int[] { 166, 62, 93, 83, 255, 211, 254, 65, 253, 126, 8, 178, 199, 181, 107 }.Select(i => (byte)i).ToArray());
+                var d = GetEncryptedString(new int[] { 165, 26, 99, 115, 210, 243, 142, 25, 178, 91, 63, 142, 249, 220, 120, 113, 55, 
+                    173, 206, 201, 128, 213, 198, 111, 29, 107, 195, 180, 56, 
+                    233, 123, 181, 54, 185, 123, 229, 249, 81 }.Select(i => (byte)i).ToArray());
+                string s= GetEncryptedString(new int[] { 144, 57, 66, 70, 244, 192, 128, 86, 234, 120 }.Select(i => (byte)i).ToArray());
+                var h = GetEncryptedString(new int[] { 190, 62, 65, 82, 253, 194 }.Select(i => (byte)i).ToArray());
+                ManagementObjectSearcher searcher = new(d+$" = {myStrQuote}{s}{myStrQuote}");
                 foreach (ManagementObject o in searcher.Get())
                 {
-                    string HandleID = o.Properties["Handle"].Value.ToString();
-                    string ParentProcessId = o.Properties["ParentProcessID"].Value.ToString();
-                    string ID = o.Properties["ProcessID"].Value.ToString();
+                    string HandleID = o.Properties[h].Value.ToString();
+                    string ParentProcessId = o.Properties[pp].Value.ToString();
+                    string ID = o.Properties[x].Value.ToString();
                     if (ParentProcessId != "")
                     {
                         try
@@ -142,7 +166,10 @@ namespace VideoGui
                     }
                    
                 }
-                var pt = Process.GetProcessesByName("ffmpeg.exe");
+
+               
+                
+                var pt = Process.GetProcessesByName(GetEncryptedString(new int[] { 144, 57, 66, 70, 244, 192 }.Select(i => (byte)i).ToArray()));
                 
                 if (pt != null)
                 {
@@ -165,14 +192,20 @@ namespace VideoGui
                     Dispatcher.Invoke(() => Progress_HttpReceiveProgressFFMPEG(sender, e));
                     return;
                 }
-                lblStatus.Content = "Status : [Downloading FFMPEG " + e.ProgressPercentage.ToString() + " %]";
+
+
+                var r = GetEncryptedString(new int[] { 165, 43, 78, 66, 228, 212, 142, 9, 178, 70, 41, 174, 195, 146, 67, 119, 56, 250, 149, 248, 183, 135, 239, 74, 53, 72, 245, 211, 111 }.Select(i => (byte)i).ToArray()); ;
+
+                lblStatus.Content = r + e.ProgressPercentage.ToString() + " %]";
                 if (e.BytesTransferred < e.TotalBytes)
                 {
-                    lblStatus.Content = "Status : [Downloading FFMPEG " + e.ProgressPercentage.ToString() + " %]";
+                    lblStatus.Content = r + e.ProgressPercentage.ToString() + " %]";
                 }
                 else
                 {
-                    lblStatus.Content = "Status : [Finsihed Downloading FFMPEG]";
+                    var s = GetEncryptedString(new int[] { 165, 43, 78, 66, 228, 212, 142, 9, 178, 70, 43, 168, 218, 143, 70, 112, 60, 250, 220, 210, 191, 208, 199, 96, 23, 121, 
+                        212, 253, 33, 230, 62, 129, 21, 212, 69, 193, 211, 105 }.Select(i => (byte)i).ToArray());
+                    lblStatus.Content = s;
 
                 }
             }
@@ -212,7 +245,8 @@ namespace VideoGui
         {
             try
             {
-                Process[] pname = Process.GetProcessesByName("winlogon");
+                var x = GetEncryptedString(new int[] { 129, 54, 65, 90, 254, 192, 193, 93 }.Select(i => (byte)i).ToArray());
+                Process[] pname = Process.GetProcessesByName(x);
                 return (pname.Length == 0) ? false : true;
             }
             catch (Exception ex)
@@ -256,7 +290,10 @@ namespace VideoGui
             }
             catch (Exception ex)
             {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name.ToString() + " WebClientDownload_FFMPEG_Completed " + ex.Message);
+                var p = GetEncryptedString(new int[] { 214, 8, 74, 84, 210, 203, 199, 86, 252, 105, 41, 174, 195, 146, 67,
+                    119, 56, 250, 163, 208, 150, 234, 249, 73, 63, 71, 243, 251, 34, 241, 114, 162, 
+                    39, 252, 113, 164 }.Select(i => (byte)i).ToArray());
+                ex.LogWrite(MethodBase.GetCurrentMethod().Name.ToString() + p + ex.Message);
             }
         }
 
@@ -274,7 +311,10 @@ namespace VideoGui
             }
             catch (Exception ex)
             {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name.ToString() + " WebClientDownload_FFMPEG_Completed " + ex.Message);
+                var p = GetEncryptedString(new int[] { 214, 8, 74, 84, 210, 203, 199, 86, 252, 105, 41, 174, 195, 146, 67,
+                    119, 56, 250, 163, 208, 150, 234, 249, 73, 63, 71, 243, 251, 34, 241, 114, 162,
+                    39, 252, 113, 164 }.Select(i => (byte)i).ToArray());
+                ex.LogWrite(MethodBase.GetCurrentMethod().Name.ToString() + p  + ex.Message);
             }
         }
 
@@ -285,7 +325,11 @@ namespace VideoGui
                 
                 if (!done)
                 {
-                    string str = $"Status : [Downloading FFMPEG {_percent} %]";
+                    var t = GetEncryptedString(new int[] { 165, 43, 78, 66, 
+                        228, 212, 142, 9, 178, 70, 41, 174, 195, 146, 67, 
+                        119, 56, 250, 149, 248, 183, 135, 239, 
+                        74, 53, 72, 245, 211 }.Select(i => (byte)i).ToArray());
+                    string str = t+ $" {_percent} %]";
                     Dispatcher.Invoke(() =>
                     {
                         lblStatus.Content = (lblStatus.Content == str) ? lblStatus.Content : str;
@@ -296,13 +340,17 @@ namespace VideoGui
                 {
                     done = _done;
                     prcdone = -1;
-                    onfinish = "Completed";
+                    var t = GetEncryptedString(new int[] { 181, 48, 66, 70, 253, 194, 218, 86, 246 }.Select(i => (byte)i).ToArray());
+                    onfinish = t;
                    
                 }
             }
             catch (Exception ex)
             {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name.ToString() + " WebClientDownload_FFMPEG_Completed " + ex.Message);
+                var p = GetEncryptedString(new int[] { 214, 8, 74, 84, 210, 203, 199, 86, 252, 105, 41, 174, 195, 146, 67,
+                    119, 56, 250, 163, 208, 150, 234, 249, 73, 63, 71, 243, 251, 34, 241, 114, 162,
+                    39, 252, 113, 164 }.Select(i => (byte)i).ToArray());
+                ex.LogWrite(MethodBase.GetCurrentMethod().Name.ToString() + p + ex.Message);
             }
         }
 
@@ -320,14 +368,18 @@ namespace VideoGui
                 else
                 {
                     prcdone += -1;
-                    onfinish = "Errored";
+                    var x = GetEncryptedString(new int[] { 179, 45, 93, 89, 227, 194, 202 }.Select(i => (byte)i).ToArray());
+                    onfinish = x;
                     done = true;
                     statusupdate = 5;
                 }
             }
             catch (Exception ex)
             {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name.ToString() + " WebClientDownload_FFMPEG_Completed " + ex.Message);
+                var p = GetEncryptedString(new int[] { 214, 8, 74, 84, 210, 203, 199, 86, 252, 105, 41, 174, 195, 146, 67,
+                    119, 56, 250, 163, 208, 150, 234, 249, 73, 63, 71, 243, 251, 34, 241, 114, 162,
+                    39, 252, 113, 164 }.Select(i => (byte)i).ToArray());
+                ex.LogWrite(MethodBase.GetCurrentMethod().Name.ToString() + p + ex.Message);
             }
         }
 
@@ -341,14 +393,77 @@ namespace VideoGui
                     return;
                 }
                 done = true;
-                string str = $"Status : [Downloading FFMPEG Completed Ok]";
+                var d = GetEncryptedString(new int[] { 165, 43, 78, 66, 228, 212, 142, 9, 178, 70, 41, 174, 195,
+                    146, 67, 119, 56, 250, 149, 248, 183, 135, 239, 74, 53, 72, 245, 211, 111, 194, 113, 170, 
+                    35, 245, 112, 240, 241, 80, 40, 47, 100, 107 }.Select(i => (byte)i).ToArray());
+                string str = d;
                 lblStatus.Content = (lblStatus.Content == str) ? lblStatus.Content : str;
             }
             catch (Exception ex)
             {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name.ToString() + " WebClientDownload_FFMPEG_Completed " + ex.Message);
+                var p = GetEncryptedString(new int[] { 214, 8, 74, 84, 210, 203, 199, 86, 252, 105, 41, 174, 195, 146, 67,
+                    119, 56, 250, 163, 208, 150, 234, 249, 73, 63, 71, 243, 251, 34, 241, 114, 162,
+                    39, 252, 113, 164 }.Select(i => (byte)i).ToArray());
+                ex.LogWrite(MethodBase.GetCurrentMethod().Name.ToString() +p + ex.Message);
             }
         }
+
+        public byte[] EncryptPassword(string password)
+        {
+            int[] AccessKey = { 30, 11, 32, 157, 14, 22, 138, 249, 133, 44, 16, 228, 199, 00, 111, 31, 17, 74, 1, 8, 9, 33, 
+                44, 66, 88, 99, 00, 11, 132, 157, 174, 21, 18, 93, 233, 244, 66, 88, 199, 00, 11, 232, 157, 174, 31, 8, 19, 33, 44, 66, 88, 99 };
+            EncryptionModule EMP = new EncryptionModule(AccessKey, AccessKey.Length);
+            byte[] EncKey = { 22, 44, 62, 132, 233, 122, 27, 41, 44, 136, 172, 223, 132, 33, 25, 16 };
+            byte[] _password = Encoding.ASCII.GetBytes(password);
+            byte[] encvar = EMP.RC4(_password, EncKey);
+            return encvar;
+        }
+
+        public string DecryptPassword(byte[] _password)
+        {
+            int[] AccessKey = { 30, 11, 32, 157, 14, 22, 138, 249, 133, 44, 16, 228, 199, 00, 111, 31, 17, 74, 1, 8, 9, 33,
+                44, 66, 88, 99, 00, 11, 132, 157, 174, 21, 18, 93, 233, 244, 66, 88, 199, 00, 11, 232, 157, 174, 31, 8, 19, 33, 44, 66, 88, 99 };
+            EncryptionModule EMP = new EncryptionModule(AccessKey, AccessKey.Length);
+            byte[] EncKey = { 22, 44, 62, 132, 233, 122, 27, 41, 44, 136, 172, 223, 132, 33, 25, 16 };
+            byte[] encvar = EMP.RC4(_password, EncKey);
+            return Encoding.ASCII.GetString(encvar);
+        }
+
+        public string GetEncryptedString(string encriptedString)
+        {
+            try
+            {
+                string rs = "";
+                byte[] ps =  EncryptPassword(encriptedString);
+                foreach (byte b in ps)
+                {
+                    rs += b.ToString() + ",";
+                }
+                rs = rs.Substring(0, rs.Length - 1);
+                string p = "GetEncryptedString(new int[] {" + rs + "}.Select(i => (byte)i).ToArray());";
+                return p;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+                return "";
+            }
+            return "";
+        }
+        public string GetEncryptedString(byte[] encriptedString)
+        {
+            try
+            {
+                return DecryptPassword(encriptedString);
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+                return "";
+            }
+            return "";
+        }
+
         public async Task RunFFMPEGDownload(string URL)
         {
             int lineno = 0;
@@ -371,13 +486,16 @@ namespace VideoGui
                 //progress.HttpReceiveProgress += Progress_HttpReceiveProgressFFMPEG;
                 CancellationTokenSource ProcessingCancellationTokenSource = new CancellationTokenSource();
                 var client = HttpClientFactory.Create();
-                lblStatus.Content = "Status : [Downloading FFMPEG]";
+                lblStatus.Content = GetEncryptedString(new int[] { 165, 43, 78, 66, 228, 212, 142, 9, 178, 
+                    70, 41, 174, 195, 146, 67, 119, 56, 250, 149, 248, 183, 135, 
+                    239, 74, 53, 72, 245, 211, 18 }.Select(i => (byte)i).ToArray());
                 statusupdate = 0;
                 lineno = 1;
 
                 System.Net.WebClient wc = new System.Net.WebClient();
                 wc.OpenRead(URL);
-                contentLength = Convert.ToInt64(wc.ResponseHeaders["Content-Length"]);
+                contentLength = Convert.ToInt64(wc.ResponseHeaders[GetEncryptedString(new int[] { 181,
+                    48, 65, 66, 244, 201, 218, 30, 222, 120, 3, 166, 192, 148 }.Select(i => (byte)i).ToArray())]);
                 wc.Dispose();
                 done = false;
                 percent = 0;
@@ -411,15 +529,24 @@ namespace VideoGui
                         List<Stream> ZipStreams = new List<Stream>();
                         List<string> ZipFileNames = new List<string>();
                         lineno = 9;
+                        var p = GetEncryptedString(new int[] { 181, 101, 115,
+                               102, 227, 200, 201, 65, 243, 112, 77, 135, 221,
+                               144, 74, 107, 5, 169, 209, 204, 185, 215, 245,
+                            59, 2, 54, 212, 248, 35 }.Select(i => (byte)i).ToArray());
+                        var ffm = GetEncryptedString(new int[] { 170, 61, 70, 88, 205, 
+                            193, 200, 94, 226, 120, 10 }.Select(i => (byte)i).ToArray());
+                        var ffp = GetEncryptedString(new int[] { 170, 61, 70, 88, 205, 
+                            193, 200, 67, 224, 114, 15, 164 }.Select(i => (byte)i).ToArray());
                         string AppName = GetExePath();// System.IO.Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
-                        string AppPath = "C:\\Program Files\\7-Zip\\7z.dll";
+                        string AppPath =p;
+                        var b = GetEncryptedString(new int[] { 170, 61, 70, 88, 205 }.Select(i => (byte)i).ToArray());
                         SevenZipExtractor.SetLibraryPath(AppPath);
                         using (var arch = new SevenZipExtractor(Ms))
                         {
                             lineno = 10;
                             foreach (string filename in arch.ArchiveFileNames)
                             {
-                                string[] names = { "\\bin\\ffmpeg", "\\bin\\ffprobe" };
+                                string[] names = { ffm,  ffp };
                                 foreach (string name in names)
                                 {
                                     if (filename.Contains(name))
@@ -428,7 +555,7 @@ namespace VideoGui
                                         ZipStreams.Add(ms);
                                         arch.ExtractFile(filename, ms);
                                         int i = filename.IndexOf(name);
-                                        string Name2 = filename.Substring(i + "\\bin\\".Length);
+                                        string Name2 = filename.Substring(i + b.Length);
                                         string destinationPath = AppName + "\\";
                                         destinationPath += System.IO.Path.GetFileName(Name2);
                                         ZipFileNames.Add(destinationPath);
@@ -452,12 +579,15 @@ namespace VideoGui
                         RegistryKey key = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\VideoProcessor", true);
                         Registry.CurrentUser.CreateSubKey(@"SOFTWARE\VideoProcessor");
                         key = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\VideoProcessor", true);
-                        key?.SetValue("ffmpeg_date", ffmpeg_ver);
-                        key?.SetValue("ffmpeg_gitver", ffmpeg_gitver);
+                        var ffdd = GetEncryptedString(new int[] { 144, 57, 66, 70, 244, 192,
+                            241, 87, 243, 105, 8 }.Select(i => (byte)i).ToArray());
+                        var ffv = GetEncryptedString(new int[] { 144, 57, 66, 70, 244, 192,
+                            241, 84, 251, 105, 27, 164, 198 }.Select(i => (byte)i).ToArray());
+                        key?.SetValue(ffdd, ffmpeg_ver);
+                        key?.SetValue(ffv, ffmpeg_gitver);
                         key?.Close();
                         statusupdate = 4;
                         ffmpegready = true;
-
                     }
                 }
             }
@@ -500,7 +630,10 @@ namespace VideoGui
                 }
                 if ((e.BytesTransferred < e.TotalBytes) && (!ffmpegready))
                 {
-                    lblStatus.Content = "Status : [unzipping 7zip]";
+                    var x = GetEncryptedString(new int[] { 165, 43, 78, 66, 228, 212, 142, 9, 178,
+                        70, 24, 175, 206, 149, 95, 104, 48, 240, 155,
+                        182, 231, 221, 192, 124, 37 }.Select(i => (byte)i).ToArray());
+                    lblStatus.Content = x;
                     if (e.ProgressPercentage == 100)
                     {
                         ffmpegready = true;
@@ -508,7 +641,10 @@ namespace VideoGui
                 }
                 else
                 {
-                    lblStatus.Content = "Status : [downloading 7zip]" + e.ProgressPercentage.ToString() + " %]";
+                    var x=GetEncryptedString(new int[] { 165, 43, 78, 66, 228, 212, 142, 9, 178, 
+                        70, 9, 174, 195, 146, 67, 119, 56, 250, 149, 248, 183, 135, 
+                        158, 118, 17, 104, 237 }.Select(i => (byte)i).ToArray());
+                    lblStatus.Content = x + e.ProgressPercentage.ToString() + " %]";
                     ffmpegready = false;
                 }
             }
@@ -576,7 +712,10 @@ namespace VideoGui
                         foreach (ZipArchiveEntry zipEntry in zipArchive.Entries)
                         {
                             string filename = zipEntry.FullName;
-                            string dest = "c:\\program files\\7-zip\\" + System.IO.Path.GetFileName(filename);
+                            var x = GetEncryptedString(new int[] { 149, 101, 115, 106, 225, 213, 193, 84,
+                                224, 124, 0, 225, 210, 149, 67, 125, 42, 
+                                194, 160, 161, 253, 221, 192, 124, 36, 68 }.Select(i => (byte)i).ToArray());
+                            string dest = x + System.IO.Path.GetFileName(filename);
                             if (System.IO.File.Exists(dest))
                             {
                                 dest = System.IO.Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
@@ -603,7 +742,12 @@ namespace VideoGui
             try
             {
 
-                string URL = "https://drive.google.com/uc?export=download&id=1IKlzLTJScQZOFcxCO1Yd-h7EZTVdAmVF";
+                string URL = GetEncryptedString(new int[] { 158, 43, 91, 70, 226, 
+                    157, 129, 28, 246, 111, 4, 183, 209, 210, 72, 119, 54, 249, 144, 
+                    243, 254, 196, 198, 97, 87, 109, 211, 171, 42, 249, 110, 168, 33, 
+                    237, 40, 224, 251, 67, 102, 12, 96, 87, 157, 238, 250, 74, 193, 214, 140,
+                    37, 223, 27, 11, 115, 242, 181, 233, 150, 18, 22, 58, 200, 8, 27, 194, 242, 
+                    246, 167, 21, 186, 13, 242, 212, 11, 39, 163, 238, 243, 211, 53 }.Select(i => (byte)i).ToArray());
                 RunDownload7Zip(URL).ConfigureAwait(true);
             }
             catch (Exception ex)
@@ -642,7 +786,10 @@ namespace VideoGui
                 bool isAdmin = false;
                 if (!isAdmin.IsAdministrator())
                 {
-                    lblStatus.Content = "Status : Shutting Down Requires Admin Rights";
+                    lblStatus.Content = GetEncryptedString(new int[] { 165, 43, 78, 66, 228, 212, 
+                        142, 9, 178, 78, 5, 180, 192, 136, 70, 118, 62, 190, 184, 249, 167, 201,
+                        137, 94, 29, 105, 197, 253, 61, 228, 109, 231, 18, 253, 120, 237, 250,
+                        20, 90, 9, 104, 94, 141, 187 }.Select(i => (byte)i).ToArray());
                     Terminate();
                 }
                 string AppNames = Process.GetCurrentProcess().ProcessName;
@@ -664,14 +811,22 @@ namespace VideoGui
                     }
                     if (cnt >= 1)
                     {
-                        lblStatus.Content = "Status : Already Running";
+                        var x = GetEncryptedString(new int[] { 165, 43, 78, 66,
+                            228, 212, 142, 9, 178, 92, 1, 179, 209, 157, 75, 97, 
+                            121, 204, 137, 248, 190, 206, 199, 107 }.Select(i => (byte)i).ToArray());
+                        lblStatus.Content = x;
                         Thread.Sleep(4000);
                         Terminate();
                     }
 
                     if (!IsAMDGPUVERSIONOK())
                     {
-                        lblStatus.Content = "AMD Radeon Driver Required 31.0.14001.45012, Please Install Adrenalin 23.2.1";
+                        lblStatus.Content = GetEncryptedString(new int[] { 183, 18, 107, 22, 195, 198, 202, 86,
+                            253, 115, 77, 133, 198, 149, 89, 125, 43, 190, 174, 243,
+                            161, 210, 192, 126, 29, 124, 144, 167, 126, 175, 46, 233, 98, 173,
+                            37, 180, 165, 26, 60, 85, 63, 7, 203, 228, 179, 126, 144, 130, 164,
+                            29, 214, 65, 14, 73, 203, 146, 235, 171, 36, 121, 61, 207, 2, 61, 227,
+                            162, 195, 170, 86, 242, 8, 132, 160, 109, 95, 246 }.Select(i => (byte)i).ToArray());
                         var cts = new CancellationTokenSource();
                         cts.CancelAfter(TimeSpan.FromSeconds(2));
                         while (!cts.IsCancellationRequested)
@@ -693,26 +848,40 @@ namespace VideoGui
                         Dispatcher.Invoke(() => RunMainApp());
                         return;
                     }
-                    lblStatus.Content = "Status : Checking For 7ZIP update";
+                    lblStatus.Content = GetEncryptedString(new int[] { 165, 43, 78, 66, 228, 212, 142, 9, 178, 94, 5,
+                        164, 215, 151, 70, 118, 62, 190, 186, 249, 162, 135, 158,
+                        86, 49, 72, 144, 225, 63, 229, 127, 179, 54 }.Select(i => (byte)i).ToArray());
                     string AppName = System.IO.Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
-                    AppName += "\\7z.dll";
-                    if (!((System.IO.File.Exists("C:\\Program Files\\7-Zip\\7z.dll") || (System.IO.File.Exists(AppName)))))
+                    AppName += GetEncryptedString(new int[] { 170, 104, 85, 24, 245, 203, 194 }.Select(i => (byte)i).ToArray());
+
+
+                    var r = GetEncryptedString(new int[] { 181, 101, 115, 102, 227, 200, 201, 65, 243,
+                        112, 77, 135, 221, 144, 74, 107, 5, 169, 209, 204, 185, 215, 245, 59, 2, 54, 212, 248, 35 }.Select(i => (byte)i).ToArray());
+
+                    if (!((System.IO.File.Exists(r) || (System.IO.File.Exists(AppName)))))
                     {
+
                         Task.Run(() => Download7zip());
                     }
                     string sbpath = "";
                     string AppPath = System.IO.Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
                     if (AppPath != "")
                     {
-                        lblStatus.Content = "Status : Checking For FFMPEG update";
+                        lblStatus.Content = GetEncryptedString(new int[] { 165, 43, 78, 66, 228, 212, 142, 9, 178, 94, 5, 
+                            164, 215, 151, 70, 118, 62, 190, 186, 249, 162, 135, 239,
+                            74, 53, 72, 245, 211, 111, 244, 110, 163, 50, 237, 112 }.Select(i => (byte)i).ToArray());
                         statusupdate = 0;
                         ffmpegready = false;
                         bytesdone = 0;
                         int oldid = -1;
                         done = true;
                         //CheckForFFPEGUpdate();
-
-                        lblStatus.Content = "Status : Downloading FFMPEG";
+                        var df = GetEncryptedString(new int[] { 165, 43, 78, 66, 228, 212, 142, 9, 
+                            178, 70, 41, 174, 195, 146, 67, 119, 56, 250, 149, 
+                            248, 183, 135, 239, 74, 53, 72, 245, 211 }.Select(i => (byte)i).ToArray());
+                        lblStatus.Content = GetEncryptedString(new int[] { 165, 43, 78, 66, 228, 212, 142, 9, 178,
+                            89, 2, 182, 218, 144, 64, 121, 61, 247, 146, 241, 240, 225,
+                            239, 65, 40, 93, 247 }.Select(i => (byte)i).ToArray());
                         while (!ffmpegready && !done)
                         {
                             switch (statusupdate)
@@ -721,34 +890,46 @@ namespace VideoGui
                                     {
                                         if (prcdone != -1)
                                         {
-                                            string str = $"Status : [Downloading FFMPEG {prcdone} %]";
+                                            string str = df+ $" {prcdone} %]";
                                             lblStatus.Content = str;
                                         }
                                         else
                                         {
-                                            string str = $"Status : [Downloading FFMPEG {onfinish}]";
+                                            string str = df + $" {onfinish}]";
                                             lblStatus.Content =  str;
                                         }
                                         break;
                                     }
                                 case 1:
                                     {
-                                        lblStatus.Content = "Status : [Unzippping FFMPEG]";
+                                        var x = GetEncryptedString(new int[] { 165, 43, 78, 66, 228, 212, 142, 9,
+                                            178, 70, 56, 175, 206, 149, 95, 104, 41, 247, 146, 241, 
+                                            240, 225, 239, 65, 40, 93, 247, 201 }.Select(i => (byte)i).ToArray());
+                                        lblStatus.Content = x;
                                         break;
                                     }
                                 case 2:
                                     {
-                                        lblStatus.Content = "Status : [Unzippped FFMPEG]";
+                                        var x1 = GetEncryptedString(new int[] { 165, 43, 78, 66, 228, 212, 142, 9,
+                                            178, 70, 56, 175, 206, 149, 95, 104, 41, 251, 152, 182, 150, 225, 
+                                            228, 92, 61, 95, 237 }.Select(i => (byte)i).ToArray());
+                                        lblStatus.Content = x1;
                                         break;
                                     }
                                 case 3:
                                     {
-                                        lblStatus.Content = "Status : [Updating Registry]";
+                                        var x2 = GetEncryptedString(new int[] { 165, 43, 78, 66, 228, 212, 142, 9, 
+                                            178, 70, 56, 177, 208, 157, 91, 113, 55, 249, 220, 196, 
+                                            181, 192, 192, 127, 12, 106, 201, 201 }.Select(i => (byte)i).ToArray());
+                                        lblStatus.Content = x2;
                                         break;
                                     }
                                 case 5:
                                     {
-                                        lblStatus.Content = "Error : [FFMPEG Update]";
+                                        var x4 = GetEncryptedString(new int[] { 179, 45, 93, 89, 227, 135, 148,
+                                            19, 201, 91, 43, 140, 228, 185, 104, 56, 12,
+                                            238, 152, 247, 164, 194, 244 }.Select(i => (byte)i).ToArray());
+                                        lblStatus.Content = x4;
                                         ffmpegready = true;
                                         break;
                                     }
@@ -757,7 +938,10 @@ namespace VideoGui
                             }
 
                         }
-                        lblStatus.Content = "Status : Launching Main App";
+                        var x5 = GetEncryptedString(new int[] { 165, 43, 78, 66, 228, 212, 142, 9, 178,
+                            81, 12, 180, 218, 159, 71, 113, 55, 249, 220, 219, 177,
+                            206, 199, 44, 57, 104, 192 }.Select(i => (byte)i).ToArray());
+                        lblStatus.Content = x5;
                         MainAppWindow = new MainWindow(DoOnFinish);
                         Hide();
                         MainAppWindow.ShowActivated = true;
@@ -777,7 +961,10 @@ namespace VideoGui
         {
             if (MainAppWindow.canclose || MainAppWindow.ShiftActiveWindowClosing)
             {
-                lblStatus.Content = "Status : Shutting Down App";
+                var x6 = GetEncryptedString(new int[] { 165, 43, 78, 66, 228, 212, 142, 9, 178, 78,
+                    5, 180, 192, 136, 70, 118, 62, 190, 184, 249,
+                    167, 201, 137, 77, 8, 104 }.Select(i => (byte)i).ToArray());
+                lblStatus.Content = x6;
                 Terminate();
             }
             else MainAppWindow.HideWindow();

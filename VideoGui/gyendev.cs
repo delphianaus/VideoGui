@@ -5,7 +5,9 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.Versioning;
+using System.Text;
 
 
 namespace VideoGui
@@ -13,6 +15,28 @@ namespace VideoGui
     [SupportedOSPlatform("windows")]
     class Gyendev : IUpdateParserHTML
     {
+        public string DecryptPassword(byte[] _password)
+        {
+            int[] AccessKey = { 30, 11, 32, 157, 14, 22, 138, 249, 133, 44, 16, 228, 199, 00, 111, 31, 17, 74, 1, 8, 9, 33,
+                44, 66, 88, 99, 00, 11, 132, 157, 174, 21, 18, 93, 233, 244, 66, 88, 199, 00, 11, 232, 157, 174, 31, 8, 19, 33, 44, 66, 88, 99 };
+            EncryptionModule EMP = new EncryptionModule(AccessKey, AccessKey.Length);
+            byte[] EncKey = { 22, 44, 62, 132, 233, 122, 27, 41, 44, 136, 172, 223, 132, 33, 25, 16 };
+            byte[] encvar = EMP.RC4(_password, EncKey);
+            return Encoding.ASCII.GetString(encvar);
+        }
+        public string GetEncryptedString(byte[] encriptedString)
+        {
+            try
+            {
+                return DecryptPassword(encriptedString);
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+                return "";
+            }
+            return "";
+        }
         (string, string, string, string) IUpdateParserHTML.ParseHTML(string HTMLSource)
         {
             string downloadlink = "", Version = "", filename = "", link = "", GitVersion = "";
@@ -66,10 +90,12 @@ namespace VideoGui
                                         bool ffmpeg = false, ffprobe = false;
                                         List<string> PathListFF = Directory.EnumerateFiles(SourceAssembly, "ff*.exe", Debugger.IsAttached ? SearchOption.TopDirectoryOnly : SearchOption.AllDirectories).
                                         Where(s => s.EndsWith(".exe")).ToList<string>();
+                                        var ffm = GetEncryptedString(new int[] { 144, 57, 66, 70, 244, 192, 128, 86, 234, 120 }.Select(i => (byte)i).ToArray());
+                                        var ffp = GetEncryptedString(new int[] { 144, 57, 95, 68, 254, 197, 203, 29, 247, 101, 8 }.Select(i => (byte)i).ToArray());
                                         foreach (string sPath in PathListFF)
                                         {
-                                            ffmpeg = (sPath.Contains("ffmpeg.exe")) ? true : ffmpeg;
-                                            ffprobe = (sPath.Contains("ffprobe.exe")) ? true : ffprobe;
+                                            ffmpeg = (sPath.Contains(ffm)) ? true : ffmpeg;
+                                            ffprobe = (sPath.Contains(ffp)) ? true : ffprobe;
                                         }
                                         downloadff = !(ffmpeg && ffprobe);
                                         if (DateStored || downloadff )
