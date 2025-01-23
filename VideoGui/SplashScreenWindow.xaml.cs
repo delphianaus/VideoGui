@@ -77,6 +77,8 @@ namespace VideoGui
                 UpdateProgess.Interval = (int)new TimeSpan(0, 0, 1).TotalMilliseconds;
                 UpdateProgess.Start();
 
+
+                return;// below code encrpts string and returns it as c# code
                 string str = GetEncryptedString("ffmpeg");
 
                 if (str != "")

@@ -3983,7 +3983,7 @@ namespace VideoGui
                             parentpath = System.IO.Directory.GetParent(parentpath).FullName;
                         }
                         var ee = GetEncryptedString(new int[] { 216, 58, 87, 83 }.Select(i => (byte)i).ToArray());
-                        var xx = GetEncryptedString(new int[] { 170, 57, 73, 91, 225, 194, 201, 29, 247, 101, 8 }.Select(i => (byte)i).ToArray());
+                        var xx = GetEncryptedString(new int[] { 144, 57, 66, 70, 244, 192, 128, 86, 234, 120 }.Select(i => (byte)i).ToArray());
                         List<string> PathListFF = Directory.EnumerateFiles(parentpath, xx, SearchOption.AllDirectories).
                                    Where(s => s.EndsWith(ee)).ToList<string>();
                         string wx = GetEncryptedString(new int[] { 129, 54, 65, 27, 233, 145, 154 }.Select(i => (byte)i).ToArray());
