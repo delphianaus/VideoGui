@@ -44,7 +44,8 @@
                 <GroupBox x:Name="grpMaxSchedules" Height="71" Width="117" Header="Max Schedules" Canvas.Top="1" 
                           HorizontalAlignment="Center" VerticalAlignment="Top" Canvas.Left="261">
                     <Canvas x:Name="cnvmaxschedules">
-                        <TextBox x:Name="txtMaxSchedules" Width="78" Height="24" Canvas.Top="10" Canvas.Left="10" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                        <TextBox x:Name="txtMaxSchedules" Width="78" Height="24" Canvas.Top="10" Canvas.Left="10"
+                                 HorizontalAlignment="Left" VerticalAlignment="Center"/>
                     </Canvas>
                 </GroupBox>
                 <GroupBox Name="grpActionName" Header="Action Name" Width="383" Height="66" 
