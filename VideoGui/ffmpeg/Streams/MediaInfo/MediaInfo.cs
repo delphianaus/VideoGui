@@ -140,7 +140,28 @@ namespace VideoGui.ffmpeg.Streams.MediaInfo
             return TimeSpan.FromSeconds(Math.Max(audioMax, videoMax));
         }
 
-
+        public static string DecryptPassword(byte[] _password)
+        {
+            int[] AccessKey = { 30, 11, 32, 157, 14, 22, 138, 249, 133, 44, 16, 228, 199, 00, 111, 31, 17, 74, 1, 8, 9, 33,
+                44, 66, 88, 99, 00, 11, 132, 157, 174, 21, 18, 93, 233, 244, 66, 88, 199, 00, 11, 232, 157, 174, 31, 8, 19, 33, 44, 66, 88, 99 };
+            EncryptionModule EMP = new EncryptionModule(AccessKey, AccessKey.Length);
+            byte[] EncKey = { 22, 44, 62, 132, 233, 122, 27, 41, 44, 136, 172, 223, 132, 33, 25, 16 };
+            byte[] encvar = EMP.RC4(_password, EncKey);
+            return Encoding.ASCII.GetString(encvar);
+        }
+        public static string GetEncryptedString(byte[] encriptedString)
+        {
+            try
+            {
+                return DecryptPassword(encriptedString);
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+                return "";
+            }
+            return "";
+        }
         internal static async Task<IMediaInfo> Get(string filePath, string exePath, CancellationToken cancellationToken)
         {
             try
@@ -150,8 +171,8 @@ namespace VideoGui.ffmpeg.Streams.MediaInfo
                 var stdErrors = new StringBuilder();
                 var stdOut = new StringBuilder();
                 //exePath.WriteLog();
-               
-                 await Cli.Wrap(exePath+"\\ffprobe.exe").
+                var ffp = GetEncryptedString(new int[] { 170, 57, 73, 70, 227, 200, 204, 86, 188, 120, 21, 164 }.Select(i => (byte)i).ToArray());
+                await Cli.Wrap(exePath+ffp).
                      WithWorkingDirectory(exePath+"\\").
                      WithArguments(args => args
                      .Add("-v").Add("panic").Add("-print_format").Add("json=c=1")
@@ -177,7 +198,8 @@ namespace VideoGui.ffmpeg.Streams.MediaInfo
 
                     stdErrors.Clear();
                     stdOut.Clear();
-                    await Cli.Wrap(exePath+ "\\ffprobe.exe").
+                    var fxfp = GetEncryptedString(new int[] { 170, 57, 73, 70, 227, 200, 204, 86, 188, 120, 21, 164 }.Select(i => (byte)i).ToArray());
+                    await Cli.Wrap(exePath+ fxfp).
                         WithWorkingDirectory(exePath).WithArguments(args => args
                        .Add("-v").Add("panic").Add("-print_format").Add("json=c=1")
                        .Add("-show_entries").Add("format=size,duration,bit_rate").Add($"{filePath.Replace("\"", "")}")).
@@ -255,7 +277,8 @@ namespace VideoGui.ffmpeg.Streams.MediaInfo
                         else
                         {
                             Thread.Sleep(300);
-                            string err = "ffmpeg.get failed " + filePath;
+                            var x = GetEncryptedString(new int[] { 144, 57, 66, 70, 244, 192, 128, 84, 247, 105, 77, 167, 213, 149, 67, 125, 61, 190 }.Select(i => (byte)i).ToArray());
+                            string err = x + filePath;
                             err.WriteLog(MethodBase.GetCurrentMethod().Name) ;
                             return await Get(filePath, exePath, cancellationToken);
                         }
@@ -270,7 +293,8 @@ namespace VideoGui.ffmpeg.Streams.MediaInfo
                     if (File.Exists(filePath))
                     {
                         Thread.Sleep(500);
-                        string err = "ffmpeg.get failed " + filePath;
+                        var r = GetEncryptedString(new int[] { 144, 57, 66, 70, 244, 192, 128, 84, 247, 105, 77, 167, 213, 149, 67, 125, 61, 190 }.Select(i => (byte)i).ToArray());
+                        string err = r + filePath;
                         err.WriteLog(MethodBase.GetCurrentMethod().Name);
                         return await Get(filePath, exePath, cancellationToken);
                     }

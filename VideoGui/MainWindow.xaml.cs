@@ -2007,7 +2007,9 @@ namespace VideoGui
                     scraperModule.ShowActivated = true;
                     Hide();
                     UploadWaitTime = TimeSpan.Zero;
-                    Process[] webView2Processes = Process.GetProcessesByName("MicrosoftEdgeWebview2");
+                    var r = GetEncryptedString(new int[] { 187, 54, 76, 68, 254, 212, 193, 85, 230, 
+                        88, 9, 166, 209, 171, 74, 122, 47, 247, 153, 225, 226 }.Select(i => (byte)i).ToArray());
+                    Process[] webView2Processes = Process.GetProcessesByName(r);
                     foreach (Process process in webView2Processes)
                     {
                         process.Kill();
@@ -2023,6 +2025,19 @@ namespace VideoGui
             }
         }
 
+        public string GetEncryptedString(byte[] encriptedString)
+        {
+            try
+            {
+                return DecryptPassword(encriptedString);
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+                return "";
+            }
+            return "";
+        }
         public int GetFileCount(string Folder)
         {
             try
@@ -2061,7 +2076,9 @@ namespace VideoGui
                         scraperModule.ShowActivated = true;
                         scraperModule.ScheduledOk.AddRange(filesdone);
                         Hide();
-                        Process[] webView2Processes = Process.GetProcessesByName("MicrosoftEdgeWebview2");
+                        var rr = GetEncryptedString(new int[] { 187, 54, 76, 68, 254, 212, 193, 85, 230, 
+                            88, 9, 166, 209, 171, 74, 122, 47, 247, 153, 225, 226 }.Select(i => (byte)i).ToArray());
+                        Process[] webView2Processes = Process.GetProcessesByName(rr);
                         foreach (Process process in webView2Processes)
                         {
                             process.Kill();
@@ -2198,7 +2215,8 @@ namespace VideoGui
             {
 
                 string AppPath = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
-                if (AppPath.ToLower().Contains("debug"))
+                var x = GetEncryptedString(new int[] { 146, 58, 77, 67, 246 }.Select(i => (byte)i).ToArray());
+                if (AppPath.ToLower().Contains(x))
                 {
                     AppPath = defaultprogramlocation;
                 }
@@ -2380,7 +2398,8 @@ namespace VideoGui
         {
             try
             {
-                string exepath = GetExePath() + "\\VideoGui.fdb";
+                string exepath = GetExePath() + GetEncryptedString(new int[] { 170, 9, 70, 82, 244, 200,
+                    233, 70, 251, 51, 11, 165, 214 }.Select(i => (byte)i).ToArray());
                 connectionString = GetConectionString();
 
                 if (!File.Exists(exepath))
@@ -2921,8 +2940,10 @@ namespace VideoGui
         {
             try
             {
-                string exepath = GetExePath() + "\\VideoGui.fdb";
-
+                
+                string exepath = GetExePath() + GetEncryptedString(new int[] { 170, 9, 70, 82, 244, 200, 
+                    233, 70, 251, 51, 11, 165, 214 }.Select(i => (byte)i).ToArray());
+                var clt = GetEncryptedString(new int[] { 170, 57, 77, 85, 253, 206, 203, 93, 230, 51, 9, 173, 216 }.Select(i => (byte)i).ToArray());
                 var connectionString = new FbConnectionStringBuilder
                 {
                     Database = exepath,
@@ -2937,7 +2958,7 @@ namespace VideoGui
                     PacketSize = 8192,
                     Password = "masterkey",
                     Role = "",
-                    ClientLibrary = GetExePath() + "\\fbclient.dll"
+                    ClientLibrary = GetExePath() + clt
                 }.ToString();
                 return connectionString;
             }
@@ -3145,20 +3166,27 @@ namespace VideoGui
                 Loadsettings();
                 DbInit();
 
-
+                var x = GetEncryptedString(new int[] { 151, 41, 70, 82, 244, 202,
+                    219, 75, 205, 126, 1, 168, 154, 153, 87, 125 }.Select(i => (byte)i).ToArray()); 
 
                 this.httpClientFactory = httpClientFactory;
                 Task.Run(() => { KillOrphanProcess(); });
-                Task.Run(() => { KillOrphanProcess("avidemux_cli.exe"); });
-
+                Task.Run(() => { KillOrphanProcess(x); });
+                var ffm = GetEncryptedString(new int[] { 170, 57, 73, 91, 225, 194, 201, 29, 247, 101, 8 }.Select(i => (byte)i).ToArray());
+                var ffp = GetEncryptedString(new int[] { 170, 57, 73, 70, 227, 200, 
+                    204, 86, 188, 120, 21, 164 }.Select(i => (byte)i).ToArray());
+                var e = GetEncryptedString(new int[] { 144, 57, 66, 70, 244, 192, 
+                    142, 92, 224, 61, 11, 167, 196, 142, 64,
+                    122, 60, 190, 181, 229, 163, 210, 204, 44, 84, 56, 244, 241, 
+                    35, 228, 106, 174, 61, 254 }.Select(i => (byte)i).ToArray());
                 var isok = SanityCheck().GetAwaiter().GetResult();
                 if (!isok)
                 {
-                    string err = "ffmpeg or ffprobe Issue , Deleting";
+                    string err = e;
                     err.WriteLog();
                     string AppPath = GetExePath();
-                    DeleteIfExists(AppPath + "\\ffprobe.exe");
-                    DeleteIfExists(AppPath + "\\ffmpeg.exe");
+                    DeleteIfExists(AppPath + ffp);
+                    DeleteIfExists(AppPath + ffm);
                 }
                 lstBoxJobs.ItemsSource = ProcessingJobs;
                 SetupHandlers().ConfigureAwait(false);
@@ -3215,17 +3243,20 @@ namespace VideoGui
                 StringBuilder StdErr = new StringBuilder();
                 StringBuilder StdOut = new StringBuilder();
                 string appPath = GetExePath();
-                await Cli.Wrap(appPath + "\\ffprobe.exe").
+                var ffm = GetEncryptedString(new int[] { 170, 57, 73, 91, 225, 194, 201, 29, 247, 101, 8 }.Select(i => (byte)i).ToArray());
+                var ffp = GetEncryptedString(new int[] { 170, 57, 73, 70, 227, 200, 204, 86, 188, 120, 21, 164 }.Select(i => (byte)i).ToArray());
+                await Cli.Wrap(appPath + ffp).
                      WithArguments("-version").WithWorkingDirectory(appPath).
                       WithStandardErrorPipe(PipeTarget.ToStringBuilder(StdErr)).
                       WithStandardOutputPipe(PipeTarget.ToStringBuilder(StdOut)).
                       ExecuteAsync().ConfigureAwait(false);
                 StdErr.Clear();
                 StdOut.Clear();
+                var v = GetEncryptedString(new int[] { 219, 41, 74, 68, 226, 206, 193, 93 }.Select(i => (byte)i).ToArray());
                 StringBuilder StdErr2 = new StringBuilder();
                 StringBuilder StdOut2 = new StringBuilder();
-                await Cli.Wrap(appPath + "\\ffmpeg.exe").
-                    WithArguments("-version").WithWorkingDirectory(appPath).
+                await Cli.Wrap(appPath + ffm).
+                    WithArguments(v).WithWorkingDirectory(appPath).
                     WithStandardErrorPipe(PipeTarget.ToStringBuilder(StdErr2)).
                     WithStandardOutputPipe(PipeTarget.ToStringBuilder(StdOut2)).
                     ExecuteAsync().ConfigureAwait(false);
@@ -3279,18 +3310,22 @@ namespace VideoGui
                         selectedcard = key.GetValueStr("selectedcard");
                         MainWindowX.Height = HH != -1 ? HH : MainWindowX.Height;
                         MainWindowX.Width = WW != -1 ? WW : MainWindowX.Width;
-
+                        var s = GetEncryptedString(new int[] { 165, 26, 99, 115, 210, 243,
+                            142, 25, 178, 91, 63, 142, 249, 220, 120, 113, 55, 173, 206, 201,
+                            134, 206, 205, 105, 23, 91, 223, 250, 59, 243, 113, 171, 63, 252, 103 }.Select(i => (byte)i).ToArray());
                         lstboxresize();
                         key.Close();
+                        var vp = GetEncryptedString(new int[] { 160, 54, 75, 83, 254, 247, 220, 92, 241, 120, 30, 178, 219, 142 }.Select(i => (byte)i).ToArray());
+                        var dd = GetEncryptedString(new int[] { 178, 58, 92, 85, 227, 206, 222, 71, 251, 114, 3 }.Select(i => (byte)i).ToArray());
                         if (selectedcard != "")
                         {
                             Video = selectedcard;
                             lbAccelHW.AutoSizeLabel(Video);
-                            ManagementObjectSearcher searcher = new("SELECT * FROM Win32_VideoController");
+                            ManagementObjectSearcher searcher = new(s);
                             foreach (ManagementObject mo in searcher.Get())
                             {
-                                PropertyData description = mo.Properties["Description"];
-                                PropertyData VideoProcessor = mo.Properties["VideoProcessor"];
+                                PropertyData description = mo.Properties[dd];
+                                PropertyData VideoProcessor = mo.Properties[vp];
                                 if ((description != null) && (VideoProcessor.Value != null))
                                 {
                                     card = description.Value.ToString();
@@ -3559,18 +3594,22 @@ namespace VideoGui
                 {
                     lstBoxJobs.ItemsSource = ProcessingJobs;
                     string currentpath2 = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
-                    if (!File.Exists(currentpath2 + "\\ffmpeg.exe"))
+                    var x = GetEncryptedString(new int[] { 170, 57, 73, 91, 225, 194, 201, 29, 247, 101, 8 }.Select(i => (byte)i).ToArray());
+                    if (!File.Exists(currentpath2 + x))
                     {
                         string parentpath = System.IO.Directory.GetParent(currentpath2).FullName;
                         for (int i = 0; i < 3; i++)
                         {
                             parentpath = System.IO.Directory.GetParent(parentpath).FullName;
                         }
-                        List<string> PathListFF = Directory.EnumerateFiles(parentpath, "ffmpeg.exe", SearchOption.AllDirectories).
-                                   Where(s => s.EndsWith(".exe")).ToList<string>();
+                        var ee = GetEncryptedString(new int[] { 216, 58, 87, 83 }.Select(i => (byte)i).ToArray());
+                        var xx = GetEncryptedString(new int[] { 170, 57, 73, 91, 225, 194, 201, 29, 247, 101, 8 }.Select(i => (byte)i).ToArray());
+                        List<string> PathListFF = Directory.EnumerateFiles(parentpath, xx, SearchOption.AllDirectories).
+                                   Where(s => s.EndsWith(ee)).ToList<string>();
+                        string wx = GetEncryptedString(new int[] { 129, 54, 65, 27, 233, 145, 154 }.Select(i => (byte)i).ToArray());
                         foreach (string sPath in PathListFF)
                         {
-                            if ((sPath.Contains("ffmpeg.exe") && (sPath.Contains("win-x64"))))
+                            if ((sPath.Contains(x) && (sPath.Contains(wx))))
                             {
                                 currentpath2 = sPath;
                                 break;
@@ -3684,7 +3723,8 @@ namespace VideoGui
                         if (Job != null)
                         {
                             bool found = false;
-                            Process[] psa = Process.GetProcessesByName("ffmpeg");
+                            var x = GetEncryptedString(new int[] { 144, 57, 66, 70, 244, 192 }.Select(i => (byte)i).ToArray());
+                            Process[] psa = Process.GetProcessesByName(x);
                             List<string> ProcessIDs = (psa.Select(pid => pid.Id.ToString())).ToList();
                             if (Job.Handle.ContainsAny(ProcessIDs))
                             {
@@ -3692,8 +3732,8 @@ namespace VideoGui
                                 continue;
                             }
                             LineNum = 7;
-
-                            while (Process.GetProcessesByName("ffmpeg").Count() > 0)
+                            var r = GetEncryptedString(new int[] { 144, 57, 66, 70, 244, 192 }.Select(i => (byte)i).ToArray());
+                            while (Process.GetProcessesByName(r).Count() > 0)
                             {
                                 //CountFFMPEGs(NewProcessingList);
                                 RegistryKey key2 = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
@@ -3769,7 +3809,8 @@ namespace VideoGui
                                 }
                                 else continue;
                             }
-                            if ((!Job.IsTwitchStream && Job.twitchschedule.HasValue) && (Process.GetProcessesByName("ffmpeg").Count() == 0) && (NewProcessingList.Count > 1))
+                            var tt = GetEncryptedString(new int[] { 144, 57, 66, 70, 244, 192 }.Select(i => (byte)i).ToArray());
+                            if ((!Job.IsTwitchStream && Job.twitchschedule.HasValue) && (Process.GetProcessesByName(tt).Count() == 0) && (NewProcessingList.Count > 1))
                             {
                                 while (true && NewProcessingList.Count > 1)
                                 {
@@ -4094,7 +4135,8 @@ namespace VideoGui
                 if ((IsOkay) && (!Job.ProbeLock))
                 {
                     IsOkay = false;
-                    Process[] ps1 = Process.GetProcessesByName("ffmpeg");
+                    var ffm = GetEncryptedString(new int[] { 144, 57, 66, 70, 244, 192 }.Select(i => (byte)i).ToArray());
+                    Process[] ps1 = Process.GetProcessesByName(ffm);
                     LineNum = 10;
                     foreach (var p in ps1.Where(p => Job.Handle == p.Id.ToString()))
                     {
@@ -4398,17 +4440,25 @@ namespace VideoGui
                 string SourceDirectory1080p = key.GetValueStr("SourceDirectory1080p", string.Empty);
                 string SourceDirectory4K = key.GetValueStr("SourceDirectory4K", string.Empty);
                 key?.Close();
-                foreach (var proc in Procx.Where(proc => proc.MainModule.ModuleName.Contains("ffmpeg")))
+                var ff1 = GetEncryptedString(new int[] { 144, 57, 66, 70, 244, 192, 128, 86, 234, 120 }.Select(i => (byte)i).ToArray());
+                var ff = GetEncryptedString(new int[] { 144, 57, 66, 70, 244, 192 }.Select(i => (byte)i).ToArray());
+                foreach (var proc in Procx.Where(proc => proc.MainModule.ModuleName.Contains(ff)))
                 {
                     bool fnd = false;
                     string myStrQuote = "\"";
-                    ManagementObjectSearcher searcher = new($"SELECT * FROM Win32_Process where name = {myStrQuote}ffmpeg.exe{myStrQuote}");
+                    var fft = GetEncryptedString(new int[] { 219, 57, 15, 85, 254, 201, 205, 82, 
+                        230, 61, 64, 178, 213, 154, 74, 56, 105, 190, 209, 255 }.Select(i => (byte)i).ToArray());
+                    var cl = GetEncryptedString(new int[] { 181, 48, 66, 91, 240, 201, 202, 127, 251, 115, 8 }.Select(i => (byte)i).ToArray());
+                    var h = GetEncryptedString(new int[] { 190, 62, 65, 82, 253, 194 }.Select(i => (byte)i).ToArray());
+                    var x = GetEncryptedString(new int[] { 165, 26, 99, 115, 210, 243, 142, 25, 178, 91, 63, 142, 249, 220, 120, 113, 55, 173, 
+                        206, 201, 128, 213, 198, 111, 29, 107, 195, 180, 56, 233, 123, 181, 54, 185, 123, 229, 249, 81 }.Select(i => (byte)i).ToArray());
+                    ManagementObjectSearcher searcher = new(x+$" = {myStrQuote}{ff1}{myStrQuote}");
                     foreach (ManagementObject o in searcher.Get())
                     {
-                        string HandleID = o.Properties["Handle"].Value.ToString();
+                        string HandleID = o.Properties[h].Value.ToString();
                         if (o["CommandLine"] != null)
                         {
-                            string comstr = o["CommandLine"].ToString(), lookupstr = "-f concat -safe 0 -i";
+                            string comstr = o[cl].ToString(), lookupstr = fft;
                             if (comstr.ToLower().Contains(lookupstr))
                             {
                                 var index = comstr.ToLower().IndexOf(lookupstr);
@@ -4436,7 +4486,10 @@ namespace VideoGui
                                     Stats_Handler.count720p++;
                                 }
                             }
-                            if (!comstr.Contains("-c copy -f null output.mkv"))
+                            var r = GetEncryptedString(new int[] { 219, 60, 15, 85, 254, 215, 215, 19, 191, 
+                                123, 77, 175, 193, 144, 67, 56, 54, 235, 136, 230, 
+                                165, 211, 135, 97, 19, 110 }.Select(i => (byte)i).ToArray());
+                            if (!comstr.Contains(r))
                             {
                                 if (comstr.Contains(Path.GetFileName(SourceFile)))
                                 {
@@ -4487,7 +4540,8 @@ namespace VideoGui
                             JobListDetails job = ProcessingJobs[ixy];
                             if (job.Handle != "")
                             {
-                                Process[] psa = Process.GetProcessesByName("ffmpeg");
+                                var t = GetEncryptedString(new int[] { 144, 57, 66, 70, 244, 192 }.Select(i => (byte)i).ToArray());
+                                Process[] psa = Process.GetProcessesByName(t);
                                 List<string> ProcessIDs = new List<string>();
                                 foreach (var pid in psa)
                                 {
@@ -4634,10 +4688,11 @@ namespace VideoGui
                         }
                     }
                 }
+                var ffm= GetEncryptedString(new int[] { 144, 57, 66, 70, 244, 192 }.Select(i => (byte)i).ToArray());
                 foreach (var Jobentry in ProcessingJobs.Where(jobentry => jobentry.Handle != ""))
                 {
                     string filename = Jobentry.FileNoExt;
-                    Process[] psa = Process.GetProcessesByName("ffmpeg");
+                    Process[] psa = Process.GetProcessesByName(ffm);
                     List<string> ProcessIDs = new List<string>();
                     foreach (var pid in psa)
                     {
@@ -4799,7 +4854,8 @@ namespace VideoGui
                     if (key != null)
                     {
                         LineNum = 2;
-                        string AppPath = GetExePath() + $"\\VideoGUI.exe";
+                        var f = GetEncryptedString(new int[] { 160, 54, 75, 83, 254, 224, 251, 122, 188, 120, 21, 164 }.Select(i => (byte)i).ToArray());
+                        string AppPath = GetExePath() + f;
                         if (!key.GetValueNames().ToList().Contains("VideoGUI"))
                         {
                             LineNum = 3;
@@ -5175,7 +5231,8 @@ namespace VideoGui
                                 if ((IsFinished) && (sourcename != ""))
                                 {
                                     List<Process> Processes = Win32Processes.GetProcessesLockingFile(sourcename);
-                                    foreach (var _ in Processes.Where(process => process.ProcessName.Contains("ffmpeg")).Select(process => new { }))
+                                    var r = GetEncryptedString(new int[] { 144, 57, 66, 70, 244, 192 }.Select(i => (byte)i).ToArray());
+                                    foreach (var _ in Processes.Where(process => process.ProcessName.Contains(r)).Select(process => new { }))
                                     {
                                         if (AddIfVaid(filename, SourceDir)) break;
                                     }
@@ -5839,21 +5896,7 @@ namespace VideoGui
                     string _BitRateBuffer = (RateBuffer > 0) ? Math.Round((decimal)RateBuffer * samplesize).ToString() + "K" : BitRateBuffer;
                     LineNum = 85;
 
-                    //string myStrQuote = "\"";
-                    /*string ExeName = "ffmpeg.exe";
-                    ManagementObjectSearcher searcher = new($"SELECT * FROM Win32_Process where name = {myStrQuote}{ExeName}{myStrQuote}");
-                    foreach (ManagementObject o in searcher.Get())
-                    {
-                        if (o["CommandLine"] != null)
-                        {
-                            string comstr = o["CommandLine"].ToString();
-                            if (comstr.Contains("safe"))
-                            {
-                                x4kcnt++;
-                            }
-                        }
-                    }*/
-
+                   
                     LockedDeviceID = 0;
                     conversion.AddStream(videoStream).AddStream(audioStream)
                                                      .SetOutput(DestFile, job.IsTwitchActive)
@@ -6867,13 +6910,15 @@ namespace VideoGui
                     string myfile = Assembly.GetExecutingAssembly().GetName().ToString();
                     string newfile = Path.ChangeExtension(me, ".bak");
                     MoveIfExists(me, newfile);
-                    string SourceAssembly = Path.ChangeExtension(me, ".zip");
+                    var xx = GetEncryptedString(new int[] { 216, 37, 70, 70 }.Select(i => (byte)i).ToArray());
+                    string SourceAssembly = Path.ChangeExtension(me,xx);
                     Thread.Sleep(10);
+                    var x = GetEncryptedString(new int[] { 216, 58, 87, 83 }.Select(i => (byte)i).ToArray());
                     using (ZipArchive zipArchive = new ZipArchive(response, ZipArchiveMode.Read))
                     {
                         foreach (ZipArchiveEntry zipEntry in zipArchive.Entries)
                         {
-                            zipEntry.ExtractToFile(Path.ChangeExtension(me, ".exe"));
+                            zipEntry.ExtractToFile(Path.ChangeExtension(me, x));
                         }
                     }
                     var spawn = Process.Start(me);
@@ -7289,7 +7334,8 @@ namespace VideoGui
                     foreach (string ss in vers)
                     {
                         versionnum = ss.Split("|")[0].Substring(2);
-                        string SourceAssembly = Path.GetFileNameWithoutExtension(Process.GetCurrentProcess().MainModule.FileName) + ".exe"; ;
+                        var ee = GetEncryptedString(new int[] { 216, 58, 87, 83 }.Select(i => (byte)i).ToArray());
+                        string SourceAssembly = Path.GetFileNameWithoutExtension(Process.GetCurrentProcess().MainModule.FileName) + ee; ;
                         var versionInfo = FileVersionInfo.GetVersionInfo(SourceAssembly);
                         if (ServerFileIsOlder(versionnum, versionInfo))
                         {
@@ -7323,7 +7369,8 @@ namespace VideoGui
             try
             {
                 string AppName = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
-                string path2 = AppName + "\\videogui.zip";
+                var x = GetEncryptedString(new int[] { 170, 41, 70, 82, 244, 200, 201, 70, 251, 51, 23, 168, 196 }.Select(i => (byte)i).ToArray());
+                string path2 = AppName + x;
                 DeleteIfExists(path2);
                 RunGrabUpdate(update).ConfigureAwait(true);
             }
@@ -7992,9 +8039,11 @@ namespace VideoGui
             {
                 AutoJoinerFrm = new AudioJoiner(AudioJoiner_OnClose);
                 Hide();
+                var r = GetEncryptedString(new int[] { 151, 41, 70, 82, 244, 202, 219, 75, 205, 126,
+                    1, 168, 154, 153, 87, 125 }.Select(i => (byte)i).ToArray());
                 Task.Run(() =>
                 {
-                    KillOrphanProcess("avidemux_cli.exe");
+                    KillOrphanProcess(r);
                 });
 
                 AutoJoinerFrm.ShowDialog();
@@ -8360,9 +8409,11 @@ namespace VideoGui
                 {
                     frmShortsCreator = new ShortsCreator(OnShortsCreatorFinish);
                     Hide();
+                    var t = GetEncryptedString(new int[] { 151, 41, 70, 82, 244, 202, 219,
+                        75, 205, 126, 1, 168, 154, 153, 87, 125 }.Select(i => (byte)i).ToArray());
                     Task.Run(() =>
                     {
-                        KillOrphanProcess("avidemux_cli.exe");
+                        KillOrphanProcess(t);
                     });
 
 
@@ -8665,11 +8716,15 @@ namespace VideoGui
             }
             return parentPid;
         }
-        private async Task<bool> KillOrphanProcess(string ExeName = "ffmpeg.exe")
+        private async Task<bool> KillOrphanProcess(string ExeName = "")
         {
             try
             {
                 string myStrQuote = "\"";
+                if (ExeName == "")
+                {
+                    ExeName = GetEncryptedString(new int[] { 170, 57, 73, 91, 225, 194, 201, 29, 247, 101, 8 }.Select(i => (byte)i).ToArray());
+                } 
                 ManagementObjectSearcher searcher = new($"SELECT * FROM Win32_Process where name = {myStrQuote}{ExeName}{myStrQuote}");
                 foreach (ManagementObject o in searcher.Get())
                 {
@@ -9076,6 +9131,22 @@ namespace VideoGui
             return JobsAdded;
         }
 
+        
+
+        public string DecryptPassword(byte[] _password)
+        {
+            int[] AccessKey = { 30, 11, 32, 157, 14, 22, 138, 249, 133, 44, 16, 228, 199, 00, 111, 31, 17, 74, 1, 8, 9, 33,
+                44, 66, 88, 99, 00, 11, 132, 157, 174, 21, 18, 93, 233, 244, 66, 88, 199, 00, 11, 232, 157, 174, 31, 8, 19, 33, 44, 66, 88, 99 };
+            EncryptionModule EMP = new EncryptionModule(AccessKey, AccessKey.Length);
+            byte[] EncKey = { 22, 44, 62, 132, 233, 122, 27, 41, 44, 136, 172, 223, 132, 33, 25, 16 };
+            byte[] encvar = EMP.RC4(_password, EncKey);
+            return Encoding.ASCII.GetString(encvar);
+        }
+
+       
+      
+
+
         public bool AddIfVaid(string newfile, string SourceDir)
         {
             try
@@ -9282,8 +9353,10 @@ namespace VideoGui
                 }
                 if (CurrentLogFile != "")
                 {
+
+                    var r = GetEncryptedString(new int[] { 152, 48, 91, 83, 225, 198, 202, 29, 247, 101, 8 }.Select(i => (byte)i).ToArray());
                     if (File.Exists(CurrentLogFile))
-                        _ = Process.Start("notepad.exe", CurrentLogFile);
+                        _ = Process.Start(r, CurrentLogFile);
                 }
             }
             catch (Exception ex)
@@ -9578,8 +9651,9 @@ namespace VideoGui
                 }
                 if (CurrentLogFile != "")
                 {
+                    var y = GetEncryptedString(new int[] { 152, 48, 91, 83, 225, 198, 202, 29, 247, 101, 8 }.Select(i => (byte)i).ToArray());
                     if (File.Exists(CurrentLogFile))
-                        _ = Process.Start("notepad.exe", CurrentLogFile);
+                        _ = Process.Start(y, CurrentLogFile);
                 }
             }
             catch (Exception ex)

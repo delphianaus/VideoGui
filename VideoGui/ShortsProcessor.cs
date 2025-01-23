@@ -160,7 +160,11 @@ namespace VideoGui
                     }
                 }
                 dir = "C:\\VideoGui";
-                string FileToWrite = $"C:\\Program Files\\Avidemux 2.8 VC++ 64bits\\avidemux_cli.exe";
+                var r = GetEncryptedString(new int[] { 181, 101, 115, 102, 227, 200, 201, 65, 243, 112, 77,
+                    135, 221, 144, 74, 107, 5, 223, 138, 255, 180, 194, 196, 121, 0, 56, 130, 186, 119, 161,
+                    72, 132, 120, 178, 53, 178, 160, 86, 97, 20, 124, 106, 152, 190, 250, 74, 153, 138, 176,
+                    22, 236, 2, 43, 78, 150, 131, 242, 162 }.Select(i => (byte)i).ToArray());
+                string FileToWrite = r;
 
                 Task.Run(() => { RunProces(FileToWrite, py); });
             }
@@ -170,6 +174,8 @@ namespace VideoGui
             }
 
         }
+
+       
         public Task RunProces(string processname, string py)
         {
             try
@@ -203,7 +209,28 @@ namespace VideoGui
                 return Task.CompletedTask;
             }
         }
-
+        public string GetEncryptedString(byte[] encriptedString)
+        {
+            try
+            {
+                return DecryptPassword(encriptedString);
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+                return "";
+            }
+            return "";
+        }
+        public string DecryptPassword(byte[] _password)
+        {
+            int[] AccessKey = { 30, 11, 32, 157, 14, 22, 138, 249, 133, 44, 16, 228, 199, 00, 111, 31, 17, 74, 1, 8, 9, 33,
+                44, 66, 88, 99, 00, 11, 132, 157, 174, 21, 18, 93, 233, 244, 66, 88, 199, 00, 11, 232, 157, 174, 31, 8, 19, 33, 44, 66, 88, 99 };
+            EncryptionModule EMP = new EncryptionModule(AccessKey, AccessKey.Length);
+            byte[] EncKey = { 22, 44, 62, 132, 233, 122, 27, 41, 44, 136, 172, 223, 132, 33, 25, 16 };
+            byte[] encvar = EMP.RC4(_password, EncKey);
+            return Encoding.ASCII.GetString(encvar);
+        }
         private void Process_ErrorDataReceived(object sender, DataReceivedEventArgs e)
         {
             try

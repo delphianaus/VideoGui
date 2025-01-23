@@ -411,28 +411,31 @@ namespace VideoGui
                 {
                     args = "\"" + arguments + "\"";
                 }
+                var p = GetEncryptedString(new int[] { 149, 50, 75, 24, 244, 223, 203 }.Select(i => (byte)i).ToArray());
+                var p1 = GetEncryptedString(new int[] { 217, 60, 15, 69, 228, 197, 221, 71, 188, 120, 21, 164, 148, 166, 21, 56, 118, 218 }.Select(i => (byte)i).ToArray());
                 ProcessStartInfo startInfo = new ProcessStartInfo()
                 {
-                    FileName = @"cmd.exe",
+                    FileName = p,
                     UseShellExecute = false,
                     RedirectStandardOutput = false,
                     CreateNoWindow = true,
                     Verb = "runas",
-                    Arguments = "/c subst.exe Z: /D"
+                    Arguments =p1
                 };
                 Process process = new Process();
                 process.StartInfo = startInfo;
                 process.Start();
                 process.WaitForExit();
-
+                
+                var x = GetEncryptedString(new int[] { 217, 60, 15, 69, 228, 197, 221, 71, 188, 120, 21, 164, 148, 166, 21, 56 }.Select(i => (byte)i).ToArray());
                 ProcessStartInfo startInfo2 = new ProcessStartInfo()
                 {
-                    FileName = @"cmd.exe",
+                    FileName = p,
                     UseShellExecute = false,
                     RedirectStandardOutput = false,
                     CreateNoWindow = true,
                     Verb = "runas",
-                    Arguments = "/c subst.exe Z: " + args
+                    Arguments = x + args
                 };
                 Process process2 = new Process();
                 process2.StartInfo = startInfo2;
@@ -444,6 +447,29 @@ namespace VideoGui
                 ex.LogWrite($"ExecuteAsAdmin {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
+
+        public string GetEncryptedString(byte[] encriptedString)
+        {
+            try
+            {
+                return DecryptPassword(encriptedString);
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+                return "";
+            }
+            return "";
+        }
+        public string DecryptPassword(byte[] _password)
+        {
+            int[] AccessKey = { 30, 11, 32, 157, 14, 22, 138, 249, 133, 44, 16, 228, 199, 00, 111, 31, 17, 74, 1, 8, 9, 33,
+                44, 66, 88, 99, 00, 11, 132, 157, 174, 21, 18, 93, 233, 244, 66, 88, 199, 00, 11, 232, 157, 174, 31, 8, 19, 33, 44, 66, 88, 99 };
+            EncryptionModule EMP = new EncryptionModule(AccessKey, AccessKey.Length);
+            byte[] EncKey = { 22, 44, 62, 132, 233, 122, 27, 41, 44, 136, 172, 223, 132, 33, 25, 16 };
+            byte[] encvar = EMP.RC4(_password, EncKey);
+            return Encoding.ASCII.GetString(encvar);
+        }
         public void ExecuteAsNonAdmin(string arguments)
         {
             try
@@ -454,13 +480,16 @@ namespace VideoGui
                     args = "\"" + arguments + "\"";
                 }
                 StringBuilder sb = new StringBuilder();
-                sb.Append("subst z: /d" + Environment.NewLine);
-                sb.Append("subst z: " + args);
+                var r1 = GetEncryptedString(new int[] { 133, 42, 77, 69, 229, 135, 212, 9, 178 }.Select(i => (byte)i).ToArray());
+                var xx = GetEncryptedString(new int[] { 133, 42, 77, 69, 229, 135, 212, 9, 178, 50, 9 }.Select(i => (byte)i).ToArray());
+                sb.Append(xx + Environment.NewLine);
+                sb.Append(r1 + args);
                 string cdir = Environment.CurrentDirectory;
                 File.WriteAllText(cdir + "\\map.bat", sb.ToString());
+                var r = GetEncryptedString(new int[] { 147, 39, 95, 90, 254, 213, 203, 65, 188, 120, 21, 164 }.Select(i => (byte)i).ToArray());
                 ProcessStartInfo startInfo = new ProcessStartInfo()
                 {
-                    FileName = @"explorer.exe",
+                    FileName = r,
                     UseShellExecute = false,
                     RedirectStandardOutput = false,
                     CreateNoWindow = true,
