@@ -18,6 +18,10 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <UseWindowsForms>True</UseWindowsForms>
     <IncludeSymbols>True</IncludeSymbols>
+    <Title>VideoGui</Title>
+    <Authors>Justin Smyth</Authors>
+    <Company>SmythConsulting</Company>
+    <Description>Video Process &amp; YouTube App</Description>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
