@@ -10,74 +10,58 @@
         WindowStyle="ToolWindow" Title="Select Release Schedule" 
         Height="344" Width="902">
     <Grid Width="901" Height="322" HorizontalAlignment="Left" VerticalAlignment="Top">
-        <Border x:Name="brdschules" BorderThickness="2" 
-                BorderBrush="Black"  Margin="5,5,5,5" Width="888" HorizontalAlignment="Left" VerticalAlignment="Top" Height="208">
-            <Canvas Margin="0,0,0,0">
-                <StackPanel Orientation="Vertical">
-                    <StackPanel Height="30" VerticalAlignment="Top">
-                        <ListBox x:Name="lstSchItems" Height="27" Canvas.Top="3" 
-                           IsSynchronizedWithCurrentItem="True" 
-                                 IsManipulationEnabled="True" Canvas.Left="10" 
-                                 Margin="6,0,4,0" VerticalAlignment="Top">
-                            <ListBox.Template>
-                                <ControlTemplate x:Name="GridControlss">
-                                    <DockPanel LastChildFill="True" Margin="0,0,0,0" >
-                                        <Grid DockPanel.Dock="Top" Height="30" >
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition x:Name="title0" Width="0"/>
-                                                <ColumnDefinition x:Name="title1" Width="140"/>
-                                            </Grid.ColumnDefinitions>
-                                            <Label Grid.Column="1" Content="Schedule Name"/>
-                                        </Grid>
-                                        <ItemsPresenter></ItemsPresenter>
-                                    </DockPanel>
-                                </ControlTemplate>
-                            </ListBox.Template>
-                        </ListBox>
-                    </StackPanel>
-                    <StackPanel ScrollViewer.VerticalScrollBarVisibility="Disabled" 
-                                ScrollViewer.HorizontalScrollBarVisibility="Disabled" HorizontalAlignment="Left">
-                        <ScrollViewer Width="874" >
-                            <StackPanel ScrollViewer.VerticalScrollBarVisibility="Disabled" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Width="777" Height="175" HorizontalAlignment="Left" VerticalAlignment="Top">
-                                <ListBox x:Name="lstMainSchedules"  Padding="0,0,0,2" MouseDoubleClick="lstMainSchedules_MouseDoubleClick"
+        <Canvas Margin="0,0,0,0">
+            <ListBox x:Name="lstSchItems" Height="27" Canvas.Top="3" IsSynchronizedWithCurrentItem="True" 
+                IsManipulationEnabled="True" Canvas.Left="10" Margin="6,0,4,0" VerticalAlignment="Top">
+                <ListBox.Template>
+                    <ControlTemplate x:Name="GridControlss">
+                        <DockPanel LastChildFill="True" Margin="0,0,0,0" >
+                            <Grid DockPanel.Dock="Top" Height="30">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition x:Name="title1" Width="140"/>
+                                </Grid.ColumnDefinitions>
+                                <Label Grid.Column="1" Content="Schedule Name"/>
+                            </Grid>
+                            <ItemsPresenter></ItemsPresenter>
+                        </DockPanel>
+                    </ControlTemplate>
+                </ListBox.Template>
+            </ListBox>
+        </Canvas>
+        <Canvas Margin="0,0,0,0">
+            <ListBox x:Name="lstMainSchedules" Canvas.Top="33" Padding="0,0,0,2" MouseDoubleClick="lstMainSchedules_MouseDoubleClick"
                                 ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Visible" Height="175"
-                            ScrollViewer.HorizontalScrollBarVisibility="Disabled" VerticalContentAlignment="Stretch" Width="871" HorizontalAlignment="Left" VerticalAlignment="Top">
-                                    <ListBox.Resources>
-                                        <!--Defines a context menu-->
-                                        <ContextMenu x:Key="MyElementMenu">
-                                            <MenuItem Name="mnuSave" Header="Save" Click="mnuSave_Click"/>
-                                            <MenuItem Name="mnuEdit" Header="Edit" Click="mnuEdit_Click"/>
-                                            <Separator/>
-                                            <MenuItem Name="mnuNew" Header="New" Click="mnuNew_Click"/>
-                                            <Separator/>
-                                            <MenuItem Name="mnuDelete" Header="Delete" Click="mnuDelete_Click"/>
-                                        </ContextMenu>
-                                        <!--Sets a context menu for each ListBoxItem in the current ListBox-->
-                                        <Style TargetType="{x:Type ListBoxItem}">
-                                            <Setter Property="ContextMenu" Value="{StaticResource MyElementMenu}"/>
-                                        </Style>
-                                    </ListBox.Resources>
-                                    <ListBox.ItemTemplate>
-                                        <DataTemplate x:Name="GridControlsB">
-                                            <Grid Margin="0,2" x:Name="gridwidths" >
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition x:Name="title0" Width="0"/>
-                                                    <ColumnDefinition x:Name="title1" Width="140*"/>
-                                                </Grid.ColumnDefinitions>
-                                                <TextBlock x:Name="Id" Tag ="1" Grid.Column="0" Text="{Binding Id}" Width="0"/>
-                                                <TextBlock x:Name="Name" Tag ="2" Grid.Column="1" Text="{Binding Name}"  />
-                                            </Grid>
-                                        </DataTemplate>
-                                    </ListBox.ItemTemplate>
-                                </ListBox>
-                            </StackPanel>
-                        </ScrollViewer>
-                    </StackPanel>
-                </StackPanel>
-            </Canvas>
-        </Border>
+                            ScrollViewer.HorizontalScrollBarVisibility="Disabled" VerticalContentAlignment="Stretch" Width="871" HorizontalAlignment="Left" VerticalAlignment="Center" Canvas.Left="14">
+                <ListBox.Resources>
+                    <!--Defines a context menu-->
+                    <ContextMenu x:Key="MyElementMenu">
+                        <MenuItem Name="mnuEdit" Header="Edit" Click="mnuEdit_Click"/>
+                        <Separator/>
+                        <MenuItem Name="mnuNew" Header="New" Click="mnuNew_Click"/>
+                        <Separator/>
+                        <MenuItem Name="mnuDelete" Header="Delete" Click="mnuDelete_Click"/>
+                    </ContextMenu>
+                    <!--Sets a context menu for each ListBoxItem in the current ListBox-->
+                    <Style TargetType="{x:Type ListBoxItem}">
+                        <Setter Property="ContextMenu" Value="{StaticResource MyElementMenu}"/>
+                    </Style>
+                </ListBox.Resources>
+                <ListBox.ItemTemplate>
+                    <DataTemplate x:Name="GridControlsB">
+                        <Grid Margin="0,2" x:Name="gridwidths" >
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition x:Name="title0" Width="0"/>
+                                <ColumnDefinition x:Name="title1" Width="140*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock x:Name="Id" Tag ="1" Grid.Column="0" Text="{Binding Id}" Width="0"/>
+                            <TextBlock x:Name="Name" Tag ="2" Grid.Column="1" Text="{Binding Name}"  />
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Canvas>
         <Label Name="lblScheduleName" Margin="2,216,0,0"  Content="Schedule Name :" HorizontalAlignment="Left" VerticalAlignment="Top"/>
-        <TextBox x:Name="txtScheduleName" Margin="101,219,0,0" Height="23" HorizontalAlignment="Left" VerticalAlignment="Top" Width="791"/>
+        <TextBox x:Name="txtScheduleName" Margin="101,219,0,0" Height="23" HorizontalAlignment="Left" VerticalAlignment="Top" Width="791" LostFocus="txtScheduleName_LostFocus"/>
         <Button x:Name="btnClose" Content="Close" Width="50" Height="27" Margin="0,0,10,18" HorizontalAlignment="Right" VerticalAlignment="Bottom" Click="btnClose_Click"/>
         <Button x:Name="btnSave" Content="Save" Width="50" Height="27" Margin="0,0,830,18" HorizontalAlignment="Right" VerticalAlignment="Bottom" RenderTransformOrigin="-5.4,1.296" Click="btnSave_Click"/>
 

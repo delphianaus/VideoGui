@@ -68,10 +68,12 @@
     <None Remove="Icons\OutputX264.png" />
     <None Remove="Icons\plus.png" />
     <None Remove="Icons\RightArrow..png" />
+    <None Remove="Icons\save.png" />
     <None Remove="Icons\SelectDown.png" />
     <None Remove="Icons\set.png" />
     <None Remove="Icons\upArrow.png" />
     <None Remove="Icons\update.png" />
+    <None Remove="Icons\update2.png" />
     <None Remove="Icons\UpdateCircle.png" />
     <None Remove="Icons\UpdateNew.png" />
     <None Remove="Icons\Yes.png" />
@@ -97,7 +99,7 @@
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.0" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.0" />
     <PackageReference Include="Microsoft.NETCore.Platforms" Version="8.0.0-preview.7.23375.6" />
-	<PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2903.40" />
+	<PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2950-prerelease" />
     <PackageReference Include="Nancy" Version="2.0.0" />
     <PackageReference Include="runtime.native.System.Net.Http" Version="4.3.1" />
     <PackageReference Include="Squid-Box.SevenZipSharp" Version="1.6.2.24" />
@@ -157,6 +159,10 @@
 
     <Resource Include="Icons\RightArrow..png" />
 
+    <Resource Include="Icons\save.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+
     <Resource Include="Icons\SelectDown.png" />
 
     <Resource Include="Icons\set.png">
@@ -166,6 +172,10 @@
     <Resource Include="Icons\upArrow.png" />
 
     <Resource Include="Icons\update.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+
+    <Resource Include="Icons\update2.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
 

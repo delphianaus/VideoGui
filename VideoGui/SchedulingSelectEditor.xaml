@@ -50,7 +50,6 @@
                         </Grid>
                     </DataTemplate>
                 </ListBox.ItemTemplate>
-                <System:String>ScrollViewer.HorizontalScrollBarVisibility="Disabled" SelectionMode="Multiple" ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Visible" Width="171"&gt;</System:String>
             </ListBox>
         </Border>
         <Button x:Name="btnSelect" Click="btnSelect_Click" Margin="717,27,0,0" VerticalAlignment="Top" 
@@ -84,7 +83,7 @@
                 <Button Name="btnUpdate" Width="24" Height="24" Canvas.Left="517" 
                         Canvas.Top="6" HorizontalAlignment="Left" 
                         VerticalAlignment="Center" Click="btnUpdate_Click">
-                    <Image Source="/Icons/Update2.png"/>
+                    <Image Source="/Icons/update2.png"/>
                 </Button>
                 <Button Name="btnSave" Width="24" Height="24" Canvas.Left="551" 
                         Canvas.Top="6" HorizontalAlignment="Left" VerticalAlignment="Center" 

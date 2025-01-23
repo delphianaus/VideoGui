@@ -73,7 +73,7 @@ namespace VideoGui
         {
             try
             {
-                dbInitialzer?.Invoke(this, null);
+                dbInitialzer?.Invoke(this, new CustomParams_Initialize());
             }
             catch (Exception ex)
             {
