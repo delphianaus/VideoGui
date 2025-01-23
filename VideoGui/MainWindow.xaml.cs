@@ -321,7 +321,7 @@ namespace VideoGui
             }
         }
 
-        public void ShowScraper(Nullable<DateTime> startdate = null, Nullable<DateTime> enddate = null, 
+        public void ShowScraper(Nullable<DateTime> startdate = null, Nullable<DateTime> enddate = null,
             List<ListScheduleItems> _listSchedules = null, int SchMaxUploads = 100, int _eventid = 0)
         {
             try
@@ -352,7 +352,7 @@ namespace VideoGui
                 int MaxShorts = MaxUploads.ToInt(80);
                 int MaxPerSlot = uploadsnumber.ToInt(100);
                 scraperModule = new ScraperModule(ModuleCallback, FinishScraper,
-                    gUrl, startdate, enddate, SchMaxUploads , _listSchedules, _eventid);
+                    gUrl, startdate, enddate, SchMaxUploads, _listSchedules, _eventid);
                 Hide();
                 scraperModule.ShowActivated = true;
                 scraperModule.Show();
@@ -415,7 +415,7 @@ namespace VideoGui
                             formObjectHandler_SchedulingSelectEditor(tld, schedulingSelectEditor);
                             break;
                         }
-                   
+
                 }
             }
             catch (Exception ex)
@@ -594,6 +594,20 @@ namespace VideoGui
                 ex.LogWrite($"RemoveFromSchedulingList {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
             }
         }
+
+        public ObservableCollection<ScheduleMapItem> GetScheduleList(int idx, SchedulingSelectEditor schedulingSelectEditor)
+        {
+            try
+            {
+                schedulingSelectEditor.TitleId = idx;
+                return new ObservableCollection<ScheduleMapItem>(SchedulingItemsList.Where(s => s.ScheduleId == idx).OrderBy(s => s.Start).ToList());
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"GetScheduleList {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+                return null;
+            }
+        }
         private void formObjectHandler_SchedulingSelectEditor(object tld, SchedulingSelectEditor schedulingSelectEditor)
         {
             try
@@ -604,14 +618,14 @@ namespace VideoGui
                     int idx = connectionString.ExecuteScalar(sqla, [("@P0", "CURRENTSCHEDULINGID")]).ToInt(-1);
                     if (idx != -1)
                     {
-                        foreach (var cp in SchedulingNamesList.Where(cp => cp.Id == idx))
+                        foreach (var cp in SchedulingNamesList.Where(cp => cp.Id == idx && idx != -1))
                         {
                             schedulingSelectEditor.txtTitle.Text = cp.Name;
                             break;
                         }
-                   
-                        schedulingSelectEditor.lstTitles.ItemsSource = SchedulingItemsList.Where(s => s.ScheduleId == idx).ToList();
-                        schedulingSelectEditor.TitleId = idx;
+
+                        schedulingSelectEditor.lstTitles.ItemsSource = GetScheduleList(idx, schedulingSelectEditor);
+
                     }
                     else
                     {
@@ -626,8 +640,17 @@ namespace VideoGui
                 }
                 else if (tld is CustomParams_EditTimeSpans cp_ETSE)
                 {
-                    EditTimeSpansFromSchedulingItemsList(cp_ETSE.id, cp_ETSE.Start, cp_ETSE.End, cp_ETSE.Gap); 
-                    schedulingSelectEditor.lstTitles.ItemsSource = SchedulingItemsList.Where(s => s.ScheduleId == schedulingSelectEditor.TitleId).ToList();
+                    if (cp_ETSE.id != -1)
+                    {
+                        EditTimeSpansFromSchedulingItemsList(cp_ETSE.id, cp_ETSE.Start, cp_ETSE.End, cp_ETSE.Gap);
+                        schedulingSelectEditor.lstTitles.ItemsSource = GetScheduleList(schedulingSelectEditor.TitleId, schedulingSelectEditor);
+                    }
+                    else
+                    {
+                        var Id = schedulingSelectEditor.TitleId;
+                        AddTimeSpansToSchedulingItemsList(cp_ETSE.Start, cp_ETSE.End, cp_ETSE.Gap, Id);
+                        schedulingSelectEditor.lstTitles.ItemsSource = GetScheduleList(schedulingSelectEditor.TitleId, schedulingSelectEditor);
+                    }
                 }
                 else if (tld is CustomParams_Refresh cR)
                 {
@@ -642,8 +665,7 @@ namespace VideoGui
                             break;
                         }
                         schedulingSelectEditor.lstTitles.ItemsSource = null;
-                        schedulingSelectEditor.lstTitles.ItemsSource = SchedulingItemsList.Where(s => s.ScheduleId == idx).ToList();
-                        schedulingSelectEditor.TitleId = idx;
+                        schedulingSelectEditor.lstTitles.ItemsSource = GetScheduleList(idx, schedulingSelectEditor);
                     }
                     else
                     {
@@ -655,7 +677,7 @@ namespace VideoGui
                 {
                     var Id = schedulingSelectEditor.TitleId;
                     AddTimeSpansToSchedulingItemsList(cp_ATSE.Start, cp_ATSE.End, cp_ATSE.Gap, Id);
-                    schedulingSelectEditor.lstTitles.ItemsSource = SchedulingItemsList.Where(s => s.ScheduleId == schedulingSelectEditor.TitleId).ToList();
+                    schedulingSelectEditor.lstTitles.ItemsSource = GetScheduleList(schedulingSelectEditor.TitleId, schedulingSelectEditor);
                 }
                 else if (tld is CustomParams_Update cpu)
                 {
@@ -697,11 +719,10 @@ namespace VideoGui
                     idx = connectionString.ExecuteScalar(sqlx, [("@START", Start), ("@END", End), ("@GAP", Gap), ("@SCHEDULINGID", SchedulingId)]).ToInt(-1);
                     if (idx != -1)
                     {
-                        connectionString.ExecuteReader($"SELECT * FROM SCHEDULINGITEMS WHERE ID = {idx}",
-                                    (FbDataReader r) =>
-                                    {
-                                        SchedulingItemsList.Add(new ScheduleMapItem(r));
-                                    }); ;
+                        connectionString.ExecuteReader($"SELECT * FROM SCHEDULINGITEMS WHERE ID = {idx}", (FbDataReader r) =>
+                        {
+                            SchedulingItemsList.Add(new ScheduleMapItem(r));
+                        }); ;
                     }
                 }
                 else
@@ -3533,7 +3554,7 @@ namespace VideoGui
                 LLC = key.GetValueFloat("FisheyeRemoval_LLC", 0.5f);
                 RRF = key.GetValueFloat("FisheyeRemoval_RRF", -0.335f);
                 RLC = key.GetValueFloat("FisheyeRemoval_RLC", 0.097f);
-                
+
                 key?.Close();
                 FileQueChecker = new System.Windows.Forms.Timer();
                 FileQueChecker.Tick += new EventHandler(FileQueChecker_Tick);
@@ -5329,15 +5350,15 @@ namespace VideoGui
                 LineNum = 22;
                 this.SetChecked("GPUEncode", key.GetValueBool("GPUEncode", true));
                 this.SetChecked("Fisheye", key.GetValueBool("FishEyeRemoval", false));
-                
+
                 this.SetChecked("ChkResize1080p", key.GetValueBool("resize1080p"));
-              
+
                 this.SetChecked("X265Output", key.GetValueBool("X265", true));
                 this.SetChecked("ChkAudioConversion", key.GetValueBool("AudioConversionAC3", true));
-                
+
                 this.SetSelectedIndex("cmbH64Target", key.GetValueInt("h264Target", -1));
                 this.SetChecked("ChkResize1080shorts", key.GetValueBool("Do1080pShorts", false));
-                
+
                 LineNum = 24;
                 SystemSetup = false;
                 key.Close();
@@ -5571,7 +5592,7 @@ namespace VideoGui
                 bool _isCopy = false;
                 _StatsHandler _stats_handle = stats_handle;
                 bool overrider = false, chkresized = false;
-                
+
                 RegistryKey key = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\VideoProcessor", true);
                 int _cmbaudiomodeSelectedIndex = key.GetValueInt("Audiomode", 0);
                 int H264Target = key.GetValueInt("h264Target", -1);
@@ -5579,7 +5600,7 @@ namespace VideoGui
                 bool _GPUEncode = this.IsChecked("GPUEncode"), _X265Output = !this.IsChecked("X265Output");
                 key.Close();
 
-                
+
                 string myStrQuote = "\"";
                 (chkresized, overrider, job.InProcess) = (ResizeEnable, job.X264Override, true);
                 Video = CheckForGraphicsCard();
@@ -5911,7 +5932,7 @@ namespace VideoGui
                 }
                 LineNum = 53;
 
-               
+
                 ffmpeg.VideoCodec DecoderCodec = ffmpeg.VideoCodec.h264;
                 double aspectratio = -1;
                 LineNum = 54;
@@ -8204,7 +8225,7 @@ namespace VideoGui
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
             }
         }
-      
+
         public void OnChkButton_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -8547,7 +8568,7 @@ namespace VideoGui
                     }
                 });
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name + $" {ex.Message}");
 
@@ -8815,10 +8836,10 @@ namespace VideoGui
             try
             {
                 Nullable<DateTime> startdate = DateTime.Now, enddate = DateTime.Now.AddHours(10);
-                List<ListScheduleItems> listSchedules2 = new();   
+                List<ListScheduleItems> listSchedules2 = new();
                 int _eventid = 0;
                 SchMaxUploads = 100;
-                ShowScraper(startdate, enddate,  listSchedules2,SchMaxUploads, _eventid);
+                ShowScraper(startdate, enddate, listSchedules2, SchMaxUploads, _eventid);
             }
             catch (Exception ex)
             {
@@ -9019,7 +9040,7 @@ namespace VideoGui
 
         }
 
-      
+
 
         private void Window_FocusableChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
@@ -9554,7 +9575,7 @@ namespace VideoGui
         {
             //_shouldStop = true;
         }
-      
+
         private void MainWindowX_StateChanged(object sender, EventArgs e)
         {
             try
@@ -9772,7 +9793,7 @@ namespace VideoGui
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
             }
         }
-        
+
         private void BtnCompare_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -9946,7 +9967,7 @@ namespace VideoGui
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
             }
         }
-       
+
         private void CmbScanDirectory_KeyUp(object sender, System.Windows.Input.KeyEventArgs e)
         {
             try

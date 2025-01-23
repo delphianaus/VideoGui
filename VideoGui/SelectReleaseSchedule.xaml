@@ -5,8 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:VideoGui" Closing="Window_Closing" 
         Loaded="Window_Loaded"
-        mc:Ignorable="d" ResizeMode="CanResizeWithGrip" 
-        WindowStartupLocation="CenterScreen"  
+        mc:Ignorable="d" ResizeMode="CanResizeWithGrip" WindowStartupLocation="CenterScreen"  
         WindowStyle="ToolWindow" Title="Select Release Schedule" 
         Height="344" Width="902">
     <Grid Width="901" Height="322" HorizontalAlignment="Left" VerticalAlignment="Top">
