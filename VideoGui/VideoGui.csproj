@@ -22,6 +22,7 @@
     <Authors>Justin Smyth</Authors>
     <Company>SmythConsulting</Company>
     <Description>Video Process &amp; YouTube App</Description>
+    <PackageIcon>computer.png</PackageIcon>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -208,6 +209,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Icons\computer.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
     <None Update="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
