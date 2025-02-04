@@ -68,7 +68,6 @@ using Nancy;
 using FirebirdSql.Data.Isql;
 using Google.Apis.YouTube.v3.Data;
 using static System.Windows.Forms.LinkLabel;
-using WinRT.Interop;
 using System.Windows.Controls.Primitives;
 using Button = System.Windows.Controls.Button;
 
