@@ -86,7 +86,7 @@ namespace VideoGui
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    /// C:\VideoGui\src\VideoGui\MainWindow.xaml.cs  // ver 280 merge from 279 server ver
+    /// :\VideoGui\src\VideoGui\MainWindow.xaml.cs  // ver 280 merge from 279 server ver
     public class Stats
     {
         public string filename;
@@ -1597,7 +1597,7 @@ namespace VideoGui
                             BaseStr = BaseStr.Trim();
                             frmTitleSelect.txtTitle.Text = BaseStr.Trim();
                             frmTitleSelect.lblTitleLength.Content = BaseStr.Trim().Length;
-                            TitleTagsSrc = TitlesList.Where(s => s.Id == ShortsDirectoryIndex).FirstOrDefault().Id;
+                            TitleTagsSrc = TitlesList.Where(s => s.GroupId == ShortsDirectoryIndex).FirstOrDefault().Id;
                             titletagsViewSource.SortDescriptions.Add(new SortDescription("Description", ListSortDirection.Ascending));
                             titletagsViewSource.Source = TitleTagsList;
                             titletagsViewSource.Filter += (object sender, FilterEventArgs e) =>
@@ -4012,29 +4012,6 @@ namespace VideoGui
                 this.Dispatcher.Invoke(() =>
                 {
                     lstBoxJobs.ItemsSource = ProcessingJobs;
-                    string currentpath2 = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
-                    var x = GetEncryptedString(new int[] { 170, 57, 73, 91, 225, 194, 201, 29, 247, 101, 8 }.Select(i => (byte)i).ToArray());
-                    if (!File.Exists(currentpath2 + x))
-                    {
-                        string parentpath = System.IO.Directory.GetParent(currentpath2).FullName;
-                        for (int i = 0; i < 3; i++)
-                        {
-                            parentpath = System.IO.Directory.GetParent(parentpath).FullName;
-                        }
-                        var ee = GetEncryptedString(new int[] { 216, 58, 87, 83 }.Select(i => (byte)i).ToArray());
-                        var xx = GetEncryptedString(new int[] { 170, 57, 73, 91, 225, 194, 201, 29, 247, 101, 8 }.Select(i => (byte)i).ToArray());
-                        List<string> PathListFF = Directory.EnumerateFiles(parentpath, xx, SearchOption.AllDirectories).
-                                   Where(s => s.EndsWith(ee)).ToList<string>();
-                        string wx = GetEncryptedString(new int[] { 129, 54, 65, 27, 233, 145, 154 }.Select(i => (byte)i).ToArray());
-                        foreach (string sPath in PathListFF)
-                        {
-                            if ((sPath.Contains(x) && (sPath.Contains(wx))))
-                            {
-                                currentpath2 = sPath;
-                                break;
-                            }
-                        }
-                    }
                 });
                 LineNum = 1;
                 string TwitchStreamKey = string.Empty;
