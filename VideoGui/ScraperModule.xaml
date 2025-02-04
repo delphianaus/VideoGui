@@ -54,19 +54,17 @@
         </Border>
         <StatusBar Name="StatusBar" HorizontalAlignment="Left" 
                    VerticalAlignment="Bottom" Height="37" Background="#FFEBCACA" Width="795" Margin="5,0,3,2">
-            <Label x:Name="lblLastNode" Content="Initializing..."  Margin="0,0,0,0" VerticalAlignment="Bottom" Padding="0,2,24,0"/>
-            <Label Name="lblInsert" Content="Total Uploads : " Width="81" VerticalAlignment="Center"/>
+            <Label x:Name="lblLastNode" Content="Initializing..."  Margin="0,0,0,0" VerticalAlignment="Bottom" Padding="0,2,24,0" SizeChanged="lblLastNode_SizeChanged"/>
+            <Label Name="lblInsert" Content="Total Uploads : " Width="81" VerticalAlignment="Center" SizeChanged="lblInsert_SizeChanged"/>
             <Label x:Name="lblTotal" Content="" VerticalAlignment="Center"/>
-            <Label x:Name="lblUp" Width="69" Content="Uploading : " VerticalAlignment="Center"/>
+            <Label x:Name="lblUp" Width="69" Content="Uploading : " VerticalAlignment="Center" SizeChanged="lblUp_SizeChanged"/>
             <Label x:Name="lblUploading" Content="" VerticalAlignment="Center"/>
-            <Label Name="lblInsertId4" Width="68" Content="Uploaded : " VerticalAlignment="Center"/>
+            <Label Name="lblInsertId4" Width="68" Content="Uploaded : " VerticalAlignment="Center" SizeChanged="lblInsertId4_SizeChanged"/>
             <Label x:Name="lblUploaded" Content="" VerticalAlignment="Center"/>
-            <Label Name="lblInsertId5" Width="68" Content="Waiting : " VerticalAlignment="Center" HorizontalAlignment="Left"/>
+            <Label Name="lblInsertId5" Width="68" Content="Waiting : " VerticalAlignment="Center" HorizontalAlignment="Left" SizeChanged="lblInsertId5_SizeChanged"/>
             <Label x:Name="lblWaiting" Content="" VerticalAlignment="Center"/>
-            <Button Name="btnClickUpload" Content="Click Upload" VerticalAlignment="Top"
-                    Height="32" Width="75" HorizontalAlignment="Right" Click="btnClickUpload_Click" Margin="121,0,0,0"/>
             <Button Name="btnClose" Content="Close" VerticalAlignment="Center"
-           Height="32" Width="75" HorizontalAlignment="Right" Margin="1,0,0,0" MinWidth="3" Click="btnClose_Click" HorizontalContentAlignment="Center"/>
+           Height="32" Width="75" HorizontalAlignment="Left" Margin="239,0,0,0" MinWidth="3" Click="btnClose_Click" HorizontalContentAlignment="Center"/>
         </StatusBar>
     </Grid>
 </Window>

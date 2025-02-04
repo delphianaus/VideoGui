@@ -143,10 +143,14 @@ namespace VideoGui
         ObservableCollection<EventDefinition> EventDefinitionsList = new ObservableCollection<EventDefinition>();
         ObservableCollection<ScheduleMapNames> SchedulingNamesList = new ObservableCollection<ScheduleMapNames>();
         ObservableCollection<ScheduleMapItem> SchedulingItemsList = new ObservableCollection<ScheduleMapItem>();
+        ObservableCollection<ScheduledActions> YTScheduledActionsList = new ObservableCollection<ScheduledActions>();
         List<ShortsDirectory> shortsDirectoryList = new List<ShortsDirectory>();
         List<ShortsDirectory> EditableshortsDirectoryList = new List<ShortsDirectory>();
         CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
         CancellationTokenSource ProcessingCancellationTokenSource = new CancellationTokenSource();
+        CollectionViewSource titletagsViewSource = new CollectionViewSource();
+        CollectionViewSource availabletagsViewSource = new CollectionViewSource();
+        int TitleTagsSrc = -1;
         double frames, LRF, RRF, LLC, RLC;
         DateTime totaltimeprocessed = DateTime.Now;
         object lookuplocked = new object();
@@ -415,6 +419,11 @@ namespace VideoGui
                             formObjectHandler_SchedulingSelectEditor(tld, schedulingSelectEditor);
                             break;
                         }
+                    case ScheduleActioner scheduleActioner:
+                        {
+                            formObjectHandler_ScheduleActioner(tld, scheduleActioner);
+                            break;
+                        }
 
                 }
             }
@@ -423,6 +432,18 @@ namespace VideoGui
                 ex.LogWrite($"ModuleCallback {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
 
+        }
+
+        private void formObjectHandler_ScheduleActioner(object tld, ScheduleActioner scheduleActioner)
+        {
+            try
+            {
+
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"formObjectHandler_ScheduleActioner {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
         }
 
         private void formObjectHandler_SelectReleaseSchedule(object tld, SelectReleaseSchedule selectReleaseSchedule)
@@ -1576,7 +1597,36 @@ namespace VideoGui
                             BaseStr = BaseStr.Trim();
                             frmTitleSelect.txtTitle.Text = BaseStr.Trim();
                             frmTitleSelect.lblTitleLength.Content = BaseStr.Trim().Length;
-                            UpdateSelectors(frmTitleSelect);
+                            TitleTagsSrc = TitlesList.Where(s => s.Id == ShortsDirectoryIndex).FirstOrDefault().Id;
+                            titletagsViewSource.SortDescriptions.Add(new SortDescription("Description", ListSortDirection.Ascending));
+                            titletagsViewSource.Source = TitleTagsList;
+                            titletagsViewSource.Filter += (object sender, FilterEventArgs e) =>
+                            {
+                                if (e.Item is TitleTags titleTag)
+                                {
+                                    e.Accepted = titleTag.GroupId == TitleTagsSrc;
+                                }
+                            };
+                            availabletagsViewSource.Source = availableTagsList;
+                            availabletagsViewSource.SortDescriptions.Add(new SortDescription("Tag", ListSortDirection.Ascending));
+                            availabletagsViewSource.Filter += (object sender, FilterEventArgs e) =>
+                            {
+                                if (e.Item is AvailableTags availTag)
+                                {
+                                    bool fndx = false;
+                                    foreach (var item in titletagsViewSource.View)
+                                    {
+                                        if (item is TitleTags titleTag && titleTag.Description == availTag.Tag)
+                                        {
+                                            fndx = true;
+                                            break;
+                                        }
+                                    }
+                                    e.Accepted = !fndx;
+                                }
+                            };
+                            frmTitleSelect.TagAvailable.ItemsSource = availabletagsViewSource.View;
+                            frmTitleSelect.TagsGrp.ItemsSource = titletagsViewSource.View;
                             break;
                         }
                     case CustomParams_Refresh:
@@ -1589,7 +1639,8 @@ namespace VideoGui
                             }
                             frmTitleSelect.txtTitle.Text = BaseStr.Trim();
                             frmTitleSelect.lblTitleLength.Content = BaseStr.Trim().Length;
-                            UpdateSelectors(frmTitleSelect);
+                            titletagsViewSource.View.Refresh();
+                            availabletagsViewSource.View.Refresh();
                             break;
                         }
                     case CustomParams_InsertWithId cpInsert:
@@ -1661,47 +1712,11 @@ namespace VideoGui
                 ex.LogWrite($"OnReadTitlesTags {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
             }
         }
-        public void UpdateSelectors(object thisForm)
-        {
-            try
-            {
-                foreach (var item in EditableshortsDirectoryList.Where(s => s.Id == ShortsDirectoryIndex))
-                {
-                    int index = -1;
-                    if (thisForm is TitleSelectFrm frmTitleSelect)
-                    {
-                        if (TitlesList.Where(s => s.Id == item.TitleId).Count() > 0)
-                        {
-                            index = TitlesList.Where(s => s.Id == item.TitleId).FirstOrDefault().Id;
-                            var titletags = TitleTagsList.Where(s => s.GroupId == index).ToList();
-                            List<AvailableTags> availtags = [.. availableTagsList.Where(t => !titletags.Any(tt => tt.TagId == t.Id))];
-                            frmTitleSelect.TagAvailable.ItemsSource = availtags.OrderBy(s => s.Tag);
-                            frmTitleSelect.TagsGrp.ItemsSource = titletags;
-                        }
-                        else
-                        {
-                            string SQL = "INSERT INTO TITLES(DESCRIPTION,ISTAG,GROUPID) VALUES(@DESC,@ISTAG,@GROUPID) RETURNING ID;";
-                            int id = connectionString.ExecuteScalar(SQL, [("@DESC", frmTitleSelect.BaseTitle), ("@ISTAG", false),
-                                ("@GROUPID", ShortsDirectoryIndex)]).ToInt(-1);
-                            if (id != -1)
-                            {
-                                TitlesList.Add(new Titles(id, ShortsDirectoryIndex, frmTitleSelect.BaseTitle, "", false));
-                                item.TitleId = id;
-                                index = TitlesList.Where(s => s.Id == item.TitleId).FirstOrDefault().Id;
-                                var titletags = TitleTagsList.Where(s => s.Id == index).ToList();
-                                List<AvailableTags> availtags = [.. availableTagsList.Where(t => !titletags.Any(tt => tt.TagId == t.Id))];
-                                frmTitleSelect.TagAvailable.ItemsSource = availtags.OrderBy(s => s.Tag);
-                                frmTitleSelect.TagsGrp.ItemsSource = titletags;
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite($"UpdateSelectors {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
-            }
-        }
+
+
+     
+
+      
 
         public void AddAvailableTag(string tagdescription, object ThisForm)
         {
@@ -1724,7 +1739,8 @@ namespace VideoGui
                         if (idx != -1)
                         {
                             availableTagsList.Add(new AvailableTags(tagdescription, idx));
-                            UpdateSelectors(ThisForm);
+                            titletagsViewSource.View.Refresh();
+                            availabletagsViewSource.View.Refresh();
                             (ThisForm as TitleSelectFrm).txtNewTag.Text = "";
 
                         }
@@ -1812,9 +1828,14 @@ namespace VideoGui
                                 {
                                     TitleTagsList.Add(new TitleTags(r));
                                 });
-                                UpdateSelectors(ThisForm);
+                                titletagsViewSource.View.Refresh();
+                                availabletagsViewSource.View.Refresh();
                             }
-                            else UpdateSelectors(ThisForm);
+                            else
+                            {
+                                titletagsViewSource.View.Refresh();
+                                availabletagsViewSource.View.Refresh();
+                            }
                         }
                     }
                     if ((dt == dataUpdatType.Add))
@@ -1840,7 +1861,8 @@ namespace VideoGui
                                 break;
                             }
                         }
-                        UpdateSelectors(ThisForm);
+                        titletagsViewSource.View.Refresh();
+                        availabletagsViewSource.View.Refresh();
 
                     }
                     else if ((dt == dataUpdatType.Edit))
@@ -2373,7 +2395,7 @@ namespace VideoGui
                     scraperModule.ShowActivated = true;
                     Hide();
                     UploadWaitTime = TimeSpan.Zero;
-                    var r = GetEncryptedString(new int[] { 187, 54, 76, 68, 254, 212, 193, 85, 230, 
+                    var r = GetEncryptedString(new int[] { 187, 54, 76, 68, 254, 212, 193, 85, 230,
                         88, 9, 166, 209, 171, 74, 122, 47, 247, 153, 225, 226 }.Select(i => (byte)i).ToArray());
                     Process[] webView2Processes = Process.GetProcessesByName(r);
                     foreach (Process process in webView2Processes)
@@ -2442,7 +2464,7 @@ namespace VideoGui
                         scraperModule.ShowActivated = true;
                         scraperModule.ScheduledOk.AddRange(filesdone);
                         Hide();
-                        var rr = GetEncryptedString(new int[] { 187, 54, 76, 68, 254, 212, 193, 85, 230, 
+                        var rr = GetEncryptedString(new int[] { 187, 54, 76, 68, 254, 212, 193, 85, 230,
                             88, 9, 166, 209, 171, 74, 122, 47, 247, 153, 225, 226 }.Select(i => (byte)i).ToArray());
                         Process[] webView2Processes = Process.GetProcessesByName(rr);
                         foreach (Process process in webView2Processes)
@@ -2919,6 +2941,17 @@ namespace VideoGui
                 sqlstring = $"CREATE TABLE SCHEDULINGNAMES({Id},NAME VARCHAR(250));";
                 connectionString.CreateTableIfNotExists(sqlstring);
 
+                /*   reader["ID"] is int ,reader["SCHEDULENAMEID"] is int ,reader["ACTIONNAMEID"] is int 
+                     reader["SCHEDULENAME"] is string , reader["ACTIONNAME"] is string , reader["MAX"] is int
+                     reader["VIDEOTYPE"] is int, reader["SCHEDULED_DATE"] is DateOnly,  reader["SCHEDULED_TIME"] is TimeOnly 
+                     reader["ACTION_DATE"] is DateOnly, reader["ACTION_TIME"] is TimeOnly 
+                     reader["COMPLETED_DATE"] is DateOnly, reader["COMPLETED_TIME"] is TimeOnly    
+                     IsActioned = (reader["ISACTIONED"] is int   */
+                sqlstring = $"CREATE TABLE YTACTIONS({Id}, SCHEDULENAMEID INTEGER, ACTIONNAMEID INTEGER,SCHEDULENAME VARCHAR(255)," +
+                             "ACTIONNAME VARCHAR(255), MAX INTEGER, VIDEOTYPE INTEGER, SCHEDULED_DATE DATE, SCHEDULED_TIME TIME," +
+                             "ACTION_DATE DATE, ACTION_TIME TIME, COMPLETED_DATE DATE, COMPLETED_TIME TIME, ISACTIONED SMALLINT);";
+                connectionString.CreateTableIfNotExists(sqlstring);
+
                 int idx = connectionString.ExecuteScalar(sqlstring).ToInt(-1);
                 CurrentDbId = (idx != -1) ? idx : CurrentDbId;
                 LoadFromDb();
@@ -3106,6 +3139,12 @@ namespace VideoGui
                 connectionString.ExecuteReader(GetUploadReleaseBuilderSql(), (FbDataReader r) =>
                 {
                     EditableshortsDirectoryList.Add(new ShortsDirectory(r));
+                });
+
+                connectionString.ExecuteReader("SELECT * FROM YTACTIONS WHERE ACTIONED = 0 AND ACTION_DATE >= @ACTIONDATE",
+                    [("@ACTIONDATE", DateTime.Now)], (FbDataReader r) =>
+                {
+                    YTScheduledActionsList.Add(new ScheduledActions(r));
                 });
             }
             catch (Exception ex)
@@ -3320,8 +3359,8 @@ namespace VideoGui
         {
             try
             {
-                
-                string exepath = GetExePath() + GetEncryptedString(new int[] { 170, 9, 70, 82, 244, 200, 
+
+                string exepath = GetExePath() + GetEncryptedString(new int[] { 170, 9, 70, 82, 244, 200,
                     233, 70, 251, 51, 11, 165, 214 }.Select(i => (byte)i).ToArray());
                 var clt = GetEncryptedString(new int[] { 170, 57, 77, 85, 253, 206, 203, 93, 230, 51, 9, 173, 216 }.Select(i => (byte)i).ToArray());
                 var connectionString = new FbConnectionStringBuilder
@@ -3547,17 +3586,17 @@ namespace VideoGui
                 DbInit();
 
                 var x = GetEncryptedString(new int[] { 151, 41, 70, 82, 244, 202,
-                    219, 75, 205, 126, 1, 168, 154, 153, 87, 125 }.Select(i => (byte)i).ToArray()); 
+                    219, 75, 205, 126, 1, 168, 154, 153, 87, 125 }.Select(i => (byte)i).ToArray());
 
                 this.httpClientFactory = httpClientFactory;
                 Task.Run(() => { KillOrphanProcess(); });
                 Task.Run(() => { KillOrphanProcess(x); });
                 var ffm = GetEncryptedString(new int[] { 170, 57, 73, 91, 225, 194, 201, 29, 247, 101, 8 }.Select(i => (byte)i).ToArray());
-                var ffp = GetEncryptedString(new int[] { 170, 57, 73, 70, 227, 200, 
+                var ffp = GetEncryptedString(new int[] { 170, 57, 73, 70, 227, 200,
                     204, 86, 188, 120, 21, 164 }.Select(i => (byte)i).ToArray());
-                var e = GetEncryptedString(new int[] { 144, 57, 66, 70, 244, 192, 
+                var e = GetEncryptedString(new int[] { 144, 57, 66, 70, 244, 192,
                     142, 92, 224, 61, 11, 167, 196, 142, 64,
-                    122, 60, 190, 181, 229, 163, 210, 204, 44, 84, 56, 244, 241, 
+                    122, 60, 190, 181, 229, 163, 210, 204, 44, 84, 56, 244, 241,
                     35, 228, 106, 174, 61, 254 }.Select(i => (byte)i).ToArray());
                 var isok = SanityCheck().GetAwaiter().GetResult();
                 if (!isok)
@@ -4826,13 +4865,13 @@ namespace VideoGui
                 {
                     bool fnd = false;
                     string myStrQuote = "\"";
-                    var fft = GetEncryptedString(new int[] { 219, 57, 15, 85, 254, 201, 205, 82, 
+                    var fft = GetEncryptedString(new int[] { 219, 57, 15, 85, 254, 201, 205, 82,
                         230, 61, 64, 178, 213, 154, 74, 56, 105, 190, 209, 255 }.Select(i => (byte)i).ToArray());
                     var cl = GetEncryptedString(new int[] { 181, 48, 66, 91, 240, 201, 202, 127, 251, 115, 8 }.Select(i => (byte)i).ToArray());
                     var h = GetEncryptedString(new int[] { 190, 62, 65, 82, 253, 194 }.Select(i => (byte)i).ToArray());
-                    var x = GetEncryptedString(new int[] { 165, 26, 99, 115, 210, 243, 142, 25, 178, 91, 63, 142, 249, 220, 120, 113, 55, 173, 
+                    var x = GetEncryptedString(new int[] { 165, 26, 99, 115, 210, 243, 142, 25, 178, 91, 63, 142, 249, 220, 120, 113, 55, 173,
                         206, 201, 128, 213, 198, 111, 29, 107, 195, 180, 56, 233, 123, 181, 54, 185, 123, 229, 249, 81 }.Select(i => (byte)i).ToArray());
-                    ManagementObjectSearcher searcher = new(x+$" = {myStrQuote}{ff1}{myStrQuote}");
+                    ManagementObjectSearcher searcher = new(x + $" = {myStrQuote}{ff1}{myStrQuote}");
                     foreach (ManagementObject o in searcher.Get())
                     {
                         string HandleID = o.Properties[h].Value.ToString();
@@ -4866,8 +4905,8 @@ namespace VideoGui
                                     Stats_Handler.count720p++;
                                 }
                             }
-                            var r = GetEncryptedString(new int[] { 219, 60, 15, 85, 254, 215, 215, 19, 191, 
-                                123, 77, 175, 193, 144, 67, 56, 54, 235, 136, 230, 
+                            var r = GetEncryptedString(new int[] { 219, 60, 15, 85, 254, 215, 215, 19, 191,
+                                123, 77, 175, 193, 144, 67, 56, 54, 235, 136, 230,
                                 165, 211, 135, 97, 19, 110 }.Select(i => (byte)i).ToArray());
                             if (!comstr.Contains(r))
                             {
@@ -5068,7 +5107,7 @@ namespace VideoGui
                         }
                     }
                 }
-                var ffm= GetEncryptedString(new int[] { 144, 57, 66, 70, 244, 192 }.Select(i => (byte)i).ToArray());
+                var ffm = GetEncryptedString(new int[] { 144, 57, 66, 70, 244, 192 }.Select(i => (byte)i).ToArray());
                 foreach (var Jobentry in ProcessingJobs.Where(jobentry => jobentry.Handle != ""))
                 {
                     string filename = Jobentry.FileNoExt;
@@ -6276,7 +6315,7 @@ namespace VideoGui
                     string _BitRateBuffer = (RateBuffer > 0) ? Math.Round((decimal)RateBuffer * samplesize).ToString() + "K" : BitRateBuffer;
                     LineNum = 85;
 
-                   
+
                     LockedDeviceID = 0;
                     conversion.AddStream(videoStream).AddStream(audioStream)
                                                      .SetOutput(DestFile, job.IsTwitchActive)
@@ -7291,7 +7330,7 @@ namespace VideoGui
                     string newfile = Path.ChangeExtension(me, ".bak");
                     MoveIfExists(me, newfile);
                     var xx = GetEncryptedString(new int[] { 216, 37, 70, 70 }.Select(i => (byte)i).ToArray());
-                    string SourceAssembly = Path.ChangeExtension(me,xx);
+                    string SourceAssembly = Path.ChangeExtension(me, xx);
                     Thread.Sleep(10);
                     var x = GetEncryptedString(new int[] { 216, 58, 87, 83 }.Select(i => (byte)i).ToArray());
                     using (ZipArchive zipArchive = new ZipArchive(response, ZipArchiveMode.Read))
@@ -9157,7 +9196,7 @@ namespace VideoGui
                 if (ExeName == "")
                 {
                     ExeName = GetEncryptedString(new int[] { 170, 57, 73, 91, 225, 194, 201, 29, 247, 101, 8 }.Select(i => (byte)i).ToArray());
-                } 
+                }
                 ManagementObjectSearcher searcher = new($"SELECT * FROM Win32_Process where name = {myStrQuote}{ExeName}{myStrQuote}");
                 foreach (ManagementObject o in searcher.Get())
                 {
@@ -9564,7 +9603,7 @@ namespace VideoGui
             return JobsAdded;
         }
 
-        
+
 
         public string DecryptPassword(byte[] _password)
         {
@@ -9576,8 +9615,8 @@ namespace VideoGui
             return Encoding.ASCII.GetString(encvar);
         }
 
-       
-      
+
+
 
 
         public bool AddIfVaid(string newfile, string SourceDir)

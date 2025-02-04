@@ -44,6 +44,7 @@ using System.Data.SqlTypes;
 using VideoGui.Models.delegates;
 using FirebirdSql.Data.FirebirdClient;
 using Microsoft.Web.WebView2.Wpf;
+using System.Windows.Controls.Primitives;
 
 namespace VideoGui
 {
@@ -297,6 +298,23 @@ namespace VideoGui
     }
     public static class Extensions
     {
+
+        public static void ApplyMargin(this StatusBar statusBar, int offset = 40)
+        {
+            try
+            {
+                double sumWidths = statusBar.Items.OfType<FrameworkElement>().Sum(fe => fe.ActualWidth);
+                var closeButton = statusBar.Items.OfType<System.Windows.Controls.Button>().FirstOrDefault(btn => btn.Name.Equals("btnclose", StringComparison.OrdinalIgnoreCase));
+                if (closeButton != null)
+                {
+                    closeButton.Margin = new Thickness(statusBar.ActualWidth - sumWidths - offset, 0, 0, 0);
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"ApplyMargin {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
 
         public static void AddIfNotExists(this List<(string, bool)> list, string Key, bool Input)
         {
@@ -665,7 +683,7 @@ namespace VideoGui
             }
         }
 
-        public static void ExecuteReader(this string connectionStr, List<(string, object)>? parameters, string sql, OnFirebirdReader Reader)
+        public static void ExecuteReader(this string connectionStr, string sql, List<(string, object)>? parameters, OnFirebirdReader Reader)
         {
             try
             {

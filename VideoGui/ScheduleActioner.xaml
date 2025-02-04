@@ -52,18 +52,14 @@
                           Canvas.Top="198" HorizontalAlignment="Center"
                           VerticalAlignment="Top">
                     <Canvas Name="cnvActionName">
-                        <TextBox x:Name="txtActionName" Width="252" Height="24"
+                        <TextBox x:Name="txtActionName" Width="280" Height="24"
                              HorizontalAlignment="Left" VerticalAlignment="Center" Canvas.Left="5" Canvas.Top="10"/>
                         <Button x:Name="BtnSaveAction" VerticalAlignment="Center" 
-                             Width="26" Height="26" HorizontalAlignment="Left" Canvas.Top="9" Canvas.Left="267" >
+                             Width="26" Height="26" HorizontalAlignment="Left" Canvas.Top="9" Canvas.Left="300" Click="BtnSaveAction_Click" >
                             <Image Source="/Icons/save.png" HorizontalAlignment="Left" VerticalAlignment="Top" Width="22" Height="22"/>
                         </Button>
-                        <Button x:Name="BtnUpdate" VerticalAlignment="Center" 
-                               Width="26" Height="26" HorizontalAlignment="Left" Canvas.Top="9" Canvas.Left="301" >
-                            <Image Source="/Icons/update2.png" HorizontalAlignment="Left" VerticalAlignment="Top" Width="22" Height="22"/>
-                        </Button>
                         <Button x:Name="BtnSelectAction" VerticalAlignment="Center" 
-                          Width="26" Height="26" HorizontalAlignment="Left" Canvas.Top="9" Canvas.Left="336" >
+                          Width="26" Height="26" HorizontalAlignment="Left" Canvas.Top="9" Canvas.Left="336" Click="BtnSelectAction_Click" >
                             <Image Source="/Icons/SelectDown.png" HorizontalAlignment="Left" VerticalAlignment="Center" Width="22" Height="22"/>
                         </Button>
                     </Canvas>

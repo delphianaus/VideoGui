@@ -13,7 +13,7 @@
         Title="Scheduling Items Editor" Height="407" Width="767">
     <Grid HorizontalAlignment="Left" VerticalAlignment="Top" Width="763" Height="389">
         <Border x:Name="brdShortsVideoCat" BorderThickness="2" 
-                BorderBrush="Black" Margin="21,61,21,80" Height="248" Width="721">
+                BorderBrush="Black" Margin="21,62,7,13" Height="247" Width="721" HorizontalAlignment="Left" VerticalAlignment="Top">
             <ListBox x:Name="lstTitles" MinWidth="100" MinHeight="54" 
                      Margin="6,3,3,4" Width="713" Height="240" HorizontalAlignment="Left" 
                      VerticalAlignment="Top" MouseDoubleClick="lstTitles_MouseDoubleClick">
@@ -65,9 +65,9 @@
         </Border>
         <Label x:Name="lblName" Content="Name :" HorizontalAlignment="Left" 
             Margin="21,0,0,0" VerticalAlignment="Top"/>
-        <Border BorderBrush="Black" BorderThickness="2" HorizontalAlignment="Left" 
-                Height="41" Margin="22,321,0,0" VerticalAlignment="Top" 
-                Width="604">
+        <Border x:Name="brdActions" BorderBrush="Black" BorderThickness="2" HorizontalAlignment="Left" 
+                Height="41" Margin="22,0,0,29" 
+                Width="604" VerticalAlignment="Bottom">
             <Canvas x:Name="cnvmain">
                 <xctk:TimePicker x:Name="ReleaseDate" Format="Custom" 
                        FormatString="hh:mm:ss tt" 

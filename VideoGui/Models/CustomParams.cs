@@ -102,6 +102,30 @@ namespace VideoGui.Models
         }
     }
 
+
+    public class CustomParams_UpdateAction
+    {
+        public int id { get; set; }
+        public Nullable<DateTime> ActionDate { get; set; }
+        public Nullable<DateTime> ScheduleDate { get; set; }
+        public Nullable<DateTime> CompletedDate { get; set; }
+        public string ScheduleName { get; set; } = "";
+        public string ActionName { get; set; } = "";
+
+        public int Max { get; set; } = 0;
+        public CustomParams_UpdateAction(int _id, Nullable<DateTime> _ActionDate, 
+            Nullable<DateTime> _ScheduleDate, Nullable<DateTime> _CompletedDate,
+            string _ScheduleName, string _ActionName, int _max)
+        {
+            id = _id;
+            ActionDate = _ActionDate;
+            ScheduleDate = _ScheduleDate;
+            CompletedDate = _CompletedDate;
+            ScheduleName = _ScheduleName;
+            ActionName = _ActionName;
+            Max = _max;
+        }
+    }
     public class CustomParams_SetTimeSpans
     {
         public Nullable<DateTime> Start { get; set; }

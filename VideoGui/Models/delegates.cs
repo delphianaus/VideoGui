@@ -21,6 +21,7 @@ namespace VideoGui.Models.delegates
     public enum ViewType { LESS_EQUAL, GREATER_EQUAL };
     public enum dataFormName { MasterTagSelect, TagSelecteditor };
     public enum dataUpdatType { Add, Remove, Edit, Change, Delete, Insert, Get };
+    public enum ActionType { VideoSchedule, VideoUpload };
     //
     // Summary:
     //     Specifies the day of the week.

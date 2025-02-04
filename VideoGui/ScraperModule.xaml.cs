@@ -69,21 +69,12 @@ using FirebirdSql.Data.Isql;
 using Google.Apis.YouTube.v3.Data;
 using static System.Windows.Forms.LinkLabel;
 using WinRT.Interop;
+using System.Windows.Controls.Primitives;
+using Button = System.Windows.Controls.Button;
 
 namespace VideoGui
 {
-    public class uploads
-    {
-        public string file = "";
-        public bool uploaded = false, finished = false;
-        public uploads(string _file, bool _uploaded, bool _finished)
-        {
-            file = _file;
-            uploaded = _uploaded;
-            finished = _finished;
-        }
 
-    }
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
@@ -98,7 +89,7 @@ namespace VideoGui
         bool DoNextNode = true, finished = false, TimedOut = false, Uploading = false, NextRecord = false, Processing = false, clickupload = true;
         public bool IsClosing = false, IsClosed = false, Exceeded = false, KilledUploads = false, SwapEnabled = false, IsTitleEditor = false;
         string SendKeysString = "", UploadPath = "", LastNode = "", DefaultUrl = "", LastValidFileName = "", TableDestination = "";
-        List<uploads> uploaded = new();
+        List<ScraperUploads> Scraper_uploaded = new();
         List<string> IdNodes = new(), titles = new List<string>(), nextaddress = new(), Ids = new(), Idx = new(), ufiles = new(), Files = new();// DoneFiles = new();
         public List<string> ScheduledOk = new List<string>(), VideoFiles = new List<string>(), nodeslist = new List<string>();
         public List<ShortsDirectory> ShortsDirectories = new(); // <shortname>
@@ -307,6 +298,36 @@ namespace VideoGui
             }
         }
 
+        private void lblLastNode_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            double sumWidths = 0;
+
+            foreach (var child in StatusBar.Items)
+            {
+                sumWidths += (child as FrameworkElement)?.ActualWidth ?? 0;
+            }
+            btnClose.Margin = new Thickness(StatusBar.Width - sumWidths - 40, 0, 0, 0);
+        }
+
+        private void lblInsert_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            lblLastNode_SizeChanged(sender, e);
+        }
+
+        private void lblUp_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            lblLastNode_SizeChanged(sender, e);
+        }
+
+        private void lblInsertId4_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            lblLastNode_SizeChanged(sender, e);
+        }
+
+        private void lblInsertId5_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            lblLastNode_SizeChanged(sender, e);
+        }
 
         private void DoNewVideoUpdate(string address)
         {
@@ -392,9 +413,11 @@ namespace VideoGui
                 await wv2A8.EnsureCoreWebView2Async(env);
                 await wv2A9.EnsureCoreWebView2Async(env);
                 await wv2A10.EnsureCoreWebView2Async(env);
-
-
                 await SetupSubstDrive();
+                StatusBar.Items.OfType<FrameworkElement>().Where(child => !(child is Button)).ToList().ForEach(frameworkElement =>
+                {
+                   frameworkElement.SizeChanged += (object sender, SizeChangedEventArgs e) => {StatusBar.ApplyMargin();};
+                });
             }
             catch (Exception ex)
             {
@@ -420,13 +443,13 @@ namespace VideoGui
                     RedirectStandardOutput = false,
                     CreateNoWindow = true,
                     Verb = "runas",
-                    Arguments =p1
+                    Arguments = p1
                 };
                 Process process = new Process();
                 process.StartInfo = startInfo;
                 process.Start();
                 process.WaitForExit();
-                
+
                 var x = GetEncryptedString(new int[] { 217, 60, 15, 69, 228, 197, 221, 71, 188, 120, 21, 164, 148, 166, 21, 56 }.Select(i => (byte)i).ToArray());
                 ProcessStartInfo startInfo2 = new ProcessStartInfo()
                 {
@@ -1108,6 +1131,7 @@ namespace VideoGui
                 lstMain.Width = Width - 5;
                 var thick = new Thickness(0, 0, 0, 0);
                 thick.Left = Width - 190;
+
                 //btnClickUpload.Margin = thick; 
                 key?.Close();
                 if (Parent is MainWindow mainWindow)
@@ -1121,6 +1145,8 @@ namespace VideoGui
                 {
                     InitAsync();
                 });
+                Width--;
+                Width--;
             }
             catch (Exception ex)
             {
@@ -1131,8 +1157,7 @@ namespace VideoGui
         {
             try
             {
-                wv2.CoreWebView2.Settings.IsGeneralAutofillEnabled = true;
-                wv2.CoreWebView2.Settings.IsPasswordAutosaveEnabled = true;
+
                 ActiveWebView[1].Source = new Uri(webAddressBuilder.GetChannelURL().Address);
 
             }
@@ -1474,7 +1499,7 @@ namespace VideoGui
                         }
                         return;
                         List<HtmlNode> Nodes = doc.DocumentNode.SelectNodes($"//li[@class='{Span_Name}']").ToList();
-                        var uploadedDictionary = uploaded.ToDictionary(v => v.file);
+                        var uploadedDictionary = Scraper_uploaded.ToDictionary(v => v.file);
                         var processedFiles = new HashSet<string>();
 
                         Parallel.ForEach(Nodes, item =>
@@ -1510,7 +1535,7 @@ namespace VideoGui
                     if (ehtml is not null && ehtml.Contains(">Uploads complete</span>"))
                     {
                         lblLastNode.Content = "Uploads Completed";
-                        foreach (var file in uploaded.Where(file => !file.uploaded && file.finished))
+                        foreach (var file in Scraper_uploaded.Where(file => !file.uploaded && file.finished))
                         {
                             File.Delete(file.file);
                         }
@@ -1643,6 +1668,7 @@ namespace VideoGui
                     Dispatcher.Invoke(() =>
                     {
                         lblLastNode.Content = LastNode;
+                        SetMargin(StatusBar);
                     });
                     ProcessChannelContent(doc, targetSpan);
                 }
@@ -1764,9 +1790,7 @@ namespace VideoGui
                                         string idp = filename.Split("_").ToArray<string>().ToList().LastOrDefault().Trim();
                                         if (idp is not null && idp != "")
                                         {
-                                            int TitleId = -1;
-                                            int DescId = -1;
-                                            int Id = -1;
+                                            int TitleId = -1, DescId = -1, Id = -1;
                                             var p1 = new CustomParams_GetConnectionString();
                                             dbInitializer?.Invoke(this, p1);
                                             string connectionStr = p1.ConnectionString;
@@ -1854,6 +1878,27 @@ namespace VideoGui
                 ex.LogWrite($"wv2_NavigationCompleted {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
+
+        public void SetMargin(object statusbar, int offset = 40)
+        {
+            try
+            {
+                if (statusbar is StatusBar statusBar)
+                {
+                    double sumWidths = statusBar.Items.OfType<FrameworkElement>().Sum(fe => fe.ActualWidth);
+                    var closeButton = statusBar.Items.OfType<Button>().FirstOrDefault(btn => btn.Name.Equals("btnclose", StringComparison.OrdinalIgnoreCase));
+                    if (closeButton != null)
+                    {
+                        closeButton.Margin = new Thickness(statusBar.Width - sumWidths - offset, 0, 0, 0);
+                    }
+                }
+
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"SetMargin {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+        }
         public void ProcessChannelContent(HtmlDocument doc, HtmlAgilityPack.HtmlNode targetSpan)
         {
             try
@@ -1933,6 +1978,7 @@ namespace VideoGui
                                         {
                                             lblLastNode.Content = $"{files} Inserted";
                                         }
+                                        SetMargin(StatusBar);
                                     });
                                 }
                                 else
@@ -1950,6 +1996,7 @@ namespace VideoGui
                                             break;
                                         }
                                     }
+                                    SetMargin(StatusBar);
                                 }
                             }
                             if (DoVideoInsert)
@@ -2283,15 +2330,7 @@ namespace VideoGui
             }
         }
 
-        private async void btnClickUpload_Click(object sender, RoutedEventArgs e)
-        {
-            await ActiveWebView[1].CoreWebView2.ExecuteScriptAsync(@"
-                var buttons = document.querySelectorAll('#uploads');
-                if (buttons.length > 1) {
-                    buttons[1].click();
-                }
-            ");
-        }
+
 
         public bool YouTubeLoaded()
         {
@@ -2384,7 +2423,6 @@ namespace VideoGui
                     ActiveWebView[1].Height = brdmain.Height - 13;
                     var p = new Thickness(0, 0, 0, 0);
                     p.Left = Width - 692;
-                    btnClickUpload.Margin = p;
 
                     lstMain.Width = Width - 25;
                     StatusBar.Width = Width - 5;
@@ -2394,6 +2432,8 @@ namespace VideoGui
                     key.SetValue("Webleft", Left);
                     key.SetValue("Webtop", Top);
                     key?.Close();
+
+                    SetMargin(StatusBar);
                 }
             }
             catch (Exception ex)
@@ -2588,6 +2628,7 @@ namespace VideoGui
                     if (index1 != -1)
                     {
                         lstMain.Items[index1] += $" {filename}";
+                        SetMargin(StatusBar);
                     }
                 }
                 else lstMain.Items[index1] += $" {filename}";
@@ -2601,6 +2642,7 @@ namespace VideoGui
                     if (files > 0)
                     {
                         lblLastNode.Content = $"{files} Inserted";
+                        SetMargin(StatusBar);
                     }
                 });
 

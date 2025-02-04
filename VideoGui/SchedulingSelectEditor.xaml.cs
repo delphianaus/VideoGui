@@ -61,6 +61,17 @@ namespace VideoGui
             {
                 if (IsLoaded)
                 {
+                    if (e.WidthChanged)
+                    {
+                        brdShortsVideoCa1t.Width = e.NewSize.Width - 76;
+                        brdShortsVideoCat.Width = e.NewSize.Width - 54;
+                        btnSelect.Margin = new Thickness(e.NewSize.Width - 50, 0, 0, 0);
+                        brdActions.Width = e.NewSize.Width - 163;
+                    }
+                    if (e.HeightChanged)
+                    {
+                        brdShortsVideoCat.Height = e.NewSize.Height - 142;
+                    }
                 }
             }
             catch (Exception ex)
