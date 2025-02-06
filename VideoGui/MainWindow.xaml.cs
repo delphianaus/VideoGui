@@ -1597,7 +1597,8 @@ namespace VideoGui
                             BaseStr = BaseStr.Trim();
                             frmTitleSelect.txtTitle.Text = BaseStr.Trim();
                             frmTitleSelect.lblTitleLength.Content = BaseStr.Trim().Length;
-                            TitleTagsSrc = TitlesList.Where(s => s.GroupId == ShortsDirectoryIndex).FirstOrDefault().Id;
+                            int Tid = EditableshortsDirectoryList.Where(s => s.Id == ShortsDirectoryIndex).FirstOrDefault().TitleId;
+                            TitleTagsSrc = TitlesList.Where(s => s.Id == Tid).FirstOrDefault().Id;
                             titletagsViewSource.SortDescriptions.Add(new SortDescription("Description", ListSortDirection.Ascending));
                             titletagsViewSource.Source = TitleTagsList;
                             titletagsViewSource.Filter += (object sender, FilterEventArgs e) =>
@@ -1639,8 +1640,7 @@ namespace VideoGui
                             }
                             frmTitleSelect.txtTitle.Text = BaseStr.Trim();
                             frmTitleSelect.lblTitleLength.Content = BaseStr.Trim().Length;
-                            titletagsViewSource.View.Refresh();
-                            availabletagsViewSource.View.Refresh();
+                            RefreshView();
                             break;
                         }
                     case CustomParams_InsertWithId cpInsert:
@@ -1739,8 +1739,7 @@ namespace VideoGui
                         if (idx != -1)
                         {
                             availableTagsList.Add(new AvailableTags(tagdescription, idx));
-                            titletagsViewSource.View.Refresh();
-                            availabletagsViewSource.View.Refresh();
+                            RefreshView();
                             (ThisForm as TitleSelectFrm).txtNewTag.Text = "";
 
                         }
@@ -1828,13 +1827,11 @@ namespace VideoGui
                                 {
                                     TitleTagsList.Add(new TitleTags(r));
                                 });
-                                titletagsViewSource.View.Refresh();
-                                availabletagsViewSource.View.Refresh();
+                                RefreshView();
                             }
                             else
                             {
-                                titletagsViewSource.View.Refresh();
-                                availabletagsViewSource.View.Refresh();
+                                RefreshView();
                             }
                         }
                     }
@@ -1861,8 +1858,7 @@ namespace VideoGui
                                 break;
                             }
                         }
-                        titletagsViewSource.View.Refresh();
-                        availabletagsViewSource.View.Refresh();
+                        RefreshView();
 
                     }
                     else if ((dt == dataUpdatType.Edit))
@@ -1884,6 +1880,14 @@ namespace VideoGui
             {
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name + " " + ex.Message);
             }
+        }
+
+        private void RefreshView()
+        {
+            int Tid = EditableshortsDirectoryList.Where(s => s.Id == ShortsDirectoryIndex).FirstOrDefault().TitleId;
+            TitleTagsSrc = TitlesList.Where(s => s.Id == Tid).FirstOrDefault().Id;
+            titletagsViewSource.View.Refresh();
+            availabletagsViewSource.View.Refresh();
         }
 
         public void UpdateTitleTagDesc(int id, object ThisForm)
