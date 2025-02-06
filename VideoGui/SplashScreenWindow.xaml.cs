@@ -40,7 +40,6 @@ using static VideoGui.MainWindow;
 using System.Management;
 using VideoGui.Models.delegates;
 using Nancy.TinyIoc;
-using Windows.Foundation.Metadata;
 
 namespace VideoGui
 {
