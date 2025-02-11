@@ -424,7 +424,11 @@ namespace VideoGui
                             formObjectHandler_ScheduleActioner(tld, scheduleActioner);
                             break;
                         }
-
+                    case ActionScheduleSelector actionScheduleSelector:
+                        {
+                            formObjectHandler_ActionScheduleSelector(tld, actionScheduleSelector);
+                            break;
+                        }
                 }
             }
             catch (Exception ex)
@@ -434,11 +438,57 @@ namespace VideoGui
 
         }
 
+        private void formObjectHandler_ActionScheduleSelector(object tld, ActionScheduleSelector actionScheduleSelector)
+        {
+            try
+            {
+                if (tld is CustomParams_Initialize cpInit)
+                {
+                    actionScheduleSelector.lstItems.ItemsSource = YTScheduledActionsList;
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"formObjectHandler_ActionScheduleSelector {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+        }
+
         private void formObjectHandler_ScheduleActioner(object tld, ScheduleActioner scheduleActioner)
         {
             try
             {
-
+                if (tld is CustomParams_Initialize cpInit)
+                {
+                    string sqla = "SELECT ID FROM SETTINGS WHERE SETTINGNAME = @P0";
+                    int idx = connectionString.ExecuteScalar(sqla, [("@P0", "ACTIONSCHEDULEID")]).ToInt(-1);
+                    if ((cpInit.Id != -1) || (cpInit.Id == -1 && idx != -1))// grab data
+                    {
+                        int Index = -1;
+                        if (cpInit.Id != -1) Index = cpInit.Id;
+                        if (cpInit.Id == -1 && idx != -1) Index = cpInit.Id;
+                        foreach(var item in YTScheduledActionsList.Where(s=>s.Id == cpInit.Id))
+                        {
+                            scheduleActioner.txtActionName.Text = item.ActionName;
+                            scheduleActioner.txtMaxSchedules.Text = item.ScheduleName;
+                            scheduleActioner.txtSchName.Text = item.Max.ToString();
+                            scheduleActioner.ReleaseDate.Value = (item.ActionSchedule.HasValue) ? item.ActionSchedule : null;
+                            scheduleActioner.ReleaseTime.Value = (item.ActionSchedule.HasValue) ? item.ActionSchedule : null;
+                            scheduleActioner.AppliedDate.Value = (item.AppliedAction.HasValue) ? item.AppliedAction : null;
+                            scheduleActioner.AppliedTime.Value = (item.AppliedAction.HasValue) ? item.AppliedAction : null;
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        scheduleActioner.txtActionName.Text = "";
+                        scheduleActioner.txtMaxSchedules.Text = "";
+                        scheduleActioner.txtSchName.Text = "";
+                        scheduleActioner.ReleaseDate = null;
+                        scheduleActioner.ReleaseTime = null;
+                        scheduleActioner.AppliedDate = null;
+                        scheduleActioner.AppliedTime = null;
+                    }
+                }
             }
             catch (Exception ex)
             {

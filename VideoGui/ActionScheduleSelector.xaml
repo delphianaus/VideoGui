@@ -34,6 +34,20 @@
                     </ListBox.Template>
                 </ListBox>
                 <ListBox x:Name="lstItems" Height="327" Canvas.Top="33" Width="782" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,0,0,0">
+                    <ListBox.Resources>
+                        <!--Defines a context menu-->
+                        <ContextMenu x:Key="MyElementMenu">
+                            <MenuItem Name="mnuSelectItem" Header="Select Item" Click="mnuSelectItem_Click"/>
+                            <Separator/>
+                            <MenuItem x:Name="mnuDeleteItem" Header="Delete Item" Click="mnuDeleteItem_Click"/>
+                            <Separator/>
+                        </ContextMenu>
+                        <!--Sets a context menu for each ListBoxItem in the current ListBox-->
+                        <Style TargetType="{x:Type ListBoxItem}">
+                            <Setter Property="ContextMenu" Value="{StaticResource MyElementMenu}"/>
+                        </Style>
+                    </ListBox.Resources>
+
                     <ListBox.ItemTemplate>
                         <DataTemplate x:Name="GridControlsA" >
                             <Grid Margin="0,2" x:Name="gridwidths">

@@ -24,6 +24,8 @@ namespace VideoGui
     {
         databasehook<Object> ModuleCallBack = null;
         public bool IsClosed = false, IsClosing = false;
+        public string Title = "";
+        public int TitleId = -1;
         public ActionScheduleSelector(OnFinish DoOnFinish, databasehook<Object> _ModuleCallBack)
         {
             try
@@ -47,6 +49,26 @@ namespace VideoGui
         private void BtnClose_Click(object sender, RoutedEventArgs e)
         {
             Close();
+        }
+
+        private void mnuSelectItem_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (lstItems.SelectedItems.Count > 0)
+                {
+                    if (lstItems.SelectedItems[0] is ScheduledActions item)
+                    {
+                        TitleId = item.Id;
+                        Close();
+                    }
+                }
+
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"mnuSelectItem_Click Constuctor {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
         }
 
         private void Window_SizeChanged(object sender, SizeChangedEventArgs e)

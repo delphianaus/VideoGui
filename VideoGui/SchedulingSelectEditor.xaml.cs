@@ -240,7 +240,6 @@ namespace VideoGui
                     ReleaseDate.Value = n.Date + smi.Start;
                     ReleaseEndDate.Value = n.Date + smi.End;
                     txtGap.Text = smi.Gap.ToString();
-
                 }
             }
             catch (Exception ex)

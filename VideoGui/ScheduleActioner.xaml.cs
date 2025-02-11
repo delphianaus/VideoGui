@@ -91,8 +91,12 @@ namespace VideoGui
             try
             {
                 Show();
+                int LastId = -1;
                 if (frmSchedulingSelectEditor is not null)
                 {
+
+                    LastId = frmSchedulingSelectEditor.TitleId;
+                    txtSchName.Text = (LastId != -1) ? frmSchedulingSelectEditor.Title : txtSchName.Text;
                     if (!frmSchedulingSelectEditor.IsClosing)
                     {
                         while (!frmSchedulingSelectEditor.IsClosed)
@@ -149,6 +153,7 @@ namespace VideoGui
                 Show();
                 if (frmActionScheduleSelector is not null)
                 {
+                    txtActionName.Text = (frmActionScheduleSelector.PersistId != -1) ? frmActionScheduleSelector.Title : txtActionName.Text;
                     if (!frmActionScheduleSelector.IsClosing)
                     {
                         while (!frmActionScheduleSelector.IsClosed)

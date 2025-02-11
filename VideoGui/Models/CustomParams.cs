@@ -173,10 +173,12 @@ namespace VideoGui.Models
     public class CustomParams_Initialize
     {
         bool IsUploads { get; set; }
+        public int Id { get; set; } = -1;
 
-        public CustomParams_Initialize(bool _IsUploads = false)
+        public CustomParams_Initialize(bool _IsUploads = false, int _Id = -1)
         {
             IsUploads = _IsUploads;
+            Id = _Id;
         }
     }
 
