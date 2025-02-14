@@ -25,7 +25,7 @@ namespace VideoGui
     public partial class ScheduleActioner : Window
     {
         databasehook<Object> ModuleCallBack = null;
-        bool IsClosed = false, IsClosing = false;
+        public bool IsClosed = false, IsClosing = false;
         ActionScheduleSelector frmActionScheduleSelector = null;
         SchedulingSelectEditor frmSchedulingSelectEditor = null;
         Nullable<DateTime> actionDate = null, scheduleDate = null, completeDate = null;
@@ -49,7 +49,14 @@ namespace VideoGui
         {
             try
             {
-                ModuleCallBack?.Invoke(this, new CustomParams_Initialize());
+                if (actionScheduleID == -1)
+                {
+                    ModuleCallBack?.Invoke(this, new CustomParams_Initialize());
+                }
+                else
+                {
+                    ModuleCallBack?.Invoke(this, new CustomParams_Initialize(actionScheduleID));
+                }
             }
             catch (Exception ex)
             {

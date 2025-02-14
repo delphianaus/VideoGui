@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Reflection;
+using System.Security.Permissions;
 using System.Text;
 using System.Threading.Tasks;
 using VideoGui.Models.delegates;
@@ -172,8 +173,13 @@ namespace VideoGui.Models
 
     public class CustomParams_Initialize
     {
-        bool IsUploads { get; set; }
+        bool IsUploads { get; set; } = false;
         public int Id { get; set; } = -1;
+
+        public CustomParams_Initialize(int _id)
+        {
+            Id = _id;
+        }
 
         public CustomParams_Initialize(bool _IsUploads = false, int _Id = -1)
         {

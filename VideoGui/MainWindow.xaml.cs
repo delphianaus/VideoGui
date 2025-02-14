@@ -446,6 +446,17 @@ namespace VideoGui
                 {
                     actionScheduleSelector.lstItems.ItemsSource = YTScheduledActionsList;
                 }
+                else if (tld is CustomParams_Delete cpDel && cpDel.Id != -1)
+                {
+                    int index = YTScheduledActionsList.Where(s => s.Id == cpDel.Id).FirstOrDefault()?.Id ?? -1;
+                    if (index != -1)
+                    {
+                        YTScheduledActionsList.RemoveAt(index);
+                        string sql = "DELETE FROM YTACTIONS WHERE ID = @ID";
+                        connectionString.ExecuteScalar(sql, [("@ID", cpDel.Id)]);
+                    }
+
+                }
             }
             catch (Exception ex)
             {
@@ -466,7 +477,7 @@ namespace VideoGui
                         int Index = -1;
                         if (cpInit.Id != -1) Index = cpInit.Id;
                         if (cpInit.Id == -1 && idx != -1) Index = cpInit.Id;
-                        foreach(var item in YTScheduledActionsList.Where(s=>s.Id == cpInit.Id))
+                        foreach (var item in YTScheduledActionsList.Where(s => s.Id == cpInit.Id))
                         {
                             scheduleActioner.txtActionName.Text = item.ActionName;
                             scheduleActioner.txtMaxSchedules.Text = item.ScheduleName;
@@ -487,6 +498,123 @@ namespace VideoGui
                         scheduleActioner.ReleaseTime = null;
                         scheduleActioner.AppliedDate = null;
                         scheduleActioner.AppliedTime = null;
+                    }
+                }
+                else if (tld is CustomParams_UpdateAction cpUpdateAction)
+                {
+                    bool found = false;
+                    foreach (var item in YTScheduledActionsList.Where(s => s.ActionName == cpUpdateAction.ActionName))
+                    {
+                        found = true;
+                        break;
+                    }
+                    if (!found)
+                    {
+                        /*"SCHEDULENAMEID,ACTIONNAMEID,SCHEDULENAME, ACTIONNAME, MAX,VIDEOTYPE 0, ISACTIONED 0
+                          SCHEDULED_DATE DATE, SCHEDULED_TIME TIME,ACTION_DATE DATE, ACTION_TIME TIME); */
+                        var ActionDate = cpUpdateAction.ActionDate.Value.Date;
+                        var ActionTime = cpUpdateAction.ActionDate.Value.TimeOfDay;
+                        var ScheduleDate = cpUpdateAction.ScheduleDate.Value.Date;
+                        var ScheduleTime = cpUpdateAction.ScheduleDate.Value.TimeOfDay;
+                        int SheduleNameId = -1;
+                        foreach (var item in SchedulingNamesList.Where(item => item is ScheduleMapNames scc && scc.Name == cpUpdateAction.ScheduleName))
+                        {
+                            SheduleNameId = item.Id;
+                            break;
+                        }
+                        string sqla = "INSERT INTO YTACTIONS(SCHEDULENAMEID,SCHEDULENAME,ACTIONNAME," +
+                            "MAX,VIDEOTYPE,SCHEDULED_DATE,SCHEDULED_TIME,ACTION_DATE,ACTION_TIME,ISACTIONED) " +
+                            "VALUES(@SCHEDULENAMEID,@SCHEDULENAME,@ACTIONNAME,@MAX,0," +
+                            "@SCHEDULED_DATE,@SCHEDULED_TIME,@ACTION_DATE,@ACTION_TIME,0) RETURNING ID;";
+                        int idx = connectionString.ExecuteScalar(sqla,
+                            [("@SCHEDULENAMEID", SheduleNameId),("@SCHEDULENAME", cpUpdateAction.ScheduleName),
+                            ("@ACTIONNAME", cpUpdateAction.ActionName),("@MAX", cpUpdateAction.Max),
+                            ("@SCHEDULED_DATE", ScheduleDate),("@SCHEDULED_TIME", ScheduleTime),
+                            ("@ACTION_DATE", ActionDate), ("@ACTION_TIME", ActionTime)]).ToInt(-1);
+                        if (idx != -1)
+                        {
+                            sqla = "SELECT * FROM YTACTIONS WHERE ID = @ID;";
+                            connectionString.ExecuteReader(sqla, [("@ID", idx)], (FbDataReader r) =>
+                            {
+                                YTScheduledActionsList.Add(new ScheduledActions(r));
+                            });
+                        }
+                    }
+                    else
+                    {
+                        List<(string, object)> Params = new List<(string, object)>();
+                        string usql = "update YTACTIONS set ";
+                        string wsql = "where ID = @ID and ACTIONNAME = @ACTIONNAME;";
+                        Params.Add(("ACTIONNAME", cpUpdateAction.ActionName));
+                        Params.Add(("ID", cpUpdateAction.id));
+                        foreach (var item in YTScheduledActionsList.Where(s => s.ActionName == cpUpdateAction.ActionName))
+                        {
+                            bool update = false;
+                            if (cpUpdateAction.ScheduleDate.HasValue)
+                            {
+                                update = false;
+                                if (item.ActionSchedule.HasValue)
+                                {
+                                    if (item.ActionSchedule.Value.Date != cpUpdateAction.ScheduleDate.Value.Date)
+                                    {
+                                        update = true;
+                                    }
+                                }
+                                else update = true;
+                                if (update)
+                                {
+                                    var ScheduleDate = cpUpdateAction.ScheduleDate.Value.Date;
+                                    var ScheduleTime = cpUpdateAction.ScheduleDate.Value.TimeOfDay;
+                                    usql += "SCHEDULED_DATE = @SCHEDULED_DATE, SCHEDULED_TIME = @SCHEDULED_TIME, ";
+                                    Params.Add(("SCHEDULED_DATE", ScheduleDate));
+                                    Params.Add(("SCHEDULED_TIME", ScheduleTime));
+                                }
+                            }
+                            if (cpUpdateAction.ActionDate.HasValue)
+                            {
+                                update = false;
+                                if (item.AppliedAction.HasValue)
+                                {
+                                    if (item.AppliedAction.Value.Date != cpUpdateAction.ActionDate.Value.Date)
+                                    {
+                                        update = true;
+                                    }
+                                }
+                                else update = true;
+                                if (update)
+                                {
+                                    var ActionDate = cpUpdateAction.ActionDate.Value.Date;
+                                    var ActionTime = cpUpdateAction.ActionDate.Value.TimeOfDay;
+                                    usql += "ACTION_DATE = @ACTION_DATE, ACTION_TIME = @ACTION_TIME, ";
+                                    Params.Add(("ACTION_DATE", ActionDate));
+                                    Params.Add(("ACTION_TIME", ActionTime));
+                                }
+                            }
+                            if (cpUpdateAction.Max != item.Max)
+                            {
+                                usql += "MAX = @MAX, ";
+                                Params.Add(("MAX", cpUpdateAction.Max));
+                            }
+                            if (cpUpdateAction.ScheduleName != item.ScheduleName)
+                            {
+                                usql += "SCHEDULENAME = @SCHEDULENAME, SCHEDULENAMEID = @SCHEDULENAMEID, ";
+                                int SheduleNameId = -1;
+                                foreach (var items in SchedulingNamesList.Where(item => item is ScheduleMapNames scc && scc.Name == cpUpdateAction.ScheduleName))
+                                {
+                                    SheduleNameId = items.Id;
+                                    break;
+                                }
+                                Params.Add(("SCHEDULENAME", (SheduleNameId != -1) ? cpUpdateAction.ScheduleName : ""));
+                                Params.Add(("SCHEDULENAMEID", SheduleNameId));
+                            }
+                            if (usql != "update YTACTIONS set ")
+                            {
+                                usql = usql.Substring(0, usql.Length - 2);
+                                usql += wsql;
+                                connectionString.ExecuteScalar(usql, Params);
+                            }
+                            break;
+                        }
                     }
                 }
             }
@@ -3001,7 +3129,7 @@ namespace VideoGui
                      reader["ACTION_DATE"] is DateOnly, reader["ACTION_TIME"] is TimeOnly 
                      reader["COMPLETED_DATE"] is DateOnly, reader["COMPLETED_TIME"] is TimeOnly    
                      IsActioned = (reader["ISACTIONED"] is int   */
-                sqlstring = $"CREATE TABLE YTACTIONS({Id}, SCHEDULENAMEID INTEGER, ACTIONNAMEID INTEGER,SCHEDULENAME VARCHAR(255)," +
+                sqlstring = $"CREATE TABLE YTACTIONS({Id}, SCHEDULENAMEID INTEGER, SCHEDULENAME VARCHAR(255)," +
                              "ACTIONNAME VARCHAR(255), MAX INTEGER, VIDEOTYPE INTEGER, SCHEDULED_DATE DATE, SCHEDULED_TIME TIME," +
                              "ACTION_DATE DATE, ACTION_TIME TIME, COMPLETED_DATE DATE, COMPLETED_TIME TIME, ISACTIONED SMALLINT);";
                 connectionString.CreateTableIfNotExists(sqlstring);

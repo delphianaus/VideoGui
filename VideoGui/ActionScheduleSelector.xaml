@@ -37,10 +37,10 @@
                     <ListBox.Resources>
                         <!--Defines a context menu-->
                         <ContextMenu x:Key="MyElementMenu">
-                            <MenuItem Name="mnuSelectItem" Header="Select Item" Click="mnuSelectItem_Click"/>
+                            <MenuItem Name="mnuNewItem" Header="Add New Item" Click="mnuNewItem_Click"/>
+                            <MenuItem Name="mnuEditItem" Header="Edit Item" Click="mnuEditItem_Click"/>
                             <Separator/>
-                            <MenuItem x:Name="mnuDeleteItem" Header="Delete Item" Click="mnuDeleteItem_Click"/>
-                            <Separator/>
+                            <MenuItem Name="mnuDeleteItem" Header="Delete Item" Click="mnuDeleteItem_Click"/>
                         </ContextMenu>
                         <!--Sets a context menu for each ListBoxItem in the current ListBox-->
                         <Style TargetType="{x:Type ListBoxItem}">
@@ -73,6 +73,8 @@
         </Border>
         <Button x:Name="BtnClose" Content="Close" Width="90" Height="30" Margin="0,0,9,10" 
          HorizontalAlignment="Right" VerticalAlignment="Bottom" Click="BtnClose_Click"/>
+        <Button x:Name="BtnNew" Content="New" Width="90" Height="30" Margin="12,0,0,10" 
+            HorizontalAlignment="Left" VerticalAlignment="Bottom" Click="BtnNew_Click"/>
 
     </Grid>
 </Window>

@@ -15,7 +15,7 @@ namespace VideoGui.Models
 
     class ScheduledActions : INotifyPropertyChanged
     {
-        private int _Id = -1, _ScheduleNameId = -1, _ActionNameId = -1, _Max = -1;
+        private int _Id = -1, _ScheduleNameId = -1, _Max = -1;
         private ActionType _VideoActionType = ActionType.VideoUpload;
         private Nullable<DateTime> _ActionSchedule = null, _AppliedAction = null, _CompletedScheduledDate = null;
         private string _ScheduleName = "", _ActionName = "", _AppliedDateString, _ScheduleDateString, _CompletedDateString;
@@ -23,7 +23,6 @@ namespace VideoGui.Models
         public string ActionName { get => _ActionName; set { _ActionName = value; OnPropertyChanged(); } }
         public bool IsActioned { get => _IsActioned; set { _IsActioned = value; OnPropertyChanged(); } }
         public int Id { get => _Id; set { _Id = value; OnPropertyChanged(); } }
-        public int ActionNameId { get => _ActionNameId; set { _ActionNameId = value; OnPropertyChanged(); } }
         public int Max { get => _Max; set { _Max = value; OnPropertyChanged(); } }
         public string ScheduleName { get => _ScheduleName; set { _ScheduleName = value; OnPropertyChanged(); } }
         public int ScheduleNameId { get => _ScheduleNameId; set { _ScheduleNameId = value; OnPropertyChanged(); } }
@@ -40,7 +39,7 @@ namespace VideoGui.Models
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
 
-        public ScheduledActions(int _Id, int _ScheduleId, int _ActionNameId, string _ScheduleName, string _ActionName, int Max,
+        public ScheduledActions(int _Id, int _ScheduleId, string _ScheduleName, string _ActionName, int Max,
             ActionType _ActionType, Nullable<DateTime> _AppliedSchedule, Nullable<DateTime> _AppliedAction,
             Nullable<DateTime> _CompletedScheduledDate, bool _IsActioned = false)
         {
@@ -48,7 +47,6 @@ namespace VideoGui.Models
             {
                 Id = _Id;
                 ScheduleNameId = _ScheduleId;
-                ActionNameId = _ActionNameId;
                 ScheduleName = _ScheduleName;
                 ActionName = _ActionName;
                 Max = Max;
@@ -70,7 +68,6 @@ namespace VideoGui.Models
             {
                 Id = (reader["ID"] is int Idx) ? Idx : -1;
                 ScheduleNameId = (reader["SCHEDULENAMEID"] is int SCHNAMEID) ? SCHNAMEID : -1;
-                ActionNameId = (reader["ACTIONNAMEID"] is int ANAMEID) ? ANAMEID : -1;
                 ScheduleName = (reader["SCHEDULENAME"] is string SNAME) ? SNAME : "";
                 ActionName = (reader["ACTIONNAME"] is string ANAME) ? ANAME : "";
                 Max = (reader["MAX"] is int MX) ? MX : -1;
