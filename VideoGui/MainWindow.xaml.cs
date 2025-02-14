@@ -550,7 +550,7 @@ namespace VideoGui
                         foreach (var item in YTScheduledActionsList.Where(s => s.ActionName == cpUpdateAction.ActionName))
                         {
                             bool update = false, cpsd = cpUpdateAction.ScheduleDate.HasValue, iaa = item.AppliedAction.HasValue,
-                                cpad = cpUpdateAction.ActionDate.HasValue, ias = item.ActionSchedule.HasValue,
+                                cpad = cpUpdateAction.ActionDate.HasValue, ias = item.ActionSchedule.HasValue;
 
                             if ((cpsd && !ias) || (cpsd && ias && item.ActionSchedule.Value.Date != cpUpdateAction.ScheduleDate.Value.Date))
                             {
