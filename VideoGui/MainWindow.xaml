@@ -94,7 +94,7 @@
             </ListBox>
         </Border>
         <ToggleButton x:Name="GPUEncode" Style="{StaticResource  ToggleStyle1}" Margin="921,0,7,76" Height="24" Width="Auto" HorizontalAlignment="Left" VerticalAlignment="Bottom" IsChecked="False"/>
-        <ToggleButton x:Name="X265Output" Style="{StaticResource  ToggleStyle2}"  Margin="816,0,96,76" Height="24" Width="98" HorizontalAlignment="Left" VerticalAlignment="Bottom" IsChecked="False"/>
+        <ToggleButton x:Name="X265Output" Style="{StaticResource  ToggleStyle2}"  Margin="821,0,0,76" Height="24" Width="98" HorizontalAlignment="Left" VerticalAlignment="Bottom" IsChecked="False"/>
         <ToggleButton x:Name="Fisheye" Style="{StaticResource  ToggleStyle3}"  Margin="1025,0,7,76" Height="24"  Width="Auto" HorizontalAlignment="Left" VerticalAlignment="Bottom"/>
 
         <Button x:Name="btnConfig" Content="Configuration" HorizontalAlignment="Left" Height="22" Margin="26,0,0,113" VerticalAlignment="Bottom" Click="BtnConfig_Click" Width="97"/>
@@ -150,8 +150,9 @@
         </StatusBar>
         <Button x:Name="BtnFileFixer" Content="File Fixer" HorizontalAlignment="Left" Height="24" Margin="26,0,0,82" VerticalAlignment="Bottom" Width="53" Click="BtnFileFixer_Click"/>
         <Button x:Name="BtnVideoCardDetails" Content="" HorizontalAlignment="Left" Height="30" Margin="469,0,0,79" VerticalAlignment="Bottom" Width="40" Click="BtnVideoCardDetails_Click" RenderTransformOrigin="-0.864,0.693"/>
-        <Button x:Name="btnEditDirectories" Content="Edit Dirs" Height="26" Margin="515,0,0,81" VerticalAlignment="Bottom" HorizontalAlignment="Left" Click="btnEditDirectories_Click" Width="64"/>
-        <Button x:Name="btnEditSchedules" Content="Edit Schedules" Height="26" Margin="584,0,0,81" VerticalAlignment="Bottom" HorizontalAlignment="Left" Click="btnEditSchedules_Click" Width="119"/>
+        <Button x:Name="btnEditDirectories" Content="Edit Dirs" Height="26" Margin="515,0,0,81" VerticalAlignment="Bottom" HorizontalAlignment="Left" Click="btnEditDirectories_Click" Width="57"/>
+        <Button x:Name="btnEditSchedules" Content="Edit Schedules" Height="26" Margin="576,0,0,81" VerticalAlignment="Bottom" HorizontalAlignment="Left" Click="btnEditSchedules_Click" Width="89"/>
+        <Button x:Name="btnEditActions" Content="Edit Actions" Height="26" Margin="669,0,0,81" VerticalAlignment="Bottom" HorizontalAlignment="Left" Click="btnEditActions_Click" Width="74"/>
     </Grid>
 
 </Window>

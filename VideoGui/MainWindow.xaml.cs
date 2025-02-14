@@ -127,6 +127,7 @@ namespace VideoGui
         public SelectReleaseSchedule SelectReleaseScheduleFrm = null;
         public DirectoryTitleDescEditor DirectoryTitleDescEditorFrm = null;
         public SchedulingSelectEditor schedulingSelectEditor = null;
+        public ActionScheduleSelector actionScheduleSelector = null;
         public ShowMatcher Swm;
         List<ListScheduleItems> ScheduleListItems = new List<ListScheduleItems>();
         List<ListScheduleItems> ScheduleListedItems = new List<ListScheduleItems>();
@@ -8811,6 +8812,59 @@ namespace VideoGui
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
             }
         }
+
+        private void btnEditActions_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (actionScheduleSelector is not null)
+                {
+                    if (actionScheduleSelector.IsClosing) actionScheduleSelector.Close();
+                    while (!actionScheduleSelector.IsClosed)
+                    {
+                        Thread.Sleep(100);
+                        System.Windows.Forms.Application.DoEvents();
+                    }
+                    actionScheduleSelector.Close();
+                    actionScheduleSelector = null;
+                }
+
+                actionScheduleSelector = new ActionScheduleSelector(ActionScheduleSelectorFinish, ModuleCallback);
+                actionScheduleSelector.ShowActivated = true;
+                Hide();
+                actionScheduleSelector.Show();
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"btnEditActions_Click {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
+            }
+        }
+
+        private void ActionScheduleSelectorFinish()
+        {
+            try
+            {
+                Show();
+                Task.Run(() =>
+                {
+                    if (actionScheduleSelector is not null && !actionScheduleSelector.IsClosed)
+                    {
+                        if (actionScheduleSelector.IsClosing) actionScheduleSelector.Close();
+                        while (!actionScheduleSelector.IsClosed)
+                        {
+                            Thread.Sleep(100);
+                        }
+                        actionScheduleSelector.Close();
+                        actionScheduleSelector = null;
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"ActionScheduleSelectorFinish {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
+            }
+        }
+
         public void ClearImportTimes()
         {
             try
