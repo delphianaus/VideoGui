@@ -549,46 +549,24 @@ namespace VideoGui
                         Params.Add(("ID", cpUpdateAction.id));
                         foreach (var item in YTScheduledActionsList.Where(s => s.ActionName == cpUpdateAction.ActionName))
                         {
-                            bool update = false;
-                            if (cpUpdateAction.ScheduleDate.HasValue)
+                            bool update = false, cpsd = cpUpdateAction.ScheduleDate.HasValue, iaa = item.AppliedAction.HasValue,
+                                cpad = cpUpdateAction.ActionDate.HasValue, ias = item.ActionSchedule.HasValue,
+
+                            if ((cpsd && !ias) || (cpsd && ias && item.ActionSchedule.Value.Date != cpUpdateAction.ScheduleDate.Value.Date))
                             {
-                                update = false;
-                                if (item.ActionSchedule.HasValue)
-                                {
-                                    if (item.ActionSchedule.Value.Date != cpUpdateAction.ScheduleDate.Value.Date)
-                                    {
-                                        update = true;
-                                    }
-                                }
-                                else update = true;
-                                if (update)
-                                {
-                                    var ScheduleDate = cpUpdateAction.ScheduleDate.Value.Date;
-                                    var ScheduleTime = cpUpdateAction.ScheduleDate.Value.TimeOfDay;
-                                    usql += "SCHEDULED_DATE = @SCHEDULED_DATE, SCHEDULED_TIME = @SCHEDULED_TIME, ";
-                                    Params.Add(("SCHEDULED_DATE", ScheduleDate));
-                                    Params.Add(("SCHEDULED_TIME", ScheduleTime));
-                                }
+                                var ScheduleDate = cpUpdateAction.ScheduleDate.Value.Date;
+                                var ScheduleTime = cpUpdateAction.ScheduleDate.Value.TimeOfDay;
+                                usql += "SCHEDULED_DATE = @SCHEDULED_DATE, SCHEDULED_TIME = @SCHEDULED_TIME, ";
+                                Params.Add(("SCHEDULED_DATE", ScheduleDate));
+                                Params.Add(("SCHEDULED_TIME", ScheduleTime));
                             }
-                            if (cpUpdateAction.ActionDate.HasValue)
+                            if ((cpad && !iaa) || (cpad && iaa && item.AppliedAction.Value.Date != cpUpdateAction.ActionDate.Value.Date))
                             {
-                                update = false;
-                                if (item.AppliedAction.HasValue)
-                                {
-                                    if (item.AppliedAction.Value.Date != cpUpdateAction.ActionDate.Value.Date)
-                                    {
-                                        update = true;
-                                    }
-                                }
-                                else update = true;
-                                if (update)
-                                {
-                                    var ActionDate = cpUpdateAction.ActionDate.Value.Date;
-                                    var ActionTime = cpUpdateAction.ActionDate.Value.TimeOfDay;
-                                    usql += "ACTION_DATE = @ACTION_DATE, ACTION_TIME = @ACTION_TIME, ";
-                                    Params.Add(("ACTION_DATE", ActionDate));
-                                    Params.Add(("ACTION_TIME", ActionTime));
-                                }
+                                var ActionDate = cpUpdateAction.ActionDate.Value.Date;
+                                var ActionTime = cpUpdateAction.ActionDate.Value.TimeOfDay;
+                                usql += "ACTION_DATE = @ACTION_DATE, ACTION_TIME = @ACTION_TIME, ";
+                                Params.Add(("ACTION_DATE", ActionDate));
+                                Params.Add(("ACTION_TIME", ActionTime));
                             }
                             if (cpUpdateAction.Max != item.Max)
                             {
