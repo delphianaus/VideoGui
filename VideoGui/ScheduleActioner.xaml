@@ -3,39 +3,42 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit" 
+        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit" SizeChanged="Window_SizeChanged"
         xmlns:local="clr-namespace:VideoGui" ResizeMode="CanResizeWithGrip" WindowStartupLocation="CenterScreen" 
         mc:Ignorable="d" Loaded="Window_Loaded" SizeToContent="Manual" WindowStyle="ToolWindow" 
-        Title="ScheduleActioner" Height="353" Width="396">
+        Title="ScheduleActioner" Height="372" Width="396" MinWidth="396" MinHeight="372">
     <Grid>
-        <Border x:Name="brdMain" Margin="0,0,0,60" BorderThickness="2" BorderBrush="Black" Padding="2,2,2,2">
-            <Canvas x:Name="ScheduleName">
+        <Border x:Name="brdMain" Margin="2,2,2,60" BorderThickness="2" BorderBrush="Black">
+            <Canvas x:Name="ScheduleNameX">
                 <GroupBox Name="grpScheduleName" Header="Schedule Name" Width="256" Height="70" BorderThickness="2,2,2,2" HorizontalAlignment="Left" VerticalAlignment="Center" >
                     <Canvas x:Name="SceduleName">
                         <TextBox x:Name="txtSchName" Width="201" Height="24" HorizontalAlignment="Left" VerticalAlignment="Center" Canvas.Left="10" Canvas.Top="10"/>
                         <Button x:Name="btnSelect" Click="btnSelect_Click" VerticalAlignment="Center" 
-                             Width="26" Height="26" HorizontalAlignment="Left" Canvas.Left="216" Canvas.Top="9" >
+                             Width="26" Height="26" HorizontalAlignment="Left" Canvas.Left="211" Canvas.Top="9" >
                             <Image Source="/Icons/SelectDown.png" HorizontalAlignment="Left" VerticalAlignment="Top" Width="22" Height="22"/>
                         </Button>
                     </Canvas>
                 </GroupBox>
                 <GroupBox x:Name="grpScheduleDates" Header="Video Scheduled Date &amp; Time" Width="383" Canvas.Top="73" 
-                          HorizontalAlignment="Left" Height="63" VerticalAlignment="Center">
+                          HorizontalAlignment="Center" Height="80" VerticalAlignment="Top">
                     <Canvas Margin="0,0,0,0">
-                        <Label Name="lblDate" Content="Date :" HorizontalAlignment="Left" Canvas.Top="7" VerticalAlignment="Center" Canvas.Left="6"/>
+                        <Label Name="lblDate" Content="Date :" HorizontalAlignment="Center" Canvas.Top="16" VerticalAlignment="Top" Canvas.Left="6"/>
                         <xctk:DateTimePicker x:Name="ReleaseDate" Format="Custom" 
                           FormatString="dd/MM/yyyy" MinWidth="140" 
-                          Focusable="True" Width="140" HorizontalAlignment="Left" 
-                          Canvas.Left="45" Canvas.Top="10" VerticalAlignment="Center" 
+                          Focusable="True" Width="140" HorizontalAlignment="Center" 
+                          Canvas.Left="45" Canvas.Top="19" VerticalAlignment="Top" 
                           AutoCloseCalendar="True" TimePickerAllowSpin="False" 
                           TimePickerShowButtonSpinner="False" TimePickerVisibility="Collapsed" />
-                        <Label x:Name="lblTime" Content="Time :" Canvas.Top="7" Canvas.Left="185" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                        <xctk:TimePicker x:Name="ReleaseTime" Format="Custom" FormatString="hh:mm:ss tt" MinWidth="140"  
-                          Focusable="True" Width="140" HorizontalAlignment="Left" Canvas.Left="226" Canvas.Top="10" VerticalAlignment="Center" />
+                        <Label x:Name="lblTime" Content="Start" Canvas.Top="2" Canvas.Left="189" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                        <xctk:TimePicker x:Name="ReleaseTimeStart" Format="Custom" FormatString="hh:mm:ss tt" MinWidth="140"  
+                          Focusable="True" Width="140" HorizontalAlignment="Center" Canvas.Left="226" Canvas.Top="5" VerticalAlignment="Top" />
+                        <xctk:TimePicker x:Name="ReleaseTimeEnd" Format="Custom" FormatString="hh:mm:ss tt" MinWidth="140"  
+                            Focusable="True" Width="140" Canvas.Left="226" Canvas.Top="32" HorizontalAlignment="Center" VerticalAlignment="Top" />
+                        <Label x:Name="lblTime_Copy" Content="End" Canvas.Top="30" Canvas.Left="189" HorizontalAlignment="Center" VerticalAlignment="Top"/>
                     </Canvas>
                 </GroupBox>
-                <GroupBox x:Name="grpScheduleDates2" Header="Applied Date &amp; Time" Width="383" Canvas.Top="135" 
-                     HorizontalAlignment="Left" Height="63" VerticalAlignment="Center">
+                <GroupBox x:Name="grpScheduleDates2" Header="Applied Date &amp; Time" Width="383" Canvas.Top="154" 
+                     HorizontalAlignment="Center" Height="63" VerticalAlignment="Top">
                     <Canvas Margin="0,0,0,0">
                         <Label Name="lblDateApp" Content="Date :" HorizontalAlignment="Left" Canvas.Top="7" VerticalAlignment="Center" Canvas.Left="6"/>
                         <xctk:DateTimePicker x:Name="AppliedDate" Format="Custom" 
@@ -51,14 +54,14 @@
                     </Canvas>
                 </GroupBox>
                 <GroupBox x:Name="grpMaxSchedules" Height="71" Width="117" Header="Max Schedules" Canvas.Top="1" 
-                          HorizontalAlignment="Center" VerticalAlignment="Top" Canvas.Left="261">
+                          HorizontalAlignment="Left" VerticalAlignment="Top" Canvas.Left="261">
                     <Canvas x:Name="cnvmaxschedules">
-                        <TextBox x:Name="txtMaxSchedules" Width="78" Height="24" Canvas.Top="10" Canvas.Left="10"
+                        <TextBox x:Name="txtMaxSchedules" Width="85" Height="24" Canvas.Top="10" Canvas.Left="10"
                                  HorizontalAlignment="Left" VerticalAlignment="Center"/>
                     </Canvas>
                 </GroupBox>
                 <GroupBox Name="grpActionName" Header="Action Name" Width="383" Height="66" 
-                          Canvas.Top="198" HorizontalAlignment="Center"
+                          Canvas.Top="220" HorizontalAlignment="Center"
                           VerticalAlignment="Top">
                     <Canvas Name="cnvActionName">
                         <TextBox x:Name="txtActionName" Width="280" Height="24"

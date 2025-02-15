@@ -483,8 +483,8 @@ namespace VideoGui
                             scheduleActioner.txtActionName.Text = item.ActionName;
                             scheduleActioner.txtMaxSchedules.Text = item.ScheduleName;
                             scheduleActioner.txtSchName.Text = item.Max.ToString();
-                            scheduleActioner.ReleaseDate.Value = (item.ActionSchedule.HasValue) ? item.ActionSchedule : null;
-                            scheduleActioner.ReleaseTime.Value = (item.ActionSchedule.HasValue) ? item.ActionSchedule : null;
+                            scheduleActioner.ReleaseDate.Value = (item.ActionSchedule.HasValue) ? new DateTime(item.ActionSchedule.Value.Year, item.ActionSchedule.Value.Month, item.ActionSchedule.Value.Day) : null;
+                            scheduleActioner.ReleaseTimeStart.Value = (item.ActionScheduleStart.HasValue) ? new DateTime(0, 0, 0, item.ActionScheduleStart.Value.Hour, item.ActionScheduleStart.Value.Minute, item.ActionScheduleStart.Value.Second) : null;//new DateTime(item.ActionScheduleStart.Value.Year, item.ActionScheduleStart.Value.Month, item.ActionScheduleStart.Value.Day) : null;
                             scheduleActioner.AppliedDate.Value = (item.AppliedAction.HasValue) ? item.AppliedAction : null;
                             scheduleActioner.AppliedTime.Value = (item.AppliedAction.HasValue) ? item.AppliedAction : null;
                             break;
@@ -496,9 +496,10 @@ namespace VideoGui
                         scheduleActioner.txtMaxSchedules.Text = "";
                         scheduleActioner.txtSchName.Text = "";
                         scheduleActioner.ReleaseDate.Value = DateTime.Now.Date;
-                        scheduleActioner.ReleaseTime = null;
+                        scheduleActioner.ReleaseTimeStart.Value = null;
+                        scheduleActioner.ReleaseTimeEnd.Value = null;
                         scheduleActioner.AppliedDate.Value = DateTime.Now.Date;
-                        scheduleActioner.AppliedTime = null;
+                        scheduleActioner.AppliedTime.Value = null;
                     }
                 }
                 else if (tld is CustomParams_UpdateAction cpUpdateAction)
@@ -515,8 +516,11 @@ namespace VideoGui
                           SCHEDULED_DATE DATE, SCHEDULED_TIME TIME,ACTION_DATE DATE, ACTION_TIME TIME); */
                         var ActionDate = cpUpdateAction.ActionDate.Value.Date;
                         var ActionTime = cpUpdateAction.ActionDate.Value.TimeOfDay;
-                        var ScheduleDate = cpUpdateAction.ScheduleDate.Value.Date;
-                        var ScheduleTime = cpUpdateAction.ScheduleDate.Value.TimeOfDay;
+                        var ScheduleDate = cpUpdateAction.ScheduleDate.Value;
+                        var ScheduleTimeStart = cpUpdateAction.ScheduleTimeStart.Value;
+                        var ScheduleTimeEnd = cpUpdateAction.ScheduleTimeEnd.Value;
+
+
                         int SheduleNameId = -1;
                         foreach (var item in SchedulingNamesList.Where(item => item is ScheduleMapNames scc && scc.Name == cpUpdateAction.ScheduleName))
                         {
@@ -524,13 +528,15 @@ namespace VideoGui
                             break;
                         }
                         string sqla = "INSERT INTO YTACTIONS(SCHEDULENAMEID,SCHEDULENAME,ACTIONNAME," +
-                            "MAX,VIDEOTYPE,SCHEDULED_DATE,SCHEDULED_TIME,ACTION_DATE,ACTION_TIME,ISACTIONED) " +
+                            "MAX,VIDEOTYPE,SCHEDULED_DATE,SCHEDULED_TIME_START,SCHEDULED_TIME_END,ACTION_DATE,ACTION_TIME,ISACTIONED) " +
                             "VALUES(@SCHEDULENAMEID,@SCHEDULENAME,@ACTIONNAME,@MAX,0," +
                             "@SCHEDULED_DATE,@SCHEDULED_TIME,@ACTION_DATE,@ACTION_TIME,0) RETURNING ID;";
                         int idx = connectionString.ExecuteScalar(sqla,
                             [("@SCHEDULENAMEID", SheduleNameId),("@SCHEDULENAME", cpUpdateAction.ScheduleName),
                             ("@ACTIONNAME", cpUpdateAction.ActionName),("@MAX", cpUpdateAction.Max),
-                            ("@SCHEDULED_DATE", ScheduleDate),("@SCHEDULED_TIME", ScheduleTime),
+                            ("@SCHEDULED_DATE", ScheduleDate),("@SCHEDULED_TIME_START", ScheduleTimeStart),
+                            ("@SCHEDULED_TIME_END", ScheduleTimeEnd),
+
                             ("@ACTION_DATE", ActionDate), ("@ACTION_TIME", ActionTime)]).ToInt(-1);
                         if (idx != -1)
                         {
@@ -553,14 +559,14 @@ namespace VideoGui
                             bool update = false, cpsd = cpUpdateAction.ScheduleDate.HasValue, iaa = item.AppliedAction.HasValue,
                                 cpad = cpUpdateAction.ActionDate.HasValue, ias = item.ActionSchedule.HasValue;
 
-                            if ((cpsd && !ias) || (cpsd && ias && item.ActionSchedule.Value.Date != cpUpdateAction.ScheduleDate.Value.Date))
+                            /*if ((cpsd && !ias) || (cpsd && ias && item.ActionSchedule.Value != cpUpdateAction.ScheduleDate.Value.Date))
                             {
                                 var ScheduleDate = cpUpdateAction.ScheduleDate.Value.Date;
                                 var ScheduleTime = cpUpdateAction.ScheduleDate.Value.TimeOfDay;
                                 usql += "SCHEDULED_DATE = @SCHEDULED_DATE, SCHEDULED_TIME = @SCHEDULED_TIME, ";
                                 Params.Add(("SCHEDULED_DATE", ScheduleDate));
                                 Params.Add(("SCHEDULED_TIME", ScheduleTime));
-                            }
+                            }*/
                             if ((cpad && !iaa) || (cpad && iaa && item.AppliedAction.Value.Date != cpUpdateAction.ActionDate.Value.Date))
                             {
                                 var ActionDate = cpUpdateAction.ActionDate.Value.Date;
@@ -3109,10 +3115,11 @@ namespace VideoGui
                      reader["COMPLETED_DATE"] is DateOnly, reader["COMPLETED_TIME"] is TimeOnly    
                      IsActioned = (reader["ISACTIONED"] is int   */
                 sqlstring = $"CREATE TABLE YTACTIONS({Id}, SCHEDULENAMEID INTEGER, SCHEDULENAME VARCHAR(255)," +
-                             "ACTIONNAME VARCHAR(255), MAX INTEGER, VIDEOTYPE INTEGER, SCHEDULED_DATE DATE, SCHEDULED_TIME TIME," +
+                             "ACTIONNAME VARCHAR(255), MAX INTEGER, VIDEOTYPE INTEGER, SCHEDULED_DATE DATE, SCHEDULED_TIME_START TIME, SCHEDULED_TIME_END TIME," +
                              "ACTION_DATE DATE, ACTION_TIME TIME, COMPLETED_DATE DATE, COMPLETED_TIME TIME, ISACTIONED SMALLINT);";
                 connectionString.CreateTableIfNotExists(sqlstring);
-
+                connectionString.AddFieldToTable("YTACTIONS", "SCHEDULED_TIME_START", "TIME", null); 
+                connectionString.AddFieldToTable("YTACTIONS", "SCHEDULED_TIME_END", "TIME", null);
                 int idx = connectionString.ExecuteScalar(sqlstring).ToInt(-1);
                 CurrentDbId = (idx != -1) ? idx : CurrentDbId;
                 LoadFromDb();
