@@ -77,7 +77,7 @@ namespace VideoGui.Models
                 ScheduleNameId = (reader["SCHEDULENAMEID"] is int SCHNAMEID) ? SCHNAMEID : -1;
                 ScheduleName = (reader["SCHEDULENAME"] is string SNAME) ? SNAME : "";
                 ActionName = (reader["ACTIONNAME"] is string ANAME) ? ANAME : "";
-                Max = (reader["MAX"] is int MX) ? MX : -1;
+                Max = (reader["MAXSCHEDULES"] is int MX) ? MX : -1;
                 VideoActionType = (reader["VIDEOTYPE"] is int VT) ? (ActionType)VT : ActionType.VideoUpload;
                 ActionSchedule = (reader["SCHEDULED_DATE"] is DateOnly scheduledDateStart) ? scheduledDateStart : new DateOnly();
                 ActionScheduleEnd = (reader["SCHEDULED_TIME_END"] is TimeOnly scheduledTimeEnd) ? scheduledTimeEnd : new TimeOnly();

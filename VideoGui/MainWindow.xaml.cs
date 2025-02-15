@@ -3045,8 +3045,8 @@ namespace VideoGui
                 connectionString.CreateTableIfNotExists(sqlstring);
 
 
-                sqlstring = $"create table PLANINGCUTS({Id}, PLANNINGQUEID INTEGER,BIGINT START ,BIGINT END , " +
-                    "SMALLINT CUTNO , FILENAME VARCHAR(500))";
+                sqlstring = $"create table PLANINGCUTS({Id}, PLANNINGQUEID INTEGER,STARTA BIGINT  ,ENDA BIGINT , " +
+                    " CUTNO SMALLINT , FILENAME VARCHAR(500))";
                 connectionString.CreateTableIfNotExists(sqlstring);
 
                 sqlstring = $"create table DRAFTSHORTS({Id}, VIDEOID VARCHAR(255), FILENAME VARCHAR(500))";
@@ -3087,13 +3087,13 @@ namespace VideoGui
                 connectionString.CreateTableIfNotExists(sqlstring);
                 sqlstring = $"CREATE TABLE SCHEDULEDPOOLS({Id},POOLID INTEGER, DIRECTORY VARCHAR(512));";
                 connectionString.CreateTableIfNotExists(sqlstring);
-                sqlstring = $"CREATE TABLE SCHEDULEUPLOADS({Id},POOLID INTEGER, DAY SMALLINT, UPLOADTIME TIME, MAX SMALLINT);";
+                sqlstring = $"CREATE TABLE SCHEDULEUPLOADS({Id},POOLID INTEGER, DAYS SMALLINT, UPLOADTIME TIME, MAXA SMALLINT);";
                 connectionString.CreateTableIfNotExists(sqlstring);
                 sqlstring = $"CREATE TABLE EVENTSCHEDULES({Id},EVENTID INTEGER, SCHEDULEID INTEGER);";
                 connectionString.CreateTableIfNotExists(sqlstring);
-                sqlstring = $"CREATE TABLE EVENTSCHEDULEDATE({Id},EVENTID INTEGER, START DATE, END DATE, STARTTIME TIME, ENDTIME TIME);";
+                sqlstring = $"CREATE TABLE EVENTSCHEDULEDATE({Id},EVENTID INTEGER, STARTA DATE, ENDA DATE, STARTTIME TIME, ENDTIME TIME);";
                 connectionString.CreateTableIfNotExists(sqlstring);
-                sqlstring = $"CREATE TABLE SCHEDULEDATE({Id},EVENTID INTEGER, START DATE, END DATE, STARTTIME TIME, ENDTIME TIME);";
+                sqlstring = $"CREATE TABLE SCHEDULEDATE({Id},EVENTID INTEGER, STARTA DATE, ENDA DATE, STARTTIME TIME, ENDTIME TIME);";
                 connectionString.CreateTableIfNotExists(sqlstring);
                 sqlstring = $"CREATE TABLE SCHEDULES({Id},NAME VARCHAR(250), ISSCHEDULE SMALLINT, SCHEDULEID INTEGER);";
                 connectionString.CreateTableIfNotExists(sqlstring);
@@ -3131,7 +3131,7 @@ namespace VideoGui
                      reader["COMPLETED_DATE"] is DateOnly, reader["COMPLETED_TIME"] is TimeOnly    
                      IsActioned = (reader["ISACTIONED"] is int   */
                 sqlstring = $"CREATE TABLE YTACTIONS({Id}, SCHEDULENAMEID INTEGER, SCHEDULENAME VARCHAR(255)," +
-                             "ACTIONNAME VARCHAR(255), MAX INTEGER, VIDEOTYPE INTEGER, SCHEDULED_DATE DATE, SCHEDULED_TIME_START TIME, SCHEDULED_TIME_END TIME," +
+                             "ACTIONNAME VARCHAR(255), MAXSCHEDULES INTEGER, VIDEOTYPE INTEGER, SCHEDULED_DATE DATE, SCHEDULED_TIME_START TIME, SCHEDULED_TIME_END TIME," +
                              "ACTION_DATE DATE, ACTION_TIME TIME, COMPLETED_DATE DATE, COMPLETED_TIME TIME, ISACTIONED SMALLINT);";
                 connectionString.CreateTableIfNotExists(sqlstring);
                 connectionString.AddFieldToTable("YTACTIONS", "SCHEDULED_TIME_START", "TIME", null); 
