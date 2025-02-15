@@ -28,8 +28,9 @@ namespace VideoGui
         public bool IsClosed = false, IsClosing = false;
         ActionScheduleSelector frmActionScheduleSelector = null;
         SchedulingSelectEditor frmSchedulingSelectEditor = null;
+        SelectReleaseSchedule selectReleaseSchedule = null;
         Nullable<DateTime> actionDate = null, scheduleDate = null, completeDate = null;
-        public int actionScheduleID =-1;
+        public int actionScheduleID = -1;
         public ScheduleActioner(OnFinish DoOnFinish, databasehook<Object> _ModuleCallBack)
         {
             try
@@ -49,14 +50,9 @@ namespace VideoGui
         {
             try
             {
-                if (actionScheduleID == -1)
-                {
-                    ModuleCallBack?.Invoke(this, new CustomParams_Initialize());
-                }
-                else
-                {
-                    ModuleCallBack?.Invoke(this, new CustomParams_Initialize(actionScheduleID));
-                }
+
+                ModuleCallBack?.Invoke(this, new CustomParams_Initialize(actionScheduleID));
+
             }
             catch (Exception ex)
             {
@@ -68,28 +64,53 @@ namespace VideoGui
         {
             try
             {
-
-                if (frmSchedulingSelectEditor is not null)
+                if (selectReleaseSchedule is not null)
                 {
-                    if (!frmSchedulingSelectEditor.IsClosed)
+                    if (!selectReleaseSchedule.IsClosed)
                     {
-                        frmSchedulingSelectEditor.Close();
-                        while (!frmSchedulingSelectEditor.IsClosed)
+                        selectReleaseSchedule.Close();
+                        while (!selectReleaseSchedule.IsClosed)
                         {
                             Thread.Sleep(100);
                             System.Windows.Forms.Application.DoEvents();
                         }
                     }
-                    frmSchedulingSelectEditor = null;
+                    selectReleaseSchedule = null;
                 }
-                frmSchedulingSelectEditor = new SchedulingSelectEditor(SchedulingSelectEditor_OnFinish, ModuleCallBack);
+                selectReleaseSchedule = new SelectReleaseSchedule(selectReleaseSchedule_OnFinish, ModuleCallBack);
                 Hide();
-                frmSchedulingSelectEditor.ShowActivated = true;
-                frmSchedulingSelectEditor.Show();
+                selectReleaseSchedule.ShowActivated = true;
+                selectReleaseSchedule.Show();
             }
             catch (Exception ex)
             {
                 ex.LogWrite($"btnSelect_Click - {this} {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
+
+        private void selectReleaseSchedule_OnFinish()
+        {
+            try
+            {
+                Show();
+                int LastId = -1;
+                if (selectReleaseSchedule is not null)
+                {
+                    txtSchName.Text = (selectReleaseSchedule.SelectedId != -1) ? selectReleaseSchedule.SelectedItem : txtSchName.Text;
+                    if (selectReleaseSchedule.IsClosing)
+                    {
+                        while (selectReleaseSchedule is not null && !selectReleaseSchedule.IsClosed)
+                        {
+                            Thread.Sleep(100);
+                            System.Windows.Forms.Application.DoEvents();
+                            if (selectReleaseSchedule is null) break;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"SchedulingSelectEditor_OnFinish - {this} {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
             }
         }
 
@@ -101,15 +122,15 @@ namespace VideoGui
                 int LastId = -1;
                 if (frmSchedulingSelectEditor is not null)
                 {
-
                     LastId = frmSchedulingSelectEditor.TitleId;
                     txtSchName.Text = (LastId != -1) ? frmSchedulingSelectEditor.Title : txtSchName.Text;
-                    if (!frmSchedulingSelectEditor.IsClosing)
+                    if (frmSchedulingSelectEditor.IsClosing)
                     {
-                        while (!frmSchedulingSelectEditor.IsClosed)
+                        while (frmSchedulingSelectEditor.IsClosing)
                         {
                             Thread.Sleep(100);
                             System.Windows.Forms.Application.DoEvents();
+                            if (frmSchedulingSelectEditor is null) break;
                         }
                     }
                     if (frmSchedulingSelectEditor.IsClosed)
@@ -141,7 +162,7 @@ namespace VideoGui
                     }
                     frmActionScheduleSelector = null;
                 }
-                frmActionScheduleSelector = new ActionScheduleSelector(ActionScheduleSelector_OnFinish,ModuleCallBack);
+                frmActionScheduleSelector = new ActionScheduleSelector(ActionScheduleSelector_OnFinish, ModuleCallBack);
                 Hide();
                 frmActionScheduleSelector.ShowActivated = true;
                 frmActionScheduleSelector.Show();
@@ -185,8 +206,8 @@ namespace VideoGui
         {
             try
             {
-                ModuleCallBack?.Invoke(this, new 
-                    CustomParams_UpdateAction(actionScheduleID,actionDate,scheduleDate,completeDate, 
+                ModuleCallBack?.Invoke(this, new
+                    CustomParams_UpdateAction(actionScheduleID, actionDate, scheduleDate, completeDate,
                     txtSchName.Text, txtActionName.Text, txtMaxSchedules.Text.ToInt(0)));
             }
             catch (Exception ex)

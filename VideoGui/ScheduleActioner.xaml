@@ -23,8 +23,12 @@
                           HorizontalAlignment="Left" Height="63" VerticalAlignment="Center">
                     <Canvas Margin="0,0,0,0">
                         <Label Name="lblDate" Content="Date :" HorizontalAlignment="Left" Canvas.Top="7" VerticalAlignment="Center" Canvas.Left="6"/>
-                        <xctk:TimePicker x:Name="ReleaseDate" Format="Custom" FormatString="dd/mm/yyyy" MinWidth="140"  
-                          Focusable="True" Width="140" HorizontalAlignment="Left" Canvas.Left="45" Canvas.Top="10" VerticalAlignment="Center" />
+                        <xctk:DateTimePicker x:Name="ReleaseDate" Format="Custom" 
+                          FormatString="dd/MM/yyyy" MinWidth="140" 
+                          Focusable="True" Width="140" HorizontalAlignment="Left" 
+                          Canvas.Left="45" Canvas.Top="10" VerticalAlignment="Center" 
+                          AutoCloseCalendar="True" TimePickerAllowSpin="False" 
+                          TimePickerShowButtonSpinner="False" TimePickerVisibility="Collapsed" />
                         <Label x:Name="lblTime" Content="Time :" Canvas.Top="7" Canvas.Left="185" HorizontalAlignment="Left" VerticalAlignment="Center"/>
                         <xctk:TimePicker x:Name="ReleaseTime" Format="Custom" FormatString="hh:mm:ss tt" MinWidth="140"  
                           Focusable="True" Width="140" HorizontalAlignment="Left" Canvas.Left="226" Canvas.Top="10" VerticalAlignment="Center" />
@@ -34,8 +38,13 @@
                      HorizontalAlignment="Left" Height="63" VerticalAlignment="Center">
                     <Canvas Margin="0,0,0,0">
                         <Label Name="lblDateApp" Content="Date :" HorizontalAlignment="Left" Canvas.Top="7" VerticalAlignment="Center" Canvas.Left="6"/>
-                        <xctk:TimePicker x:Name="AppliedDate" Format="Custom" FormatString="dd/mm/yyyy" MinWidth="140"  
-                       Focusable="True" Width="140" HorizontalAlignment="Left" Canvas.Left="45" Canvas.Top="10" VerticalAlignment="Center" />
+                        <xctk:DateTimePicker x:Name="AppliedDate" Format="Custom" 
+                          FormatString="ddMM/yyyy" MinWidth="140"
+                          Focusable="True" Width="140" HorizontalAlignment="Left" 
+                          Canvas.Left="45" Canvas.Top="10" VerticalAlignment="Center" 
+                          AutoCloseCalendar="True" TimePickerAllowSpin="False" 
+                          TimePickerShowButtonSpinner="False" TimePickerVisibility="Collapsed"
+                          Kind="Local" MouseWheelActiveTrigger="Disabled" />
                         <Label x:Name="lblTimeApp" Content="Time :" Canvas.Top="7" Canvas.Left="185" HorizontalAlignment="Left" VerticalAlignment="Center"/>
                         <xctk:TimePicker x:Name="AppliedTime" Format="Custom" FormatString="hh:mm:ss tt" MinWidth="140"  
                       Focusable="True" Width="140" HorizontalAlignment="Left" Canvas.Left="226" Canvas.Top="10" VerticalAlignment="Center" />

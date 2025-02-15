@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:VideoGui"
+        xmlns:local="clr-namespace:VideoGui" WindowStyle="ToolWindow"
         mc:Ignorable="d" Loaded="Window_Loaded" ResizeMode="CanResizeWithGrip" 
         WindowStartupLocation="CenterScreen" SizeChanged="Window_SizeChanged"
         Title="Action Schedule Selector" Height="450" Width="800" Icon="/Icons/computer.ico">
@@ -33,7 +33,7 @@
                         </ControlTemplate>
                     </ListBox.Template>
                 </ListBox>
-                <ListBox x:Name="lstItems" Height="327" Canvas.Top="33" Width="782" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,0,0,0">
+                <ListBox x:Name="lstItems" Height="309" Canvas.Top="33" Width="766" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,0,0,0">
                     <ListBox.Resources>
                         <!--Defines a context menu-->
                         <ContextMenu x:Key="MyElementMenu">

@@ -84,7 +84,7 @@ namespace VideoGui
         {
             try
             {
-                dbInitialzer?.Invoke(this, new CustomParams_Initialize());
+                dbInitialzer?.Invoke(this, new CustomParams_Initialize(TitleId));
             }
             catch (Exception ex)
             {

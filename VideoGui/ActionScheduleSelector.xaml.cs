@@ -46,6 +46,8 @@ namespace VideoGui
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             ModuleCallBack?.Invoke(this, new CustomParams_Initialize());
+            Width++;
+            Height++;
         }
 
         private void BtnClose_Click(object sender, RoutedEventArgs e)
@@ -187,7 +189,7 @@ namespace VideoGui
             }
         }
 
-       
+      
 
         private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
         {
@@ -197,12 +199,12 @@ namespace VideoGui
                 {
                     if (e.WidthChanged)
                     {
-                        lstHeader.Width = e.NewSize.Width - 17;// 800-783 = 17
-                        lstItems.Width = e.NewSize.Width - 17;
+                        lstHeader.Width = e.NewSize.Width - 33;// 800-783 = 17
+                        lstItems.Width = e.NewSize.Width - 33;
                     }
                     if (e.HeightChanged)
                     {
-                        lstItems.Height = e.NewSize.Height - 123;
+                        lstItems.Height = e.NewSize.Height - 144;
                     }
                 }
             }

@@ -495,9 +495,9 @@ namespace VideoGui
                         scheduleActioner.txtActionName.Text = "";
                         scheduleActioner.txtMaxSchedules.Text = "";
                         scheduleActioner.txtSchName.Text = "";
-                        scheduleActioner.ReleaseDate = null;
+                        scheduleActioner.ReleaseDate.Value = DateTime.Now.Date;
                         scheduleActioner.ReleaseTime = null;
-                        scheduleActioner.AppliedDate = null;
+                        scheduleActioner.AppliedDate.Value = DateTime.Now.Date;
                         scheduleActioner.AppliedTime = null;
                     }
                 }
@@ -8784,12 +8784,10 @@ namespace VideoGui
                 {
                     if (schedulingSelectEditor is not null && !schedulingSelectEditor.IsClosed)
                     {
-                        if (schedulingSelectEditor.IsClosing) schedulingSelectEditor.Close();
-                        while (!schedulingSelectEditor.IsClosed)
+                        while (schedulingSelectEditor.IsClosing)
                         {
                             Thread.Sleep(100);
                         }
-                        schedulingSelectEditor.Close();
                         schedulingSelectEditor = null;
                     }
                 });

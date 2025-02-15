@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -25,6 +26,11 @@ namespace VideoGui
         OnFinish DoOnFinish = null;
         public bool IsApplied = false,  IsClosing = false, IsClosed = false;
         databasehook<object> dbInitialzer = null;
+        public string SelectedItem = "";
+        public int SelectedId = -1;
+        public SchedulingSelectEditor schedulingSelectEditor = null;
+
+
         public SelectReleaseSchedule(OnFinish _OnFinish, databasehook<object> _dbInitialzer, bool Is_Applied = false)
         {
             try
@@ -63,12 +69,56 @@ namespace VideoGui
             {
                 if (lstMainSchedules.SelectedItem is ScheduleMapNames SMN)
                 {
-                    txtScheduleName.Text = SMN.Name;
+                    if (SMN != null && SMN.Id != -1)
+                    {
+                        if (schedulingSelectEditor is not null)
+                        {
+                            if (schedulingSelectEditor.IsClosing) schedulingSelectEditor.Close();
+                            while (!schedulingSelectEditor.IsClosed)
+                            {
+                                Thread.Sleep(100);
+                                System.Windows.Forms.Application.DoEvents();
+                            }
+                            schedulingSelectEditor.Close();
+                            schedulingSelectEditor = null;
+                        }
+
+                        schedulingSelectEditor = new SchedulingSelectEditor(SchedulingEditorOnFinish, dbInitialzer);
+                        schedulingSelectEditor.ShowActivated = true;
+                        schedulingSelectEditor.TitleId = SMN.Id;
+                        Hide();
+                        schedulingSelectEditor.Show();
+
+                    }
                 }
             }
             catch (Exception ex)
             {
                 ex.LogWrite($"mnuEdit_Click {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
+
+        private void SchedulingEditorOnFinish()
+        {
+            try
+            {
+                Show();
+                Task.Run(() =>
+                {
+                    if (schedulingSelectEditor is not null && !schedulingSelectEditor.IsClosed)
+                    {
+                        while (schedulingSelectEditor.IsClosing)
+                        {
+                            Thread.Sleep(100);
+                        }
+                        schedulingSelectEditor = null;
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite(MethodBase.GetCurrentMethod().Name + $" {ex.Message}");
+
             }
         }
 
@@ -153,7 +203,8 @@ namespace VideoGui
                 if (lstMainSchedules.SelectedItem is ScheduleMapNames SMN)
                 {
                     txtScheduleName.Text = SMN.Name;
-
+                    SelectedItem = SMN.Name;
+                    SelectedId = SMN.Id;
                     dbInitialzer?.Invoke(this, new CustomParams_Select(SMN.Id));
                     Close();
                 }
