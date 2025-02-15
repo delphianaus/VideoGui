@@ -533,11 +533,9 @@ namespace VideoGui
                             "@SCHEDULED_DATE,@SCHEDULED_TIME,@ACTION_DATE,@ACTION_TIME,0) RETURNING ID;";
                         int idx = connectionString.ExecuteScalar(sqla,
                             [("@SCHEDULENAMEID", SheduleNameId),("@SCHEDULENAME", cpUpdateAction.ScheduleName),
-                            ("@ACTIONNAME", cpUpdateAction.ActionName),("@MAX", cpUpdateAction.Max),
+                            ("@ACTIONNAME", cpUpdateAction.ActionName),("@MAX", cpUpdateAction.Max),("@ACTION_TIME", ActionTime),
                             ("@SCHEDULED_DATE", ScheduleDate),("@SCHEDULED_TIME_START", ScheduleTimeStart),
-                            ("@SCHEDULED_TIME_END", ScheduleTimeEnd),
-
-                            ("@ACTION_DATE", ActionDate), ("@ACTION_TIME", ActionTime)]).ToInt(-1);
+                            ("@SCHEDULED_TIME_END", ScheduleTimeEnd),("@ACTION_DATE", ActionDate)]).ToInt(-1);
                         if (idx != -1)
                         {
                             sqla = "SELECT * FROM YTACTIONS WHERE ID = @ID;";
@@ -559,6 +557,24 @@ namespace VideoGui
                             bool update = false, cpsd = cpUpdateAction.ScheduleDate.HasValue, iaa = item.AppliedAction.HasValue,
                                 cpad = cpUpdateAction.ActionDate.HasValue, ias = item.ActionSchedule.HasValue;
 
+                            update = cpUpdateAction.ScheduleDate.HasValue && (item.ActionSchedule == null || item.ActionSchedule.Value != cpUpdateAction.ScheduleDate.Value);
+                            if (update)
+                            {
+                                usql += "SCHEDULED_DATE = @SCHEDULED_DATE, ";
+                                Params.Add(("SCHEDULED_DATE", cpUpdateAction.ScheduleDate.Value));
+                            }
+
+                            if (cpUpdateAction.ScheduleTimeStart.HasValue && (item.ActionScheduleStart == null || item.ActionScheduleStart.Value != cpUpdateAction.ScheduleTimeStart.Value))
+                            {
+                                usql += "SCHEDULED_TIME_START = @SCHEDULED_TIME_START, ";
+                                Params.Add(("SCHEDULED_TIME_START", cpUpdateAction.ScheduleTimeStart.Value));
+                            }
+
+                            if (cpUpdateAction.ScheduleTimeEnd.HasValue && (item.ActionScheduleEnd == null || item.ActionScheduleEnd.Value != cpUpdateAction.ScheduleTimeEnd.Value))
+                            {
+                                usql += "SCHEDULED_TIME_END = @SCHEDULED_TIME_END, ";
+                                Params.Add(("SCHEDULED_TIME_END", cpUpdateAction.ScheduleTimeEnd.Value));
+                            }
                             /*if ((cpsd && !ias) || (cpsd && ias && item.ActionSchedule.Value != cpUpdateAction.ScheduleDate.Value.Date))
                             {
                                 var ScheduleDate = cpUpdateAction.ScheduleDate.Value.Date;
