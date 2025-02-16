@@ -481,10 +481,21 @@ namespace VideoGui
                         foreach (var item in YTScheduledActionsList.Where(s => s.Id == cpInit.Id))
                         {
                             scheduleActioner.txtActionName.Text = item.ActionName;
-                            scheduleActioner.txtMaxSchedules.Text = item.ScheduleName;
-                            scheduleActioner.txtSchName.Text = item.Max.ToString();
-                            scheduleActioner.ReleaseDate.Value = (item.ActionSchedule.HasValue) ? new DateTime(item.ActionSchedule.Value.Year, item.ActionSchedule.Value.Month, item.ActionSchedule.Value.Day) : null;
-                            scheduleActioner.ReleaseTimeStart.Value = (item.ActionScheduleStart.HasValue) ? new DateTime(0, 0, 0, item.ActionScheduleStart.Value.Hour, item.ActionScheduleStart.Value.Minute, item.ActionScheduleStart.Value.Second) : null;//new DateTime(item.ActionScheduleStart.Value.Year, item.ActionScheduleStart.Value.Month, item.ActionScheduleStart.Value.Day) : null;
+                            scheduleActioner.txtMaxSchedules.Text = item.Max.ToString();
+                            scheduleActioner.txtSchName.Text = item.ScheduleName;
+                            scheduleActioner.ReleaseDate.Value = (item.ActionSchedule.HasValue) ?
+                                new DateTime(item.ActionSchedule.Value.Year, 
+                                item.ActionSchedule.Value.Month, item.ActionSchedule.Value.Day) : null;
+                            scheduleActioner.ReleaseTimeStart.Value = (item.ActionScheduleStart.HasValue) ? 
+                                new DateTime(1, 1, 1, item.ActionScheduleStart.Value.Hours, 
+                                item.ActionScheduleStart.Value.Minutes, 
+                                item.ActionScheduleStart.Value.Seconds) : null;//new DateTime(item.ActionScheduleStart.Value.Year, item.ActionScheduleStart.Value.Month, item.ActionScheduleStart.Value.Day) : null;
+                            scheduleActioner.ReleaseTimeEnd.Value = (item.ActionScheduleEnd.HasValue) ?
+                                new DateTime(1, 1, 1, item.ActionScheduleEnd.Value.Hours,
+                                item.ActionScheduleEnd.Value.Minutes,
+                                item.ActionScheduleEnd.Value.Seconds) : null;//new DateTime(item.ActionScheduleStart.Value.Year, item.ActionScheduleStart.Value.Month, item.ActionScheduleStart.Value.Day) : null;
+
+
                             scheduleActioner.AppliedDate.Value = (item.AppliedAction.HasValue) ? item.AppliedAction : null;
                             scheduleActioner.AppliedTime.Value = (item.AppliedAction.HasValue) ? item.AppliedAction : null;
                             break;
@@ -519,18 +530,17 @@ namespace VideoGui
                         var ScheduleDate = cpUpdateAction.ScheduleDate.Value;
                         var ScheduleTimeStart = cpUpdateAction.ScheduleTimeStart.Value;
                         var ScheduleTimeEnd = cpUpdateAction.ScheduleTimeEnd.Value;
-
-
                         int SheduleNameId = -1;
                         foreach (var item in SchedulingNamesList.Where(item => item is ScheduleMapNames scc && scc.Name == cpUpdateAction.ScheduleName))
                         {
                             SheduleNameId = item.Id;
                             break;
                         }
-                        string sqla = "INSERT INTO YTACTIONS(SCHEDULENAMEID,SCHEDULENAME,ACTIONNAME," +
-                            "MAX,VIDEOTYPE,SCHEDULED_DATE,SCHEDULED_TIME_START,SCHEDULED_TIME_END,ACTION_DATE,ACTION_TIME,ISACTIONED) " +
-                            "VALUES(@SCHEDULENAMEID,@SCHEDULENAME,@ACTIONNAME,@MAX,0," +
-                            "@SCHEDULED_DATE,@SCHEDULED_TIME,@ACTION_DATE,@ACTION_TIME,0) RETURNING ID;";
+                        string sqla = "INSERT INTO YTACTIONS(SCHEDULENAMEID,SCHEDULENAME,ACTIONNAME,MAXSCHEDULES,"+//4
+                            "VIDEOTYPE,SCHEDULED_DATE,SCHEDULED_TIME_START,SCHEDULED_TIME_END,ACTION_DATE,"+//9
+                            "ACTION_TIME,ISACTIONED) VALUES(@SCHEDULENAMEID,@SCHEDULENAME,@ACTIONNAME,"+
+                            "@MAX,0,@SCHEDULED_DATE,@SCHEDULED_TIME_START,@SCHEDULED_TIME_END,@ACTION_DATE,"+
+                            "@ACTION_TIME,0) RETURNING ID;";
                         int idx = connectionString.ExecuteScalar(sqla,
                             [("@SCHEDULENAMEID", SheduleNameId),("@SCHEDULENAME", cpUpdateAction.ScheduleName),
                             ("@ACTIONNAME", cpUpdateAction.ActionName),("@MAX", cpUpdateAction.Max),("@ACTION_TIME", ActionTime),
@@ -550,8 +560,8 @@ namespace VideoGui
                         List<(string, object)> Params = new List<(string, object)>();
                         string usql = "update YTACTIONS set ";
                         string wsql = "where ID = @ID and ACTIONNAME = @ACTIONNAME;";
-                        Params.Add(("ACTIONNAME", cpUpdateAction.ActionName));
-                        Params.Add(("ID", cpUpdateAction.id));
+                        Params.Add(("@ACTIONNAME", cpUpdateAction.ActionName));
+                        Params.Add(("@ID", cpUpdateAction.id));
                         foreach (var item in YTScheduledActionsList.Where(s => s.ActionName == cpUpdateAction.ActionName))
                         {
                             bool update = false, cpsd = cpUpdateAction.ScheduleDate.HasValue, iaa = item.AppliedAction.HasValue,
@@ -561,19 +571,19 @@ namespace VideoGui
                             if (update)
                             {
                                 usql += "SCHEDULED_DATE = @SCHEDULED_DATE, ";
-                                Params.Add(("SCHEDULED_DATE", cpUpdateAction.ScheduleDate.Value));
+                                Params.Add(("@SCHEDULED_DATE", cpUpdateAction.ScheduleDate.Value));
                             }
 
                             if (cpUpdateAction.ScheduleTimeStart.HasValue && (item.ActionScheduleStart == null || item.ActionScheduleStart.Value != cpUpdateAction.ScheduleTimeStart.Value))
                             {
                                 usql += "SCHEDULED_TIME_START = @SCHEDULED_TIME_START, ";
-                                Params.Add(("SCHEDULED_TIME_START", cpUpdateAction.ScheduleTimeStart.Value));
+                                Params.Add(("@SCHEDULED_TIME_START", cpUpdateAction.ScheduleTimeStart.Value));
                             }
 
                             if (cpUpdateAction.ScheduleTimeEnd.HasValue && (item.ActionScheduleEnd == null || item.ActionScheduleEnd.Value != cpUpdateAction.ScheduleTimeEnd.Value))
                             {
                                 usql += "SCHEDULED_TIME_END = @SCHEDULED_TIME_END, ";
-                                Params.Add(("SCHEDULED_TIME_END", cpUpdateAction.ScheduleTimeEnd.Value));
+                                Params.Add(("@SCHEDULED_TIME_END", cpUpdateAction.ScheduleTimeEnd.Value));
                             }
                             /*if ((cpsd && !ias) || (cpsd && ias && item.ActionSchedule.Value != cpUpdateAction.ScheduleDate.Value.Date))
                             {
@@ -588,13 +598,13 @@ namespace VideoGui
                                 var ActionDate = cpUpdateAction.ActionDate.Value.Date;
                                 var ActionTime = cpUpdateAction.ActionDate.Value.TimeOfDay;
                                 usql += "ACTION_DATE = @ACTION_DATE, ACTION_TIME = @ACTION_TIME, ";
-                                Params.Add(("ACTION_DATE", ActionDate));
-                                Params.Add(("ACTION_TIME", ActionTime));
+                                Params.Add(("@ACTION_DATE", ActionDate));
+                                Params.Add(("@ACTION_TIME", ActionTime));
                             }
                             if (cpUpdateAction.Max != item.Max)
                             {
-                                usql += "MAX = @MAX, ";
-                                Params.Add(("MAX", cpUpdateAction.Max));
+                                usql += "MAXSCHEDULES = @MAX, ";
+                                Params.Add(("@MAX", cpUpdateAction.Max));
                             }
                             if (cpUpdateAction.ScheduleName != item.ScheduleName)
                             {
@@ -605,8 +615,8 @@ namespace VideoGui
                                     SheduleNameId = items.Id;
                                     break;
                                 }
-                                Params.Add(("SCHEDULENAME", (SheduleNameId != -1) ? cpUpdateAction.ScheduleName : ""));
-                                Params.Add(("SCHEDULENAMEID", SheduleNameId));
+                                Params.Add(("@SCHEDULENAME", (SheduleNameId != -1) ? cpUpdateAction.ScheduleName : ""));
+                                Params.Add(("@SCHEDULENAMEID", SheduleNameId));
                             }
                             if (usql != "update YTACTIONS set ")
                             {
@@ -3325,8 +3335,7 @@ namespace VideoGui
                     EditableshortsDirectoryList.Add(new ShortsDirectory(r));
                 });
 
-                connectionString.ExecuteReader("SELECT * FROM YTACTIONS WHERE ACTIONED = 0 AND ACTION_DATE >= @ACTIONDATE",
-                    [("@ACTIONDATE", DateTime.Now)], (FbDataReader r) =>
+                connectionString.ExecuteReader("SELECT * FROM YTACTIONS WHERE ISACTIONED = 0", (FbDataReader r) =>
                     {
                         YTScheduledActionsList.Add(new ScheduledActions(r));
                     });

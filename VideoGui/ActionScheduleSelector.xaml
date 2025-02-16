@@ -16,11 +16,11 @@
                             <DockPanel LastChildFill="True" Margin="0,0,0,0" >
                                 <Grid DockPanel.Dock="Top" Height="30" >
                                     <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="210"/>
+                                        <ColumnDefinition Width="135"/>
                                         <ColumnDefinition Width="180"/>
                                         <ColumnDefinition Width="180"/>
-                                        <ColumnDefinition Width="190"/>
-                                        <ColumnDefinition Width="190"/>
-                                        <ColumnDefinition Width="60"/>
+                                        <ColumnDefinition Width="45"/>
                                     </Grid.ColumnDefinitions>
                                     <Label Grid.Column="0" Content="Action" />
                                     <Label Grid.Column="1" Content="Apply At"/>
@@ -53,11 +53,11 @@
                             <Grid Margin="0,2" x:Name="gridwidths">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="0"/>
+                                    <ColumnDefinition Width="210" />
+                                    <ColumnDefinition Width="135" />
                                     <ColumnDefinition Width="180" />
                                     <ColumnDefinition Width="180" />
-                                    <ColumnDefinition Width="190" />
-                                    <ColumnDefinition Width="190" />
-                                    <ColumnDefinition Width="60" />
+                                    <ColumnDefinition Width="45" />
                                 </Grid.ColumnDefinitions>
                                 <TextBlock x:Name="Id" Grid.Column="0" Margin="4,0,0,0" Width="0" Text="{Binding Id}"/>
                                 <TextBlock x:Name="ActionName" Grid.Column="1" Text="{Binding ActionName}"/>

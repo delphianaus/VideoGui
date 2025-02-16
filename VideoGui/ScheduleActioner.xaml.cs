@@ -32,7 +32,7 @@ namespace VideoGui
         SelectReleaseSchedule selectReleaseSchedule = null;
         Nullable<DateTime> actionDate = null, completeDate = null;
         Nullable<DateOnly> scheduleDate = null;
-       Nullable<TimeOnly> scheduleTimeStart = null, scheduleTimeEnd = null;
+        Nullable<TimeSpan> scheduleTimeStart = null, scheduleTimeEnd = null;
         public int actionScheduleID = -1;
         public ScheduleActioner(OnFinish DoOnFinish, databasehook<Object> _ModuleCallBack)
         {
@@ -250,8 +250,8 @@ namespace VideoGui
                 actionDate = null;
                 if (AppliedDate.Value.HasValue && AppliedTime.Value.HasValue)
                 {
-                    actionDate = new DateTime(AppliedDate.Value.Value.Year, AppliedDate.Value.Value.Month, AppliedDate.Value.Value.Day,
-                        AppliedTime.Value.Value.Hour, AppliedTime.Value.Value.Minute, AppliedTime.Value.Value.Second);
+                    actionDate = new DateTime(AppliedDate.Value.Value.Year, AppliedDate.Value.Value.Month,
+                        AppliedDate.Value.Value.Day,AppliedTime.Value.Value.Hour, AppliedTime.Value.Value.Minute, AppliedTime.Value.Value.Second);
                 }
                 scheduleDate = null;
                 if (ReleaseDate.Value.HasValue)
@@ -262,12 +262,14 @@ namespace VideoGui
               
                 if (ReleaseTimeStart.Value.HasValue)
                 {
-                    scheduleTimeStart = new TimeOnly(ReleaseTimeStart.Value.Value.Hour, ReleaseTimeStart.Value.Value.Minute, ReleaseTimeStart.Value.Value.Second);
+                    scheduleTimeStart = new TimeSpan(ReleaseTimeStart.Value.Value.Hour, ReleaseTimeStart.Value.Value.Minute, ReleaseTimeStart.Value.Value.Second);
                 }
                 if (ReleaseTimeEnd.Value.HasValue)
                 {
-                    scheduleTimeEnd = new TimeOnly(ReleaseTimeEnd.Value.Value.Hour, ReleaseTimeEnd.Value.Value.Minute, ReleaseTimeEnd.Value.Value.Second);
+                    scheduleTimeEnd = new TimeSpan(ReleaseTimeEnd.Value.Value.Hour, ReleaseTimeEnd.Value.Value.Minute, ReleaseTimeEnd.Value.Value.Second);
                 }
+                var p = txtMaxSchedules.Text.ToInt(0);
+
 
                 ModuleCallBack?.Invoke(this, new
                     CustomParams_UpdateAction(actionScheduleID, actionDate, scheduleDate,

@@ -109,16 +109,16 @@ namespace VideoGui.Models
         public int id { get; set; }
         public Nullable<DateTime> ActionDate { get; set; }
         public Nullable<DateOnly> ScheduleDate { get; set; }
-        public Nullable<TimeOnly> ScheduleTimeStart { get; set; }
-        public Nullable<TimeOnly> ScheduleTimeEnd { get; set; }
+        public Nullable<TimeSpan> ScheduleTimeStart { get; set; }
+        public Nullable<TimeSpan> ScheduleTimeEnd { get; set; }
         public Nullable<DateTime> CompletedDate { get; set; }
         public string ScheduleName { get; set; } = "";
         public string ActionName { get; set; } = "";
 
         public int Max { get; set; } = 0;
         public CustomParams_UpdateAction(int _id, Nullable<DateTime> _ActionDate, 
-            Nullable<DateOnly> _ScheduleDate, Nullable<TimeOnly> _ScheduleTimeStart, 
-            Nullable<TimeOnly> _ScheduleTimeEnd, Nullable<DateTime> _CompletedDate,
+            Nullable<DateOnly> _ScheduleDate, Nullable<TimeSpan> _ScheduleTimeStart,
+            Nullable<TimeSpan> _ScheduleTimeEnd, Nullable<DateTime> _CompletedDate,
             string _ScheduleName, string _ActionName, int _max)
         {
             id = _id;
