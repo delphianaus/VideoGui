@@ -80,7 +80,7 @@ namespace VideoGui
             try
             {
                 NewActioner();
-                         }
+            }
             catch (Exception ex)
             {
                 ex.LogWrite($"mnuNewItem_Click {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
@@ -190,6 +190,18 @@ namespace VideoGui
         }
 
       
+
+        private void lstItems_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            try
+            {
+                mnuEditItem_Click(sender, e);
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"lstItems_MouseDoubleClick {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
 
         private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
         {

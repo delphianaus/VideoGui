@@ -10,7 +10,9 @@
     <Grid Margin="2,2,2,2">
         <Border x:Name="brdmain" Margin="0,0,0,60" BorderThickness="2" BorderBrush="Black">
             <Canvas>
-                <ListBox x:Name="lstHeader" VerticalAlignment="Top" HorizontalAlignment="Left" Width="783" Canvas.Top="3" Height="30" Margin="5,0,0,0">
+                <ListBox x:Name="lstHeader" VerticalAlignment="Top"
+                         HorizontalAlignment="Left" Width="783" Canvas.Top="3" 
+                         Height="30" Margin="5,0,0,0">
                     <ListBox.Template>
                         <ControlTemplate x:Name="GridControlss">
                             <DockPanel LastChildFill="True" Margin="0,0,0,0" >
@@ -33,7 +35,8 @@
                         </ControlTemplate>
                     </ListBox.Template>
                 </ListBox>
-                <ListBox x:Name="lstItems" Height="309" Canvas.Top="33" Width="766" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,0,0,0">
+                <ListBox x:Name="lstItems" Height="309" Canvas.Top="33" Width="766" MouseDoubleClick="lstItems_MouseDoubleClick"
+                         HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,0,0,0">
                     <ListBox.Resources>
                         <!--Defines a context menu-->
                         <ContextMenu x:Key="MyElementMenu">
