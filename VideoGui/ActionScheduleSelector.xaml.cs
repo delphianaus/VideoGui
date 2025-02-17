@@ -87,7 +87,7 @@ namespace VideoGui
             }
         }
 
-        private void NewActioner(int id = -1)
+        private void NewActioner(int id = -1, bool IsCopy = false)
         {
             try
             {
@@ -101,10 +101,10 @@ namespace VideoGui
                     frmScheduleActioner.Close();
                     frmScheduleActioner = null;
                 }
-                frmScheduleActioner = new ScheduleActioner(scheduleActioner_onfinish,
-                      ModuleCallBack);
+                frmScheduleActioner = new ScheduleActioner(scheduleActioner_onfinish,ModuleCallBack);
                 Hide();
                 frmScheduleActioner.ShowActivated = true;
+                frmScheduleActioner.IsCopy = IsCopy;
                 if (id != -1) frmScheduleActioner.actionScheduleID = id;
                 frmScheduleActioner.Show();
             }
@@ -203,6 +203,25 @@ namespace VideoGui
             }
         }
 
+        private void mnuAddItemAsCopy_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                foreach (var item in lstItems.SelectedItems)
+                {
+                    if (item is ScheduledActions sitem)
+                    {
+                        NewActioner(sitem.Id, true);
+                        break;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"mnuAddItemAsCopy_Click {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
+        
         private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             try

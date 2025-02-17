@@ -26,7 +26,7 @@ namespace VideoGui
     public partial class ScheduleActioner : Window
     {
         databasehook<Object> ModuleCallBack = null;
-        public bool IsClosed = false, IsClosing = false;
+        public bool IsClosed = false, IsClosing = false, IsCopy = false;
         ActionScheduleSelector frmActionScheduleSelector = null;
         SchedulingSelectEditor frmSchedulingSelectEditor = null;
         SelectReleaseSchedule selectReleaseSchedule = null;
@@ -34,6 +34,7 @@ namespace VideoGui
         Nullable<DateOnly> scheduleDate = null;
         Nullable<TimeSpan> scheduleTimeStart = null, scheduleTimeEnd = null;
         public int actionScheduleID = -1;
+        
         public ScheduleActioner(OnFinish DoOnFinish, databasehook<Object> _ModuleCallBack)
         {
             try
@@ -175,6 +176,26 @@ namespace VideoGui
             {
                 ex.LogWrite($"BtnSelectAction_Click - {this} {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
             }
+        }
+
+        private void ProcessLostFocus(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                BtnSaveAction.IsEnabled = txtActionName.Text != "" && txtSchName.Text != ""
+                    && ReleaseDate.Value.HasValue && ReleaseTimeStart.Value.HasValue && 
+                       ReleaseTimeEnd.Value.HasValue && AppliedDate.Value.HasValue && 
+                       AppliedTime.Value.HasValue && txtMaxSchedules.Text.ToInt(0) > 0;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"ProcessLostFocus - {this} {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
+
+        private void txtActionName_LostFocus(object sender, RoutedEventArgs e)
+        {
+
         }
 
         private void Window_SizeChanged(object sender, SizeChangedEventArgs e)

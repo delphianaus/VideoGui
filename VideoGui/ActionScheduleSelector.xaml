@@ -42,6 +42,7 @@
                         <ContextMenu x:Key="MyElementMenu">
                             <MenuItem Name="mnuNewItem" Header="Add New Item" Click="mnuNewItem_Click"/>
                             <MenuItem Name="mnuEditItem" Header="Edit Item" Click="mnuEditItem_Click"/>
+                            <MenuItem Name="mnuAddItemAsCopy" Header="Edir this item as a copy" Click="mnuAddItemAsCopy_Click"/>
                             <Separator/>
                             <MenuItem Name="mnuDeleteItem" Header="Delete Item" Click="mnuDeleteItem_Click"/>
                         </ContextMenu>

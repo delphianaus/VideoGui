@@ -480,7 +480,7 @@ namespace VideoGui
                         if (cpInit.Id == -1 && idx != -1) Index = cpInit.Id;
                         foreach (var item in YTScheduledActionsList.Where(s => s.Id == cpInit.Id))
                         {
-                            scheduleActioner.txtActionName.Text = item.ActionName;
+                            scheduleActioner.txtActionName.Text = (scheduleActioner.IsCopy) ? "" :item.ActionName;
                             scheduleActioner.txtMaxSchedules.Text = item.Max.ToString();
                             scheduleActioner.txtSchName.Text = item.ScheduleName;
                             scheduleActioner.ReleaseDate.Value = (item.ActionSchedule.HasValue) ?
