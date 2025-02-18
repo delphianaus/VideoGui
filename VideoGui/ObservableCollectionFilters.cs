@@ -262,7 +262,7 @@ namespace VideoGui
                                 {
                                     IsTargetDateFiltered = (filterData is DateTime) ? true : false;
                                     TargetType = FilterState;
-                                    TargetDate = (filterData is DateTime td) ? new DateOnly(td.Year,td.Month,td.Day) : TargetDate;
+                                    TargetDate = (filterData is DateTime td) ? new DateOnly(td.Year, td.Month, td.Day) : TargetDate;
                                     collectionViewSource.View.Refresh();
                                     res = true;
                                 }
@@ -309,26 +309,13 @@ namespace VideoGui
             {
                 if (e.Item is ScheduledActions saa)
                 {
-                    bool IsAccepted = true;
-                    if (IsActionedFiltered)
-                    {
-                        IsAccepted = IsAccepted && (saa.IsActioned == IsActioned);
-                    }
-                    if (IsTargetDateFiltered && TargetDate.HasValue && saa.ActionSchedule.HasValue)
-                    {
-                        IsAccepted = IsAccepted && (TargetType) ? saa.ActionSchedule <= TargetDate : saa.ActionSchedule >= TargetDate;
-                    }
-                    if (IsCompletedDateFiltered && CompletedDate.HasValue && saa.CompletedScheduledDate.HasValue)
-                    {
-                        IsAccepted = IsAccepted && (CompletedTargetType) ? saa.CompletedScheduledDate <= CompletedDate : saa.CompletedScheduledDate >= CompletedDate;
-                    }
-                    if (IsCompletedFiltered)
-                    {
-                        IsAccepted = IsAccepted && (saa.CompletedScheduledDate.HasValue == IsCompleted);
-                    }
-                    e.Accepted = IsAccepted;
-
-
+                    e.Accepted = (!IsActionedFiltered || saa.IsActioned == IsActioned) &&
+                      (!IsTargetDateFiltered || !TargetDate.HasValue || !saa.ActionSchedule.HasValue ||
+                      ((TargetType) ? saa.ActionSchedule <= TargetDate : saa.ActionSchedule >= TargetDate)) &&
+                      (!IsCompletedDateFiltered || !CompletedDate.HasValue || !saa.CompletedScheduledDate.HasValue ||
+                      ((CompletedTargetType) ? saa.CompletedScheduledDate <= CompletedDate :
+                      saa.CompletedScheduledDate >= CompletedDate)) &&
+                      (!IsCompletedFiltered || saa.CompletedScheduledDate.HasValue == IsCompleted);
                 }
                 else
                 {
