@@ -16,8 +16,12 @@ namespace VideoGui
         public CollectionViewSource HistoricCollectionViewSource = new CollectionViewSource();
         public CollectionViewSource CurrentCollectionViewSource = new CollectionViewSource();
         public CollectionViewSource ImportCollectionViewSource = new CollectionViewSource();
+        public CollectionViewSource ActionsScheduleCollectionViewSource = new CollectionViewSource();
 
-        public bool ActiveCurrentCollection = false, ActiveHistoricCollection = false, ImportHistoricCollection = false;
+        public bool ActiveCurrentCollection = false, ActiveHistoricCollection = false,
+            IsTargetDateFiltered = false, IsCompletedDateFiltered = false, TargetType = false,
+            ImportHistoricCollection = false, IsActionedFiltered = true, IsActioned = false,
+            CompletedTargetType = false, IsCompletedFiltered = false, IsCompleted = false;
 
         private GetListDelegate OnGetLists;
 
@@ -26,7 +30,9 @@ namespace VideoGui
         public string CurrentContainsSourceDirectory = "", CurrentContainsPath = "", CurrentContainsFileName = "";
         public TimeSpan FromTime = TimeSpan.Zero;
         public TimeSpan ToTime = TimeSpan.Zero;
-        
+        public Nullable<DateOnly> TargetDate = null;
+        public Nullable<DateTime> CompletedDate = null;
+
         public void SetFromTimeSpan(TimeSpan time)
         {
             try
@@ -35,7 +41,7 @@ namespace VideoGui
                 ImportHistoricCollection = true;
                 ImportCollectionViewSource.View.Refresh();
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
             }
@@ -49,7 +55,7 @@ namespace VideoGui
                 ImportHistoricCollection = true;
                 ImportCollectionViewSource.View.Refresh();
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
             }
@@ -69,16 +75,16 @@ namespace VideoGui
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
             }
         }
-        public (TimeSpan,TimeSpan) GetTimeSpans()
+        public (TimeSpan, TimeSpan) GetTimeSpans()
         {
             try
             {
-                return (FromTime,ToTime);
+                return (FromTime, ToTime);
             }
-            catch(Exception ex) 
+            catch (Exception ex)
             {
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
-                return (TimeSpan.Zero,TimeSpan.Zero);
+                return (TimeSpan.Zero, TimeSpan.Zero);
             }
         }
         public string GetFilterString(FilterTypes Filter, FilterClass Active)
@@ -98,8 +104,8 @@ namespace VideoGui
                 return "";
             }
         }
-        
-        public (int,int) GetFilterAges()
+
+        public (int, int) GetFilterAges()
         {
             try
             {
@@ -119,7 +125,7 @@ namespace VideoGui
                 ActiveHistoricCollection = true;
                 HistoricCollectionViewSource.View.Refresh();
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
             }
@@ -216,9 +222,10 @@ namespace VideoGui
                 CurrentCollectionViewSource.Filter += new FilterEventHandler(OnCurrentCollectionFilter);
                 HistoricCollectionViewSource.Filter += new FilterEventHandler(OnHistoricCollectionFilter);
                 ImportCollectionViewSource.Filter += new FilterEventHandler(OnImportCollectionFilter);
-
+                ActionsScheduleCollectionViewSource.Filter += new FilterEventHandler(OnActionsScheduleCollectionFilter);
                 HistoricCollectionViewSource.IsLiveFilteringRequested = true;
                 CurrentCollectionViewSource.IsLiveFilteringRequested = true;
+                ActionsScheduleCollectionViewSource.IsLiveFilteringRequested = true;
 
             }
             catch (Exception ex)
@@ -226,6 +233,112 @@ namespace VideoGui
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
             }
         }
+
+        public bool SetFilterData(CollectionViewSource collectionViewSource,
+            ActionScheduleFilterType asFilterType, object filterData, bool FilterState)
+        {
+            try
+            {
+                bool res = false;
+                if (collectionViewSource is not null)
+                {
+                    switch (asFilterType)
+                    {
+                        case ActionScheduleFilterType.IsActioned:
+                            {
+                                if (collectionViewSource == ActionsScheduleCollectionViewSource)
+                                {
+                                    IsActioned = (filterData is bool fd) ? fd : IsActioned;
+                                    IsActionedFiltered = FilterState;
+                                    collectionViewSource.View.Refresh();
+                                    res = true;
+                                }
+                                break;
+                            }
+                        case ActionScheduleFilterType.TargetDate:
+                            {
+                                if (collectionViewSource == ActionsScheduleCollectionViewSource)
+                                {
+                                    IsTargetDateFiltered = FilterState;
+                                    TargetDate = (filterData is DateOnly td) ? td : TargetDate;
+                                    collectionViewSource.View.Refresh();
+                                    res = true;
+                                }
+                                break;
+                            }
+                        case ActionScheduleFilterType.CompletedDate:
+                            {
+                                if (collectionViewSource == ActionsScheduleCollectionViewSource)
+                                {
+                                    IsCompletedDateFiltered = FilterState;
+                                    CompletedDate = (filterData is DateTime cd) ? cd : CompletedDate;
+                                    collectionViewSource.View.Refresh();
+                                    res = true;
+                                }
+                                break;
+                            }
+                        case ActionScheduleFilterType.IsCompleted:
+                            {
+                                if (collectionViewSource == ActionsScheduleCollectionViewSource)
+                                {
+                                    IsCompletedFiltered = FilterState;
+                                    IsCompleted = (filterData is bool cdd) ? cdd : IsCompleted;
+                                    collectionViewSource.View.Refresh();
+                                    res = true;
+                                }
+                                break;
+                            }
+
+                    }
+
+                }
+                return res;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"SetFilterData {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+                return false;
+            }
+        }
+        private void OnActionsScheduleCollectionFilter(object sender, FilterEventArgs e)
+        {
+            try
+            {
+                if (e.Item is ScheduledActions saa)
+                {
+                    bool IsAccepted = true;
+                    if (IsActionedFiltered)
+                    {
+                        IsAccepted = IsAccepted && (saa.IsActioned != IsActioned);
+                    }
+                    if (IsTargetDateFiltered && TargetDate.HasValue && saa.ActionSchedule.HasValue)
+                    {
+                        IsAccepted = IsAccepted && (TargetType) ? saa.ActionSchedule <= TargetDate : saa.ActionSchedule >= TargetDate;
+                    }
+                    if (IsCompletedDateFiltered && CompletedDate.HasValue && saa.CompletedScheduledDate.HasValue)
+                    {
+                        IsAccepted = IsAccepted && (CompletedTargetType) ? saa.CompletedScheduledDate <= CompletedDate : saa.CompletedScheduledDate >= CompletedDate;
+                    }
+                    if (IsCompletedFiltered)
+                    {
+                        IsAccepted = IsAccepted && (saa.CompletedScheduledDate.HasValue == IsCompleted);
+                    }
+                    e.Accepted = IsAccepted;
+
+
+                }
+                else
+                {
+                    e.Accepted = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"OnActionsScheduleCollectionFilter {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+                e.Accepted = true;
+            }
+        }
+
 
         private void OnTitleTagViewFilter(object sender, FilterEventArgs e)
         {

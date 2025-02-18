@@ -445,7 +445,8 @@ namespace VideoGui
             {
                 if (tld is CustomParams_Initialize cpInit)
                 {
-                    actionScheduleSelector.lstItems.ItemsSource = YTScheduledActionsList;
+
+                    actionScheduleSelector.lstItems.ItemsSource = ObservableCollectionFilter.ActionsScheduleCollectionViewSource.View;
                 }
                 else if (tld is CustomParams_Delete cpDel && cpDel.Id != -1)
                 {
@@ -480,15 +481,15 @@ namespace VideoGui
                         if (cpInit.Id == -1 && idx != -1) Index = cpInit.Id;
                         foreach (var item in YTScheduledActionsList.Where(s => s.Id == cpInit.Id))
                         {
-                            scheduleActioner.txtActionName.Text = (scheduleActioner.IsCopy) ? "" :item.ActionName;
+                            scheduleActioner.txtActionName.Text = (scheduleActioner.IsCopy) ? "" : item.ActionName;
                             scheduleActioner.txtMaxSchedules.Text = item.Max.ToString();
                             scheduleActioner.txtSchName.Text = item.ScheduleName;
                             scheduleActioner.ReleaseDate.Value = (item.ActionSchedule.HasValue) ?
-                                new DateTime(item.ActionSchedule.Value.Year, 
+                                new DateTime(item.ActionSchedule.Value.Year,
                                 item.ActionSchedule.Value.Month, item.ActionSchedule.Value.Day) : null;
-                            scheduleActioner.ReleaseTimeStart.Value = (item.ActionScheduleStart.HasValue) ? 
-                                new DateTime(1, 1, 1, item.ActionScheduleStart.Value.Hours, 
-                                item.ActionScheduleStart.Value.Minutes, 
+                            scheduleActioner.ReleaseTimeStart.Value = (item.ActionScheduleStart.HasValue) ?
+                                new DateTime(1, 1, 1, item.ActionScheduleStart.Value.Hours,
+                                item.ActionScheduleStart.Value.Minutes,
                                 item.ActionScheduleStart.Value.Seconds) : null;//new DateTime(item.ActionScheduleStart.Value.Year, item.ActionScheduleStart.Value.Month, item.ActionScheduleStart.Value.Day) : null;
                             scheduleActioner.ReleaseTimeEnd.Value = (item.ActionScheduleEnd.HasValue) ?
                                 new DateTime(1, 1, 1, item.ActionScheduleEnd.Value.Hours,
@@ -536,10 +537,10 @@ namespace VideoGui
                             SheduleNameId = item.Id;
                             break;
                         }
-                        string sqla = "INSERT INTO YTACTIONS(SCHEDULENAMEID,SCHEDULENAME,ACTIONNAME,MAXSCHEDULES,"+//4
-                            "VIDEOTYPE,SCHEDULED_DATE,SCHEDULED_TIME_START,SCHEDULED_TIME_END,ACTION_DATE,"+//9
-                            "ACTION_TIME,ISACTIONED) VALUES(@SCHEDULENAMEID,@SCHEDULENAME,@ACTIONNAME,"+
-                            "@MAX,0,@SCHEDULED_DATE,@SCHEDULED_TIME_START,@SCHEDULED_TIME_END,@ACTION_DATE,"+
+                        string sqla = "INSERT INTO YTACTIONS(SCHEDULENAMEID,SCHEDULENAME,ACTIONNAME,MAXSCHEDULES," +//4
+                            "VIDEOTYPE,SCHEDULED_DATE,SCHEDULED_TIME_START,SCHEDULED_TIME_END,ACTION_DATE," +//9
+                            "ACTION_TIME,ISACTIONED) VALUES(@SCHEDULENAMEID,@SCHEDULENAME,@ACTIONNAME," +
+                            "@MAX,0,@SCHEDULED_DATE,@SCHEDULED_TIME_START,@SCHEDULED_TIME_END,@ACTION_DATE," +
                             "@ACTION_TIME,0) RETURNING ID;";
                         int idx = connectionString.ExecuteScalar(sqla,
                             [("@SCHEDULENAMEID", SheduleNameId),("@SCHEDULENAME", cpUpdateAction.ScheduleName),
@@ -3144,7 +3145,7 @@ namespace VideoGui
                              "ACTIONNAME VARCHAR(255), MAXSCHEDULES INTEGER, VIDEOTYPE INTEGER, SCHEDULED_DATE DATE, SCHEDULED_TIME_START TIME, SCHEDULED_TIME_END TIME," +
                              "ACTION_DATE DATE, ACTION_TIME TIME, COMPLETED_DATE DATE, COMPLETED_TIME TIME, ISACTIONED SMALLINT);";
                 connectionString.CreateTableIfNotExists(sqlstring);
-                connectionString.AddFieldToTable("YTACTIONS", "SCHEDULED_TIME_START", "TIME", null); 
+                connectionString.AddFieldToTable("YTACTIONS", "SCHEDULED_TIME_START", "TIME", null);
                 connectionString.AddFieldToTable("YTACTIONS", "SCHEDULED_TIME_END", "TIME", null);
                 int idx = connectionString.ExecuteScalar(sqlstring).ToInt(-1);
                 CurrentDbId = (idx != -1) ? idx : CurrentDbId;
@@ -3335,10 +3336,12 @@ namespace VideoGui
                     EditableshortsDirectoryList.Add(new ShortsDirectory(r));
                 });
 
-                connectionString.ExecuteReader("SELECT * FROM YTACTIONS WHERE ISACTIONED = 0", (FbDataReader r) =>
+                connectionString.ExecuteReader("SELECT * FROM YTACTIONS", (FbDataReader r) =>
                     {
                         YTScheduledActionsList.Add(new ScheduledActions(r));
                     });
+                ObservableCollectionFilter.ActionsScheduleCollectionViewSource.Source = YTScheduledActionsList;
+
             }
             catch (Exception ex)
             {
@@ -3773,7 +3776,7 @@ namespace VideoGui
                 Content += " " + Assembly.GetExecutingAssembly().GetName().Version.ToString();
                 OnIsFileInUse = new IsFileInUse(IsFileActive);
                 InitializeComponent();
-
+                ObservableCollectionFilter = new ObservableCollectionFilters();
                 MainWindowX.KeyDown += Window_KeyDown_EventHandler;
                 Loadsettings();
                 DbInit();
@@ -3822,7 +3825,7 @@ namespace VideoGui
                 Task.Run(async () => SetupThreadProcessorAsync());
                 Thread.Sleep(100);
                 SetupTicker();
-                ObservableCollectionFilter = new ObservableCollectionFilters();
+
 
                 FormResizerEvent = new System.Windows.Forms.Timer();
                 FormResizerEvent.Tick += new EventHandler(FormResizerEvent_Tick);
@@ -9282,6 +9285,7 @@ namespace VideoGui
                 {
                     if (SelectReleaseScheduleFrm is not null && !SelectReleaseScheduleFrm.IsClosed)
                     {
+                        //SelectReleaseScheduleFrm.PersistId
                         if (SelectReleaseScheduleFrm.IsClosing) SelectReleaseScheduleFrm.Close();
                         while (!SelectReleaseScheduleFrm.IsClosed)
                         {
