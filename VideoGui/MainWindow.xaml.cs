@@ -445,6 +445,10 @@ namespace VideoGui
             {
                 if (tld is CustomParams_Initialize cpInit)
                 {
+                    ObservableCollectionFilter.SetFilterData(ObservableCollectionFilter.ActionsScheduleCollectionViewSource,
+                        ActionScheduleFilterType.TargetDate, DateTime.Now, false);
+                    ObservableCollectionFilter.SetFilterData(ObservableCollectionFilter.ActionsScheduleCollectionViewSource,
+                    ActionScheduleFilterType.IsCompleted, false, true);
 
                     actionScheduleSelector.lstItems.ItemsSource = ObservableCollectionFilter.ActionsScheduleCollectionViewSource.View;
                 }

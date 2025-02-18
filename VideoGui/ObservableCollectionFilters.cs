@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Reflection;
+using System.Security.Cryptography.Xml;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Data;
@@ -259,8 +260,9 @@ namespace VideoGui
                             {
                                 if (collectionViewSource == ActionsScheduleCollectionViewSource)
                                 {
-                                    IsTargetDateFiltered = FilterState;
-                                    TargetDate = (filterData is DateOnly td) ? td : TargetDate;
+                                    IsTargetDateFiltered = (filterData is DateTime) ? true : false;
+                                    TargetType = FilterState;
+                                    TargetDate = (filterData is DateTime td) ? new DateOnly(td.Year,td.Month,td.Day) : TargetDate;
                                     collectionViewSource.View.Refresh();
                                     res = true;
                                 }
@@ -270,7 +272,8 @@ namespace VideoGui
                             {
                                 if (collectionViewSource == ActionsScheduleCollectionViewSource)
                                 {
-                                    IsCompletedDateFiltered = FilterState;
+                                    IsCompletedDateFiltered = (filterData is DateTime) ? true : false;
+                                    CompletedTargetType = FilterState;
                                     CompletedDate = (filterData is DateTime cd) ? cd : CompletedDate;
                                     collectionViewSource.View.Refresh();
                                     res = true;
@@ -281,7 +284,7 @@ namespace VideoGui
                             {
                                 if (collectionViewSource == ActionsScheduleCollectionViewSource)
                                 {
-                                    IsCompletedFiltered = FilterState;
+                                    IsCompletedFiltered = filterData != null;
                                     IsCompleted = (filterData is bool cdd) ? cdd : IsCompleted;
                                     collectionViewSource.View.Refresh();
                                     res = true;
@@ -309,7 +312,7 @@ namespace VideoGui
                     bool IsAccepted = true;
                     if (IsActionedFiltered)
                     {
-                        IsAccepted = IsAccepted && (saa.IsActioned != IsActioned);
+                        IsAccepted = IsAccepted && (saa.IsActioned == IsActioned);
                     }
                     if (IsTargetDateFiltered && TargetDate.HasValue && saa.ActionSchedule.HasValue)
                     {

@@ -123,7 +123,7 @@
     <Resource Include="computer.ico" />
     <Resource Include="Icons\Cancel.png" />
     <Resource Include="Icons\computer.ico">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory></CopyToOutputDirectory>
     </Resource>
     <Resource Include="Icons\computer3.ico">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
