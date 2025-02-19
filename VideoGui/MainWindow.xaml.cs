@@ -569,7 +569,8 @@ namespace VideoGui
                         Params.Add(("@ID", cpUpdateAction.id));
                         foreach (var item in YTScheduledActionsList.Where(s => s.ActionName == cpUpdateAction.ActionName))
                         {
-                            bool update = false, cpsd = cpUpdateAction.ScheduleDate.HasValue, iaa = item.AppliedAction.HasValue,
+                            bool update = false, cpsd = cpUpdateAction.ScheduleDate.HasValue, 
+                                iaa = item.AppliedAction.HasValue,
                                 cpad = cpUpdateAction.ActionDate.HasValue, ias = item.ActionSchedule.HasValue;
 
                             update = cpUpdateAction.ScheduleDate.HasValue && (item.ActionSchedule == null || item.ActionSchedule.Value != cpUpdateAction.ScheduleDate.Value);
@@ -598,7 +599,7 @@ namespace VideoGui
                                 Params.Add(("SCHEDULED_DATE", ScheduleDate));
                                 Params.Add(("SCHEDULED_TIME", ScheduleTime));
                             }*/
-                            if ((cpad && !iaa) || (cpad && iaa && item.AppliedAction.Value.Date != cpUpdateAction.ActionDate.Value.Date))
+                            if ((cpad && !iaa) || (cpad && iaa && item.AppliedAction.Value != cpUpdateAction.ActionDate.Value))
                             {
                                 var ActionDate = cpUpdateAction.ActionDate.Value.Date;
                                 var ActionTime = cpUpdateAction.ActionDate.Value.TimeOfDay;
@@ -626,8 +627,33 @@ namespace VideoGui
                             if (usql != "update YTACTIONS set ")
                             {
                                 usql = usql.Substring(0, usql.Length - 2);
-                                usql += wsql;
+                                usql += " "+wsql;
                                 connectionString.ExecuteScalar(usql, Params);
+                                ScheduledActions itemx = new ScheduledActions();
+                                connectionString.ExecuteReader("select * from YTACTIONS where id = @ID", [("@ID", cpUpdateAction.id)], (FbDataReader r) =>
+                                {
+                                    itemx = new ScheduledActions(r);
+                                });
+                                if (itemx is not null && itemx.ActionName == cpUpdateAction.ActionName && itemx.Id == cpUpdateAction.id)
+                                {
+                                    foreach (var itemd in YTScheduledActionsList.Where(s => s.ActionName == cpUpdateAction.ActionName && s.Id == itemx.Id))
+                                    {
+                                        itemd.IsActioned = (itemd.IsActioned != itemx.IsActioned) ? itemx.IsActioned : itemd.IsActioned;
+                                        itemd.ActionSchedule = (itemd.ActionSchedule != itemx.ActionSchedule) ? itemx.ActionSchedule : itemd.ActionSchedule;
+                                        itemd.ActionScheduleStart = (itemd.ActionScheduleStart != itemx.ActionScheduleStart) ? itemx.ActionScheduleStart : itemd.ActionScheduleStart;
+                                        itemd.ActionScheduleEnd = (itemd.ActionScheduleEnd != itemx.ActionScheduleEnd) ? itemx.ActionScheduleEnd : itemd.ActionScheduleEnd;
+                                        itemd.AppliedAction = (itemd.AppliedAction != itemx.AppliedAction) ? itemx.AppliedAction : itemd.AppliedAction;
+                                        itemd.Max = (itemd.Max != itemx.Max) ? itemx.Max : itemd.Max;
+                                        itemd.ScheduleName = (itemd.ScheduleName != itemx.ScheduleName) ? itemx.ScheduleName : itemd.ScheduleName;
+                                        itemd.ScheduleNameId = (itemd.ScheduleNameId != itemx.ScheduleNameId) ? itemx.ScheduleNameId : itemd.ScheduleNameId;
+                                        itemd.CompletedScheduledDate = (itemd.CompletedScheduledDate != itemx.CompletedScheduledDate) ? itemx.CompletedScheduledDate : itemd.CompletedScheduledDate;
+                                        itemd.VideoActionType = (itemd.VideoActionType != itemx.VideoActionType) ? itemx.VideoActionType : itemd.VideoActionType;
+                                        //actionScheduleSelector.lstItems.ItemsSource = 
+                                            
+                                        ObservableCollectionFilter.ActionsScheduleCollectionViewSource.View.Refresh();
+                                        break;
+                                    }
+                                }
                             }
                             break;
                         }

@@ -32,7 +32,7 @@ namespace VideoGui.Models
         public Nullable<DateOnly> ActionSchedule { get => _ActionSchedule; set { _ActionSchedule = value; OnPropertyChanged(); } }
         public Nullable<TimeSpan> ActionScheduleStart { get => _ActionScheduleStart; set { _ActionScheduleStart = value; OnPropertyChanged(); } }
         public Nullable<TimeSpan> ActionScheduleEnd { get => _ActionScheduleEnd; set { _ActionScheduleEnd = value; OnPropertyChanged(); } }
-        public string AppliedDateString { get => AppliedAction?.ToString("dd/MM/yyyy HH:mm:ss tt"); set { _AppliedDateString = value; OnPropertyChanged(); } }
+        public string AppliedDateString { get => AppliedAction?.ToString("dd/MM/yyyy hh:mm:ss tt"); set { _AppliedDateString = value; OnPropertyChanged(); } }
         public string ScheduleDateString { get => GetScheduleDate(); set { _ScheduleDateString = value; OnPropertyChanged(); } }
 
         private string GetScheduleDate()
@@ -48,7 +48,7 @@ namespace VideoGui.Models
                     var end = ActionScheduleEnd.Value;
                     if (start.Minutes == 00)
                     {
-                        data += $" {(start.Hours % 12 == 0 ? 12 : start.Hours % 12)}{(start.Hours < 12 ? "AM" : "PM")}-";
+                        data += (start.Hours > 12) ? $" {start.Hours-12}PM-" : $" {start.Hours}AM-";
                     }
                     else
                     {
@@ -57,7 +57,7 @@ namespace VideoGui.Models
 
                     if (end.Minutes == 00)
                     {
-                        data += $" {(end.Hours % 12 == 0 ? 12 : end.Hours % 12)}{(end.Hours < 12 ? "AM" : "PM")}-";
+                        data += (end.Hours > 12) ? $" {end.Hours - 12}PM" : $" {end.Hours}AM";
                     }
                     else
                     {
@@ -84,6 +84,10 @@ namespace VideoGui.Models
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
 
+
+        public ScheduledActions() 
+        { 
+        }
         public ScheduledActions(int _Id, int _ScheduleId, string _ScheduleName, string _ActionName, int Max,
             ActionType _ActionType, Nullable<DateOnly> _AppliedSchedule,
             Nullable<TimeSpan> _AppliedScheduleStart, Nullable<TimeSpan> _AppliedScheduleEnd,

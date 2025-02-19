@@ -198,6 +198,21 @@ namespace VideoGui
 
         }
 
+        private void txtActionName_KeyUp(object sender, KeyEventArgs e)
+        {
+            try
+            {
+                if (txtActionName.Text != "")
+                {
+                    ProcessLostFocus(sender, e);
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"txtActionName_KeyUp - {this} {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
+
         private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             try
