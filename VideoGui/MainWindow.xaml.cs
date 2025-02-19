@@ -128,10 +128,11 @@ namespace VideoGui
         public DirectoryTitleDescEditor DirectoryTitleDescEditorFrm = null;
         public SchedulingSelectEditor schedulingSelectEditor = null;
         public ActionScheduleSelector actionScheduleSelector = null;
+        public ProcessSchedule ScheduleProccessor = null;
         public ShowMatcher Swm;
         List<ListScheduleItems> ScheduleListItems = new List<ListScheduleItems>();
         List<ListScheduleItems> ScheduleListedItems = new List<ListScheduleItems>();
-
+        System.Threading.Timer EventTimer = null;
         ObservableCollection<GroupTitleTags> groupTitleTagsList = new ObservableCollection<GroupTitleTags>();
         ObservableCollection<Descriptions> DescriptionsList = new ObservableCollection<Descriptions>();
         ObservableCollection<SelectedTags> selectedTagsList = new ObservableCollection<SelectedTags>();
@@ -3810,7 +3811,8 @@ namespace VideoGui
                 MainWindowX.KeyDown += Window_KeyDown_EventHandler;
                 Loadsettings();
                 DbInit();
-
+                EventTimer = new System.Threading.Timer(TimerEvent_Handler, null, 0, 1000);
+                
                 var x = GetEncryptedString(new int[] { 151, 41, 70, 82, 244, 202,
                     219, 75, 205, 126, 1, 168, 154, 153, 87, 125 }.Select(i => (byte)i).ToArray());
 
@@ -3869,6 +3871,69 @@ namespace VideoGui
             }
         }
 
+        private void TimerEvent_Handler(object? state)
+        {
+            try
+            {
+                if (YTScheduledActionsList.Count == 0 || (YTScheduledActionsList.Where(s => s.AppliedAction.HasValue &&
+                    s.AppliedAction.Value.Date != DateTime.Now.Date && s.VideoActionType == 0 && !s.IsActioned &&
+                   !s.CompletedScheduledDate.HasValue).Count() == 0))
+                {
+                    EventTimer.Change(TimeSpan.Zero, TimeSpan.FromSeconds(30));
+                }
+                else
+                {
+                    EventTimer.Change(TimeSpan.Zero, TimeSpan.FromMinutes(2));
+                    foreach (var yt in YTScheduledActionsList.Where(s => s.AppliedAction.HasValue && s.AppliedAction.Value.Date != DateTime.Now.Date && s.VideoActionType == 0 && !s.IsActioned && !s.CompletedScheduledDate.HasValue))
+                    {
+                        bool ActionAvailable = false, IsClear = false, IsReady = false; ;
+                        TimeSpan timeofactionA = yt.AppliedAction.Value.TimeOfDay.Subtract(TimeSpan.FromHours(4));
+                        TimeSpan timeofactionB = yt.AppliedAction.Value.TimeOfDay.Add(TimeSpan.FromMinutes(1));
+                        TimeSpan timeofactionC = yt.AppliedAction.Value.TimeOfDay.Add(TimeSpan.FromMinutes(30));
+                        TimeSpan timeofactionD = yt.AppliedAction.Value.TimeOfDay.Add(TimeSpan.FromMinutes(4));
+                        if (yt.AppliedAction.HasValue &&
+                            yt.AppliedAction.Value.Date == DateTime.Now.Date &&
+                            yt.VideoActionType == 0 && !yt.IsActioned &&
+                            !yt.CompletedScheduledDate.HasValue)
+                        {
+                            var timeofaction = yt.AppliedAction.Value.TimeOfDay;
+                            ActionAvailable = (timeofaction.IfBetweenTimeSpans(timeofactionA, timeofactionB)) ? true : ActionAvailable;
+                            IsClear = (timeofactionC-timeofaction >= TimeSpan.FromMinutes(15)) ? true : IsClear;
+                            IsReady = (timeofactionD-timeofaction >= TimeSpan.FromMinutes(4)) ? true : IsReady;
+                        } 
+                        if (IsClear) EventTimer.Change(TimeSpan.Zero, TimeSpan.FromMinutes(30));
+                        if (ActionAvailable && !IsClear && IsReady)
+                        {
+                            EventTimer.Change(TimeSpan.Zero, TimeSpan.FromMinutes(5));
+                            int max= yt.Max;
+                            //DateTime dt = yt.ActionScheduledDate.Date.ToTime(yt.AtionScheduleStart.Value);
+                            DateOnly a = yt.ActionSchedule.Value;// AtTime(yt.ActionScheduleStart.Value);
+                            DateTime d = new DateTime(a.Year, a.Month, a.Day, 0, 0, 0);
+                            var Start = d.AtTime(TimeOnly.FromTimeSpan(yt.ActionScheduleStart.Value));
+                            var End = d.AtTime(TimeOnly.FromTimeSpan(yt.ActionScheduleEnd.Value));
+                            this.Dispatcher.Invoke(() =>
+                            {
+                                ScheduleProccessor?.Invoke(yt.Id, Start, End, max);
+                            });
+                            break;
+                        }
+                        if (ActionAvailable && !IsClear && !IsReady)
+                        {
+                            EventTimer.Change(TimeSpan.Zero, TimeSpan.FromMinutes(10));
+                        }
+
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"TimerEvent_Handler {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
+            }
+        }
+
+      
+
+      
         private void Window_KeyDown_EventHandler(object sender, System.Windows.Input.KeyEventArgs e)
         {
             try
