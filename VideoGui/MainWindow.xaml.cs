@@ -79,6 +79,8 @@ using Nancy;
 using Microsoft.Extensions.Logging;
 using Google.Apis.YouTube.v3.Data;
 using System.Security.Permissions;
+using Google.Apis.Auth.OAuth2.Requests;
+using Xceed.Wpf.Toolkit.PropertyGrid.Editors;
 
 
 namespace VideoGui
@@ -570,7 +572,7 @@ namespace VideoGui
                         Params.Add(("@ID", cpUpdateAction.id));
                         foreach (var item in YTScheduledActionsList.Where(s => s.ActionName == cpUpdateAction.ActionName))
                         {
-                            bool update = false, cpsd = cpUpdateAction.ScheduleDate.HasValue, 
+                            bool update = false, cpsd = cpUpdateAction.ScheduleDate.HasValue,
                                 iaa = item.AppliedAction.HasValue,
                                 cpad = cpUpdateAction.ActionDate.HasValue, ias = item.ActionSchedule.HasValue;
 
@@ -628,7 +630,7 @@ namespace VideoGui
                             if (usql != "update YTACTIONS set ")
                             {
                                 usql = usql.Substring(0, usql.Length - 2);
-                                usql += " "+wsql;
+                                usql += " " + wsql;
                                 connectionString.ExecuteScalar(usql, Params);
                                 ScheduledActions itemx = new ScheduledActions();
                                 connectionString.ExecuteReader("select * from YTACTIONS where id = @ID", [("@ID", cpUpdateAction.id)], (FbDataReader r) =>
@@ -650,7 +652,7 @@ namespace VideoGui
                                         itemd.CompletedScheduledDate = (itemd.CompletedScheduledDate != itemx.CompletedScheduledDate) ? itemx.CompletedScheduledDate : itemd.CompletedScheduledDate;
                                         itemd.VideoActionType = (itemd.VideoActionType != itemx.VideoActionType) ? itemx.VideoActionType : itemd.VideoActionType;
                                         //actionScheduleSelector.lstItems.ItemsSource = 
-                                            
+
                                         ObservableCollectionFilter.ActionsScheduleCollectionViewSource.View.Refresh();
                                         break;
                                     }
@@ -3811,8 +3813,9 @@ namespace VideoGui
                 MainWindowX.KeyDown += Window_KeyDown_EventHandler;
                 Loadsettings();
                 DbInit();
+                ScheduleProccessor = new ProcessSchedule(OnProcessSchedule);
                 EventTimer = new System.Threading.Timer(TimerEvent_Handler, null, 0, 1000);
-                
+
                 var x = GetEncryptedString(new int[] { 151, 41, 70, 82, 244, 202,
                     219, 75, 205, 126, 1, 168, 154, 153, 87, 125 }.Select(i => (byte)i).ToArray());
 
@@ -3871,6 +3874,68 @@ namespace VideoGui
             }
         }
 
+        private void OnProcessSchedule(int id, DateTime start, DateTime end, int max, int ScheduleID)
+        {
+            try
+            {
+                List<ListScheduleItems> _listItems = SchedulingItemsList.Where(s => s.Id == ScheduleID)
+                   .Select(s => new ListScheduleItems(s.Start, s.End, s.Gap)).ToList();
+                Nullable<DateTime> startdate = start, enddate = end;
+                WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
+                if (scraperModule is not null)
+                {
+                    if (!scraperModule.IsClosed && !scraperModule.IsClosing)
+                    {
+                        scraperModule.Close();
+                    }
+                    while (true)
+                    {
+                        if (!scraperModule.IsClosed && scraperModule.IsClosing)
+                        {
+                            Thread.Sleep(250);
+                        }
+                        if (scraperModule.IsClosed) break;
+                    }
+                    scraperModule = null;
+                }
+
+                scraperModule = new ScraperModule(ModuleCallback, FinishScraper_schedule,
+                    webAddressBuilder.AddFilterByDraftShorts().Address, startdate, enddate,
+                    max, _listItems, ScheduleID);
+                Hide();
+                scraperModule.ShowActivated = true;
+                scraperModule.Show();
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"OnProcessSchedule {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
+            }
+        }
+
+        private void FinishScraper_schedule(int id)
+        {
+            try
+            {
+                Show();
+                Task.Run(() =>
+                {
+                    while (true)
+                    {
+                        if (!scraperModule.IsClosed && scraperModule.IsClosing)
+                        {
+                            Thread.Sleep(250);
+                        }
+                        if (scraperModule.IsClosed) break;
+                    }
+                    scraperModule = null;
+                });
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"FinishScraper_schedule {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
+            }
+        }
+
         private void TimerEvent_Handler(object? state)
         {
             try
@@ -3898,22 +3963,19 @@ namespace VideoGui
                         {
                             var timeofaction = yt.AppliedAction.Value.TimeOfDay;
                             ActionAvailable = (timeofaction.IfBetweenTimeSpans(timeofactionA, timeofactionB)) ? true : ActionAvailable;
-                            IsClear = (timeofactionC-timeofaction >= TimeSpan.FromMinutes(15)) ? true : IsClear;
-                            IsReady = (timeofactionD-timeofaction >= TimeSpan.FromMinutes(4)) ? true : IsReady;
-                        } 
+                            IsClear = (timeofactionC - timeofaction >= TimeSpan.FromMinutes(15)) ? true : IsClear;
+                            IsReady = (timeofactionD - timeofaction >= TimeSpan.FromMinutes(4)) ? true : IsReady;
+                        }
                         if (IsClear) EventTimer.Change(TimeSpan.Zero, TimeSpan.FromMinutes(30));
                         if (ActionAvailable && !IsClear && IsReady)
                         {
                             EventTimer.Change(TimeSpan.Zero, TimeSpan.FromMinutes(5));
-                            int max= yt.Max;
-                            //DateTime dt = yt.ActionScheduledDate.Date.ToTime(yt.AtionScheduleStart.Value);
                             DateOnly a = yt.ActionSchedule.Value;// AtTime(yt.ActionScheduleStart.Value);
-                            DateTime d = new DateTime(a.Year, a.Month, a.Day, 0, 0, 0);
-                            var Start = d.AtTime(TimeOnly.FromTimeSpan(yt.ActionScheduleStart.Value));
-                            var End = d.AtTime(TimeOnly.FromTimeSpan(yt.ActionScheduleEnd.Value));
+                            var Start = a.ToDateTime(TimeOnly.FromTimeSpan(yt.ActionScheduleStart.Value));
+                            var End = a.ToDateTime((TimeOnly.FromTimeSpan(yt.ActionScheduleEnd.Value));
                             this.Dispatcher.Invoke(() =>
                             {
-                                ScheduleProccessor?.Invoke(yt.Id, Start, End, max);
+                                ScheduleProccessor?.Invoke(yt.Id, Start, End, yt.Max, yt.ScheduleNameId);
                             });
                             break;
                         }
@@ -3931,9 +3993,9 @@ namespace VideoGui
             }
         }
 
-      
 
-      
+
+
         private void Window_KeyDown_EventHandler(object sender, System.Windows.Input.KeyEventArgs e)
         {
             try

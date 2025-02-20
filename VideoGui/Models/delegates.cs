@@ -41,7 +41,7 @@ namespace VideoGui.Models.delegates
     public delegate void _StatsHandler(int mode, string filename);
     public delegate void CompairFinished();
     public delegate void ComplexFinished();
-    public delegate void ProcessSchedule(int id, DateTime start, DateTime end, int max);
+    public delegate void ProcessSchedule(int id, DateTime start, DateTime end, int max, int ScheduleID);
     public delegate string OnGetTagIds(int id);
     public delegate void GetNextNode();
     public delegate void ReportVideoScheduled(DateTime dateTime, string id, string title);
