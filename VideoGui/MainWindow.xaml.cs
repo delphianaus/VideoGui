@@ -3972,7 +3972,7 @@ namespace VideoGui
                             EventTimer.Change(TimeSpan.Zero, TimeSpan.FromMinutes(5));
                             DateOnly a = yt.ActionSchedule.Value;// AtTime(yt.ActionScheduleStart.Value);
                             var Start = a.ToDateTime(TimeOnly.FromTimeSpan(yt.ActionScheduleStart.Value));
-                            var End = a.ToDateTime((TimeOnly.FromTimeSpan(yt.ActionScheduleEnd.Value));
+                            var End = a.ToDateTime(TimeOnly.FromTimeSpan(yt.ActionScheduleEnd.Value));
                             this.Dispatcher.Invoke(() =>
                             {
                                 ScheduleProccessor?.Invoke(yt.Id, Start, End, yt.Max, yt.ScheduleNameId);
