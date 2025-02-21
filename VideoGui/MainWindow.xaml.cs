@@ -121,13 +121,14 @@ namespace VideoGui
         public SourceDestComp compareform;
         public VideoSizeChecker videoResCompare;
         public VideoCardSelector videoCardDetailsSelector;
-        public ScraperModule scraperModule = null;
+        public ScraperModule scraperModule = null, scheduleScraperModule = null;
         public SelectShortUpload selectShortUpload = null;
         public MasterTagSelectForm MasterTagSelectFrm = null;
         public SelectReleaseSchedule SelectReleaseScheduleFrm = null;
         public DirectoryTitleDescEditor DirectoryTitleDescEditorFrm = null;
         public SchedulingSelectEditor schedulingSelectEditor = null;
         public ActionScheduleSelector actionScheduleSelector = null;
+        public ManualScheduler manualScheduler = null;
         public ProcessSchedule ScheduleProccessor = null;
         public ShowMatcher Swm;
         List<ListScheduleItems> ScheduleListItems = new List<ListScheduleItems>();
@@ -431,6 +432,11 @@ namespace VideoGui
                             formObjectHandler_ActionScheduleSelector(tld, actionScheduleSelector);
                             break;
                         }
+                    case ManualScheduler manualScheduler:
+                        {
+                            formObjectHandler_ManualScheduler(tld, manualScheduler);
+                            break;
+                        }
                 }
             }
             catch (Exception ex)
@@ -440,6 +446,20 @@ namespace VideoGui
 
         }
 
+        private void formObjectHandler_ManualScheduler(object tld, ManualScheduler manualScheduler)
+        {
+            try
+            {
+                if (tld is CustomParams_Initialize cpInit)
+                {
+
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"formObjectHandler_ManualScheduler {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+        }
         private void formObjectHandler_ActionScheduleSelector(object tld, ActionScheduleSelector actionScheduleSelector)
         {
             try
@@ -3811,6 +3831,8 @@ namespace VideoGui
                 MainWindowX.KeyDown += Window_KeyDown_EventHandler;
                 Loadsettings();
                 DbInit();
+                ScheduleProccessor = new ProcessSchedule(OnProcessSchedule);
+
                 EventTimer = new System.Threading.Timer(TimerEvent_Handler, null, 0, 1000);
                 
                 var x = GetEncryptedString(new int[] { 151, 41, 70, 82, 244, 202,
@@ -3870,7 +3892,67 @@ namespace VideoGui
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
             }
         }
+        private void OnProcessSchedule(int id, DateTime start, DateTime end, int max, int ScheduleID)
+        {
+            try
+            {
+                List<ListScheduleItems> _listItems = SchedulingItemsList.Where(s => s.Id == ScheduleID)
+                   .Select(s => new ListScheduleItems(s.Start, s.End, s.Gap)).ToList();
+                Nullable<DateTime> startdate = start, enddate = end;
+                WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
+                if (scheduleScraperModule is not null)
+                {
+                    if (!scheduleScraperModule.IsClosed && !scheduleScraperModule.IsClosing)
+                    {
+                        scheduleScraperModule.Close();
+                    }
+                    while (true)
+                    {
+                        if (!scheduleScraperModule.IsClosed && scheduleScraperModule.IsClosing)
+                        {
+                            Thread.Sleep(250);
+                        }
+                        if (scheduleScraperModule.IsClosed) break;
+                    }
+                    scheduleScraperModule = null;
+                }
 
+                scheduleScraperModule = new ScraperModule(ModuleCallback, FinishScraper_schedule,
+                    webAddressBuilder.AddFilterByDraftShorts().Address, startdate, enddate,
+                    max, _listItems, ScheduleID);
+                Hide();
+                scheduleScraperModule.ShowActivated = true;
+                scheduleScraperModule.Show();
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"OnProcessSchedule {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
+            }
+        }
+
+        private void FinishScraper_schedule(int id)
+        {
+            try
+            {
+                Show();
+                Task.Run(() =>
+                {
+                    while (true)
+                    {
+                        if (!scheduleScraperModule.IsClosed && scheduleScraperModule.IsClosing)
+                        {
+                            Thread.Sleep(250);
+                        }
+                        if (scheduleScraperModule.IsClosed) break;
+                    }
+                    scheduleScraperModule = null;
+                });
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"FinishScraper_schedule {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
+            }
+        }
         private void TimerEvent_Handler(object? state)
         {
             try
@@ -3886,42 +3968,41 @@ namespace VideoGui
                     EventTimer.Change(TimeSpan.Zero, TimeSpan.FromMinutes(2));
                     foreach (var yt in YTScheduledActionsList.Where(s => s.AppliedAction.HasValue && s.AppliedAction.Value.Date != DateTime.Now.Date && s.VideoActionType == 0 && !s.IsActioned && !s.CompletedScheduledDate.HasValue))
                     {
-                        bool ActionAvailable = false, IsClear = false, IsReady = false; ;
-                        TimeSpan timeofactionA = yt.AppliedAction.Value.TimeOfDay.Subtract(TimeSpan.FromHours(4));
-                        TimeSpan timeofactionB = yt.AppliedAction.Value.TimeOfDay.Add(TimeSpan.FromMinutes(1));
-                        TimeSpan timeofactionC = yt.AppliedAction.Value.TimeOfDay.Add(TimeSpan.FromMinutes(30));
-                        TimeSpan timeofactionD = yt.AppliedAction.Value.TimeOfDay.Add(TimeSpan.FromMinutes(4));
-                        if (yt.AppliedAction.HasValue &&
-                            yt.AppliedAction.Value.Date == DateTime.Now.Date &&
-                            yt.VideoActionType == 0 && !yt.IsActioned &&
-                            !yt.CompletedScheduledDate.HasValue)
+                        bool actionAvailable = false, isClear = false, isReady = false;
+                        var now = DateTime.Now;
+                        var today = now.Date;
+                        var actionTime = yt.AppliedAction.Value.TimeOfDay;
+                        if (yt.AppliedAction.HasValue && yt.AppliedAction.Value.Date == today &&
+                            yt.VideoActionType == 0 && !yt.IsActioned && !yt.CompletedScheduledDate.HasValue)
                         {
-                            var timeofaction = yt.AppliedAction.Value.TimeOfDay;
-                            ActionAvailable = (timeofaction.IfBetweenTimeSpans(timeofactionA, timeofactionB)) ? true : ActionAvailable;
-                            IsClear = (timeofactionC-timeofaction >= TimeSpan.FromMinutes(15)) ? true : IsClear;
-                            IsReady = (timeofactionD-timeofaction >= TimeSpan.FromMinutes(4)) ? true : IsReady;
-                        } 
-                        if (IsClear) EventTimer.Change(TimeSpan.Zero, TimeSpan.FromMinutes(30));
-                        if (ActionAvailable && !IsClear && IsReady)
+                            var timeA = actionTime - TimeSpan.FromHours(4);
+                            var timeB = actionTime + TimeSpan.FromMinutes(1);
+                            var timeC = actionTime + TimeSpan.FromMinutes(30);
+                            var timeD = actionTime + TimeSpan.FromMinutes(4);
+                            actionAvailable = actionTime.IfBetweenTimeSpans(timeA, timeB);
+                            isClear = timeC - actionTime >= TimeSpan.FromMinutes(15);
+                            isReady = timeD - actionTime >= TimeSpan.FromMinutes(4);
+                        }
+                        if (isClear)
                         {
-                            EventTimer.Change(TimeSpan.Zero, TimeSpan.FromMinutes(5));
-                            int max= yt.Max;
-                            //DateTime dt = yt.ActionScheduledDate.Date.ToTime(yt.AtionScheduleStart.Value);
-                            DateOnly a = yt.ActionSchedule.Value;// AtTime(yt.ActionScheduleStart.Value);
-                            DateTime d = new DateTime(a.Year, a.Month, a.Day, 0, 0, 0);
-                            var Start = d.AtTime(TimeOnly.FromTimeSpan(yt.ActionScheduleStart.Value));
-                            var End = d.AtTime(TimeOnly.FromTimeSpan(yt.ActionScheduleEnd.Value));
-                            this.Dispatcher.Invoke(() =>
+                            EventTimer.Change(TimeSpan.Zero, TimeSpan.FromMinutes(30));
+                        }
+                        else if (actionAvailable && !isClear)
+                        {
+                            EventTimer.Change(TimeSpan.Zero, isReady ? TimeSpan.FromMinutes(5) : TimeSpan.FromMinutes(10));
+                            if (isReady)
                             {
-                                ScheduleProccessor?.Invoke(yt.Id, Start, End, max);
-                            });
-                            break;
+                                var scheduleDate = yt.ActionSchedule.Value;
+                                var scheduleStart = TimeOnly.FromTimeSpan(yt.ActionScheduleStart.Value);
+                                var scheduleEnd = TimeOnly.FromTimeSpan(yt.ActionScheduleEnd.Value);
+                                var start = new DateTime(scheduleDate.Year, scheduleDate.Month, scheduleDate.Day, scheduleStart.Hour, scheduleStart.Minute, scheduleStart.Second);
+                                var end = new DateTime(scheduleDate.Year, scheduleDate.Month, scheduleDate.Day, scheduleEnd.Hour, scheduleEnd.Minute, scheduleEnd.Second);
+                                this.Dispatcher.Invoke(() =>
+                                {
+                                    ScheduleProccessor?.Invoke(yt.Id, start, end, yt.Max, yt.ScheduleNameId);
+                                });
+                            }
                         }
-                        if (ActionAvailable && !IsClear && !IsReady)
-                        {
-                            EventTimer.Change(TimeSpan.Zero, TimeSpan.FromMinutes(10));
-                        }
-
                     }
                 }
             }

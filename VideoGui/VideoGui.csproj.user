@@ -10,6 +10,9 @@
     <Compile Update="DirectoryTitleDescEditor.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="ManualScheduler.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="ScheduleActioner.xaml.cs">
       <SubType>Code</SubType>
     </Compile>

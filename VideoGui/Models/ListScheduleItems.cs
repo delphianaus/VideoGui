@@ -19,5 +19,12 @@ namespace VideoGui.Models
             Start = start;
             End = end;
         }
+
+        public ListScheduleItems(TimeSpan start, TimeSpan end, int gap)
+        {
+            Gap = gap;
+            Start = TimeOnly.FromTimeSpan(start);
+            End = TimeOnly.FromTimeSpan(end); //end;
+        }
     }
 }
