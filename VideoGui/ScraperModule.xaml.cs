@@ -175,6 +175,8 @@ namespace VideoGui
                 ex.LogWrite($"Constructor Scraper.Schedule {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
+
+
         public ScraperModule(databasehook<object> _dbInit, OnFinishId _OnFinish, string _Default_url,
             Nullable<DateTime> Start, Nullable<DateTime> End, int MaxUoploads, List<ListScheduleItems> _listSchedules, int _eventid)
         {
@@ -415,7 +417,7 @@ namespace VideoGui
                 await SetupSubstDrive();
                 StatusBar.Items.OfType<FrameworkElement>().Where(child => !(child is Button)).ToList().ForEach(frameworkElement =>
                 {
-                   frameworkElement.SizeChanged += (object sender, SizeChangedEventArgs e) => {StatusBar.ApplyMargin();};
+                    frameworkElement.SizeChanged += (object sender, SizeChangedEventArgs e) => { StatusBar.ApplyMargin(); };
                 });
             }
             catch (Exception ex)
