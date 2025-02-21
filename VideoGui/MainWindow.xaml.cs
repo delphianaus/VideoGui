@@ -79,6 +79,8 @@ using Nancy;
 using Microsoft.Extensions.Logging;
 using Google.Apis.YouTube.v3.Data;
 using System.Security.Permissions;
+using Google.Apis.Auth.OAuth2.Requests;
+using Xceed.Wpf.Toolkit.PropertyGrid.Editors;
 
 
 namespace VideoGui
@@ -590,7 +592,7 @@ namespace VideoGui
                         Params.Add(("@ID", cpUpdateAction.id));
                         foreach (var item in YTScheduledActionsList.Where(s => s.ActionName == cpUpdateAction.ActionName))
                         {
-                            bool update = false, cpsd = cpUpdateAction.ScheduleDate.HasValue, 
+                            bool update = false, cpsd = cpUpdateAction.ScheduleDate.HasValue,
                                 iaa = item.AppliedAction.HasValue,
                                 cpad = cpUpdateAction.ActionDate.HasValue, ias = item.ActionSchedule.HasValue;
 
@@ -648,7 +650,7 @@ namespace VideoGui
                             if (usql != "update YTACTIONS set ")
                             {
                                 usql = usql.Substring(0, usql.Length - 2);
-                                usql += " "+wsql;
+                                usql += " " + wsql;
                                 connectionString.ExecuteScalar(usql, Params);
                                 ScheduledActions itemx = new ScheduledActions();
                                 connectionString.ExecuteReader("select * from YTACTIONS where id = @ID", [("@ID", cpUpdateAction.id)], (FbDataReader r) =>
@@ -670,7 +672,7 @@ namespace VideoGui
                                         itemd.CompletedScheduledDate = (itemd.CompletedScheduledDate != itemx.CompletedScheduledDate) ? itemx.CompletedScheduledDate : itemd.CompletedScheduledDate;
                                         itemd.VideoActionType = (itemd.VideoActionType != itemx.VideoActionType) ? itemx.VideoActionType : itemd.VideoActionType;
                                         //actionScheduleSelector.lstItems.ItemsSource = 
-                                            
+
                                         ObservableCollectionFilter.ActionsScheduleCollectionViewSource.View.Refresh();
                                         break;
                                     }
@@ -3834,7 +3836,7 @@ namespace VideoGui
                 ScheduleProccessor = new ProcessSchedule(OnProcessSchedule);
 
                 EventTimer = new System.Threading.Timer(TimerEvent_Handler, null, 0, 1000);
-                
+
                 var x = GetEncryptedString(new int[] { 151, 41, 70, 82, 244, 202,
                     219, 75, 205, 126, 1, 168, 154, 153, 87, 125 }.Select(i => (byte)i).ToArray());
 
@@ -3916,14 +3918,8 @@ namespace VideoGui
                     }
                     scheduleScraperModule = null;
                 }
-
-                scheduleScraperModule = new ScraperModule(ModuleCallback, FinishScraper_schedule,
-                    webAddressBuilder.AddFilterByDraftShorts().Address, startdate, enddate,
-                    max, _listItems, ScheduleID);
-                Hide();
-                scheduleScraperModule.ShowActivated = true;
-                scheduleScraperModule.Show();
             }
+        
             catch (Exception ex)
             {
                 ex.LogWrite($"OnProcessSchedule {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
@@ -3946,6 +3942,7 @@ namespace VideoGui
                         if (scheduleScraperModule.IsClosed) break;
                     }
                     scheduleScraperModule = null;
+
                 });
             }
             catch (Exception ex)
@@ -3953,6 +3950,7 @@ namespace VideoGui
                 ex.LogWrite($"FinishScraper_schedule {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
         }
+
         private void TimerEvent_Handler(object? state)
         {
             try
@@ -4012,9 +4010,9 @@ namespace VideoGui
             }
         }
 
-      
 
-      
+
+
         private void Window_KeyDown_EventHandler(object sender, System.Windows.Input.KeyEventArgs e)
         {
             try
