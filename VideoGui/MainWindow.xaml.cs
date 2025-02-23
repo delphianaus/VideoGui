@@ -194,7 +194,7 @@ namespace VideoGui
         public CollectionViewSource CurrentCollectionViewSource = new CollectionViewSource();
         public CollectionViewSource ImportCollectionViewSource = new CollectionViewSource();
         public MediaImporter GoProMediaImporter = null;
-      
+
         public ObservableCollection<ComplexJobList> ComplexProcessingJobList = new ObservableCollection<ComplexJobList>();
         public ObservableCollection<ComplexJobHistory> ComplexProcessingJobHistory = new ObservableCollection<ComplexJobHistory>();
         public ObservableCollection<FileInfoGoPro> FileRenamer = new ObservableCollection<FileInfoGoPro>();
@@ -452,13 +452,168 @@ namespace VideoGui
 
         }
 
+        public Nullable<DateTime> LoadDate(string name)
+        {
+            try
+            {
+                string sql = "SELECT ID FROM SETTINGS WHERE SETTINGNAME = @P0";
+                int idx = connectionString.ExecuteScalar(sql, [("@P0", name)]).ToInt(-1);
+                if (idx == -1) return null;
+                sql = "SELECT SETTINGDATE FROM SETTINGS WHERE SETTINGNAME = @P0";
+                var obj = connectionString.ExecuteScalar(sql, [("@P0", name)]);
+                if (obj is DateTime dt)
+                {
+                    return dt;
+                }
+                else return null;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"LoadDate {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+                return null;
+            }
+        }
+
+        public Nullable<TimeSpan> LoadTime(string name)
+        {
+            try
+            {
+                string sql = "SELECT ID FROM SETTINGS WHERE SETTINGNAME = @P0";
+                int idx = connectionString.ExecuteScalar(sql, [("@P0", name)]).ToInt(-1);
+                if (idx == -1) return null;
+                sql = "SELECT SETTINGTIME FROM SETTINGS WHERE SETTINGNAME = @P0";
+                var obj = connectionString.ExecuteScalar(sql, [("@P0", name)]);
+                if (obj is TimeSpan ts)
+                {
+                    return ts;
+                }
+                else return null;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"LoadTime {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+                return null;
+            }
+        }
+
+        public void SaveTime(TimeSpan startdate, string name, bool IsDateTime = false)
+        {
+            try
+            {
+                string sql = "SELECT * FROM SETTINGS WHERE SETTINGNAME = @P0";
+                int id = connectionString.ExecuteScalar(sql, [("@P0", name)]).ToInt(-1);
+                if (id != -1)
+                {
+                    sql = "UPDATE SETTINGS SET SETTINGTIME = @P1 WHERE ID = @P2";
+                    connectionString.ExecuteScalar(sql, [("@P1", startdate), ("@P2", id)]);
+                }
+                else
+                {
+                    sql = "INSERT INTO SETTINGS (SETTINGTIME,SETTINGNAME) VALUES (@P0,@P1)";
+                    connectionString.ExecuteScalar(sql, [("@P0", startdate), ("@P1", name)]);
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"SaveTime {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+        }
+
+        public string LoadString(string name)
+        {
+            try
+            {
+                string sql = "SELECT ID FROM SETTINGS WHERE SETTINGNAME = @P0";
+                int idx = connectionString.ExecuteScalar(sql, [("@P0", name)]).ToInt(-1);
+                if (idx == -1) return null;
+                sql = "SELECT SETTING FROM SETTINGS WHERE SETTINGNAME = @P0";
+                var obj = connectionString.ExecuteScalar(sql, [("@P0", name)]);
+                if (obj is string strx)
+                {
+                    return strx;
+                }
+                else return null;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"LoadString {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+                return null;
+            }
+        }
+        public void SaveString(string startdate, string name)
+        {
+            try
+            {
+                string sql = "SELECT * FROM SETTINGS WHERE SETTINGNAME = @P0";
+                int id = connectionString.ExecuteScalar(sql, [("@P0", name)]).ToInt(-1);
+                if (id != -1)
+                {
+                    sql = "UPDATE SETTINGS SET SETTINGNAME = @P1 WHERE ID = @P2";
+                    connectionString.ExecuteScalar(sql, [("@P1", startdate), ("@P2", id)]);
+                }
+                else
+                {
+                    sql = "INSERT INTO SETTINGS (SETTING,SETTINGNAME) VALUES (@P0,@P1)";
+                    connectionString.ExecuteScalar(sql, [("@P0", startdate), ("@P1", name)]);
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"SaveString {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+        }
+        public void SaveDates(DateTime startdate,string name, bool IsDateTime=false)
+        {
+            try
+            {
+                string sql = "SELECT * FROM SETTINGS WHERE SETTINGNAME = @P0";
+                int id = connectionString.ExecuteScalar(sql, [("@P0", name)]).ToInt(-1);
+                if (id != -1)
+                {
+                    sql = "UPDATE SETTINGS SET SETTINGDATE = @P1 WHERE ID = @P2";
+                    connectionString.ExecuteScalar(sql, [("@P1", startdate.Date), ("@P2", id)]);
+                }
+                else
+                {
+                    sql = "INSERT INTO SETTINGS (SETTINGDATE,SETTINGNAME) VALUES (@P0,@P1)";
+                    connectionString.ExecuteScalar(sql, [("@P0", startdate.Date), ("@P1", name)]);
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"SavedDates {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+        }
+
         private void formObjectHandler_ManualScheduler(object tld, ManualScheduler manualScheduler)
         {
             try
             {
                 if (tld is CustomParams_Initialize cpInit)
                 {
-
+                    Nullable<DateTime> dt = LoadDate("ScheduleDate");
+                    Nullable<TimeSpan> st = LoadTime("ScheduleTimeStart");
+                    Nullable<TimeSpan> et = LoadTime("ScheduleTimeEnd");
+                    var s = LoadString("maxr");
+                    string pp = (s is string str) ? str : "";
+                    DateTime r = new DateTime(1,1,1);
+                    if (dt.HasValue && st.HasValue && et.HasValue && pp != "")
+                    {
+                        manualScheduler.txtMaxSchedules.Text = pp;
+                        manualScheduler.ReleaseDate.Value = dt.Value.Date;
+                        manualScheduler.ReleaseTimeStart.Value = r.AtTime(TimeOnly.FromTimeSpan(st.Value));
+                        manualScheduler.ReleaseTimeEnd.Value = r.AtTime(TimeOnly.FromTimeSpan(et.Value));
+                    }
+                }
+                else if (tld is CustomParams_SaveSchedule cpSaveSchedule)
+                {
+                    var dt = cpSaveSchedule.ScheduleDate.Date.Date;
+                    var st = cpSaveSchedule.ScheduleTimeStart;
+                    var et = cpSaveSchedule.ScheduleTimeEnd;
+                    SaveDates(dt, "ScheduleDate");
+                    SaveTime(st, "ScheduleTimeStart");
+                    SaveTime(et, "ScheduleTimeEnd");
+                    SaveString(cpSaveSchedule.max.ToString(), "maxr");
                 }
             }
             catch (Exception ex)
@@ -3174,6 +3329,11 @@ namespace VideoGui
                 connectionString.CreateTableIfNotExists(sqlstring);
                 connectionString.AddFieldToTable("SCHEDULES", "MAXEVENT", "INTEGER", -1);
                 connectionString.CreateTableIfNotExists(sqlstring);
+                connectionString.AddFieldToTable("SETTINGS", "SETTINGDATE", "DATE");
+                connectionString.AddFieldToTable("SETTINGS", "SETTINGTIME", "TIME");
+
+
+
 
 
                 sqlstring = $"CREATE TABLE VIDEOSCHEDULE({Id},SCHEDULEID INTEGER, SCHEDULETIME TIME,DAYS INTEGER);";
@@ -3923,7 +4083,7 @@ namespace VideoGui
                     scheduleScraperModule = null;
                 }
             }
-        
+
             catch (Exception ex)
             {
                 ex.LogWrite($"OnProcessSchedule {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
@@ -9081,62 +9241,54 @@ namespace VideoGui
         {
             try
             {
-                Show(); 
-                Task.Run(() =>
+                Show();
+
+                int max = 0;
+                Nullable<DateTime> startdate = null, enddate = null;
+                if (manualScheduler is not null && !manualScheduler.IsClosed)
                 {
-                    int max = 0;
-                    Nullable<DateTime> startdate = null, enddate = null;
-                    if (manualScheduler is not null && !manualScheduler.IsClosed)
+                    if (manualScheduler.IsClosing) manualScheduler.Close();
+                    while (!manualScheduler.IsClosed)
                     {
-                        if (manualScheduler.IsClosing) manualScheduler.Close();
-                        while (!manualScheduler.IsClosed)
+                        Thread.Sleep(100);
+                    }
+                }
+                if (manualScheduler.HasValues)
+                {
+                    max = manualScheduler.txtMaxSchedules.Text.ToInt(0);
+                    startdate = manualScheduler.ReleaseDate.Value;
+                    enddate = manualScheduler.ReleaseDate.Value;
+                    TimeOnly tsa = manualScheduler.StartTime.Value;
+                    TimeOnly tsb = manualScheduler.EndTime.Value;
+                    startdate = startdate.Value.Date.Add(tsa.ToTimeSpan());
+                    enddate = enddate.Value.Date.Add(tsb.ToTimeSpan());
+                }
+                manualScheduler = null;
+                string sqla = "SELECT ID FROM SETTINGS WHERE SETTINGNAME = @P0";
+                int iScheduleID = connectionString.ExecuteScalar(sqla, [("@P0", "CURRENTSCHEDULINGID")]).ToInt(-1);
+                if (iScheduleID != -1 && startdate.HasValue && enddate.HasValue && max > 0)
+                {
+                    if (scheduleScraperModule is not null)
+                    {
+                        if (scheduleScraperModule.IsClosing) scheduleScraperModule.Close();
+                        while (!scheduleScraperModule.IsClosed)
                         {
                             Thread.Sleep(100);
+                            System.Windows.Forms.Application.DoEvents();
                         }
-                        manualScheduler.Close();
-                        if (manualScheduler.HasValues)
-                        {
-                            max = manualScheduler.txtMaxSchedules.Text.ToInt(0);
-                            startdate = manualScheduler.ReleaseDate.Value;
-                            enddate = manualScheduler.ReleaseDate.Value;
-                            TimeOnly tsa = manualScheduler.StartTime.Value;
-                            TimeOnly tsb = manualScheduler.EndTime.Value;
-                            startdate = startdate.Value.Date.Add(tsa.ToTimeSpan());
-                            enddate = enddate.Value.Date.Add(tsb.ToTimeSpan());
-                        }
-
-                        /*public ScraperModule(databasehook<object> _dbInit, OnFinishId _OnFinish, 
-                         * string _Deffault_url, nullable<DateTime> Start, Nullable<DateTime> End, 
-                         * int MaxUoploads, List<ListScheduleItems> _listSchedules, int _eventid)
-                         */
-                        manualScheduler = null;
-                        string sqla = "SELECT ID FROM SETTINGS WHERE SETTINGNAME = @P0";
-                        int iScheduleID = connectionString.ExecuteScalar(sqla, [("@P0", "CURRENTSCHEDULINGID")]).ToInt(-1);
-                        if (iScheduleID != -1)
-                        {
-                            List<ListScheduleItems> _listItems = SchedulingItemsList.Where(s => s.Id == iScheduleID)
-                              .Select(s => new ListScheduleItems(s.Start, s.End, s.Gap)).ToList();
-                            WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
-                            string gUrl = webAddressBuilder.AddFilterByDraftShorts().Address;
-                            if (scheduleScraperModule is null && startdate.HasValue && enddate.HasValue && max > 0)
-                            {
-                                if (scheduleScraperModule.IsClosing) scheduleScraperModule.Close();
-                                while (!scheduleScraperModule.IsClosed)
-                                {
-                                    Thread.Sleep(100);
-                                    System.Windows.Forms.Application.DoEvents();
-                                }
-                                scheduleScraperModule.Close();
-                                scheduleScraperModule = null;
-                            }
-                            scheduleScraperModule = new ScraperModule(ModuleCallback, mnl_scraper_OnFinish, gUrl,
-                                startdate, enddate, max, _listItems, 0);
-                            scheduleScraperModule.ShowActivated = true;
-                            Hide();
-                            scheduleScraperModule.Show();
-                        }
+                        scheduleScraperModule.Close();
+                        scheduleScraperModule = null;
                     }
-                });
+                    List<ListScheduleItems> _listItems = SchedulingItemsList.Where(s => s.Id == iScheduleID)
+                     .Select(s => new ListScheduleItems(s.Start, s.End, s.Gap)).ToList();
+                    WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
+                    string gUrl = webAddressBuilder.AddFilterByDraftShorts().Address;
+                    scheduleScraperModule = new ScraperModule(ModuleCallback, mnl_scraper_OnFinish, gUrl,
+                        startdate, enddate, max, _listItems, 0);
+                    scheduleScraperModule.ShowActivated = true;
+                    Hide();
+                    scheduleScraperModule.Show();
+                }
             }
             catch (Exception ex)
             {

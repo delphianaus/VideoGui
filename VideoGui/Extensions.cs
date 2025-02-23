@@ -609,36 +609,23 @@ namespace VideoGui
         {
             try
             {
-                string sql = (defaultvalue is not null) ?
-                $"ALTER TABLE {Table} ADD {Field} {FieldType} DEFAULT @DF NOT NULL;"
-                : $"SELECT RDB$FIELD_NAME AS FIELD_NAME FROM RDB$RELATION_FIELDS WHERE " +
-                   $"RDB$RELATION_NAME='{Table}'AND RDB$FIELD_NAME = '{Field}';";
-
-                int idx = -1;
-                using (var connection = new FbConnection(connectionStr))
+                string sql = "";
+                string sqlb = $"SELECT RDB$FIELD_NAME AS FIELD_NAME FROM RDB$RELATION_FIELDS WHERE " +
+                   $"RDB$RELATION_NAME=@P1 AND RDB$FIELD_NAME = @P0;";
+                var resx = connectionStr.ExecuteScalar(sqlb, [("@P0", Field.ToUpper()), ("@P1", Table.ToUpper())]);
+                if (resx is not null) return;
+                if (defaultvalue is null)
                 {
-                    connection.Open();
-                    if (defaultvalue is string)
-                    {
-                        sql = sql.Replace("@DF", "''");
-                    }
-                    if (defaultvalue is int)
-                    {
-                        sql = sql.Replace("@DF", $"{defaultvalue}");
-                    }
-                    using (var command = new FbCommand(sql, connection))
-                    {
-                        command.Parameters.Clear();
-                        if (command.ExecuteScalar() is int res)
-                        {
-                            idx = res;
-                        }
-                    }
-                    connection.Close();
+                    sql = $"ALTER TABLE @P1 ADD @P0 @P2 NOT NULL;";
+                    connectionStr.ExecuteScalar(sql, [("@P0", Field.ToUpper()), ("@P1", Table.ToUpper()),
+                        ("@P2", FieldType.ToUpper())]);
                 }
-
-
-
+                else
+                {
+                    sql = $"ALTER TABLE @P1 ADD @P0 @P2 NOT NULL DEFAULT @DF NOT NULL;";
+                    connectionStr.ExecuteScalar(sql, [("@P0", Field.ToUpper()), ("@P1", Table.ToUpper()),
+                        ("@P2", FieldType.ToUpper()), ("@DF", defaultvalue)]);
+                }
             }
             catch (Exception ex)
             {

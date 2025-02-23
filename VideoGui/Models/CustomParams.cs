@@ -63,7 +63,21 @@ namespace VideoGui.Models
         }
     }
 
-
+    public class CustomParams_SaveSchedule
+    {
+        public DateTime ScheduleDate { get; set; }
+        public TimeSpan ScheduleTimeStart { get; set; }
+        public TimeSpan ScheduleTimeEnd { get; set; }
+        public int max { get; set; } = 0;
+        public CustomParams_SaveSchedule(DateTime _ScheduleDate, TimeSpan _ScheduleTimeStart, 
+            TimeSpan _ScheduleTimeEnd, int _max)
+        {
+            ScheduleDate = _ScheduleDate;
+            ScheduleTimeStart = _ScheduleTimeStart;
+            ScheduleTimeEnd = _ScheduleTimeEnd;
+            max = _max;
+        }
+    }
     public class CustomParams_GetVideoFileName
     {
         public string id = "";

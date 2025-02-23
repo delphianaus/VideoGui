@@ -60,6 +60,14 @@ namespace VideoGui
                     EndTime = TimeOnly.FromDateTime(ReleaseTimeEnd.Value.Value);
                 }
                 HasValues = (Max.HasValue && SelectedDate.HasValue && StartTime.HasValue && EndTime.HasValue);
+        
+                if (HasValues)
+                {
+                    ModuleCallBack?.Invoke(this, new CustomParams_SaveSchedule(SelectedDate.Value,
+                        ReleaseTimeStart.Value.Value.TimeOfDay, 
+                        ReleaseTimeEnd.Value.Value.TimeOfDay, txtMaxSchedules.Text.ToInt(0))) ;
+                }
+            
             }            
             catch (Exception ex)
             {

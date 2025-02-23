@@ -7,7 +7,7 @@
         WindowStartupLocation="CenterScreen" 
         xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit" SizeChanged="Window_SizeChanged"
         mc:Ignorable="d" Loaded="Window_Loaded" SizeToContent="Manual" WindowStyle="ToolWindow" 
-        Title="Manual Scheduler" Height="157" Width="538" MinWidth="538" MinHeight="157">
+        Title="Manual Scheduler" Height="177" Width="559" MinWidth="538" MinHeight="157" Icon="/computer.ico">
     <Grid>
         <Border x:Name="brdmain" BorderBrush="Black" BorderThickness="3" Margin="2,1,3,58" AllowDrop="True">
             <GroupBox x:Name="grpScheduleDates" Header="Video Scheduled Date &amp; Time" Canvas.Top="73" 
