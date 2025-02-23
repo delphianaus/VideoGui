@@ -2382,8 +2382,12 @@ namespace VideoGui
                 {
                     if (ScraperType == EventTypes.ShortsSchedule && directshortsScheduler is null && ReleaseDate.HasValue && ReleaseEndDate.HasValue)
                     {
+                        var p = new CustomParams_GetConnectionString();
+                        dbInitializer?.Invoke(this, p);
+                        string connectionString = p.ConnectionString;
                         directshortsScheduler = new DirectshortsScheduler(() => { Show(); }, DoOnScheduleComplete, listSchedules,
                             ReleaseDate.Value, ReleaseEndDate.Value, DoReportSchedule, ScheduleMax);
+                        directshortsScheduler.connectionString = connectionString;
                     }
                     IsVideoLookup = true;
 
