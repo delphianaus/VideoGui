@@ -140,6 +140,7 @@
                                         </TransformGroup>
                                     </Button.RenderTransform>
                                 </Button>
+                                <Button x:Name="btnSaveCut" Content="Save" Width="174" Height="30" Canvas.Left="22" Canvas.Top="218" Click="btnSaveCut_Click" IsEnabled="False" HorizontalAlignment="Left" VerticalAlignment="Center"/>
 
                             </Canvas>
                         </Border>

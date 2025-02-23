@@ -61,7 +61,7 @@ namespace VideoGui
                 string Root = key.GetValueStr("CutSourceDirectory", "c:\\");
                 key?.Close();
 
-                
+
                 FolderBrowserDialog folderBrowserDialog = new FolderBrowserDialog();
                 folderBrowserDialog.Title = "Select a folder";
                 folderBrowserDialog.InitialFolder = Root;
@@ -84,7 +84,7 @@ namespace VideoGui
                     }
                     Filename = txtsrcdir.Text.Split("\\").ToList().LastOrDefault();
                     var FileIndexer = new ffmpegbridge();
-                    List<string> files = Directory.EnumerateFiles(txtsrcdir.Text,"*.mp4", SearchOption.TopDirectoryOnly).ToList();
+                    List<string> files = Directory.EnumerateFiles(txtsrcdir.Text, "*.mp4", SearchOption.TopDirectoryOnly).ToList();
                     FileIndexer.ReadDuration(files);
                     while (!FileIndexer.Finished)
                     {
@@ -160,8 +160,8 @@ namespace VideoGui
                     key.SetValue("AdobeDestinationDir", txxtEditDirectory.Text);
                     key?.Close();
 
-                    
-                    
+
+
                 }
             }
             catch (Exception ex)
@@ -247,7 +247,7 @@ namespace VideoGui
             string Root = key.GetValueStr("AdobeDestinationDir", "c:\\");
             key?.Close();
             txxtEditDirectory.Text = Root;
-           
+
 
         }
 
@@ -356,7 +356,7 @@ namespace VideoGui
                                         true, ctv.TimeFrom.ToFFmpeg(), (ctv.TimeTo - ctv.TimeFrom).ToFFmpeg()
                                         , txtsrcdir.Text,
                                         destdir + "\\" + ctv.FileName + $"part {ctv._CutNo}.mp4",
-                                        null,null,chkExportForTwitch.IsChecked.Value);
+                                        null, null, chkExportForTwitch.IsChecked.Value);
                 lblStatus.Content = $"Injecting {ctv.FileName} part {ctv._CutNo}";
             }
             catch (Exception ex)
@@ -370,8 +370,8 @@ namespace VideoGui
             try
             {
                 int idx = 0;
-                string sql = $"SELECT ID FROM AUTOEDITS WHERE SOURCE = {txtsrcdir.Text}";
-                var res = ConnectionString.ExecuteScalar(sql).ToInt(-1);
+                string sql = $"SELECT ID FROM AUTOEDITS WHERE SOURCE = @SRC";
+                var res = ConnectionString.ExecuteScalar(sql, [("@SRC", txtsrcdir.Text)]).ToInt(-1);
                 if (res != -1)
                 {
                     sql = $"UPDATE AUTOEDITS SET DESTINATION = @P1, THRESHHOLD = @P2, TARGET = @P3, " +
@@ -396,9 +396,9 @@ namespace VideoGui
         }
         private void btnAccept_Click(object sender, RoutedEventArgs e)
         {
-           try
+            try
             {
-        
+
                 lblStatus.Content = "Injecting";
                 foreach (var ctv in ListOfCuts)
                 {
@@ -410,7 +410,7 @@ namespace VideoGui
                 txtSegment1.Text = txtSegment.Text;
                 txtTarget1.Text = txtTarget.Text;
                 txtThreash1.Text = txtThreash.Text;
-                
+
             }
             catch (Exception ex)
             {
@@ -422,7 +422,7 @@ namespace VideoGui
         {
             try
             {
-                foreach(VideoCutInfo ctv in lstSchedules.SelectedItems)
+                foreach (VideoCutInfo ctv in lstSchedules.SelectedItems)
                 {
                     AddItem(ctv);
                 }
@@ -455,6 +455,18 @@ namespace VideoGui
                 {
                     AddItem(ctv);
                 }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+            }
+        }
+
+        private void btnSaveCut_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                SaveData();
             }
             catch (Exception ex)
             {
