@@ -77,10 +77,48 @@ namespace VideoGui
                     string id = "";
                     string sql = $"SELECT ID FROM AUTOEDITS WHERE SOURCE = @P0";
                     int idx = ConnectionString.ExecuteScalar(sql, [("@P0", txtsrcdir.Text)]).ToInt(-1);
-
+                    bool Loaded = false;
                     if (idx != -1)
                     {
-                        ConnectionString.ExecuteReader($"SELECT * FROM AUTOEDITS WHERE ID = {id}", OnReadAutoEdit);
+                        ConnectionString.ExecuteReader($"SELECT * FROM AUTOEDITS WHERE ID = @ID", [("@ID", idx)], (FbDataReader reader) =>
+                        {
+                            string DestDir = (reader["DESTINATION"] is string des) ? des : "";
+                            string Target = (reader["TARGET"] is string target) ? target : "";
+                            string Segment = (reader["SEGMENT"] is string segment) ? segment : "";
+                            string Threashhold = (reader["THRESHHOLD"] is string theashhold) ? theashhold : "";
+                            txxtEditDirectory.Text = (DestDir != "") ? DestDir : txxtEditDirectory.Text;
+                            txtSegment.Text = (Segment != "") ? Segment : txtSegment.Text;
+                            txtThreash.Text = (Threashhold != "") ? Threashhold : txtThreash.Text;
+                            txtTarget.Text = (Target != "") ? Target : txtTarget.Text;
+                            Loaded = true;
+                        });
+                    }
+                    else
+                    {
+                        string r,Last = txtsrcdir.Text.Split("\\").ToList().LastOrDefault();
+                        if (Last.Length >= 6)
+                        {
+                            var done = false;
+                            r = Last.Substring(Last.Length - 6, 6);
+                            ConnectionString.ExecuteReader("select * from autoedits WHERE source CONTAINING @P0", [("@P0", r)], (FbDataReader reader) =>
+                            {
+                                if (!done)
+                                {
+                                    string DestDir = (reader["DESTINATION"] is string des) ? des : "";
+                                    string Target = (reader["TARGET"] is string target) ? target : "";
+                                    string Segment = (reader["SEGMENT"] is string segment) ? segment : "";
+                                    string Threashhold = (reader["THRESHHOLD"] is string theashhold) ? theashhold : "";
+                                    txxtEditDirectory.Text = (DestDir != "") ? DestDir : txxtEditDirectory.Text;
+                                    txtSegment.Text = (Segment != "") ? Segment : txtSegment.Text;
+                                    txtThreash.Text = (Threashhold != "") ? Threashhold : txtThreash.Text;
+                                    txtTarget.Text = (Target != "") ? Target : txtTarget.Text;
+                                    Loaded = true;
+                                    done = true;
+                                }
+                            });
+                        }
+
+
                     }
                     Filename = txtsrcdir.Text.Split("\\").ToList().LastOrDefault();
                     var FileIndexer = new ffmpegbridge();
@@ -95,12 +133,19 @@ namespace VideoGui
                     FileIndexer = null;
                     _TotalSecs = Math.Truncate(TotalSecs.TotalSeconds).ToInt();
                     TimeSpan Target = TimeSpan.Zero;
-                    if (txtTarget.Text != "")
+                    if (!Loaded)
                     {
-                        string time = "00:" + txtTarget;
-                        Target = time.FromStrToTimeSpan();
+                        if (txtTarget.Text != "")
+                        {
+                            string time = "00:" + txtTarget;
+                            Target = time.FromStrToTimeSpan();
+                        }
+                        else Target = TimeSpan.FromMinutes(22);
                     }
-                    else Target = TimeSpan.FromMinutes(22);
+                    else
+                    {
+                        Target = txtTarget.Text.FromStrToTimeSpan();
+                    }
                     int Threash = txtThreash.Text.ToInt(-1);
                     if (Threash == -1) Threash = 70;
                     int Segment = txtSegment.Text.ToInt(-1);
@@ -225,6 +270,7 @@ namespace VideoGui
                     btnAccept.IsEnabled = true;
                     btnAcceptSelected.IsEnabled = true;
                     chkExportForTwitch.IsEnabled = btnAcceptSelected.IsEnabled;
+                    btnSaveCut.IsEnabled = btnAcceptSelected.IsEnabled;
                 }
             }
 
@@ -386,6 +432,10 @@ namespace VideoGui
                             "VALUES(@P1,@P2,@P3,@P4,@P5) RETURNING ID";
                     idx = ConnectionString.ExecuteScalar(sql, [("@P1", txtsrcdir.Text), ("@P2", txxtEditDirectory.Text),
                         ("@P3", txtTarget.Text), ("@P4", txtSegment.Text), ("@P5", txtThreash.Text)]).ToInt(-1);
+                    if (idx != -1)
+                    {
+                     
+                    }
 
                 }
             }

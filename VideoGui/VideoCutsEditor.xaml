@@ -111,7 +111,7 @@
                                 <Label x:Name="lblThreash" Content="Threashold" Canvas.Left="22" Canvas.Top="111" HorizontalAlignment="Center" VerticalAlignment="Top"/>
                                 <TextBox x:Name="txtThreash" Canvas.Left="97" TextWrapping="Wrap" Canvas.Top="115" Width="54" HorizontalAlignment="Left" VerticalAlignment="Center" KeyDown="IsCalcEnabled_KeyDown"/>
                                 <Label x:Name="lblTarget" Content="Target" Canvas.Left="22" Canvas.Top="143" HorizontalAlignment="Center" VerticalAlignment="Top"/>
-                                <TextBox x:Name="txtTarget" Canvas.Left="97" TextWrapping="Wrap" Canvas.Top="147" Width="54" HorizontalAlignment="Center" VerticalAlignment="Top" KeyDown="IsCalcEnabled_KeyDown"/>
+                                <TextBox x:Name="txtTarget" Canvas.Left="97" TextWrapping="Wrap" Canvas.Top="147" Width="54" HorizontalAlignment="Center" VerticalAlignment="Top" KeyDown="IsCalcEnabled_KeyDown" IsEnabled="False"/>
                                 <Label x:Name="lblsegment" Content="Segment" Canvas.Left="22" Canvas.Top="171" HorizontalAlignment="Center" VerticalAlignment="Top"/>
                                 <TextBox x:Name="txtSegment" Canvas.Left="97" TextWrapping="Wrap" Canvas.Top="175" Width="54" HorizontalAlignment="Center" VerticalAlignment="Top" KeyDown="IsCalcEnabled_KeyDown"/>
                                 <Button x:Name="BtnCalc" Content="Calculate" Height="35" Canvas.Left="139" Canvas.Top="136" Width="80" HorizontalAlignment="Center" VerticalAlignment="Top" RenderTransformOrigin="0.5,0.5" Click="BtnCalc_Click">
