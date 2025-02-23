@@ -14,6 +14,7 @@ using Google.Apis.Services;
 using Google.Apis.Util.Store;
 using Google.Apis.YouTube.v3;
 using Microsoft.Web.WebView2.Wpf;
+using FirebirdSql.Data.FirebirdClient;
 
 namespace VideoGui
 {
@@ -28,6 +29,7 @@ namespace VideoGui
         DateOnly CurrentDate = DateOnly.FromDateTime(DateTime.Now);
         TimeOnly LastValidTime = TimeOnly.FromTimeSpan(TimeSpan.Zero);
         DateTime ScheduleAt = DateTime.Now.AddYears(-500);
+        public string connectionString = ""; 
         List<ListScheduleItems> ScheduleList = new List<ListScheduleItems>();
         public DateTime StartDate = DateTime.Now, EndDate = DateTime.Now, LastValidDate = DateTime.Now;
         List<DateTime> AvailableSchedules = new List<DateTime>();
@@ -119,11 +121,40 @@ namespace VideoGui
                 return "";
             }
         }
+
+        public byte[] CryptData(byte[] _password)
+        {
+            int[] AccessKey = { 32, 16, 22, 157, 214, 12, 138, 249, 133, 244, 116, 28, 99, 00, 111, 131, 17, 174, 21,
+                88, 99, 33, 44, 166, 88, 99, 100, 11, 232, 157, 74, 1, 28, 39, 33, 244, 166, 88, 99, 100,
+                14, 132, 157, 74, 123, 28, 49, 233, 144, 166, 188, 99 };
+            EncryptionModule EMP = new EncryptionModule(AccessKey, AccessKey.Length);
+            byte[] EncKey = { 122, 244, 162, 232, 133, 222, 127, 141, 244, 136, 172, 223, 132, 233, 125, 126 };
+            byte[] encvar = EMP.RC4(_password, EncKey);
+            return encvar;
+        }
+        public Stream GetClientSecrets()
+        {
+            try
+            {
+                byte[] clientSecret = Array.Empty<byte>();
+                
+                connectionString.ExecuteReader("SELECT * FROM SETTINGS WHERE SETTINGNAME = 'CLIENT_SECRET';", (FbDataReader r) =>
+                {
+                    clientSecret = (r["SETTING"] is System.Byte[] res) ? CryptData(res) : Array.Empty<byte>();
+                });
+                return (clientSecret.Length > 0) ? new MemoryStream(clientSecret) : new MemoryStream();
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite(MethodBase.GetCurrentMethod().Name + " " + ex.Message);
+                return new MemoryStream();
+            }
+        }
         public async Task<bool> ApplyVideoSchedule(string videoId, string title, DateTime ScheduleAt, string desc = "")
         {
             try
             {
-
+                // no client secret
                 UserCredential credential;
                 string[] scopes = new string[] { "https://www.googleapis.com/auth/youtube.upload",
                                                  "https://www.googleapis.com/auth/youtube",
@@ -132,8 +163,8 @@ namespace VideoGui
                                                  "https://www.googleapis.com/auth/youtube.readonly",
                                                  "https://www.googleapis.com/auth/youtubepartner",
                                                  "https://www.googleapis.com/auth/youtubepartner-channel-audit"};
-                string fLocation = GetExePath() + "\\client_secrets.json";
-                using (var stream = new FileStream(fLocation, FileMode.Open, FileAccess.Read))
+               // string fLocation = GetExePath() + "\\client_secrets.json";
+                using (var stream = GetClientSecrets())
                 {
                     credential = await GoogleWebAuthorizationBroker.AuthorizeAsync(
                         clientSecrets: GoogleClientSecrets.Load(stream).Secrets,

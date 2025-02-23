@@ -540,7 +540,7 @@ namespace VideoGui
                 return null;
             }
         }
-        public void SaveString(string startdate, string name)
+        public void SaveString(string str, string name)
         {
             try
             {
@@ -548,13 +548,13 @@ namespace VideoGui
                 int id = connectionString.ExecuteScalar(sql, [("@P0", name)]).ToInt(-1);
                 if (id != -1)
                 {
-                    sql = "UPDATE SETTINGS SET SETTINGNAME = @P1 WHERE ID = @P2";
-                    connectionString.ExecuteScalar(sql, [("@P1", startdate), ("@P2", id)]);
+                    sql = "UPDATE SETTINGS SET SETTING = @P1 WHERE ID = @P2";
+                    connectionString.ExecuteScalar(sql, [("@P1", str), ("@P2", id)]);
                 }
                 else
                 {
                     sql = "INSERT INTO SETTINGS (SETTING,SETTINGNAME) VALUES (@P0,@P1)";
-                    connectionString.ExecuteScalar(sql, [("@P0", startdate), ("@P1", name)]);
+                    connectionString.ExecuteScalar(sql, [("@P0", str), ("@P1", name)]);
                 }
             }
             catch (Exception ex)
@@ -2000,36 +2000,40 @@ namespace VideoGui
                             frmTitleSelect.txtTitle.Text = BaseStr.Trim();
                             frmTitleSelect.lblTitleLength.Content = BaseStr.Trim().Length;
                             int Tid = EditableshortsDirectoryList.Where(s => s.Id == ShortsDirectoryIndex).FirstOrDefault().TitleId;
-                            TitleTagsSrc = TitlesList.Where(s => s.Id == Tid).FirstOrDefault().Id;
-                            titletagsViewSource.SortDescriptions.Add(new SortDescription("Description", ListSortDirection.Ascending));
-                            titletagsViewSource.Source = TitleTagsList;
-                            titletagsViewSource.Filter += (object sender, FilterEventArgs e) =>
+                            if (TitlesList.Where(s => s.Id == Tid).Count() > 0)
                             {
-                                if (e.Item is TitleTags titleTag)
+
+                                TitleTagsSrc = TitlesList.Where(s => s.Id == Tid).FirstOrDefault().Id;
+                                titletagsViewSource.SortDescriptions.Add(new SortDescription("Description", ListSortDirection.Ascending));
+                                titletagsViewSource.Source = TitleTagsList;
+                                titletagsViewSource.Filter += (object sender, FilterEventArgs e) =>
                                 {
-                                    e.Accepted = titleTag.GroupId == TitleTagsSrc;
-                                }
-                            };
-                            availabletagsViewSource.Source = availableTagsList;
-                            availabletagsViewSource.SortDescriptions.Add(new SortDescription("Tag", ListSortDirection.Ascending));
-                            availabletagsViewSource.Filter += (object sender, FilterEventArgs e) =>
-                            {
-                                if (e.Item is AvailableTags availTag)
-                                {
-                                    bool fndx = false;
-                                    foreach (var item in titletagsViewSource.View)
+                                    if (e.Item is TitleTags titleTag)
                                     {
-                                        if (item is TitleTags titleTag && titleTag.Description == availTag.Tag)
-                                        {
-                                            fndx = true;
-                                            break;
-                                        }
+                                        e.Accepted = titleTag.GroupId == TitleTagsSrc;
                                     }
-                                    e.Accepted = !fndx;
-                                }
-                            };
-                            frmTitleSelect.TagAvailable.ItemsSource = availabletagsViewSource.View;
-                            frmTitleSelect.TagsGrp.ItemsSource = titletagsViewSource.View;
+                                };
+                                availabletagsViewSource.Source = availableTagsList;
+                                availabletagsViewSource.SortDescriptions.Add(new SortDescription("Tag", ListSortDirection.Ascending));
+                                availabletagsViewSource.Filter += (object sender, FilterEventArgs e) =>
+                                {
+                                    if (e.Item is AvailableTags availTag)
+                                    {
+                                        bool fndx = false;
+                                        foreach (var item in titletagsViewSource.View)
+                                        {
+                                            if (item is TitleTags titleTag && titleTag.Description == availTag.Tag)
+                                            {
+                                                fndx = true;
+                                                break;
+                                            }
+                                        }
+                                        e.Accepted = !fndx;
+                                    }
+                                };
+                                frmTitleSelect.TagAvailable.ItemsSource = availabletagsViewSource.View;
+                                frmTitleSelect.TagsGrp.ItemsSource = titletagsViewSource.View;
+                            }
                             break;
                         }
                     case CustomParams_Refresh:
@@ -2373,7 +2377,7 @@ namespace VideoGui
                             scs.ScraperType = EventTypes.ShortsSchedule;
                         }
                     }
-                    else if (tld is CustomParams_GetDesc cgd)
+                    if (tld is CustomParams_GetDesc cgd)
                     {
                         foreach (var item in DescriptionsList.Where(s => s.TitleTagId == cgd.id))
                         {
@@ -9282,7 +9286,7 @@ namespace VideoGui
                     List<ListScheduleItems> _listItems = SchedulingItemsList.Where(s => s.Id == iScheduleID)
                      .Select(s => new ListScheduleItems(s.Start, s.End, s.Gap)).ToList();
                     WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
-                    string gUrl = webAddressBuilder.AddFilterByDraftShorts().Address;
+                    string gUrl = webAddressBuilder.AddFilterByDraftShorts().GetHTML();
                     scheduleScraperModule = new ScraperModule(ModuleCallback, mnl_scraper_OnFinish, gUrl,
                         startdate, enddate, max, _listItems, 0);
                     scheduleScraperModule.ShowActivated = true;

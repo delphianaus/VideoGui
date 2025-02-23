@@ -70,6 +70,7 @@ using Google.Apis.YouTube.v3.Data;
 using static System.Windows.Forms.LinkLabel;
 using System.Windows.Controls.Primitives;
 using Button = System.Windows.Controls.Button;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace VideoGui
 {
@@ -1560,7 +1561,7 @@ namespace VideoGui
         }
 
 
-
+        bool InsertAtZero = false;
 
 
         private async void ProcessWV2(string html, object sender)
@@ -1576,7 +1577,25 @@ namespace VideoGui
                     }
                     else if (ehtml is not null && ehtml.Contains("Channel dashboard"))
                     {
-                        if (clickupload && ScraperType != EventTypes.ShortsSchedule)
+                        if (ScraperType == EventTypes.ShortsSchedule)
+                        {
+                            bool valid = false; 
+                            if (ehtml.Contains("@JustinsTrainJourneys"))
+                            {
+                                valid = true;
+                            }
+                            else
+                            {
+                                //DispatcherTimer.Start();
+                                valid = false;
+                            }
+                            if (valid)
+                            {
+                                InsertAtZero = true;
+                                YouTubeLoaded();
+                            }
+                        }
+                        else if (clickupload && ScraperType != EventTypes.ShortsSchedule)
                         {
                             wv2.AllowDrop = true;
                             clickupload = false;
@@ -1729,7 +1748,11 @@ namespace VideoGui
                 if (sender is WebView2 webView2Instance)
                 {
                     var task = webView2Instance.ExecuteScriptAsync("document.body.innerHTML");
+                   
                     task.ContinueWith(x => { ProcessWV2(x.Result, sender); }, TaskScheduler.FromCurrentSynchronizationContext());
+                   
+
+                   // task.ContinueWith(x => { ProcessWV2(x.Result, sender); }, TaskScheduler.FromCurrentSynchronizationContext());
                 }
             }
             catch (Exception ex)
@@ -1786,7 +1809,7 @@ namespace VideoGui
                                     index = html.IndexOf("<");
                                     html = html[..(index - 1)];
                                     filename = html.Replace("\n", "").Replace("\r", "").Trim();
-                                    if (filename.Contains("_") && IsVideoLookup && ScraperType == EventTypes.UploadTest)
+                                    if (filename.Contains("_") && IsVideoLookup && ScraperType == EventTypes.ShortsSchedule)
                                     {
                                         string idp = filename.Split("_").ToArray<string>().ToList().LastOrDefault().Trim();
                                         if (idp is not null && idp != "")
@@ -1795,12 +1818,13 @@ namespace VideoGui
                                             var p1 = new CustomParams_GetConnectionString();
                                             dbInitializer?.Invoke(this, p1);
                                             string connectionStr = p1.ConnectionString;
-                                            string sql = $"SELECT * FROM SHORTSDIRECTORY WHERE ID = {idp}";
-                                            connectionStr.ExecuteReader(sql, (FbDataReader r) =>
+                                            int idd = idp.Replace(".mp4", "").ToInt(-1);
+                                            string sql = $"SELECT * FROM SHORTSDIRECTORY WHERE ID = @UID";
+                                            connectionStr.ExecuteReader(sql, [("UID", idd)], (FbDataReader r) =>
                                             {
                                                 Id = (r["ID"] is Int32 i) ? i : -1;
-                                                TitleId = (r["TITLEID"] is Int16 tid) ? tid : -1;
-                                                DescId = (r["DESCID"] is Int16 did) ? did : -1;
+                                                TitleId = (r["TITLEID"] is int tid) ? tid : -1;
+                                                DescId = (r["DESCID"] is int did) ? did : -1;
                                             });
 
                                             string Title = "", Desc = "";
@@ -1808,13 +1832,13 @@ namespace VideoGui
                                             {
                                                 if (TitleId != -1)
                                                 {
-                                                    var p = new CustomParams_GetTitle(TitleId, Id);
+                                                    var p = new CustomParams_GetTitle(idd,TitleId);
                                                     dbInitializer?.Invoke(this, p);
                                                     Title = p.name;
                                                 }
                                                 if (DescId != -1)
                                                 {
-                                                    var p = new CustomParams_GetDesc(DescId, Id);
+                                                    var p = new CustomParams_GetDesc(idd,DescId);
                                                     dbInitializer?.Invoke(this, p);
                                                     Desc = p.name;
                                                 }
@@ -1879,7 +1903,24 @@ namespace VideoGui
                 ex.LogWrite($"wv2_NavigationCompleted {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
+        private async void wv2v_NavigationCompleted(object sender, CoreWebView2NavigationCompletedEventArgs e)
+        {
+            try
+            {
+                if ((e is not null && e.IsSuccess) || e is null)
+                {
+                    NextRecord = false;
+                    var task = (sender as WebView2).CoreWebView2.ExecuteScriptAsync("document.body.innerHTML");
 
+                    task.ContinueWith(x => { ProcessWV2Completed_ShortsScheduler(x.Result, sender); }, TaskScheduler.FromCurrentSynchronizationContext());
+
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"wv2_NavigationCompleted {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+        }
         public void SetMargin(object statusbar, int offset = 40)
         {
             try
@@ -2344,9 +2385,13 @@ namespace VideoGui
                         directshortsScheduler = new DirectshortsScheduler(() => { Show(); }, DoOnScheduleComplete, listSchedules,
                             ReleaseDate.Value, ReleaseEndDate.Value, DoReportSchedule, ScheduleMax);
                     }
+                    IsVideoLookup = true;
+
                     //string URL = webAddressBuilder.AddFiltersByDRAFT_UNLISTED(false).Finalize().Address;
                     if (DefaultUrl is not null && DefaultUrl != "")
                     {
+                        ActiveWebView[1].ZoomFactor = 0.7;
+                        ActiveWebView[1].NavigationCompleted += wv2v_NavigationCompleted;
                         ActiveWebView[1].Source = new Uri(DefaultUrl);
                         return true;
                     }
