@@ -27,7 +27,7 @@ namespace VideoGui
         public Nullable<DateTime> SelectedDate = null;
         public Nullable<TimeOnly> StartTime = null, EndTime = null;
         public Nullable<int> Max = null;
-        public ManualScheduler(OnFinish DoOnFinish, databasehook<Object> _ModuleCallBack)
+        public ManualScheduler(databasehook<Object> _ModuleCallBack, OnFinish DoOnFinish)
         {
             try
             {

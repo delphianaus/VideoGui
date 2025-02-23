@@ -81,6 +81,9 @@ using Google.Apis.YouTube.v3.Data;
 using System.Security.Permissions;
 using Google.Apis.Auth.OAuth2.Requests;
 using Xceed.Wpf.Toolkit.PropertyGrid.Editors;
+using Nancy.Diagnostics;
+using Coravel.Scheduling.Schedule;
+using static System.Windows.Forms.AxHost;
 
 
 namespace VideoGui
@@ -191,6 +194,7 @@ namespace VideoGui
         public CollectionViewSource CurrentCollectionViewSource = new CollectionViewSource();
         public CollectionViewSource ImportCollectionViewSource = new CollectionViewSource();
         public MediaImporter GoProMediaImporter = null;
+      
         public ObservableCollection<ComplexJobList> ComplexProcessingJobList = new ObservableCollection<ComplexJobList>();
         public ObservableCollection<ComplexJobHistory> ComplexProcessingJobHistory = new ObservableCollection<ComplexJobHistory>();
         public ObservableCollection<FileInfoGoPro> FileRenamer = new ObservableCollection<FileInfoGoPro>();
@@ -9047,6 +9051,124 @@ namespace VideoGui
             }
         }
 
+        private void btnSchedule_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (manualScheduler is not null)
+                {
+                    if (manualScheduler.IsClosing) manualScheduler.Close();
+                    while (!manualScheduler.IsClosed)
+                    {
+                        Thread.Sleep(100);
+                        System.Windows.Forms.Application.DoEvents();
+                    }
+                    manualScheduler.Close();
+                    manualScheduler = null;
+                }
+                manualScheduler = new ManualScheduler(ModuleCallback, ManualSchedulerFinish);
+                manualScheduler.ShowActivated = true;
+                Hide();
+                manualScheduler.Show();
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"btnSchedule_Click {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
+            }
+        }
+
+        private void ManualSchedulerFinish()
+        {
+            try
+            {
+                Show(); 
+                Task.Run(() =>
+                {
+                    int max = 0;
+                    Nullable<DateTime> startdate = null, enddate = null;
+                    if (manualScheduler is not null && !manualScheduler.IsClosed)
+                    {
+                        if (manualScheduler.IsClosing) manualScheduler.Close();
+                        while (!manualScheduler.IsClosed)
+                        {
+                            Thread.Sleep(100);
+                        }
+                        manualScheduler.Close();
+                        if (manualScheduler.HasValues)
+                        {
+                            max = manualScheduler.txtMaxSchedules.Text.ToInt(0);
+                            startdate = manualScheduler.ReleaseDate.Value;
+                            enddate = manualScheduler.ReleaseDate.Value;
+                            TimeOnly tsa = manualScheduler.StartTime.Value;
+                            TimeOnly tsb = manualScheduler.EndTime.Value;
+                            startdate = startdate.Value.Date.Add(tsa.ToTimeSpan());
+                            enddate = enddate.Value.Date.Add(tsb.ToTimeSpan());
+                        }
+
+                        /*public ScraperModule(databasehook<object> _dbInit, OnFinishId _OnFinish, 
+                         * string _Deffault_url, nullable<DateTime> Start, Nullable<DateTime> End, 
+                         * int MaxUoploads, List<ListScheduleItems> _listSchedules, int _eventid)
+                         */
+                        manualScheduler = null;
+                        string sqla = "SELECT ID FROM SETTINGS WHERE SETTINGNAME = @P0";
+                        int iScheduleID = connectionString.ExecuteScalar(sqla, [("@P0", "CURRENTSCHEDULINGID")]).ToInt(-1);
+                        if (iScheduleID != -1)
+                        {
+                            List<ListScheduleItems> _listItems = SchedulingItemsList.Where(s => s.Id == iScheduleID)
+                              .Select(s => new ListScheduleItems(s.Start, s.End, s.Gap)).ToList();
+                            WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
+                            string gUrl = webAddressBuilder.AddFilterByDraftShorts().Address;
+                            if (scheduleScraperModule is null && startdate.HasValue && enddate.HasValue && max > 0)
+                            {
+                                if (scheduleScraperModule.IsClosing) scheduleScraperModule.Close();
+                                while (!scheduleScraperModule.IsClosed)
+                                {
+                                    Thread.Sleep(100);
+                                    System.Windows.Forms.Application.DoEvents();
+                                }
+                                scheduleScraperModule.Close();
+                                scheduleScraperModule = null;
+                            }
+                            scheduleScraperModule = new ScraperModule(ModuleCallback, mnl_scraper_OnFinish, gUrl,
+                                startdate, enddate, max, _listItems, 0);
+                            scheduleScraperModule.ShowActivated = true;
+                            Hide();
+                            scheduleScraperModule.Show();
+                        }
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"ManualSchedulerFinish {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
+            }
+        }
+
+        private void mnl_scraper_OnFinish(int id)
+        {
+            try
+            {
+                Show();
+                Task.Run(() =>
+                {
+                    if (scheduleScraperModule is not null && !scheduleScraperModule.IsClosed)
+                    {
+                        if (scheduleScraperModule.IsClosing) scheduleScraperModule.Close();
+                        while (!scheduleScraperModule.IsClosed)
+                        {
+                            Thread.Sleep(100);
+                        }
+                        scheduleScraperModule.Close();
+                        scheduleScraperModule = null;
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"mnl_scraper_OnFinish {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
+            }
+        }
+
         private void ActionScheduleSelectorFinish()
         {
             try
@@ -10235,7 +10357,7 @@ namespace VideoGui
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
             }
         }
-        List<(long, long, string)> ComplexData = new List<(long, long, string)>();
+
 
 
         public unsafe void ProcessMutliFile(string sourcefile, List<(long, long, string)> CutData)

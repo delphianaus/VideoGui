@@ -149,10 +149,11 @@
 
         </StatusBar>
         <Button x:Name="BtnFileFixer" Content="File Fixer" HorizontalAlignment="Left" Height="24" Margin="26,0,0,82" VerticalAlignment="Bottom" Width="53" Click="BtnFileFixer_Click"/>
-        <Button x:Name="BtnVideoCardDetails" Content="" HorizontalAlignment="Left" Height="30" Margin="469,0,0,79" VerticalAlignment="Bottom" Width="40" Click="BtnVideoCardDetails_Click" RenderTransformOrigin="-0.864,0.693"/>
-        <Button x:Name="btnEditDirectories" Content="Edit Dirs" Height="26" Margin="515,0,0,81" VerticalAlignment="Bottom" HorizontalAlignment="Left" Click="btnEditDirectories_Click" Width="57"/>
-        <Button x:Name="btnEditSchedules" Content="Edit Schedules" Height="26" Margin="576,0,0,81" VerticalAlignment="Bottom" HorizontalAlignment="Left" Click="btnEditSchedules_Click" Width="89"/>
-        <Button x:Name="btnEditActions" Content="Edit Actions" Height="26" Margin="669,0,0,81" VerticalAlignment="Bottom" HorizontalAlignment="Left" Click="btnEditActions_Click" Width="74"/>
+        <Button x:Name="BtnVideoCardDetails" Content="" HorizontalAlignment="Left" Height="26" Margin="469,0,0,81" VerticalAlignment="Bottom" Width="25" Click="BtnVideoCardDetails_Click" RenderTransformOrigin="-0.864,0.693"/>
+        <Button x:Name="btnEditDirectories" Content="Edit Dirs" Height="26" Margin="498,0,0,82" VerticalAlignment="Bottom" HorizontalAlignment="Left" Click="btnEditDirectories_Click" Width="45"/>
+        <Button x:Name="btnEditSchedules" Content="Edit Schedules" Height="26" Margin="545,0,0,82" VerticalAlignment="Bottom" HorizontalAlignment="Left" Click="btnEditSchedules_Click" Width="75"/>
+        <Button x:Name="btnEditActions" Content="Edit Actions" Height="26" Margin="622,0,0,82" VerticalAlignment="Bottom" HorizontalAlignment="Left" Click="btnEditActions_Click" Width="68"/>
+        <Button x:Name="btnSchedule" Content="Scheduler" Height="26" Margin="692,0,0,82" VerticalAlignment="Bottom" HorizontalAlignment="Left" Click="btnSchedule_Click" Width="54"/>
     </Grid>
 
 </Window>
