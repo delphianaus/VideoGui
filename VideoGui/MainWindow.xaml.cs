@@ -3335,6 +3335,7 @@ namespace VideoGui
                 connectionString.CreateTableIfNotExists(sqlstring);
                 connectionString.AddFieldToTable("SETTINGS", "SETTINGDATE", "DATE");
                 connectionString.AddFieldToTable("SETTINGS", "SETTINGTIME", "TIME");
+                //connectionString.AddFieldToTable("SETTINGS", "SETTINGBLOB", "BLOB");
 
 
 
@@ -3998,25 +3999,27 @@ namespace VideoGui
                 OnIsFileInUse = new IsFileInUse(IsFileActive);
                 InitializeComponent();
                 ObservableCollectionFilter = new ObservableCollectionFilters();
-                MainWindowX.KeyDown += Window_KeyDown_EventHandler;
+                MainWindowX.KeyDown += Window_KeyDown_EventHandler;  
+                Loadsettings();
                 string clientSecret = "", p = "";
                 connectionString = GetConectionString();
+                DbInit();
                 connectionString.ExecuteReader("SELECT * FROM SETTINGS WHERE SETTINGNAME = 'CLIENT_SECRET';", (FbDataReader r) =>
                 {
-                    clientSecret = (r["SETTING"] is System.Byte[] res) ? Encoding.ASCII.GetString(CryptData(res)) : "";
+                    clientSecret = (r["SETTINGBLOB"] is byte[] res) ? Encoding.ASCII.GetString(CryptData(res)) : "";
                 });
 
                 if (clientSecret == "")
                 {
                     var lines = File.ReadAllText(GetExePath() + "\\client_secrets.json");
                     byte[] details = CryptData(Encoding.ASCII.GetBytes(lines));
-                    string sql = $"INSERT INTO SETTINGS (SETTINGNAME, SETTING) VALUES (@FIELD, @DATA) RETURNING ID;";
+                    string sql = $"INSERT INTO SETTINGS (SETTINGNAME, SETTINGBLOB) VALUES (@FIELD, @DATA) RETURNING ID;";
                     int id = connectionString.ExecuteScalar(sql, [("@FIELD", "CLIENT_SECRET"), ("@DATA", details)]).ToInt(-1);
                 }
                
 
-                Loadsettings();
-                DbInit();
+               
+               
                 ScheduleProccessor = new ProcessSchedule(OnProcessSchedule);
 
                 EventTimer = new System.Threading.Timer(TimerEvent_Handler, null, 0, 1000);

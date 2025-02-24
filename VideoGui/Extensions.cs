@@ -614,7 +614,13 @@ namespace VideoGui
                    $"RDB$RELATION_NAME=@P1 AND RDB$FIELD_NAME = @P0;";
                 var resx = connectionStr.ExecuteScalar(sqlb, [("@P0", Field.ToUpper()), ("@P1", Table.ToUpper())]);
                 if (resx is not null) return;
-                if (defaultvalue is null)
+                if (FieldType == "BLOB")
+                {
+                    var sq = $"ALTER TABLE @P0 ADD @P1 "+
+                        "BLOB SUB_TYPE BINARY SEGMENT SIZE 2048;";
+                    connectionStr.ExecuteScalar(sq, [("@P0", Table.ToUpper()), ("@P1", Field.ToUpper())]);
+                }
+                else if (defaultvalue is null)
                 {
                     sql = $"ALTER TABLE @P1 ADD @P0 @P2 NOT NULL;";
                     connectionStr.ExecuteScalar(sql, [("@P0", Field.ToUpper()), ("@P1", Table.ToUpper()),

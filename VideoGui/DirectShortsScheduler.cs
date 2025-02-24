@@ -140,7 +140,7 @@ namespace VideoGui
                 
                 connectionString.ExecuteReader("SELECT * FROM SETTINGS WHERE SETTINGNAME = 'CLIENT_SECRET';", (FbDataReader r) =>
                 {
-                    clientSecret = (r["SETTING"] is System.Byte[] res) ? CryptData(res) : Array.Empty<byte>();
+                    clientSecret = (r["SETTINGBLOB"] is System.Byte[] res) ? CryptData(res) : Array.Empty<byte>();
                 });
                 return (clientSecret.Length > 0) ? new MemoryStream(clientSecret) : new MemoryStream();
             }
