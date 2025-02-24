@@ -45,6 +45,7 @@ using VideoGui.Models.delegates;
 using FirebirdSql.Data.FirebirdClient;
 using Microsoft.Web.WebView2.Wpf;
 using System.Windows.Controls.Primitives;
+using System.Reflection.Metadata;
 
 namespace VideoGui
 {
@@ -616,8 +617,7 @@ namespace VideoGui
                 if (resx is not null) return;
                 if (FieldType == "BLOB")
                 {
-                    var sq = $"ALTER TABLE @P0 ADD @P1 "+
-                        "BLOB SUB_TYPE BINARY SEGMENT SIZE 2048;";
+                    var sq = "ALTER TABLE @P0 ADD @P1 BLOB SUB_TYPE BINARY SEGMENT SIZE 2048 DEFAULT NULL;";
                     connectionStr.ExecuteScalar(sq, [("@P0", Table.ToUpper()), ("@P1", Field.ToUpper())]);
                 }
                 else if (defaultvalue is null)
