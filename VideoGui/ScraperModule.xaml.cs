@@ -1422,11 +1422,21 @@ namespace VideoGui
                             if (Allow)
                             {
                                 btnNext_Task(sender);
-                                for (int i = 0; i < 50; i++)
+                                string ehtml = "";
+                                while(true)
                                 {
-                                    Thread.Sleep(100);
-                                    System.Windows.Forms.Application.DoEvents();
+                                    var cts = new CancellationTokenSource();
+                                    cts.CancelAfter(TimeSpan.FromMilliseconds(300));
+                                    while (!cts.IsCancellationRequested)
+                                    {
+                                        Thread.Sleep(200);
+                                        System.Windows.Forms.Application.DoEvents();
+                                    }
+                                    var html = wv2.CoreWebView2.ExecuteScriptAsync("document.body.innerHTML").GetAwaiter().GetResult();
+                                    ehtml = Regex.Unescape(html);
+                                    if (!ehtml.Contains(LastNode)) break;
                                 }
+                                ProcessWV2Completed_ShortsScheduler(ehtml, wv2);
 
                             }
                         }
@@ -1454,7 +1464,10 @@ namespace VideoGui
             nextButton.click();
         }
     ";
+
+                (sender as WebView2).NavigationCompleted += wv2v_NavigationCompleted;
                 (sender as WebView2).CoreWebView2.ExecuteScriptAsync(script).ConfigureAwait(true);
+
             }
             catch (Exception ex)
             {

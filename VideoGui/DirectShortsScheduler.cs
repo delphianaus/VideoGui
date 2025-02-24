@@ -235,7 +235,7 @@ namespace VideoGui
         }
 
 
-        public void ScheduleVideo(string videoId, string title, string desc, bool UseNewStart)
+        public void ScheduleVideo(string videoId, string title,string desc , bool UseNewStart)
         {
             try
             {
@@ -243,7 +243,7 @@ namespace VideoGui
                 {
                     if (AvailableSchedules.Count > -1)
                     {
-                        DoSchedule(videoId, title, UseNewStart, desc);
+                        DoSchedule(videoId, title, UseNewStart);
                     }
                     else
                     {
@@ -258,27 +258,23 @@ namespace VideoGui
                 ex.LogWrite($"ScheduleVideo {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
             }
         }
-        
 
-        public void DoSchedule(string videoId, string title, bool UseNewStart, string desc = "")
+
+        public void DoSchedule(string videoId, string title, bool UseNewStart)
         {
             try
             {
                 LastValidVideoScheduledAt = CurrentDate.ToDateTime(CurrentTime);
-                if (!CurrentDate.ToDateTime(CurrentTime).IsBetween(StartDate, EndDate))
-                {
-
-                }
                 bool IsStartMode = BeginMode && CurrentDate.ToDateTime(CurrentTime) >= StartDate;
                 bool IsEndMode = FinishMode && (CurrentDate.ToDateTime(CurrentTime) >= StartDate &&
                                                 CurrentDate.ToDateTime(CurrentTime) <= EndDate);
-
                 IsStartMode = IsStartMode;//|| IsEndMode
                 if (CurrentDate.ToDateTime(CurrentTime).IsBetween(StartDate, EndDate) || IsEndMode || IsStartMode)
                 {
                     bool IsValid = false;
                     while (!IsValid)
                     {
+                        System.Windows.Forms.Application.DoEvents();
                         if (ListScheduleIndex < ScheduleList.Count)
                         {
                             var _end = ScheduleList.LastOrDefault().End;
@@ -296,14 +292,7 @@ namespace VideoGui
                                     else if (ctp > dtp)
                                     {
                                         CurrentDate = CurrentDate.AddDays(1);
-                                        if (UseNewStart)
-                                        {
-                                            CurrentTime = TimeOnly.FromDateTime(StartDate);
-                                        }
-                                        else
-                                        {
-                                            CurrentTime = ScheduleList[ListScheduleIndex].Start;
-                                        }
+                                        CurrentTime = UseNewStart ? TimeOnly.FromDateTime(StartDate) : ScheduleList[ListScheduleIndex].Start;
                                         IsValid = true;
                                         break;
                                     }
@@ -320,14 +309,8 @@ namespace VideoGui
                                     else if (ctp > dtp)
                                     {
                                         CurrentDate = CurrentDate.AddDays(1);
-                                        if (UseNewStart)
-                                        {
-                                            CurrentTime = TimeOnly.FromDateTime(StartDate);
-                                        }
-                                        else
-                                        {
-                                            CurrentTime = ScheduleList[ListScheduleIndex].Start;
-                                        }
+                                        CurrentTime = UseNewStart ? TimeOnly.FromDateTime(StartDate)
+                                            : ScheduleList[ListScheduleIndex].Start;
                                         IsValid = true;
                                         break;
                                     }
@@ -336,14 +319,9 @@ namespace VideoGui
                             else if (CurrentTime >= _end)
                             {
                                 CurrentDate = CurrentDate.AddDays(1);
-                                if (UseNewStart)
-                                {
-                                    CurrentTime = TimeOnly.FromDateTime(StartDate);
-                                }
-                                else
-                                {
-                                    CurrentTime = ScheduleList[ListScheduleIndex].Start;
-                                }
+                                CurrentTime = UseNewStart ? TimeOnly.FromDateTime(StartDate)
+                                            : ScheduleList[ListScheduleIndex].Start;
+
                                 if (CurrentDate.ToDateTime(CurrentTime).IsBetween(StartDate, EndDate))
                                 {
                                     IsValid = true;
@@ -357,14 +335,18 @@ namespace VideoGui
                                         IsValid = !(CurrentDate > DateOnly.FromDateTime(EndDate.Date));
                                         if (!IsValid)
                                         {
-                                            DoOnFinishSchedulesComplete?.Invoke();
-                                            break;
+                                            if (DoOnFinishSchedulesComplete.Invoke())
+                                            {
+                                                break;
+                                            }
                                         }
                                     }
                                     else
                                     {
-                                        DoOnFinishSchedulesComplete?.Invoke();
-                                        break;
+                                        if (DoOnFinishSchedulesComplete.Invoke())
+                                        {
+                                            break;
+                                        }
                                     }
                                 }
                             }
@@ -377,13 +359,7 @@ namespace VideoGui
                                         IsValid = true;
                                         break;
                                     }
-                                    else
-                                    {
-                                        if (true)
-                                        {
-
-                                        }
-                                    }
+                                  
                                 }
                                 else ListScheduleIndex++;
                                 if (ListScheduleIndex >= ScheduleList.Count)
@@ -395,13 +371,20 @@ namespace VideoGui
                     }
                     if (IsValid)
                     {
+                        System.Windows.Forms.Application.DoEvents();
                         ApplyVideoSchedule(videoId, title, CurrentDate.ToDateTime(CurrentTime)).ConfigureAwait(false);
                         int WrappedDays = 0;
+                        System.Windows.Forms.Application.DoEvents();
                         CurrentTime = CurrentTime.AddMinutes(ScheduleList[ListScheduleIndex].Gap, out WrappedDays);
                         if (WrappedDays > 0)
                         {
                             CurrentDate = CurrentDate.AddDays(1);
                             CurrentTime = ScheduleList.FirstOrDefault().Start;
+                        }
+
+                        if (CurrentDate.ToDateTime(CurrentTime) >= EndDate)
+                        {
+                            DoOnFinishSchedulesComplete?.Invoke();
                         }
                     }
                 }

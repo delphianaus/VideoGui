@@ -4043,8 +4043,8 @@ namespace VideoGui
                     string err = e;
                     err.WriteLog();
                     string AppPath = GetExePath();
-                    DeleteIfExists(AppPath + ffp);
-                    DeleteIfExists(AppPath + ffm);
+                    //DeleteIfExists(AppPath + ffp);
+                    //DeleteIfExists(AppPath + ffm);
                 }
                 lstBoxJobs.ItemsSource = ProcessingJobs;
                 SetupHandlers().ConfigureAwait(false);
@@ -9313,7 +9313,7 @@ namespace VideoGui
                         scheduleScraperModule.Close();
                         scheduleScraperModule = null;
                     }
-                    List<ListScheduleItems> _listItems = SchedulingItemsList.Where(s => s.Id == iScheduleID)
+                    List<ListScheduleItems> _listItems = SchedulingItemsList.Where(s => s.ScheduleId == iScheduleID)
                      .Select(s => new ListScheduleItems(s.Start, s.End, s.Gap)).ToList();
                     WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
                     string gUrl = webAddressBuilder.AddFilterByDraftShorts().GetHTML();
