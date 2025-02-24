@@ -2453,7 +2453,13 @@ namespace VideoGui
         {
             try
             {
-
+                Dispatcher.Invoke(() =>
+                {
+                    int r = directshortsScheduler.ScheduleNumber;
+                    string t = $"{title.Replace("\n", "").Replace("\r", "").Trim()} {id} {r} {dateTime}";
+                    lstMain.Items.Insert(0, t);
+                    System.Windows.Forms.Application.DoEvents();
+                });
             }
             catch (Exception ex)
             {
