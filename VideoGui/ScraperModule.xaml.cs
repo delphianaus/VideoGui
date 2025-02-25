@@ -105,7 +105,7 @@ namespace VideoGui
         TimeOnly CurrentTime = new TimeOnly();
         DateOnly CurrentDate = DateOnly.FromDateTime(DateTime.Now);
         public DateTime StartDate = DateTime.Now, EndDate = DateTime.Now, LastValidDate = DateTime.Now;
-
+        bool IsTest = true;
         //string Title = "", Desc = "";
         Dictionary<int, WebView2> wv2Dictionary = new Dictionary<int, WebView2>();
         Dictionary<int, WebView2> ActiveWebView = new Dictionary<int, WebView2>();
@@ -179,7 +179,8 @@ namespace VideoGui
 
 
         public ScraperModule(databasehook<object> _dbInit, OnFinishId _OnFinish, string _Default_url,
-            Nullable<DateTime> Start, Nullable<DateTime> End, int MaxUoploads, List<ListScheduleItems> _listSchedules, int _eventid)
+            Nullable<DateTime> Start, Nullable<DateTime> End, int MaxUoploads, 
+            List<ListScheduleItems> _listSchedules, int _eventid ,bool IsTest)
         {
             try
             {
@@ -1335,11 +1336,11 @@ namespace VideoGui
                             Nullable<DateTime> dateTime = null;
                             if (ScraperType == EventTypes.ShortsSchedule)
                             {
-                                // grab video filename. await till its got it.
+                                // grab video filename. await till its got it
                                 string gUrl2 = $"https://studio.youtube.com/video/{Id}/edit";
                                 WaitingFileName = true;
                                 wv2A10.NavigationCompleted += wv2_NavigationCompleted_GetFileName;
-                                wv2A10.Source = new Uri(gUrl2);
+                                wv2A10.Source = new Uri(gUrl2); 
                                 var cts = new CancellationTokenSource();
                                 cts.CancelAfter(TimeSpan.FromSeconds(300));
                                 TimedOut = false;
@@ -1355,6 +1356,8 @@ namespace VideoGui
                                         System.Windows.Forms.Application.DoEvents();
                                     }
                                 }
+
+
                                 if (directshortsScheduler is not null && !cts.IsCancellationRequested)
                                 {
                                     directshortsScheduler.ScheduleVideo(Id, Title, Desc, false);
@@ -1398,10 +1401,7 @@ namespace VideoGui
                         int iCntNow = CntNow.ToInt(-1);
                         if (iCntNow > 0 && iCnt > 0)
                         {
-                            if (iCntNow < iCnt)
-                            {
-                                processnextnode = true;
-                            }
+                            processnextnode = (iCntNow < iCnt) ? true : processnextnode;
                         }
                         if (processnextnode && DoNextNode)
                         {
@@ -1410,33 +1410,40 @@ namespace VideoGui
                             bool Allow = true;
                             if (directshortsScheduler is not null)
                             {
-                                if (directshortsScheduler.ScheduleNumber >= directshortsScheduler.MaxNumberSchedules)
+                                if (directshortsScheduler.ScheduleNumber+1 >= directshortsScheduler.MaxNumberSchedules)
                                 {
                                     Allow = false;
                                 }
                                 if (TimedOut)
                                 {
                                     Allow = false;
+                                    
                                 }
                             }
                             if (Allow)
                             {
                                 btnNext_Task(sender);
                                 string ehtml = "";
-                                while(true)
+                                while (true)
                                 {
                                     var cts = new CancellationTokenSource();
-                                    cts.CancelAfter(TimeSpan.FromMilliseconds(300));
+                                    cts.CancelAfter(TimeSpan.FromMilliseconds(400));
                                     while (!cts.IsCancellationRequested)
                                     {
                                         Thread.Sleep(200);
                                         System.Windows.Forms.Application.DoEvents();
                                     }
-                                    var html = wv2.CoreWebView2.ExecuteScriptAsync("document.body.innerHTML").GetAwaiter().GetResult();
-                                    ehtml = Regex.Unescape(html);
-                                    if (!ehtml.Contains(LastNode)) break;
+                                    var task = wv2.ExecuteScriptAsync("document.body.innerHTML");
+                                    task.ContinueWith(x => { ehtml = Regex.Unescape(x.Result); }, TaskScheduler.FromCurrentSynchronizationContext());
+                                    if (!ehtml.Contains(LastNode) && ehtml != "") break;
                                 }
-                                ProcessWV2Completed_ShortsScheduler(ehtml, wv2);
+                                NextRecord = false;
+                                var task1 = (sender as WebView2).CoreWebView2.ExecuteScriptAsync("document.body.innerHTML");
+
+                                task1.ContinueWith(x => { 
+                                    ProcessWV2Completed_ShortsScheduler(x.Result, sender); 
+                                }, TaskScheduler.FromCurrentSynchronizationContext());
+
 
                             }
                         }
@@ -1465,8 +1472,9 @@ namespace VideoGui
         }
     ";
 
-                (sender as WebView2).NavigationCompleted += wv2v_NavigationCompleted;
-                (sender as WebView2).CoreWebView2.ExecuteScriptAsync(script).ConfigureAwait(true);
+                var webView2 = sender as WebView2;
+                //webView2.NavigationCompleted += wv2v_NavigationCompleted;
+                await webView2.ExecuteScriptAsync(script);
 
             }
             catch (Exception ex)
@@ -1592,7 +1600,7 @@ namespace VideoGui
                     {
                         if (ScraperType == EventTypes.ShortsSchedule)
                         {
-                            bool valid = false; 
+                            bool valid = false;
                             if (ehtml.Contains("@JustinsTrainJourneys"))
                             {
                                 valid = true;
@@ -1761,11 +1769,11 @@ namespace VideoGui
                 if (sender is WebView2 webView2Instance)
                 {
                     var task = webView2Instance.ExecuteScriptAsync("document.body.innerHTML");
-                   
-                    task.ContinueWith(x => { ProcessWV2(x.Result, sender); }, TaskScheduler.FromCurrentSynchronizationContext());
-                   
 
-                   // task.ContinueWith(x => { ProcessWV2(x.Result, sender); }, TaskScheduler.FromCurrentSynchronizationContext());
+                    task.ContinueWith(x => { ProcessWV2(x.Result, sender); }, TaskScheduler.FromCurrentSynchronizationContext());
+
+
+                    // task.ContinueWith(x => { ProcessWV2(x.Result, sender); }, TaskScheduler.FromCurrentSynchronizationContext());
                 }
             }
             catch (Exception ex)
@@ -1845,13 +1853,13 @@ namespace VideoGui
                                             {
                                                 if (TitleId != -1)
                                                 {
-                                                    var p = new CustomParams_GetTitle(idd,TitleId);
+                                                    var p = new CustomParams_GetTitle(idd, TitleId);
                                                     dbInitializer?.Invoke(this, p);
                                                     Title = p.name;
                                                 }
                                                 if (DescId != -1)
                                                 {
-                                                    var p = new CustomParams_GetDesc(idd,DescId);
+                                                    var p = new CustomParams_GetDesc(idd, DescId);
                                                     dbInitializer?.Invoke(this, p);
                                                     Desc = p.name;
                                                 }
@@ -1934,7 +1942,7 @@ namespace VideoGui
                 ex.LogWrite($"wv2_NavigationCompleted {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-        public void SetMargin(object statusbar, int offset = 40)
+        public void SetMargin(object statusbar, int offset = 78)
         {
             try
             {
@@ -2430,7 +2438,7 @@ namespace VideoGui
                 {
                     bool res = false;
                     int r = directshortsScheduler.ScheduleNumber;
-                    lstMain.Items.Insert(0, $"{r} Schedules Complete");
+                    lstMain.Items.Insert(0, $"{r+1} Schedules Complete");
                     if (Days > 1)
                     {
                         if (CurrentDay > Days - 1) return false;
@@ -2469,7 +2477,7 @@ namespace VideoGui
                 Dispatcher.Invoke(() =>
                 {
                     int r = directshortsScheduler.ScheduleNumber;
-                    string t = $"{title.Replace("\n", "").Replace("\r", "").Trim()} {id} {r} {dateTime}";
+                    string t = $"{title.Replace("\n", "").Replace("\r", "").Trim()} {id} {r+1} {dateTime}";
                     lstMain.Items.Insert(0, t);
                     System.Windows.Forms.Application.DoEvents();
                 });

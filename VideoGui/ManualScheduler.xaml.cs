@@ -23,7 +23,7 @@ namespace VideoGui
     public partial class ManualScheduler : Window
     {
         databasehook<Object> ModuleCallBack = null;
-        public bool IsClosed = false, IsClosing = false, IsCopy = false, HasValues = false;
+        public bool IsClosed = false, IsClosing = false, IsCopy = false, HasValues = false, TestMode = false;
         public Nullable<DateTime> SelectedDate = null;
         public Nullable<TimeOnly> StartTime = null, EndTime = null;
         public Nullable<int> Max = null;
@@ -60,12 +60,13 @@ namespace VideoGui
                     EndTime = TimeOnly.FromDateTime(ReleaseTimeEnd.Value.Value);
                 }
                 HasValues = (Max.HasValue && SelectedDate.HasValue && StartTime.HasValue && EndTime.HasValue);
-        
+                TestMode = chkSchedule.IsChecked.Value;
                 if (HasValues)
                 {
                     ModuleCallBack?.Invoke(this, new CustomParams_SaveSchedule(SelectedDate.Value,
                         ReleaseTimeStart.Value.Value.TimeOfDay, 
-                        ReleaseTimeEnd.Value.Value.TimeOfDay, txtMaxSchedules.Text.ToInt(0))) ;
+                        ReleaseTimeEnd.Value.Value.TimeOfDay, txtMaxSchedules.Text.ToInt(0)),
+                        chkSchedule.IsChecked.Value) ;
                 }
             
             }            

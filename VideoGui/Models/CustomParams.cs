@@ -68,14 +68,16 @@ namespace VideoGui.Models
         public DateTime ScheduleDate { get; set; }
         public TimeSpan ScheduleTimeStart { get; set; }
         public TimeSpan ScheduleTimeEnd { get; set; }
+        public bool TestMode { get; set; } = false; 
         public int max { get; set; } = 0;
         public CustomParams_SaveSchedule(DateTime _ScheduleDate, TimeSpan _ScheduleTimeStart, 
-            TimeSpan _ScheduleTimeEnd, int _max)
+            TimeSpan _ScheduleTimeEnd, int _max, bool _TestMode)
         {
             ScheduleDate = _ScheduleDate;
             ScheduleTimeStart = _ScheduleTimeStart;
             ScheduleTimeEnd = _ScheduleTimeEnd;
             max = _max;
+            TestMode = TestMode;
         }
     }
     public class CustomParams_GetVideoFileName

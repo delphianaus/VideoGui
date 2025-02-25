@@ -13,6 +13,8 @@
             <GroupBox x:Name="grpScheduleDates" Header="Video Scheduled Date &amp; Time" Canvas.Top="73" 
                       VerticalAlignment="Top" Margin="0,0,7,0" Height="73" Width="524">
                 <Canvas x:Name="cnvmain" Margin="0,0,0,0" Width="516" Height="52">
+                    <CheckBox x:Name="chkSchedule" Content="Test Mode" Canvas.Top="48" Canvas.Left="419" 
+                              HorizontalAlignment="Left" VerticalAlignment="Top"/>
                     <Label Name="lblDate" Content="Date :" HorizontalAlignment="Center"
                            Canvas.Top="16" VerticalAlignment="Top" Canvas.Left="6"/>
                     <xctk:DateTimePicker x:Name="ReleaseDate" Format="Custom" 

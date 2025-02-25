@@ -365,7 +365,7 @@ namespace VideoGui
                 int MaxShorts = MaxUploads.ToInt(80);
                 int MaxPerSlot = uploadsnumber.ToInt(100);
                 scraperModule = new ScraperModule(ModuleCallback, FinishScraper,
-                    gUrl, startdate, enddate, SchMaxUploads, _listSchedules, _eventid);
+                    gUrl, startdate, enddate, SchMaxUploads, _listSchedules, _eventid, true);
                 Hide();
                 scraperModule.ShowActivated = true;
                 scraperModule.Show();
@@ -595,6 +595,8 @@ namespace VideoGui
                     Nullable<TimeSpan> st = LoadTime("ScheduleTimeStart");
                     Nullable<TimeSpan> et = LoadTime("ScheduleTimeEnd");
                     var s = LoadString("maxr");
+                    var test = LoadString("TestMode");
+                    bool IsTest = (test == "True") ? true : false;
                     string pp = (s is string str) ? str : "";
                     DateTime r = new DateTime(1,1,1);
                     if (dt.HasValue && st.HasValue && et.HasValue && pp != "")
@@ -603,6 +605,7 @@ namespace VideoGui
                         manualScheduler.ReleaseDate.Value = dt.Value.Date;
                         manualScheduler.ReleaseTimeStart.Value = r.AtTime(TimeOnly.FromTimeSpan(st.Value));
                         manualScheduler.ReleaseTimeEnd.Value = r.AtTime(TimeOnly.FromTimeSpan(et.Value));
+                        manualScheduler.chkSchedule.IsChecked = IsTest;
                     }
                 }
                 else if (tld is CustomParams_SaveSchedule cpSaveSchedule)
@@ -613,6 +616,7 @@ namespace VideoGui
                     SaveDates(dt, "ScheduleDate");
                     SaveTime(st, "ScheduleTimeStart");
                     SaveTime(et, "ScheduleTimeEnd");
+                    SaveString(cpSaveSchedule.TestMode.ToString(), "TestMode");
                     SaveString(cpSaveSchedule.max.ToString(), "maxr");
                 }
             }
@@ -2958,7 +2962,7 @@ namespace VideoGui
                         WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
                         string gUrl = webAddressBuilder.AddFilterByDraftShorts().Address;
                         scraperModule = new ScraperModule(ModuleCallback, ShortsScheduler_OnFinish,
-                            gUrl, Start, End, SchMaxUploads, ScheduleListItems, eventdef.Id);//, false, true, 0, 0);
+                            gUrl, Start, End, SchMaxUploads, ScheduleListItems, eventdef.Id, true);//, false, true, 0, 0);
                         scraperModule.ShowActivated = true;
                     }
 
@@ -4096,7 +4100,7 @@ namespace VideoGui
         {
             try
             {
-                List<ListScheduleItems> _listItems = SchedulingItemsList.Where(s => s.Id == ScheduleID)
+                List<ListScheduleItems> _listItems = SchedulingItemsList.Where(s => s.ScheduleId == ScheduleID)
                    .Select(s => new ListScheduleItems(s.Start, s.End, s.Gap)).ToList();
                 Nullable<DateTime> startdate = start, enddate = end;
                 WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
@@ -9276,7 +9280,7 @@ namespace VideoGui
             try
             {
                 Show();
-
+                bool IsTest = false;
                 int max = 0;
                 Nullable<DateTime> startdate = null, enddate = null;
                 if (manualScheduler is not null && !manualScheduler.IsClosed)
@@ -9296,6 +9300,7 @@ namespace VideoGui
                     TimeOnly tsb = manualScheduler.EndTime.Value;
                     startdate = startdate.Value.Date.Add(tsa.ToTimeSpan());
                     enddate = enddate.Value.Date.Add(tsb.ToTimeSpan());
+                    IsTest = manualScheduler.TestMode;
                 }
                 manualScheduler = null;
                 string sqla = "SELECT ID FROM SETTINGS WHERE SETTINGNAME = @P0";
@@ -9318,7 +9323,7 @@ namespace VideoGui
                     WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
                     string gUrl = webAddressBuilder.AddFilterByDraftShorts().GetHTML();
                     scheduleScraperModule = new ScraperModule(ModuleCallback, mnl_scraper_OnFinish, gUrl,
-                        startdate, enddate, max, _listItems, 0);
+                        startdate, enddate, max, _listItems, 0, IsTest);
                     scheduleScraperModule.ShowActivated = true;
                     Hide();
                     scheduleScraperModule.Show();

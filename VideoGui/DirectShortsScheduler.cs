@@ -29,7 +29,8 @@ namespace VideoGui
         DateOnly CurrentDate = DateOnly.FromDateTime(DateTime.Now);
         TimeOnly LastValidTime = TimeOnly.FromTimeSpan(TimeSpan.Zero);
         DateTime ScheduleAt = DateTime.Now.AddYears(-500);
-        public string connectionString = ""; 
+        public string connectionString = "";
+        bool IsTest = true;
         List<ListScheduleItems> ScheduleList = new List<ListScheduleItems>();
         public DateTime StartDate = DateTime.Now, EndDate = DateTime.Now, LastValidDate = DateTime.Now;
         List<DateTime> AvailableSchedules = new List<DateTime>();
@@ -137,7 +138,7 @@ namespace VideoGui
             try
             {
                 byte[] clientSecret = Array.Empty<byte>();
-                
+
                 connectionString.ExecuteReader("SELECT * FROM SETTINGS WHERE SETTINGNAME = 'CLIENT_SECRET';", (FbDataReader r) =>
                 {
                     clientSecret = (r["SETTINGBLOB"] is System.Byte[] res) ? CryptData(res) : Array.Empty<byte>();
@@ -163,7 +164,7 @@ namespace VideoGui
                                                  "https://www.googleapis.com/auth/youtube.readonly",
                                                  "https://www.googleapis.com/auth/youtubepartner",
                                                  "https://www.googleapis.com/auth/youtubepartner-channel-audit"};
-               // string fLocation = GetExePath() + "\\client_secrets.json";
+                // string fLocation = GetExePath() + "\\client_secrets.json";
                 using (var stream = GetClientSecrets())
                 {
                     credential = await GoogleWebAuthorizationBroker.AuthorizeAsync(
@@ -235,7 +236,7 @@ namespace VideoGui
         }
 
 
-        public void ScheduleVideo(string videoId, string title,string desc , bool UseNewStart)
+        public void ScheduleVideo(string videoId, string title, string desc, bool UseNewStart)
         {
             try
             {
@@ -243,12 +244,14 @@ namespace VideoGui
                 {
                     if (AvailableSchedules.Count > -1)
                     {
+
                         DoSchedule(videoId, title, UseNewStart);
                     }
                     else
                     {
                         DateTime newSchedule = AvailableSchedules.FirstOrDefault();
                         AvailableSchedules.RemoveAt(0);
+
                         ApplyVideoSchedule(videoId, title, newSchedule, desc).ConfigureAwait(false);
                     }
                 }
@@ -359,7 +362,7 @@ namespace VideoGui
                                         IsValid = true;
                                         break;
                                     }
-                                  
+
                                 }
                                 else ListScheduleIndex++;
                                 if (ListScheduleIndex >= ScheduleList.Count)
@@ -372,7 +375,15 @@ namespace VideoGui
                     if (IsValid)
                     {
                         System.Windows.Forms.Application.DoEvents();
-                        ApplyVideoSchedule(videoId, title, CurrentDate.ToDateTime(CurrentTime)).ConfigureAwait(false);
+                        if (!IsTest)
+                        {
+                            ApplyVideoSchedule(videoId, title, CurrentDate.ToDateTime(CurrentTime)).ConfigureAwait(false);
+                        }
+                        else
+                        {
+                            DoReportScheduled(CurrentDate.ToDateTime(CurrentTime), videoId, "Test");
+                            ScheduleNumber++;
+                        }
                         int WrappedDays = 0;
                         System.Windows.Forms.Application.DoEvents();
                         CurrentTime = CurrentTime.AddMinutes(ScheduleList[ListScheduleIndex].Gap, out WrappedDays);
