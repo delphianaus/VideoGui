@@ -11,10 +11,10 @@
     <Grid>
         <Border x:Name="brdmain" BorderBrush="Black" BorderThickness="3" Margin="2,1,3,58" AllowDrop="True">
             <GroupBox x:Name="grpScheduleDates" Header="Video Scheduled Date &amp; Time" Canvas.Top="73" 
-                      VerticalAlignment="Top" Margin="0,0,7,0" Height="73" Width="524">
+                      VerticalAlignment="Top" Margin="9,0,15,0" Height="73" Width="524">
                 <Canvas x:Name="cnvmain" Margin="0,0,0,0" Width="516" Height="52">
-                    <CheckBox x:Name="chkSchedule" Content="Test Mode" Canvas.Top="48" Canvas.Left="419" 
-                              HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                    <CheckBox x:Name="chkSchedule" Content="Test Mode" Canvas.Top="34" Canvas.Left="419" 
+                              HorizontalAlignment="Center" VerticalAlignment="Top"/>
                     <Label Name="lblDate" Content="Date :" HorizontalAlignment="Center"
                            Canvas.Top="16" VerticalAlignment="Top" Canvas.Left="6"/>
                     <xctk:DateTimePicker x:Name="ReleaseDate" Format="Custom" 
@@ -30,9 +30,9 @@
                     <xctk:TimePicker x:Name="ReleaseTimeEnd" Format="Custom" FormatString="hh:mm:ss tt" MinWidth="140"  
             Focusable="True" Width="140" Canvas.Left="226" Canvas.Top="32" HorizontalAlignment="Left" VerticalAlignment="Center" />
                     <Label x:Name="lblTime_Copy" Content="End" Canvas.Top="30" Canvas.Left="189" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                    <TextBox x:Name="txtMaxSchedules" Width="85" Height="24" Canvas.Top="19" Canvas.Left="419"
-                       HorizontalAlignment="Left" VerticalAlignment="Top"/>
-                    <Label x:Name="lblTime_Copy1" Content="Max" Canvas.Top="17" Canvas.Left="382" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                    <TextBox x:Name="txtMaxSchedules" Width="85" Height="24" Canvas.Top="9" Canvas.Left="419"
+                       HorizontalAlignment="Center" VerticalAlignment="Top"/>
+                    <Label x:Name="lblTime_Copy1" Content="Max" Canvas.Top="7" Canvas.Left="382" HorizontalAlignment="Center" VerticalAlignment="Top"/>
                 </Canvas>
             </GroupBox>
 
