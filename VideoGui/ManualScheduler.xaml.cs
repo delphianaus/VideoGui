@@ -65,8 +65,7 @@ namespace VideoGui
                 {
                     ModuleCallBack?.Invoke(this, new CustomParams_SaveSchedule(SelectedDate.Value,
                         ReleaseTimeStart.Value.Value.TimeOfDay, 
-                        ReleaseTimeEnd.Value.Value.TimeOfDay, txtMaxSchedules.Text.ToInt(0)),
-                        chkSchedule.IsChecked.Value) ;
+                        ReleaseTimeEnd.Value.Value.TimeOfDay, txtMaxSchedules.Text.ToInt(0), chkSchedule.IsChecked.Value)) ;
                 }
             
             }            
