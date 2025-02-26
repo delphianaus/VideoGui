@@ -2511,6 +2511,8 @@ namespace VideoGui
             {
                 if ((DoAutoCancel is not null && DoAutoCancel.IsCloseAction))
                 {
+                    canceltoken.Cancel();
+                    cancelds();
                     Close();
                     return;
                 }
