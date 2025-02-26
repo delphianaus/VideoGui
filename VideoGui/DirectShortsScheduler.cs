@@ -39,7 +39,8 @@ namespace VideoGui
         bool setup = false, BeginMode = false, FinishMode = false, FirstTime = false;
         public bool CanSchedule = true;
         public DirectshortsScheduler(OnFinish doOnFinish, OnFinishBool doOnFinishSchedulesComplete, List<ListScheduleItems> listSchedules,
-            DateTime startDate, DateTime endDate, ReportVideoScheduled doReportSchedule, int maxNumberSchedules)
+            DateTime startDate, DateTime endDate, ReportVideoScheduled doReportSchedule, int maxNumberSchedules, 
+            bool isTest)
         {
             try
             {
@@ -51,6 +52,7 @@ namespace VideoGui
                 ScheduleList = listSchedules;
                 StartDate = startDate;
                 EndDate = endDate;
+                IsTest = isTest;    
                 DateTime ScheduleStart = DateOnly.FromDateTime(startDate).ToDateTime(listSchedules.FirstOrDefault().Start);
                 DateTime ScheduleEnd = DateOnly.FromDateTime(EndDate).ToDateTime(listSchedules.LastOrDefault().End);
                 if (startDate <= ScheduleStart && endDate <= ScheduleStart)

@@ -105,7 +105,7 @@ namespace VideoGui
         TimeOnly CurrentTime = new TimeOnly();
         DateOnly CurrentDate = DateOnly.FromDateTime(DateTime.Now);
         public DateTime StartDate = DateTime.Now, EndDate = DateTime.Now, LastValidDate = DateTime.Now;
-        bool IsTest = true;
+        bool IsTest = false;
         //string Title = "", Desc = "";
         Dictionary<int, WebView2> wv2Dictionary = new Dictionary<int, WebView2>();
         Dictionary<int, WebView2> ActiveWebView = new Dictionary<int, WebView2>();
@@ -180,7 +180,7 @@ namespace VideoGui
 
         public ScraperModule(databasehook<object> _dbInit, OnFinishId _OnFinish, string _Default_url,
             Nullable<DateTime> Start, Nullable<DateTime> End, int MaxUoploads, 
-            List<ListScheduleItems> _listSchedules, int _eventid ,bool IsTest)
+            List<ListScheduleItems> _listSchedules, int _eventid ,bool _IsTest)
         {
             try
             {
@@ -193,6 +193,7 @@ namespace VideoGui
                 DefaultUrl = _Default_url;
                 ScheduleMax = MaxUoploads;
                 IsDashboardMode = true;
+                IsTest = _IsTest;
                 dbInitializer = _dbInit;
                 InitializeComponent();
                 Closing += (s, e) => { IsClosing = true; };
@@ -2407,7 +2408,7 @@ namespace VideoGui
                         dbInitializer?.Invoke(this, p);
                         string connectionString = p.ConnectionString;
                         directshortsScheduler = new DirectshortsScheduler(() => { Show(); }, DoOnScheduleComplete, listSchedules,
-                            ReleaseDate.Value, ReleaseEndDate.Value, DoReportSchedule, ScheduleMax);
+                            ReleaseDate.Value, ReleaseEndDate.Value, DoReportSchedule, ScheduleMax,IsTest);
                         directshortsScheduler.connectionString = connectionString;
                     }
                     IsVideoLookup = true;
