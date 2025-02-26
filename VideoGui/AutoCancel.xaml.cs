@@ -94,6 +94,7 @@ namespace VideoGui
                 lblTime.Content = dispatchcnt.ToString();
                 if ( dispatchcnt == 0)
                 {
+                    IsCloseAction = true;
                     Close();
                 }
             }

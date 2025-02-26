@@ -2479,7 +2479,6 @@ namespace VideoGui
                     }
                     else
                     {
-                        Hide();
                         if (DoAutoCancel is not null)
                         {
                             if (DoAutoCancel.IsClosing) DoAutoCancel.Close();
@@ -2491,8 +2490,7 @@ namespace VideoGui
                             DoAutoCancel.Close();
                             DoAutoCancel = null;
                         }
-                        DoAutoCancel = new AutoCancel(DoAutoCancelClose, "Auto Closing", 30, 
-                            "Scheduling Finished");
+                        DoAutoCancel = new AutoCancel(DoAutoCancelClose, "", 5,"Scheduling Finished");
                         DoAutoCancel.ShowActivated = true;
                         DoAutoCancel.Show();
                     }
@@ -2511,13 +2509,12 @@ namespace VideoGui
         {
             try
             {
-                if ((DoAutoCancel != null) && (DoAutoCancel.IsCloseAction))
+                if ((DoAutoCancel is not null && DoAutoCancel.IsCloseAction))
                 {
                     Close();
                     return;
                 }
                 DoAutoCancel = null;
-                Show();
             }
             catch (Exception ex)
             {
