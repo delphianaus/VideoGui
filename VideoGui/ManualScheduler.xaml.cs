@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -27,6 +28,7 @@ namespace VideoGui
         public Nullable<DateTime> SelectedDate = null;
         public Nullable<TimeOnly> StartTime = null, EndTime = null;
         public Nullable<int> Max = null;
+        
         public ManualScheduler(databasehook<Object> _ModuleCallBack, OnFinish DoOnFinish)
         {
             try

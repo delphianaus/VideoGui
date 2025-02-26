@@ -31,6 +31,7 @@ namespace VideoGui
         DateTime ScheduleAt = DateTime.Now.AddYears(-500);
         public string connectionString = "";
         bool IsTest = true;
+        CancellationTokenSource canceltoken = new CancellationTokenSource();
         List<ListScheduleItems> ScheduleList = new List<ListScheduleItems>();
         public DateTime StartDate = DateTime.Now, EndDate = DateTime.Now, LastValidDate = DateTime.Now;
         List<DateTime> AvailableSchedules = new List<DateTime>();
@@ -277,7 +278,7 @@ namespace VideoGui
                 if (CurrentDate.ToDateTime(CurrentTime).IsBetween(StartDate, EndDate) || IsEndMode || IsStartMode)
                 {
                     bool IsValid = false;
-                    while (!IsValid)
+                    while (!IsValid && !canceltoken.IsCancellationRequested)
                     {
                         System.Windows.Forms.Application.DoEvents();
                         if (ListScheduleIndex < ScheduleList.Count)
@@ -374,7 +375,7 @@ namespace VideoGui
                             }
                         }
                     }
-                    if (IsValid)
+                    if (IsValid && !canceltoken.IsCancellationRequested)
                     {
                         System.Windows.Forms.Application.DoEvents();
                         if (!IsTest)
