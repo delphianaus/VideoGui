@@ -1371,6 +1371,7 @@ namespace VideoGui
                                 var cts = new CancellationTokenSource();
                                 cts.CancelAfter(TimeSpan.FromSeconds(300));
                                 TimedOut = false;
+                                string oldtitle = Title;
                                 while (WaitingFileName && !cts.IsCancellationRequested && !canceltoken.IsCancellationRequested)
                                 {
                                     Thread.Sleep(200);
@@ -1385,6 +1386,18 @@ namespace VideoGui
                                 }
 
 
+                                if (oldtitle != Title && Title != "")
+                                {
+                                    Dispatcher.Invoke(() =>
+                                    {
+                                        string r = lstMain.Items[0].ToString();
+                                        if (r.Contains(oldtitle))
+                                        {
+                                            r = r.Replace(oldtitle, Title);
+                                            lstMain.Items[0] = r;
+                                        }
+                                    });
+                                }
                                 if (directshortsScheduler is not null && !cts.IsCancellationRequested)
                                 {
                                     directshortsScheduler.ScheduleVideo(Id, Title, Desc, false);
@@ -2476,6 +2489,8 @@ namespace VideoGui
                 {
                     bool res = false;
                     int r = directshortsScheduler.ScheduleNumber;
+                    if (r >= ScheduleMax-1) r = ScheduleMax-1;
+
                     lstMain.Items.Insert(0, $"{r+1} Schedules Complete");
                     if (Days > 1)
                     {

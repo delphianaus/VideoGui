@@ -93,16 +93,24 @@ namespace VideoGui
                 {
                     timereventtime = nowx;
                     dispatchcnt--;
-                    Dispatcher.Invoke(() =>
-                    {
-                        lblTime.Content = dispatchcnt.ToString();
-                    });
-                    if (dispatchcnt == 0)
+                    if (dispatchcnt <= 0)
                     {
                         IsCloseAction = true;
                         Close();
                     }
+                    Dispatcher.Invoke(() =>
+                    {
+                        lblTime.Content = (dispatchcnt <= 0) ? "" : dispatchcnt.ToString();
+                    });
                 }
+                Dispatcher.Invoke(() =>
+                {
+                    if (dispatchcnt.ToString() == "" || dispatchcnt < 0)
+                    {
+                        IsCloseAction = true;
+                        Close();
+                    }
+                });
             }
             catch (Exception ex)
             {

@@ -39,7 +39,8 @@ namespace VideoGui
         public int MaxNumberSchedules = 100, ScheduleNumber = 0;
         bool setup = false, BeginMode = false, FinishMode = false, FirstTime = false;
         public bool CanSchedule = true;
-        public DirectshortsScheduler(OnFinish doOnFinish, OnFinishBool doOnFinishSchedulesComplete, List<ListScheduleItems> listSchedules,
+        public DirectshortsScheduler(OnFinish doOnFinish, OnFinishBool doOnFinishSchedulesComplete, 
+            List<ListScheduleItems> listSchedules,
             DateTime startDate, DateTime endDate, ReportVideoScheduled doReportSchedule, int maxNumberSchedules, 
             bool isTest)
         {
@@ -330,8 +331,18 @@ namespace VideoGui
 
                                 if (CurrentDate.ToDateTime(CurrentTime).IsBetween(StartDate, EndDate))
                                 {
-                                    IsValid = true;
-                                    break;
+                                    if (ScheduleNumber >= MaxNumberSchedules)
+                                    {
+                                        if (DoOnFinishSchedulesComplete.Invoke())
+                                        {
+                                            break;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        IsValid = true;
+                                        break;
+                                    }
                                 }
                                 else
                                 {
@@ -339,7 +350,7 @@ namespace VideoGui
                                     {
                                         FirstTime = true;
                                         IsValid = !(CurrentDate > DateOnly.FromDateTime(EndDate.Date));
-                                        if (!IsValid)
+                                        if (!IsValid || ScheduleNumber > MaxNumberSchedules)
                                         {
                                             if (DoOnFinishSchedulesComplete.Invoke())
                                             {
@@ -362,8 +373,18 @@ namespace VideoGui
                                 {
                                     if (CurrentDate.ToDateTime(CurrentTime).IsBetween(StartDate, EndDate))
                                     {
-                                        IsValid = true;
-                                        break;
+                                        if (ScheduleNumber >= MaxNumberSchedules)
+                                        {
+                                            if (DoOnFinishSchedulesComplete.Invoke())
+                                            {
+                                                break;
+                                            }
+                                        }
+                                        else
+                                        {
+                                            IsValid = true;
+                                            break;
+                                        }
                                     }
 
                                 }
@@ -378,6 +399,11 @@ namespace VideoGui
                     if (IsValid && !canceltoken.IsCancellationRequested)
                     {
                         System.Windows.Forms.Application.DoEvents();
+                        if (ScheduleNumber >= MaxNumberSchedules)
+                        {
+                            DoOnFinishSchedulesComplete.Invoke();
+                            return;
+                        }
                         if (!IsTest)
                         {
                             ApplyVideoSchedule(videoId, title, CurrentDate.ToDateTime(CurrentTime)).ConfigureAwait(false);
