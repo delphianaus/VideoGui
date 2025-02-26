@@ -4,10 +4,12 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:VideoGui"
-        mc:Ignorable="d"  WindowStyle="None" AllowsTransparency="true" Background="Transparent"
-        WindowStartupLocation="CenterOwner" ResizeMode="NoResize" Cursor="" ShowInTaskbar="False"
+        mc:Ignorable="d"  WindowStyle="None" AllowsTransparency="true"
+        Background="Transparent"  WindowStartupLocation="CenterScreen" 
+        ResizeMode="NoResize" Cursor="" ShowInTaskbar="False"
         Loaded="Window_Loaded" 
-        Title="AutoCancel" Height="120" Width="475" HorizontalAlignment="Left" VerticalAlignment="Top">
+        Title="AutoCancel" Height="120" Width="475" HorizontalAlignment="Left" 
+        VerticalAlignment="Top">
     <Grid>
         <Border CornerRadius="15" BorderThickness="6" BorderBrush="#FF46433E">
             <Border CornerRadius="10" BorderThickness="6" Margin="0,4,0,4">

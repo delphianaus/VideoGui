@@ -100,8 +100,13 @@ namespace VideoGui
                     }
                     Dispatcher.Invoke(() =>
                     {
-                        lblTime.Content = (dispatchcnt <= 0) ? "" : dispatchcnt.ToString();
+                        lblTime.Content = (dispatchcnt <= 1) ? "1" : dispatchcnt.ToString();
                     });
+
+                    if (dispatchcnt == 1)
+                    {
+                        AutoCloseTimer.Change(0, 10);
+                    }
                 }
                 Dispatcher.Invoke(() =>
                 {
