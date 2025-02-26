@@ -153,6 +153,8 @@ namespace VideoGui
                         Exceeded = true;
                     }
                     IsClosing = true;
+                    canceltoken.Cancel();
+                    cancelds();
                 };
                 Closed += (s, e) =>
                 {
@@ -197,7 +199,7 @@ namespace VideoGui
                 IsTest = _IsTest;
                 dbInitializer = _dbInit;
                 InitializeComponent();
-                Closing += (s, e) => { IsClosing = true; canceltoken.Cancel(); };
+                Closing += (s, e) => { IsClosing = true; canceltoken.Cancel();cancelds(); };
                 Closed += (s, e) =>
                 {
                     IsClosed = true;
@@ -238,7 +240,7 @@ namespace VideoGui
                 IsUnlisted = false;
                 SlotsPerUpload = slotsperupload;
                 InitializeComponent();
-                Closing += (s, e) => { IsClosing = true; canceltoken.Cancel(); };
+                Closing += (s, e) => { IsClosing = true; canceltoken.Cancel(); cancelds(); };
                 Closed += (s, e) =>
                 {
                     IsClosed = true;
@@ -248,7 +250,7 @@ namespace VideoGui
                 wv2Dictionary.Add(1, wv2A1);//20
                 wv2Dictionary.Add(2, wv2A2);//30
                 wv2Dictionary.Add(3, wv2A3);//40
-                wv2Dictionary.Add(4, wv2A4);//50
+                wv2Dictionary.Add(4, wv2A4);//50;
                 wv2Dictionary.Add(5, wv2A5);//60
                 wv2Dictionary.Add(6, wv2A6);//70
                 wv2Dictionary.Add(7, wv2A7);//80
@@ -278,7 +280,7 @@ namespace VideoGui
                 IsUnlisted = false;
                 SlotsPerUpload = 2;
                 InitializeComponent();
-                Closing += (s, e) => { IsClosing = true; canceltoken.Cancel(); };
+                Closing += (s, e) => { IsClosing = true; canceltoken.Cancel(); cancelds(); };
                 Closed += (s, e) =>
                 {
                     IsClosed = true;
@@ -2534,6 +2536,20 @@ namespace VideoGui
             }
         }
 
+        public void cancelds()
+        {
+            try
+            {
+                if (directshortsScheduler is not null)
+                {
+                    directshortsScheduler.canceltoken.Cancel();
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"cancelds {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+        }
 
 
         public async Task<ButtonReturnType> IsButtonEnabled(WebView2 webView2)

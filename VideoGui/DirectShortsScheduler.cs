@@ -31,7 +31,7 @@ namespace VideoGui
         DateTime ScheduleAt = DateTime.Now.AddYears(-500);
         public string connectionString = "";
         bool IsTest = true;
-        CancellationTokenSource canceltoken = new CancellationTokenSource();
+        public CancellationTokenSource canceltoken = new CancellationTokenSource();
         List<ListScheduleItems> ScheduleList = new List<ListScheduleItems>();
         public DateTime StartDate = DateTime.Now, EndDate = DateTime.Now, LastValidDate = DateTime.Now;
         List<DateTime> AvailableSchedules = new List<DateTime>();
