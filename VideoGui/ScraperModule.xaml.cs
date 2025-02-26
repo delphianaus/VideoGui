@@ -106,7 +106,8 @@ namespace VideoGui
         TimeOnly CurrentTime = new TimeOnly();
         DateOnly CurrentDate = DateOnly.FromDateTime(DateTime.Now);
         public DateTime StartDate = DateTime.Now, EndDate = DateTime.Now, LastValidDate = DateTime.Now;
-        bool IsTest = false;
+        bool IsTest = false, AutoClose = false;
+        AutoCancel DoAutoCancel = null;
         //string Title = "", Desc = "";
         Dictionary<int, WebView2> wv2Dictionary = new Dictionary<int, WebView2>();
         Dictionary<int, WebView2> ActiveWebView = new Dictionary<int, WebView2>();
@@ -1174,7 +1175,7 @@ namespace VideoGui
             }
             catch (Exception ex)
             {
-                ex.LogWrite($"Wv2_CoreWebView2InitializationCompleted {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+                ex.LogWrite($"Wv2_CoreWebView2Initializationdreportd {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
 
@@ -2476,6 +2477,25 @@ namespace VideoGui
                         }
                         return res;
                     }
+                    else
+                    {
+                        Hide();
+                        if (DoAutoCancel is not null)
+                        {
+                            if (DoAutoCancel.IsClosing) DoAutoCancel.Close();
+                            while (!DoAutoCancel.IsClosed && !canceltoken.IsCancellationRequested)
+                            {
+                                Thread.Sleep(100);
+                                System.Windows.Forms.Application.DoEvents();
+                            }
+                            DoAutoCancel.Close();
+                            DoAutoCancel = null;
+                        }
+                        DoAutoCancel = new AutoCancel(DoAutoCancelClose, "Auto Closing", 30, 
+                            "Scheduling Finished");
+                        DoAutoCancel.ShowActivated = true;
+                        DoAutoCancel.Show();
+                    }
                     return res;
                 }
                 return false;
@@ -2484,6 +2504,24 @@ namespace VideoGui
             {
                 ex.LogWrite($"DoOnScheduleComplete {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
                 return false;
+            }
+        }
+
+        private void DoAutoCancelClose()
+        {
+            try
+            {
+                if ((DoAutoCancel != null) && (DoAutoCancel.IsCloseAction))
+                {
+                    Close();
+                    return;
+                }
+                DoAutoCancel = null;
+                Show();
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"DoAutoCancelClose {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
 

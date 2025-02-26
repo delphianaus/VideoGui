@@ -25,21 +25,24 @@ namespace VideoGui
    
     public partial class AutoCancel : Window
     {
-        public bool IsCloseAction = false;
+        public bool IsCloseAction = false, IsClosed = false, IsClosing = false;
         DispatcherTimer AutoCloseTimer;
         int dispatchcnt = 0;
         int TotalTime = 30;
         string DestName;
         OnFinish DoOnFinished = null;
-        public AutoCancel(OnFinish _OnFinished, string destName, int _totaltime = 30)
+        public AutoCancel(OnFinish _OnFinished, string destName, int _totaltime = 30, string captiontitle = "")
         {
             InitializeComponent();
+            Closing += (s, e) => { IsClosing = true; };
+            Closed += (s, e) => { IsClosed = true; DoOnFinished?.Invoke(); };
             TotalTime = _totaltime;
             DoOnFinished = _OnFinished;
             dispatchcnt = _totaltime;
             lblTime.Content = TotalTime.ToString();
             DestName = destName;
             lblDestName.Content = DestName;
+            lblYouTubeHelper.Content = (captiontitle != "") ? captiontitle : lblYouTubeHelper.Content;
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
@@ -100,16 +103,6 @@ namespace VideoGui
             }
         }
 
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
-        {
-            try
-            {
-                DoOnFinished?.Invoke();
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite($"AutoCancel.Window_Closing {MethodBase.GetCurrentMethod().Name}");
-            }
-        }
+        
     }
 }
