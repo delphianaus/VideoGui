@@ -9291,42 +9291,45 @@ namespace VideoGui
                         Thread.Sleep(100);
                     }
                 }
-                if (manualScheduler.HasValues)
+                if (manualScheduler.RunSchedule)
                 {
-                    max = manualScheduler.txtMaxSchedules.Text.ToInt(0);
-                    startdate = manualScheduler.ReleaseDate.Value;
-                    enddate = manualScheduler.ReleaseDate.Value;
-                    TimeOnly tsa = manualScheduler.StartTime.Value;
-                    TimeOnly tsb = manualScheduler.EndTime.Value;
-                    startdate = startdate.Value.Date.Add(tsa.ToTimeSpan());
-                    enddate = enddate.Value.Date.Add(tsb.ToTimeSpan());
-                    IsTest = manualScheduler.TestMode;
-                }
-                manualScheduler = null;
-                string sqla = "SELECT ID FROM SETTINGS WHERE SETTINGNAME = @P0";
-                int iScheduleID = connectionString.ExecuteScalar(sqla, [("@P0", "CURRENTSCHEDULINGID")]).ToInt(-1);
-                if (iScheduleID != -1 && startdate.HasValue && enddate.HasValue && max > 0)
-                {
-                    if (scheduleScraperModule is not null)
+                    if (manualScheduler.HasValues)
                     {
-                        if (scheduleScraperModule.IsClosing) scheduleScraperModule.Close();
-                        while (!scheduleScraperModule.IsClosed)
-                        {
-                            Thread.Sleep(100);
-                            System.Windows.Forms.Application.DoEvents();
-                        }
-                        scheduleScraperModule.Close();
-                        scheduleScraperModule = null;
+                        max = manualScheduler.txtMaxSchedules.Text.ToInt(0);
+                        startdate = manualScheduler.ReleaseDate.Value;
+                        enddate = manualScheduler.ReleaseDate.Value;
+                        TimeOnly tsa = manualScheduler.StartTime.Value;
+                        TimeOnly tsb = manualScheduler.EndTime.Value;
+                        startdate = startdate.Value.Date.Add(tsa.ToTimeSpan());
+                        enddate = enddate.Value.Date.Add(tsb.ToTimeSpan());
+                        IsTest = manualScheduler.TestMode;
                     }
-                    List<ListScheduleItems> _listItems = SchedulingItemsList.Where(s => s.ScheduleId == iScheduleID)
-                     .Select(s => new ListScheduleItems(s.Start, s.End, s.Gap)).ToList();
-                    WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
-                    string gUrl = webAddressBuilder.AddFilterByDraftShorts().GetHTML();
-                    scheduleScraperModule = new ScraperModule(ModuleCallback, mnl_scraper_OnFinish, gUrl,
-                        startdate, enddate, max, _listItems, 0, IsTest);
-                    scheduleScraperModule.ShowActivated = true;
-                    Hide();
-                    scheduleScraperModule.Show();
+                    manualScheduler = null;
+                    string sqla = "SELECT ID FROM SETTINGS WHERE SETTINGNAME = @P0";
+                    int iScheduleID = connectionString.ExecuteScalar(sqla, [("@P0", "CURRENTSCHEDULINGID")]).ToInt(-1);
+                    if (iScheduleID != -1 && startdate.HasValue && enddate.HasValue && max > 0)
+                    {
+                        if (scheduleScraperModule is not null)
+                        {
+                            if (scheduleScraperModule.IsClosing) scheduleScraperModule.Close();
+                            while (!scheduleScraperModule.IsClosed)
+                            {
+                                Thread.Sleep(100);
+                                System.Windows.Forms.Application.DoEvents();
+                            }
+                            scheduleScraperModule.Close();
+                            scheduleScraperModule = null;
+                        }
+                        List<ListScheduleItems> _listItems = SchedulingItemsList.Where(s => s.ScheduleId == iScheduleID)
+                         .Select(s => new ListScheduleItems(s.Start, s.End, s.Gap)).ToList();
+                        WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
+                        string gUrl = webAddressBuilder.AddFilterByDraftShorts().GetHTML();
+                        scheduleScraperModule = new ScraperModule(ModuleCallback, mnl_scraper_OnFinish, gUrl,
+                            startdate, enddate, max, _listItems, 0, IsTest);
+                        scheduleScraperModule.ShowActivated = true;
+                        Hide();
+                        scheduleScraperModule.Show();
+                    }
                 }
             }
             catch (Exception ex)

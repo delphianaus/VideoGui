@@ -434,6 +434,23 @@ namespace VideoGui
             }
         }
 
+        private void mainwindow_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            try
+            {
+                if (e.Key == Key.F4 && Keyboard.Modifiers == ModifierKeys.Alt)
+                {
+                    canceltoken.Cancel();
+                    cancelds();
+                    Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"mainwindow_KeyDown {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+        }
+
         public void ExecuteAsAdmin(string arguments)
         {
             try
@@ -1434,7 +1451,7 @@ namespace VideoGui
                             {
                                 btnNext_Task(sender);
                                 string ehtml = "";
-                                while (true)
+                                while (true && !canceltoken.IsCancellationRequested)
                                 {
                                     var cts = new CancellationTokenSource();
                                     cts.CancelAfter(TimeSpan.FromMilliseconds(400));
@@ -2197,6 +2214,9 @@ namespace VideoGui
         {
             try
             {
+                cancelds();
+                canceltoken.Cancel();
+                
                 if (SwapEnabled)
                 {
                     WebView2 temp = brdmain.Child as WebView2;
@@ -2479,6 +2499,8 @@ namespace VideoGui
                     }
                     else
                     {
+                        cancelds();
+                        canceltoken.Cancel();
                         if (DoAutoCancel is not null)
                         {
                             if (DoAutoCancel.IsClosing) DoAutoCancel.Close();
@@ -2513,6 +2535,7 @@ namespace VideoGui
                 {
                     canceltoken.Cancel();
                     cancelds();
+                    DoAutoCancel.Close();   
                     Close();
                     return;
                 }

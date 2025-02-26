@@ -24,11 +24,25 @@ namespace VideoGui
     public partial class ManualScheduler : Window
     {
         databasehook<Object> ModuleCallBack = null;
-        public bool IsClosed = false, IsClosing = false, IsCopy = false, HasValues = false, TestMode = false;
+        public bool IsClosed = false, IsClosing = false, IsCopy = false, 
+            HasValues = false, TestMode = false, RunSchedule = false;
         public Nullable<DateTime> SelectedDate = null;
         public Nullable<TimeOnly> StartTime = null, EndTime = null;
         public Nullable<int> Max = null;
-        
+
+        private void btnAccept_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                RunSchedule = true;
+                Close();
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"ManualScheduler.btnAccept_Click {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
+            }
+        }
+
         public ManualScheduler(databasehook<Object> _ModuleCallBack, OnFinish DoOnFinish)
         {
             try

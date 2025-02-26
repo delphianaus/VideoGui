@@ -22,11 +22,11 @@ namespace VideoGui
     /// </summary>
     /// 
 
-   
+
     public partial class AutoCancel : Window
     {
         public bool IsCloseAction = false, IsClosed = false, IsClosing = false;
-        DispatcherTimer AutoCloseTimer;
+        System.Threading.Timer AutoCloseTimer;
         int dispatchcnt = 0;
         int TotalTime = 30;
         string DestName;
@@ -71,18 +71,42 @@ namespace VideoGui
             }
         }
 
+        DateTime timereventtime = DateTime.Now;
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             try
             {
-                AutoCloseTimer = new DispatcherTimer();
-                AutoCloseTimer.Tick += new EventHandler(AutoCloseTimer_Tick);
-                AutoCloseTimer.Interval = new TimeSpan(0, 0, 1);
-                AutoCloseTimer.Start();
+                AutoCloseTimer = new System.Threading.Timer(TimerEvent_Handler, null, 0, 250);
             }
             catch (Exception ex)
             {
                 ex.LogWrite($"AutoCancel.BtnClose_Click {MethodBase.GetCurrentMethod().Name}");
+            }
+        }
+
+        private void TimerEvent_Handler(object? state)
+        {
+            try
+            {
+                DateTime nowx = DateTime.Now;
+                if (nowx.Subtract(timereventtime).TotalSeconds >= 1)
+                {
+                    timereventtime = nowx;
+                    dispatchcnt--;
+                    Dispatcher.Invoke(() =>
+                    {
+                        lblTime.Content = dispatchcnt.ToString();
+                    });
+                    if (dispatchcnt == 0)
+                    {
+                        IsCloseAction = true;
+                        Close();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"AutoCancel.TimerEvent_Handler {MethodBase.GetCurrentMethod().Name}");
             }
         }
 
@@ -92,7 +116,7 @@ namespace VideoGui
             {
                 dispatchcnt--;
                 lblTime.Content = dispatchcnt.ToString();
-                if ( dispatchcnt == 0)
+                if (dispatchcnt == 0)
                 {
                     IsCloseAction = true;
                     Close();
@@ -104,6 +128,6 @@ namespace VideoGui
             }
         }
 
-        
+
     }
 }

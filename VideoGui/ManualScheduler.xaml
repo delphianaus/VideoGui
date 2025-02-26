@@ -40,5 +40,7 @@
         </Border>
         <Button x:Name="BtnClose" Content="Close" Width="90" Height="30" Margin="0,0,9,10" 
           HorizontalAlignment="Right" VerticalAlignment="Bottom" Click="BtnClose_Click"/>
+        <Button x:Name="btnAccept" Content="Accept" Width="90" Height="30" Margin="10,0,0,10" 
+            HorizontalAlignment="Left" VerticalAlignment="Bottom" Click="btnAccept_Click"/>
     </Grid>
 </Window>
