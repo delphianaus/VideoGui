@@ -63,6 +63,14 @@ namespace VideoGui.Models
         }
     }
 
+    public class CustomParams_DataSelect
+    {
+        public int Id { get; set; } = -1;
+        public CustomParams_DataSelect(int _id)
+        {
+            Id = _id;
+        }
+    }
     public class CustomParams_SaveSchedule
     {
         public DateTime ScheduleDate { get; set; }

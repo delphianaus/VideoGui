@@ -253,37 +253,7 @@ namespace VideoGui
             }
         }
 
-        public void SetObservableLists(int id)
-        {
-            try
-            {
-                if (ObservableCollectionFilter is not null)
-                {
-                    switch (id)
-                    {
-                        case 0:
-                            {
-                                ObservableCollectionFilter.CurrentCollectionViewSource.Source = ComplexProcessingJobList;
-                                break;
-                            }
-                        case 1:
-                            {
-                                ObservableCollectionFilter.HistoricCollectionViewSource.Source = ComplexProcessingJobHistory;
-                                break;
-                            }
-                        case 2:
-                            {
-                                ObservableCollectionFilter.ImportCollectionViewSource.Source = FileRenamer;
-                                break;
-                            }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
-            }
-        }
+        
 
 
         public async Task<bool> ConnectT()
@@ -443,6 +413,17 @@ namespace VideoGui
                             formObjectHandler_ManualScheduler(tld, manualScheduler);
                             break;
                         }
+                    case ComplexSchedular complexSchedular:
+                        {
+                            formObjectHandler_ComplexSchedular(tld, complexSchedular);
+                            break;
+                        }
+                    case MediaImporter goProMediaImporter:
+                        {
+                            formObjectHandler_GoProMediaImporter(tld, GoProMediaImporter);
+                            break;
+                        }
+
                 }
             }
             catch (Exception ex)
@@ -450,6 +431,75 @@ namespace VideoGui
                 ex.LogWrite($"ModuleCallback {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
 
+        }
+
+        private void formObjectHandler_GoProMediaImporter(object tld, MediaImporter goProMediaImporter)
+        {
+            try
+            {
+                if (tld is CustomParams_GetConnectionString CGCS)
+                {
+                    CGCS.ConnectionString = connectionString;
+                }
+                else if (tld is CustomParams_Initialize cpInit)
+                {
+                    if (cpInit.Id == 0)
+                    {
+                        ConnectC().ConfigureAwait(false);
+                    }
+                    else if (cpInit.Id == 1) ConnectH().ConfigureAwait(false);
+                    else if (cpInit.Id == 2) ConnectI().ConfigureAwait(false);
+                    else if (cpInit.Id == 3) ConnectT().ConfigureAwait(false);
+                }
+                else if (tld is CustomParams_DataSelect cds)
+                {
+                    if (cds.Id == 0) ConnectC().ConfigureAwait(false);
+                    else if (cds.Id == 1) ConnectH().ConfigureAwait(false);
+                    else if (cds.Id == 2) ConnectI().ConfigureAwait(false);
+                    else if (cds.Id == 3) ConnectT().ConfigureAwait(false);
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+            }
+        }
+
+        private void formObjectHandler_ComplexSchedular(object tld, ComplexSchedular complexSchedular)
+        {
+            try
+            {
+                /*  case 0:ConnectC().ConfigureAwait(false);
+                    case 1:ConnectH().ConfigureAwait(false);
+                    case 2:ConnectI().ConfigureAwait(false);
+                    case 3:ConnectT().ConfigureAwait(false);*/
+                if (tld is CustomParams_DataSelect cds)
+                {
+                    if (cds.Id == 0) ConnectC().ConfigureAwait(false);
+                    else if (cds.Id == 1) ConnectH().ConfigureAwait(false);
+                    else if (cds.Id == 2) ConnectI().ConfigureAwait(false);
+                    else if (cds.Id == 3) ConnectT().ConfigureAwait(false);
+                }
+                else if (tld is CustomParams_GetConnectionString CGCS)
+                {
+                    CGCS.ConnectionString = connectionString;
+                }
+                else if (tld is CustomParams_Initialize cpInit)
+                {
+                    if (cpInit.Id == 0)
+                    {
+                        ConnectC().ConfigureAwait(false);
+                    }
+                    else if (cpInit.Id == 1)
+                    {
+                        ConnectH().ConfigureAwait(false);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"formObjectHandler_ComplexSchedular {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
         }
 
         public Nullable<DateTime> LoadDate(string name)
@@ -2536,41 +2586,7 @@ namespace VideoGui
             }
         }
 
-        public void ConnnectLists(int Id = 0)
-        {
-            try
-            {
-                switch (Id)
-                {
-                    case 0:
-                        {
-                            ConnectC().ConfigureAwait(false);
-                            break;
-                        }
-                    case 1:
-                        {
-                            ConnectH().ConfigureAwait(false);
-                            break;
-
-                        }
-                    case 2:
-                        {
-                            ConnectI().ConfigureAwait(false);
-                            break;
-                        }
-                    case 3:
-                        {
-                            ConnectT().ConfigureAwait(false);
-                            break;
-                        }
-
-                }
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
-            }
-        }
+       
         public bool IsFileActive(string filename, int threadid)
         {
             lock (lookuplocked)
@@ -3955,8 +3971,8 @@ namespace VideoGui
             {
                 if (complexfrm == null)
                 {
-                    complexfrm = new ComplexSchedular(AddRecord, DeleteRecord, CloseDialogComplexEditor,
-                        ConnnectLists, LocalSetFilterAge, LocalSetFilterString, GetFilterAges, GetFilterString);
+                    complexfrm = new ComplexSchedular(ModuleCallback,AddRecord, DeleteRecord, CloseDialogComplexEditor,
+                         LocalSetFilterAge, LocalSetFilterString, GetFilterAges, GetFilterString);
                     Hide();
                     complexfrm.ShowDialog();
                     Show();
@@ -4120,6 +4136,12 @@ namespace VideoGui
                     }
                     scheduleScraperModule = null;
                 }
+                string gUrl = webAddressBuilder.AddFilterByDraftShorts().GetHTML();
+                scheduleScraperModule = new ScraperModule(ModuleCallback, mnl_scraper_OnFinish, gUrl,
+                            startdate, enddate, max, _listItems, 0, true);
+                Hide();
+                scheduleScraperModule.ShowActivated = true;
+                scheduleScraperModule.Show();
             }
 
             catch (Exception ex)
@@ -9404,8 +9426,9 @@ namespace VideoGui
             try
             {
                 Hide();
-                GoProMediaImporter = new MediaImporter(FileImportClear, AddImportRecord, CheckImportRecords,
-                    ConnnectLists, ReOrderFilesInc, ClearImportTimes, SetImportFromTime, SetImportToTime);
+                GoProMediaImporter = new MediaImporter(ModuleCallback, FileImportClear, 
+                    AddImportRecord, CheckImportRecords,ReOrderFilesInc, ClearImportTimes, 
+                    SetImportFromTime, SetImportToTime);
                 GoProMediaImporter.ShowDialog();
                 Show();
             }
@@ -9688,7 +9711,7 @@ namespace VideoGui
                 {
                     Hide();
                     selectShortUpload = new SelectShortUpload(ModuleCallback,
-                        SelectShortUpload_onFinish, ConnnectLists);
+                        SelectShortUpload_onFinish);
                     selectShortUpload.ShowActivated = true;
                     selectShortUpload.ShowDialog();
                 }

@@ -91,6 +91,10 @@ namespace VideoGui
                             txtThreash.Text = (Threashhold != "") ? Threashhold : txtThreash.Text;
                             txtTarget.Text = (Target != "") ? Target : txtTarget.Text;
                             Loaded = true;
+                            txtTarget.IsEnabled = true;
+                            txtSegment.IsEnabled = true;
+                            txtThreash.IsEnabled = true;
+                            BtnCalc.IsEnabled = true;
                         });
                     }
                     else
@@ -166,26 +170,6 @@ namespace VideoGui
             }
         }
 
-        private void OnReadAutoEdit(FbDataReader reader)
-        {
-            try
-            {
-                string DestDir = (reader["DESTINATION"] is string des) ? des : "";
-                string Target = (reader["TARGET"] is string target) ? target : "";
-                string Segment = (reader["SEGMENT"] is string segment) ? segment : "";
-                string Threashhold = (reader["THREASHHOLD"] is string theashhold) ? theashhold : "";
-                txxtEditDirectory.Text = (DestDir != "") ? DestDir : txxtEditDirectory.Text;
-                txtSegment.Text = (Segment != "") ? Segment : txtSegment.Text;
-                txtThreash.Text = (Threashhold != "") ? Threashhold : txtThreash.Text;
-                txtTarget.Text = (Target != "") ? Target : txtTarget.Text;
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite($"OnReadAutoEdit {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
-            }
-
-        }
-
         private void txtEditFileSelect_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -204,9 +188,6 @@ namespace VideoGui
                     key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                     key.SetValue("AdobeDestinationDir", txxtEditDirectory.Text);
                     key?.Close();
-
-
-
                 }
             }
             catch (Exception ex)
@@ -293,8 +274,6 @@ namespace VideoGui
             string Root = key.GetValueStr("AdobeDestinationDir", "c:\\");
             key?.Close();
             txxtEditDirectory.Text = Root;
-
-
         }
 
         private void frmVideoCutsEditor_Closing(object sender, System.ComponentModel.CancelEventArgs e)

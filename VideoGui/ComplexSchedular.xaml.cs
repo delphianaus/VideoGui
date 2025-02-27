@@ -46,9 +46,9 @@ namespace VideoGui
         public SetFilterAge DoSetFilterAge;
         public SetFilterString DoSetFilterString;
         public ComplexFinished ComplexOnClose;
-        public SetLists DoSetLists;
+        
         public GetFilerString DoGetFilerString;
-
+        databasehook<object> ModuleCallBack = null;
 
         public GetFilterAges DoGetFilterAges;
         public Visibility deletemenuvisible = Visibility.Visible;
@@ -58,20 +58,23 @@ namespace VideoGui
         public CustomStringEntry DestinationDirectoryEntry = null;
         public CustomStringEntry DestinationFileEntry = null;
 
-        public ComplexSchedular(AddRecordDelegate _AdddRecord, RemoveRecordDelegate _RemoveRecord,
-            ComplexFinished _ComplexFinished, SetLists _SetLists, SetFilterAge _SetFilterAge,
-            SetFilterString _SetFilterString, GetFilterAges _GetFilterAges, GetFilerString _GetFilterString)
+        public ComplexSchedular(databasehook<object> _ModuleCallBack, AddRecordDelegate _AdddRecord,
+            RemoveRecordDelegate _RemoveRecord,
+            ComplexFinished _ComplexFinished, SetFilterAge _SetFilterAge,
+            SetFilterString _SetFilterString, GetFilterAges _GetFilterAges,
+            GetFilerString _GetFilterString)
         {
             try
             {
                 InitializeComponent();
                 LastWidth = ActualWidth;
+                ModuleCallBack = _ModuleCallBack;
                 //lstSchedules.ItemsSource = data;
                 DoAddRecord = _AdddRecord;
                 DoGetFilterAges = _GetFilterAges;
                 DoRemoveRecord = _RemoveRecord;
                 ComplexOnClose = _ComplexFinished;
-                DoSetLists = _SetLists;
+                
 
                 DoSetFilterAge = _SetFilterAge;
                 DoSetFilterString = _SetFilterString;
@@ -352,7 +355,8 @@ namespace VideoGui
                     mnuGroupPaste1.Visibility = Visibility.Hidden;
                     deletemenuvisible = Visibility.Hidden;
                     AgeFilter = Visibility.Collapsed;
-                    DoSetLists?.Invoke(1);
+                    ModuleCallBack?.Invoke(this, new CustomParams_DataSelect(1));
+                    //DoSetLists?.Invoke(1);
                 }
                 else
                 {
@@ -360,7 +364,8 @@ namespace VideoGui
                     mnuGroupPaste1.Visibility = Visibility.Visible;
                     deletemenuvisible = Visibility.Visible;
                     AgeFilter = Visibility.Visible;
-                    DoSetLists?.Invoke(0);
+                    ModuleCallBack?.Invoke(this, new CustomParams_DataSelect(0));
+                    //DoSetLists?.Invoke(0);
                 }
             }
             catch (Exception ex)
@@ -788,9 +793,9 @@ namespace VideoGui
                 string rootfolder = key.GetValueStr("DestinationDir", "c:\\");
                 key?.Close();
                 txtdestdir.Text = rootfolder;
+                ModuleCallBack?.Invoke(this, new CustomParams_Initialize(0));
 
-
-                DoSetLists?.Invoke(0);// Set to true for Current
+                //DoSetLists?.Invoke(0);
             }
             catch (Exception ex)
             {

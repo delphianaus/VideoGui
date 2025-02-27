@@ -50,19 +50,23 @@ namespace VideoGui
         ClearTimes DoClearTimes;
         SetFromTime DoSetFromTime;
         SetToTime DoSetToTime;
-        SetLists Set_Lists;
+        //SetLists Set_Lists;
         FileRenamerClear DoFileRenamerClear;
         int MaxFile = 0;
+        databasehook<object> ModuleCallBack;
 
         double DockPanelWidth = 348;
-        public MediaImporter(FileImporterClear _FileImporterClear, ImportRecordAdd _ImportRec, CheckImports _CheckImports, SetLists _SetLists,
-            ReOrderFiles _ReOrderFiles, ClearTimes doClearTimes, SetFromTime doSetFromTime, SetToTime doSetToTime)
+        public MediaImporter(databasehook<object> _ModuleCallback,FileImporterClear _FileImporterClear,
+            ImportRecordAdd _ImportRec, CheckImports _CheckImports, 
+            ReOrderFiles _ReOrderFiles, ClearTimes doClearTimes,
+            SetFromTime doSetFromTime, SetToTime doSetToTime)
         {
             InitializeComponent();
             File_Importer_Clear = _FileImporterClear;
             Import_Record_Add = _ImportRec;
             Check_Imports = _CheckImports;
-            Set_Lists = _SetLists;
+            ModuleCallBack = _ModuleCallback;
+            //Set_Lists = _SetLists;
             DoReOrderFiles = _ReOrderFiles;
             DoClearTimes = doClearTimes;
             DoSetFromTime = doSetFromTime;
@@ -179,8 +183,8 @@ namespace VideoGui
         {
             try
             {
-                Set_Lists?.Invoke(2);
-
+                ModuleCallBack?.Invoke(this, new CustomParams_DataSelect(2));
+                
                 RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                 string Root = key.GetValueStr("MediaImporterSource", "c:\\");
                 key?.Close();
@@ -252,7 +256,8 @@ namespace VideoGui
             {
                 if (IsLoaded)
                 {
-                    Set_Lists?.Invoke(2);
+                    //Set_Lists?.Invoke(2);
+                    ModuleCallBack?.Invoke(this, new CustomParams_Initialize(2));
                 }
             }
             catch (Exception ex)

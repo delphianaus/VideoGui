@@ -9,7 +9,7 @@
         ResizeMode="NoResize" Cursor="" ShowInTaskbar="False"
         Loaded="Window_Loaded" 
         Title="AutoCancel" Height="120" Width="475" HorizontalAlignment="Left" 
-        VerticalAlignment="Top">
+        VerticalAlignment="Top" Topmost="True">
     <Grid>
         <Border CornerRadius="15" BorderThickness="6" BorderBrush="#FF46433E">
             <Border CornerRadius="10" BorderThickness="6" Margin="0,4,0,4">

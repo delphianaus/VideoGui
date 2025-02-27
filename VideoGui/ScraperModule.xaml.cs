@@ -1,79 +1,93 @@
-﻿using HtmlAgilityPack;
+﻿using CliWrap;
+using CliWrap.EventStream;
+using FirebirdSql.Data.FirebirdClient;
+using FirebirdSql.Data.Isql;
+using Google.Apis.YouTube.v3.Data;
+using HtmlAgilityPack;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.WinForms;
 using Microsoft.Web.WebView2.Wpf;
 using Microsoft.Win32;
+using Nancy;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.DirectoryServices;
+using System.DirectoryServices.AccountManagement;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Linq.Expressions;
 using System.Media;
 using System.Net;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics.X86;
+using System.Security;
 using System.Security.Permissions;
 using System.Security.Policy;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Automation;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Documents;
+using System.Windows.Forms;
 using System.Windows.Forms.Design;
 using System.Windows.Input;
+using System.Windows.Input.Manipulations;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 using System.Xml;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
-using Application = System.Windows.Application;
-using HtmlDocument = HtmlAgilityPack.HtmlDocument;
-using WebView2 = Microsoft.Web.WebView2.Wpf.WebView2;
-using Window = System.Windows.Window;
-using System.Threading;
-using System.Linq;
+using System.Xml.Linq;
 using VideoGui.Models;
 using VideoGui.Models.delegates;
-using System.IO;
-using System.Runtime.InteropServices;
-using System.Windows.Input.Manipulations;
-using System.Windows.Media.Animation;
-using System.Windows.Automation;
-using Path = System.IO.Path;
-using System.Linq.Expressions;
-using System.Windows.Forms;
-using MouseEventArgs = System.Windows.Input.MouseEventArgs;
+using static Microsoft.WindowsAPICodePack.Shell.PropertySystem.SystemProperties.System;
+using static System.Net.WebRequestMethods;
+using static System.Runtime.InteropServices.JavaScript.JSType;
+using static System.Windows.Forms.AxHost;
+using static System.Windows.Forms.LinkLabel;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;
+using Application = System.Windows.Application;
+using Button = System.Windows.Controls.Button;
 using DataFormats = System.Windows.DataFormats;
 using DataObject = System.Windows.DataObject;
 using DragDropEffects = System.Windows.DragDropEffects;
-using CliWrap;
-using static System.Net.WebRequestMethods;
 using File = System.IO.File;
-using System.DirectoryServices;
-using System.Diagnostics;
-using System.Xml.Linq;
-using CliWrap.EventStream;
-using Microsoft.Extensions.Hosting;
-using System.DirectoryServices.AccountManagement;
-using System.Security;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;
-using static Microsoft.WindowsAPICodePack.Shell.PropertySystem.SystemProperties.System;
+using HtmlDocument = HtmlAgilityPack.HtmlDocument;
+using MouseEventArgs = System.Windows.Input.MouseEventArgs;
+using Path = System.IO.Path;
 using Task = System.Threading.Tasks.Task;
-using Newtonsoft.Json.Linq;
-using System.Globalization;
-using static System.Windows.Forms.AxHost;
-using FirebirdSql.Data.FirebirdClient;
-using Nancy;
-using FirebirdSql.Data.Isql;
-using Google.Apis.YouTube.v3.Data;
-using static System.Windows.Forms.LinkLabel;
-using System.Windows.Controls.Primitives;
-using Button = System.Windows.Controls.Button;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+using WebView2 = Microsoft.Web.WebView2.Wpf.WebView2;
+using Window = System.Windows.Window;
 
 namespace VideoGui
 {
+    public class DirectoriesProbe
+    {
+        public string Directory { get; set; } = "";
+        public string url { get; set; } = "";
+        public bool Probed { get; set; } = false;
+        public bool MatchNotFound { get; set; } = false;
+        public bool Processed { get; set; } = false;
+        public DirectoriesProbe(string dir)
+        {
+            Directory = dir;
+        }
+
+    }
 
     /// <summary>
     /// Interaction logic for MainWindow.xaml
@@ -86,7 +100,7 @@ namespace VideoGui
         int swap = 1, ct = 0, MaxNodes = -1, MaxUploads = 0, recs = 0, gmaxrecs = 0, files = 0, max = 0, SlotsPerUpload = 0,
             ScheduleMax = 0, ts = 0, LastKey = -1, Days = 1, CurrentDay = 1;
         bool EditDone = false, btndone = false, ExitDialog = false, Waiting = false, IsVideoLookup = false, WaitingFileName = false;
-        bool Valid = false, IsUnlisted = false, IsDashboardMode = false, CanSpool = false, FirstRun = true, done = false, HasExited = false;
+        bool Valid = false, IsVideoLookupShort = false, IsValid = false, IsUnlisted = false, IsDashboardMode = false, CanSpool = false, FirstRun = true, done = false, HasExited = false;
         bool DoNextNode = true, finished = false, TimedOut = false, Uploading = false, NextRecord = false, Processing = false, clickupload = true;
         public bool IsClosing = false, IsClosed = false, Exceeded = false, KilledUploads = false, SwapEnabled = false, IsTitleEditor = false;
         string SendKeysString = "", UploadPath = "", LastNode = "", DefaultUrl = "", LastValidFileName = "", TableDestination = "";
@@ -108,6 +122,7 @@ namespace VideoGui
         public DateTime StartDate = DateTime.Now, EndDate = DateTime.Now, LastValidDate = DateTime.Now;
         bool IsTest = false, AutoClose = false;
         AutoCancel DoAutoCancel = null;
+        List<DirectoriesProbe> Directories = new(); //Directories
         //string Title = "", Desc = "";
         Dictionary<int, WebView2> wv2Dictionary = new Dictionary<int, WebView2>();
         Dictionary<int, WebView2> ActiveWebView = new Dictionary<int, WebView2>();
@@ -131,6 +146,53 @@ namespace VideoGui
         [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         private static extern int GetClassName(IntPtr hWnd, System.Text.StringBuilder lpClassName, int nMaxCount);
         private delegate bool EnumWindowProc(IntPtr hWnd, IntPtr parameter);
+
+        public ScraperModule(databasehook<object> _dbInit, OnFinishId _OnFinish, List<string> directories, bool IsShort)
+        {
+            try
+            {
+                ScraperType = EventTypes.VideoLookup;
+                _dbInit = _dbInit;
+                _OnFinish = _OnFinish;
+                foreach (var dir in directories)
+                {
+                    Directories.Add(new DirectoriesProbe(dir));
+                }
+                IsVideoLookupShort = IsShort;
+                IsDashboardMode = true;
+                dbInitializer = _dbInit;
+                InitializeComponent();
+                webAddressBuilder = new WebAddressBuilder(null, null, "UCdMH7lMpKJRGbbszk5AUc7w");
+                Closing += (s, e) =>
+                {
+                    IsClosing = true;
+                    canceltoken.Cancel();
+                    cancelds();
+                };
+                Closed += (s, e) =>
+                {
+                    IsClosed = true;
+                    DoOnFinish?.Invoke(EventId);
+                };
+                webAddressBuilder = new WebAddressBuilder(null, null, "UCdMH7lMpKJRGbbszk5AUc7w");
+                wv2Dictionary.Add(1, wv2A1);//20
+                wv2Dictionary.Add(2, wv2A2);//30
+                wv2Dictionary.Add(3, wv2A3);//40
+                wv2Dictionary.Add(4, wv2A4);//50
+                wv2Dictionary.Add(5, wv2A5);//60
+                wv2Dictionary.Add(6, wv2A6);//70
+                wv2Dictionary.Add(7, wv2A7);//80
+                wv2Dictionary.Add(8, wv2A8);//90
+                wv2Dictionary.Add(9, wv2A9);//100
+                wv2Dictionary.Add(10, wv2A10);
+                ActiveWebView.Add(1, wv2);
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"Constructor Scraper.VideoLookup {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+        }
+
         public ScraperModule(databasehook<object> _dbInit, OnFinishId _OnFinish, string _Default_url,
                string TableDest, int _EventId)
         {
@@ -183,8 +245,8 @@ namespace VideoGui
 
 
         public ScraperModule(databasehook<object> _dbInit, OnFinishId _OnFinish, string _Default_url,
-            Nullable<DateTime> Start, Nullable<DateTime> End, int MaxUoploads, 
-            List<ListScheduleItems> _listSchedules, int _eventid ,bool _IsTest)
+            Nullable<DateTime> Start, Nullable<DateTime> End, int MaxUoploads,
+            List<ListScheduleItems> _listSchedules, int _eventid, bool _IsTest)
         {
             try
             {
@@ -200,7 +262,7 @@ namespace VideoGui
                 IsTest = _IsTest;
                 dbInitializer = _dbInit;
                 InitializeComponent();
-                Closing += (s, e) => { IsClosing = true; canceltoken.Cancel();cancelds(); };
+                Closing += (s, e) => { IsClosing = true; canceltoken.Cancel(); cancelds(); };
                 Closed += (s, e) =>
                 {
                     IsClosed = true;
@@ -1367,7 +1429,7 @@ namespace VideoGui
                                 string gUrl2 = $"https://studio.youtube.com/video/{Id}/edit";
                                 WaitingFileName = true;
                                 wv2A10.NavigationCompleted += wv2_NavigationCompleted_GetFileName;
-                                wv2A10.Source = new Uri(gUrl2); 
+                                wv2A10.Source = new Uri(gUrl2);
                                 var cts = new CancellationTokenSource();
                                 cts.CancelAfter(TimeSpan.FromSeconds(300));
                                 TimedOut = false;
@@ -1450,14 +1512,14 @@ namespace VideoGui
                             bool Allow = true;
                             if (directshortsScheduler is not null)
                             {
-                                if (directshortsScheduler.ScheduleNumber+1 >= directshortsScheduler.MaxNumberSchedules)
+                                if (directshortsScheduler.ScheduleNumber + 1 >= directshortsScheduler.MaxNumberSchedules)
                                 {
                                     Allow = false;
                                 }
                                 if (TimedOut)
                                 {
                                     Allow = false;
-                                    
+
                                 }
                             }
                             if (Allow)
@@ -1480,8 +1542,9 @@ namespace VideoGui
                                 NextRecord = false;
                                 var task1 = (sender as WebView2).CoreWebView2.ExecuteScriptAsync("document.body.innerHTML");
 
-                                task1.ContinueWith(x => { 
-                                    ProcessWV2Completed_ShortsScheduler(x.Result, sender); 
+                                task1.ContinueWith(x =>
+                                {
+                                    ProcessWV2Completed_ShortsScheduler(x.Result, sender);
                                 }, TaskScheduler.FromCurrentSynchronizationContext());
 
 
@@ -1638,7 +1701,7 @@ namespace VideoGui
                     }
                     else if (ehtml is not null && ehtml.Contains("Channel dashboard"))
                     {
-                        if (ScraperType == EventTypes.ShortsSchedule)
+                        if (ScraperType == EventTypes.ShortsSchedule || ScraperType == EventTypes.VideoLookup)
                         {
                             bool valid = false;
                             if (ehtml.Contains("@JustinsTrainJourneys"))
@@ -2229,7 +2292,7 @@ namespace VideoGui
             {
                 cancelds();
                 canceltoken.Cancel();
-                
+
                 if (SwapEnabled)
                 {
                     WebView2 temp = brdmain.Child as WebView2;
@@ -2452,24 +2515,53 @@ namespace VideoGui
             {
                 if (webAddressBuilder is not null)
                 {
-                    if (ScraperType == EventTypes.ShortsSchedule && directshortsScheduler is null && ReleaseDate.HasValue && ReleaseEndDate.HasValue)
+                    if (ScraperType != EventTypes.VideoLookup)
                     {
-                        var p = new CustomParams_GetConnectionString();
-                        dbInitializer?.Invoke(this, p);
-                        string connectionString = p.ConnectionString;
-                        directshortsScheduler = new DirectshortsScheduler(() => { Show(); }, DoOnScheduleComplete, listSchedules,
-                            ReleaseDate.Value, ReleaseEndDate.Value, DoReportSchedule, ScheduleMax,IsTest);
-                        directshortsScheduler.connectionString = connectionString;
-                    }
-                    IsVideoLookup = true;
+                        if (ScraperType == EventTypes.ShortsSchedule && directshortsScheduler is null && ReleaseDate.HasValue && ReleaseEndDate.HasValue)
+                        {
+                            var p = new CustomParams_GetConnectionString();
+                            dbInitializer?.Invoke(this, p);
+                            string connectionString = p.ConnectionString;
+                            directshortsScheduler = new DirectshortsScheduler(() => { Show(); }, DoOnScheduleComplete, listSchedules,
+                                ReleaseDate.Value, ReleaseEndDate.Value, DoReportSchedule, ScheduleMax, IsTest);
+                            directshortsScheduler.connectionString = connectionString;
+                        }
+                        IsVideoLookup = true;
 
-                    //string URL = webAddressBuilder.AddFiltersByDRAFT_UNLISTED(false).Finalize().Address;
-                    if (DefaultUrl is not null && DefaultUrl != "")
+                        //string URL = webAddressBuilder.AddFiltersByDRAFT_UNLISTED(false).Finalize().Address;
+                        if (DefaultUrl is not null && DefaultUrl != "")
+                        {
+                            ActiveWebView[1].ZoomFactor = 0.6;
+                            ActiveWebView[1].NavigationCompleted += wv2v_NavigationCompleted;
+                            ActiveWebView[1].Source = new Uri(DefaultUrl);
+                            return true;
+                        }
+                    }
+                    else
                     {
-                        ActiveWebView[1].ZoomFactor = 0.6;
-                        ActiveWebView[1].NavigationCompleted += wv2v_NavigationCompleted;
-                        ActiveWebView[1].Source = new Uri(DefaultUrl);
-                        return true;
+                        bool found = false;
+                        for (int i = 0; i < Directories.Count; i++)
+                        {
+                            if (!Directories[i].Probed)
+                            {
+
+                                webAddressBuilder.AddFilterByShorts();
+                                webAddressBuilder.AddFilterByTitle(Directories[i].Directory);
+                                DefaultUrl = webAddressBuilder.GetHTML();
+                                Directories[i].Probed = true;
+                                Directories[i].url = DefaultUrl;
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (found)
+                        {
+                            ActiveWebView[1].ZoomFactor = 0.46;
+                            ActiveWebView[1].NavigationCompleted += wv2Lookup_NavigationCompleted;
+                            ActiveWebView[1].Source = new Uri(DefaultUrl);
+                            return true;
+                        }
+                        return false;
                     }
                 }
                 return false;
@@ -2481,6 +2573,108 @@ namespace VideoGui
             }
         }
 
+        private void wv2Lookup_NavigationCompleted(object? sender, CoreWebView2NavigationCompletedEventArgs e)
+        {
+            if (canceltoken.IsCancellationRequested) return;
+            if ((e is not null && e.IsSuccess) || e is null)
+            {
+                NextRecord = false;
+                var task = (sender as WebView2).CoreWebView2.ExecuteScriptAsync("document.body.innerHTML");
+                task.ContinueWith(x => { ProcessWV2Completed_VideoLookup(x.Result, sender); }, TaskScheduler.FromCurrentSynchronizationContext());
+            }
+        }
+
+        private void ProcessWV2Completed_VideoLookup(string html, object sender)
+        {
+            try
+            {
+                if (canceltoken.IsCancellationRequested) return;
+                if (html is not null)
+                {
+                    bool NoMatch = false;
+                    var ehtml = Regex.Unescape(html);
+                    if (ehtml is not null && ehtml == "")
+                    {
+                        ActiveWebView[1].NavigationCompleted += wv2Lookup_NavigationCompleted;
+                        ActiveWebView[1].Source = new System.Uri(DefaultUrl);
+                    }
+                    else if (ehtml is not null)
+                    {
+                        if (ehtml.Contains("No matching videos") || ehtml.Contains("No matching shorts"))
+                        {
+                            NoMatch = true;
+                        }
+
+                        for (int i = 0; i < Directories.Count; i++)
+                        {
+                            if (Directories[i].url == DefaultUrl)
+                            {
+                                Directories[i].MatchNotFound = NoMatch;
+                                Directories[i].Processed = true;
+                                break;
+                            }
+                        }
+
+                        string url = "";
+                        for (int i = 0; i < Directories.Count; i++)
+                        {
+                            if (!Directories[i].Probed)
+                            {
+                                url = webAddressBuilder.AddFilterByTitle(Directories[i].Directory).GetHTML();
+                                Directories[i].Probed = true;
+                                Directories[i].url = url;
+                                break;
+                            }
+                        }
+
+                        if (url != "")
+                        {
+                            ActiveWebView[1].NavigationCompleted += wv2Lookup_NavigationCompleted;
+                            ActiveWebView[1].Source = new Uri(url);
+                        }
+                        else
+                        {
+                            DoOnLookupComplete();
+                        }
+
+
+                    }
+
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"ProcessWV2Completed_VideoLookup {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+        }
+
+
+        private void DoOnLookupComplete()
+        {
+            try
+            {
+                cancelds();
+                canceltoken.Cancel();
+                if (DoAutoCancel is not null)
+                {
+                    if (DoAutoCancel.IsClosing) DoAutoCancel.Close();
+                    while (!DoAutoCancel.IsClosed && !canceltoken.IsCancellationRequested)
+                    {
+                        Thread.Sleep(100);
+                        System.Windows.Forms.Application.DoEvents();
+                    }
+                    DoAutoCancel.Close();
+                    DoAutoCancel = null;
+                }
+                DoAutoCancel = new AutoCancel(DoAutoCancelClose, "", 5, "Scheduling Finished");
+                DoAutoCancel.ShowActivated = true;
+                DoAutoCancel.Show();
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"DoOnLookupComplete {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+        }
         private bool DoOnScheduleComplete()
         {
             try
@@ -2489,9 +2683,9 @@ namespace VideoGui
                 {
                     bool res = false;
                     int r = directshortsScheduler.ScheduleNumber;
-                    if (r >= ScheduleMax-1) r = ScheduleMax-1;
+                    if (r >= ScheduleMax - 1) r = ScheduleMax - 1;
 
-                    lstMain.Items.Insert(0, $"{r+1} Schedules Complete");
+                    lstMain.Items.Insert(0, $"{r + 1} Schedules Complete");
                     if (Days > 1)
                     {
                         if (CurrentDay > Days - 1) return false;
@@ -2527,7 +2721,7 @@ namespace VideoGui
                             DoAutoCancel.Close();
                             DoAutoCancel = null;
                         }
-                        DoAutoCancel = new AutoCancel(DoAutoCancelClose, "", 5,"Scheduling Finished");
+                        DoAutoCancel = new AutoCancel(DoAutoCancelClose, "", 5, "Scheduling Finished");
                         DoAutoCancel.ShowActivated = true;
                         DoAutoCancel.Show();
                     }
@@ -2550,7 +2744,7 @@ namespace VideoGui
                 {
                     canceltoken.Cancel();
                     cancelds();
-                    DoAutoCancel.Close();   
+                    DoAutoCancel.Close();
                     Close();
                     return;
                 }
@@ -2569,7 +2763,7 @@ namespace VideoGui
                 Dispatcher.Invoke(() =>
                 {
                     int r = directshortsScheduler.ScheduleNumber;
-                    string t = $"{title.Replace("\n", "").Replace("\r", "").Trim()} {id} {r+1} {dateTime}";
+                    string t = $"{title.Replace("\n", "").Replace("\r", "").Trim()} {id} {r + 1} {dateTime}";
                     lstMain.Items.Insert(0, t);
                     System.Windows.Forms.Application.DoEvents();
                 });

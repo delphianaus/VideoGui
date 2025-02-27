@@ -34,13 +34,12 @@ namespace VideoGui
         public bool IsClosing = false, IsClosed = false;
         public TitleSelectFrm DoTitleSelectFrm = null;
         public DescSelectFrm DoDescSelectFrm = null;
-        public SetLists ConnnectLists = null;
+        
         public WebViewDebug webviewDebug = null;
-        public SelectShortUpload(databasehook<object> _dbInit, OnFinish _DoOnFinished, SetLists _SetLists)
+        public SelectShortUpload(databasehook<object> _dbInit, OnFinish _DoOnFinished)
         {
             InitializeComponent();
             dbInit = _dbInit;
-            ConnnectLists = _SetLists;
             Closing += (s, e) => { IsClosing = true; };
             Closed += (s, e) => { IsClosed = true; _DoOnFinished?.Invoke(); };
         }
