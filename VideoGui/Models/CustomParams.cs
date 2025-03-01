@@ -10,7 +10,7 @@ using VideoGui.Models.delegates;
 
 namespace VideoGui.Models
 {
-    
+
     public class CustomParams_InsertTags
     {
         public List<int> TagIds { get; set; } = new List<int>();
@@ -76,9 +76,9 @@ namespace VideoGui.Models
         public DateTime ScheduleDate { get; set; }
         public TimeSpan ScheduleTimeStart { get; set; }
         public TimeSpan ScheduleTimeEnd { get; set; }
-        public bool TestMode { get; set; } = false; 
+        public bool TestMode { get; set; } = false;
         public int max { get; set; } = 0;
-        public CustomParams_SaveSchedule(DateTime _ScheduleDate, TimeSpan _ScheduleTimeStart, 
+        public CustomParams_SaveSchedule(DateTime _ScheduleDate, TimeSpan _ScheduleTimeStart,
             TimeSpan _ScheduleTimeEnd, int _max, bool _TestMode)
         {
             ScheduleDate = _ScheduleDate;
@@ -111,7 +111,27 @@ namespace VideoGui.Models
             RemoveAll = All;
         }
     }
-
+    public class CustomParams_GetBaseDirectory
+    {
+        public string User { get; set; } = "";
+        public bool found { get; set; } = false;
+        public string basedir { get; set; } = "";
+        public CustomParams_GetBaseDirectory(string _user)
+        {
+            User = _user;
+        }
+    }
+    public class CustomParams_Authorize
+    {
+        public bool IsUser { get; set; } = true;
+        public string data { get; set; } = "";
+        public bool Authorized { get; set; } = false;
+        public CustomParams_Authorize(string data, bool IsUser = false)
+        {
+            this.data = data;
+            this.IsUser = IsUser;
+        }
+    }
     public class CustomParams_EditTimeSpans
     {
         public TimeSpan Start { get; set; }
@@ -140,7 +160,7 @@ namespace VideoGui.Models
         public string ActionName { get; set; } = "";
 
         public int Max { get; set; } = 0;
-        public CustomParams_UpdateAction(int _id, Nullable<DateTime> _ActionDate, 
+        public CustomParams_UpdateAction(int _id, Nullable<DateTime> _ActionDate,
             Nullable<DateOnly> _ScheduleDate, Nullable<TimeSpan> _ScheduleTimeStart,
             Nullable<TimeSpan> _ScheduleTimeEnd, Nullable<DateTime> _CompletedDate,
             string _ScheduleName, string _ActionName, int _max)
@@ -181,7 +201,7 @@ namespace VideoGui.Models
             Idx = _idx;
         }
 
-        
+
         public CustomParams_Get()
         {
 
@@ -279,8 +299,8 @@ namespace VideoGui.Models
         public bool isfixed = false;
         public StatusTypes Status { get; set; } = StatusTypes.PRIVATE;
         public string videoid = "", filename = "", title = "", TableName = "";
-        public CustomParams_AddVideoInfo(Nullable<int> _id, StatusTypes _status, string _videoid, string _title, 
-            string _filename, int _groupid, bool _isfixed, string _TablwName= "")
+        public CustomParams_AddVideoInfo(Nullable<int> _id, StatusTypes _status, string _videoid, string _title,
+            string _filename, int _groupid, bool _isfixed, string _TablwName = "")
         {
             id = (_id.HasValue) ? _id.Value : id;
             groupid = _groupid;
