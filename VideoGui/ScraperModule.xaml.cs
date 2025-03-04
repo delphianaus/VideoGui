@@ -1230,8 +1230,9 @@ namespace VideoGui
                     var r = new CustomParams_SetTimeSpans(null, null);
                     dbInitializer?.Invoke(this, r);
                 }
-
-                wv2.CoreWebView2InitializationCompleted += Wv2_CoreWebView2InitializationCompleted;
+                wv2.CoreWebView2InitializationCompleted += (sender, args) => {
+                    ActiveWebView[1].Source = new Uri(webAddressBuilder.GetChannelURL().Address);
+                };
                 Dispatcher.Invoke(() =>
                 {
                     InitAsync();
@@ -1244,19 +1245,7 @@ namespace VideoGui
                 ex.LogWrite($"Window_Loaded {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-        private void Wv2_CoreWebView2InitializationCompleted(object? sender, CoreWebView2InitializationCompletedEventArgs e)
-        {
-            try
-            {
-
-                ActiveWebView[1].Source = new Uri(webAddressBuilder.GetChannelURL().Address);
-
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite($"Wv2_CoreWebView2Initializationdreportd {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
-            }
-        }
+        
 
         private async void ProcessWV2Completed_ShortsScheduler(string html, object sender)
         {
@@ -1307,22 +1296,12 @@ namespace VideoGui
                 lstMain.Items.Insert(0, t);
                 string newtitle = Title.Replace("\n", "").Replace("\r", "").Trim();
                 var spliter = newtitle.Split(' ').ToList();
-                foreach (var item in spliter)
-                {
-                    if (item.StartsWith("#"))
-                    {
-                        newtitle = newtitle.Replace(item, "");
-                    }
-                }
-                newtitle = newtitle.Trim();
+                newtitle = string.Join(" ", spliter.Where(item => !item.StartsWith("#"))).Trim();
                 titles.Add(newtitle);
                 Ids.Insert(0, Id);
                 dbInitializer?.Invoke(this, new CustomParams_AddVideoInfo(null, VStatusType, Id, Title,
                 FileName, -1, false));
-                if (Id.Contains("webp/"))
-                {
-                    Id = Id.Replace("webp/", "");
-                }
+                Id = (Id.Contains("webp/")) ? Id.Replace("webp/", "") : Id;
                 webAddressBuilder.ScopeVideo(Id, true);
                 return true;
             }
@@ -1361,7 +1340,7 @@ namespace VideoGui
                     string StatusNodeStr = "label-span style-scope ytcp-video-row";
                     List<HtmlNode> StatusNode = doc.DocumentNode.SelectNodes($"//span[@class='{StatusNodeStr}']").ToList();
                     string DateNodeStr = " cell-body tablecell-date sortable column-sorted  style-scope ytcp-video-row";
-                    List<HtmlNode> DateNode = doc.DocumentNode.SelectNodes($"//div[@class='{DateNodeStr}']").ToList();
+                   //ist<HtmlNode> DateNode = doc.DocumentNode.SelectNodes($"//div[@class='{DateNodeStr}']").ToList();
                     string aclassname = " remove-default-style  style-scope ytcp-video-list-cell-video";
                     for (int i = 0; i < targetSpanList.Count; i++)
                     {
@@ -1387,7 +1366,7 @@ namespace VideoGui
                             int idx2 = fullid.IndexOf(@"com/vi");
                             if (idx1 != -1 && idx2 != -1)
                             {
-                                Id = fullid.Substring(idx2 + 7, idx1 - 7 - idx2);
+                                Id = fullid.Substring(idx2 + 7, idx1 - idx2 - 7);
                             }
                             else
                             {
@@ -1395,7 +1374,7 @@ namespace VideoGui
                                 idx2 = fullid.IndexOf(@"com/vi");
                                 if (idx1 != -1 && idx2 != -1)
                                 {
-                                    Id = fullid.Substring(idx2 + 7, idx1 - 7 - idx2);
+                                    Id = fullid.Substring(idx2 + 7, idx1 - idx2 - 7);
                                 }
                             }
                         }
@@ -1509,20 +1488,9 @@ namespace VideoGui
                         {
                             int nodesc = 0;
                             nodeslist.Clear();
-                            bool Allow = true;
-                            if (directshortsScheduler is not null)
-                            {
-                                if (directshortsScheduler.ScheduleNumber + 1 >= directshortsScheduler.MaxNumberSchedules)
-                                {
-                                    Allow = false;
-                                }
-                                if (TimedOut)
-                                {
-                                    Allow = false;
-
-                                }
-                            }
-                            if (Allow)
+                            if (directshortsScheduler is null ||
+                                !(directshortsScheduler.ScheduleNumber + 1 >= directshortsScheduler.MaxNumberSchedules ||
+                                TimedOut))
                             {
                                 btnNext_Task(sender);
                                 string ehtml = "";
@@ -1703,17 +1671,7 @@ namespace VideoGui
                     {
                         if (ScraperType == EventTypes.ShortsSchedule || ScraperType == EventTypes.VideoLookup)
                         {
-                            bool valid = false;
                             if (ehtml.Contains("@JustinsTrainJourneys"))
-                            {
-                                valid = true;
-                            }
-                            else
-                            {
-                                //DispatcherTimer.Start();
-                                valid = false;
-                            }
-                            if (valid)
                             {
                                 InsertAtZero = true;
                                 YouTubeLoaded();
@@ -1897,10 +1855,7 @@ namespace VideoGui
                 int Id = (sender as WebView2).Name.Replace("wv2A", "").ToInt(-1);
                 string source = (sender as WebView2).Source.AbsoluteUri.ToString(), IntId = "";
                 int p1 = source.IndexOf("video/"), p2 = source.IndexOf("/edit");
-                if (p1 != -1 && p2 != -1)
-                {
-                    IntId = source.Substring(p1 + 6, p2 - p1 - 6);
-                }
+                IntId = (p1 != -1 && p2 != -1) ? source.Substring(p1 + 6, p2 - p1 - 6) : IntId;
                 var task = (sender as WebView2).ExecuteScriptAsync("document.body.innerHTML");
                 task.ContinueWith(x => { ProcessHTML_Filename(x.Result, Id, IntId, sender); },
                     TaskScheduler.FromCurrentSynchronizationContext());
@@ -2081,7 +2036,7 @@ namespace VideoGui
                 string StatusNodeStr = "label-span style-scope ytcp-video-row";
                 List<HtmlNode> StatusNode = doc.DocumentNode.SelectNodes($"//span[@class='{StatusNodeStr}']").ToList();
                 string DateNodeStr = " cell-body tablecell-date sortable column-sorted  style-scope ytcp-video-row";
-                List<HtmlNode> DateNode = doc.DocumentNode.SelectNodes($"//div[@class='{DateNodeStr}']").ToList();
+              //  List<HtmlNode> DateNode = doc.DocumentNode.SelectNodes($"//div[@class='{DateNodeStr}']").ToList();
                 string aclassname = " remove-default-style  style-scope ytcp-video-list-cell-video";
                 for (int i = 0; i < targetSpanList.Count; i++)
                 {

@@ -137,6 +137,7 @@ namespace VideoGui
                     FileIndexer = null;
                     _TotalSecs = Math.Truncate(TotalSecs.TotalSeconds).ToInt();
                     TimeSpan Target = TimeSpan.Zero;
+                    txtTarget.IsEnabled = true;
                     if (!Loaded)
                     {
                         if (txtTarget.Text != "")
@@ -149,6 +150,7 @@ namespace VideoGui
                     else
                     {
                         Target = txtTarget.Text.FromStrToTimeSpan();
+                        
                     }
                     int Threash = txtThreash.Text.ToInt(-1);
                     if (Threash == -1) Threash = 70;
