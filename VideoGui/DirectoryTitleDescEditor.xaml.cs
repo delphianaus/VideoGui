@@ -101,8 +101,7 @@ namespace VideoGui
         {
             try
             {
-                var p = new CustomParams_GetConnectionString();
-                dbInit?.Invoke(this, p);
+      
 
                 if (DoTitleSelectFrm is not null)
                 {

@@ -34,7 +34,7 @@ namespace VideoGui
         public bool IsClosing = false, IsClosed = false;
         public TitleSelectFrm DoTitleSelectFrm = null;
         public DescSelectFrm DoDescSelectFrm = null;
-        
+
         public WebViewDebug webviewDebug = null;
         public SelectShortUpload(databasehook<object> _dbInit, OnFinish _DoOnFinished)
         {
@@ -62,37 +62,39 @@ namespace VideoGui
                 if (ofg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                 {
                     txtsrcdir.Text = ofg.SelectedFolder;
-                    var p = new CustomParams_GetConnectionString();
-                    dbInit?.Invoke(this, p);
+
+                    string connectionStr = dbInit?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
+
+
                     int res = -1;
                     string ThisDir = ofg.SelectedFolder.Split(@"\").ToList().LastOrDefault();
-                    if (p.ConnectionString is not null && p.ConnectionString.Length > 0)
+
+                    string sql = "select ID from SHORTSDIRECTORY WHERE DIRECTORYNAME = @P0";
+                    res = connectionStr.ExecuteScalar(sql.ToUpper(), [("@P0", ThisDir.ToUpper())]).ToInt(-1);
+                    if (res == -1)
                     {
-                        string connectionString = p.ConnectionString;
-                        string sql = "select ID from SHORTSDIRECTORY WHERE DIRECTORYNAME = @P0";
-                        res = connectionString.ExecuteScalar(sql.ToUpper(), [("@P0", ThisDir.ToUpper())]).ToInt(-1);
-                        if (res == -1)
+                        sql = "INSERT INTO SHORTSDIRECTORY(DIRECTORYNAME) VALUES (@P0) RETURNING ID";
+                        res = connectionStr.ExecuteScalar(sql.ToUpper(), [("@P0", ThisDir.ToUpper())]).ToInt(-1);
+                        ShortsIndex = res;
+                        btnEditTitle.IsChecked = false;
+                        btnEditDesc.IsChecked = false;
+                    }
+                    else
+                    {
+                        ShortsIndex = res;
+                        dbInit?.Invoke(this, new CustomParams_Select(res));
+
+                        string connectStr = dbInit?.Invoke(this, new CustomParams_GetConnectionString()) is string con1n ? con1n : "";
+                        connectStr.ExecuteReader(GetShortsDirectorySql(res), (FbDataReader r) =>
                         {
-                            sql = "INSERT INTO SHORTSDIRECTORY(DIRECTORYNAME) VALUES (@P0) RETURNING ID";
-                            res = connectionString.ExecuteScalar(sql.ToUpper(), [("@P0", ThisDir.ToUpper())]).ToInt(-1);
-                            ShortsIndex = res;
-                            btnEditTitle.IsChecked = false;
-                            btnEditDesc.IsChecked = false;
-                        }
-                        else
-                        {
-                            ShortsIndex = res;
-                            dbInit?.Invoke(this, new CustomParams_Select(res));
-                            connectionString.ExecuteReader(GetShortsDirectorySql(res), (FbDataReader r) =>
-                            {
-                                int titleid = r["TITLEID"].ToInt(-1);
-                                int descid = r["DESCID"].ToInt(-1);
-                                string LinkedTitleId = r["LINKEDTITLEIDS"] is string TITD ? TITD : "";
-                                string LinkedDescId = r["LINKEDDESCIDS"] is string DITD ? DITD : "";
-                                btnEditTitle.IsChecked = titleid != -1 && LinkedTitleId != "";
-                                btnEditDesc.IsChecked = descid != -1 && LinkedDescId != "";
-                            });
-                        }
+                            int titleid = r["TITLEID"].ToInt(-1);
+                            int descid = r["DESCID"].ToInt(-1);
+                            string LinkedTitleId = r["LINKEDTITLEIDS"] is string TITD ? TITD : "";
+                            string LinkedDescId = r["LINKEDDESCIDS"] is string DITD ? DITD : "";
+                            btnEditTitle.IsChecked = titleid != -1 && LinkedTitleId != "";
+                            btnEditDesc.IsChecked = descid != -1 && LinkedDescId != "";
+                        });
+
 
                     }
 
@@ -212,11 +214,9 @@ namespace VideoGui
             {
                 if (DoTitleSelectFrm is not null)
                 {
-                    var p = new CustomParams_GetConnectionString();
-                    dbInit?.Invoke(this, p);
+                    string connectionStr = dbInit?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
                     bool found = false;
                     int titleid = -1;
-                    string connectionStr = p.ConnectionString;
                     string sql = "Select TITLEID FROM SHORTSDIRECTORY WHERE ID = @ID";
                     titleid = connectionStr.ExecuteScalar(sql, [("@ID", ShortsIndex)]).ToInt(-1);
 
@@ -541,8 +541,8 @@ namespace VideoGui
                 string MaxUploads = key.GetValueStr("MaxUploads", "100");
                 key?.Close();
                 //ConnnectLists?.Invoke(3);
-                var p = new CustomParams_GetConnectionString();
-                dbInit?.Invoke(this, p);
+                string connectionStr = dbInit?.Invoke(this, new CustomParams_GetConnectionString()) is string con2n ? con2n : "";
+                bool found = false;
                 txtsrcdir.Text = (rootfolder != "" && Directory.Exists(rootfolder)) ? rootfolder : txtsrcdir.Text;
                 txtMaxUpload.Text = (uploadsnumber != "") ? uploadsnumber : txtMaxUpload.Text;
                 txtTotalUploads.Text = (MaxUploads != "") ? MaxUploads : txtTotalUploads.Text;
@@ -555,32 +555,30 @@ namespace VideoGui
                 if (rootfolder != "")
                 {
                     string ThisDir = rootfolder.Split(@"\").ToList().LastOrDefault();
-                    if (p.ConnectionString is not null && p.ConnectionString.Length > 0)
+
+                    string sql = "select ID from SHORTSDIRECTORY WHERE DIRECTORYNAME = @P0";
+                    int res = connectionStr.ExecuteScalar(sql.ToUpper(), [("@P0", ThisDir.ToUpper())]).ToInt(-1);
+                    if (res == -1)
                     {
-                        string connectionString = p.ConnectionString;
-                        string sql = "select ID from SHORTSDIRECTORY WHERE DIRECTORYNAME = @P0";
-                        int res = connectionString.ExecuteScalar(sql.ToUpper(), [("@P0", ThisDir.ToUpper())]).ToInt(-1);
-                        if (res == -1)
-                        {
-                            sql = "INSERT INTO SHORTSDIRECTORY(DIRECTORYNAME) VALUES (@P0) RETURNING ID";
-                            res = connectionString.ExecuteScalar(sql.ToUpper(), [("@P0", ThisDir.ToUpper())]).ToInt(-1);
-                            btnEditTitle.IsChecked = false;
-                            btnEditDesc.IsChecked = false;
-                        }
-                        else
-                        {
-                            dbInit?.Invoke(this, new CustomParams_Select(res));
-                            connectionString.ExecuteReader(GetShortsDirectorySql(res), (FbDataReader r) =>
-                            {
-                                int titleid = r["TITLEID"].ToInt(-1);
-                                int descid = r["DESCID"].ToInt(-1);
-                                string LinkedTitleId = r["LINKEDTITLEIDS"] is string TITD ? TITD : "";
-                                string LinkedDescId = r["LINKEDDESCIDS"] is string DITD ? DITD : "";
-                                btnEditTitle.IsChecked = titleid != -1 && LinkedTitleId != "";
-                                btnEditDesc.IsChecked = descid != -1 && LinkedDescId != "";
-                            });
-                        }
+                        sql = "INSERT INTO SHORTSDIRECTORY(DIRECTORYNAME) VALUES (@P0) RETURNING ID";
+                        res = connectionStr.ExecuteScalar(sql.ToUpper(), [("@P0", ThisDir.ToUpper())]).ToInt(-1);
+                        btnEditTitle.IsChecked = false;
+                        btnEditDesc.IsChecked = false;
                     }
+                    else
+                    {
+                        dbInit?.Invoke(this, new CustomParams_Select(res));
+                        connectionStr.ExecuteReader(GetShortsDirectorySql(res), (FbDataReader r) =>
+                        {
+                            int titleid = r["TITLEID"].ToInt(-1);
+                            int descid = r["DESCID"].ToInt(-1);
+                            string LinkedTitleId = r["LINKEDTITLEIDS"] is string TITD ? TITD : "";
+                            string LinkedDescId = r["LINKEDDESCIDS"] is string DITD ? DITD : "";
+                            btnEditTitle.IsChecked = titleid != -1 && LinkedTitleId != "";
+                            btnEditDesc.IsChecked = descid != -1 && LinkedDescId != "";
+                        });
+                    }
+
                 }
             }
             catch (Exception ex)

@@ -778,9 +778,7 @@ namespace VideoGui
                     int max = 0;
 
                     SendKeysString = "";
-                    var p1 = new CustomParams_GetConnectionString();
-                    dbInitializer?.Invoke(this, p1);
-                    string connectionStr = p1.ConnectionString;
+                    string connectionStr = (dbInitializer?.Invoke(this, new CustomParams_GetConnectionString()) is string conn) ? conn : "";
                     string sql = "select count(Id) from UPLOADSRECORD WHERE UPLOAD_DATE = @P0 AND UPLOADTYPE = 0";
                     object res = connectionStr.ExecuteScalar(sql, [("@p0", DateTime.Now.Date)]);
                     if (res is long resxx)
@@ -836,11 +834,7 @@ namespace VideoGui
                 {
                     HasExited = false;
                     ExitDialog = false;
-                    string connectStr = "";
-                    var p = new CustomParams_GetConnectionString();
-                    dbInitializer?.Invoke(this, p);
-                    connectStr = p.ConnectionString;
-
+                    string connectStr = dbInitializer?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
                     List<Uploads> clicks = new List<Uploads>();
                     List<bool> filesDone = Enumerable.Repeat(false, Files.Count).ToList();
                     bool Exit = false, finished = false;
@@ -874,10 +868,8 @@ namespace VideoGui
                             {
                                 int uploaded = 0;
                                 string sql = "select count(Id) from UPLOADSRECORD WHERE UPLOAD_DATE = @P0 AND UPLOADTYPE = 0";
-                                var p1 = new CustomParams_GetConnectionString();
-                                dbInitializer?.Invoke(this, p1);
-                                string connectionStr = p1.ConnectionString;
-                                uploaded = connectionStr.ExecuteScalar(sql, [("@p0", DateTime.Now.Date)]).ToInt(0);
+                                string cconnectStr = dbInitializer?.Invoke(this, new CustomParams_GetConnectionString()) is string conn1 ? conn1 : "";
+                                uploaded = cconnectStr.ExecuteScalar(sql, [("@p0", DateTime.Now.Date)]).ToInt(0);
                                 if (uploaded < 100)
                                 {
                                     dbInitializer?.Invoke(this, new CustomParams_Wait());
@@ -1894,9 +1886,7 @@ namespace VideoGui
                                         if (idp is not null && idp != "")
                                         {
                                             int TitleId = -1, DescId = -1, Id = -1;
-                                            var p1 = new CustomParams_GetConnectionString();
-                                            dbInitializer?.Invoke(this, p1);
-                                            string connectionStr = p1.ConnectionString;
+                                            string connectionStr = dbInitializer?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
                                             int idd = idp.Replace(".mp4", "").ToInt(-1);
                                             string sql = $"SELECT * FROM SHORTSDIRECTORY WHERE ID = @UID";
                                             connectionStr.ExecuteReader(sql, [("UID", idd)], (FbDataReader r) =>
@@ -2474,12 +2464,10 @@ namespace VideoGui
                     {
                         if (ScraperType == EventTypes.ShortsSchedule && directshortsScheduler is null && ReleaseDate.HasValue && ReleaseEndDate.HasValue)
                         {
-                            var p = new CustomParams_GetConnectionString();
-                            dbInitializer?.Invoke(this, p);
-                            string connectionString = p.ConnectionString;
+                            string connectionStr = dbInitializer?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
                             directshortsScheduler = new DirectshortsScheduler(() => { Show(); }, DoOnScheduleComplete, listSchedules,
                                 ReleaseDate.Value, ReleaseEndDate.Value, DoReportSchedule, ScheduleMax, IsTest);
-                            directshortsScheduler.connectionString = connectionString;
+                            directshortsScheduler.connectionString = connectionStr;
                         }
                         IsVideoLookup = true;
 
@@ -2832,9 +2820,7 @@ namespace VideoGui
                                             int TitleId = -1;
                                             int DescId = -1;
                                             int Id = -1;
-                                            var p1 = new CustomParams_GetConnectionString();
-                                            dbInitializer?.Invoke(this, p1);
-                                            string connectionStr = p1.ConnectionString;
+                                            string connectionStr = dbInitializer?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
                                             string sql = $"SELECT * FROM SHORTSDIRECTORY WHERE ID = {idp}";
                                             connectionStr.ExecuteReader(sql, (FbDataReader r) =>
                                             {
