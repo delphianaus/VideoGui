@@ -346,7 +346,7 @@ namespace VideoGui
             }
         }
 
-        private void ModuleCallback(object ThisForm, object tld)
+        private object ModuleCallback(object ThisForm, object tld)
         {
             try
             {
@@ -354,92 +354,95 @@ namespace VideoGui
                 {
                     case TitleSelectFrm frmTitleSelect:
                         {
-                            formObjectHandler_TitleSelect(ThisForm, tld, frmTitleSelect);
+                            return formObjectHandler_TitleSelect(ThisForm, tld, frmTitleSelect);
                             break;
                         }
                     case ScraperModule scraperModule:
                         {
-                            scraperModule_Handler(ThisForm, tld);
+                            return scraperModule_Handler(ThisForm, tld);
                             break;
                         }
                     case SelectShortUpload selectShortUpload:
                         {
-                            selectShortUpload_Handler(ThisForm, tld);
+                            return selectShortUpload_Handler(ThisForm, tld);
                             break;
                         }
                     case MasterTagSelectForm frmMasterTagSelectForm:
                         {
-                            formObjectHandler_MasterTagSelect(tld, frmMasterTagSelectForm);
+                            return formObjectHandler_MasterTagSelect(tld, frmMasterTagSelectForm);
                             break;
                         }
                     case DescSelectFrm frmDescSelectFrm:
                         {
-                            formObjectHandler_DescSelect(tld, frmDescSelectFrm);
+                            return formObjectHandler_DescSelect(tld, frmDescSelectFrm);
                             break;
                         }
                     case ScheduleEventCreator scheduleEventCreatorFrm:
                         {
-                            formObjectHandler_scheduleEventCreator(tld, scheduleEventCreatorFrm);
+                            return formObjectHandler_scheduleEventCreator(tld, scheduleEventCreatorFrm);
                             break;
                         }
 
                     case DirectoryTitleDescEditor directoryTitleDescEditor:
                         {
-                            formObjectHandler_DirectoryTitleDescEditor(tld, directoryTitleDescEditor);
+                            return formObjectHandler_DirectoryTitleDescEditor(tld, directoryTitleDescEditor);
                             break;
                         }
                     case SelectReleaseSchedule selectReleaseSchedule:
                         {
-                            formObjectHandler_SelectReleaseSchedule(tld, selectReleaseSchedule);
+                            return formObjectHandler_SelectReleaseSchedule(tld, selectReleaseSchedule);
                             break;
                         }
                     case SchedulingSelectEditor schedulingSelectEditor:
                         {
-                            formObjectHandler_SchedulingSelectEditor(tld, schedulingSelectEditor);
+                            return formObjectHandler_SchedulingSelectEditor(tld, schedulingSelectEditor);
                             break;
                         }
                     case ScheduleActioner scheduleActioner:
                         {
-                            formObjectHandler_ScheduleActioner(tld, scheduleActioner);
+                            return formObjectHandler_ScheduleActioner(tld, scheduleActioner);
                             break;
                         }
                     case ActionScheduleSelector actionScheduleSelector:
                         {
-                            formObjectHandler_ActionScheduleSelector(tld, actionScheduleSelector);
+                            return formObjectHandler_ActionScheduleSelector(tld, actionScheduleSelector);
                             break;
                         }
                     case ManualScheduler manualScheduler:
                         {
-                            formObjectHandler_ManualScheduler(tld, manualScheduler);
+                            return formObjectHandler_ManualScheduler(tld, manualScheduler);
                             break;
                         }
                     case ComplexSchedular complexSchedular:
                         {
-                            formObjectHandler_ComplexSchedular(tld, complexSchedular);
+                            return formObjectHandler_ComplexSchedular(tld, complexSchedular);
                             break;
                         }
                     case MediaImporter goProMediaImporter:
                         {
-                            formObjectHandler_GoProMediaImporter(tld, GoProMediaImporter);
+                            return formObjectHandler_GoProMediaImporter(tld, GoProMediaImporter);
                             break;
                         }
 
                 }
+                return null;
             }
             catch (Exception ex)
             {
                 ex.LogWrite($"ModuleCallback {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+                return null;
             }
 
         }
 
-        private void formObjectHandler_GoProMediaImporter(object tld, MediaImporter goProMediaImporter)
+        private object formObjectHandler_GoProMediaImporter(object tld, MediaImporter goProMediaImporter)
         {
             try
             {
                 if (tld is CustomParams_GetConnectionString CGCS)
                 {
                     CGCS.ConnectionString = connectionString;
+                    return connectionString;
                 }
                 else if (tld is CustomParams_Initialize cpInit)
                 {
@@ -458,14 +461,16 @@ namespace VideoGui
                     else if (cds.Id == 2) ConnectI().ConfigureAwait(false);
                     else if (cds.Id == 3) ConnectT().ConfigureAwait(false);
                 }
+                return null;
             }
             catch (Exception ex)
             {
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+                return null;
             }
         }
 
-        private void formObjectHandler_ComplexSchedular(object tld, ComplexSchedular complexSchedular)
+        private object formObjectHandler_ComplexSchedular(object tld, ComplexSchedular complexSchedular)
         {
             try
             {
@@ -483,6 +488,7 @@ namespace VideoGui
                 else if (tld is CustomParams_GetConnectionString CGCS)
                 {
                     CGCS.ConnectionString = connectionString;
+                    return connectionString;
                 }
                 else if (tld is CustomParams_Initialize cpInit)
                 {
@@ -495,10 +501,12 @@ namespace VideoGui
                         ConnectH().ConfigureAwait(false);
                     }
                 }
+                return null;
             }
             catch (Exception ex)
             {
                 ex.LogWrite($"formObjectHandler_ComplexSchedular {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+                return null;
             }
         }
 
@@ -635,7 +643,7 @@ namespace VideoGui
             }
         }
 
-        private void formObjectHandler_ManualScheduler(object tld, ManualScheduler manualScheduler)
+        private object formObjectHandler_ManualScheduler(object tld, ManualScheduler manualScheduler)
         {
             try
             {
@@ -669,13 +677,15 @@ namespace VideoGui
                     SaveString(cpSaveSchedule.TestMode.ToString(), "TestMode");
                     SaveString(cpSaveSchedule.max.ToString(), "maxr");
                 }
+                return null;
             }
             catch (Exception ex)
             {
                 ex.LogWrite($"formObjectHandler_ManualScheduler {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+                return null;
             }
         }
-        private void formObjectHandler_ActionScheduleSelector(object tld, ActionScheduleSelector actionScheduleSelector)
+        private object formObjectHandler_ActionScheduleSelector(object tld, ActionScheduleSelector actionScheduleSelector)
         {
             try
             {
@@ -699,14 +709,16 @@ namespace VideoGui
                     }
 
                 }
+                return null;
             }
             catch (Exception ex)
             {
                 ex.LogWrite($"formObjectHandler_ActionScheduleSelector {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+                return null;
             }
         }
 
-        private void formObjectHandler_ScheduleActioner(object tld, ScheduleActioner scheduleActioner)
+        private object formObjectHandler_ScheduleActioner(object tld, ScheduleActioner scheduleActioner)
         {
             try
             {
@@ -895,14 +907,17 @@ namespace VideoGui
                         }
                     }
                 }
+
+                return null;
             }
             catch (Exception ex)
             {
                 ex.LogWrite($"formObjectHandler_ScheduleActioner {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+                return null;
             }
         }
 
-        private void formObjectHandler_SelectReleaseSchedule(object tld, SelectReleaseSchedule selectReleaseSchedule)
+        private object formObjectHandler_SelectReleaseSchedule(object tld, SelectReleaseSchedule selectReleaseSchedule)
         {
             try
             {
@@ -997,10 +1012,12 @@ namespace VideoGui
                         }
                     }
                 }
+                return  true;
             }
             catch (Exception ex)
             {
                 ex.LogWrite($"formObjectHandler_SelectReleaseSchedule {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+                return null;
             }
         }
 
@@ -1085,7 +1102,7 @@ namespace VideoGui
                 return null;
             }
         }
-        private void formObjectHandler_SchedulingSelectEditor(object tld, SchedulingSelectEditor schedulingSelectEditor)
+        private object formObjectHandler_SchedulingSelectEditor(object tld, SchedulingSelectEditor schedulingSelectEditor)
         {
             try
             {
@@ -1166,10 +1183,12 @@ namespace VideoGui
                         break;
                     }
                 }
+                return null;
             }
             catch (Exception ex)
             {
                 ex.LogWrite($"formObjectHandler_SchedulingSelectEditor {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+                return null;
             }
         }
 
@@ -1269,7 +1288,7 @@ namespace VideoGui
                 return "";
             }
         }
-        private void formObjectHandler_DirectoryTitleDescEditor(object tld, DirectoryTitleDescEditor directoryTitleDescEditor)
+        private object formObjectHandler_DirectoryTitleDescEditor(object tld, DirectoryTitleDescEditor directoryTitleDescEditor)
         {
             try
             {
@@ -1340,16 +1359,18 @@ namespace VideoGui
                     int id = connectionString.ExecuteScalar(sql, [("@ID", cts.UploadsReleaseInfo.Id)]).ToInt(-1);
                     if (id != -1) cts.UploadsReleaseInfo.TitleId = TitleId;
                 }
+                return null;
             }
             catch (Exception ex)
             {
                 ex.LogWrite($"formObjectHandler_DirectoryTitleDescEditor {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+                return null;
             }
         }
 
         public Nullable<int> EventId = null;
 
-        private void formObjectHandler_scheduleEventCreator(object tld, ScheduleEventCreator scheduleEventCreatorFrm)
+        private object formObjectHandler_scheduleEventCreator(object tld, ScheduleEventCreator scheduleEventCreatorFrm)
         {
             try
             {
@@ -1499,14 +1520,17 @@ namespace VideoGui
                         }
                     }
                 }
+                return null;
             }
             catch (Exception ex)
             {
                 ex.LogWrite($"formObjectHandler_scheduleEventCreator {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+                return null;
+          
             }
         }
 
-        private void formObjectHandler_DescSelect(object tld, DescSelectFrm frmDescSelectFrm, bool IsShort = false)
+        private object formObjectHandler_DescSelect(object tld, DescSelectFrm frmDescSelectFrm, bool IsShort = false)
         {
             try
             {
@@ -1555,6 +1579,7 @@ namespace VideoGui
                                     selectShortUpload.UpdateDescId(p.id, linkeddescids);
                                 }
                             }
+                            return null;
                             break;
                         }
                     case CustomParams_Initialize cpInit:
@@ -1609,11 +1634,13 @@ namespace VideoGui
                                     break;
                                 }
                             }
+                            return null;
                             break;
                         }
                     case null:
                         {
                             frmDescSelectFrm.lstAllDescriptions.ItemsSource = DescriptionsList;
+                            return  null;
                             break;
                         }
                     case CustomParams_Remove cpRemove:
@@ -1631,6 +1658,7 @@ namespace VideoGui
                                     }
                                 }
                             }
+                            return null;
                             break;
                         }
                     case CustomParams_AddDescription cpAdd:
@@ -1674,17 +1702,20 @@ namespace VideoGui
                                     break;
                                 }
                             }
+                            return  null;
                             break;
                         }
                 }
+                return  null;
             }
             catch (Exception ex)
             {
                 ex.LogWrite($"ObjectHandler - {this} {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+                return null;
             }
         }
 
-        private void formObjectHandler_MasterTagSelect(object tld, MasterTagSelectForm frmMasterTagSelectForm)
+        private object formObjectHandler_MasterTagSelect(object tld, MasterTagSelectForm frmMasterTagSelectForm)
         {
             try
             {
@@ -1755,6 +1786,7 @@ namespace VideoGui
                                 frmMasterTagSelectForm.TagSetChanged = true;
 
                             }
+                            return null;
                             break;
                         }
                     case CustomParams_Select cpSelect:
@@ -1793,7 +1825,7 @@ namespace VideoGui
 
                             frmMasterTagSelectForm.txtTags.Text = TagList;
 
-
+                            return null;
                             break;
                         }
                     case CustomParams_Initialize:
@@ -1805,11 +1837,13 @@ namespace VideoGui
 
                             frmMasterTagSelectForm.lstDescriptions.ItemsSource =
                                 TitlesList2.Where(idx => idx.Id != frmMasterTagSelectForm.ParentId);//.Where(ind => ind.IsTag = frmMasterTagSelectForm.IsTitleTag);
+                            return null;
                             break;
                         }
                     case null:
                         {
                             frmMasterTagSelectForm.lstDescriptions.ItemsSource = TitlesList.Where(ind => ind.IsTag);
+                            return null;
                             break;
                         }
                     case CustomParams_Add cpAdd:
@@ -1821,13 +1855,16 @@ namespace VideoGui
                             {
                                 DescriptionsList.Add(new Descriptions(idx, cpAdd.Name, false, "", cpAdd.Name, true));
                             }
+                            return null;
                             break;
                         }
                 }
+                return null;
             }
             catch (Exception ex)
             {
                 ex.LogWrite($"ObjectHandler - {this} {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+                return null;
             }
         }
         private void OnReadTitlesTags2(FbDataReader reader)
@@ -1842,7 +1879,7 @@ namespace VideoGui
             }
         }
         int ShortsDirectoryIndex = -1;
-        private void formObjectHandler_TitleSelect(object FormObject, object tld, TitleSelectFrm frmTitleSelect)
+        private object formObjectHandler_TitleSelect(object FormObject, object tld, TitleSelectFrm frmTitleSelect)
         {
             try
             {
@@ -1897,7 +1934,7 @@ namespace VideoGui
                                 frmTitleSelect.lblTitleLength.Content = BaseStr1.Trim().Length;
 
                             }
-
+                            return null;
                             break;
                         }
                     case CustomParams_Update:
@@ -1926,6 +1963,7 @@ namespace VideoGui
                                     selectShortUpload.UpdateTitleId(p.id, linkedtitleids);
                                 }
                             }
+                            return null;
                             break;
                         }
                     case CustomParams_Initialize:
@@ -1947,6 +1985,7 @@ namespace VideoGui
                                         connectionString.ExecuteScalar(SQLa, [("@ID", ShortsDirectoryIndex),
                                             ("@TID", t.Id)]);
                                         frmTitleSelect.SetTitleTag(t.Id);
+                                        return null;
                                         break;
                                     }
                                 }
@@ -1964,7 +2003,6 @@ namespace VideoGui
                                 frmTitleSelect.BaseTitle = $"{BaseTitle}";
                                 frmTitleSelect.txtBaseTitle.Content = $"{BaseTitle}";
                                 frmTitleSelect.txtTitle.Text = $"{BaseTitle}";
-
                                 break;
                             }
 
@@ -2088,6 +2126,7 @@ namespace VideoGui
                                 frmTitleSelect.TagAvailable.ItemsSource = availabletagsViewSource.View;
                                 frmTitleSelect.TagsGrp.ItemsSource = titletagsViewSource.View;
                             }
+                            return null;
                             break;
                         }
                     case CustomParams_Refresh:
@@ -2101,6 +2140,7 @@ namespace VideoGui
                             frmTitleSelect.txtTitle.Text = BaseStr.Trim();
                             frmTitleSelect.lblTitleLength.Content = BaseStr.Trim().Length;
                             RefreshView();
+                            return null;
                             break;
                         }
                     case CustomParams_InsertWithId cpInsert:
@@ -2112,6 +2152,7 @@ namespace VideoGui
 
 
                             cpInsert.TitleLength = x.Length;
+                            return null;
                             break;
                         }
                     case CustomParams_Remove cpRemove:
@@ -2119,11 +2160,13 @@ namespace VideoGui
                             TagUpdate(dataUpdatType.Remove, cpRemove.id, -1, FormObject, cpRemove.Name);
                             string x = OnGetAllTags(frmTitleSelect.GetTitleTag());
                             cpRemove.TitleLength = x.Length;
+                            return null;
                             break;
                         }
                     case CustomParams_Add cpAdd:
                         {
                             AddAvailableTag(cpAdd.data_string, FormObject);
+                            return null;
                             break;
                         }
                     case CustomParams_EditName cp_Update:
@@ -2139,6 +2182,7 @@ namespace VideoGui
                                 string sql = "UPDATE TITLES SET DESCRIPTION = @name WHERE ID = @id;";
                                 connectionString.ExecuteScalar(sql, [("@name", cp_Update.name), ("@id", cp_Update.id)]);
                             }
+                            return null;
                             break;
                         }
                     case CustomParams_Get cpGet:
@@ -2152,13 +2196,16 @@ namespace VideoGui
                                 MasterTagSelectFrm.ParentId = frmTitleSelect.TitleId;
                                 MasterTagSelectFrm.Show();
                             }
+                            return null;
                             break;
                         }
                 }
+                return null;
             }
             catch (Exception ex)
             {
                 ex.LogWrite($"ObjectHandler - {this} {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+                return null;
             }
         }
         private void OnReadTitlesTags(FbDataReader reader)
@@ -2377,16 +2424,19 @@ namespace VideoGui
             }
         }
 
-        private void selectShortUpload_Handler(object thisForm, object tld)
+        private object selectShortUpload_Handler(object thisForm, object tld)
         {
             if (tld is CustomParams_GetConnectionString CGCS)
             {
                 CGCS.ConnectionString = GetConectionString();
+                return null;
             }
             else if (tld is CustomParams_Select SPS)
             {
-                ShortsDirectoryIndex = SPS.Id;
+                ShortsDirectoryIndex = SPS.Id;  
+                
             }
+            return null;
         }
 
         public string OnGetAllTags(int Id)
@@ -2412,7 +2462,7 @@ namespace VideoGui
         }
 
 
-        private void scraperModule_Handler(object thisForm, object tld)
+        private object scraperModule_Handler(object thisForm, object tld)
         {
             try
             {
@@ -2503,16 +2553,20 @@ namespace VideoGui
                 if (tld is CustomParams_Wait)
                 {
                     UploadWaitTime = DateTime.Now.TimeOfDay.Add(TimeSpan.FromMinutes(5));
+                    
                 }
 
                 if (tld is CustomParams_GetConnectionString CGCS)
                 {
                     CGCS.ConnectionString = GetConectionString();
+                    return CGCS.ConnectionString;
                 }
+                return null;
             }
             catch (Exception ex)
             {
                 ex.LogWrite($"scraperModule_Handler {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+                return null;
             }
         }
 

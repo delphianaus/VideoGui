@@ -84,7 +84,7 @@ namespace VideoGui.Models.delegates
     public delegate string GetFilerString(FilterTypes Filters, FilterClass Active);
     public delegate void SetFilterString(string Filter, FilterTypes FilterType, FilterClass FilterClassIs);
     public delegate void OnFirebirdReader(FbDataReader reader);
-    public delegate void databasehook<T>(object ThisForm, T tld);
+    public delegate object databasehook<T>(object ThisForm, T tld);
     public delegate void dataupdate(dataUpdatType dt, int id, string description, object ThisForm);
 
 
