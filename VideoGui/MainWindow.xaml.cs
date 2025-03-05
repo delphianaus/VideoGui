@@ -219,6 +219,7 @@ namespace VideoGui
         List<string> _720PFiles = new(), _1080PFiles = new(), _4KFiles = new();
         List<ConverterProgressInfo> ProgressInfoDisplay = new List<ConverterProgressInfo>();
         public AudioJoiner AutoJoinerFrm = null;
+        string TitleStr = "", DescStr = "";
         ComplexSchedular complexfrm = null;
         private ConverterProgress ConverterProgressEventHandler = new ConverterProgress();
         private ObservableCollectionFilters ObservableCollectionFilter;
@@ -2747,7 +2748,6 @@ namespace VideoGui
                     }
                 });
                 bool IsTitle = false, IsDesc = false;
-                string Title = "", Desc = "";
                 if (ScrapeCustomCommand != "" && ScrapeCustomCommand.Contains("|"))
                 {
                     List<string> ScrapeList = ScrapeCustomCommand.Split('|').ToList();
@@ -2755,11 +2755,11 @@ namespace VideoGui
                     {
                         if (s.Contains("title="))
                         {
-                            (IsTitle, Title) = (true, s.Replace("title=", ""));
+                            (IsTitle, TitleStr) = (true, s.Replace("title=", ""));
                         }
                         if (s.Contains("desc="))
                         {
-                            (IsDesc, Desc) = (true, s.Replace("desc=", ""));
+                            (IsDesc, DescStr) = (true, s.Replace("desc=", ""));
                         }
                     }
                 }
@@ -2768,8 +2768,8 @@ namespace VideoGui
                 bool IsShorts = (ScrapeType & 1) == 1;
                 bool IsFullVideos = (ScrapeType & 2) == 2;
                 WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
-                if (IsTitle) webAddressBuilder = webAddressBuilder.AddFilterByTitle(Title, false);
-                if (IsDesc) webAddressBuilder = webAddressBuilder.AddFilterByDesc(Desc, false);
+                if (IsTitle) webAddressBuilder = webAddressBuilder.AddFilterByTitle(TitleStr, false);
+                if (IsDesc) webAddressBuilder = webAddressBuilder.AddFilterByDesc(DescStr, false);
                 List<StatusTypes> statusTypes = new List<StatusTypes>();
                 if ((ScrapeType & 4) == 4) statusTypes.Add(StatusTypes.DRAFT);
                 if ((ScrapeType & 8) == 8) statusTypes.Add(StatusTypes.UNLISTED);

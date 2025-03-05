@@ -113,6 +113,7 @@ namespace VideoGui
         DispatcherTimer CloseTimer = new DispatcherTimer();
         DirectshortsScheduler directshortsScheduler = null;
         public AddressUpdate DoVideoLookUp = null;
+        string TitleStr = "", DescStr = "";
         StatusTypes VStatusType = StatusTypes.PRIVATE;
         WebAddressBuilder webAddressBuilder = null;
         databasehook<object> dbInitializer = null;
@@ -1371,25 +1372,13 @@ namespace VideoGui
                             }
                         }
                         string divlass = " remove-default-style  style-scope ytcp-video-list-cell-video";
-                        string Title = "", Desc = "";
+                        
                         string html2 = item.OuterHtml; ;
                         HtmlDocument doc2 = new HtmlDocument();
                         doc2.LoadHtml(html2);
-                        foreach (var vitem in item.ChildNodes)
-                        {
-                            if (vitem.Name.ToLower() == "h3")
-                            {
-                                Title = vitem.InnerText;
-                            }
-                            if (item.Name.ToLower() == "div")
-                            {
-                                Desc = vitem.InnerText;
-                            }
-                            if (Desc != "" && Title != "") break;
-                            //System.Windows.Forms.Application.DoEvents();
-                        }
+                        
 
-                        if (Id != "" && Desc != "" & Title != "")
+                        if (Id != "")
                         {
                             IdNodes.Add(Id);
                             string StatusStr = StatusNode[i].InnerText.Trim();
@@ -1404,7 +1393,7 @@ namespace VideoGui
                                 var cts = new CancellationTokenSource();
                                 cts.CancelAfter(TimeSpan.FromSeconds(300));
                                 TimedOut = false;
-                                string oldtitle = Title;
+                                string oldtitle = TitleStr;
                                 while (WaitingFileName && !cts.IsCancellationRequested && !canceltoken.IsCancellationRequested)
                                 {
                                     Thread.Sleep(200);
@@ -1419,21 +1408,30 @@ namespace VideoGui
                                 }
 
 
-                                if (oldtitle != Title && Title != "")
+                                if (oldtitle != TitleStr && TitleStr != "")
                                 {
                                     Dispatcher.Invoke(() =>
                                     {
+                                    if (lstMain.Items.Count > 0)
+                                    {
                                         string r = lstMain.Items[0].ToString();
-                                        if (r.Contains(oldtitle))
-                                        {
-                                            r = r.Replace(oldtitle, Title);
-                                            lstMain.Items[0] = r;
+                                            if (r.Contains(oldtitle))
+                                            {
+                                                r = r.Replace(oldtitle, TitleStr);
+                                                if (lstMain.Items.Count > 0)
+                                                {
+                                                    lstMain.Items.RemoveAt(0);
+                                                    lstMain.Items.Insert(0, r);
+                                                }
+                                                else lstMain.Items.Add(r);
+                                            }                                       
                                         }
+                                    
                                     });
                                 }
                                 if (directshortsScheduler is not null && !cts.IsCancellationRequested)
                                 {
-                                    directshortsScheduler.ScheduleVideo(Id, Title, Desc, false);
+                                    directshortsScheduler.ScheduleVideo(Id, TitleStr, DescStr, false);
                                     DoNextNode = true;
                                 }
                                 else if (directshortsScheduler is not null && cts.IsCancellationRequested)
@@ -1447,7 +1445,7 @@ namespace VideoGui
                             {
                                 if (DoNextNode && ScraperType == EventTypes.ShortsSchedule)
                                 {
-                                    DoNextNode = DoNodeScrapeUpdate(Id, Title, Desc, "", StatusStr, dateTime);
+                                    DoNextNode = DoNodeScrapeUpdate(Id, TitleStr, DescStr, "", StatusStr, dateTime);
                                 }
                                 else if (DoNextNode && Id != "" && ScraperType == EventTypes.ScapeSchedule)
                                 {
@@ -1896,20 +1894,20 @@ namespace VideoGui
                                                 DescId = (r["DESCID"] is int did) ? did : -1;
                                             });
 
-                                            string Title = "", Desc = "";
+                                            
                                             if (id != -1)
                                             {
                                                 if (TitleId != -1)
                                                 {
                                                     var p = new CustomParams_GetTitle(idd, TitleId);
                                                     dbInitializer?.Invoke(this, p);
-                                                    Title = p.name;
+                                                    TitleStr = p.name;
                                                 }
                                                 if (DescId != -1)
                                                 {
                                                     var p = new CustomParams_GetDesc(idd, DescId);
                                                     dbInitializer?.Invoke(this, p);
-                                                    Desc = p.name;
+                                                    DescStr = p.name;
                                                 }
 
                                             }
@@ -2055,23 +2053,23 @@ namespace VideoGui
                         }
                     }
                     string divlass = " remove-default-style  style-scope ytcp-video-list-cell-video";
-                    string Title = "", Desc = "", html2 = item.OuterHtml; ;
+                    string html2 = item.OuterHtml; ;
                     HtmlDocument doc2 = new HtmlDocument();
                     doc2.LoadHtml(html2);
                     foreach (var vitem in item.ChildNodes)
                     {
                         if (canceltoken.IsCancellationRequested) break;
-                        Title = (vitem.Name.ToLower() == "h3") ? vitem.InnerText : Title;
-                        Desc = (item.Name.ToLower() == "div") ? vitem.InnerText : Desc;
-                        if (Desc != "" && Title != "") break;
+                        TitleStr = (vitem.Name.ToLower() == "h3") ? vitem.InnerText : TitleStr;
+                        DescStr = (item.Name.ToLower() == "div") ? vitem.InnerText : DescStr;
+                        if (DescStr != "" && TitleStr != "") break;
                     }
-                    if (Title != "" && Id != "" && Desc != "")
+                    if (TitleStr != "" && Id != "" && DescStr != "")
                     {
                         if (Idx.IndexOf(Id) == -1)
                         {
                             Idx.Add(Id);
                             recs++;
-                            string ntitle = Title.Replace("/n", "").Trim();
+                            string ntitle = TitleStr.Replace("/n", "").Trim();
                             Dispatcher.Invoke(() =>
                             {
                                 lblInsert.Content = recs.ToString();
@@ -2829,48 +2827,47 @@ namespace VideoGui
                                                 DescId = (r["DESCID"] is Int16 did) ? did : -1;
                                             });
 
-                                            string Title = "", Desc = "";
                                             if (id != -1)
                                             {
                                                 if (TitleId != -1)
                                                 {
                                                     var p = new CustomParams_GetTitle(TitleId, Id);
                                                     dbInitializer?.Invoke(this, p);
-                                                    Title = p.name;
+                                                    TitleStr = p.name;
                                                 }
                                                 if (DescId != -1)
                                                 {
                                                     var p = new CustomParams_GetDesc(DescId, Id);
                                                     dbInitializer?.Invoke(this, p);
-                                                    Desc = p.name;
+                                                    DescStr = p.name;
                                                 }
                                             }
 
-                                            if (Title != "")
+                                            if (TitleStr != "")
                                             {
                                                 if ((sender as WebView2).CoreWebView2 != null)
                                                 {
                                                     // Define the JavaScript code to replace the text content
                                                     string script = "var divElements = document.querySelectorAll('[aria-label=\"Tell viewers about your video (type @ to mention a channel)\"]');" +
                                                        "divElements.forEach(function(divElement) {" +
-                                                      $"   divElement.textContent = '{Title}';" +
+                                                      $"   divElement.textContent = '{TitleStr}';" +
                                                        "});";
 
                                                     // Execute the JavaScript code within the WebView2 control
                                                     (sender as WebView2).CoreWebView2.ExecuteScriptAsync(script);
                                                 }
                                             }
-                                            if (Desc != "")
+                                            if (DescStr != "")
                                             {
                                                 string script2 = "var divElements = document.querySelectorAll('[aria-label=\"Add a title that describes your video (type @ to mention a channel)\"]');" +
                                                        "divElements.forEach(function(divElement) {" +
-                                                      $"   divElement.textContent = '{Desc}';" +
+                                                      $"   divElement.textContent = '{DescStr}';" +
                                                        "});";
 
                                                 // Execute th       e JavaScript code within the WebView2 control
                                                 (sender as WebView2).CoreWebView2.ExecuteScriptAsync(script2);
                                             }
-                                            if (Title != "" || Desc != "")
+                                            if (TitleStr != "" || DescStr != "")
                                             {
                                                 if ((sender as WebView2).CoreWebView2 != null)
                                                 {
