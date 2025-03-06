@@ -1,89 +1,90 @@
-﻿using CliWrap;
+﻿using AsyncAwaitBestPractices;
+using CliWrap;
+using Coravel.Scheduling.Schedule;
+using FirebirdSql.Data.FirebirdClient;
+using FolderBrowserEx;
+using Google.Apis.Auth.OAuth2.Requests;
+using Google.Apis.YouTube.v3.Data;
+using MediaInfo.Model;
+using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Logging;
+using Microsoft.VisualBasic;
 using Microsoft.Win32;
+using Microsoft.WindowsAPICodePack.Shell;
+using Nancy;
+using Nancy.Diagnostics;
+using Nancy.Extensions;
+using Nancy.TinyIoc;
+using Nancy.ViewEngines;
+using SevenZip;
 using System;
+using System.CodeDom;
+using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Data;
+using System.Data.Common;
+using System.Data.SqlTypes;
 using System.Diagnostics;
+using System.Diagnostics.Eventing.Reader;
+using System.DirectoryServices.ActiveDirectory;
+using System.Drawing;
+using System.Formats.Tar;
 using System.Globalization;
 using System.IO;
 using System.IO.Compression;
+using System.IO.Packaging;
 using System.Linq;
 using System.Management;
 using System.Net;
-using FolderBrowserEx;
 using System.Net.Http;
 using System.Net.Http.Handlers;
 using System.Net.NetworkInformation;
+using System.Net.Sockets;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.Marshalling;
+using System.Runtime.Intrinsics.Arm;
 using System.Runtime.Versioning;
+using System.Security.Cryptography.Pkcs;
+using System.Security.Permissions;
+using System.Security.Policy;
+using System.Security.Principal;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Controls.Ribbon;
 using System.Windows.Data;
+using System.Windows.Documents;
 using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
+using System.Windows.Media.Imaging;
+using System.Windows.Shapes;
 using System.Windows.Threading;
+using System.Xml.Linq;
 using VideoGui.ffmpeg;
 using VideoGui.ffmpeg.Events;
 using VideoGui.ffmpeg.Streams.Audio;
 using VideoGui.ffmpeg.Streams.Video;
+using VideoGui.Models;
+using VideoGui.Models.delegates;
+using Xceed.Wpf.Toolkit.PropertyGrid.Editors;
+using static System.Net.Mime.MediaTypeNames;
+using static System.Net.WebRequestMethods;
+using static System.Windows.Forms.AxHost;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.TextBox;
 using Application = System.Windows.Application;
 using File = System.IO.File;
+using FolderBrowserDialog = FolderBrowserEx.FolderBrowserDialog;
 using Path = System.IO.Path;
 using Window = System.Windows.Window;
-using System.IO.Packaging;
-using Microsoft.Extensions.FileProviders;
-using FirebirdSql.Data.FirebirdClient;
-using VideoGui.Models;
-using System.Drawing;
-using VideoGui.Models.delegates;
-using Nancy.ViewEngines;
-using System.Data.Common;
-using System.CodeDom;
-using System.Security.Principal;
-using System.Windows.Documents;
-using System.Windows.Media.Animation;
-using System.Data.SqlTypes;
-using Microsoft.VisualBasic;
-using System.Data;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.TextBox;
-using System.Net.Sockets;
-using System.Security.Policy;
-using System.Diagnostics.Eventing.Reader;
-using System.Windows.Controls.Ribbon;
-using SevenZip;
-using System.DirectoryServices.ActiveDirectory;
-using AsyncAwaitBestPractices;
-using System.Collections;
-using System.Windows.Shapes;
-using static System.Net.WebRequestMethods;
-using MediaInfo.Model;
-using System.Formats.Tar;
-using FolderBrowserDialog = FolderBrowserEx.FolderBrowserDialog;
-using System.Security.Cryptography.Pkcs;
-using Microsoft.WindowsAPICodePack.Shell;
-using Nancy.Extensions;
-using static System.Net.Mime.MediaTypeNames;
-using Nancy.TinyIoc;
-using System.Xml.Linq;
-using System.Collections.Immutable;
-using System.Windows.Media.Imaging;
-using System.Runtime.InteropServices.Marshalling;
-using System.ComponentModel;
-using Nancy;
-using Microsoft.Extensions.Logging;
-using Google.Apis.YouTube.v3.Data;
-using System.Security.Permissions;
-using Google.Apis.Auth.OAuth2.Requests;
-using Xceed.Wpf.Toolkit.PropertyGrid.Editors;
-using Nancy.Diagnostics;
-using Coravel.Scheduling.Schedule;
-using static System.Windows.Forms.AxHost;
 
 
 namespace VideoGui
@@ -254,7 +255,7 @@ namespace VideoGui
             }
         }
 
-        
+
 
 
         public async Task<bool> ConnectT()
@@ -621,7 +622,7 @@ namespace VideoGui
                 ex.LogWrite($"SaveString {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-        public void SaveDates(DateTime startdate,string name, bool IsDateTime=false)
+        public void SaveDates(DateTime startdate, string name, bool IsDateTime = false)
         {
             try
             {
@@ -657,7 +658,7 @@ namespace VideoGui
                     var test = LoadString("TestMode");
                     bool IsTest = (test == "True") ? true : false;
                     string pp = (s is string str) ? str : "";
-                    DateTime r = new DateTime(1,1,1);
+                    DateTime r = new DateTime(1, 1, 1);
                     if (dt.HasValue && st.HasValue && et.HasValue && pp != "")
                     {
                         manualScheduler.txtMaxSchedules.Text = pp;
@@ -1013,7 +1014,7 @@ namespace VideoGui
                         }
                     }
                 }
-                return  true;
+                return true;
             }
             catch (Exception ex)
             {
@@ -1527,7 +1528,7 @@ namespace VideoGui
             {
                 ex.LogWrite($"formObjectHandler_scheduleEventCreator {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
                 return null;
-          
+
             }
         }
 
@@ -1641,7 +1642,7 @@ namespace VideoGui
                     case null:
                         {
                             frmDescSelectFrm.lstAllDescriptions.ItemsSource = DescriptionsList;
-                            return  null;
+                            return null;
                             break;
                         }
                     case CustomParams_Remove cpRemove:
@@ -1703,11 +1704,11 @@ namespace VideoGui
                                     break;
                                 }
                             }
-                            return  null;
+                            return null;
                             break;
                         }
                 }
-                return  null;
+                return null;
             }
             catch (Exception ex)
             {
@@ -1970,6 +1971,16 @@ namespace VideoGui
                     case CustomParams_Initialize:
                         {
                             string _title = "", BaseTitle = "", xx = "", part = "";
+
+                            if (ShortsDirectoryIndex == -1)
+                            {
+                                var itempx = EditableshortsDirectoryList.LastOrDefault();
+                                if (itempx is not null)
+                                {
+                                    ShortsDirectoryIndex = itempx.Id;
+                                    break;
+                                }
+                            }
                             int index = -1;// UploadReleasesBuilderIndex;
                             //frmTitleSelect.lstTitles.ItemsSource = EditableshortsDirectoryList;
                             foreach (var item in EditableshortsDirectoryList.Where(item => item.Id == ShortsDirectoryIndex))
@@ -2012,6 +2023,9 @@ namespace VideoGui
                                 string BaseStrX = frmTitleSelect.BaseTitle;
                                 if (BaseStrX == "")
                                 {
+                                    var itempx = EditableshortsDirectoryList.LastOrDefault();
+
+
                                     RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                                     string rootfolder = key.GetValueStr("UploadPath", @"D:\shorts");
                                     key?.Close();
@@ -2023,8 +2037,113 @@ namespace VideoGui
                                     {
                                         TitlesList.Add(new Titles(id, ShortsDirectoryIndex, BaseStrX, "", false));
                                     }
+                                    if (ShortsDirectoryIndex == -1)
+                                    {
+                                        foreach (var itemd in EditableshortsDirectoryList)
+                                        {
+                                            if (itemd.Directory == BaseStrX)
+                                            {
+                                                ShortsDirectoryIndex = itemd.Id;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                    if (ShortsDirectoryIndex == -1)
+                                    {
+                                        string ssqla = "SELECT * FROM SHORTSDIRECTORY WHERE DIRECTORYNAME = @P0;";
+                                        int idp = connectionString.ExecuteScalar(ssqla, [("@P0", BaseStrX)]).ToInt(-1);
+                                        if (idp == -1)
+                                        {
+                                            ssqla = "INSERT INTO SHORTSDIRECTORY(DIRECTORYNAME) VALUES (@P0) RETURNING ID";
+                                            int resx = connectionString.ExecuteScalar(ssqla.ToUpper(), [("@P0", BaseStrX.ToUpper())]).ToInt(-1);
+                                            if (resx != -1)
+                                            {
+                                                ShortsDirectoryIndex = resx;
+                                                EditableshortsDirectoryList.Add(
+                                                    new ShortsDirectory(ShortsDirectoryIndex, BaseStrX));
+                                                ssqla = "SELECT ID FROM TITLES WHERE DESCRIPTION = @P0;";
+                                                id = connectionString.ExecuteScalar(ssqla, [("@P0", BaseStrX)]).ToInt(-1);
+                                                if (id != -1)
+                                                {
+                                                    ssqla = "INSERT INTO TITLES(DESCRIPTION,ISTAG,GROUPID) " +
+                                                        "VALUES(@P0,@P1,@P2) RETURNING ID;";
+                                                    int titleid = connectionString.ExecuteScalar(ssqla, [("@P0", BaseStrX),
+
+                                                        ("@P1", false), ("@P2", resx)]).ToInt(-1);
+                                                    if (titleid != -1)
+                                                    {
+                                                        TitlesList.Add(new Titles(titleid, resx, BaseStrX, "", false));
+                                                    }
+                                                    ssqla = "UPDATE SHORTSDIRECTORY SET TITLEID = @TID WHERE ID = @ID;";
+                                                    connectionString.ExecuteScalar(ssqla, [("@ID", ShortsDirectoryIndex), ("@TID", titleid)]);
+                                                    foreach (var itemp in EditableshortsDirectoryList.Where(s => s.Id == ShortsDirectoryIndex))
+                                                    {
+                                                        itemp.TitleId = titleid;
+                                                        break;
+                                                    }
+                                                    string linkedtitleids = "", linkeddescids = "";
+                                                    connectionString.ExecuteReader(GetUploadReleaseBuilderSql(resx), (FbDataReader r) =>
+                                                    {
+                                                        linkedtitleids = (r["LINKEDTITLEIDS"] is string ldid1 ? ldid1 : "");
+                                                        linkeddescids = (r["LINKEDDESCIDS"] is string lditt ? lditt : "");
+                                                    });
+                                                    selectShortUpload.UpdateTitleId(resx, linkedtitleids);
+                                                    selectShortUpload.UpdateDescId(resx, linkeddescids);
+
+                                                }
+                                            }
+                                        }
+                                        else
+                                        {
+                                            ShortsDirectoryIndex = idp;
+                                            ssqla = "SELECT ID FROM TITLES WHERE DESCRIPTION = @P0;";
+                                            id = connectionString.ExecuteScalar(ssqla, [("@P0", BaseStrX)]).ToInt(-1);
+                                            if (id != -1)
+                                            {
+                                                ssqla = "INSERT INTO TITLES(DESCRIPTION,ISTAG,GROUPID) " +
+                                                    "VALUES(@P0,@P1,@P2) RETURNING ID;";
+                                                int titleid = connectionString.ExecuteScalar(ssqla, [("@P0", BaseStrX),
+                                                        ("@P1", false), ("@P2", idp)]).ToInt(-1);
+                                                if (titleid != -1)
+                                                {
+                                                    TitlesList.Add(new Titles(titleid, idp, BaseStrX, "", false));
+                                                }
+                                                ssqla = "UPDATE SHORTSDIRECTORY SET TITLEID = @TID WHERE ID = @ID;";
+                                                connectionString.ExecuteScalar(ssqla, [("@ID", ShortsDirectoryIndex), ("@TID", titleid)]);
+                                                foreach (var itemp in EditableshortsDirectoryList.Where(s => s.Id == ShortsDirectoryIndex))
+                                                {
+                                                    itemp.TitleId = titleid;
+                                                    break;
+                                                }
+                                                string linkedtitleids1 = "", linkeddescids1 = "";
+                                                connectionString.ExecuteReader(GetUploadReleaseBuilderSql(idp), (FbDataReader r) =>
+                                                {
+                                                    linkedtitleids1 = (r["LINKEDTITLEIDS"] is string ldid ? ldid : "");
+                                                    linkeddescids1 = (r["LINKEDDESCIDS"] is string ldit ? ldit : "");
+
+                                                });
+                                                selectShortUpload.UpdateTitleId(idp, linkedtitleids1);
+                                                selectShortUpload.UpdateDescId(idp, linkeddescids1);
+                                            }
+
+                                        }
+                                    }
+                                    else
+                                    {
+                                        string linkedtitleids2 = "", linkeddescids2 = "";
+                                        connectionString.ExecuteReader(GetUploadReleaseBuilderSql(ShortsDirectoryIndex), (FbDataReader r) =>
+                                        {
+                                            linkedtitleids2 = (r["LINKEDTITLEIDS"] is string ldid ? ldid : "");
+                                            linkeddescids2 = (r["LINKEDDESCIDS"] is string ldit ? ldit : "");
+                                        });
+                                        selectShortUpload.UpdateTitleId(ShortsDirectoryIndex, linkedtitleids2);
+                                        selectShortUpload.UpdateDescId(ShortsDirectoryIndex, linkeddescids2);
+
+                                    }
+
+
                                     foreach (var item in EditableshortsDirectoryList.
-                                        Where(item => item.Id == ShortsDirectoryIndex))
+                                            Where(item => item.Id == ShortsDirectoryIndex))
                                     {
                                         item.TitleId = id;
 
@@ -2065,7 +2184,6 @@ namespace VideoGui
 
                             frmTitleSelect.TitleId = index;
                             string BaseStr = frmTitleSelect.BaseTitle + " ";
-
 
                             foreach (var item in TitleTagsList.Where(s => s.GroupId == index))
                             {
@@ -2430,12 +2548,32 @@ namespace VideoGui
             if (tld is CustomParams_GetConnectionString CGCS)
             {
                 CGCS.ConnectionString = GetConectionString();
-                return null;
+                return CGCS.ConnectionString;
             }
             else if (tld is CustomParams_Select SPS)
             {
-                ShortsDirectoryIndex = SPS.Id;  
-                
+                ShortsDirectoryIndex = SPS.Id;
+
+            }
+            else if (tld is CustomParams_Get)
+            {
+                if (ShortsDirectoryIndex == -1)
+                {
+                    var r = EditableshortsDirectoryList.LastOrDefault();
+                    if (r is not null)
+                    {
+                        return r.Id;
+                    }
+                }
+                return null;
+            }
+            else if (tld is CustomParams_Select cpsel)
+            {
+                string sqlg = "SELECT * FROM TITLES WHERE ID = @ID";
+                connectionString.ExecuteReader(sqlg, [("@ID", cpsel.Id)], (FbDataReader r) =>
+                {
+                    TitlesList.Add(new Titles(r, OnGetAllTags));
+                });
             }
             return null;
         }
@@ -2554,7 +2692,7 @@ namespace VideoGui
                 if (tld is CustomParams_Wait)
                 {
                     UploadWaitTime = DateTime.Now.TimeOfDay.Add(TimeSpan.FromMinutes(5));
-                    
+
                 }
 
                 if (tld is CustomParams_GetConnectionString CGCS)
@@ -2641,7 +2779,7 @@ namespace VideoGui
             }
         }
 
-       
+
         public bool IsFileActive(string filename, int threadid)
         {
             lock (lookuplocked)
@@ -4025,7 +4163,7 @@ namespace VideoGui
             {
                 if (complexfrm == null)
                 {
-                    complexfrm = new ComplexSchedular(ModuleCallback,AddRecord, DeleteRecord, CloseDialogComplexEditor,
+                    complexfrm = new ComplexSchedular(ModuleCallback, AddRecord, DeleteRecord, CloseDialogComplexEditor,
                          LocalSetFilterAge, LocalSetFilterString, GetFilterAges, GetFilterString);
                     Hide();
                     complexfrm.ShowDialog();
@@ -4073,7 +4211,7 @@ namespace VideoGui
                 OnIsFileInUse = new IsFileInUse(IsFileActive);
                 InitializeComponent();
                 ObservableCollectionFilter = new ObservableCollectionFilters();
-                MainWindowX.KeyDown += Window_KeyDown_EventHandler;  
+                MainWindowX.KeyDown += Window_KeyDown_EventHandler;
                 Loadsettings();
                 string clientSecret = "", p = "";
                 connectionString = GetConectionString();
@@ -4090,10 +4228,10 @@ namespace VideoGui
                     string sql = $"INSERT INTO SETTINGS (SETTINGNAME, SETTINGBLOB) VALUES (@FIELD, @DATA) RETURNING ID;";
                     int id = connectionString.ExecuteScalar(sql, [("@FIELD", "CLIENT_SECRET"), ("@DATA", details)]).ToInt(-1);
                 }
-               
 
-               
-               
+
+
+
                 ScheduleProccessor = new ProcessSchedule(OnProcessSchedule);
 
                 EventTimer = new System.Threading.Timer(TimerEvent_Handler, null, 0, 1000);
@@ -6172,7 +6310,13 @@ namespace VideoGui
                 {
                     string DownloadsDir = GetDownloadsFolder();
 
-                    string[] SourceDirs = { DownloadsDir, SourceDirectory720p, SourceDirectory1080p, SourceDirectory4K, SourceDirectory4KAdobe };
+                    List<string> SourceDirs = new List<string>() { SourceDirectory720p, SourceDirectory1080p, SourceDirectory4K, SourceDirectory4KAdobe };
+                    bool IsPrometheus = Environment.MachineName.ToLower().Contains("prometheus");
+                    if (!IsPrometheus)
+                    {
+                        SourceDirs.Insert(0, DownloadsDir);
+                    }
+
                     foreach (string SourceDir in SourceDirs)
                     {
                         List<string> SourceList = Directory.EnumerateFiles(SourceDir, "*.*", SearchOption.AllDirectories).
@@ -8479,7 +8623,14 @@ namespace VideoGui
                 }
                 List<string> Source = new List<string>();
                 string DownloadsDir = GetDownloadsFolder();
-                string[] SourceDirs = { DownloadsDir, SourceDirectory720p, SourceDirectory1080p, SourceDirectory4K, SourceDirectory4KAdobe };
+
+                List<string> SourceDirs = new List<string> { SourceDirectory720p, SourceDirectory1080p, SourceDirectory4K, SourceDirectory4KAdobe };
+                bool IsPrometheus = Environment.MachineName.ToLower().Contains("prometheus");
+                if (!IsPrometheus)
+                {
+                    SourceDirs.Insert(0, DownloadsDir);
+                }
+
                 foreach (string SourceDir in SourceDirs)
                 {
                     List<string> SourceList = Directory.EnumerateFiles(SourceDir, "*.*", SearchOption.AllDirectories).
@@ -9480,8 +9631,8 @@ namespace VideoGui
             try
             {
                 Hide();
-                GoProMediaImporter = new MediaImporter(ModuleCallback, FileImportClear, 
-                    AddImportRecord, CheckImportRecords,ReOrderFilesInc, ClearImportTimes, 
+                GoProMediaImporter = new MediaImporter(ModuleCallback, FileImportClear,
+                    AddImportRecord, CheckImportRecords, ReOrderFilesInc, ClearImportTimes,
                     SetImportFromTime, SetImportToTime);
                 GoProMediaImporter.ShowDialog();
                 Show();

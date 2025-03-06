@@ -217,6 +217,15 @@ namespace VideoGui
                     string connectionStr = dbInit?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
                     bool found = false;
                     int titleid = -1;
+
+                    if (ShortsIndex == -1)
+                    {
+                        string dir = txtsrcdir.Text;
+                        string DirName = dir.Split(@"\").ToList().LastOrDefault();
+                        string sqla = "SELECT ID FROM SHORTSDIRECTORY WHERE DIRECTORYNAME = @DIRECTORYNAME";
+                        ShortsIndex = connectionStr.ExecuteScalar(sqla,
+                            [("@DIRECTORYNAME", DirName)]).ToInt(-1);
+                    }
                     string sql = "Select TITLEID FROM SHORTSDIRECTORY WHERE ID = @ID";
                     titleid = connectionStr.ExecuteScalar(sql, [("@ID", ShortsIndex)]).ToInt(-1);
 
@@ -227,10 +236,12 @@ namespace VideoGui
                     }
 
                     string linkedtitleid = "";
+
+
                     sql = GetShortsDirectorySql(ShortsIndex);
-                    sql.ExecuteReader(connectionStr, (FbDataReader r) =>
+                    connectionStr.ExecuteReader(sql, (FbDataReader r) =>
                     {
-                        linkedtitleid = (r["LINKEDTITLEID"] is string tidt ? tidt : "");
+                        linkedtitleid = (r["LINKEDTITLEIDS"] is string tidt ? tidt : "");
                     });
                     btnEditTitle.IsChecked = (linkedtitleid != "" && DoTitleSelectFrm.TitleId != -1);
                     //GetShortsDirectorySql(DoTitleSelectFrm.PersistId);
@@ -466,7 +477,17 @@ namespace VideoGui
                         DoDescSelectFrm.Close();
                         DoDescSelectFrm = null;
                     }
-
+                    if (ShortsIndex == -1)
+                    {
+                        string dir = txtsrcdir.Text;
+                        string connectionStr =
+                            dbInit?.Invoke(this, new CustomParams_GetConnectionString())
+                            is string conn ? conn : "";
+                        string DirName = dir.Split(@"\").ToList().LastOrDefault();
+                        string sqla = "SELECT ID FROM SHORTSDIRECTORY WHERE DIRECTORYNAME = @DIRECTORYNAME";
+                        ShortsIndex = connectionStr.ExecuteScalar(sqla,
+                            [("@DIRECTORYNAME", DirName)]).ToInt(-1);
+                    }
                     DoDescSelectFrm = new DescSelectFrm(OnSelectFormClose, dbInit, true);
                     Hide();
                     DoDescSelectFrm.Show();
@@ -543,10 +564,10 @@ namespace VideoGui
                 //ConnnectLists?.Invoke(3);
                 string connectionStr = dbInit?.Invoke(this, new CustomParams_GetConnectionString()) is string con2n ? con2n : "";
                 bool found = false;
-                txtsrcdir.Text = (rootfolder != "" && Directory.Exists(rootfolder)) ? rootfolder : txtsrcdir.Text;
+                txtsrcdir.Text = rootfolder;// : txtsrcdir.Text;
                 txtMaxUpload.Text = (uploadsnumber != "") ? uploadsnumber : txtMaxUpload.Text;
                 txtTotalUploads.Text = (MaxUploads != "") ? MaxUploads : txtTotalUploads.Text;
-                if (rootfolder != @"D:\shorts\")
+                if (rootfolder != @"D:\shorts\" && Directory.Exists(rootfolder))
                 {
                     int cnt = Directory.EnumerateFiles(rootfolder, "*.mp4", SearchOption.AllDirectories).ToList().Count();
                     lblShortNo.Content = cnt.ToString();
@@ -555,19 +576,56 @@ namespace VideoGui
                 if (rootfolder != "")
                 {
                     string ThisDir = rootfolder.Split(@"\").ToList().LastOrDefault();
-
+                    connectionStr = dbInit?.Invoke(this, new CustomParams_GetConnectionString()) is string con2 ? con2 : "";
                     string sql = "select ID from SHORTSDIRECTORY WHERE DIRECTORYNAME = @P0";
                     int res = connectionStr.ExecuteScalar(sql.ToUpper(), [("@P0", ThisDir.ToUpper())]).ToInt(-1);
                     if (res == -1)
                     {
                         sql = "INSERT INTO SHORTSDIRECTORY(DIRECTORYNAME) VALUES (@P0) RETURNING ID";
-                        res = connectionStr.ExecuteScalar(sql.ToUpper(), [("@P0", ThisDir.ToUpper())]).ToInt(-1);
+                        res = connectionStr.ExecuteScalar(sql, [("@P0", ThisDir.ToUpper())]).ToInt(-1);
                         btnEditTitle.IsChecked = false;
                         btnEditDesc.IsChecked = false;
+                        sql = "SELECT ID FROM TITLES WHERE DESCRIPTION = @P0";
+                        res = connectionStr.ExecuteScalar(sql.ToUpper(), [("@P0", ThisDir.ToUpper())]).ToInt(-1);
+                        if (res == -1)
+                        {
+                            sql = "INSERT INTO TITLES(DESCRIPTION,ISTAG,GROUPID) VALUES (@P0,@P1,@P2) RETURNING ID";
+                            int titleid = connectionStr.ExecuteScalar(sql.ToUpper(), [("@P0", ThisDir.ToUpper()),
+                                ("@P1", false), ("@P2", res)]).ToInt(-1);
+                            if (titleid != -1)
+                            {
+                                dbInit?.Invoke(this, new CustomParams_Select(titleid));
+                            }
+                        }
+
                     }
                     else
                     {
                         dbInit?.Invoke(this, new CustomParams_Select(res));
+                        string sq = "SELECT ID FROM TITLES WHERE GROUPID = @GID AND ISTAG = @ISTAG";
+                        int idd = connectionStr.ExecuteScalar(sq, [("@GID", res), ("@ISTAG", false)]).ToInt(-1);
+                        if (idd == -1)
+                        {
+                            sq = "SELECT ID FROM TITLES WHERE DESCRIPTION = @P0";
+                            int idy = connectionStr.ExecuteScalar(sq.ToUpper(), [("@P0", ThisDir.ToUpper())]).ToInt(-1);
+                            if (idy == -1)
+                            {
+                                sq = "INSERT INTO TITLES(DESCRIPTION,ISTAG,GROUPID) VALUES (@P0,@P1,@P2) RETURNING ID";
+                                int titleid = connectionStr.ExecuteScalar(sq.ToUpper(), [("@P0", ThisDir.ToUpper()),
+                                ("@P1", false), ("@P2", res)]).ToInt(-1);
+                                if (titleid != -1)
+                                {
+                                    dbInit?.Invoke(this, new CustomParams_Select(titleid));
+                                }
+                            }
+                            else
+                            {
+                                sq = "UPDATE TITLES SET GROUPID = @GID WHERE ID = @ID";
+                                connectionStr.ExecuteScalar(sq, [("@ID", idy), ("@GID", res)]);
+                                dbInit?.Invoke(this, new CustomParams_Select(idy));
+                            }
+                        }
+
                         connectionStr.ExecuteReader(GetShortsDirectorySql(res), (FbDataReader r) =>
                         {
                             int titleid = r["TITLEID"].ToInt(-1);
