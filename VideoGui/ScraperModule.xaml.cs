@@ -11,6 +11,7 @@ using Microsoft.Web.WebView2.WinForms;
 using Microsoft.Web.WebView2.Wpf;
 using Microsoft.Win32;
 using Nancy;
+using Nancy.Extensions;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -1897,22 +1898,32 @@ namespace VideoGui
                                                 TitleId = (r["TITLEID"] is int tid) ? tid : -1;
                                                 DescId = (r["DESCID"] is int did) ? did : -1;
                                             });
-
-
                                             if (id != -1)
                                             {
-                                                if (TitleId != -1)
-                                                {
-                                                    var p = new CustomParams_GetTitle(idd, TitleId);
-                                                    dbInitializer?.Invoke(this, p);
-                                                    TitleStr = p.name;
-                                                }
                                                 if (DescId != -1)
                                                 {
                                                     var p = new CustomParams_GetDesc(idd, DescId);
                                                     dbInitializer?.Invoke(this, p);
                                                     DescStr = p.name;
                                                 }
+                                                if (TitleId != -1)
+                                                {
+                                                    var p = new CustomParams_GetTitle(idd, TitleId);
+                                                    dbInitializer?.Invoke(this, p);
+                                                    TitleStr = p.name;
+                                                    var r = p.name.Split(" ").ToArray<string>().ToList();
+                                                    foreach (var (item, t) in from item in r.Where(s => s.ToLower() != "vline" && !s.StartsWith("#"))
+                                                                              let t = item.ToCamelCase()
+                                                                              select (item, t))
+                                                    {
+                                                        TitleStr = TitleStr.Replace(item, t);
+                                                        if (DescStr.Contains(item))
+                                                        {
+                                                            DescStr = DescStr.Replace(item, t);
+                                                        }
+                                                    }
+                                                }
+
 
                                             }
                                             WaitingFileName = false;

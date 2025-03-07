@@ -311,7 +311,7 @@ namespace VideoGui
                     {
                         if (!IsTest)
                         {
-                            var r =  ApplyVideoSchedule(videoId, TitleStr, DescStr, ScheduleDate).ConfigureAwait(false).GetAwaiter().GetResult();
+                            var r = ApplyVideoSchedule(videoId, TitleStr, DescStr, ScheduleDate).ConfigureAwait(false).GetAwaiter().GetResult();
                             if (r)
                             {
                                 DoReportScheduled(ScheduleDate, videoId, TitleStr);
@@ -326,7 +326,7 @@ namespace VideoGui
                             CurrentTime = CurrentTime.Add(GapTime);
                             return true;
                         }
-                        
+
                     }
                     else if (ScheduleDate > EndDate)
                     {
