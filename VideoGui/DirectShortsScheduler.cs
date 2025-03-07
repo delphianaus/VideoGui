@@ -211,7 +211,7 @@ namespace VideoGui
                         ScheduleNumber++;
 
                         LastValidDate = ScheduleAt;
-                        DoReportScheduled(ScheduleAt, videoId, Title_str);
+                        //DoReportScheduled(ScheduleAt, videoId, Title_str);
 
                         return true;
                     }
