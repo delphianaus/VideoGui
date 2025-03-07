@@ -1398,7 +1398,7 @@ namespace VideoGui
                                 lookups.Add(gUrl2);
                                 wv2A10.Source = new Uri(gUrl2);
                                 var cts = new CancellationTokenSource();
-                                cts.CancelAfter(TimeSpan.FromSeconds(300));
+                                cts.CancelAfter(TimeSpan.FromSeconds(30000));
                                 TimedOut = false;
                                 string oldtitle = TitleStr;
                                 while (WaitingFileName && !cts.IsCancellationRequested && !canceltoken.IsCancellationRequested)
@@ -1414,12 +1414,12 @@ namespace VideoGui
                                     }
                                 }
 
-                                if (TimedOut || cts.IsCancellationRequested || canceltoken.IsCancellationRequested)
+                                if (TimedOut || canceltoken.IsCancellationRequested)
                                 {
-                                    TitleStr = oldtitle;
-                                    lstMain.Items.Insert(0, $"Timeout on getting filename. {TitleStr}");
+                                    lstMain.Items.Insert(0, $"Timeout on getting filename");
                                     break;
                                 }
+
                                 bool Ok = false;
                                 if (directshortsScheduler is not null && !cts.IsCancellationRequested)
                                 {
