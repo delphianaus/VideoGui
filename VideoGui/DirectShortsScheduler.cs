@@ -30,7 +30,7 @@ namespace VideoGui
         TimeOnly LastValidTime = TimeOnly.FromTimeSpan(TimeSpan.Zero);
         DateTime ScheduleAt = DateTime.Now.AddYears(-500);
         public string connectionString = "";
-        bool IsTest = true;
+        bool IsTest = true, IsFirstTime = true;
         public CancellationTokenSource canceltoken = new CancellationTokenSource();
         List<ListScheduleItems> ScheduleList = new List<ListScheduleItems>();
         public DateTime StartDate = DateTime.Now, EndDate = DateTime.Now, LastValidDate = DateTime.Now;
@@ -39,9 +39,9 @@ namespace VideoGui
         public int MaxNumberSchedules = 100, ScheduleNumber = 0;
         bool setup = false, BeginMode = false, FinishMode = false, FirstTime = false;
         public bool CanSchedule = true;
-        public DirectshortsScheduler(OnFinish doOnFinish, OnFinishBool doOnFinishSchedulesComplete, 
+        public DirectshortsScheduler(OnFinish doOnFinish, OnFinishBool doOnFinishSchedulesComplete,
             List<ListScheduleItems> listSchedules,
-            DateTime startDate, DateTime endDate, ReportVideoScheduled doReportSchedule, int maxNumberSchedules, 
+            DateTime startDate, DateTime endDate, ReportVideoScheduled doReportSchedule, int maxNumberSchedules,
             bool isTest)
         {
             try
@@ -54,7 +54,7 @@ namespace VideoGui
                 ScheduleList = listSchedules;
                 StartDate = startDate;
                 EndDate = endDate;
-                IsTest = isTest;    
+                IsTest = isTest;
                 DateTime ScheduleStart = DateOnly.FromDateTime(startDate).ToDateTime(listSchedules.FirstOrDefault().Start);
                 DateTime ScheduleEnd = DateOnly.FromDateTime(EndDate).ToDateTime(listSchedules.LastOrDefault().End);
                 if (startDate <= ScheduleStart && endDate <= ScheduleStart)
@@ -155,7 +155,7 @@ namespace VideoGui
                 return new MemoryStream();
             }
         }
-        public async Task<bool> ApplyVideoSchedule(string videoId, string title_str, DateTime ScheduleAt, string desc_str = "")
+        public async Task<bool> ApplyVideoSchedule(string videoId, string Title_str, string Desc_Str, DateTime ScheduleAt) //ApplyVideoSchedule(string videoId, string title_str, string Desc_Str,DateTime ScheduleAt)
         {
             try
             {
@@ -194,10 +194,10 @@ namespace VideoGui
                         video.Status.PublishAtDateTimeOffset = publishDateTime;
                         video.Status.PublishAt = publishDateTime;
                         video.Status.PrivacyStatus = "private";
-                        if (desc_str != "")
+                        if (Desc_Str != "")
                         {
-                            video.Snippet.Description = desc_str;
-                            video.Snippet.Title = title_str;
+                            video.Snippet.Description = Desc_Str;
+                            video.Snippet.Title = Title_str;
                         }
                         var updateRequest = youtubeService.Videos.Update(video, $"Id,snippet,status");
                         if (ScheduleNumber > 118)
@@ -211,7 +211,7 @@ namespace VideoGui
                         ScheduleNumber++;
 
                         LastValidDate = ScheduleAt;
-                        DoReportScheduled(ScheduleAt, videoId, title_str);
+                        DoReportScheduled(ScheduleAt, videoId, Title_str);
 
                         return true;
                     }
@@ -240,199 +240,108 @@ namespace VideoGui
         }
 
 
-        public void ScheduleVideo(string videoId, string titlestr, string desc, bool UseNewStart)
+        public bool ScheduleVideo(string videoId, string TitleStr, string DescStr, bool UseNewStart)
         {
             try
             {
                 if (CanSchedule)
                 {
-                    if (AvailableSchedules.Count > -1)
+                    if (AvailableSchedules.Count == 0)
                     {
-
-                        DoSchedule(videoId, titlestr, UseNewStart);
+                        return DoSchedule(videoId, TitleStr, DescStr);
                     }
                     else
                     {
                         DateTime newSchedule = AvailableSchedules.FirstOrDefault();
                         AvailableSchedules.RemoveAt(0);
-
-                        ApplyVideoSchedule(videoId, titlestr, newSchedule, desc).ConfigureAwait(false);
+                        return ApplyVideoSchedule(videoId, TitleStr, DescStr, newSchedule).ConfigureAwait(false).GetAwaiter().GetResult();
                     }
                 }
+                else return false;
             }
             catch (Exception ex)
             {
                 ex.LogWrite($"ScheduleVideo {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+                return false;
             }
         }
 
 
-        public void DoSchedule(string videoId, string title, bool UseNewStart)
+        public bool DoSchedule(string videoId, string TitleStr, string DescStr)
         {
             try
             {
-                LastValidVideoScheduledAt = CurrentDate.ToDateTime(CurrentTime);
-                bool IsStartMode = BeginMode && CurrentDate.ToDateTime(CurrentTime) >= StartDate;
-                bool IsEndMode = FinishMode && (CurrentDate.ToDateTime(CurrentTime) >= StartDate &&
-                                                CurrentDate.ToDateTime(CurrentTime) <= EndDate);
-                IsStartMode = IsStartMode;//|| IsEndMode
-                if (CurrentDate.ToDateTime(CurrentTime).IsBetween(StartDate, EndDate) || IsEndMode || IsStartMode)
+                TimeSpan GapTime = TimeSpan.Zero;
+                if (FirstTime)
                 {
-                    bool IsValid = false;
-                    while (!IsValid && !canceltoken.IsCancellationRequested)
+                    FirstTime = false;
+                    CurrentDate = DateOnly.FromDateTime(StartDate);
+                    CurrentTime = TimeOnly.FromDateTime(StartDate);
+                }
+                var Start = ScheduleList.FirstOrDefault().Start;
+                var End = ScheduleList.LastOrDefault().End;
+                TimeOnly StartTime = TimeOnly.FromDateTime(StartDate);
+                TimeOnly EndTime = TimeOnly.FromDateTime(EndDate);
+                if (CurrentTime >= Start && CurrentTime <= End)
+                {
+                    foreach (var Schedule in ScheduleList)
                     {
-                        System.Windows.Forms.Application.DoEvents();
-                        if (ListScheduleIndex < ScheduleList.Count)
+                        if (CurrentTime >= Schedule.Start && CurrentTime <= Schedule.End)
                         {
-                            var _end = ScheduleList.LastOrDefault().End;
-                            if (IsEndMode || IsStartMode)
-                            {
-                                var ctp = CurrentDate.ToDateTime(CurrentTime);
-                                var dtp = CurrentDate.ToDateTime(_end);
-                                if (IsStartMode && ctp.IsBetween(StartDate, EndDate))
-                                {
-                                    if (StartDate.Day == EndDate.Day)
-                                    {
-                                        IsValid = true;
-                                        break;
-                                    }
-                                    else if (ctp > dtp)
-                                    {
-                                        CurrentDate = CurrentDate.AddDays(1);
-                                        CurrentTime = UseNewStart ? TimeOnly.FromDateTime(StartDate) : ScheduleList[ListScheduleIndex].Start;
-                                        IsValid = true;
-                                        break;
-                                    }
-                                    IsValid = true;
-                                    break;
-                                }
-                                else if (IsEndMode && ctp.IsBetween(StartDate, EndDate))
-                                {
-                                    if (StartDate.Day == EndDate.Day)
-                                    {
-                                        IsValid = true;
-                                        break;
-                                    }
-                                    else if (ctp > dtp)
-                                    {
-                                        CurrentDate = CurrentDate.AddDays(1);
-                                        CurrentTime = UseNewStart ? TimeOnly.FromDateTime(StartDate)
-                                            : ScheduleList[ListScheduleIndex].Start;
-                                        IsValid = true;
-                                        break;
-                                    }
-                                }
-                            }
-                            else if (CurrentTime >= _end)
-                            {
-                                CurrentDate = CurrentDate.AddDays(1);
-                                CurrentTime = UseNewStart ? TimeOnly.FromDateTime(StartDate)
-                                            : ScheduleList[ListScheduleIndex].Start;
-
-                                if (CurrentDate.ToDateTime(CurrentTime).IsBetween(StartDate, EndDate))
-                                {
-                                    if (ScheduleNumber >= MaxNumberSchedules)
-                                    {
-                                        if (DoOnFinishSchedulesComplete.Invoke())
-                                        {
-                                            break;
-                                        }
-                                    }
-                                    else
-                                    {
-                                        IsValid = true;
-                                        break;
-                                    }
-                                }
-                                else
-                                {
-                                    if (!FirstTime && (CurrentDate.ToDateTime(CurrentTime) > EndDate))
-                                    {
-                                        FirstTime = true;
-                                        IsValid = !(CurrentDate > DateOnly.FromDateTime(EndDate.Date));
-                                        if (!IsValid || ScheduleNumber > MaxNumberSchedules)
-                                        {
-                                            if (DoOnFinishSchedulesComplete.Invoke())
-                                            {
-                                                break;
-                                            }
-                                        }
-                                    }
-                                    else
-                                    {
-                                        if (DoOnFinishSchedulesComplete.Invoke())
-                                        {
-                                            break;
-                                        }
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                if (CurrentTime.IsBetween(ScheduleList[ListScheduleIndex].Start, ScheduleList.LastOrDefault().End))
-                                {
-                                    if (CurrentDate.ToDateTime(CurrentTime).IsBetween(StartDate, EndDate))
-                                    {
-                                        if (ScheduleNumber >= MaxNumberSchedules)
-                                        {
-                                            if (DoOnFinishSchedulesComplete.Invoke())
-                                            {
-                                                break;
-                                            }
-                                        }
-                                        else
-                                        {
-                                            IsValid = true;
-                                            break;
-                                        }
-                                    }
-
-                                }
-                                else ListScheduleIndex++;
-                                if (ListScheduleIndex >= ScheduleList.Count)
-                                {
-                                    ListScheduleIndex = 0;
-                                }
-                            }
-                        }
-                    }
-                    if (IsValid && !canceltoken.IsCancellationRequested)
-                    {
-                        System.Windows.Forms.Application.DoEvents();
-                        if (ScheduleNumber >= MaxNumberSchedules)
-                        {
-                            DoOnFinishSchedulesComplete.Invoke();
-                            return;
-                        }
-                        if (!IsTest)
-                        {
-                            ApplyVideoSchedule(videoId, title, CurrentDate.ToDateTime(CurrentTime)).ConfigureAwait(false);
-                        }
-                        else
-                        {
-                            DoReportScheduled(CurrentDate.ToDateTime(CurrentTime), videoId, "Test");
-                            ScheduleNumber++;
-                        }
-                        int WrappedDays = 0;
-                        System.Windows.Forms.Application.DoEvents();
-                        CurrentTime = CurrentTime.AddMinutes(ScheduleList[ListScheduleIndex].Gap, out WrappedDays);
-                        if (WrappedDays > 0)
-                        {
-                            CurrentDate = CurrentDate.AddDays(1);
-                            CurrentTime = ScheduleList.FirstOrDefault().Start;
-                        }
-
-                        if (CurrentDate.ToDateTime(CurrentTime) >= EndDate)
-                        {
-                            DoOnFinishSchedulesComplete?.Invoke();
+                            GapTime = TimeSpan.FromMinutes(Schedule.Gap);
+                            break;
                         }
                     }
                 }
+                else
+                {
+                    if (CurrentTime < Start)
+                    {
+                        GapTime = TimeSpan.FromMinutes(ScheduleList.FirstOrDefault().Gap);
+                    }
+                    else if (CurrentTime > End)
+                    {
+                        GapTime = TimeSpan.FromMinutes(ScheduleList.LastOrDefault().Gap);
+                    }
+                }
+                if (GapTime != TimeSpan.Zero)
+                {
+                    var ScheduleDate = CurrentDate.ToDateTime(CurrentTime);
+                    if (ScheduleDate >= StartDate && ScheduleDate <= EndDate && ScheduleNumber < MaxNumberSchedules)
+                    {
+                        if (!IsTest)
+                        {
+                            var r =  ApplyVideoSchedule(videoId, TitleStr, DescStr, ScheduleDate).ConfigureAwait(false).GetAwaiter().GetResult();
+                            if (r)
+                            {
+                                DoReportScheduled(ScheduleDate, videoId, TitleStr);
+                                CurrentTime = CurrentTime.Add(GapTime);
+                            }
+                            return r;
+                        }
+                        else
+                        {
+                            DoReportScheduled(ScheduleDate, videoId, TitleStr);
+                            ScheduleNumber++;
+                            CurrentTime = CurrentTime.Add(GapTime);
+                            return true;
+                        }
+                        
+                    }
+                    else if (ScheduleDate > EndDate)
+                    {
+                        DoOnFinishSchedulesComplete.Invoke();
+                        return false;
+                    }
+                }
+                return false;
             }
             catch (Exception ex)
             {
                 ex.LogWrite($"DoSchedule {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+                return false;
             }
         }
+
     }
 }

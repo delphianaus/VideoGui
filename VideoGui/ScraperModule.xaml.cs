@@ -1223,7 +1223,8 @@ namespace VideoGui
                     var r = new CustomParams_SetTimeSpans(null, null);
                     dbInitializer?.Invoke(this, r);
                 }
-                wv2.CoreWebView2InitializationCompleted += (sender, args) => {
+                wv2.CoreWebView2InitializationCompleted += (sender, args) =>
+                {
                     ActiveWebView[1].Source = new Uri(webAddressBuilder.GetChannelURL().Address);
                 };
                 Dispatcher.Invoke(() =>
@@ -1238,7 +1239,7 @@ namespace VideoGui
                 ex.LogWrite($"Window_Loaded {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-        
+
 
         private async void ProcessWV2Completed_ShortsScheduler(string html, object sender)
         {
@@ -1304,6 +1305,8 @@ namespace VideoGui
                 return true;
             }
         }
+
+        List<string> lookups = new List<string>();
         private void ProcessNode(HtmlDocument doc, HtmlNode targetSpan, object sender = null)
         {
             try
@@ -1333,7 +1336,7 @@ namespace VideoGui
                     string StatusNodeStr = "label-span style-scope ytcp-video-row";
                     List<HtmlNode> StatusNode = doc.DocumentNode.SelectNodes($"//span[@class='{StatusNodeStr}']").ToList();
                     string DateNodeStr = " cell-body tablecell-date sortable column-sorted  style-scope ytcp-video-row";
-                   //ist<HtmlNode> DateNode = doc.DocumentNode.SelectNodes($"//div[@class='{DateNodeStr}']").ToList();
+                    //ist<HtmlNode> DateNode = doc.DocumentNode.SelectNodes($"//div[@class='{DateNodeStr}']").ToList();
                     string aclassname = " remove-default-style  style-scope ytcp-video-list-cell-video";
                     for (int i = 0; i < targetSpanList.Count; i++)
                     {
@@ -1372,11 +1375,11 @@ namespace VideoGui
                             }
                         }
                         string divlass = " remove-default-style  style-scope ytcp-video-list-cell-video";
-                        
+
                         string html2 = item.OuterHtml; ;
                         HtmlDocument doc2 = new HtmlDocument();
                         doc2.LoadHtml(html2);
-                        
+
 
                         if (Id != "")
                         {
@@ -1385,10 +1388,14 @@ namespace VideoGui
                             Nullable<DateTime> dateTime = null;
                             if (ScraperType == EventTypes.ShortsSchedule)
                             {
+                                TitleStr = "";
+                                DescStr = "";
+
                                 // grab video filename. await till its got it
                                 string gUrl2 = $"https://studio.youtube.com/video/{Id}/edit";
                                 WaitingFileName = true;
                                 wv2A10.NavigationCompleted += wv2_NavigationCompleted_GetFileName;
+                                lookups.Add(gUrl2);
                                 wv2A10.Source = new Uri(gUrl2);
                                 var cts = new CancellationTokenSource();
                                 cts.CancelAfter(TimeSpan.FromSeconds(300));
@@ -1407,32 +1414,23 @@ namespace VideoGui
                                     }
                                 }
 
-
-                                if (oldtitle != TitleStr && TitleStr != "")
+                                if (TimedOut || cts.IsCancellationRequested || canceltoken.IsCancellationRequested)
                                 {
-                                    Dispatcher.Invoke(() =>
-                                    {
-                                    if (lstMain.Items.Count > 0)
-                                    {
-                                        string r = lstMain.Items[0].ToString();
-                                            if (r.Contains(oldtitle))
-                                            {
-                                                r = r.Replace(oldtitle, TitleStr);
-                                                if (lstMain.Items.Count > 0)
-                                                {
-                                                    lstMain.Items.RemoveAt(0);
-                                                    lstMain.Items.Insert(0, r);
-                                                }
-                                                else lstMain.Items.Add(r);
-                                            }                                       
-                                        }
-                                    
-                                    });
+                                    TitleStr = oldtitle;
+                                    lstMain.Items.Insert(0, $"Timeout on getting filename. {TitleStr}");
+                                    break;
                                 }
+                                bool Ok = false;
                                 if (directshortsScheduler is not null && !cts.IsCancellationRequested)
                                 {
-                                    directshortsScheduler.ScheduleVideo(Id, TitleStr, DescStr, false);
-                                    DoNextNode = true;
+                                    Ok = directshortsScheduler.ScheduleVideo(Id, TitleStr, DescStr, false);
+                                    DoNextNode = Ok;
+                                    if (!Ok)
+                                    {
+                                        lstMain.Items.Insert(0, $"Error on Scheduling Detected.");
+                                        canceltoken.Cancel();
+                                        break;
+                                    }
                                 }
                                 else if (directshortsScheduler is not null && cts.IsCancellationRequested)
                                 {
@@ -1452,17 +1450,23 @@ namespace VideoGui
                                     webAddressBuilder.ScopeVideo(Id, true);
                                 }
                             }
+
+                            if (true)
+                            {
+
+                            }
+
                         }
                     }
                     if (LastNode != "")
                     {
                         bool processnextnode = false;
                         List<string> nodes = LastNode.Split(' ').ToList();
-                        for (int i = nodes.Count - 1; i >= 0; i--)
+                        for (int xi = nodes.Count - 1; xi >= 0; xi--)
                         {
-                            if ((nodes[i].Contains("of")) || (nodes[i].Contains("about")))
+                            if ((nodes[xi].Contains("of")) || (nodes[xi].Contains("about")))
                             {
-                                nodes.RemoveAt(i);
+                                nodes.RemoveAt(xi);
                             }
                         }
                         string Range = nodes.FirstOrDefault();
@@ -1508,6 +1512,7 @@ namespace VideoGui
 
                             }
                         }
+
                     }
                 }
             }
@@ -1515,7 +1520,6 @@ namespace VideoGui
             {
                 ex.LogWrite($"ProcessNode {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
-
         }
 
         private async Task btnNext_Task(object sender)
@@ -1894,7 +1898,7 @@ namespace VideoGui
                                                 DescId = (r["DESCID"] is int did) ? did : -1;
                                             });
 
-                                            
+
                                             if (id != -1)
                                             {
                                                 if (TitleId != -1)
@@ -1916,6 +1920,18 @@ namespace VideoGui
                                         }
                                     }
                                 }
+                            }
+                        }
+                        else
+                        {
+                            Thread.Sleep(500);
+                            if (canceltoken.IsCancellationRequested) return;
+                            if (wv2Dictionary.ContainsKey(id))
+                            {
+                                var webView2Instance = wv2Dictionary[id];
+                                var task = webView2Instance.ExecuteScriptAsync("document.body.innerHTML");
+                                task.ContinueWith(x => { ProcessHTML_Filename(x.Result, id, IntId, sender); }, TaskScheduler.FromCurrentSynchronizationContext());
+                                return;
                             }
                         }
                     }
@@ -2024,7 +2040,7 @@ namespace VideoGui
                 string StatusNodeStr = "label-span style-scope ytcp-video-row";
                 List<HtmlNode> StatusNode = doc.DocumentNode.SelectNodes($"//span[@class='{StatusNodeStr}']").ToList();
                 string DateNodeStr = " cell-body tablecell-date sortable column-sorted  style-scope ytcp-video-row";
-              //  List<HtmlNode> DateNode = doc.DocumentNode.SelectNodes($"//div[@class='{DateNodeStr}']").ToList();
+                //  List<HtmlNode> DateNode = doc.DocumentNode.SelectNodes($"//div[@class='{DateNodeStr}']").ToList();
                 string aclassname = " remove-default-style  style-scope ytcp-video-list-cell-video";
                 for (int i = 0; i < targetSpanList.Count; i++)
                 {

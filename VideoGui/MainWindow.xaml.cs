@@ -2185,7 +2185,7 @@ namespace VideoGui
                             frmTitleSelect.TitleId = index;
                             string BaseStr = frmTitleSelect.BaseTitle + " ";
 
-                            foreach (var item in TitleTagsList.Where(s => s.GroupId == index))
+                            foreach (var item in TitleTagsList.Where(s => s.GroupId == ShortsDirectoryIndex))
                             {
                                 if (!BaseStr.Contains($"#{item.Description}"))
                                 {
