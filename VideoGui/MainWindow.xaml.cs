@@ -1881,7 +1881,7 @@ namespace VideoGui
             }
         }
         int ShortsDirectoryIndex = -1;
-        private object formObjectHandler_TitleSelect(object FormObject, object tld, TitleSelectFrm frmTitleSelect)
+        private object  formObjectHandler_TitleSelect(object FormObject, object tld, TitleSelectFrm frmTitleSelect)
         {
             try
             {
@@ -2553,7 +2553,34 @@ namespace VideoGui
             else if (tld is CustomParams_Select SPS)
             {
                 ShortsDirectoryIndex = SPS.Id;
+                if (!EditableshortsDirectoryList.Any(s => s.Id == SPS.Id))
+                {
+                    string sql = "SELECT * FROM SHORTSDIRECTORY WHERE ID = @ID";
+                    connectionString.ExecuteReader(sql,[("@ID", SPS.Id)], (FbDataReader r) =>
+                    {
+                        EditableshortsDirectoryList.Add(new ShortsDirectory(r));
+                    });
+                    TitleTagsSrc = SPS.Id;
 
+
+                }
+            }
+            else if (tld is CustomParams_UpdateTitleById SPU)
+            {
+                foreach(var p in EditableshortsDirectoryList.Where(s => s.Id == SPU.Id))
+                {
+                    p.TitleId = SPU.Title;
+                    break;
+                }
+                if (!TitlesList.Any(s => s.Id == SPU.Title))
+                {
+                    string sql = "SELECT * FROM TITLES WHERE ID = @ID";
+                    connectionString.ExecuteReader(sql, [("@ID", SPU.Title)], (FbDataReader r) =>
+                    {
+                        TitlesList.Add(new Titles(r));
+                    });
+                }
+                
             }
             else if (tld is CustomParams_Get)
             {
@@ -2567,14 +2594,7 @@ namespace VideoGui
                 }
                 return null;
             }
-            else if (tld is CustomParams_Select cpsel)
-            {
-                string sqlg = "SELECT * FROM TITLES WHERE ID = @ID";
-                connectionString.ExecuteReader(sqlg, [("@ID", cpsel.Id)], (FbDataReader r) =>
-                {
-                    TitlesList.Add(new Titles(r, OnGetAllTags));
-                });
-            }
+           
             return null;
         }
 

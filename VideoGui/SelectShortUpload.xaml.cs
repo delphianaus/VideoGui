@@ -76,6 +76,24 @@ namespace VideoGui
                         sql = "INSERT INTO SHORTSDIRECTORY(DIRECTORYNAME) VALUES (@P0) RETURNING ID";
                         res = connectionStr.ExecuteScalar(sql.ToUpper(), [("@P0", ThisDir.ToUpper())]).ToInt(-1);
                         ShortsIndex = res;
+                        dbInit?.Invoke(this, new CustomParams_Select(res));
+                        sql = "SELECT ID FROM TITLES WHERE DESCRIPTION = @P0";
+                        int rres = connectionStr.ExecuteScalar(sql.ToUpper(), [("@P0", ThisDir.ToUpper())]).ToInt(-1);
+                        if (rres == -1)
+                        {
+                            sql = "INSERT INTO TITLES(DESCRIPTION,ISTAG,GROUPID) VALUES (@P0,@P1,@P2) RETURNING ID";
+                            int titleid = connectionStr.ExecuteScalar(sql.ToUpper(), [("@P0", ThisDir.ToUpper()),
+                                ("@P1", false), ("@P2", res)]).ToInt(-1);
+                            if (titleid != -1)
+                            {
+                                sql = "UPDATE SHORTSDIRECTORY SET TITLEID = @P0 WHERE ID = @P1";
+                                connectionStr.ExecuteNonQuery(sql.ToUpper(), [("@P0", titleid), ("@P1", res)]);
+                                dbInit?.Invoke(this, new CustomParams_UpdateTitleById(res, titleid));
+                            }
+                        }
+
+
+
                         btnEditTitle.IsChecked = false;
                         btnEditDesc.IsChecked = false;
                     }
