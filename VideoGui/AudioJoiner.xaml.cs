@@ -44,7 +44,7 @@ namespace VideoGui
         List<Joiner> AudioJoiners = new List<Joiner>();
         TimeSpan Duration = TimeSpan.Zero;
         ObservableCollection<AudioJoinerInfo> MediaInfoTimes = new ObservableCollection<AudioJoinerInfo>();
-
+        public CancellationTokenSource cancel = new CancellationTokenSource();
 
         public AudioJoiner(AudioJoinerOnClose _OnClose)
         {
@@ -52,7 +52,7 @@ namespace VideoGui
             DoOnClose = _OnClose;
         }
 
-   
+
 
         public async Task ReadFile(string filePath, bool UseVideoDuration = false)
         {
@@ -133,7 +133,7 @@ namespace VideoGui
         {
             try
             {
-               
+
                 brdControls.Width = frmAudioJoiner.Width - 8;
                 brd1.Width = brdControls.Width;
                 brdFileInfo.Width = brdControls.Width;
@@ -147,8 +147,8 @@ namespace VideoGui
                 brd1.Height = frmAudioJoiner.Height - 150;
                 txtsrcdir.Width = frmAudioJoiner.Width - (724 - 542);
                 Canvas.SetLeft(btnSelectSourceDir, frmAudioJoiner.Width - 53);
-                
-               
+
+
             }
             catch (Exception ex)
             {
@@ -184,6 +184,8 @@ namespace VideoGui
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
             }
         }
+
+        public int numberoffiles = 0;
 
         public async Task GetFiles(string SourceDir)
         {
@@ -221,6 +223,7 @@ namespace VideoGui
                         {
                             Thread.Sleep(25);
                         }
+                        numberoffiles++;
                         ReadFile(file).ConfigureAwait(false);
                     }
                 }
@@ -229,6 +232,7 @@ namespace VideoGui
                     Thread.Sleep(100);
                 }
                 btnRename.IsEnabled = true;
+                //cancel.Cancel();
             }
             catch (Exception ex)
             {
@@ -249,7 +253,7 @@ namespace VideoGui
                 folderBrowserDialog.InitialFolder = InitFolder;
                 folderBrowserDialog.DefaultFolder = InitFolder;
                 folderBrowserDialog.AllowMultiSelect = false;
-                
+
                 var folder = "";
                 if (folderBrowserDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                 {
@@ -344,7 +348,7 @@ namespace VideoGui
                 File.Delete(py);
             }
             bridge = null;
-            
+
         }
         private void DoOnAviDemuxEnd(string SourceFileName, string DestinationFile, int exitcode)
         {
@@ -356,9 +360,9 @@ namespace VideoGui
                     {
                         MediaInfoTimes[i].Status = $"Script Ended";
                         //Task.Run(async () =>
-                       // {
-                       //     DoVideoCheck(i, MediaInfoTimes[i].TimeData, DestinationFile, SourceFileName);
-                       // });
+                        // {
+                        //     DoVideoCheck(i, MediaInfoTimes[i].TimeData, DestinationFile, SourceFileName);
+                        // });
                         break;
                     }
                 }
@@ -430,7 +434,7 @@ namespace VideoGui
                             s = Progress.Substring(0, idx - 1).Trim();
                             s = $"Converting {s}";
                         }
-                        
+
                         MediaInfoTimes[i].Status = s;
                         this.Dispatcher.Invoke(() =>
                         {
@@ -472,6 +476,7 @@ namespace VideoGui
 
         private void btnClose_Click(object sender, RoutedEventArgs e)
         {
+            cancel.Cancel();
             Close();
         }
     }
