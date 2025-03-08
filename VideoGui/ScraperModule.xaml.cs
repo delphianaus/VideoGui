@@ -1265,7 +1265,7 @@ namespace VideoGui
                         {
                             var cts = new CancellationTokenSource();
                             cts.CancelAfter(TimeSpan.FromMilliseconds(500));
-                            while (!cts.IsCancellationRequested)
+                            while (!cts.IsCancellationRequested && !canceltoken.IsCancellationRequested)
                             {
                                 System.Windows.Forms.Application.DoEvents();
                                 Thread.Sleep(100);
@@ -1892,6 +1892,7 @@ namespace VideoGui
                                             string connectionStr = dbInitializer?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
                                             int idd = idp.Replace(".mp4", "").ToInt(-1);
                                             string sql = $"SELECT * FROM SHORTSDIRECTORY WHERE ID = @UID";
+                                            idd = (idd == 47) ? 62 : idd;
                                             connectionStr.ExecuteReader(sql, [("UID", idd)], (FbDataReader r) =>
                                             {
                                                 Id = (r["ID"] is Int32 i) ? i : -1;
@@ -1911,20 +1912,17 @@ namespace VideoGui
                                                     var p = new CustomParams_GetTitle(idd, TitleId);
                                                     dbInitializer?.Invoke(this, p);
                                                     TitleStr = p.name;
-                                                    var r = p.name.Split(" ").ToArray<string>().ToList();
-                                                    foreach (var (item, t) in from item in r.Where(s => s.ToLower() != "vline" && !s.StartsWith("#"))
-                                                                              let t = item.ToCamelCase()
-                                                                              select (item, t))
+                                                    var r = p.name.Split(" ").ToList<string>().Where(s=>!s.StartsWith("#") && 
+                                                    s != "" && s.ToLower() != "vline").ToList<string>();
+                                                    foreach (var item in r)
                                                     {
-                                                        TitleStr = TitleStr.Replace(item, t);
+                                                        TitleStr = TitleStr.Replace(item, item.ToLower().ToPascalCase());
                                                         if (DescStr.Contains(item))
                                                         {
-                                                            DescStr = DescStr.Replace(item, t);
+                                                            DescStr = DescStr.Replace(item, item.ToLower().ToPascalCase());
                                                         }
                                                     }
                                                 }
-
-
                                             }
                                             WaitingFileName = false;
                                             return;
@@ -2898,7 +2896,7 @@ namespace VideoGui
                                             {
                                                 if ((sender as WebView2).CoreWebView2 != null)
                                                 {
-                                                    while (true && !canceltoken.IsCancellationRequested)
+                                                    while (true)
                                                     {
                                                         var p = IsButtonEnabled((sender as WebView2)).GetAwaiter().GetResult();
                                                         if (p == ButtonReturnType.Enabled)
@@ -2914,7 +2912,7 @@ namespace VideoGui
                                                                    "}";
                                                     // Execute the JavaScript code within the WebView2 control
                                                     (sender as WebView2).CoreWebView2.ExecuteScriptAsync(script1);
-                                                    while (true && !canceltoken.IsCancellationRequested)
+                                                    while (true)
                                                     {
                                                         var p = IsButtonEnabled((sender as WebView2)).GetAwaiter().GetResult();
                                                         if (p == ButtonReturnType.Disabled)
@@ -2926,7 +2924,6 @@ namespace VideoGui
                                                 }
                                                 for (int i = ScheduledFiles.Count - 1; i >= 0; i--)
                                                 {
-                                                    if (canceltoken.IsCancellationRequested) break;
                                                     if (ScheduledFiles[i].FileName == filename)
                                                     {
                                                         ScheduledFiles.RemoveAt(i);
