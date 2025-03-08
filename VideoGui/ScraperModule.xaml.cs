@@ -148,10 +148,6 @@ namespace VideoGui
         [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         private static extern int GetClassName(IntPtr hWnd, System.Text.StringBuilder lpClassName, int nMaxCount);
         private delegate bool EnumWindowProc(IntPtr hWnd, IntPtr parameter);
-        bool wv1InUse = false, wv2InUse = false, wv3InUse = false, wv4InUse = false, wv5InUse = false;
-        bool wv6InUse = false, wv7InUse = false, wv8InUse = false, wv9InUse = false, wv10InUse = false;
-        bool wv1Init = false, wv2Init = false, wv3Init = false, wv4Init = false, wv5Init = false;
-        bool wv6Init = false, wv7Init = false, wv8Init = false, wv9Init = false, wv10Init = false;
         public ScraperModule(databasehook<object> _dbInit, OnFinishId _OnFinish, List<string> directories, bool IsShort)
         {
             try
@@ -205,17 +201,7 @@ namespace VideoGui
             {
                 if (sender is WebView2 wv)
                 {
-                    wv1Init = (wv.Name == "wv2A1") ? true : wv1Init;
-                    wv2Init = (wv.Name == "wv2A2") ? true : wv2Init;
-                    wv3Init = (wv.Name == "wv2A3") ? true : wv3Init;
-                    wv4Init = (wv.Name == "wv2A4") ? true : wv4Init;
-                    wv5Init = (wv.Name == "wv2A5") ? true : wv5Init;
-                    wv6Init = (wv.Name == "wv2A6") ? true : wv6Init;
-                    wv7Init = (wv.Name == "wv2A7") ? true : wv7Init;
-                    wv8Init = (wv.Name == "wv2A8") ? true : wv8Init;
-                    wv9Init = (wv.Name == "wv2A0") ? true : wv9Init;
-                    wv10Init = (wv.Name == "wv2A10") ? true : wv10Init;
-
+                    //wv2.IsInitialized = true;
                 }
             }
             catch (Exception ex)
@@ -288,74 +274,64 @@ namespace VideoGui
 
                 while (true)
                 {
-                    if (!wv1InUse && wv1Init)
+                    if (wv2A1.AllowDrop && wv2A1.Tag.ToInt(-1) == 1)
                     {
-                        wv1InUse = true;
                         wv2A1.ExecuteScriptAsync("window.gc()");
-                        wv2A1.Source = new Uri(address);
+                        wv2A1.SetURL(address); //wv2A1.Source = new Uri(address);
                         break;
                     }
-                    else if (!wv2InUse && wv2Init)
+                    else if (wv2A2.AllowDrop && wv2A2.Tag.ToInt(-1) == 1)
                     {
-                        wv2InUse = true;
                         wv2A2.ExecuteScriptAsync("window.gc()");
-                        wv2A2.Source = new Uri(address);
+                        wv2A2.SetURL(address);
                         break;
                     }
-                    else if (!wv3InUse && wv3Init)
+                    else if (wv2A3.AllowDrop && wv2A3.Tag.ToInt(-1) == 1)
                     {
-                        wv3InUse = true;
                         wv2A3.ExecuteScriptAsync("window.gc()");
-                        wv2A3.Source = new Uri(address);
+                        wv2A3.SetURL(address); 
                         break;
                     }
-                    else if (!wv4InUse && wv4Init)
+                    else if (wv2A4.AllowDrop && wv2A4.Tag.ToInt(-1) == 1)
                     {
-                        wv4InUse = true;
                         wv2A4.ExecuteScriptAsync("window.gc()");
-                        wv2A4.Source = new Uri(address);
+                        wv2A4.SetURL(address); //= new Uri(address);
                         break;
                     }
-                    else if (!wv5InUse && wv5Init)
+                    else if (wv2A5.AllowDrop && wv2A5.Tag.ToInt(-1) == 1)
                     {
-                        wv5InUse = true;
                         wv2A5.ExecuteScriptAsync("window.gc()");
-                        wv2A5.Source = new Uri(address);
+                        wv2A5.SetURL(address); //= new Uri(address);
                         break;
                     }
-                    else if (!wv6InUse && wv6Init)
+                    else if (wv2A6.AllowDrop && wv2A6.Tag.ToInt(-1) == 1)
                     {
-                        wv6InUse = true;
                         wv2A6.ExecuteScriptAsync("window.gc()");
-                        wv2A6.Source = new Uri(address);
+                        wv2A6.SetURL(address); //= new Uri(address);
                         break;
                     }
-                    else if (!wv7InUse && wv7Init)
+                    else if (wv2A7.AllowDrop && wv2A7.Tag.ToInt(-1) == 1)
                     {
-                        wv7InUse = true;
                         wv2A7.ExecuteScriptAsync("window.gc()");
-                        wv2A7.Source = new Uri(address);
+                        wv2A7.SetURL(address);
                         break;
                     }
-                    else if (!wv8InUse && wv8Init)
+                    else if (wv2A8.AllowDrop && wv2A8.Tag.ToInt(-1) == 1)
                     {
-                        wv8InUse = true;
                         wv2A8.ExecuteScriptAsync("window.gc()");
-                        wv2A8.Source = new Uri(address);
+                        wv2A8.SetURL(address);
                         break;
                     }
-                    else if (!wv9InUse && wv9Init)
+                    else if (wv2A9.AllowDrop && wv2A9.Tag.ToInt(-1) == 1)
                     {
-                        wv9InUse = true;
                         wv2A9.ExecuteScriptAsync("window.gc()");
-                        wv2A9.Source = new Uri(address);
+                        wv2A9.SetURL(address);
                         break;
                     }
-                    else if (!wv10InUse && wv10Init)
+                    else if (wv2A10.AllowDrop && wv2A10.Tag.ToInt(-1) == 1)
                     {
-                        wv10InUse = true;
                         wv2A10.ExecuteScriptAsync("window.gc()");
-                        wv2A10.Source = new Uri(address);
+                        wv2A10.SetURL(address);
                         break;
                     }
                     Thread.Sleep(50);
@@ -606,47 +582,47 @@ namespace VideoGui
                 };
                 wv2A1.CoreWebView2InitializationCompleted += (s, e) => 
                 {
-                    wv1Init = true;
+                    (s as WebView2).Tag = 1;
                 };
                 wv2A2.CoreWebView2InitializationCompleted += (s, e) =>
                 {
-                    wv2Init = true;
+                    (s as WebView2).Tag = 1;
                 };
                 wv2A3.CoreWebView2InitializationCompleted += (s, e) =>
                 {
-                    wv3Init = true;
+                    (s as WebView2).Tag = 1;
                 };
                 wv2A4.CoreWebView2InitializationCompleted += (s, e) =>
                 {
-                    wv4Init = true;
+                    (s as WebView2).Tag = 1;
                 };
                 wv2A5.CoreWebView2InitializationCompleted += (s, e) =>
                 {
-                    wv5Init = true;
+                    (s as WebView2).Tag = 1;
                 };
                 wv2A6.CoreWebView2InitializationCompleted += (s, e) =>
                 {
-                    wv6Init = true;
+                    (s as WebView2).Tag = 1;
                 };
                 wv2A7.CoreWebView2InitializationCompleted += (s, e) =>
                 {
-                    wv7Init = true;
+                    (s as WebView2).Tag = 1;
                 };
                 wv2A8.CoreWebView2InitializationCompleted += (s, e) =>
                 {
-                    wv8Init = true;
+                    (s as WebView2).Tag = 1;
                 };
                 wv2A9.CoreWebView2InitializationCompleted += (s, e) =>
                 {
-                    wv9Init = true;
+                    (s as WebView2).Tag = 1;
                 };
                 wv2A10.CoreWebView2InitializationCompleted += (s, e) =>
                 {
-                    wv10Init = true;
+                    (s as WebView2).Tag = 1;
                 };
                 wv2A6.CoreWebView2InitializationCompleted += (s, e) =>
                 {
-                    wv6Init = true;
+                    (s as WebView2).Tag = 1;
                 };
 
                 await wv2.EnsureCoreWebView2Async(env);
@@ -2726,12 +2702,16 @@ namespace VideoGui
                         IsVideoLookup = true;
                         if (ScraperType == EventTypes.ScapeSchedule)
                         {
-                            while (!wv1Init && !wv2Init && !wv3Init && !wv4Init && 
-                                !wv5Init && !wv6Init && !wv7Init && !wv8Init && !wv9Init && !wv10Init)
+                            while (wv2A1.Tag.ToInt(-1) != 1 && wv2A2.Tag.ToInt(-1) != 1 &&
+                                   wv2A3.Tag.ToInt(-1) != 1 && wv2A4.Tag.ToInt(-1) != 1 &&
+                                   wv2A5.Tag.ToInt(-1) != 1 && wv2A6.Tag.ToInt(-1) != 1 &&
+                                   wv2A7.Tag.ToInt(-1) != 1 && wv2A8.Tag.ToInt(-1) != 1 &&
+                                   wv2A9.Tag.ToInt(-1) != 1 && wv2A10.Tag.ToInt(-1) != 1)
                             {
                                 Thread.Sleep(100);
                             }
                   
+                           
                             DefaultUrl = TargetUrl;
                         }
                         //string URL = webAddressBuilder.AddFiltersByDRAFT_UNLISTED(false).Finalize().Address;
@@ -3255,16 +3235,7 @@ namespace VideoGui
                 {
                     var webView2Instance = wv2Dictionary[id];
                     webView2Instance.AllowDrop = true;
-                    if (id == 1) wv1InUse = false;
-                    if (id == 2) wv2InUse = false;
-                    if (id == 3) wv3InUse = false;
-                    if (id == 4) wv4InUse = false;
-                    if (id == 5) wv5InUse = false;
-                    if (id == 6) wv6InUse = false;
-                    if (id == 7) wv7InUse = false;
-                    if (id == 8) wv8InUse = false;
-                    if (id == 9) wv9InUse = false;
-                    if (id == 10) wv10InUse = false;
+                    
                 }
                 CanSpool = true;
                
