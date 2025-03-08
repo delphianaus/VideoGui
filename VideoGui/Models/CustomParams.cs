@@ -33,6 +33,16 @@ namespace VideoGui.Models
             Id = _id;
         }
     }
+
+    public class CustomParams_SelectById
+    {
+        public int Id { get; set; } = -1;
+        public string VideoId { get; set; } = "";
+        public SelectById(string _videoId)
+        {
+            VideoId = _videoId;
+        }
+    }
     public class CustomParams_UpdateTitleById
     {
         public int Id { get; set; } = -1;

@@ -1394,24 +1394,33 @@ namespace VideoGui
 
                                 // grab video filename. await till its got it
                                 string gUrl2 = $"https://studio.youtube.com/video/{Id}/edit";
-                                WaitingFileName = true;
-                                wv2A10.NavigationCompleted += wv2_NavigationCompleted_GetFileName;
-                                lookups.Add(gUrl2);
-                                wv2A10.Source = new Uri(gUrl2);
-                                var cts = new CancellationTokenSource();
-                                cts.CancelAfter(TimeSpan.FromSeconds(30000));
-                                TimedOut = false;
-                                string oldtitle = TitleStr;
-                                while (WaitingFileName && !cts.IsCancellationRequested && !canceltoken.IsCancellationRequested)
+                                var  vid = dbInitializer?.Invoke(this, new CustomParams_SelectById(Id));
+                                int vidoeid = (vid is int v) ? v : -1;
+                                WaitingFileName = vidoeid == -1;
+                                if (!WaitingFileName)
                                 {
-                                    Thread.Sleep(200);
-                                    System.Windows.Forms.Application.DoEvents();
-                                    var cys = new CancellationTokenSource();
-                                    cys.CancelAfter(TimeSpan.FromMilliseconds(200));
-                                    while (!cys.IsCancellationRequested && !canceltoken.IsCancellationRequested)
+                                    GetTitlesAndDesc(vidoeid);
+                                }
+                                else
+                                {
+                                    wv2A10.NavigationCompleted += wv2_NavigationCompleted_GetFileName;
+                                    lookups.Add(gUrl2);
+                                    wv2A10.Source = new Uri(gUrl2);
+                                    var cts = new CancellationTokenSource();
+                                    cts.CancelAfter(TimeSpan.FromSeconds(30000));
+                                    TimedOut = false;
+                                    string oldtitle = TitleStr;
+                                    while (WaitingFileName && !cts.IsCancellationRequested && !canceltoken.IsCancellationRequested)
                                     {
-                                        Thread.Sleep(20);
+                                        Thread.Sleep(200);
                                         System.Windows.Forms.Application.DoEvents();
+                                        var cys = new CancellationTokenSource();
+                                        cys.CancelAfter(TimeSpan.FromMilliseconds(200));
+                                        while (!cys.IsCancellationRequested && !canceltoken.IsCancellationRequested)
+                                        {
+                                            Thread.Sleep(20);
+                                            System.Windows.Forms.Application.DoEvents();
+                                        }
                                     }
                                 }
 
@@ -1861,6 +1870,8 @@ namespace VideoGui
             }
         }
 
+        int LastId = -1, Tid = -1, Did = -1;
+        string LTitleStr = "", LDescStr = "";
         private void ProcessHTML_Filename(string html, int id, string IntId, object sender)
         {
             try
@@ -1888,42 +1899,10 @@ namespace VideoGui
                                         string idp = filename.Split("_").ToArray<string>().ToList().LastOrDefault().Trim();
                                         if (idp is not null && idp != "")
                                         {
-                                            int TitleId = -1, DescId = -1, Id = -1;
-                                            string connectionStr = dbInitializer?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
                                             int idd = idp.Replace(".mp4", "").ToInt(-1);
-                                            string sql = $"SELECT * FROM SHORTSDIRECTORY WHERE ID = @UID";
+
                                             idd = (idd == 47) ? 62 : idd;
-                                            connectionStr.ExecuteReader(sql, [("UID", idd)], (FbDataReader r) =>
-                                            {
-                                                Id = (r["ID"] is Int32 i) ? i : -1;
-                                                TitleId = (r["TITLEID"] is int tid) ? tid : -1;
-                                                DescId = (r["DESCID"] is int did) ? did : -1;
-                                            });
-                                            if (id != -1)
-                                            {
-                                                if (DescId != -1)
-                                                {
-                                                    var p = new CustomParams_GetDesc(idd, DescId);
-                                                    dbInitializer?.Invoke(this, p);
-                                                    DescStr = p.name;
-                                                }
-                                                if (TitleId != -1)
-                                                {
-                                                    var p = new CustomParams_GetTitle(idd, TitleId);
-                                                    dbInitializer?.Invoke(this, p);
-                                                    TitleStr = p.name;
-                                                    var r = p.name.Split(" ").ToList<string>().Where(s=>!s.StartsWith("#") && 
-                                                    s != "" && s.ToLower() != "vline").ToList<string>();
-                                                    foreach (var item in r)
-                                                    {
-                                                        TitleStr = TitleStr.Replace(item, item.ToLower().ToPascalCase());
-                                                        if (DescStr.Contains(item))
-                                                        {
-                                                            DescStr = DescStr.Replace(item, item.ToLower().ToPascalCase());
-                                                        }
-                                                    }
-                                                }
-                                            }
+                                            GetTitlesAndDesc(id);
                                             WaitingFileName = false;
                                             return;
                                         }
@@ -1961,6 +1940,62 @@ namespace VideoGui
             catch (Exception ex)
             {
                 ex.LogWrite($"ProcessHTML_Filename {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
+            }
+        }
+
+        private void GetTitlesAndDesc(int id)
+        {
+            try
+            {
+                string connectionStr = dbInitializer?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
+                int TitleId = -1, DescId = -1, idr =-1;
+                if (LastId == -1 || LastId != id)
+                {
+                    string sql = $"SELECT * FROM SHORTSDIRECTORY WHERE ID = @UID";
+                    connectionStr.ExecuteReader(sql, [("UID", id)], (FbDataReader r) =>
+                    {
+                        idr = (r["ID"] is Int32 i) ? i : -1;
+                        TitleId = (r["TITLEID"] is int tid) ? tid : -1;
+                        DescId = (r["DESCID"] is int did) ? did : -1;
+                    });
+                    LastId = idr;
+                    if (idr != -1)
+                    {
+                        if (DescId != -1)
+                        {
+                            var p = new CustomParams_GetDesc(id, DescId);
+                            dbInitializer?.Invoke(this, p);
+                            DescStr = p.name;
+                        }
+                        if (TitleId != -1)
+                        {
+                            var p = new CustomParams_GetTitle(id, TitleId);
+                            dbInitializer?.Invoke(this, p);
+                            TitleStr = p.name;
+                            var r = p.name.Split(" ").ToList<string>().Where(s => !s.StartsWith("#") &&
+                            s != "" && s.ToLower() != "vline").ToList<string>();
+                            foreach (var item in r)
+                            {
+                                TitleStr = TitleStr.Replace(item, item.ToLower().ToPascalCase());
+                                if (DescStr.Contains(item))
+                                {
+                                    DescStr = DescStr.Replace(item, item.ToLower().ToPascalCase());
+                                }
+                            }
+                            LTitleStr = TitleStr;
+                            LDescStr = DescStr;
+                        }
+                    }
+                }
+                else
+                {
+                    TitleStr = LTitleStr;
+                    DescStr = LDescStr;
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"GetTitlesData {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
         }
 

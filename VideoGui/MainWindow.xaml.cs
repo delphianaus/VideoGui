@@ -159,6 +159,7 @@ namespace VideoGui
         CancellationTokenSource ProcessingCancellationTokenSource = new CancellationTokenSource();
         CollectionViewSource titletagsViewSource = new CollectionViewSource();
         CollectionViewSource availabletagsViewSource = new CollectionViewSource();
+        ObservableCollection<DraftShorts> DraftShortsList = new ObservableCollection<DraftShorts>();
         int TitleTagsSrc = -1;
         double frames, LRF, RRF, LLC, RLC;
         DateTime totaltimeprocessed = DateTime.Now;
@@ -1881,7 +1882,7 @@ namespace VideoGui
             }
         }
         int ShortsDirectoryIndex = -1;
-        private object  formObjectHandler_TitleSelect(object FormObject, object tld, TitleSelectFrm frmTitleSelect)
+        private object formObjectHandler_TitleSelect(object FormObject, object tld, TitleSelectFrm frmTitleSelect)
         {
             try
             {
@@ -2556,7 +2557,7 @@ namespace VideoGui
                 if (!EditableshortsDirectoryList.Any(s => s.Id == SPS.Id))
                 {
                     string sql = "SELECT * FROM SHORTSDIRECTORY WHERE ID = @ID";
-                    connectionString.ExecuteReader(sql,[("@ID", SPS.Id)], (FbDataReader r) =>
+                    connectionString.ExecuteReader(sql, [("@ID", SPS.Id)], (FbDataReader r) =>
                     {
                         EditableshortsDirectoryList.Add(new ShortsDirectory(r));
                     });
@@ -2567,7 +2568,7 @@ namespace VideoGui
             }
             else if (tld is CustomParams_UpdateTitleById SPU)
             {
-                foreach(var p in EditableshortsDirectoryList.Where(s => s.Id == SPU.Id))
+                foreach (var p in EditableshortsDirectoryList.Where(s => s.Id == SPU.Id))
                 {
                     p.TitleId = SPU.Title;
                     break;
@@ -2580,7 +2581,7 @@ namespace VideoGui
                         TitlesList.Add(new Titles(r));
                     });
                 }
-                
+
             }
             else if (tld is CustomParams_Get)
             {
@@ -2594,7 +2595,7 @@ namespace VideoGui
                 }
                 return null;
             }
-           
+
             return null;
         }
 
@@ -2639,6 +2640,16 @@ namespace VideoGui
                         {
                             scs.ScraperType = EventTypes.ShortsSchedule;
                         }
+                        
+                    }
+                    if (tld is CustomParams_SelectById csi)
+                    {
+                        foreach (var item in DraftShortsList.Where(s => s.VideoId == csi.VideoId))
+                        {
+                            return item.Id;
+                            break;
+                        }
+                        return null;
                     }
                     if (tld is CustomParams_GetDesc cgd)
                     {
@@ -2647,6 +2658,8 @@ namespace VideoGui
                             cgd.name = item.Description;
                             break;
                         }
+
+                        return null;
                     }
                     else if (tld is CustomParams_GetTitle cgt)
                     {
@@ -2671,6 +2684,7 @@ namespace VideoGui
                             }
                             BaseStr = BaseStr.Trim();
                             cgt.name = BaseTitle + " " + BaseStr;
+                            return null;
                             break;
                         }
                     }
@@ -2697,31 +2711,45 @@ namespace VideoGui
                         id = connectionString.ExecuteScalar(sql, [("@FILENAME", cit.filename)]).ToInt(-1);
                         if (id == -1)
                         {
-                            sql = "INSERT INTO DRAFTSHORTS (VIDEOID,FILENAME) VALUES (@VIDEOID,@FILENAME)";
-                            connectionString.ExecuteScalar(sql, [("@VIDEOID", cit.id), ("@FILENAME", cit.filename)]);
+                            sql = "INSERT INTO DRAFTSHORTS (VIDEOID,FILENAME) VALUES (@VIDEOID,@FILENAME) RETURNING ID";
+                            int idxx = connectionString.ExecuteScalar(sql, [("@VIDEOID", cit.id), ("@FILENAME", cit.filename)]).ToInt(-1);
+                            if (idxx != -1)
+                            {
+                                sql = "SELECT * FROM DRAFTSHORTS WHERE ID = @ID";
+                                connectionString.ExecuteReader(sql, [("@ID", idxx)], (FbDataReader r) =>
+                                {
+                                    DraftShortsList.Add(new DraftShorts(r));
+                                });
+
+                            }
+                            else
+                            {
+                                sql = "UPDATE DRAFTSHORTS SET VIDEOID = @VIDEOID WHERE ID = @ID AND FILENAME = @FILENAME";
+                                connectionString.ExecuteScalar(sql, [("@ID", id), ("@VIDEOID", cit.id), ("@FILENAME", cit.filename)]);
+                                foreach (var draft in DraftShortsList.Where(s => s.Id == id))
+                                {
+                                    draft.VideoId = cit.id;
+                                    break;
+                                }
+                            }
                         }
-                        else
-                        {
-                            sql = "UPDATE DRAFTSHORTS SET VIDEOID = @VIDEOID WHERE ID = @ID AND FILENAME = @FILENAME";
-                            connectionString.ExecuteScalar(sql, [("@ID", id), ("@VIDEOID", cit.id), ("@FILENAME", cit.filename)]);
-                        }
+                        return null;
                     }
+
+
+                    if (tld is CustomParams_Wait)
+                    {
+                        UploadWaitTime = DateTime.Now.TimeOfDay.Add(TimeSpan.FromMinutes(5));
+                        return null;
+                    }
+
+                    if (tld is CustomParams_GetConnectionString CGCS)
+                    {
+                        CGCS.ConnectionString = GetConectionString();
+                        return CGCS.ConnectionString;
+                    }
+                    return null;
                 }
-
-
-                if (tld is CustomParams_Wait)
-                {
-                    UploadWaitTime = DateTime.Now.TimeOfDay.Add(TimeSpan.FromMinutes(5));
-
-                }
-
-                if (tld is CustomParams_GetConnectionString CGCS)
-                {
-                    CGCS.ConnectionString = GetConectionString();
-                    return CGCS.ConnectionString;
-                }
-                return null;
-            }
             catch (Exception ex)
             {
                 ex.LogWrite($"scraperModule_Handler {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
@@ -3752,6 +3780,14 @@ namespace VideoGui
                 {
                     EventDefinitionsList.Add(new EventDefinition(r));
                 });
+
+
+                connectionString.ExecuteReader("SELECT * FROM DRAFTSHORTS", (FbDataReader r) =>
+                {
+                    DraftShortsList.Add(new DraftShorts(r));
+                });
+
+
                 //EVENTSDEFINITIONS
                 connectionString.ExecuteNonQuery("DELETE FROM UPLOADSRECORD WHERE UPLOAD_DATE <> CAST(GETDATE() AS DATE);");
                 connectionString.ExecuteReader("SELECT * FROM AVAILABLETAGS", (FbDataReader r) =>
