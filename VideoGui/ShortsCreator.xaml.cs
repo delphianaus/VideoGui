@@ -190,7 +190,7 @@ namespace VideoGui
                                 }
                                 if (bIsEncoding && (bMetaData || (vcopy || acopy)))
                                 {
-                                    
+
                                     double perc = -1;
                                     if (data.Contains("time="))
                                     {
@@ -262,7 +262,7 @@ namespace VideoGui
                                         //  {
                                         pg1.Value = percentdone;
                                         lblPercent.Content = percentdone.ToString((percentdone < 1) ? "0.0" : "0") + "%";
-                                        
+
                                         //  });
                                     }
                                 }
@@ -286,7 +286,7 @@ namespace VideoGui
                 return "";
             }
         }
-       
+
         public void OnShortsCreated()
         {
             try
@@ -306,7 +306,7 @@ namespace VideoGui
                 if (!ShortsDirectory.EndsWith(@"\"))
                 {
                     ShortsDirectory = ShortsDirectory + @"\";
-                }    
+                }
                 string ndo = subp.Split(@"\").ToList().LastOrDefault();
                 string newout = Path.Combine(ShortsDirectory, ndo);
 
@@ -339,9 +339,9 @@ namespace VideoGui
                     }
                     list.RemoveAt(iir);
                 }
-               
-                string LastFile = Directory.EnumerateFiles(subp, "*.mp4", SearchOption.TopDirectoryOnly).ToList().FirstOrDefault(); 
-                
+
+                string LastFile = Directory.EnumerateFiles(subp, "*.mp4", SearchOption.TopDirectoryOnly).ToList().FirstOrDefault();
+
                 if (File.Exists(LastFile))
                 {
                     List<string> dirs = Directory.EnumerateDirectories(newout).ToList();
@@ -365,12 +365,23 @@ namespace VideoGui
                     string ext = Path.GetExtension(LastFile);
                     string destDir = Path.Combine(newout, DirectoryToUse, $"{gp.ToInt().ToString("X")}{ext}");
                     File.Move(LastFile, destDir);
+
                 }
                 if (Directory.EnumerateFiles(subp, "*.mp4", SearchOption.AllDirectories).ToList().Count() == 0)
                 {
-                    Directory.Delete(subp, true);   
+                    Directory.Delete(subp, true);
                 }
-                
+
+                Dispatcher.Invoke(() => { lblShortNo.Content = "Finished"; });
+                File.Delete(shortsfile);
+                string py = shortsfile.Replace(".mp4", ".py");
+                if (File.Exists(py))
+                {
+                    File.Delete(py);
+                }
+
+
+
             }
             catch (Exception ex)
             {
@@ -490,7 +501,7 @@ namespace VideoGui
                     72, 132, 120, 178, 53, 178, 160, 86, 97, 20, 124, 106, 152, 190, 250, 74, 153, 138, 176,
                     22, 236, 2, 43, 78, 150, 131, 242, 162 }.Select(i => (byte)i).ToArray());
                 string FileToWrite = r;
-                
+
                 Task.Run(() => { RunProces(FileToWrite, py); });
             }
             catch (Exception ex)
@@ -538,7 +549,7 @@ namespace VideoGui
                 var sx = $"{qs}{source.Replace("\\", "/")}{qs}";
                 fnmp3 = $"{qs}{fnmp3.Replace("\\", "/")}{qs}";
                 var py = System.IO.Path.Combine(dir, fnamex) + ".py";
-                bool ShortType = chkFormat.IsChecked.Value; 
+                bool ShortType = chkFormat.IsChecked.Value;
                 TimeSpan SegmentSize = (ShortType) ? TimeSpan.FromMinutes(2.4) :
                                                       TimeSpan.FromSeconds(57);
                 TimeSpan SegSize1 = (ShortType) ? TimeSpan.FromMinutes(2.05) :
@@ -825,8 +836,8 @@ namespace VideoGui
                     else Directory.CreateDirectory(newpath);
                     DoOnStart = DoOnStartEvent;
                     mondir = newpath;
-                   
-                        
+                    lblShortNo.Content = "";
+
                     CreateShorts(shortsfile, OnShortsCreated).ConfigureAwait(false);
                 }
             }
@@ -847,10 +858,7 @@ namespace VideoGui
             frmShortsCreator.Height += 20;
         }
 
-        private void btnCreatShorts_Click(object sender, RoutedEventArgs e)
-        {
 
-        }
 
         private void btnClose_Click(object sender, RoutedEventArgs e)
         {
