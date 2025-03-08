@@ -38,7 +38,7 @@ namespace VideoGui.Models
     {
         public int Id { get; set; } = -1;
         public string VideoId { get; set; } = "";
-        public SelectById(string _videoId)
+        public CustomParams_SelectById(string _videoId)
         {
             VideoId = _videoId;
         }

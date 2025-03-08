@@ -1431,7 +1431,7 @@ namespace VideoGui
                                 }
 
                                 bool Ok = false;
-                                if (directshortsScheduler is not null && !cts.IsCancellationRequested)
+                                if (directshortsScheduler is not null)
                                 {
                                     Ok = directshortsScheduler.ScheduleVideo(Id, TitleStr, DescStr, false);
                                     DoNextNode = Ok;
@@ -1442,7 +1442,7 @@ namespace VideoGui
                                         break;
                                     }
                                 }
-                                else if (directshortsScheduler is not null && cts.IsCancellationRequested)
+                                else if (directshortsScheduler is not null)
                                 {
                                     TimedOut = true;
                                     lstMain.Items.Insert(0, $"Timeout on Scheduling Detected.");

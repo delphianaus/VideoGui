@@ -2640,7 +2640,7 @@ namespace VideoGui
                         {
                             scs.ScraperType = EventTypes.ShortsSchedule;
                         }
-                        
+                        return null;
                     }
                     if (tld is CustomParams_SelectById csi)
                     {
@@ -2703,6 +2703,7 @@ namespace VideoGui
                             sql = $"UPDATE {avi.TableName} SET VIDEOID = @VIDEOID WHERE ID = @ID AND FILENAME = @FILENAME";
                             connectionString.ExecuteScalar(sql, [("@ID", id), ("@VIDEOID", avi.id), ("@FILENAME", avi.filename)]);
                         }
+                        return null;
                     }
                     else if (tld is CustomParams_InsertIntoTable cit)
                     {
@@ -2748,8 +2749,10 @@ namespace VideoGui
                         CGCS.ConnectionString = GetConectionString();
                         return CGCS.ConnectionString;
                     }
-                    return null;
+                    
                 }
+                return null;
+            }
             catch (Exception ex)
             {
                 ex.LogWrite($"scraperModule_Handler {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");

@@ -16,7 +16,7 @@ namespace VideoGui.Models
         private string _VideoId { get; set; } = "";
         private string _FileName { get; set; } = "";
         public string VideoId { get { return _VideoId; } set { _VideoId = value; OnPropertyChanged(); } }
-        public string FileName { get { return _FIleName; } set { _FIleName = value; OnPropertyChanged(); } }
+        public string FileName { get { return _FileName; } set { _FileName = value; OnPropertyChanged(); } }
         public int Id { get { return _id; } set { _id = value; OnPropertyChanged(); } }
 
         public DraftShorts(string vid, string fname)
