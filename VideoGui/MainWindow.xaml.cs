@@ -137,6 +137,8 @@ namespace VideoGui
         public ManualScheduler manualScheduler = null;
         public ProcessSchedule ScheduleProccessor = null;
         public ShowMatcher Swm;
+        bool AutoClose = false;
+        AutoCancel DoAutoCancel = null;
         List<ListScheduleItems> ScheduleListItems = new List<ListScheduleItems>();
         List<ListScheduleItems> ScheduleListedItems = new List<ListScheduleItems>();
         System.Threading.Timer EventTimer = null;
@@ -337,8 +339,12 @@ namespace VideoGui
                 key?.Close();
                 int MaxShorts = MaxUploads.ToInt(80);
                 int MaxPerSlot = uploadsnumber.ToInt(100);
-                scraperModule = new ScraperModule(ModuleCallback, FinishScraper,
-                    gUrl, startdate, enddate, SchMaxUploads, _listSchedules, _eventid, true);
+
+                string TargetUrl = webAddressBuilder.AddFilterByDraftShorts().GetHTML();
+
+                scraperModule = new ScraperModule(ModuleCallback, FinishScraper, gUrl, TargetUrl, 0);
+
+
                 Hide();
                 scraperModule.ShowActivated = true;
                 scraperModule.Show();
@@ -2635,13 +2641,12 @@ namespace VideoGui
                         {
                             scs.ShortsDirectories.AddRange(shortsDirectoryList);
                         }
-
-                        if (tld is CustomParams_SetTimeSpans STT)
-                        {
-                            scs.ScraperType = EventTypes.ShortsSchedule;
-                        }
-                        return null;
                     }
+                    if (tld is CustomParams_SetTimeSpans STT)
+                    {
+                        scs.ScraperType = EventTypes.ShortsSchedule;
+                    }
+
                     if (tld is CustomParams_SelectById csi)
                     {
                         foreach (var item in DraftShortsList.Where(s => s.VideoId == csi.VideoId))
@@ -2749,7 +2754,7 @@ namespace VideoGui
                         CGCS.ConnectionString = GetConectionString();
                         return CGCS.ConnectionString;
                     }
-                    
+
                 }
                 return null;
             }
@@ -2862,57 +2867,7 @@ namespace VideoGui
             }
         }
 
-        public void EventProcessor()
-        {
-            try
-            {
-                foreach (var eventdef in EventDefinitionsList.Where(eventdef => eventdef.DaysOfWeek == (int)DateTime.Now.DayOfWeek).
-                       Where(eventdef => eventdef.EventStart > DateTime.Now.TimeOfDay && eventdef.EventEnd < DateTime.Now.TimeOfDay))
-                {
-                    switch (eventdef.Type)
-                    {
-                        case (int)EventTypes.ShortsSchedule:
-                            {
-                                int uploaded = 0;
-                                string sql = "select count(Id) from UPLOADSRECORD WHERE UPLOAD_DATE = @P0 AND UPLOADTYPE = 1";
-                                uploaded = connectionString.ExecuteScalar(sql, [("@P0", DateTime.Now.Date)]).ToInt(0);
-                                MaxUploads = eventdef.Max;
-                                if (uploaded < MaxUploads)
-                                {
-                                    DoShortsSchedule(eventdef);
-                                }
-                                break;
-                            }
-                        case (int)EventTypes.VideoUpload:
-                            {
-                                int uploaded = 0;
-                                string sql = "select count(Id) from UPLOADSRECORD WHERE UPLOAD_DATE = @P0 AND UPLOADTYPE = 0";
-                                uploaded = connectionString.ExecuteScalar(sql, [("@P0", DateTime.Now.Date)]).ToInt(0);
-                                if (uploaded < MaxUploads && !IsUploading &&
-                                  (UploadWaitTime == TimeSpan.Zero || UploadWaitTime >= DateTime.Now.TimeOfDay))
-                                {
-                                    DoVideoUpload(eventdef);
-                                }
-                                break;
-                            }
-                        case (int)EventTypes.FullSchedule:
-                            {
-                                DoFullSchedule(eventdef);
-                                break;
-                            }
-                        case (int)EventTypes.ScapeSchedule:
-                            {
-                                DoScrapeSchedule(eventdef);
-                                break;
-                            }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite($"{MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
-            }
-        }
+
 
         private void DoScrapeSchedule(EventDefinition eventdef)
         {
@@ -2968,29 +2923,35 @@ namespace VideoGui
                 webAddressBuilder.AddFilterByVisibilityStatus(statusTypes);
                 webAddressBuilder.IsShorts = (IsShorts && !IsFullVideos) ? true : false;
                 string url = webAddressBuilder.Finalize().Address;
-                if (TableDestination != "")
-                {
-                    scraperModule = new ScraperModule(ModuleCallback, ScraperSchedule_OnFinish,
-                        url, TableDestination, eventdef.Id);
-                    Hide();
-                    scraperModule.ShowActivated = true;
-                    scraperModule.Show();
-                }
+
+                scraperModule = new ScraperModule(ModuleCallback, ScraperSchedule_OnFinish,
+                    url, eventdef.Id);
+                Hide();
+                scraperModule.ShowActivated = true;
+                scraperModule.Show();
+
             }
             catch (Exception ex)
             {
                 ex.LogWrite($"DoScrapeSchedule {MethodBase.GetCurrentMethod().Name} {this} {eventdef} {ex.Message}");
             }
         }
-
-        private void ScraperSchedule_OnFinish(int id)
+        int AutoCloseUd = -1;
+        private void DoAutoCancelClose()
         {
             try
             {
-                Show();
-                if (id != -1)
+                if ((DoAutoCancel is not null && DoAutoCancel.IsCloseAction))
                 {
-                    connectionString.ExecuteNonQuery($"DELETE FROM EVENTS WHERE ID = {id};");
+                    Close();
+                    return;
+                }
+                DoAutoCancel = null;
+
+                Show();
+                if (AutoCloseUd != -1)
+                {
+                    connectionString.ExecuteNonQuery($"DELETE FROM EVENTS WHERE ID = {AutoCloseUd};");
                 }
                 if (scraperModule is not null && !scraperModule.IsClosed)
                 {
@@ -3003,8 +2964,53 @@ namespace VideoGui
                     scraperModule.Close();
                     scraperModule = null;
                 }
-                // event updater
-
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"DoAutoCancelClose {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+        }
+        private void ScraperSchedule_OnFinish(int id)
+        {
+            try
+            {
+                if (AutoClose)
+                {
+                    AutoCloseUd = id;
+                    if (DoAutoCancel is not null)
+                    {
+                        if (DoAutoCancel.IsClosing) DoAutoCancel.Close();
+                        while (!DoAutoCancel.IsClosed)
+                        {
+                            Thread.Sleep(100);
+                            System.Windows.Forms.Application.DoEvents();
+                        }
+                        DoAutoCancel.Close();
+                        DoAutoCancel = null;
+                    }
+                    DoAutoCancel = new AutoCancel(DoAutoCancelClose, "", 5, "Scheduling Finished");
+                    DoAutoCancel.ShowActivated = true;
+                    DoAutoCancel.Show();
+                }
+                else
+                {
+                    Show();
+                    if (id != -1)
+                    {
+                        connectionString.ExecuteNonQuery($"DELETE FROM EVENTS WHERE ID = {id};");
+                    }
+                    if (scraperModule is not null && !scraperModule.IsClosed)
+                    {
+                        if (scraperModule.IsClosing) scraperModule.Close();
+                        while (!scraperModule.IsClosed)
+                        {
+                            Thread.Sleep(100);
+                            System.Windows.Forms.Application.DoEvents();
+                        }
+                        scraperModule.Close();
+                        scraperModule = null;
+                    }
+                }
             }
             catch (Exception ex)
             {
@@ -6329,25 +6335,7 @@ namespace VideoGui
                     return;
                 }
 
-                if (LastTick == TimeSpan.Zero)
-                {
-                    LastTick = DateTime.Now.TimeOfDay;
-                    EventProcessor();
-                }
-                else
-                {
-                    RegistryKey key2 = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
-                    var Ticks = key2.GetValueStr("Ticks", "30").ToInt(30);
-                    key2?.Close();
-                    if (DateTime.Now.TimeOfDay - LastTick > TimeSpan.FromSeconds(Ticks))
-                    {
-                        LastTick = DateTime.Now.TimeOfDay;
-                        if (EventDefinitionsList.Count(x => x.DaysOfWeek == (int)DateTime.Now.DayOfWeek) > 0)
-                        {
-                            EventProcessor();
-                        }
-                    }
-                }
+
                 Task.Run(async () => ThinProcessingListAsync());
                 while (Monitor.IsEntered(ProcessingJobslocker))
                 {

@@ -28,6 +28,7 @@ namespace VideoGui
                 channel_ID = Channel_ID;
                 DoOnAddressUpdate = doOnAddressUpdate;
                 DoOnExtWebAddressUpdate = doOnExtAddressUpdate;
+                
             }
             catch (Exception ex)
             {
