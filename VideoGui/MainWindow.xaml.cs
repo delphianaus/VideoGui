@@ -2649,8 +2649,23 @@ namespace VideoGui
 
                     if (tld is CustomParams_SelectById csi)
                     {
+                        string filename = "", vid = "";
                         foreach (var item in DraftShortsList.Where(s => s.VideoId == csi.VideoId))
                         {
+                            filename = item.FileName;
+                            vid = item.VideoId;
+                            
+                            for (int i = 0; i < scs.lstMain.Items.Count; i++)
+                            {
+                                object id = scs.lstMain.Items[i];
+                                if (id is string s && s.StartsWith(vid))
+                                {
+                                    string o = scs.lstMain.Items[i] as string;
+                                    o = o + $" {filename}";
+                                    scs.lstMain.Items[i] = o;
+                                    break;
+                                }
+                            }
                             return item.Id;
                             break;
                         }
@@ -2713,8 +2728,18 @@ namespace VideoGui
                     else if (tld is CustomParams_InsertIntoTable cit)
                     {
                         int id = -1;
+                        bool found = false;
+                        foreach (var item in DraftShortsList.Where(s => s.FileName == cit.filename))
+                        {
+                            id = item.Id;
+                            found = true;
+                            break;
+                        }
                         string sql = "SELECT ID FROM DRAFTSHORTS WHERE FILENAME = @FILENAME";
-                        id = connectionString.ExecuteScalar(sql, [("@FILENAME", cit.filename)]).ToInt(-1);
+                        if (!found)
+                        {
+                            id = connectionString.ExecuteScalar(sql, [("@FILENAME", cit.filename)]).ToInt(-1);
+                        }
                         if (id == -1)
                         {
                             sql = "INSERT INTO DRAFTSHORTS (VIDEOID,FILENAME) VALUES (@VIDEOID,@FILENAME) RETURNING ID";

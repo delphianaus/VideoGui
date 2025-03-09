@@ -193,7 +193,7 @@ namespace VideoGui
                 ex.LogWrite($"Constructor Scraper.VideoLookup {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-       
+
 
         private void WebViewFileName_CoreWebView2InitializationCompleted(object? sender, CoreWebView2InitializationCompletedEventArgs e)
         {
@@ -272,71 +272,14 @@ namespace VideoGui
                     Thread.Sleep(15);
                 }
 
-                while (true)
+                foreach (var item in wv2Dictionary.Values)
                 {
-                    if (wv2A1.AllowDrop && wv2A1.Tag.ToInt(-1) == 1)
+                    if (item.AllowDrop && item.Tag.ToInt(-1) == 1)
                     {
-                        wv2A1.ExecuteScriptAsync("window.gc()");
-                        wv2A1.SetURL(address); //wv2A1.Source = new Uri(address);
+                        item.ExecuteScriptAsync("window.gc()");
+                        item.SetURL(address); //wv2A1.Source = new Uri(address);
                         break;
                     }
-                    else if (wv2A2.AllowDrop && wv2A2.Tag.ToInt(-1) == 1)
-                    {
-                        wv2A2.ExecuteScriptAsync("window.gc()");
-                        wv2A2.SetURL(address);
-                        break;
-                    }
-                    else if (wv2A3.AllowDrop && wv2A3.Tag.ToInt(-1) == 1)
-                    {
-                        wv2A3.ExecuteScriptAsync("window.gc()");
-                        wv2A3.SetURL(address); 
-                        break;
-                    }
-                    else if (wv2A4.AllowDrop && wv2A4.Tag.ToInt(-1) == 1)
-                    {
-                        wv2A4.ExecuteScriptAsync("window.gc()");
-                        wv2A4.SetURL(address); //= new Uri(address);
-                        break;
-                    }
-                    else if (wv2A5.AllowDrop && wv2A5.Tag.ToInt(-1) == 1)
-                    {
-                        wv2A5.ExecuteScriptAsync("window.gc()");
-                        wv2A5.SetURL(address); //= new Uri(address);
-                        break;
-                    }
-                    else if (wv2A6.AllowDrop && wv2A6.Tag.ToInt(-1) == 1)
-                    {
-                        wv2A6.ExecuteScriptAsync("window.gc()");
-                        wv2A6.SetURL(address); //= new Uri(address);
-                        break;
-                    }
-                    else if (wv2A7.AllowDrop && wv2A7.Tag.ToInt(-1) == 1)
-                    {
-                        wv2A7.ExecuteScriptAsync("window.gc()");
-                        wv2A7.SetURL(address);
-                        break;
-                    }
-                    else if (wv2A8.AllowDrop && wv2A8.Tag.ToInt(-1) == 1)
-                    {
-                        wv2A8.ExecuteScriptAsync("window.gc()");
-                        wv2A8.SetURL(address);
-                        break;
-                    }
-                    else if (wv2A9.AllowDrop && wv2A9.Tag.ToInt(-1) == 1)
-                    {
-                        wv2A9.ExecuteScriptAsync("window.gc()");
-                        wv2A9.SetURL(address);
-                        break;
-                    }
-                    else if (wv2A10.AllowDrop && wv2A10.Tag.ToInt(-1) == 1)
-                    {
-                        wv2A10.ExecuteScriptAsync("window.gc()");
-                        wv2A10.SetURL(address);
-                        break;
-                    }
-                    Thread.Sleep(50);
-                    System.Windows.Forms.Application.DoEvents();
-
                 }
             }
             catch (Exception ex)
@@ -574,13 +517,13 @@ namespace VideoGui
             try
             {
                 var env = await CoreWebView2Environment.CreateAsync(null, @"c:\stuff\scraper");
-               
+
                 bool done = false;
                 wv2.CoreWebView2InitializationCompleted += (s, e) =>
                 {
                     done = true;
                 };
-                wv2A1.CoreWebView2InitializationCompleted += (s, e) => 
+                wv2A1.CoreWebView2InitializationCompleted += (s, e) =>
                 {
                     (s as WebView2).Tag = 1;
                 };
@@ -1480,7 +1423,7 @@ namespace VideoGui
                     }
                     Dispatcher.Invoke(() =>
                     {
-                        lblLastNode.Content = LastNode;
+                        lblInsertId5.Content = LastNode;
                     });
                     string divclassname = "right-section style-scope ytcp-video-list-cell-video";
                     string idclass = "style-scope ytcp-img-with-fallback";
@@ -1617,7 +1560,18 @@ namespace VideoGui
                                             lstMain.Items.Insert(0, $"{Id} ");
                                         }
                                     });
-                                    webAddressBuilder.ScopeVideo(Id, true);
+                                    var vid = dbInitializer?.Invoke(this, new CustomParams_SelectById(Id));
+
+                                    if (vid is int v)
+                                    {
+                                        files++;
+                                        if (files > 0)
+                                        {
+                                            lblLastNode.Content = $"{files} Processed";
+                                        }
+                                        SetMargin(StatusBar);
+                                    }
+                                    else webAddressBuilder.ScopeVideo(Id, true);
 
                                 }
                             }
@@ -1906,66 +1860,6 @@ namespace VideoGui
 
             //await wv2.CoreWebView2.ExecuteScriptAsync("document.activeElement.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', keyCode: 9 }));");
         }
-        private void ProcessVideoInfo(object sender, string ehtml)
-        {
-            try
-            {
-                HtmlDocument doc = new HtmlDocument();
-                doc.LoadHtml(ehtml);
-                string Span_Name = "page-description style-scope ytcp-table-footer";
-                HtmlNode targetSpan = doc.DocumentNode.SelectSingleNode($"//span[@class='{Span_Name}']");
-                if (LastNode != "")
-                {
-                    if (targetSpan is not null && targetSpan.InnerText == LastNode)
-                    {
-                        var ctsx = new CancellationTokenSource();
-                        ctsx.CancelAfter(TimeSpan.FromMilliseconds(1500));
-                        while (!ctsx.IsCancellationRequested)
-                        {
-                            Thread.Sleep(100);
-                        }
-                        LastNode = (targetSpan is not null) ? targetSpan.InnerText : LastNode;
-                    }
-                    LastNode = (targetSpan is not null) ? targetSpan.InnerText : LastNode;
-                }
-                if (targetSpan is not null && targetSpan.InnerText is not null && targetSpan.InnerText != "")
-                {
-                    string MaxNode = targetSpan.InnerHtml;
-                    if (MaxNode is not null && MaxNode != "")
-                    {
-                        int MaxRecords = MaxNode.Split(" ").ToList().LastOrDefault().ToInt();
-                        string FirstPart = MaxNode.Replace(MaxRecords.ToString(), "").Replace("of", "").Trim();
-                        var p = FirstPart.Split('–').ToList();
-                        int CurrentRange = p.LastOrDefault().ToInt();
-                        NextRecord = (CurrentRange < MaxRecords) ? true : NextRecord;
-                        gmaxrecs = (gmaxrecs == 0) ? MaxRecords : gmaxrecs;
-                    }
-                    string SpanName = "page-description style-scope ytcp-table-footer";
-                    targetSpan = doc.DocumentNode.SelectSingleNode($"//span[@class='{SpanName}']");
-                    LastNode = (targetSpan is not null) ? targetSpan.InnerText : LastNode;
-                    Dispatcher.Invoke(() =>
-                    {
-                        lblLastNode.Content = LastNode;
-                        SetMargin(StatusBar);
-                    });
-                    ProcessChannelContent(doc, targetSpan);
-                }
-                else
-                {
-                    var cts = new CancellationTokenSource();
-                    cts.CancelAfter(TimeSpan.FromSeconds(2));
-                    while (!cts.IsCancellationRequested)
-                    {
-                        Thread.Sleep(100);
-                    }
-                    ProcessWebView(sender);
-                }
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite($"");
-            }
-        }
 
         private async void ProcessWebViewComplete(object sender)
         {
@@ -2244,125 +2138,7 @@ namespace VideoGui
                 ex.LogWrite($"SetMargin {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-        public void ProcessChannelContent(HtmlDocument doc, HtmlAgilityPack.HtmlNode targetSpan)
-        {
-            try
-            {
-                string divclassname = "right-section style-scope ytcp-video-list-cell-video";
-                string idclass = "style-scope ytcp-img-with-fallback";
-                string idNode = "style-scope ytcp-img-with-fallback";
-                List<HtmlNode> idNodes = doc.DocumentNode.SelectNodes($"//img[@class='{idNode}']").ToList();
-                List<HtmlNode> targetSpanList = doc.DocumentNode.SelectNodes($"//div[@class='{divclassname}']").ToList();
-                string StatusNodeStr = "label-span style-scope ytcp-video-row";
-                List<HtmlNode> StatusNode = doc.DocumentNode.SelectNodes($"//span[@class='{StatusNodeStr}']").ToList();
-                string DateNodeStr = " cell-body tablecell-date sortable column-sorted  style-scope ytcp-video-row";
-                //  List<HtmlNode> DateNode = doc.DocumentNode.SelectNodes($"//div[@class='{DateNodeStr}']").ToList();
-                string aclassname = " remove-default-style  style-scope ytcp-video-list-cell-video";
-                for (int i = 0; i < targetSpanList.Count; i++)
-                {
-                    if (canceltoken.IsCancellationRequested) break;
-                    var item = targetSpanList[i];
-                    string fid = "";
-                    foreach (var attr in item.ChildNodes.Where(child => child.Name == "h3").
-                        SelectMany(child => child.ChildNodes.Where(child2 => child2.Name == "a").
-                          SelectMany(child2 => child2.Attributes.Where(attr => attr.Name == "href"))))
-                    {
-                        fid = attr.Value;
-                        break;
-                    }
-                    var node = idNodes[i].OuterHtml;
-                    HtmlDocument docxx = new HtmlDocument();
-                    docxx.LoadHtml(node);
-                    string idNode2 = "style-scope ytcp-img-with-fallback";
-                    string Id = fid.Replace("/video/", "").Replace("/edit", "");
-                    if (Id == "")
-                    {
-                        var fullid = docxx.DocumentNode.SelectSingleNode($"//img[@class='{idNode2}']").GetAttributeValue("src", "");
-                        int idx1 = fullid.IndexOf(@"/mqdefault."), idx2 = fullid.IndexOf(@"com/vi");
-                        if (idx1 != -1 && idx2 != -1)
-                        {
-                            Id = fullid.Substring(idx2 + 7, idx1 - 7 - idx2);
-                        }
-                    }
-                    string divlass = " remove-default-style  style-scope ytcp-video-list-cell-video";
-                    string html2 = item.OuterHtml; ;
-                    HtmlDocument doc2 = new HtmlDocument();
-                    doc2.LoadHtml(html2);
-                    foreach (var vitem in item.ChildNodes)
-                    {
-                        if (canceltoken.IsCancellationRequested) break;
-                        TitleStr = (vitem.Name.ToLower() == "h3") ? vitem.InnerText : TitleStr;
-                        DescStr = (item.Name.ToLower() == "div") ? vitem.InnerText : DescStr;
-                        if (DescStr != "" && TitleStr != "") break;
-                    }
-                    if (TitleStr != "" && Id != "" && DescStr != "")
-                    {
-                        if (Idx.IndexOf(Id) == -1)
-                        {
-                            Idx.Add(Id);
-                            recs++;
-                            string ntitle = TitleStr.Replace("/n", "").Trim();
-                            Dispatcher.Invoke(() =>
-                            {
-                                lblInsert.Content = recs.ToString();
-                                lstMain.Items.Insert(0, $"{Id} {ntitle}");
-                            });
-                            dbInitializer?.Invoke(this, new CustomParmam_NewVideoInfo(ntitle, Id, IsUnlisted));
-                            bool DoVideoInsert = true;
-                            var p = new CustomParams_GetVideoFileName(Id, IsUnlisted);
-                            dbInitializer?.Invoke(this, p);
-                            if (p.found)
-                            {
-                                DoVideoInsert = (!p.found);
-                                int index = Ids.IndexOf(Id);
-                                if (index != -1)
-                                {
-                                    Dispatcher.Invoke(() =>
-                                    {
-                                        lstMain.Items[index] += $" {p.filename}";
-                                        files++;
-                                        if (files > 0)
-                                        {
-                                            lblLastNode.Content = $"{files} Inserted";
-                                        }
-                                        SetMargin(StatusBar);
-                                    });
-                                }
-                                else
-                                {
-                                    files++;
-                                    if (files > 0)
-                                    {
-                                        lblLastNode.Content = $"{files} Inserted";
-                                    }
-                                    for (int ix = 0; ix < lstMain.Items.Count; i++)
-                                    {
-                                        if (lstMain.Items[ix].ToString().Contains($"{Id}"))
-                                        {
-                                            lstMain.Items[ix] += $"{p.filename}";
-                                            break;
-                                        }
-                                    }
-                                    SetMargin(StatusBar);
-                                }
-                            }
-                            if (DoVideoInsert)
-                            {
-                                DoNewVideoUpdate(Id);
-                            }
-                        }
-                    }
-                }
-                if (NextRecord && LastNode != "")
-                {
-                    NextTask();
-                }
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite($"ProcessChannelContent {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
-            }
-        }
+
 
         async void NextTask()
         {
@@ -2702,16 +2478,15 @@ namespace VideoGui
                         IsVideoLookup = true;
                         if (ScraperType == EventTypes.ScapeSchedule)
                         {
-                            while (wv2A1.Tag.ToInt(-1) != 1 && wv2A2.Tag.ToInt(-1) != 1 &&
-                                   wv2A3.Tag.ToInt(-1) != 1 && wv2A4.Tag.ToInt(-1) != 1 &&
-                                   wv2A5.Tag.ToInt(-1) != 1 && wv2A6.Tag.ToInt(-1) != 1 &&
-                                   wv2A7.Tag.ToInt(-1) != 1 && wv2A8.Tag.ToInt(-1) != 1 &&
-                                   wv2A9.Tag.ToInt(-1) != 1 && wv2A10.Tag.ToInt(-1) != 1)
+                            bool ready = true;
+                            while (!ready)
                             {
+                                foreach (var item in wv2Dictionary.Values)
+                                {
+                                    ready = ready && item.Tag.ToInt(-1) == 1;
+                                }
                                 Thread.Sleep(100);
                             }
-                  
-                           
                             DefaultUrl = TargetUrl;
                         }
                         //string URL = webAddressBuilder.AddFiltersByDRAFT_UNLISTED(false).Finalize().Address;
@@ -3198,7 +2973,7 @@ namespace VideoGui
                 {
                     dbInitializer?.Invoke(this, new CustomParams_InsertIntoTable(IntId, filename));
                     inserted++;
-                    
+
                 }
                 if (IntId == LastIdNode && inserted >= MaxCnts)
                 {
@@ -3225,7 +3000,7 @@ namespace VideoGui
                 {
                     if (files > 0)
                     {
-                        lblLastNode.Content = $"{files} Inserted";
+                        lblLastNode.Content = $"{files} Processed";
                         SetMargin(StatusBar);
                     }
                 });
@@ -3235,10 +3010,10 @@ namespace VideoGui
                 {
                     var webView2Instance = wv2Dictionary[id];
                     webView2Instance.AllowDrop = true;
-                    
+
                 }
                 CanSpool = true;
-               
+
 
                 if (nextaddress.Count > 0)
                 {
@@ -3249,10 +3024,10 @@ namespace VideoGui
                     if (wv2A4.AllowDrop) Avaialble++;
                     if (wv2A5.AllowDrop) Avaialble++;
                     if (wv2A6.AllowDrop) Avaialble++;
-                    /*if (wv2A7.AllowDrop) Avaialble++;
+                    if (wv2A7.AllowDrop) Avaialble++;
                     if (wv2A8.AllowDrop) Avaialble++;
                     if (wv2A9.AllowDrop) Avaialble++;
-                    if (wv2A10.AllowDrop) Avaialble++;*/
+                    if (wv2A10.AllowDrop) Avaialble++;
                     for (int ix = 0; ix < Avaialble; ix++)
                     {
                         if (nextaddress.Count > 0)

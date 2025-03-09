@@ -61,7 +61,7 @@
             <Label x:Name="lblUploading" Content="" VerticalAlignment="Center"/>
             <Label Name="lblInsertId4" Width="68" Content="Uploaded : " VerticalAlignment="Center" SizeChanged="lblInsertId4_SizeChanged"/>
             <Label x:Name="lblUploaded" Content="" VerticalAlignment="Center"/>
-            <Label Name="lblInsertId5" Width="68" Content="Waiting : " VerticalAlignment="Center" HorizontalAlignment="Left" SizeChanged="lblInsertId5_SizeChanged"/>
+            <Label Name="lblInsertId5" Width="152" Content="Waiting : " VerticalAlignment="Center" HorizontalAlignment="Left" SizeChanged="lblInsertId5_SizeChanged"/>
             <Label x:Name="lblWaiting" Content="" VerticalAlignment="Center"/>
             <Button Name="btnClose" Content="Close" VerticalAlignment="Center"
            Height="32" Width="75" HorizontalAlignment="Left" Margin="239,0,0,0" MinWidth="3" Click="btnClose_Click" HorizontalContentAlignment="Center"/>
