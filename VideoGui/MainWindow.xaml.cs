@@ -155,7 +155,6 @@ namespace VideoGui
         ObservableCollection<ScheduleMapNames> SchedulingNamesList = new ObservableCollection<ScheduleMapNames>();
         ObservableCollection<ScheduleMapItem> SchedulingItemsList = new ObservableCollection<ScheduleMapItem>();
         ObservableCollection<ScheduledActions> YTScheduledActionsList = new ObservableCollection<ScheduledActions>();
-        List<ShortsDirectory> shortsDirectoryList = new List<ShortsDirectory>();
         List<ShortsDirectory> EditableshortsDirectoryList = new List<ShortsDirectory>();
         CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
         CancellationTokenSource ProcessingCancellationTokenSource = new CancellationTokenSource();
@@ -2634,14 +2633,7 @@ namespace VideoGui
             {
                 if (thisForm is ScraperModule scs)
                 {
-                    if (scs.ShortsDirectories is not null)
-                    {
-                        scs.ShortsDirectories.Clear();
-                        if (!IsSchedulingShorts)
-                        {
-                            scs.ShortsDirectories.AddRange(shortsDirectoryList);
-                        }
-                    }
+                  
                     if (tld is CustomParams_SetTimeSpans STT)
                     {
                         scs.ScraperType = EventTypes.ShortsSchedule;
@@ -2666,7 +2658,7 @@ namespace VideoGui
                                     break;
                                 }
                             }
-                            return item.Id;
+                            return item.FileName;
                             break;
                         }
                         return null;
@@ -3060,62 +3052,7 @@ namespace VideoGui
         }
 
 
-        private void DoVideoUpload(EventDefinition eventdef)
-        {
-            try
-            {
-                // PoolList Id , DirectoryListID, eventID
-                //DirectoryList ID , Name , IsShort - used to do enum directories ( is short = enum listed dir , else upload All from MainDir)
-                //Directories Id , DIrectoryListiD, Directory 
-                // 1 Grab DirectoryListId Based on EventID
-                // 2 Grab Directory Based on DirectoryListID
-                // 3 Uopload from List of files in directory using Max Number
-
-                shortsDirectoryList.Clear();
-                string sql = "SELECT SP.ID, SP.DIRECTORY FROM POOLLIST PL JOIN " +
-                    "SCHEDULEDPOOLS SP on PL.ID = SP.POOLID where EventID = @P0;";
-                connectionString.ExecuteReader(sql, (FbDataReader r) =>
-                {
-                    shortsDirectoryList.Add(new(r));
-                });
-
-                if (scraperModule is not null && !scraperModule.IsClosed)
-                {
-                    if (scraperModule.IsClosing) scraperModule.Close();
-                    while (!scraperModule.IsClosed)
-                    {
-                        Thread.Sleep(100);
-                    }
-                    scraperModule.Close();
-                    scraperModule = null;
-                }
-                if (scraperModule is null)
-                {
-                    WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
-                    string gUrl = webAddressBuilder.Dashboard().Address;
-                    MaxUploads = eventdef.Max;
-                    var id = eventdef.Id;
-                    scraperModule = new ScraperModule(ModuleCallback, uploadonfinish, gUrl, MaxUploads, 15);
-                    scraperModule.ShowActivated = true;
-                    Hide();
-                    UploadWaitTime = TimeSpan.Zero;
-                    var r = GetEncryptedString(new int[] { 187, 54, 76, 68, 254, 212, 193, 85, 230,
-                        88, 9, 166, 209, 171, 74, 122, 47, 247, 153, 225, 226 }.Select(i => (byte)i).ToArray());
-                    Process[] webView2Processes = Process.GetProcessesByName(r);
-                    foreach (Process process in webView2Processes)
-                    {
-                        process.Kill();
-                    }
-                    IsUploading = true;
-                    scraperModule.Show();
-                }
-
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite($"DoVideoUpload {MethodBase.GetCurrentMethod().Name} {this} {eventdef} {ex.Message}");
-            }
-        }
+       
 
         public string GetEncryptedString(byte[] encriptedString)
         {
@@ -3822,6 +3759,7 @@ namespace VideoGui
                 });
 
 
+               
                 //EVENTSDEFINITIONS
                 connectionString.ExecuteNonQuery("DELETE FROM UPLOADSRECORD WHERE UPLOAD_DATE <> CAST(GETDATE() AS DATE);");
                 connectionString.ExecuteReader("SELECT * FROM AVAILABLETAGS", (FbDataReader r) =>

@@ -108,7 +108,7 @@ namespace VideoGui
         List<ScraperUploads> Scraper_uploaded = new();
         List<string> IdNodes = new(), titles = new List<string>(), nextaddress = new(), Ids = new(), Idx = new(), ufiles = new(), Files = new();// DoneFiles = new();
         public List<string> ScheduledOk = new List<string>(), VideoFiles = new List<string>(), nodeslist = new List<string>();
-        public List<ShortsDirectory> ShortsDirectories = new(); // <shortname>
+        public List<ShortsDirectory> ShortsDirectoriesList = new(); // <shortname>
         public List<ListScheduleItems> listSchedules = new List<ListScheduleItems>();
         public List<VideoIdFileName> ScheduledFiles = new List<VideoIdFileName>();
         DispatcherTimer CloseTimer = new DispatcherTimer();
@@ -580,7 +580,11 @@ namespace VideoGui
                 await wv2A9.EnsureCoreWebView2Async(env);
                 await wv2A10.EnsureCoreWebView2Async(env);
 
-
+                var connectionString = dbInitializer?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
+                connectionString.ExecuteReader(GetUploadReleaseBuilderSql(), (FbDataReader r) =>
+                {
+                    ShortsDirectoriesList.Add(new ShortsDirectory(r));
+                });
 
                 await SetupSubstDrive();
                 StatusBar.Items.OfType<FrameworkElement>().Where(child => !(child is Button)).ToList().ForEach(frameworkElement =>
@@ -593,7 +597,25 @@ namespace VideoGui
                 ex.LogWrite($"InitAsync {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-
+        public string GetUploadReleaseBuilderSql(int index = -1)
+        {
+            try
+            {
+                // SHORTSDIRECTORY
+                return "SELECT S.ID, S.DIRECTORYNAME, S.TITLEID, S.DESCID, " +
+                       "(SELECT LIST(TAGID, ',') FROM TITLETAGS " +
+                       " WHERE GROUPID = S.TITLEID) AS LINKEDTITLEIDS, " +
+                       " (SELECT LIST(ID,',') FROM DESCRIPTIONS " +
+                       "WHERE TITLETAGID = S.DESCID) AS LINKEDDESCIDS " +
+                       "FROM SHORTSDIRECTORY S" +
+                (index != -1 ? $" WHERE U.ID = {index} " : "");
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"GetUploadReleaseBuilderSql {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+                return "";
+            }
+        }
         private void mainwindow_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
             try
@@ -867,9 +889,9 @@ namespace VideoGui
                     string _dest = UploadPath, defaultpath = Environment.SystemDirectory;
                     lblLastNode.Content = "Uploading...";
                     List<string> ufc = new List<string>();
-                    if (ShortsDirectories.Count == 0) ShortsDirectories.Add(new ShortsDirectory(-1, UploadPath));
+                    if (ShortsDirectoriesList.Count == 0) ShortsDirectoriesList.Add(new ShortsDirectory(-1, UploadPath));
                     Files.Clear();
-                    foreach (var d in ShortsDirectories)
+                    foreach (var d in ShortsDirectoriesList)
                     {
                         Files.AddRange(Directory.EnumerateFiles(d.Directory, "*.mp4", SearchOption.AllDirectories).ToList());
                     }
@@ -1491,11 +1513,16 @@ namespace VideoGui
                                 // grab video filename. await till its got it
                                 string gUrl2 = $"https://studio.youtube.com/video/{Id}/edit";
                                 var vid = dbInitializer?.Invoke(this, new CustomParams_SelectById(Id));
-                                int vidoeid = (vid is int v) ? v : -1;
-                                WaitingFileName = vidoeid == -1;
+                                string vidoeid = (vid is string v) ? v : "";
+                                WaitingFileName = vidoeid == "";
                                 if (!WaitingFileName)
                                 {
-                                    GetTitlesAndDesc(vidoeid);
+                                    string newid = vidoeid.Split('_').LastOrDefault().Trim();
+                                    if (newid == "47") newid = "62";
+                                    if (newid is string && newid != "")
+                                    {
+                                        GetTitlesAndDesc(newid.ToInt(-1));
+                                    }
                                 }
                                 else
                                 {
@@ -1936,7 +1963,8 @@ namespace VideoGui
             }
         }
 
-        int LastId = -1, Tid = -1, Did = -1;
+        int LastId = -1;
+        int Tid = -1, Did = -1;
         string LTitleStr = "", LDescStr = "";
         private void ProcessHTML_Filename(string html, int id, string IntId, object sender)
         {
@@ -1965,10 +1993,9 @@ namespace VideoGui
                                         string idp = filename.Split("_").ToArray<string>().ToList().LastOrDefault().Trim();
                                         if (idp is not null && idp != "")
                                         {
-                                            int idd = idp.Replace(".mp4", "").ToInt(-1);
-
-                                            idd = (idd == 47) ? 62 : idd;
-                                            GetTitlesAndDesc(id);
+                                            string idd = idp.Replace(".mp4", "");
+                                            idd = (idd == "47") ? "62" : idd;
+                                            GetTitlesAndDesc(idd.ToInt(-1));
                                             WaitingFileName = false;
                                             return;
                                         }
@@ -2017,13 +2044,26 @@ namespace VideoGui
                 int TitleId = -1, DescId = -1, idr = -1;
                 if (LastId == -1 || LastId != id)
                 {
-                    string sql = $"SELECT * FROM SHORTSDIRECTORY WHERE ID = @UID";
-                    connectionStr.ExecuteReader(sql, [("UID", id)], (FbDataReader r) =>
+                    bool fnd = false;
+                    foreach (var dir in ShortsDirectoriesList.Where(dir => dir.Id == id))
                     {
-                        idr = (r["ID"] is Int32 i) ? i : -1;
-                        TitleId = (r["TITLEID"] is int tid) ? tid : -1;
-                        DescId = (r["DESCID"] is int did) ? did : -1;
-                    });
+                        TitleId = dir.TitleId;
+                        DescId = dir.DescId;
+                        idr = dir.Id;
+                        fnd = true;
+                        break;
+                    }
+
+                    if (!fnd)
+                    {
+                        string sql = $"SELECT * FROM SHORTSDIRECTORY WHERE ID = @UID";
+                        connectionStr.ExecuteReader(sql, [("UID", id)], (FbDataReader r) =>
+                        {
+                            idr = (r["ID"] is Int32 i) ? i : -1;
+                            TitleId = (r["TITLEID"] is int tid) ? tid : -1;
+                            DescId = (r["DESCID"] is int did) ? did : -1;
+                        });
+                    }
                     LastId = idr;
                     if (idr != -1)
                     {
