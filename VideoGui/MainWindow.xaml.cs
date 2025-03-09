@@ -2680,14 +2680,14 @@ namespace VideoGui
                             string BaseTitle = item.Directory;
                             if (item.TitleId != -1)
                             {
-                                foreach (var t in TitlesList.Where(i => i.GroupId == ShortsDirectoryIndex && !i.IsTag))
+                                foreach (var t in TitlesList.Where(i => i.GroupId == cgt.id && !i.IsTag))
                                 {
                                     BaseTitle = t.Description;
                                     break;
                                 }
                             }
                             string BaseStr = "";
-                            foreach (var item2 in TitleTagsList.Where(s => s.GroupId == cgt.id))
+                            foreach (var item2 in TitleTagsList.Where(s => s.GroupId == cgt.title))
                             {
                                 if (!BaseStr.Contains($"#{item2.Description}"))
                                 {

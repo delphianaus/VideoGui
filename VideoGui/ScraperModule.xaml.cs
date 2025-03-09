@@ -1522,6 +1522,8 @@ namespace VideoGui
                                     if (newid is string && newid != "")
                                     {
                                         GetTitlesAndDesc(newid.ToInt(-1));
+
+
                                     }
                                 }
                                 else
