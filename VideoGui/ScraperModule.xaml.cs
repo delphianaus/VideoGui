@@ -2767,8 +2767,9 @@ namespace VideoGui
                 Dispatcher.Invoke(() =>
                 {
                     int r = directshortsScheduler.ScheduleNumber;
-                    string t = $"{title.Replace("\n", "").Replace("\r", "").Trim()} {id} {r + 1} {dateTime}";
+                    string t = $"{id} {title.Replace("\n", "").Replace("\r", "").Trim()}  {r + 1} {dateTime}";
                     lstMain.Items.Insert(0, t);
+                    lblLastNode.Content = $"{r} Scheduled";
                     System.Windows.Forms.Application.DoEvents();
                 });
             }
