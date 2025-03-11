@@ -891,10 +891,10 @@ namespace VideoGui
                     List<string> ufc = new List<string>();
                     if (ShortsDirectoriesList.Count == 0) ShortsDirectoriesList.Add(new ShortsDirectory(-1, UploadPath));
                     Files.Clear();
-                    foreach (var d in ShortsDirectoriesList)
-                    {
-                        Files.AddRange(Directory.EnumerateFiles(d.Directory, "*.mp4", SearchOption.AllDirectories).ToList());
-                    }
+
+                    
+                    Files.AddRange(Directory.EnumerateFiles("z:\\", "*.mp4", SearchOption.AllDirectories).ToList());
+                  
                     int max = 0;
 
                     SendKeysString = "";
@@ -1901,6 +1901,11 @@ namespace VideoGui
                 }
                 if (sender is WebView2 webView2Instance)
                 {
+                    string url = webView2Instance.Source.ToString();
+                    if (url is not null)
+                    {
+
+                    }
                     var task = webView2Instance.ExecuteScriptAsync("document.body.innerHTML");
                     if (ScraperType != EventTypes.ShortsSchedule && ScraperType != EventTypes.ScapeSchedule)
                     {
@@ -2149,6 +2154,15 @@ namespace VideoGui
                 if ((e is not null && e.IsSuccess) || e is null)
                 {
                     NextRecord = false;
+
+                    if (sender is WebView2 webView2Instance)
+                    {
+                        string Urlx = webView2Instance.Source.ToString();
+                        if (Urlx is not null)
+                        {
+
+                        }
+                    }
                     var task = (sender as WebView2).CoreWebView2.ExecuteScriptAsync("document.body.innerHTML");
 
                     task.ContinueWith(x => { ProcessWV2Completed_ShortsScheduler(x.Result, sender); }, TaskScheduler.FromCurrentSynchronizationContext());
@@ -2531,11 +2545,16 @@ namespace VideoGui
                             }
                             DefaultUrl = TargetUrl;
                         }
+
                         //string URL = webAddressBuilder.AddFiltersByDRAFT_UNLISTED(false).Finalize().Address;
                         if (DefaultUrl is not null && DefaultUrl != "")
                         {
                             ActiveWebView[1].ZoomFactor = 0.6;
-                            ActiveWebView[1].NavigationCompleted += wv2v_NavigationCompleted;
+                            if (ScraperType != EventTypes.VideoUpload)
+                            {
+                                ActiveWebView[1].NavigationCompleted += wv2v_NavigationCompleted;
+                            }
+                            if (ScraperType == EventTypes.VideoUpload) clickupload = true;
                             ActiveWebView[1].Source = new Uri(DefaultUrl);
                             return true;
                         }
