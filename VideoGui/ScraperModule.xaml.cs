@@ -1129,7 +1129,7 @@ namespace VideoGui
                                             }
                                             html = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
                                             Nodes = GetNodes(html, Span_Name);
-                                            if (Regex.IsMatch(html.ToLower(), @"saving|save and close|title-row style-scope ytcp-uploads-dialog|daily limit"))
+                                            if (Regex.IsMatch(html.ToLower(), @"your video template has been saved as draft|saving|save and close|title-row style-scope ytcp-uploads-dialog|daily limit"))
                                             {
                                                 Thread.Sleep(300);
                                                 await ActiveWebView[1].ExecuteScriptAsync(Script_Close);
