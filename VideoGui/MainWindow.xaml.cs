@@ -155,11 +155,15 @@ namespace VideoGui
         ObservableCollection<ScheduleMapNames> SchedulingNamesList = new ObservableCollection<ScheduleMapNames>();
         ObservableCollection<ScheduleMapItem> SchedulingItemsList = new ObservableCollection<ScheduleMapItem>();
         ObservableCollection<ScheduledActions> YTScheduledActionsList = new ObservableCollection<ScheduledActions>();
+        ObservableCollection<Rematched> RematchedList = new ObservableCollection<Rematched>();
+        
         List<ShortsDirectory> EditableshortsDirectoryList = new List<ShortsDirectory>();
         CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
         CancellationTokenSource ProcessingCancellationTokenSource = new CancellationTokenSource();
         CollectionViewSource titletagsViewSource = new CollectionViewSource();
         CollectionViewSource availabletagsViewSource = new CollectionViewSource();
+        
+
         ObservableCollection<DraftShorts> DraftShortsList = new ObservableCollection<DraftShorts>();
         int TitleTagsSrc = -1;
         double frames, LRF, RRF, LLC, RLC;
@@ -3588,6 +3592,9 @@ namespace VideoGui
                 sqlstring = $"CREATE TABLE SCHEDULINGNAMES({Id},NAME VARCHAR(250));";
                 connectionString.CreateTableIfNotExists(sqlstring);
 
+                sqlstring = $"CREATE TABLE REMATCHED({Id},OLDID INTEGER,NEWID INTEGER, DIRECTORY VARCHAR(500));";
+                connectionString.CreateTableIfNotExists(sqlstring);
+
                 /*   reader["ID"] is int ,reader["SCHEDULENAMEID"] is int ,reader["ACTIONNAMEID"] is int 
                      reader["SCHEDULENAME"] is string , reader["ACTIONNAME"] is string , reader["MAX"] is int
                      reader["VIDEOTYPE"] is int, reader["SCHEDULED_DATE"] is DateOnly,  reader["SCHEDULED_TIME"] is TimeOnly 
@@ -3752,7 +3759,10 @@ namespace VideoGui
                     EventDefinitionsList.Add(new EventDefinition(r));
                 });
 
-
+                connectionString.ExecuteReader("SELECT * FROM REMATCHED", (FbDataReader r) =>
+                {
+                    RematchedList.Add(new Rematched(r));
+                });
                 connectionString.ExecuteReader("SELECT * FROM DRAFTSHORTS", (FbDataReader r) =>
                 {
                     DraftShortsList.Add(new DraftShorts(r));

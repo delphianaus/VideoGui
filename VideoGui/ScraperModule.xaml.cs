@@ -118,6 +118,7 @@ namespace VideoGui
         StatusTypes VStatusType = StatusTypes.PRIVATE;
         WebAddressBuilder webAddressBuilder = null;
         databasehook<object> dbInitializer = null;
+        List<Rematched> RematchedList = new(); // <shortname>
         OnFinishId DoOnFinish = null;
         TimeOnly CurrentTime = new TimeOnly();
         DateOnly CurrentDate = DateOnly.FromDateTime(DateTime.Now);
@@ -302,6 +303,7 @@ namespace VideoGui
                 DoOnFinish = _OnFinish;
                 DefaultUrl = _Default_url;
                 ScheduleMax = MaxUoploads;
+
                 IsDashboardMode = true;
                 IsTest = _IsTest;
                 dbInitializer = _dbInit;
@@ -892,9 +894,9 @@ namespace VideoGui
                     if (ShortsDirectoriesList.Count == 0) ShortsDirectoriesList.Add(new ShortsDirectory(-1, UploadPath));
                     Files.Clear();
 
-                    
+
                     Files.AddRange(Directory.EnumerateFiles("z:\\", "*.mp4", SearchOption.AllDirectories).ToList());
-                  
+
                     int max = 0;
 
                     SendKeysString = "";
@@ -1346,6 +1348,43 @@ namespace VideoGui
                 {
                     ActiveWebView[1].Source = new Uri(webAddressBuilder.GetChannelURL().Address);
                 };
+
+                string connectionString = dbInitializer?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
+                int TitleId = -1, DescId = -1, idr = -1;
+                connectionString.ExecuteReader("SELECT * FROM REMATCHED", (FbDataReader r) =>
+                {
+                    RematchedList.Add(new Rematched(r));
+                });
+                if (!RematchedList.Any(s => s.OldId == 47))
+                {
+                    string sql = "INSERT INTO REMATCHED (OLDID, NEWID, DIRECTORY) VALUES (@OID, @NID, @DIRECTORY) RETURNING ID;";
+                    int idex = connectionString.ExecuteScalar(sql, [("@OID", 47), ("@NID", 62),
+                        ("@DIRECTORY", "STEAMRAILS DUNOLLY BY DIESELS 220225")]).ToInt(-1);
+                    if (idex != -1)
+                    {
+                        sql = "SELECT * FROM REMATCHED WHERE ID = @ID;";
+                        connectionString.ExecuteReader(sql, [("ID", idex)], (FbDataReader r) =>
+                        {
+                            RematchedList.Add(new Rematched(r));
+                        });
+                    }
+                }
+
+                if (!RematchedList.Any(s => s.OldId == 49))
+                {
+                    string sql = "INSERT INTO REMATCHED (OLDID, NEWID, DIRECTORY) VALUES (@OID, @NID, @DIRECTORY) RETURNING ID;";
+                    int idex = connectionString.ExecuteScalar(sql, [("@OID", 49), ("@NID", 63), 
+                        ("@DIRECTORY", "STEAMRAILS DUNOLLY BY DIESELS 220225")]).ToInt(-1);
+                    if (idex != -1)
+                    {
+                        sql = "SELECT * FROM REMATCHED WHERE ID = @ID;";
+                        connectionString.ExecuteReader(sql, [("ID", idex)], (FbDataReader r) =>
+                        {
+                            RematchedList.Add(new Rematched(r));
+                        });
+                    }
+                }
+
                 Dispatcher.Invoke(() =>
                 {
                     InitAsync();
@@ -1517,14 +1556,32 @@ namespace VideoGui
                                 WaitingFileName = vidoeid == "";
                                 if (!WaitingFileName)
                                 {
+                                    bool fnd = false;
                                     string newid = vidoeid.Split('_').LastOrDefault().Trim();
-                                    if (newid == "47") newid = "62";
-                                    if (newid is string && newid != "")
+                                    foreach (var itx in RematchedList.Where(s => s.OldId == 47))
                                     {
-                                        GetTitlesAndDesc(newid.ToInt(-1));
-
-
+                                        fnd = true;
+                                        break;
                                     }
+                                    if (!fnd) RematchedList.Add(new Rematched { OldId = 47, NewId = 62 });
+                                    fnd = false;
+                                    foreach (var itx in RematchedList.Where(s => s.OldId == 49))
+                                    {
+                                        fnd = true;
+                                        break;
+                                    }
+                                    if (!fnd) RematchedList.Add(new Rematched { OldId = 49, NewId = 63 });
+                                    int newidint = newid.ToInt(-1);
+                                    int oldid = newidint;
+                                    foreach (var itx in RematchedList.Where(
+                                        s => s.OldId == oldid))
+                                    {
+                                        newidint = itx.NewId;
+                                    }
+
+                                    GetTitlesAndDesc(newidint);
+
+
                                 }
                                 else
                                 {
@@ -2000,9 +2057,34 @@ namespace VideoGui
                                         string idp = filename.Split("_").ToArray<string>().ToList().LastOrDefault().Trim();
                                         if (idp is not null && idp != "")
                                         {
-                                            string idd = idp.Replace(".mp4", "");
-                                            idd = (idd == "47") ? "62" : idd;
-                                            GetTitlesAndDesc(idd.ToInt(-1));
+                                            bool fnd = false;
+                                            string newid = idp.Split('_').LastOrDefault().Trim();
+                                            newid = newid.Split('.').First().Trim();
+                                            
+                                            
+                                            foreach (var itx in RematchedList.Where(s => s.OldId == 47))
+                                            {
+                                                fnd = true;
+                                                break;
+                                            }
+                                            if (!fnd) RematchedList.Add(new Rematched { OldId = 47, NewId = 62 });
+                                            fnd = false;
+                                            foreach (var itx in RematchedList.Where(s => s.OldId == 49))
+                                            {
+                                                fnd = true;
+                                                break;
+                                            }
+                                            if (!fnd) RematchedList.Add(new Rematched { OldId = 49, NewId = 63 });
+                                            int newidint = newid.ToInt(-1);
+                                            int oldid = newidint;
+                                            foreach (var itx in RematchedList.Where(
+                                                s => s.OldId == oldid))
+                                            {
+                                                newidint = itx.NewId;
+                                            }
+                                            GetTitlesAndDesc(newidint);
+
+
                                             WaitingFileName = false;
                                             return;
                                         }
