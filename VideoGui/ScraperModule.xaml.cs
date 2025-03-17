@@ -893,8 +893,6 @@ namespace VideoGui
                     List<string> ufc = new List<string>();
                     if (ShortsDirectoriesList.Count == 0) ShortsDirectoriesList.Add(new ShortsDirectory(-1, UploadPath));
                     Files.Clear();
-
-
                     Files.AddRange(Directory.EnumerateFiles("z:\\", "*.mp4", SearchOption.AllDirectories).ToList());
 
                     int max = 0;
@@ -1373,7 +1371,7 @@ namespace VideoGui
                 if (!RematchedList.Any(s => s.OldId == 49))
                 {
                     string sql = "INSERT INTO REMATCHED (OLDID, NEWID, DIRECTORY) VALUES (@OID, @NID, @DIRECTORY) RETURNING ID;";
-                    int idex = connectionString.ExecuteScalar(sql, [("@OID", 49), ("@NID", 63), 
+                    int idex = connectionString.ExecuteScalar(sql, [("@OID", 49), ("@NID", 63),
                         ("@DIRECTORY", "STEAMRAILS DUNOLLY BY DIESELS 220225")]).ToInt(-1);
                     if (idex != -1)
                     {
@@ -1884,7 +1882,8 @@ namespace VideoGui
                     }
                     else if (ehtml is not null && ehtml.Contains("Channel dashboard"))
                     {
-                        if (ScraperType == EventTypes.ShortsSchedule || ScraperType == EventTypes.VideoLookup ||
+                        if (ScraperType == EventTypes.ShortsSchedule ||
+                            ScraperType == EventTypes.VideoLookup ||
                             ScraperType == EventTypes.ScapeSchedule)
                         {
                             if (ehtml.Contains("@JustinsTrainJourneys"))
@@ -1893,7 +1892,7 @@ namespace VideoGui
                                 YouTubeLoaded();
                             }
                         }
-                        else if (clickupload && ScraperType != EventTypes.ShortsSchedule)
+                        else if (clickupload && ScraperType == EventTypes.VideoUpload)
                         {
                             wv2.AllowDrop = true;
                             clickupload = false;
@@ -2060,8 +2059,8 @@ namespace VideoGui
                                             bool fnd = false;
                                             string newid = idp.Split('_').LastOrDefault().Trim();
                                             newid = newid.Split('.').First().Trim();
-                                            
-                                            
+
+
                                             foreach (var itx in RematchedList.Where(s => s.OldId == 47))
                                             {
                                                 fnd = true;

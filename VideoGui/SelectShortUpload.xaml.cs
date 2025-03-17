@@ -64,13 +64,10 @@ namespace VideoGui
                     txtsrcdir.Text = ofg.SelectedFolder;
 
                     string connectionStr = dbInit?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
-
-
-                    int res = -1;
                     string ThisDir = ofg.SelectedFolder.Split(@"\").ToList().LastOrDefault();
 
                     string sql = "select ID from SHORTSDIRECTORY WHERE DIRECTORYNAME = @P0";
-                    res = connectionStr.ExecuteScalar(sql.ToUpper(), [("@P0", ThisDir.ToUpper())]).ToInt(-1);
+                    int res = connectionStr.ExecuteScalar(sql.ToUpper(), [("@P0", ThisDir.ToUpper())]).ToInt(-1);
                     if (res == -1)
                     {
                         sql = "INSERT INTO SHORTSDIRECTORY(DIRECTORYNAME) VALUES (@P0) RETURNING ID";
@@ -118,9 +115,9 @@ namespace VideoGui
 
                     RegistryKey key2 = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                     key2.SetValue("UploadPath", txtsrcdir.Text);
-                    if (res != -1)
+                    if (ShortsIndex != -1)
                     {
-                        key2.SetValue("CurrentDirId", res);
+                        key2.SetValue("CurrentDirId", ShortsIndex);
                     }
                     if (txtMaxUpload.Text != "")
                     {
@@ -139,7 +136,7 @@ namespace VideoGui
                         {
                             frr = fr.ToString();// "X");
                         }
-                        string newfile = drx + frr + $"_{res}{Path.GetExtension(filename)}";
+                        string newfile = drx + frr + $"_{ShortsIndex}{Path.GetExtension(filename)}";
                         if (filename != newfile)
                         {
 
@@ -356,38 +353,76 @@ namespace VideoGui
         {
             try
             {
-
-                if (scraperModule is not null && !scraperModule.IsClosed)
+                bool Valid = true;
+                RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                string rootfolder = key.GetValueStr("UploadPath", "");
+                string selFolder = txtsrcdir.Text;
+                if (selFolder != rootfolder && selFolder != "")
                 {
-                    if (scraperModule.IsClosing) scraperModule.Close();
-                    while (!scraperModule.IsClosed)
-                    {
-                        Thread.Sleep(100);
-                    }
-                    scraperModule.Close();
-                    scraperModule = null;
+                    key.SetValue("UploadPath", selFolder);
                 }
-                if (scraperModule is null)
+                key?.Close();
+                if (Directory.Exists(selFolder))
                 {
-                    WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
-                    string gUrl = webAddressBuilder.Dashboard().Address;
-                    int Maxuploads = (txtTotalUploads.Text != "") ? txtTotalUploads.Text.ToInt(100) : 100;
-                    int UploadsPerSlot = (txtMaxUpload.Text != "") ? txtMaxUpload.Text.ToInt(5) : 5;
-                    if (Maxuploads > lblShortNo.Content.ToInt())
+                    string connectionStr = dbInit?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
+                    List<string> files = Directory.EnumerateFiles(selFolder, "*.mp4", SearchOption.AllDirectories).ToList();
+                    string firstfile = files.FirstOrDefault();
+                    if (firstfile is not null && File.Exists(firstfile))
                     {
-                        Maxuploads = lblShortNo.Content.ToInt();
+                        string fid = Path.GetFileNameWithoutExtension(firstfile).Split('_').LastOrDefault();
+                        int fidres = fid.ToInt(-1);
+                        if (fidres != -1 && fidres != ShortsIndex)
+                        {
+                            ShortsIndex = fidres;
+                        }
+                        string sql = "SELECT DIRECTORYNAME FROM SHORTSDIRECTORY WHERE ID = @P0";
+                        var ddirname = connectionStr.ExecuteScalar(sql, [("@P0", ShortsIndex)]);
+                        if (ddirname is string dirname)
+                        {
+                            string DirName = selFolder.Split(@"\").ToList().LastOrDefault();
+                            if (DirName != dirname)
+                            {
+                                Valid = false;
+                            }
+                        }
                     }
 
-                    scraperModule = new ScraperModule(dbInit, doOnFinish, gUrl, Maxuploads, UploadsPerSlot);
+                }
 
-                    scraperModule.ShowActivated = true;
-                    Hide();
-                    // Process[] webView2Processes = Process.GetProcessesByName("MicrosoftEdgeWebview2");
-                    // foreach (Process process in webView2Processes)
-                    //  {
-                    //       process.Kill();
-                    //   }
-                    scraperModule.Show();
+                if (Valid)
+                {
+                    if (scraperModule is not null && !scraperModule.IsClosed)
+                    {
+                        if (scraperModule.IsClosing) scraperModule.Close();
+                        while (!scraperModule.IsClosed)
+                        {
+                            Thread.Sleep(100);
+                        }
+                        scraperModule.Close();
+                        scraperModule = null;
+                    }
+                    if (scraperModule is null)
+                    {
+                        WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
+                        string gUrl = webAddressBuilder.Dashboard().Address;
+                        int Maxuploads = (txtTotalUploads.Text != "") ? txtTotalUploads.Text.ToInt(100) : 100;
+                        int UploadsPerSlot = (txtMaxUpload.Text != "") ? txtMaxUpload.Text.ToInt(5) : 5;
+                        if (Maxuploads > lblShortNo.Content.ToInt())
+                        {
+                            Maxuploads = lblShortNo.Content.ToInt();
+                        }
+
+                        scraperModule = new ScraperModule(dbInit, doOnFinish, gUrl, Maxuploads, UploadsPerSlot);
+
+                        scraperModule.ShowActivated = true;
+                        Hide();
+                        // Process[] webView2Processes = Process.GetProcessesByName("MicrosoftEdgeWebview2");
+                        // foreach (Process process in webView2Processes)
+                        //  {
+                        //       process.Kill();
+                        //   }
+                        scraperModule.Show();
+                    }
                 }
             }
             catch (Exception ex)
