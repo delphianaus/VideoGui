@@ -1370,6 +1370,21 @@ namespace VideoGui
                     }
                 }
 
+                if (!RematchedList.Any(s => s.OldId == 48))
+                {
+                    string sql = "INSERT INTO REMATCHED (OLDID, NEWID, DIRECTORY) VALUES (@OID, @NID, @DIRECTORY) RETURNING ID;";
+                    int idex = connectionString.ExecuteScalar(sql, [("@OID", 48), ("@NID", 64),
+                        ("@DIRECTORY", "VLINE Maryborough To Southern Cross 110125")]).ToInt(-1);
+                    if (idex != -1)
+                    {
+                        sql = "SELECT * FROM REMATCHED WHERE ID = @ID;";
+                        connectionString.ExecuteReader(sql, [("ID", idex)], (FbDataReader r) =>
+                        {
+                            RematchedList.Add(new Rematched(r));
+                        });
+                    }
+                }
+
                 if (!RematchedList.Any(s => s.OldId == 49))
                 {
                     string sql = "INSERT INTO REMATCHED (OLDID, NEWID, DIRECTORY) VALUES (@OID, @NID, @DIRECTORY) RETURNING ID;";
@@ -1571,6 +1586,14 @@ namespace VideoGui
                                         break;
                                     }
                                     if (!fnd) RematchedList.Add(new Rematched { OldId = 49, NewId = 63 });
+                                    fnd = false;
+                                    foreach (var itx in RematchedList.Where(s => s.OldId == 48))
+                                    {
+                                        fnd = true;
+                                        break;
+                                    }
+                                    if (!fnd) RematchedList.Add(new Rematched { OldId = 48, NewId = 64 });
+
                                     int newidint = newid.ToInt(-1);
                                     int oldid = newidint;
                                     foreach (var itx in RematchedList.Where(
@@ -3108,11 +3131,20 @@ namespace VideoGui
                     }
                     if (index1 != -1)
                     {
+                        if (!(lstMain.Items[index1] as string).Contains(filename))
+                        {
+                            lstMain.Items[index1] += $" {filename}";
+                        }
+                    }
+                    SetMargin(StatusBar);
+                }
+                else
+                {
+                    if (!(lstMain.Items[index1] as string).Contains(filename))
+                    {
                         lstMain.Items[index1] += $" {filename}";
-                        SetMargin(StatusBar);
                     }
                 }
-                else lstMain.Items[index1] += $" {filename}";
                 if (ScraperType == EventTypes.ScapeSchedule)
                 {
                     dbInitializer?.Invoke(this, new CustomParams_InsertIntoTable(IntId, filename));
