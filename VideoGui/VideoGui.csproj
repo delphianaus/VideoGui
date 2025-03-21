@@ -12,15 +12,14 @@
     <StartupObject>VideoGui.App</StartupObject>
     <ApplicationIcon>Properties\computer.ico</ApplicationIcon>
     <Platforms>x64</Platforms>
-    <AssemblyVersion>1.0.0.340</AssemblyVersion>
-    <FileVersion>1.0.0.340</FileVersion>
+    <AssemblyVersion>1.0.0.341</AssemblyVersion>
+    <FileVersion>1.0.0.341</FileVersion>
     <Nullable>annotations</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <UseWindowsForms>True</UseWindowsForms>
     <IncludeSymbols>True</IncludeSymbols>
     <Title>VideoGui</Title>
     <Authors>Justin Smyth</Authors>
-    <Company>SmythConsulting</Company>
     <Description>Video Process &amp; YouTube App</Description>
     <PackageIcon>computer.png</PackageIcon>
     <SupportedOSPlatformVersion>10.0.26100.0</SupportedOSPlatformVersion>

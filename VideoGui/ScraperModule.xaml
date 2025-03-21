@@ -57,7 +57,7 @@
             <Label x:Name="lblLastNode" Content="Initializing..."  Margin="0,0,0,0" VerticalAlignment="Bottom" Padding="0,2,24,0" SizeChanged="lblLastNode_SizeChanged"/>
             <Label Name="lblInsert" Content="Total Uploads : " Width="81" VerticalAlignment="Center" SizeChanged="lblInsert_SizeChanged"/>
             <Label x:Name="lblTotal" Content="" VerticalAlignment="Center"/>
-            <Label x:Name="lblUp" Width="69" Content="Uploading : " VerticalAlignment="Center" SizeChanged="lblUp_SizeChanged"/>
+            <Label x:Name="lblUp" Width="89" Content="Uploading : " VerticalAlignment="Center" SizeChanged="lblUp_SizeChanged"/>
             <Label x:Name="lblUploading" Content="" VerticalAlignment="Center"/>
             <Label Name="lblInsertId4" Width="68" Content="Uploaded : " VerticalAlignment="Center" SizeChanged="lblInsertId4_SizeChanged"/>
             <Label x:Name="lblUploaded" Content="" VerticalAlignment="Center"/>

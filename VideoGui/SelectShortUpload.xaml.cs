@@ -287,7 +287,7 @@ namespace VideoGui
                        "(SELECT LIST(TAGID, ',') FROM TITLETAGS " +
                        " WHERE GROUPID = S.TITLEID) AS LINKEDTITLEIDS, " +
                        " (SELECT LIST(ID,',') FROM DESCRIPTIONS " +
-                       "WHERE TITLETAGID = S.DESCID) AS LINKEDDESCIDS " +
+                       "WHERE ID = S.DESCID) AS LINKEDDESCIDS " +
                        "FROM SHORTSDIRECTORY S" +
                 (index != -1 ? $" WHERE S.ID = {index} " : "");
             }
@@ -380,7 +380,7 @@ namespace VideoGui
                         if (ddirname is string dirname)
                         {
                             string DirName = selFolder.Split(@"\").ToList().LastOrDefault();
-                            if (DirName != dirname)
+                            if (DirName.ToLower() != dirname.ToLower())
                             {
                                 Valid = false;
                             }

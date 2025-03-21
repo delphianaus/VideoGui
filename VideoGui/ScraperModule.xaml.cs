@@ -1,4 +1,4 @@
-﻿using CliWrap;
+﻿                                                                                                                                                                                                                                                                                        using CliWrap;
 using CliWrap.EventStream;
 using FirebirdSql.Data.FirebirdClient;
 using FirebirdSql.Data.Isql;
@@ -98,7 +98,7 @@ namespace VideoGui
         object lockobj = new object();
         CancellationTokenSource canceltoken = new CancellationTokenSource();
         public int EventId, TotalScheduled = 0;
-        int swap = 1, ct = 0, MaxNodes = -1, MaxUploads = 0, recs = 0, gmaxrecs = 0, files = 0, max = 0, SlotsPerUpload = 0,
+        int swap = 1, ct = 0, MaxNodes = -1, MaxUploads = 0, recs = 0, gmaxrecs = 0, files = 0, dbfiles = 0, max = 0, SlotsPerUpload = 0,
             ScheduleMax = 0, ts = 0, LastKey = -1, Days = 1, CurrentDay = 1;
         bool EditDone = false, btndone = false, ExitDialog = false, Waiting = false, IsVideoLookup = false, WaitingFileName = false;
         bool Valid = false, IsVideoLookupShort = false, IsValid = false, IsUnlisted = false, IsDashboardMode = false, CanSpool = false, FirstRun = true, done = false, HasExited = false;
@@ -119,6 +119,7 @@ namespace VideoGui
         WebAddressBuilder webAddressBuilder = null;
         databasehook<object> dbInitializer = null;
         List<Rematched> RematchedList = new(); // <shortname>
+        List<ShortsDirectory> ShortsDirectories = new();
         OnFinishId DoOnFinish = null;
         TimeOnly CurrentTime = new TimeOnly();
         DateOnly CurrentDate = DateOnly.FromDateTime(DateTime.Now);
@@ -217,6 +218,8 @@ namespace VideoGui
             {
                 ScraperType = EventTypes.ScapeSchedule;
                 DoOnFinish = _OnFinish;
+               
+               
                 TargetUrl = _TargetUrl;
                 AutoClose = true;
                 DefaultUrl = _Default_url;
@@ -1334,7 +1337,12 @@ namespace VideoGui
                 lstMain.Width = Width - 5;
                 var thick = new Thickness(0, 0, 0, 0);
                 thick.Left = Width - 190;
-
+                if (ScraperType == EventTypes.ScapeSchedule)
+                {
+                    lblInsert.Content = "Files in DB";
+                    lblUp.Content = "Max Scraped";
+                    SetMargin(StatusBar);
+                }
                 //btnClickUpload.Margin = thick; 
                 key?.Close();
                 if (Parent is MainWindow mainWindow)
@@ -1353,48 +1361,36 @@ namespace VideoGui
                 {
                     RematchedList.Add(new Rematched(r));
                 });
-                if (!RematchedList.Any(s => s.OldId == 47))
-                {
-                    string sql = "INSERT INTO REMATCHED (OLDID, NEWID, DIRECTORY) VALUES (@OID, @NID, @DIRECTORY) RETURNING ID;";
-                    int idex = connectionString.ExecuteScalar(sql, [("@OID", 47), ("@NID", 62),
-                        ("@DIRECTORY", "STEAMRAILS DUNOLLY BY DIESELS 220225")]).ToInt(-1);
-                    if (idex != -1)
-                    {
-                        sql = "SELECT * FROM REMATCHED WHERE ID = @ID;";
-                        connectionString.ExecuteReader(sql, [("ID", idex)], (FbDataReader r) =>
-                        {
-                            RematchedList.Add(new Rematched(r));
-                        });
-                    }
-                }
 
-                if (!RematchedList.Any(s => s.OldId == 48))
+                connectionString.ExecuteReader("SELECT * FROM SHORTSDIRECTORY", (FbDataReader r) =>
                 {
-                    string sql = "INSERT INTO REMATCHED (OLDID, NEWID, DIRECTORY) VALUES (@OID, @NID, @DIRECTORY) RETURNING ID;";
-                    int idex = connectionString.ExecuteScalar(sql, [("@OID", 48), ("@NID", 64),
-                        ("@DIRECTORY", "VLINE Maryborough To Southern Cross 110125")]).ToInt(-1);
-                    if (idex != -1)
-                    {
-                        sql = "SELECT * FROM REMATCHED WHERE ID = @ID;";
-                        connectionString.ExecuteReader(sql, [("ID", idex)], (FbDataReader r) =>
-                        {
-                            RematchedList.Add(new Rematched(r));
-                        });
-                    }
-                }
+                    ShortsDirectoriesList.Add(new ShortsDirectory(r));
+                });
 
-                if (!RematchedList.Any(s => s.OldId == 49))
+                List<(int, int)> ErrorList = new List<(int, int)>() { (47, 62), (48, 64), (49, 63) };
+                foreach (var (found, title, oldid, newid) in from item in ErrorList
+                                                             let found = false
+                                                             let title = ""
+                                                             let oldid = item.Item1
+                                                             let newid = item.Item2
+                                                             select (found, title, oldid, newid))
                 {
-                    string sql = "INSERT INTO REMATCHED (OLDID, NEWID, DIRECTORY) VALUES (@OID, @NID, @DIRECTORY) RETURNING ID;";
-                    int idex = connectionString.ExecuteScalar(sql, [("@OID", 49), ("@NID", 63),
-                        ("@DIRECTORY", "STEAMRAILS DUNOLLY BY DIESELS 220225")]).ToInt(-1);
-                    if (idex != -1)
+                    foreach (var itemi in ShortsDirectoriesList.Where(s => s.Id == newid))
                     {
-                        sql = "SELECT * FROM REMATCHED WHERE ID = @ID;";
-                        connectionString.ExecuteReader(sql, [("ID", idex)], (FbDataReader r) =>
+                        if (!RematchedList.Any(s => s.OldId == oldid))
                         {
-                            RematchedList.Add(new Rematched(r));
-                        });
+                            string sql = "INSERT INTO REMATCHED (OLDID, NEWID, DIRECTORY) VALUES (@OID, @NID, @DIRECTORY) RETURNING ID;";
+                            int idex = connectionString.ExecuteScalar(sql, [("@OID", oldid), ("@NID", newid),
+                            ("@DIRECTORY", itemi.Directory)]).ToInt(-1);
+                            if (idex != -1)
+                            {
+                                sql = "SELECT * FROM REMATCHED WHERE ID = @ID;";
+                                connectionString.ExecuteReader(sql, [("ID", idex)], (FbDataReader r) =>
+                                {
+                                    RematchedList.Add(new Rematched(r));
+                                });
+                            }
+                        }
                     }
                 }
 
@@ -1498,6 +1494,10 @@ namespace VideoGui
                     Dispatcher.Invoke(() =>
                     {
                         lblInsertId5.Content = LastNode;
+                        if (ScraperType == EventTypes.ScapeSchedule)
+                        {
+                            lblUploading.Content = MaxNodes.ToString();
+                        }
                     });
                     string divclassname = "right-section style-scope ytcp-video-list-cell-video";
                     string idclass = "style-scope ytcp-img-with-fallback";
@@ -1669,12 +1669,17 @@ namespace VideoGui
                                     });
                                     var vid = dbInitializer?.Invoke(this, new CustomParams_SelectById(Id));
 
-                                    if (vid is int v)
+                                    if (vid is string v)
                                     {
                                         files++;
+                                        dbfiles++;
                                         if (files > 0)
                                         {
                                             lblLastNode.Content = $"{files} Processed";
+                                        }
+                                        if (dbfiles > 0)
+                                        {
+                                            lblTotal.Content = $"{dbfiles}";
                                         }
                                         SetMargin(StatusBar);
                                     }
@@ -1965,8 +1970,6 @@ namespace VideoGui
         {
             SendKeys.SendWait("{TAB}");
             await ActiveWebView[1].ExecuteScriptAsync($"document.querySelector('li.menu-item.remove-default-style.style-scope.ytcp-navigation').click()");
-
-            //await wv2.CoreWebView2.ExecuteScriptAsync("document.activeElement.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', keyCode: 9 }));");
         }
 
         private async void ProcessWebViewComplete(object sender)
@@ -1980,11 +1983,7 @@ namespace VideoGui
                 }
                 if (sender is WebView2 webView2Instance)
                 {
-                    string url = webView2Instance.Source.ToString();
-                    if (url is not null)
-                    {
-
-                    }
+                    //string url = webView2Instance.Source.ToString();
                     var task = webView2Instance.ExecuteScriptAsync("document.body.innerHTML");
                     if (ScraperType != EventTypes.ShortsSchedule && ScraperType != EventTypes.ScapeSchedule)
                     {
@@ -2417,15 +2416,11 @@ namespace VideoGui
                         swap++;
                         ActiveWebView.Add(1, wv2Dictionary[swap]);
                         ActiveWebView[1].Source = new Uri(webAddressBuilder.GetChannelURL().Address);
-
                     }
                 }
                 else
                 {
                     KilledUploads = true;
-                    //var htmlx = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
-                    // File.WriteAllLines($"E:\\gopro9\\ScraperLog_{DateTime.Now}.txt", new string[] { htmlx });
-                    // build files
                     await BuildFiles();
                     Close();
                 }

@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -31,12 +32,19 @@ namespace VideoGui.Models
 
         public Rematched(FbDataReader r)
         {
-            Id = (r["ID"] is int id) ? id : -1;
-            OldId = (r["OLDID"] is int oldId) ? oldId : -1;
-            NewId = (r["NEWID"] is int newId) ? newId : -1;
-            Title = (r["TITLE"] is string title) ? title : "";
+            try
+            {
+                Id = (r["ID"] is int id) ? id : -1;
+                OldId = (r["OLDID"] is int oldId) ? oldId : -1;
+                NewId = (r["NEWID"] is int newId) ? newId : -1;
+                Title = (r["DIRECTORY"] is string title) ? title : "";
+            }
+            catch(Exception ex) 
+            {
+                ex.LogWrite($"Rematched {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {ex.StackTrace}");
+            }
         }
-
+        
         public event PropertyChangedEventHandler PropertyChanged;
         protected void OnPropertyChanged([CallerMemberName] string name = null)
         {
