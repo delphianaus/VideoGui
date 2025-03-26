@@ -218,8 +218,8 @@ namespace VideoGui
             {
                 ScraperType = EventTypes.ScapeSchedule;
                 DoOnFinish = _OnFinish;
-               
-               
+                
+
                 TargetUrl = _TargetUrl;
                 AutoClose = true;
                 DefaultUrl = _Default_url;
@@ -1114,11 +1114,7 @@ namespace VideoGui
                                                             click.Status = "Uploading";
                                                             break;
                                                         }
-                                                        cts.CancelAfter(TimeSpan.FromMilliseconds(500));
-                                                        while (!cts.IsCancellationRequested)
-                                                        {
-                                                            Thread.Sleep(50);
-                                                        }
+                                                      
                                                         var index1 = htmlcheck.IndexOf("https://youtu.be/");
                                                         if (index1 != -1)
                                                         {
@@ -1341,6 +1337,7 @@ namespace VideoGui
                 {
                     lblInsert.Content = "Files in DB";
                     lblUp.Content = "Max Scraped";
+                    lblInsertId4.Content = "Current Page:";
                     SetMargin(StatusBar);
                 }
                 //btnClickUpload.Margin = thick; 
@@ -1570,7 +1567,9 @@ namespace VideoGui
                                 if (!WaitingFileName)
                                 {
                                     bool fnd = false;
+                                    DateTime q = DateTime.Now;
                                     string newid = vidoeid.Split('_').LastOrDefault().Trim();
+                                    /* 
                                     foreach (var itx in RematchedList.Where(s => s.OldId == 47))
                                     {
                                         fnd = true;
@@ -1591,7 +1590,7 @@ namespace VideoGui
                                         break;
                                     }
                                     if (!fnd) RematchedList.Add(new Rematched { OldId = 48, NewId = 64 });
-
+                                    */
                                     int newidint = newid.ToInt(-1);
                                     int oldid = newidint;
                                     foreach (var itx in RematchedList.Where(
@@ -1599,7 +1598,8 @@ namespace VideoGui
                                     {
                                         newidint = itx.NewId;
                                     }
-
+                                    double totalms = (DateTime.Now - q).TotalMilliseconds;
+                                    lblWaiting.Content = $"{totalms.ToString("0.00")} ms";
                                     GetTitlesAndDesc(newidint);
 
 
@@ -1610,9 +1610,10 @@ namespace VideoGui
                                     lookups.Add(gUrl2);
                                     wv2A10.Source = new Uri(gUrl2);
                                     var cts = new CancellationTokenSource();
-                                    cts.CancelAfter(TimeSpan.FromSeconds(30000));
+                                    cts.CancelAfter(TimeSpan.FromSeconds(20000));
                                     TimedOut = false;
                                     string oldtitle = TitleStr;
+                                    DateTime q = DateTime.Now;
                                     while (WaitingFileName && !cts.IsCancellationRequested && !canceltoken.IsCancellationRequested)
                                     {
                                         Thread.Sleep(200);
@@ -1625,6 +1626,8 @@ namespace VideoGui
                                             System.Windows.Forms.Application.DoEvents();
                                         }
                                     }
+                                    double totalms = (DateTime.Now - q).TotalMilliseconds;
+                                    lblInsertId5.Content = $"{totalms.ToString("0.00")} ms";
                                 }
 
                                 if (TimedOut || canceltoken.IsCancellationRequested)
@@ -1673,14 +1676,35 @@ namespace VideoGui
                                     {
                                         files++;
                                         dbfiles++;
+                                        if (files >= MaxNodes)
+                                        {
+                                            cancelds();
+                                            canceltoken.Cancel();
+                                            if (DoAutoCancel is not null)
+                                            {
+                                                if (DoAutoCancel.IsClosing) DoAutoCancel.Close();
+                                                while (!DoAutoCancel.IsClosed && !canceltoken.IsCancellationRequested)
+                                                {
+                                                    Thread.Sleep(100);
+                                                    System.Windows.Forms.Application.DoEvents();
+                                                }
+                                                DoAutoCancel.Close();
+                                                DoAutoCancel = null;
+                                            }
+                                            DoAutoCancel = new AutoCancel(DoAutoCancelCloseScraper, $"Scraped {files} Files", 5, "Scraper Finished");
+                                            DoAutoCancel.ShowActivated = true;
+                                            DoAutoCancel.Show();
+                                        }
                                         if (files > 0)
                                         {
                                             lblLastNode.Content = $"{files} Processed";
+
                                         }
                                         if (dbfiles > 0)
                                         {
                                             lblTotal.Content = $"{dbfiles}";
                                         }
+
                                         SetMargin(StatusBar);
                                     }
                                     else webAddressBuilder.ScopeVideo(Id, true);
@@ -1767,6 +1791,28 @@ namespace VideoGui
                 ex.LogWrite($"ProcessNode {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
+
+        private void DoAutoCancelCloseScraper()
+        {
+            try
+            {
+                if ((DoAutoCancel is not null && DoAutoCancel.IsCloseAction))
+                {
+                    canceltoken.Cancel();
+                    cancelds();
+                    DoAutoCancel.Close();
+                    Close();
+                    return;
+                }
+                DoAutoCancel = null;
+                Show();
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"DoAutoCancelCloseScraper {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
+
         string LastIdNode = "";
         int MaxCnts = -1;
         private async Task btnNext_Task(object sender)
@@ -2888,6 +2934,7 @@ namespace VideoGui
                     string t = $"{id} {title.Replace("\n", "").Replace("\r", "").Trim()}  {r + 1} {dateTime}";
                     lstMain.Items.Insert(0, t);
                     lblLastNode.Content = $"{r} Scheduled";
+                    SetMargin(StatusBar);
                     System.Windows.Forms.Application.DoEvents();
                 });
             }
@@ -3128,6 +3175,28 @@ namespace VideoGui
                         if (!(lstMain.Items[index1] as string).Contains(filename))
                         {
                             lstMain.Items[index1] += $" {filename}";
+                            files++;
+
+                            SetMargin(StatusBar);
+                            if (files >= MaxNodes)
+                            {
+                                cancelds();
+                                canceltoken.Cancel();
+                                if (DoAutoCancel is not null)
+                                {
+                                    if (DoAutoCancel.IsClosing) DoAutoCancel.Close();
+                                    while (!DoAutoCancel.IsClosed && !canceltoken.IsCancellationRequested)
+                                    {
+                                        Thread.Sleep(100);
+                                        System.Windows.Forms.Application.DoEvents();
+                                    }
+                                    DoAutoCancel.Close();
+                                    DoAutoCancel = null;
+                                }
+                                DoAutoCancel = new AutoCancel(DoAutoCancelCloseScraper, $"Scraped {files} Files", 5, "Scraper Finished");
+                                DoAutoCancel.ShowActivated = true;
+                                DoAutoCancel.Show();
+                            }
                         }
                     }
                     SetMargin(StatusBar);
