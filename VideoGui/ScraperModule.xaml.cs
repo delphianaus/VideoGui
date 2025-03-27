@@ -1163,6 +1163,10 @@ namespace VideoGui
                                     int end = Nodes1[i].InnerText.IndexOf("\n", start);
                                     string filename1 = Nodes1[i].InnerText.Substring(start, end - start).Trim();
                                     UploadedHandler(Span_Name, connectStr, filename1);
+                                    Task.Run(() =>
+                                    {
+                                        InsertIntoUploadFiles(new List<string> { filename1 }, connectStr);
+                                    });
                                 }
                             }
                         }
@@ -1176,6 +1180,10 @@ namespace VideoGui
                                 if (html.ToLower().Contains("uploads complete"))
                                 {
                                     NodeUpdate(Span_Name, ScheduledGet);
+                                    Task.Run(() =>
+                                    {
+                                        InsertIntoUploadFiles(VideoFiles, connectStr);
+                                    });
                                     break;
                                 }
                                 Thread.Sleep(100);
@@ -1202,6 +1210,25 @@ namespace VideoGui
             }
         }
 
+        public void InsertIntoUploadFiles(List<string> videofiles, string connectStr)
+        {
+            try
+            {
+                foreach (var item in videofiles) 
+                {
+                    string sql = "SELECT ID FROM UPLOADSRECORD WHERE UPLOADFILE = @P0 AND UPLOADTYPE = 0";
+                    int id = connectStr.ExecuteScalar(sql.ToUpper(), [("@P0", item)]).ToInt(-1);
+                    if (id != -1) continue; 
+                    sql = "INSERT INTO UPLOADSRECORD(UPLOADFILE, UPLOAD_DATE, UPLOAD_TIME,UPLOADTYPE) VALUES (@P0,@P1,@P2,@P3) RETURNING ID";
+                    connectStr.ExecuteScalar(sql.ToUpper(), [("@P0", item), 
+                        ("@P1", DateTime.Now.Date), ("@P2", DateTime.Now.TimeOfDay), ("@P3", 0)]).ToInt(-1);
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"InsertIntoUploadFiles {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+        }
         private void UploadedHandler(string Span_Name, string connectStr, string filename1)
         {
             try
