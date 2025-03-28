@@ -412,7 +412,7 @@ namespace VideoGui
                             Maxuploads = lblShortNo.Content.ToInt();
                         }
 
-                        scraperModule = new ScraperModule(dbInit, doOnFinish, gUrl, Maxuploads, UploadsPerSlot);
+                        scraperModule = new ScraperModule(dbInit, doOnFinish, gUrl, Maxuploads, UploadsPerSlot, 0,true);
 
                         scraperModule.ShowActivated = true;
                         Hide();

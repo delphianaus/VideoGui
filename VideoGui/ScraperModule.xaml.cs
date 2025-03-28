@@ -337,12 +337,14 @@ namespace VideoGui
             }
         }
 
+        public bool NewSession = false;
         public ScraperModule(databasehook<object> _dbInit, OnFinishId _OnFinish, string _Default_url,
-            int maxuploads = 100, int slotsperupload = 5, int _EventId = -1)
+            int maxuploads = 100, int slotsperupload = 5, int _EventId = -1, bool _NewSession = false)
         {
             try
             {
                 SwapEnabled = false;
+                NewSession = _NewSession;
                 EventId = _EventId;
                 ScraperType = EventTypes.VideoUpload;
                 UploadsTimer = new System.Threading.Timer(Uploads_TimerEvent_Handler, null, -1, Timeout.Infinite);
@@ -383,7 +385,7 @@ namespace VideoGui
         {
             try
             {
-                if (DoUploadsCnt() == 0)
+                if (!NewSession || DoUploadsCnt() == 0)
                 {
                     var UploadTask = UploadV2Files(false);
                 }
