@@ -121,6 +121,7 @@ namespace VideoGui
         List<Rematched> RematchedList = new(); // <shortname>
         List<ShortsDirectory> ShortsDirectories = new();
         OnFinishId DoOnFinish = null;
+        System.Threading.Timer UploadsTimer = null;
         TimeOnly CurrentTime = new TimeOnly();
         DateOnly CurrentDate = DateOnly.FromDateTime(DateTime.Now);
         public DateTime StartDate = DateTime.Now, EndDate = DateTime.Now, LastValidDate = DateTime.Now;
@@ -344,6 +345,7 @@ namespace VideoGui
                 SwapEnabled = false;
                 EventId = _EventId;
                 ScraperType = EventTypes.VideoUpload;
+                UploadsTimer = new System.Threading.Timer(Uploads_TimerEvent_Handler, null, -1, Timeout.Infinite);
                 MaxUploads = maxuploads;
                 DoOnFinish = _OnFinish;
                 DefaultUrl = _Default_url;
@@ -374,6 +376,26 @@ namespace VideoGui
             catch (Exception ex)
             {
                 ex.LogWrite($"Constructor VideoUploader {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+        }
+
+        private void Uploads_TimerEvent_Handler(object? state)
+        {
+            try
+            {
+                if (DoUploadsCnt() == 0)
+                {
+                    var UploadTask = UploadV2Files(false);
+                }
+                else
+                {
+                   UploadsTimer.Change(TimeSpan.FromMinutes(5).TotalMilliseconds.ToInt(0), Timeout.Infinite);
+                }
+            }
+            catch (Exception ex)
+
+            {
+                ex.LogWrite($"Uploads_TimerEvent_Handler {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
 
@@ -1003,6 +1025,10 @@ namespace VideoGui
                             if (html.ToLower().Contains("uploads complete"))
                             {
                                 NodeUpdate(Span_Name, ScheduledGet);
+                                Task.Run(() =>
+                                {
+                                    InsertIntoUploadFiles(VideoFiles, connectStr);
+                                });
                                 break;
                             }
                             else NodeUpdate(Span_Name, ScheduledGet);
@@ -1035,6 +1061,10 @@ namespace VideoGui
                                 if (html.ToLower().Contains("uploads complete"))
                                 {
                                     NodeUpdate(Span_Name, ScheduledGet);
+                                    Task.Run(() =>
+                                    {
+                                        InsertIntoUploadFiles(VideoFiles, connectStr);
+                                    });
                                     break;
                                 }
                                 NodeUpdate(Span_Name, ScheduledGet);
@@ -1051,6 +1081,10 @@ namespace VideoGui
                                         int _end = Nodes[i].InnerText.IndexOf("\n", _start);
                                         string filename1 = Nodes[i].InnerText.Substring(_start, _end - _start).Trim();
                                         UploadedHandler(Span_Name, connectStr, filename1);
+                                        Task.Run(() =>
+                                        {
+                                            InsertIntoUploadFiles(new List<string> { filename1 }, connectStr);
+                                        });
                                     }
                                     if (Regex.IsMatch(Nodes[i].InnerText, @"Waiting"))
                                     {
@@ -2002,7 +2036,15 @@ namespace VideoGui
                             string _dest = key.GetValueStr("UploadPath", "");
                             key.Close();
                             UploadPath = _dest;
-                            var UploadTask = UploadV2Files(false);
+                            string sqla = "SELECT * FROM UPLOADSRECORD WHERE UPLOADTYPE = 0";
+                            if (DoUploadsCnt() == 0)
+                            {
+                                var UploadTask = UploadV2Files(false);
+                            }
+                            else
+                            {
+                                UploadsTimer.Change(TimeSpan.FromMinutes(5).TotalMilliseconds.ToInt(0), Timeout.Infinite);
+                            }
                         }
                         else if (IsTitleEditor && ScraperType != EventTypes.ScapeSchedule)
                         {
@@ -2039,6 +2081,35 @@ namespace VideoGui
             CloseTimer_TickAsync(sender, e).ConfigureAwait(false);
         }
 
+
+        public int DoUploadsCnt()
+        {
+            try
+            {
+                string sqla = "SELECT * FROM UPLOADSRECORD WHERE UPLOADTYPE = 0";
+                int uploadcnt = 0;
+                DateOnly UploadDate = new DateOnly();
+                TimeOnly UploadTime = new TimeOnly();
+                TimeSpan SpecTime = DateTime.Now.TimeOfDay;
+                string connectStr = dbInitializer?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
+                connectStr.ExecuteReader(sqla.ToUpper(), (FbDataReader r) =>
+                {
+                    UploadDate = (r["UPLOAD_DATE"] is DateTime d) ? DateOnly.FromDateTime(d) : new DateOnly();
+                    UploadTime = (r["UPLOAD_TIME"] is TimeOnly t) ? t : new TimeOnly();
+                    DateTime RecDate = UploadDate.ToDateTime(UploadTime);
+                    if (RecDate.Date == DateTime.Now.Date && RecDate.TimeOfDay <= SpecTime)
+                    {
+                        uploadcnt++;
+                    }
+                });
+                return uploadcnt;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"DoUploadsCnt {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+                return -1;
+            }
+        }
         private async Task CloseTimer_TickAsync(object? sender, EventArgs e)
         {
             SendKeys.SendWait("{TAB}");
