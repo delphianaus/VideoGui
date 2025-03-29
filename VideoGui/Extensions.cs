@@ -1521,6 +1521,7 @@ namespace VideoGui
 
         }
 
+        
 
         public static bool IsAdministrator(this bool obj)
         {

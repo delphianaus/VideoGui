@@ -1,4 +1,4 @@
-﻿                                                                                                                                                                                                                                                                                        using CliWrap;
+﻿using CliWrap;
 using CliWrap.EventStream;
 using FirebirdSql.Data.FirebirdClient;
 using FirebirdSql.Data.Isql;
@@ -219,7 +219,7 @@ namespace VideoGui
             {
                 ScraperType = EventTypes.ScapeSchedule;
                 DoOnFinish = _OnFinish;
-                
+
 
                 TargetUrl = _TargetUrl;
                 AutoClose = true;
@@ -385,13 +385,13 @@ namespace VideoGui
         {
             try
             {
-                if (!NewSession || DoUploadsCnt() == 0)
+                if (!NewSession || DoUploadsCnt() < 100)
                 {
                     var UploadTask = UploadV2Files(false);
                 }
                 else
                 {
-                   UploadsTimer.Change(TimeSpan.FromMinutes(5).TotalMilliseconds.ToInt(0), Timeout.Infinite);
+                    UploadsTimer.Change(TimeSpan.FromMinutes(5).TotalMilliseconds.ToInt(0), Timeout.Infinite);
                 }
             }
             catch (Exception ex)
@@ -982,8 +982,6 @@ namespace VideoGui
                     HasExited = false;
                     ExitDialog = false;
                     string connectStr = dbInitializer?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
-                    List<Uploads> clicks = new List<Uploads>();
-                    List<bool> filesDone = Enumerable.Repeat(false, Files.Count).ToList();
                     bool Exit = false, finished = false;
                     while (true || !finished)
                     {
@@ -993,191 +991,12 @@ namespace VideoGui
                             await ActiveWebView[1].ExecuteScriptAsync(Script_Close);
                             break;
                         }
-                        Thread.Sleep(50);// GET HTML
-
-
-
-
-                        while (true && !canceltoken.IsCancellationRequested)
+                        Thread.Sleep(50);
+                        bool flowControl = await ProcessUploadsBody(Span_Name, Script_Close, connectStr);
+                        if (!flowControl)
                         {
-                            if (ExitDialog) return;
-                            var html = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
-                            if (html is not null && html.Contains("Daily upload limit reached"))
-                            {
-                                Exceeded = true;
-                                finished = true;
-                                ExitDialog = true;
-                                break;
-                            }
-                            bool found = false;
-                            List<HtmlNode> Nodes = GetNodes(html, Span_Name);
-                            if (html.ToLower().Contains("daily limit"))
-                            {
-                                int uploaded = 0;
-                                string sql = "select count(Id) from UPLOADSRECORD WHERE UPLOAD_DATE = @P0 AND UPLOADTYPE = 0";
-                                string cconnectStr = dbInitializer?.Invoke(this, new CustomParams_GetConnectionString()) is string conn1 ? conn1 : "";
-                                uploaded = cconnectStr.ExecuteScalar(sql, [("@p0", DateTime.Now.Date)]).ToInt(0);
-                                if (uploaded < 100)
-                                {
-                                    dbInitializer?.Invoke(this, new CustomParams_Wait());
-                                    await BuildFiles();
-                                    Close();
-                                }
-                            }
-                            if (html.ToLower().Contains("uploads complete"))
-                            {
-                                NodeUpdate(Span_Name, ScheduledGet);
-                                Task.Run(() =>
-                                {
-                                    InsertIntoUploadFiles(VideoFiles, connectStr);
-                                });
-                                break;
-                            }
-                            else NodeUpdate(Span_Name, ScheduledGet);
-                            if (Nodes.Count == 0)
-                            {
-                                Thread.Sleep(250);
-                                continue;
-                            }
-                            Uploading = 0;
-                            bool waitingcnt = Nodes.Count > 0 && Nodes.Where(nodex => nodex.InnerText.Contains("Waiting")).Count() > 0;
-                            if (waitingcnt)
-                            {
-                                html = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
-                                List<HtmlNode> Nodes2 = GetNodes(html, Span_Name);
-                                if (Nodes2.Count != Nodes.Count)
-                                {
-                                    Nodes = Nodes2;
-                                }
-                                else
-                                {
-                                    // lstMain.Items.Insert(0, "loop exited");
-                                    html = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
-                                    Nodes = GetNodes(html, Span_Name);
-                                }
-                            }
-                            int CompleteCnt = 0;
-                            if (Nodes.Count > 0)
-                            {
-                                html = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
-                                if (html.ToLower().Contains("uploads complete"))
-                                {
-                                    NodeUpdate(Span_Name, ScheduledGet);
-                                    Task.Run(() =>
-                                    {
-                                        InsertIntoUploadFiles(VideoFiles, connectStr);
-                                    });
-                                    break;
-                                }
-                                NodeUpdate(Span_Name, ScheduledGet);
-                                for (int i = 0; i < Nodes.Count; i++)
-                                {
-                                    if (ExitDialog)
-                                    {
-                                        return;
-                                    }
-                                    if (Regex.IsMatch(Nodes[i].InnerText, @"Complete|100% uploaded"))
-                                    {
-                                        CompleteCnt++;
-                                        int _start = Nodes[i].InnerText.IndexOf("\n") + 1;
-                                        int _end = Nodes[i].InnerText.IndexOf("\n", _start);
-                                        string filename1 = Nodes[i].InnerText.Substring(_start, _end - _start).Trim();
-                                        UploadedHandler(Span_Name, connectStr, filename1);
-                                        Task.Run(() =>
-                                        {
-                                            InsertIntoUploadFiles(new List<string> { filename1 }, connectStr);
-                                        });
-                                    }
-                                    if (Regex.IsMatch(Nodes[i].InnerText, @"Waiting"))
-                                    {
-                                        var filenameMatch = Regex.Match(Nodes[i].InnerText, @"\n([^ ]+)\n");
-                                        if (filenameMatch.Success && !clicks.Any(clicks => clicks.FileName == filenameMatch.Groups[1].Value))
-                                        {
-                                            clicks.Add(new Uploads(filenameMatch.Groups[1].Value, "Waiting"));
-                                            var filename = filenameMatch.Groups[1].Value.Trim();
-                                            string newfile = filename.Replace("\"", "");
-                                            if (newfile.Contains("."))
-                                            {
-                                                newfile = newfile.Substring(0, newfile.IndexOf("."));
-                                            }
-                                            var buttonLabel = $"Edit video {filename}";
-                                            lstMain.Items.Insert(0, $"Getting Edit Window For {newfile}");
-                                            await ActiveWebView[1].ExecuteScriptAsync($"document.querySelector('button[aria-label=\"{buttonLabel}\"]').click()");
-                                            var cts = new CancellationTokenSource();
-                                            while (!cts.IsCancellationRequested)
-                                            {
-                                                html = await wv2.CoreWebView2.ExecuteScriptAsync("document.body.innerHTML");
-                                                var ehtml = Regex.Unescape(html);
-                                                if (ehtml is not null && ehtml.Contains("Daily upload limit reached"))
-                                                {
-                                                    Exceeded = true;
-                                                }
-
-                                                if (ExitDialog)
-                                                {
-                                                    cts.Cancel();
-                                                    return;
-                                                }
-
-                                                var htmlcheck = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
-                                                if (htmlcheck is not null)
-                                                {
-                                                    if (htmlcheck.Contains("https://youtu.be/"))
-                                                    {
-                                                        var index = htmlcheck.IndexOf("https://youtu.be/");
-                                                        if (index != -1)
-                                                        {
-                                                            int len = "https://youtu.be/".Length;
-                                                            string vid = htmlcheck.Substring(index + len, 11);
-                                                            foreach (var item in ScheduledFiles.Where(item => item.FileName == filename))
-                                                            {
-                                                                item.VideoId = vid;
-                                                                break;
-                                                            }
-
-                                                            dbInitializer?.Invoke(this, new InsertIntoTable(vid, filename));
-                                                        }
-                                                    }
-                                                    if (Regex.IsMatch(htmlcheck, @"Upload Complete|Daily limit|Processing will begin shortly"))
-                                                    {
-                                                        break;
-                                                    }
-                                                    if (!Regex.IsMatch(htmlcheck, @"title-row style-scope ytcp-uploads-dialog"))
-                                                    {
-                                                        //update clicks  upload record
-                                                        foreach (var click in clicks.Where(clicks => clicks.FileName == filename))
-                                                        {
-                                                            click.Status = "Uploading";
-                                                            break;
-                                                        }
-                                                      
-                                                        var index1 = htmlcheck.IndexOf("https://youtu.be/");
-                                                        if (index1 != -1)
-                                                        {
-                                                            break;
-                                                        }
-                                                    }
-                                                }
-                                                Thread.Sleep(100);
-                                            }
-                                            html = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
-                                            Nodes = GetNodes(html, Span_Name);
-                                            if (Regex.IsMatch(html.ToLower(), @"your video template has been saved as draft|saving|save and close|title-row style-scope ytcp-uploads-dialog|daily limit"))
-                                            {
-                                                Thread.Sleep(300);
-                                                await ActiveWebView[1].ExecuteScriptAsync(Script_Close);
-                                            }
-                                            found = true;
-                                        }
-                                    }
-                                }
-                            }
-                            if (CompleteCnt == Nodes.Count && Nodes.Count > 0)
-                            {
-                                break;
-                            }
-                            NodeUpdate(Span_Name, ScheduledGet);
-                            if (found) continue;// gets next html and looks for waiting video
+                            finished = true;
+                            break;
                         }
                         if (ExitDialog) return;
                         NodeUpdate(Span_Name, ScheduledGet);
@@ -1199,10 +1018,7 @@ namespace VideoGui
                                     int end = Nodes1[i].InnerText.IndexOf("\n", start);
                                     string filename1 = Nodes1[i].InnerText.Substring(start, end - start).Trim();
                                     UploadedHandler(Span_Name, connectStr, filename1);
-                                    Task.Run(() =>
-                                    {
-                                        InsertIntoUploadFiles(new List<string> { filename1 }, connectStr);
-                                    });
+                                    InsertIntoUploadFiles(new List<string> { filename1 }, connectStr);
                                 }
                             }
                         }
@@ -1216,18 +1032,11 @@ namespace VideoGui
                                 if (html.ToLower().Contains("uploads complete"))
                                 {
                                     NodeUpdate(Span_Name, ScheduledGet);
-                                    Task.Run(() =>
-                                    {
-                                        InsertIntoUploadFiles(VideoFiles, connectStr);
-                                    });
+                                    InsertIntoUploadFiles(VideoFiles, connectStr);
                                     break;
                                 }
                                 Thread.Sleep(100);
                             }
-                            var htmlx = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
-                            File.WriteAllLines($"E:\\gopro9\\ScraperLog_{ct++}.txt", new string[] { htmlx });
-                            // build files
-                            await BuildFiles();
                             Close();
                         }
                     }
@@ -1239,10 +1048,8 @@ namespace VideoGui
             }
             finally
             {
-                var htmlx = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
-                File.WriteAllLines($"E:\\gopro9\\ScraperLog_{ct++}.txt", new string[] { htmlx });
+                //var htmlx = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
                 HasExited = true;
-
             }
         }
 
@@ -1250,13 +1057,13 @@ namespace VideoGui
         {
             try
             {
-                foreach (var item in videofiles) 
+                foreach (var item in videofiles)
                 {
                     string sql = "SELECT ID FROM UPLOADSRECORD WHERE UPLOADFILE = @P0 AND UPLOADTYPE = 0";
                     int id = connectStr.ExecuteScalar(sql.ToUpper(), [("@P0", item)]).ToInt(-1);
-                    if (id != -1) continue; 
+                    if (id != -1) continue;
                     sql = "INSERT INTO UPLOADSRECORD(UPLOADFILE, UPLOAD_DATE, UPLOAD_TIME,UPLOADTYPE) VALUES (@P0,@P1,@P2,@P3) RETURNING ID";
-                    connectStr.ExecuteScalar(sql.ToUpper(), [("@P0", item), 
+                    connectStr.ExecuteScalar(sql.ToUpper(), [("@P0", item),
                         ("@P1", DateTime.Now.Date), ("@P2", DateTime.Now.TimeOfDay), ("@P3", 0)]).ToInt(-1);
                 }
             }
@@ -2038,8 +1845,7 @@ namespace VideoGui
                             string _dest = key.GetValueStr("UploadPath", "");
                             key.Close();
                             UploadPath = _dest;
-                            string sqla = "SELECT * FROM UPLOADSRECORD WHERE UPLOADTYPE = 0";
-                            if (DoUploadsCnt() == 0)
+                            if (DoUploadsCnt() < 100)
                             {
                                 var UploadTask = UploadV2Files(false);
                             }
@@ -2088,24 +1894,10 @@ namespace VideoGui
         {
             try
             {
-                string sqla = "SELECT * FROM UPLOADSRECORD WHERE UPLOADTYPE = 0";
-                int uploadcnt = 0;
-                DateOnly UploadDate = new DateOnly();
-                TimeOnly UploadTime = new TimeOnly();
-                TimeSpan SpecTime = DateTime.Now.TimeOfDay;
+                string sqla = "SELECT Count(Id) FROM UPLOADSRECORD WHERE UPLOAD_DATE = CURRENT_DATE AND UPLOAD_TIME >= CURRENT_TIME - 1 OR UPLOAD_DATE = CURRENT_DATE - 1 AND UPLOAD_TIME >= CURRENT_TIME - 1\";\r\n";
                 string connectStr = dbInitializer?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
-                connectStr.ExecuteReader(sqla.ToUpper(), (FbDataReader r) =>
-                {
-                    UploadDate = (r["UPLOAD_DATE"] is DateTime d) ? DateOnly.FromDateTime(d) : new DateOnly();
-                    UploadTime = (r["UPLOAD_TIME"] is TimeOnly t) ? t : new TimeOnly();
-                    DateTime RecDate = UploadDate.ToDateTime(UploadTime);
-                    if (RecDate.Date == DateTime.Now.Date && RecDate.TimeOfDay <= SpecTime)
-                    {
-                        uploadcnt++;
-                    }
-                });
-                return uploadcnt;
-            }
+                return connectStr.ExecuteScalar(sqla.ToUpper()).ToInt(-1);
+            } 
             catch (Exception ex)
             {
                 ex.LogWrite($"DoUploadsCnt {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
@@ -3114,7 +2906,174 @@ namespace VideoGui
                 return ButtonReturnType.NotPresent;
             }
         }
+        private async Task<bool> ProcessUploadsBody(string Span_Name, string Script_Close, string connectStr)
+        {
+            try
+            {
+                List<Uploads> clicks = new List<Uploads>();
+                while (true && !canceltoken.IsCancellationRequested)
+                {
+                    if (ExitDialog) return false;
+                    var html = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
+                    if (html is not null && html.Contains("Daily upload limit reached"))
+                    {
+                        Exceeded = true;
+                        finished = true;
+                        ExitDialog = true;
+                        break;
+                    }
+                    bool found = false;
+                    List<HtmlNode> Nodes = GetNodes(html, Span_Name);
+                    if (html.ToLower().Contains("daily limit"))
+                    {
+                        if (DoUploadsCnt() < 100)
+                        {
+                            //dbInitializer?.Invoke(this, new CustomParams_Wait());
+                            await BuildFiles();
+                            Close();
+                        }
+                    }
+                    if (html.ToLower().Contains("uploads complete"))
+                    {
+                        NodeUpdate(Span_Name, ScheduledGet);
+                        InsertIntoUploadFiles(VideoFiles, connectStr);
+                        break;
+                    }
+                    else NodeUpdate(Span_Name, ScheduledGet);
+                    if (Nodes.Count == 0)
+                    {
+                        Thread.Sleep(150);
+                        continue;
+                    }
 
+                    bool waitingcnt = Nodes.Count > 0 && Nodes.Where(nodex => nodex.InnerText.Contains("Waiting")).Count() > 0;
+                    if (waitingcnt)
+                    {
+                        html = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
+                        List<HtmlNode> Nodes2 = GetNodes(html, Span_Name);
+                        if (Nodes2.Count != Nodes.Count)
+                        {
+                            Nodes = Nodes2;
+                        }
+                        else
+                        {
+                            html = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
+                            Nodes = GetNodes(html, Span_Name);
+                        }
+                    }
+                    int CompleteCnt = 0;
+                    if (Nodes.Count > 0)
+                    {
+                        html = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
+                        if (html.ToLower().Contains("uploads complete"))
+                        {
+                            NodeUpdate(Span_Name, ScheduledGet);
+                            InsertIntoUploadFiles(VideoFiles, connectStr);
+                            break;
+                        }
+                        NodeUpdate(Span_Name, ScheduledGet);
+                        for (int i = 0; i < Nodes.Count; i++)
+                        {
+                            if (ExitDialog)
+                            {
+                                return false;
+                            }
+                            if (Regex.IsMatch(Nodes[i].InnerText, @"Complete|100% uploaded"))
+                            {
+                                CompleteCnt++;
+                                int _start = Nodes[i].InnerText.IndexOf("\n") + 1;
+                                int _end = Nodes[i].InnerText.IndexOf("\n", _start);
+                                string filename1 = Nodes[i].InnerText.Substring(_start, _end - _start).Trim();
+                                UploadedHandler(Span_Name, connectStr, filename1);
+                                InsertIntoUploadFiles(new List<string> { filename1 }, connectStr);
+
+                            }
+                            if (Regex.IsMatch(Nodes[i].InnerText, @"Waiting"))
+                            {
+                                var filenameMatch = Regex.Match(Nodes[i].InnerText, @"\n([^ ]+)\n");
+                                if (filenameMatch.Success && !clicks.Any(clicks => clicks.FileName == filenameMatch.Groups[1].Value))
+                                {
+                                    clicks.Add(new Uploads(filenameMatch.Groups[1].Value, "Waiting"));
+                                    var filename = filenameMatch.Groups[1].Value.Trim();
+                                    string newfile = filename.Replace("\"", "");
+                                    if (newfile.Contains("."))
+                                    {
+                                        newfile = newfile.Substring(0, newfile.IndexOf("."));
+                                    }
+                                    var buttonLabel = $"Edit video {filename}";
+                                    lstMain.Items.Insert(0, $"Getting Edit Window For {newfile}");
+                                    await ActiveWebView[1].ExecuteScriptAsync($"document.querySelector('button[aria-label=\"{buttonLabel}\"]').click()");
+                                    var cts = new CancellationTokenSource();
+                                    while (!cts.IsCancellationRequested)
+                                    {
+                                        html = await wv2.CoreWebView2.ExecuteScriptAsync("document.body.innerHTML");
+                                        var ehtml = Regex.Unescape(html);
+                                        if (ehtml is not null && ehtml.Contains("Daily upload limit reached"))
+                                        {
+                                            Exceeded = true;
+                                        }
+                                        if (ExitDialog || Exceeded)
+                                        {
+                                            cts.Cancel();
+                                            return false;
+                                        }
+
+                                        var htmlcheck = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
+                                        if (htmlcheck is not null && htmlcheck.Contains("https://youtu.be/"))
+                                        {
+                                            var index = htmlcheck.IndexOf("https://youtu.be/");
+                                            int len = "https://youtu.be/".Length;
+                                            string vid = htmlcheck.Substring(index + len, 11);
+                                            foreach (var item in ScheduledFiles.Where(item => item.FileName == filename))
+                                            {
+                                                item.VideoId = vid;
+                                                break;
+                                            }
+                                            if (Regex.IsMatch(htmlcheck, @"Upload Complete|Daily limit|Processing will begin shortly"))
+                                            {
+                                                finished = true;
+                                                break;
+                                            }
+                                            if (finished) break;
+                                            if (!Regex.IsMatch(htmlcheck, @"title-row style-scope ytcp-uploads-dialog"))
+                                            {
+                                                foreach (var click in clicks.Where(clicks => clicks.FileName == filename))
+                                                {
+                                                    click.Status = "Uploading";
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                        Thread.Sleep(100);
+                                    }
+                                    html = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
+                                    Nodes = GetNodes(html, Span_Name);
+                                    if (Regex.IsMatch(html.ToLower(), @"processing will begin shortly|your video template has been saved as draft|saving|save and close|title-row style-scope ytcp-uploads-dialog|daily limit"))
+                                    {
+                                        Thread.Sleep(300);
+                                        await ActiveWebView[1].ExecuteScriptAsync(Script_Close);
+                                    }
+                                    found = true;
+                                }
+                            }
+                        }
+                    }
+                    if (CompleteCnt == Nodes.Count && Nodes.Count > 0)
+                    {
+                        break;
+                    }
+                    NodeUpdate(Span_Name, ScheduledGet);
+                    if (found) continue;// gets next html and looks for waiting video
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"ScheduledGet {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+                return false;
+            }
+        }
         int inserted = 0;
         public void ProcessHTML(string html, int id, string IntId, object sender)
         {
