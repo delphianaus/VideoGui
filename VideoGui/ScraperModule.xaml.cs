@@ -1572,25 +1572,35 @@ namespace VideoGui
                                     {
                                         files++;
                                         dbfiles++;
-                                        /* if (files >= MaxNodes)
-                                         {
-                                             cancelds();
-                                             canceltoken.Cancel();
-                                             if (DoAutoCancel is not null)
-                                             {
-                                                 if (DoAutoCancel.IsClosing) DoAutoCancel.Close();
-                                                 while (!DoAutoCancel.IsClosed && !canceltoken.IsCancellationRequested)
-                                                 {
-                                                     Thread.Sleep(100);
-                                                     System.Windows.Forms.Application.DoEvents();
-                                                 }
-                                                 DoAutoCancel.Close();
-                                                 DoAutoCancel = null;
-                                             }
-                                             DoAutoCancel = new AutoCancel(DoAutoCancelCloseScraper, $"Scraped {files} Files", 5, "Scraper Finished");
-                                             DoAutoCancel.ShowActivated = true;
-                                             DoAutoCancel.Show();
-                                         }*/
+                                        int lstCnt = lstMain.Items.Count;
+                                        foreach (var itemss in lstMain.Items)
+                                        {
+                                            if (itemss.ToString().Contains(" "))
+                                            {
+                                                lstCnt--;
+                                                break;
+                                            }
+                                        }
+
+                                        if (lstCnt == 0 && lstMain.Items.Count == MaxNodes)
+                                        {
+                                            cancelds();
+                                            canceltoken.Cancel();
+                                            if (DoAutoCancel is not null)
+                                            {
+                                                if (DoAutoCancel.IsClosing) DoAutoCancel.Close();
+                                                while (!DoAutoCancel.IsClosed && !canceltoken.IsCancellationRequested)
+                                                {
+                                                    Thread.Sleep(100);
+                                                    System.Windows.Forms.Application.DoEvents();
+                                                }
+                                                DoAutoCancel.Close();
+                                                DoAutoCancel = null;
+                                            }
+                                            DoAutoCancel = new AutoCancel(DoAutoCancelCloseScraper, $"Scraped {files} Files", 5, "Scraper Finished");
+                                            DoAutoCancel.ShowActivated = true;
+                                            DoAutoCancel.Show();
+                                        }
                                         if (files > 0)
                                         {
                                             lblLastNode.Content = $"{files} Processed";
@@ -1674,9 +1684,34 @@ namespace VideoGui
                         {
                             if (lstMain.Items.Count > 0)
                             {
-                                string r = lstMain.Items[0].ToString();
-                                LastIdNode = r.Split(' ')[0];
-                                MaxCnts = lstMain.Items.Count;
+                                int lstCnt2 = lstMain.Items.Count;
+                                foreach (var itemssx in lstMain.Items)
+                                {
+                                    if (itemssx.ToString().Contains(" "))
+                                    {
+                                        lstCnt2--;
+                                    }
+                                }
+
+                                if (lstCnt2 == 0 && lstMain.Items.Count == MaxNodes)
+                                {
+                                    cancelds();
+                                    canceltoken.Cancel();
+                                    if (DoAutoCancel is not null)
+                                    {
+                                        if (DoAutoCancel.IsClosing) DoAutoCancel.Close();
+                                        while (!DoAutoCancel.IsClosed && !canceltoken.IsCancellationRequested)
+                                        {
+                                            Thread.Sleep(100);
+                                            System.Windows.Forms.Application.DoEvents();
+                                        }
+                                        DoAutoCancel.Close();
+                                        DoAutoCancel = null;
+                                    }
+                                    DoAutoCancel = new AutoCancel(DoAutoCancelCloseScraper, $"Scraped {files} Files", 5, "Scraper Finished");
+                                    DoAutoCancel.ShowActivated = true;
+                                    DoAutoCancel.Show();
+                                }
                             }
                         }
 
@@ -3303,9 +3338,16 @@ namespace VideoGui
                             files++;
 
                             SetMargin(StatusBar);
-
-                            /*
-                            if (files >= MaxNodes)
+                            int lstCnt = lstMain.Items.Count;
+                            foreach (var item in lstMain.Items)
+                            {
+                                if (item.ToString().Contains(" "))
+                                {
+                                    lstCnt--;
+                                }
+                            }
+                            
+                            if (files == lstCnt && lstMain.Items.Count == MaxCnts)
                             {
                               
                                 if (DoAutoCancel is not null)
@@ -3322,7 +3364,7 @@ namespace VideoGui
                                 DoAutoCancel = new AutoCancel(DoAutoCancelCloseScraper, $"Scraped {files} Files", 5, "Scraper Finished");
                                 DoAutoCancel.ShowActivated = true;
                                 DoAutoCancel.Show();
-                            }*/
+                            }
                         }
                     }
                     SetMargin(StatusBar);
