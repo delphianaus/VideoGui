@@ -2699,7 +2699,7 @@ namespace VideoGui
                                 }
                             }
                             BaseStr = BaseStr.Trim();
-                            cgt.name = BaseTitle + " " + BaseStr;
+                            cgt.name = BaseTitle.ToPascalCase() + " " + BaseStr;
                             return null;
                             break;
                         }

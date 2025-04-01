@@ -3199,6 +3199,15 @@ namespace VideoGui
                                     index = html.IndexOf("<");
                                     html = html[..(index - 1)];
                                     filename = html.Replace("\n", "").Replace("\r", "").Trim();
+
+                                    if (!filename.Contains("_"))
+                                    {
+                                        if (true)
+                                        {
+
+                                        }
+                                    }
+
                                     if (filename.Contains("_") && IsVideoLookup && ScraperType == EventTypes.UploadTest)
                                     {
                                         string idp = filename.Split("_").ToArray<string>().ToList().LastOrDefault().Trim();
