@@ -2725,7 +2725,7 @@ namespace VideoGui
                     {
                         int id = -1;
                         bool found = false;
-                        foreach (var item in DraftShortsList.Where(s => s.FileName == cit.filename))
+                        foreach (var item in DraftShortsList.Where(s => s.FileName == cit.filename  && s.VideoId == cit.id))
                         {
                             id = item.Id;
                             found = true;
