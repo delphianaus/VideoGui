@@ -2731,10 +2731,10 @@ namespace VideoGui
                             found = true;
                             break;
                         }
-                        string sql = "SELECT ID FROM DRAFTSHORTS WHERE FILENAME = @FILENAME";
+                        string sql = "SELECT ID FROM DRAFTSHORTS WHERE FILENAME = @FILENAME AND VIDEOID = @VIDEOID";
                         if (!found)
                         {
-                            id = connectionString.ExecuteScalar(sql, [("@FILENAME", cit.filename)]).ToInt(-1);
+                            id = connectionString.ExecuteScalar(sql, [("@FILENAME", cit.filename), ("@VIDEOID", cit.id)]).ToInt(-1);
                         }
                         if (id == -1)
                         {

@@ -882,6 +882,16 @@ namespace VideoGui
             }
         }
 
+        private void lblTotal_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            // SetMargin(StatusBar,92);
+        }
+
+        private void lblUploaded_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            lblTotal_SizeChanged(sender, e);
+        }
+
         public async Task UploadV2Files(bool rentry = false)
         {
             try
@@ -932,10 +942,11 @@ namespace VideoGui
                     {
                         TotalScheduled = resxx.ToInt();
                         lblTotal.Content = TotalScheduled.ToString();
+                        SetMargin(StatusBar);
                     }
 
                     max = TotalScheduled;
-                    ts = TotalScheduled;
+                    ts = max;
                     if (ts < MaxUploads)
                     {
                         foreach (string f in Files.Where(f => File.Exists(f)).Take(SlotsPerUpload))
@@ -944,6 +955,7 @@ namespace VideoGui
                             if (max <= MaxUploads)
                             {
                                 lblTotal.Content = $"{TotalScheduled}";
+                                SetMargin(StatusBar);
                                 ScheduledFiles.Add(new VideoIdFileName(Path.GetFileName(f)));
                                 string news = "\"" + @"Z:\" + new DirectoryInfo(Path.GetDirectoryName(f)).Name + "\\" + Path.GetFileName(f) + "\" ";
                                 if (SendKeysString.Length + news.Length < 255)
@@ -992,6 +1004,7 @@ namespace VideoGui
                             break;
                         }
                         Thread.Sleep(50);
+                        SetMargin(StatusBar);
                         bool flowControl = await ProcessUploadsBody(Span_Name, Script_Close, connectStr);
                         if (!flowControl)
                         {
@@ -1057,14 +1070,26 @@ namespace VideoGui
         {
             try
             {
+                //int Max = videofiles.Count, num = 1;
+                //string DataStr = "";
                 foreach (var item in videofiles)
                 {
                     string sql = "SELECT ID FROM UPLOADSRECORD WHERE UPLOADFILE = @P0 AND UPLOADTYPE = 0";
                     int id = connectStr.ExecuteScalar(sql.ToUpper(), [("@P0", item)]).ToInt(-1);
                     if (id != -1) continue;
                     sql = "INSERT INTO UPLOADSRECORD(UPLOADFILE, UPLOAD_DATE, UPLOAD_TIME,UPLOADTYPE) VALUES (@P0,@P1,@P2,@P3) RETURNING ID";
-                    connectStr.ExecuteScalar(sql.ToUpper(), [("@P0", item),
+                    id = connectStr.ExecuteScalar(sql.ToUpper(), [("@P0", item),
                         ("@P1", DateTime.Now.Date), ("@P2", DateTime.Now.TimeOfDay), ("@P3", 0)]).ToInt(-1);
+                    /*DataStr = $"{id}:{num}/{Max} {item} {DateTime.Now.TimeOfDay}";
+                    if (File.Exists(@"c:\videogui\uploadlist.txt"))
+                    {
+                        File.AppendAllText(@"c:\videogui\uploadlist.txt", DataStr + Environment.NewLine);
+                    }
+                    else
+                    {
+                        File.WriteAllText(@"c:\videogui\uploadlist.txt", DataStr + Environment.NewLine);
+                    }
+                    num++;*/
                 }
             }
             catch (Exception ex)
@@ -1154,6 +1179,7 @@ namespace VideoGui
                         lblUploading.Content = Uploading.ToString();
                         lblUploaded.Content = Uploaded.ToString();
                     });
+                    SetMargin(StatusBar);
                     return true;
                 }
                 return false;
@@ -1546,25 +1572,25 @@ namespace VideoGui
                                     {
                                         files++;
                                         dbfiles++;
-                                        if (files >= MaxNodes)
-                                        {
-                                            cancelds();
-                                            canceltoken.Cancel();
-                                            if (DoAutoCancel is not null)
-                                            {
-                                                if (DoAutoCancel.IsClosing) DoAutoCancel.Close();
-                                                while (!DoAutoCancel.IsClosed && !canceltoken.IsCancellationRequested)
-                                                {
-                                                    Thread.Sleep(100);
-                                                    System.Windows.Forms.Application.DoEvents();
-                                                }
-                                                DoAutoCancel.Close();
-                                                DoAutoCancel = null;
-                                            }
-                                            DoAutoCancel = new AutoCancel(DoAutoCancelCloseScraper, $"Scraped {files} Files", 5, "Scraper Finished");
-                                            DoAutoCancel.ShowActivated = true;
-                                            DoAutoCancel.Show();
-                                        }
+                                        /* if (files >= MaxNodes)
+                                         {
+                                             cancelds();
+                                             canceltoken.Cancel();
+                                             if (DoAutoCancel is not null)
+                                             {
+                                                 if (DoAutoCancel.IsClosing) DoAutoCancel.Close();
+                                                 while (!DoAutoCancel.IsClosed && !canceltoken.IsCancellationRequested)
+                                                 {
+                                                     Thread.Sleep(100);
+                                                     System.Windows.Forms.Application.DoEvents();
+                                                 }
+                                                 DoAutoCancel.Close();
+                                                 DoAutoCancel = null;
+                                             }
+                                             DoAutoCancel = new AutoCancel(DoAutoCancelCloseScraper, $"Scraped {files} Files", 5, "Scraper Finished");
+                                             DoAutoCancel.ShowActivated = true;
+                                             DoAutoCancel.Show();
+                                         }*/
                                         if (files > 0)
                                         {
                                             lblLastNode.Content = $"{files} Processed";
@@ -1573,6 +1599,7 @@ namespace VideoGui
                                         if (dbfiles > 0)
                                         {
                                             lblTotal.Content = $"{dbfiles}";
+                                            SetMargin(StatusBar);
                                         }
 
                                         SetMargin(StatusBar);
@@ -1897,7 +1924,7 @@ namespace VideoGui
                 string sqla = "SELECT Count(Id) FROM UPLOADSRECORD WHERE UPLOAD_DATE = CURRENT_DATE AND UPLOAD_TIME >= CURRENT_TIME - 1 OR UPLOAD_DATE = CURRENT_DATE - 1 AND UPLOAD_TIME >= CURRENT_TIME - 1\";\r\n";
                 string connectStr = dbInitializer?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
                 return connectStr.ExecuteScalar(sqla.ToUpper()).ToInt(-1);
-            } 
+            }
             catch (Exception ex)
             {
                 ex.LogWrite($"DoUploadsCnt {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
@@ -2908,6 +2935,7 @@ namespace VideoGui
         }
         private async Task<bool> ProcessUploadsBody(string Span_Name, string Script_Close, string connectStr)
         {
+            int ExitCode = -1;
             try
             {
                 List<Uploads> clicks = new List<Uploads>();
@@ -2972,13 +3000,13 @@ namespace VideoGui
                             break;
                         }
                         NodeUpdate(Span_Name, ScheduledGet);
-                        for (int i = 0; i < Nodes.Count; i++)
+                        for (int i = Nodes.Count - 1; i >= 0; i--)
                         {
                             if (ExitDialog)
                             {
                                 return false;
                             }
-                            if (Regex.IsMatch(Nodes[i].InnerText, @"Complete|100% uploaded"))
+                            if (Regex.IsMatch(Nodes[i].InnerText, @"complete|100% uploaded"))
                             {
                                 CompleteCnt++;
                                 int _start = Nodes[i].InnerText.IndexOf("\n") + 1;
@@ -2990,12 +3018,24 @@ namespace VideoGui
                             }
                             if (Regex.IsMatch(Nodes[i].InnerText, @"Waiting"))
                             {
-                                var filenameMatch = Regex.Match(Nodes[i].InnerText, @"\n([^ ]+)\n");
-                                if (filenameMatch.Success && !clicks.Any(clicks => clicks.FileName == filenameMatch.Groups[1].Value))
+                                var cyss = new CancellationTokenSource();
+                                cyss.CancelAfter(TimeSpan.FromSeconds(2));
+                                while (!cyss.IsCancellationRequested)
                                 {
-                                    clicks.Add(new Uploads(filenameMatch.Groups[1].Value, "Waiting"));
-                                    var filename = filenameMatch.Groups[1].Value.Trim();
-                                    string newfile = filename.Replace("\"", "");
+                                    System.Windows.Forms.Application.DoEvents();
+                                    Thread.Sleep(15);
+                                }
+
+                                int _startx = Nodes[i].InnerText.IndexOf("\n") + 1;
+                                int _endx = Nodes[i].InnerText.IndexOf("\n", _startx);
+                                string filename1x = Nodes[i].InnerText.Substring(_startx, _endx - _startx).Trim();
+
+
+                                if (!clicks.Any(clicks => clicks.FileName == filename1x))
+                                {
+                                    clicks.Add(new Uploads(filename1x, "Waiting"));
+                                    var filename = filename1x; //Match.Groups[1].Value.Trim();
+                                    string newfile = filename;//.Replace("\"", "");
                                     if (newfile.Contains("."))
                                     {
                                         newfile = newfile.Substring(0, newfile.IndexOf("."));
@@ -3014,11 +3054,17 @@ namespace VideoGui
                                         }
                                         if (ExitDialog || Exceeded)
                                         {
+                                            ExitCode = 0;
                                             cts.Cancel();
                                             return false;
                                         }
 
                                         var htmlcheck = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
+                                        if (Regex.IsMatch(htmlcheck, @"Uploads complete"))
+                                        {
+                                            cts.Cancel();
+                                            continue;
+                                        }
                                         if (htmlcheck is not null && htmlcheck.Contains("https://youtu.be/"))
                                         {
                                             var index = htmlcheck.IndexOf("https://youtu.be/");
@@ -3029,9 +3075,22 @@ namespace VideoGui
                                                 item.VideoId = vid;
                                                 break;
                                             }
-                                            if (Regex.IsMatch(htmlcheck, @"Upload Complete|Daily limit|Processing will begin shortly"))
+                                            if (Regex.IsMatch(htmlcheck, @"Uploads complete|Daily limit|Processing will begin shortly"))
                                             {
                                                 finished = true;
+                                                ExitCode = 1;
+                                                if (Regex.IsMatch(htmlcheck, @"Uploads complete"))
+                                                {
+                                                    ExitCode = 2;
+                                                }
+                                                if (Regex.IsMatch(htmlcheck, @"Daily limit"))
+                                                {
+                                                    ExitCode = 3;
+                                                }
+                                                if (Regex.IsMatch(htmlcheck, @"Processing will begin shortly"))
+                                                {
+                                                    ExitCode = 4;
+                                                }
                                                 break;
                                             }
                                             if (finished) break;
@@ -3072,6 +3131,13 @@ namespace VideoGui
             {
                 ex.LogWrite($"ScheduledGet {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
                 return false;
+            }
+            finally
+            {
+                if (ExitCode != -1)
+                {
+
+                }
             }
         }
         int inserted = 0;
@@ -3237,10 +3303,11 @@ namespace VideoGui
                             files++;
 
                             SetMargin(StatusBar);
+
+                            /*
                             if (files >= MaxNodes)
                             {
-                                cancelds();
-                                canceltoken.Cancel();
+                              
                                 if (DoAutoCancel is not null)
                                 {
                                     if (DoAutoCancel.IsClosing) DoAutoCancel.Close();
@@ -3255,7 +3322,7 @@ namespace VideoGui
                                 DoAutoCancel = new AutoCancel(DoAutoCancelCloseScraper, $"Scraped {files} Files", 5, "Scraper Finished");
                                 DoAutoCancel.ShowActivated = true;
                                 DoAutoCancel.Show();
-                            }
+                            }*/
                         }
                     }
                     SetMargin(StatusBar);
@@ -3322,10 +3389,10 @@ namespace VideoGui
                     if (wv2A4.AllowDrop) Avaialble++;
                     if (wv2A5.AllowDrop) Avaialble++;
                     if (wv2A6.AllowDrop) Avaialble++;
-                    if (wv2A7.AllowDrop) Avaialble++;
+                    /*if (wv2A7.AllowDrop) Avaialble++;
                     if (wv2A8.AllowDrop) Avaialble++;
                     if (wv2A9.AllowDrop) Avaialble++;
-                    if (wv2A10.AllowDrop) Avaialble++;
+                    if (wv2A10.AllowDrop) Avaialble++;*/
                     for (int ix = 0; ix < Avaialble; ix++)
                     {
                         if (nextaddress.Count > 0)
