@@ -2675,7 +2675,7 @@ namespace VideoGui
                             break;
                         }
 
-                        return null;
+                        return cgd.name;
                     }
                     else if (tld is CustomParams_GetTitle cgt)
                     {
@@ -2700,7 +2700,7 @@ namespace VideoGui
                             }
                             BaseStr = BaseStr.Trim();
                             cgt.name = BaseTitle.ToPascalCase() + " " + BaseStr;
-                            return null;
+                            return cgt.name;
                             break;
                         }
                     }

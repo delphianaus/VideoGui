@@ -933,17 +933,16 @@ namespace VideoGui
                     Files.AddRange(Directory.EnumerateFiles("z:\\", "*.mp4", SearchOption.AllDirectories).ToList());
 
                     int max = 0;
+                    string connectStr = dbInitializer?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
 
                     SendKeysString = "";
-                    string connectionStr = (dbInitializer?.Invoke(this, new CustomParams_GetConnectionString()) is string conn) ? conn : "";
-                    string sql = "select count(Id) from UPLOADSRECORD WHERE UPLOAD_DATE = @P0 AND UPLOADTYPE = 0";
-                    object res = connectionStr.ExecuteScalar(sql, [("@p0", DateTime.Now.Date)]);
-                    if (res is long resxx)
-                    {
-                        TotalScheduled = resxx.ToInt();
-                        lblTotal.Content = TotalScheduled.ToString();
-                        SetMargin(StatusBar);
-                    }
+                    int res = GetUploadsRecCnt(connectStr, true);
+
+                    TotalScheduled = res;
+                    lblTotal.Content = TotalScheduled.ToString();
+                    SetMargin(StatusBar);
+
+
 
                     max = TotalScheduled;
                     ts = max;
@@ -1064,6 +1063,27 @@ namespace VideoGui
                 //var htmlx = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
                 HasExited = true;
             }
+        }
+
+        public int GetUploadsRecCnt(string connectionStr, bool last24hrs = false)
+        {
+            try
+            {
+                string sql = "select count(Id) from UPLOADSRECORD WHERE UPLOAD_DATE = @P0 AND UPLOADTYPE = 0";
+                if (last24hrs)
+                {
+                    sql = "SELECT Count(Id) FROM UPLOADSRECORD WHERE UPLOAD_DATE = CURRENT_DATE AND " +
+                    "UPLOAD_TIME >= CURRENT_TIME - 1 AND UPLOADTYPE = 0 OR UPLOAD_DATE = CURRENT_DATE - 1 " +
+                    "AND UPLOAD_TIME >= CURRENT_TIME - 1 AND UPLOADTYPE = 0";
+                }
+                return connectionStr.ExecuteScalar(sql, [("@p0", DateTime.Now.Date)]).ToInt(-1);
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"GetUploadsRecCnt {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+                return -1;
+            }
+
         }
 
         public void InsertIntoUploadFiles(List<string> videofiles, string connectStr)
@@ -1956,7 +1976,9 @@ namespace VideoGui
         {
             try
             {
-                string sqla = "SELECT Count(Id) FROM UPLOADSRECORD WHERE UPLOAD_DATE = CURRENT_DATE AND UPLOAD_TIME >= CURRENT_TIME - 1 OR UPLOAD_DATE = CURRENT_DATE - 1 AND UPLOAD_TIME >= CURRENT_TIME - 1\";\r\n";
+                string sqla = "SELECT Count(Id) FROM UPLOADSRECORD WHERE UPLOAD_DATE = CURRENT_DATE AND " +
+                    "UPLOAD_TIME >= CURRENT_TIME - 1 AND UPLOADTYPE = 0 OR UPLOAD_DATE = CURRENT_DATE - 1 " +
+                    "AND UPLOAD_TIME >= CURRENT_TIME - 1 AND UPLOADTYPE = 0";
                 string connectStr = dbInitializer?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
                 return connectStr.ExecuteScalar(sqla.ToUpper()).ToInt(-1);
             }
@@ -2179,16 +2201,12 @@ namespace VideoGui
                     {
                         if (DescId != -1)
                         {
-                            var p = new CustomParams_GetDesc(id, DescId);
-                            dbInitializer?.Invoke(this, p);
-                            DescStr = p.name;
+                            DescStr = dbInitializer?.Invoke(this, new CustomParams_GetDesc(id, DescId)) is string s ? s : "";
                         }
                         if (TitleId != -1)
                         {
-                            var p = new CustomParams_GetTitle(id, TitleId);
-                            dbInitializer?.Invoke(this, p);
-                            TitleStr = p.name;
-                            var r = p.name.Split(" ").ToList<string>().Where(s => !s.StartsWith("#") &&
+                            TitleStr = dbInitializer?.Invoke(this, new CustomParams_GetTitle(id, TitleId)) is string s1 ? s1 : "";
+                            var r = TitleStr.Split(" ").ToList<string>().Where(s => !s.StartsWith("#") &&
                             s != "" && s.ToLower() != "vline").ToList<string>();
                             foreach (var item in r)
                             {
@@ -3229,15 +3247,11 @@ namespace VideoGui
                                             {
                                                 if (TitleId != -1)
                                                 {
-                                                    var p = new CustomParams_GetTitle(TitleId, Id);
-                                                    dbInitializer?.Invoke(this, p);
-                                                    TitleStr = p.name;
+                                                    TitleStr = dbInitializer?.Invoke(this, new CustomParams_GetTitle(TitleId, Id)) is string t ? t : "";
                                                 }
                                                 if (DescId != -1)
                                                 {
-                                                    var p = new CustomParams_GetDesc(DescId, Id);
-                                                    dbInitializer?.Invoke(this, p);
-                                                    DescStr = p.name;
+                                                    DescStr = dbInitializer?.Invoke(this, new CustomParams_GetDesc(DescId, Id)) is string d ? d : "";
                                                 }
                                             }
 
@@ -3355,10 +3369,10 @@ namespace VideoGui
                                     lstCnt--;
                                 }
                             }
-                            
+
                             if (files == lstCnt && lstMain.Items.Count == MaxCnts)
                             {
-                              
+
                                 if (DoAutoCancel is not null)
                                 {
                                     if (DoAutoCancel.IsClosing) DoAutoCancel.Close();
