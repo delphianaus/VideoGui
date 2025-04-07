@@ -15,6 +15,7 @@ using Google.Apis.Util.Store;
 using Google.Apis.YouTube.v3;
 using Microsoft.Web.WebView2.Wpf;
 using FirebirdSql.Data.FirebirdClient;
+using Windows.ApplicationModel.Activation;
 
 namespace VideoGui
 {
@@ -196,6 +197,15 @@ namespace VideoGui
                         video.Status.PrivacyStatus = "private";
                         if (Desc_Str != "")
                         {
+
+                            int iidx = Title_str.IndexOf("#");
+                            if (iidx != -1)
+                            {
+                                string r = Title_str.Substring(0, iidx - 1);
+                                string rr = r.ToPascalCase();
+                                string p = Title_str.Substring(iidx);
+                                Title_str = rr + p;
+                            }
                             video.Snippet.Description = Desc_Str;
                             video.Snippet.Title = Title_str;
                         }

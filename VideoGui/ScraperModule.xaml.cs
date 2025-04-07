@@ -1595,7 +1595,7 @@ namespace VideoGui
                                         int lstCnt = lstMain.Items.Count;
                                         foreach (var itemss in lstMain.Items)
                                         {
-                                            if (itemss.ToString().Contains(" "))
+                                            if (itemss.ToString().Contains("_"))
                                             {
                                                 lstCnt--;
                                                 break;
@@ -1604,8 +1604,7 @@ namespace VideoGui
 
                                         if (lstCnt == 0 && lstMain.Items.Count == MaxNodes)
                                         {
-                                            cancelds();
-                                            canceltoken.Cancel();
+                                            
                                             if (DoAutoCancel is not null)
                                             {
                                                 if (DoAutoCancel.IsClosing) DoAutoCancel.Close();
@@ -1707,7 +1706,7 @@ namespace VideoGui
                                 int lstCnt2 = lstMain.Items.Count;
                                 foreach (var itemssx in lstMain.Items)
                                 {
-                                    if (itemssx.ToString().Contains(" "))
+                                    if (itemssx.ToString().Contains("_"))
                                     {
                                         lstCnt2--;
                                     }
@@ -1715,8 +1714,7 @@ namespace VideoGui
 
                                 if (lstCnt2 == 0 && lstMain.Items.Count == MaxNodes)
                                 {
-                                    cancelds();
-                                    canceltoken.Cancel();
+                                   
                                     if (DoAutoCancel is not null)
                                     {
                                         if (DoAutoCancel.IsClosing) DoAutoCancel.Close();
@@ -3156,6 +3154,12 @@ namespace VideoGui
                                                 }
                                             }
                                         }
+                                        if (!Regex.IsMatch(htmlcheck.ToLower(), @"youtube.be"))
+                                        {
+                                            break;
+                                        }
+                                        wv2.ExecuteScriptAsync("document.dispatchEvent(new WheelEvent('wheel', { deltaY: -100 }));");
+                                        wv2.ExecuteScriptAsync("document.dispatchEvent(new WheelEvent('wheel', { deltaY: 100 }));");
                                         Thread.Sleep(100);
                                     }
                                     html = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));

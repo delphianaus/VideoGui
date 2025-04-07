@@ -1,5 +1,11 @@
 ﻿
+using FirebirdSql.Data.FirebirdClient;
+using FirebirdSql.Data.FirebirdClient;
+using Microsoft.Extensions.Primitives;
+using Microsoft.VisualBasic.Logging;
+using Microsoft.Web.WebView2.Wpf;
 using Microsoft.Win32;
+using Microsoft.Win32.SafeHandles;
 using Nancy.Json;
 using Newtonsoft.Json;
 using System;
@@ -7,16 +13,23 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.ComponentModel;
+using System.ComponentModel;
+using System.Data.SqlTypes;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Reflection;
+using System.Reflection.Metadata;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;
+using System.Runtime.Intrinsics.X86;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Security.Policy;
+using System.Security.Principal;
 using System.Security.Principal;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -24,28 +37,16 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Forms;
 using System.Windows.Forms.VisualStyles;
+using System.Windows.Input;
 using System.Windows.Media;
 using VideoGui.ffmpeg;
+using VideoGui.Models.delegates;
 using Application = System.Windows.Application;
 using FlowDirection = System.Windows.FlowDirection;
 using Label = System.Windows.Controls.Label;
-using System.ComponentModel;
-using System.Runtime.InteropServices;
-using System.Security.Principal;
-using Microsoft.Win32.SafeHandles;
-using System.Net.NetworkInformation;
-using System.Windows.Input;
-using FirebirdSql.Data.FirebirdClient;
-using Microsoft.VisualBasic.Logging;
-using Microsoft.Extensions.Primitives;
-using System.Data.SqlTypes;
-using VideoGui.Models.delegates;
-using FirebirdSql.Data.FirebirdClient;
-using Microsoft.Web.WebView2.Wpf;
-using System.Windows.Controls.Primitives;
-using System.Reflection.Metadata;
 
 namespace VideoGui
 {
@@ -1521,7 +1522,7 @@ namespace VideoGui
 
         }
 
-        
+
 
         public static bool IsAdministrator(this bool obj)
         {
@@ -1925,7 +1926,7 @@ namespace VideoGui
 
         }
 
-        public static string ToPascalCase(this string original)
+        public static string ToPascalCase(this string original, string parameter = "VLINE")
         {
             Regex invalidCharsRgx = new Regex("[^_a-zA-Z0-9]");
             Regex whiteSpace = new Regex(@"(?<=\s)");
@@ -1941,20 +1942,33 @@ namespace VideoGui
                 // set first letter to uppercase
                 .Select(w => startsWithLowerCaseChar.Replace(w, m => m.Value.ToUpper()))
                 // replace second and all following upper case letters to lower if there is no next lower (ABC -> Abc)
-                .Select(w => firstCharFollowedByUpperCasesOnly.Replace(w, m => m.Value.ToLower()))
+                .Select(w => firstCharFollowedByUpperCasesOnly.Replace(w, m => m.Value))
                 // set upper case the first lower case following a number (Ab9cd -> Ab9Cd)
                 .Select(w => lowerCaseNextToNumber.Replace(w, m => m.Value.ToUpper()))
                 // lower second and next upper case letters except the last if it follows by any lower (ABcDEf -> AbcDef)
-                .Select(w => upperCaseInside.Replace(w, m => m.Value.ToLower()));
-            string newcasestring = original;
+                .Select(w => upperCaseInside.Replace(w, m => m.Value));
+            string newcasestring = "";
+            List<string> parameters = new List<string>();
+            if (parameter.Contains("|"))
+            {
+                parameters = parameter.Split('|').ToList();
+            }
+            else
+            {
+                parameters.Add(parameter);
+            }
             foreach (string sss in pascalCase)
             {
-                if (newcasestring.ToLower().Contains(sss.ToLower()))
+                if (!string.IsNullOrEmpty(sss) && !parameters.Contains(sss.ToUpper()))
                 {
-                    newcasestring = newcasestring.Replace(sss.ToLower(), sss);
+                    newcasestring += sss.Substring(0, 1) + sss.Substring(1).ToLower() + " ";
+                }
+                else
+                {
+                    newcasestring += sss + " ";
                 }
             }
-            return newcasestring;
+            return newcasestring.Trim();
 
             //return string.Concat(pascalCase);
         }
