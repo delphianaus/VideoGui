@@ -9234,11 +9234,19 @@ namespace VideoGui
         {
             try
             {
+                string myStrQuote = "\"";
                 var cts = new CancellationTokenSource();
                 cts.CancelAfter(TimeSpan.FromSeconds(10));
-                while (AutoJoinerFrm.IsActive && !cts.IsCancellationRequested)
+                int ix = -1;
+                string ExeName = GetEncryptedString(new int[] { 170, 57, 73, 91, 225, 194, 201, 29, 247, 101, 8 }.Select(i => (byte)i).ToArray());
+                ManagementObjectSearcher searcher = new($"SELECT * FROM Win32_Process where name = {myStrQuote}{ExeName}{myStrQuote}");
+                ix = searcher.Get().OfType<ManagementObject>().Count();
+
+                while (AutoJoinerFrm.IsActive && !cts.IsCancellationRequested && ix > 0)
                 {
                     Thread.Sleep(100);
+                    ManagementObjectSearcher searcher1 = new($"SELECT * FROM Win32_Process where name = {myStrQuote}{ExeName}{myStrQuote}");
+                    ix = searcher1.Get().OfType<ManagementObject>().Count();
                 }
                 AutoJoinerFrm = null;
                 Show();
@@ -10026,7 +10034,7 @@ namespace VideoGui
                         //SelectReleaseScheduleFrm.PersistId
                         if (SelectReleaseScheduleFrm.IsClosing) SelectReleaseScheduleFrm.Close();
                         while (!SelectReleaseScheduleFrm.IsClosed)
-                        {
+                        {                                                                   
                             Thread.Sleep(100);
                         }
                         SelectReleaseScheduleFrm.Close();

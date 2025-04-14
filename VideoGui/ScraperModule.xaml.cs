@@ -1074,7 +1074,7 @@ namespace VideoGui
                 {
                     sql = "SELECT Count(Id) FROM UPLOADSRECORD WHERE UPLOAD_DATE = CURRENT_DATE AND " +
                     "UPLOAD_TIME >= CURRENT_TIME - 1 AND UPLOADTYPE = 0 OR UPLOAD_DATE = CURRENT_DATE - 1 " +
-                    "AND UPLOAD_TIME >= CURRENT_TIME - 1 AND UPLOADTYPE = 0";
+                    "AND UPLOAD_TIME >= CURRENT_TIME - 1 AND UPLOADTYPE = 0 AND UPLOADSRECORD.UPLOADFILE NOT LIKE '%mp4'";
                 }
                 return connectionStr.ExecuteScalar(sql, [("@p0", DateTime.Now.Date)]).ToInt(-1);
             }
@@ -1094,22 +1094,13 @@ namespace VideoGui
                 //string DataStr = "";
                 foreach (var item in videofiles)
                 {
+                    string fname = Path.GetFileNameWithoutExtension(item);
                     string sql = "SELECT ID FROM UPLOADSRECORD WHERE UPLOADFILE = @P0 AND UPLOADTYPE = 0";
-                    int id = connectStr.ExecuteScalar(sql.ToUpper(), [("@P0", item)]).ToInt(-1);
+                    int id = connectStr.ExecuteScalar(sql.ToUpper(), [("@P0", fname)]).ToInt(-1);
                     if (id != -1) continue;
                     sql = "INSERT INTO UPLOADSRECORD(UPLOADFILE, UPLOAD_DATE, UPLOAD_TIME,UPLOADTYPE) VALUES (@P0,@P1,@P2,@P3) RETURNING ID";
-                    id = connectStr.ExecuteScalar(sql.ToUpper(), [("@P0", item),
+                    id = connectStr.ExecuteScalar(sql.ToUpper(), [("@P0", fname),
                         ("@P1", DateTime.Now.Date), ("@P2", DateTime.Now.TimeOfDay), ("@P3", 0)]).ToInt(-1);
-                    /*DataStr = $"{id}:{num}/{Max} {item} {DateTime.Now.TimeOfDay}";
-                    if (File.Exists(@"c:\videogui\uploadlist.txt"))
-                    {
-                        File.AppendAllText(@"c:\videogui\uploadlist.txt", DataStr + Environment.NewLine);
-                    }
-                    else
-                    {
-                        File.WriteAllText(@"c:\videogui\uploadlist.txt", DataStr + Environment.NewLine);
-                    }
-                    num++;*/
                 }
             }
             catch (Exception ex)
@@ -1131,17 +1122,19 @@ namespace VideoGui
                         NodeUpdate(Span_Name, ScheduledGet);
                         lstMain.Items.Insert(0, $"{file} Deleted");
                         int res = -1;
+                        string fname = Path.GetFileNameWithoutExtension(file);
                         string sql = "select ID from UPLOADSRECORD WHERE UPLOADFILE = @P0 AND UPLOADTYPE = 0";
-                        res = connectStr.ExecuteScalar(sql.ToUpper(), [("@P0", filename1)]).ToInt(-1);
+                        res = connectStr.ExecuteScalar(sql.ToUpper(), [("@P0", fname)]).ToInt(-1);
                         if (res == -1)
                         {
                             sql = "INSERT INTO UPLOADSRECORD(UPLOADFILE, UPLOAD_DATE, UPLOAD_TIME,UPLOADTYPE) VALUES (@P0,@P1,@P2,@P3) RETURNING ID";
-                            res = connectStr.ExecuteScalar(sql.ToUpper(), [("@P0", filename1), ("@P1", DateTime.Now.Date), ("@P2", DateTime.Now.TimeOfDay), ("@P3", 0)]).ToInt(-1);
+                            res = connectStr.ExecuteScalar(sql.ToUpper(), [("@P0", fname), ("@P1", DateTime.Now.Date), ("@P2", DateTime.Now.TimeOfDay), ("@P3", 0)]).ToInt(-1);
                         }
                         else
                         {
                             sql = "UPDATE UPLOADSRECORD SET UPLOAD_DATE = @P1, UPLOAD_TIME = @P2 WHERE ID = @P0";
-                            connectStr.ExecuteNonQuery(sql.ToUpper(), [("@P0", res), ("@P1", DateTime.Now.Date), ("@P2", DateTime.Now.TimeOfDay)]);
+                            connectStr.ExecuteNonQuery(sql.ToUpper(), [("@P0", res), ("@P1", DateTime.Now.Date), 
+                                ("@P2", DateTime.Now.TimeOfDay)]);
                         }
                         if (ScheduledOk.IndexOf(filename1) == -1)
                         {
@@ -2990,6 +2983,28 @@ namespace VideoGui
             try
             {
                 List<Uploads> clicks = new List<Uploads>();
+                DispatcherTimer timer = new DispatcherTimer();
+                timer.Interval = TimeSpan.FromSeconds(1);
+                bool timeractive = false;
+                int scrollcnt = 0;
+                timer.Tick += (s, e) =>
+                {
+                    timeractive = true;
+                    timer.Stop();
+                    scrollcnt++;
+                    wv2.ExecuteScriptAsync("document.dispatchEvent(new WheelEvent('wheel', { deltaY: -100 }));");
+                    var crs = new CancellationTokenSource();
+                    crs.CancelAfter(TimeSpan.FromSeconds(2));
+                    while (!crs.IsCancellationRequested)
+                    {
+                        System.Windows.Forms.Application.DoEvents();
+                        Thread.Sleep(15);
+                    }   
+                    wv2.ExecuteScriptAsync("document.dispatchEvent(new WheelEvent('wheel', { deltaY: 100 }));");
+                    Thread.Sleep(100);
+                    timeractive = false;
+                };
+
                 while (true && !canceltoken.IsCancellationRequested)
                 {
                     if (ExitDialog) return false;
@@ -3057,6 +3072,7 @@ namespace VideoGui
                             {
                                 return false;
                             }
+                            scrollcnt = 0;
                             if (Regex.IsMatch(Nodes[i].InnerText, @"complete|100% uploaded"))
                             {
                                 CompleteCnt++;
@@ -3158,8 +3174,11 @@ namespace VideoGui
                                         {
                                             break;
                                         }
-                                        wv2.ExecuteScriptAsync("document.dispatchEvent(new WheelEvent('wheel', { deltaY: -100 }));");
-                                        wv2.ExecuteScriptAsync("document.dispatchEvent(new WheelEvent('wheel', { deltaY: 100 }));");
+                                        ///new thread evoke
+                                        if (!timeractive && scrollcnt <  3)
+                                        {
+                                            timer.Start();
+                                        }
                                         Thread.Sleep(100);
                                     }
                                     html = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
