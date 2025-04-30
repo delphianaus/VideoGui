@@ -16,7 +16,7 @@
                     <CheckBox x:Name="chkSchedule" Content="Test Mode" Canvas.Top="34" Canvas.Left="419" 
                               HorizontalAlignment="Center" VerticalAlignment="Top"/>
                     <Label Name="lblDate" Content="Date :" HorizontalAlignment="Center"
-                           Canvas.Top="16" VerticalAlignment="Top" Canvas.Left="6"/>
+                           Canvas.Top="16" VerticalAlignment="Top" Canvas.Left="6" MouseDoubleClick="lblDate_MouseDoubleClick"/>
                     <xctk:DateTimePicker x:Name="ReleaseDate" Format="Custom" 
           FormatString="dd/MM/yyyy" MinWidth="140" 
           Focusable="True" Width="140" HorizontalAlignment="Center" 

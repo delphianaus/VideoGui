@@ -117,7 +117,7 @@ namespace VideoGui
                         DriverVer = Driver.Value.ToString();
                         if (Card.ToLower().Contains(amd) && DriverVer != "31.0.14001.45012")
                         {
-                            res = false;
+                            //res = false;
                         }
                     }
                 }

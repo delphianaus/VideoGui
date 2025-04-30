@@ -22,6 +22,8 @@ using VideoGui.ffmpeg.Streams.Audio;
 using VideoGui.ffmpeg.Streams.MediaInfo;
 using VideoGui.ffmpeg.Streams.Video;
 using VideoGui.Models.delegates;
+using Windows.ApplicationModel.Background;
+using Windows.Media.Audio;
 using static System.Formats.Asn1.AsnWriter;
 using static System.Net.WebRequestMethods;
 
@@ -164,37 +166,62 @@ namespace VideoGui.ffmpeg
                 return null;
             }
         }
+        int numberframes = 0, cntx = 0;
+        float LastPercent = 0.0f;
         public Task ErrorHandler(string args)
         {
             try
             {
-                OnProbeData?.Invoke(this, ProbeID, _source);
-                //ProbeData.Add(args);
-                ProbeID++;
+                //OnProbeData?.Invoke(this, ProbeID, _source);
                 string[] breaks = { "frame=", "fps=", "bitrate=", "time=" };
-                if (args.Contains("Application provided invalid, non monotonically increasing dts to muxer in stream"))
+                int dtsindex = args.IndexOf("Application provided invalid, non monotonically increasing dts to muxer in stream");
+                if (dtsindex != -1)
                 {
                     mtscnt++;
-                    if (mtscnt > 10)
+                    if (mtscnt > 450)
                     {
-                        cancellation.Cancel();
-                    }
-                    else if ((mtscnt > 10) && _Is1080p)
-                    {
-                        cancellation.CancelAfter(TimeSpan.FromSeconds(1));
-                        return Task.CompletedTask;
+                        int pr = args.LastIndexOf(":");
+                        string p = args.Substring(pr+1).Trim();
+                        if (p.Contains("=") && numberframes > 0)
+                        {
+                            var xp = p.IndexOf("=");
+                            var num = p.Substring(xp + 1).Trim();
+                            var current_frame = num.ToInt();
+                            float percentage = (float)((current_frame / (float)numberframes) * 100);
+                            p = percentage.ToString("0.0") + "%";
+                            LastPercent = percentage;
+                        }
+                        OnProbeData?.Invoke(this, ProbeID, _source + "|" + p + "|");
+                        mtscnt = 0;
                     }
                 }
-                if (args.Contains("Output #0, null, to") && _Is1080p)
+                else
                 {
-                    cancellation.CancelAfter(TimeSpan.FromSeconds(1));
-                    return Task.CompletedTask;
-                }
-                if (!args.Contains("Application provided invalid, non monotonically increasing dts to muxer in stream"))
-                {
+                    cntx++;
+                    if (cntx > 10)
+                    {
+                        cntx = 0;
+                        Thread.Sleep(10);
+                        System.Windows.Forms.Application.DoEvents();
+                    }
+                    var ap = LastPercent.ToString("0.0") + "%";
+                    OnProbeData?.Invoke(this, ProbeID, _source + "|" + ap + "|");
+                    if (args.Contains("NUMBER_OF_FRAMES:") && numberframes == 0)
+                    {
+                        var r = "NUMBER_OF_FRAMES:".Length;
+                        string p = args.Trim().Substring(r).Trim();
+                        numberframes = p.ToInt();
+                    }
                     ProbeResults.Add(args);
+                    ProbeID++;
                     if (ProbeID > 4) ProbeID = 0;
                 }
+                if (args.Contains("out#0/null"))
+                {
+                    cancellation.CancelAfter(TimeSpan.FromMilliseconds(200));
+                    return Task.CompletedTask;
+                }
+
 
                 return Task.CompletedTask;
             }
@@ -377,7 +404,7 @@ namespace VideoGui.ffmpeg
         bool ProcessRunning = false;
         int InternalProcessId = -1;
 
-        public async Task<IConversionResult> ProbeFile(string filename, bool is1080p)
+        public async Task<bool> ProbeFile(string filename, bool is1080p)
         {
             try
             {
@@ -391,42 +418,52 @@ namespace VideoGui.ffmpeg
                 _src = filename;
                 DateTime startTime = DateTime.Now;
                 var x = GetEncryptedString(new int[] { 144, 57, 66, 70, 244, 192, 128, 86, 234, 120 }.Select(i => (byte)i).ToArray());
-                cmd = Cli.Wrap(defaultpath + "\\"+x).
+                cmd = Cli.Wrap(defaultpath + "\\" + x).
                     WithArguments(args => args
                    .Add("-hide_banner")
                     .Add("-i")
                     .Add($"{filename}")
-                    .Add("-c")
-                    .Add("copy")
-                    .Add("-a")
-                    .Add("copy")
-                    .Add("-s")
-                    .Add("copy")
                     .Add("-f").Add("null").Add("output.mkv"))
                   .WithWorkingDirectory(defaultpath).
                   WithValidation(CommandResultValidation.None).
                   WithStandardErrorPipe(PipeTarget.ToDelegate(ErrorHandler)).
                   WithStandardOutputPipe(PipeTarget.ToDelegate(DataHandler));
-                InternalProcessId = cmd.ExecuteAsync().ProcessId;
-                ProcessRunning = true;
-
-                return new ConversionResult
+                await foreach (var commandEvent in cmd.ListenAsync())
                 {
-                    StartTime = startTime,
-                    EndTime = DateTime.Now,
-                    Arguments = _parameterAsstring
-                };
+                    switch (commandEvent)
+                    {
+                        case StartedCommandEvent StartedEvent:
+                            {
+                                ProcessID = StartedEvent.ProcessId;
+                                InternalProcessId = ProcessID;
+                                break;
+                            }
+                        case StandardOutputCommandEvent OutputEvent:
+                            {
+                                DataHandler(OutputEvent.Text);
+                                break;
+                            }
+                        case StandardErrorCommandEvent ErrorEvent:
+                            {
+                                ErrorHandler(ErrorEvent.Text);
+                                break;
+                            }
+                        case ExitedCommandEvent ExitedEvent:
+                            {
+                                ProcessRunning = false;
+                                InternalProcessId = -1;
+                                return true;
+                                break;
+                            }
+                    }
+                }
+
+                return false;
             }
             catch (Exception ex)
             {
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
-                return new ConversionResult
-                {
-                    StartTime = DateTime.Now,
-                    EndTime = DateTime.Now,
-                    Arguments = _parameterAsstring
-                };
-
+                return false;
             }
         }
 
@@ -502,10 +539,9 @@ namespace VideoGui.ffmpeg
 
                     args2x.AddRange(GetStreamsPreInputs());
                     errn = 116;
-
                     args2x.AddRange(GetStreamsPostInputs());
                     errn = 117;
-
+                   
                     args2x.AddRange(GetFilters());
                     errn = 118;
 
@@ -563,6 +599,7 @@ namespace VideoGui.ffmpeg
                     errn = 6;
                     ProbeData.Clear();
                     errn = 7;
+                    string accmode = "";
                     foreach (IStream stream in _streams)
                     {
                         if (stream is VideoStream vss)
@@ -1242,6 +1279,7 @@ namespace VideoGui.ffmpeg
                 }
                 string command = "";
                 int cnt = 0;
+                string aacmode = "";
                 bool vcopy = false, acopy = false;
                 var builder = new List<string>();
                 foreach (IStream stream in _streams)
@@ -1253,6 +1291,10 @@ namespace VideoGui.ffmpeg
                     if (stream is AudioStream ass)
                     {
                         acopy = stream.IsCopy;
+                        if (ass.Codec == "aac")
+                        {
+                            aacmode = "-ac " + ass.Channels;
+                        }
                     }
                 }
                 foreach (IStream stream in _streams)
@@ -1291,7 +1333,14 @@ namespace VideoGui.ffmpeg
                             builder.Add($"{command}");
                         }
                     }
-                    else builder.AddRange(stream.BuildParameters(stream.PostInput).Split(" ").ToList());
+                    else
+                    {
+                        if (aacmode != "")
+                        {
+                            builder.AddRange(aacmode.Split(" ").ToList());
+                        }
+                        builder.AddRange(stream.BuildParameters(stream.PostInput).Split(" ").ToList());
+                    }
                 }
                 foreach (var res in builder)
                 {

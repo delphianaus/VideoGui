@@ -6494,7 +6494,7 @@ namespace VideoGui
                 ffmpeg.VideoCodec Encoder = ffmpeg.VideoCodec.h264;
                 HardwareAccelerator HardwareAcceleration = HardwareAccelerator.cuda;// "qsv";
                 LineNum = 2;
-                if (Video.Contains("AMD") || Video.Contains("Radeon")) HardwareAcceleration = HardwareAccelerator.vulkan;
+                if (Video.Contains("AMD") || Video.Contains("Radeon")) HardwareAcceleration = HardwareAccelerator.amf;
                 if (_GPUEncode)
                 {
                     if ((!overrider) && (_X265Output))
@@ -8765,7 +8765,6 @@ namespace VideoGui
                     LineNum = 7;
                     if (ffprobe.ProbeResults.ToList().Count > 0)
                     {
-
                         string LastResult = ffprobe.ProbeResults.Last<string>();
                         LineNum = 8;
                         if (LastResult != null)
@@ -8869,7 +8868,16 @@ namespace VideoGui
                             break;
                         }
                 }
-                ThreadStatsHandlerXtra?.Invoke(Data, "[Probing File" + probchar + "]");
+                string dp = "";
+                string fname = Data;
+                if (Data.Contains("|"))
+                {
+                    string r = Data.Split('|')[1];
+                    dp = r+ " ";
+                    fname = Data.Split('|')[0];
+                }
+
+                ThreadStatsHandlerXtra?.Invoke(fname, dp+"[Probing File" + probchar + "]");
             }
             catch (Exception ex)
             {
@@ -9254,6 +9262,7 @@ namespace VideoGui
             catch (Exception ex)
             {
                 ex.LogWrite($"AudioJoiner_OnClose {MethodBase.GetCurrentMethod().Name} {ex.Message}");
+                Show();
             }
         }
         private void btnRunTest_Click(object sender, RoutedEventArgs e)

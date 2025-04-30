@@ -936,7 +936,7 @@ namespace VideoGui
                     string connectStr = dbInitializer?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
 
                     SendKeysString = "";
-                    int res = GetUploadsRecCnt(connectStr, true);
+                    int res = GetUploadsRecCnt(connectStr, false);
 
                     TotalScheduled = res;
                     lblTotal.Content = TotalScheduled.ToString();
@@ -2201,12 +2201,14 @@ namespace VideoGui
                             s != "" && s.ToLower() != "vline").ToList<string>();
                             foreach (var item in r)
                             {
-                                TitleStr = TitleStr.Replace(item, item.ToLower().ToPascalCase());
-                                if (DescStr.Contains(item))
+                                TitleStr = TitleStr.Replace(item.Trim(), item.Trim().ToLower().ToPascalCase());
+                                if (DescStr.Contains(item.Trim()))
                                 {
-                                    DescStr = DescStr.Replace(item, item.ToLower().ToPascalCase());
+                                    DescStr = DescStr.Replace(item.Trim(), item.Trim().ToLower().ToPascalCase());
                                 }
                             }
+                            
+
                             LTitleStr = TitleStr;
                             LDescStr = DescStr;
                         }

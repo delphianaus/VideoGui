@@ -30,11 +30,40 @@ namespace VideoGui
         public Nullable<TimeOnly> StartTime = null, EndTime = null;
         public Nullable<int> Max = null;
 
+        private void lblDate_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            try
+            {
+                if (ReleaseDate.Value.HasValue)
+                {
+                    var cts_Date = ReleaseDate.Value.Value;
+                    cts_Date = cts_Date.AddDays(1);
+                    ReleaseDate.Value = cts_Date;
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"ManualScheduler.lblDate_MouseDoubleClick {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
+            }
+        }
+
         private void btnAccept_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                RunSchedule = true;
+
+                bool IsValidDate = (ReleaseDate.Value.HasValue && ReleaseDate.Value.Value.Date >= DateTime.Now.Date );
+                if (IsValidDate)
+                {
+                    DateOnly date =  DateOnly.FromDateTime(ReleaseDate.Value.Value.Date);
+                    TimeOnly start = TimeOnly.FromDateTime(ReleaseTimeStart.Value.Value);
+                    var NewDate = date.ToDateTime(start);   
+                    if (NewDate < DateTime.Now)
+                    {
+                        IsValidDate = false;
+                    }
+                }
+                RunSchedule = true && IsValidDate; 
                 Close();
             }
             catch (Exception ex)

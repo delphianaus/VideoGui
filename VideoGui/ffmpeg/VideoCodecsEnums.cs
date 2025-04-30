@@ -55,6 +55,8 @@ namespace VideoGui.ffmpeg
         ///     
         /// </summary>
         software,
+
+        amf,
     }
     public enum AudioCodec
     {
