@@ -6,7 +6,8 @@
         xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit" SizeChanged="Window_SizeChanged"
         xmlns:local="clr-namespace:VideoGui" ResizeMode="CanResizeWithGrip" WindowStartupLocation="CenterScreen" 
         mc:Ignorable="d" Loaded="Window_Loaded" SizeToContent="Manual" WindowStyle="ToolWindow" 
-        Title="ScheduleActioner" Height="372" Width="396" MinWidth="396" MinHeight="372">
+        Title="ScheduleActioner" Height="372" Width="396" MinWidth="396" MinHeight="372" Icon="/Icons/computer.ico" 
+        ShowInTaskbar="False" IsManipulationEnabled="True">
     <Grid>
         <Border x:Name="brdMain" Margin="2,2,2,60" BorderThickness="2" BorderBrush="Black">
             <Canvas x:Name="ScheduleNameX">

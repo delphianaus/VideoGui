@@ -8,7 +8,7 @@
         mc:Ignorable="d" ResizeMode="CanResize" 
         WindowStartupLocation="CenterScreen" WindowStyle="ToolWindow" 
         Title="YouTube Uploader Module" Height="450" Width="800" Loaded="Window_Loaded" 
-        SizeChanged="Window_SizeChanged" KeyDown="mainwindow_KeyDown" Icon="/Icons/computer.ico">
+        SizeChanged="Window_SizeChanged" KeyDown="mainwindow_KeyDown" Icon="/Icons/computer.ico" ShowInTaskbar="False">
     <Grid UseLayoutRounding="True" x:Name="gridmain">
         <Border x:Name="brdmain" BorderBrush="Black" BorderThickness="3" Margin="2,1,3,40" AllowDrop="True"
                 VerticalAlignment="Top" >

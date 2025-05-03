@@ -71,10 +71,10 @@
                         <Image x:Name="PART_Image2"  />
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsChecked" Value="true">
-                                <Setter TargetName="PART_Image2" Property="Source" Value="{StaticResource CEN}"/>
+                                <Setter TargetName="PART_Image2" Property="Source" Value="{StaticResource GEN}"/>
                             </Trigger>
                             <Trigger Property="IsChecked" Value="False">
-                                <Setter TargetName="PART_Image2" Property="Source" Value="{StaticResource GEN}"/>
+                                <Setter TargetName="PART_Image2" Property="Source" Value="{StaticResource CEN}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>

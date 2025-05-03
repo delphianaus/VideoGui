@@ -425,9 +425,7 @@ namespace VideoGui.ffmpeg
                     .Add($"{filename}")
                     .Add("-f").Add("null").Add("output.mkv"))
                   .WithWorkingDirectory(defaultpath).
-                  WithValidation(CommandResultValidation.None).
-                  WithStandardErrorPipe(PipeTarget.ToDelegate(ErrorHandler)).
-                  WithStandardOutputPipe(PipeTarget.ToDelegate(DataHandler));
+                  WithValidation(CommandResultValidation.None);
                 await foreach (var commandEvent in cmd.ListenAsync())
                 {
                     switch (commandEvent)

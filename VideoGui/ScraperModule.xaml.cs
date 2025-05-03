@@ -14,6 +14,7 @@ using Nancy;
 using Nancy.Extensions;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.DirectoryServices;
@@ -44,6 +45,7 @@ using System.Windows.Forms;
 using System.Windows.Forms.Design;
 using System.Windows.Input;
 using System.Windows.Input.Manipulations;
+using System.Windows.Markup;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
@@ -385,7 +387,8 @@ namespace VideoGui
         {
             try
             {
-                if (!NewSession || DoUploadsCnt() < 100)
+                int r = DoUploadsCnt();
+                if (!NewSession || r < 100)
                 {
                     var UploadTask = UploadV2Files(false);
                 }
@@ -1015,23 +1018,32 @@ namespace VideoGui
                         var html1 = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
                         List<HtmlNode> Nodes1 = GetNodes(html1, Span_Name);
                         int finishedz = 0;
-                        for (int i = 0; i < Nodes1.Count; i++)
+                        foreach (HtmlNode Node in Nodes1)
                         {
                             finishedz++;
-                            if (Nodes1[1].InnerText.ToLower().Contains("limit"))
+                            int start = Node.InnerText.IndexOf("\n") + 1;
+                            string filename1 = Node.InnerText.Substring(start).Split('\n').FirstOrDefault().Trim();
+                            if (Node.InnerText.ToLower().Contains("limit") || Node.InnerText.ToLower().Contains("100% uploaded"))
                             {
-                                Exceeded = true;
-                            }
-                            else
-                            {
-                                if (Nodes1[i].InnerText.ToLower().Contains("100% uploaded"))
+                                var e = Node.InnerText.ToLower().Contains("limit");
+                                Exceeded = Exceeded || e;
+                                UploadedHandler(Span_Name, connectStr, filename1);
+                                if (!e)
                                 {
-                                    int start = Nodes1[i].InnerText.IndexOf("\n") + 1;
-                                    int end = Nodes1[i].InnerText.IndexOf("\n", start);
-                                    string filename1 = Nodes1[i].InnerText.Substring(start, end - start).Trim();
-                                    UploadedHandler(Span_Name, connectStr, filename1);
                                     InsertIntoUploadFiles(new List<string> { filename1 }, connectStr);
                                 }
+                            }
+                        }
+                        if (Exceeded)
+                        {
+                            html1 = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
+                            Nodes1 = GetNodes(html1, Span_Name);
+                            foreach (var Node in Nodes1.Where(Node => Node.InnerText.ToLower().Contains("100% uploaded")))
+                            {
+                                int start = Node.InnerText.IndexOf("\n") + 1;
+                                string filename1 = Node.InnerText.Substring(start).Split('\n').FirstOrDefault().Trim();
+                                UploadedHandler(Span_Name, connectStr, filename1);
+                                InsertIntoUploadFiles(new List<string> { filename1 }, connectStr);
                             }
                         }
                         if (finishedz == Nodes1.Count && Nodes1.Count > 0)
@@ -1133,7 +1145,7 @@ namespace VideoGui
                         else
                         {
                             sql = "UPDATE UPLOADSRECORD SET UPLOAD_DATE = @P1, UPLOAD_TIME = @P2 WHERE ID = @P0";
-                            connectStr.ExecuteNonQuery(sql.ToUpper(), [("@P0", res), ("@P1", DateTime.Now.Date), 
+                            connectStr.ExecuteNonQuery(sql.ToUpper(), [("@P0", res), ("@P1", DateTime.Now.Date),
                                 ("@P2", DateTime.Now.TimeOfDay)]);
                         }
                         if (ScheduledOk.IndexOf(filename1) == -1)
@@ -1597,7 +1609,7 @@ namespace VideoGui
 
                                         if (lstCnt == 0 && lstMain.Items.Count == MaxNodes)
                                         {
-                                            
+
                                             if (DoAutoCancel is not null)
                                             {
                                                 if (DoAutoCancel.IsClosing) DoAutoCancel.Close();
@@ -1707,7 +1719,7 @@ namespace VideoGui
 
                                 if (lstCnt2 == 0 && lstMain.Items.Count == MaxNodes)
                                 {
-                                   
+
                                     if (DoAutoCancel is not null)
                                     {
                                         if (DoAutoCancel.IsClosing) DoAutoCancel.Close();
@@ -1918,7 +1930,8 @@ namespace VideoGui
                             string _dest = key.GetValueStr("UploadPath", "");
                             key.Close();
                             UploadPath = _dest;
-                            if (DoUploadsCnt() < 100)
+                            int r = DoUploadsCnt();
+                            if (r < 200)
                             {
                                 var UploadTask = UploadV2Files(false);
                             }
@@ -1967,11 +1980,24 @@ namespace VideoGui
         {
             try
             {
-                string sqla = "SELECT Count(Id) FROM UPLOADSRECORD WHERE UPLOAD_DATE = CURRENT_DATE AND " +
-                    "UPLOAD_TIME >= CURRENT_TIME - 1 AND UPLOADTYPE = 0 OR UPLOAD_DATE = CURRENT_DATE - 1 " +
-                    "AND UPLOAD_TIME >= CURRENT_TIME - 1 AND UPLOADTYPE = 0";
+                List<DateTime> Dateslist = new List<DateTime>();
+                DateTime Opt = new DateTime(1900, 1, 1);
+                string sqla = "SELECT * FROM UPLOADSRECORD u WHERE u.UPLOAD_DATE >= current_date -1 AND UPLOADTYPE = 0 " +
+                    "ORDER BY UPLOAD_DATE DESC FETCH FIRST 150 ROWS ONLY";
                 string connectStr = dbInitializer?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
-                return connectStr.ExecuteScalar(sqla.ToUpper()).ToInt(-1);
+                connectStr?.ExecuteReader(sqla.ToUpper(), (FbDataReader r) =>
+                {
+                    var dt = (r["UPLOAD_DATE"] is DateTime d) ? d : Opt;// new DateTime(1900, 1, 1);
+                    var tt = (r["UPLOAD_TIME"] is TimeSpan t) ? t : TimeSpan.Zero;// new DateTime(0, 0, 0);
+                    var DateA = dt.AtTime(TimeOnly.FromTimeSpan(tt));
+                    var DateB = DateTime.Now;
+                    var timeSpan = (DateA > DateB) ? DateA - DateB : DateB - DateA;
+                    if (timeSpan.Hours < 24 && timeSpan.Days == 0)
+                    {
+                        Dateslist.Add(DateA);
+                    }
+                });
+                return Dateslist.Count;
             }
             catch (Exception ex)
             {
@@ -2207,7 +2233,7 @@ namespace VideoGui
                                     DescStr = DescStr.Replace(item.Trim(), item.Trim().ToLower().ToPascalCase());
                                 }
                             }
-                            
+
 
                             LTitleStr = TitleStr;
                             LDescStr = DescStr;
@@ -2994,15 +3020,18 @@ namespace VideoGui
                     timeractive = true;
                     timer.Stop();
                     scrollcnt++;
-                    wv2.ExecuteScriptAsync("document.dispatchEvent(new WheelEvent('wheel', { deltaY: -100 }));");
-                    var crs = new CancellationTokenSource();
-                    crs.CancelAfter(TimeSpan.FromSeconds(2));
-                    while (!crs.IsCancellationRequested)
+                    Dispatcher.BeginInvoke(new Action(() =>
                     {
-                        System.Windows.Forms.Application.DoEvents();
-                        Thread.Sleep(15);
-                    }   
-                    wv2.ExecuteScriptAsync("document.dispatchEvent(new WheelEvent('wheel', { deltaY: 100 }));");
+                        wv2.ExecuteScriptAsync("document.dispatchEvent(new WheelEvent('wheel', { deltaY: -100 }));");
+                        var crs = new CancellationTokenSource();
+                        crs.CancelAfter(TimeSpan.FromSeconds(2));
+                        while (!crs.IsCancellationRequested)
+                        {
+                            System.Windows.Forms.Application.DoEvents();
+                            Thread.Sleep(15);
+                        }
+                        wv2.ExecuteScriptAsync("document.dispatchEvent(new WheelEvent('wheel', { deltaY: 100 }));");
+                    }));
                     Thread.Sleep(100);
                     timeractive = false;
                 };
@@ -3022,6 +3051,7 @@ namespace VideoGui
                     List<HtmlNode> Nodes = GetNodes(html, Span_Name);
                     if (html.ToLower().Contains("daily limit"))
                     {
+
                         if (DoUploadsCnt() < 100)
                         {
                             //dbInitializer?.Invoke(this, new CustomParams_Wait());
@@ -3070,6 +3100,8 @@ namespace VideoGui
                         NodeUpdate(Span_Name, ScheduledGet);
                         for (int i = Nodes.Count - 1; i >= 0; i--)
                         {
+                            int start = Nodes[i].InnerText.IndexOf("\n") + 1;
+                            string filename1 = Nodes[i].InnerText.Substring(start).Split('\n').FirstOrDefault().Trim();
                             if (ExitDialog)
                             {
                                 return false;
@@ -3078,9 +3110,6 @@ namespace VideoGui
                             if (Regex.IsMatch(Nodes[i].InnerText, @"complete|100% uploaded"))
                             {
                                 CompleteCnt++;
-                                int _start = Nodes[i].InnerText.IndexOf("\n") + 1;
-                                int _end = Nodes[i].InnerText.IndexOf("\n", _start);
-                                string filename1 = Nodes[i].InnerText.Substring(_start, _end - _start).Trim();
                                 UploadedHandler(Span_Name, connectStr, filename1);
                                 InsertIntoUploadFiles(new List<string> { filename1 }, connectStr);
 
@@ -3095,21 +3124,15 @@ namespace VideoGui
                                     Thread.Sleep(15);
                                 }
 
-                                int _startx = Nodes[i].InnerText.IndexOf("\n") + 1;
-                                int _endx = Nodes[i].InnerText.IndexOf("\n", _startx);
-                                string filename1x = Nodes[i].InnerText.Substring(_startx, _endx - _startx).Trim();
-
-
-                                if (!clicks.Any(clicks => clicks.FileName == filename1x))
+                                if (!clicks.Any(clicks => clicks.FileName == filename1))
                                 {
-                                    clicks.Add(new Uploads(filename1x, "Waiting"));
-                                    var filename = filename1x; //Match.Groups[1].Value.Trim();
-                                    string newfile = filename;//.Replace("\"", "");
+                                    clicks.Add(new Uploads(filename1, "Waiting"));
+                                    string newfile = filename1;//.Replace("\"", "");
                                     if (newfile.Contains("."))
                                     {
                                         newfile = newfile.Substring(0, newfile.IndexOf("."));
                                     }
-                                    var buttonLabel = $"Edit video {filename}";
+                                    var buttonLabel = $"Edit video {filename1}";
                                     lstMain.Items.Insert(0, $"Getting Edit Window For {newfile}");
                                     await ActiveWebView[1].ExecuteScriptAsync($"document.querySelector('button[aria-label=\"{buttonLabel}\"]').click()");
                                     var cts = new CancellationTokenSource();
@@ -3139,7 +3162,7 @@ namespace VideoGui
                                             var index = htmlcheck.IndexOf("https://youtu.be/");
                                             int len = "https://youtu.be/".Length;
                                             string vid = htmlcheck.Substring(index + len, 11);
-                                            foreach (var item in ScheduledFiles.Where(item => item.FileName == filename))
+                                            foreach (var item in ScheduledFiles.Where(item => item.FileName == filename1))
                                             {
                                                 item.VideoId = vid;
                                                 break;
@@ -3147,25 +3170,19 @@ namespace VideoGui
                                             if (Regex.IsMatch(htmlcheck, @"Uploads complete|Daily limit|Processing will begin shortly"))
                                             {
                                                 finished = true;
-                                                ExitCode = 1;
-                                                if (Regex.IsMatch(htmlcheck, @"Uploads complete"))
+                                                ExitCode = htmlcheck.ToLower() switch
                                                 {
-                                                    ExitCode = 2;
-                                                }
-                                                if (Regex.IsMatch(htmlcheck, @"Daily limit"))
-                                                {
-                                                    ExitCode = 3;
-                                                }
-                                                if (Regex.IsMatch(htmlcheck, @"Processing will begin shortly"))
-                                                {
-                                                    ExitCode = 4;
-                                                }
+                                                    var x when x.Contains("uploads complete") => 2,
+                                                    var x when x.Contains("daily limit") => 3,
+                                                    var x when x.Contains("processing will begin shortly") => 4,
+                                                    _ => 1,
+                                                };
                                                 break;
                                             }
                                             if (finished) break;
                                             if (!Regex.IsMatch(htmlcheck, @"title-row style-scope ytcp-uploads-dialog"))
                                             {
-                                                foreach (var click in clicks.Where(clicks => clicks.FileName == filename))
+                                                foreach (var click in clicks.Where(clicks => clicks.FileName == filename1))
                                                 {
                                                     click.Status = "Uploading";
                                                     break;
@@ -3177,7 +3194,7 @@ namespace VideoGui
                                             break;
                                         }
                                         ///new thread evoke
-                                        if (!timeractive && scrollcnt <  3)
+                                        if (!timeractive && scrollcnt < 3)
                                         {
                                             timer.Start();
                                         }

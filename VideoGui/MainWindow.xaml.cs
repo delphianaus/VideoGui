@@ -6482,7 +6482,7 @@ namespace VideoGui
                 int _cmbaudiomodeSelectedIndex = key.GetValueInt("Audiomode", 0);
                 int H264Target = key.GetValueInt("h264Target", -1);
                 bool ChkAutoAAC_IsChecked = key.GetValueBool("ChkAutoAAC", true);
-                bool _GPUEncode = this.IsChecked("GPUEncode"), _X265Output = !this.IsChecked("X265Output");
+                bool _GPUEncode = this.IsChecked("GPUEncode"), _X265Output = this.IsChecked("X265Output");
                 key.Close();
 
 
@@ -8765,12 +8765,15 @@ namespace VideoGui
                     LineNum = 7;
                     if (ffprobe.ProbeResults.ToList().Count > 0)
                     {
-                        string LastResult = ffprobe.ProbeResults.Last<string>();
-                        LineNum = 8;
-                        if (LastResult != null)
+                        var listp = ffprobe.ProbeResults.ToList();
+                        for (int i = listp.Count - 1; i >= 0; i--)
                         {
-                            LineNum = 9;
-                            isfound = LastResult.Contains("video:0kB");
+                            if (listp[i].Contains("video:0kB"))
+                            {
+                                isfound = true;
+                                break;
+                            }
+                            if (i == listp.Count - 10) break;
                         }
                         LineNum = 10;
                         bool _IsInterlaced = false;
