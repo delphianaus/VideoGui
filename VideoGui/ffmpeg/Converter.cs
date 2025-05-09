@@ -423,6 +423,8 @@ namespace VideoGui.ffmpeg
                    .Add("-hide_banner")
                     .Add("-i")
                     .Add($"{filename}")
+                    .Add($"-c:v")
+                    .Add("copy")
                     .Add("-f").Add("null").Add("output.mkv"))
                   .WithWorkingDirectory(defaultpath).
                   WithValidation(CommandResultValidation.None);
@@ -1278,6 +1280,7 @@ namespace VideoGui.ffmpeg
                 string command = "";
                 int cnt = 0;
                 string aacmode = "";
+                bool IsHevc = false;
                 bool vcopy = false, acopy = false;
                 var builder = new List<string>();
                 foreach (IStream stream in _streams)
@@ -1285,6 +1288,8 @@ namespace VideoGui.ffmpeg
                     if (stream is VideoStream vss)
                     {
                         vcopy = stream.IsCopy;
+                        IsHevc = stream.Codec.ToLower().Contains("hevc")
+                            && vss.PixelFormat == "YUV420p10le" && vss.Width <= 1920;
                     }
                     if (stream is AudioStream ass)
                     {
@@ -1326,6 +1331,11 @@ namespace VideoGui.ffmpeg
                         }
                         if ((cnt > 0) && (!vcopy))
                         {
+                            if (IsHevc)
+                            {
+                                builder.Add("-pix_fmt");
+                                builder.Add("yuv420p");
+                            }
                             builder.Add("-vf");
                             const string myStrQuote = "";
                             builder.Add($"{command}");

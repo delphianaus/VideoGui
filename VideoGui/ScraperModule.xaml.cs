@@ -56,6 +56,7 @@ using System.Xml;
 using System.Xml.Linq;
 using VideoGui.Models;
 using VideoGui.Models.delegates;
+using Windows.Web.UI.Interop;
 using static Microsoft.WindowsAPICodePack.Shell.PropertySystem.SystemProperties.System;
 using static System.Net.WebRequestMethods;
 using static System.Runtime.InteropServices.JavaScript.JSType;
@@ -137,6 +138,13 @@ namespace VideoGui
         TaskCompletionSource<bool> tcs = new TaskCompletionSource<bool>();
         public Nullable<DateTime> ReleaseDate = null, ReleaseEndDate = null;
         public EventTypes ScraperType = EventTypes.VideoUpload;
+        private const int WM_MOUSEWHEEL = 0x020A;
+        private const int WHEEL_DELTA = 120; // Standard wheel delta value
+
+
+
+
+
         [DllImport("user32.dll", SetLastError = true)]
         private static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
         [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
@@ -3005,6 +3013,58 @@ namespace VideoGui
                 return ButtonReturnType.NotPresent;
             }
         }
+        private static IntPtr MakeLParam(int x, int y)
+        {
+            return (IntPtr)((y << 16) | (x & 0xFFFF));
+        }
+
+        // Helper function to create wParam for mouse wheel
+        private static IntPtr MakeWParam(int keys, int delta)
+        {
+            return (IntPtr)((delta << 16) | keys);
+        }
+        public void SimulateMouseWheel(WebView2 webView, bool isUp)
+        {
+            var wih = new System.Windows.Interop.WindowInteropHelper(Window.GetWindow(webView));
+            var handle = wih.Handle;
+
+            // Get WebView position
+            Point position = webView.PointToScreen(new Point(webView.ActualWidth / 2, webView.ActualHeight / 2));
+
+            // Create parameters for the message
+            IntPtr lParam = MakeLParam((int)position.X, (int)position.Y);
+            IntPtr wParam = MakeWParam(0, isUp ? WHEEL_DELTA : -WHEEL_DELTA);
+
+            // Send the wheel message
+            SendMessage(handle, WM_MOUSEWHEEL, wParam, lParam);
+
+        }
+        public void SimulateWheelUpDown(WebView2 webView)
+        {
+            // Ensure we're on the UI thread
+            webView.Dispatcher.Invoke(() =>
+            {
+                // Focus the WebView
+                webView.Focus();
+
+                // Wheel Up
+                SimulateMouseWheel(webView, true);
+
+                // Small delay
+                System.Threading.Thread.Sleep(100);
+
+                // Wheel Down
+                SimulateMouseWheel(webView, false);
+            });
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct POINT
+        {
+            public int X;
+            public int Y;
+        }
+
         private async Task<bool> ProcessUploadsBody(string Span_Name, string Script_Close, string connectStr)
         {
             int ExitCode = -1;
@@ -3022,17 +3082,22 @@ namespace VideoGui
                     scrollcnt++;
                     Dispatcher.BeginInvoke(new Action(() =>
                     {
-                        wv2.ExecuteScriptAsync("document.dispatchEvent(new WheelEvent('wheel', { deltaY: -100 }));");
-                        var crs = new CancellationTokenSource();
-                        crs.CancelAfter(TimeSpan.FromSeconds(2));
-                        while (!crs.IsCancellationRequested)
-                        {
-                            System.Windows.Forms.Application.DoEvents();
-                            Thread.Sleep(15);
-                        }
-                        wv2.ExecuteScriptAsync("document.dispatchEvent(new WheelEvent('wheel', { deltaY: 100 }));");
+                        SimulateWheelUpDown(wv2);
                     }));
-                    Thread.Sleep(100);
+
+                    /* Dispatcher.BeginInvoke(new Action(() =>
+                     {
+                         wv2.ExecuteScriptAsync("document.dispatchEvent(new WheelEvent('wheel', { deltaY: -100 }));");
+                         var crs = new CancellationTokenSource();
+                         crs.CancelAfter(TimeSpan.FromSeconds(2));
+                         while (!crs.IsCancellationRequested)
+                         {
+                             System.Windows.Forms.Application.DoEvents();
+                             Thread.Sleep(15);
+                         }
+                         wv2.ExecuteScriptAsync("document.dispatchEvent(new WheelEvent('wheel', { deltaY: 100 }));");
+                     }));
+                     Thread.Sleep(100);*/
                     timeractive = false;
                 };
 

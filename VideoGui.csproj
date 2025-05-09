@@ -132,6 +132,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Reference Include="NotifyIconWpf">
+      <HintPath>NotifyIconWpf\bin\Debug\net6.0-windows\NotifyIconWpf.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Update="Properties\Settings.Designer.cs">
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <AutoGen>True</AutoGen>
