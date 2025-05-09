@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36025.13
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NotifyIconWpf", "NotifyIconWpf.csproj", "{CD27800F-7570-F085-F4A5-AA38155223DE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|x64 = Debug|x64
+		Release|Any CPU = Release|Any CPU
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CD27800F-7570-F085-F4A5-AA38155223DE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CD27800F-7570-F085-F4A5-AA38155223DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CD27800F-7570-F085-F4A5-AA38155223DE}.Debug|x64.ActiveCfg = Debug|x64
+		{CD27800F-7570-F085-F4A5-AA38155223DE}.Debug|x64.Build.0 = Debug|x64
+		{CD27800F-7570-F085-F4A5-AA38155223DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CD27800F-7570-F085-F4A5-AA38155223DE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CD27800F-7570-F085-F4A5-AA38155223DE}.Release|x64.ActiveCfg = Release|x64
+		{CD27800F-7570-F085-F4A5-AA38155223DE}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {17E60F90-EC3A-4AEA-8C62-FE441E5916DC}
+	EndGlobalSection
+EndGlobal

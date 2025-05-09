@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36025.13
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ToggleClass", "ToggleClass.csproj", "{D181B9CF-B5C5-E0F6-C67E-4E757D9DE2CE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|x64 = Debug|x64
+		Release|Any CPU = Release|Any CPU
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D181B9CF-B5C5-E0F6-C67E-4E757D9DE2CE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D181B9CF-B5C5-E0F6-C67E-4E757D9DE2CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D181B9CF-B5C5-E0F6-C67E-4E757D9DE2CE}.Debug|x64.ActiveCfg = Debug|x64
+		{D181B9CF-B5C5-E0F6-C67E-4E757D9DE2CE}.Debug|x64.Build.0 = Debug|x64
+		{D181B9CF-B5C5-E0F6-C67E-4E757D9DE2CE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D181B9CF-B5C5-E0F6-C67E-4E757D9DE2CE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D181B9CF-B5C5-E0F6-C67E-4E757D9DE2CE}.Release|x64.ActiveCfg = Release|x64
+		{D181B9CF-B5C5-E0F6-C67E-4E757D9DE2CE}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {02FE8C98-5E3E-454E-B8FD-1836165216B4}
+	EndGlobalSection
+EndGlobal
