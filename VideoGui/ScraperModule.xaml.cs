@@ -1654,6 +1654,20 @@ namespace VideoGui
                                             DoAutoCancel.ShowActivated = true;
                                             DoAutoCancel.Show();
                                         }
+                                        else if (lstMain.Items.Count == MaxNodes)
+                                        {
+                                            CloseScrape.Interval = TimeSpan.FromSeconds(10);
+                                            CloseScrape.Tick += (s, e) =>
+                                            {
+                                                CloseScrape.Stop();
+                                                canceltoken.Cancel();
+                                                cancelds();
+                                                DoAutoCancel.Close();
+                                                TimedOutClose = true;
+                                                Close();
+                                            };
+                                            CloseScrape.Start();
+                                        }
                                         if (files > 0)
                                         {
                                             lblLastNode.Content = $"{files} Processed";
