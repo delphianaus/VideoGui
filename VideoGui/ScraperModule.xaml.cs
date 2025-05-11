@@ -35,6 +35,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Timers;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
@@ -116,6 +117,7 @@ namespace VideoGui
         public List<VideoIdFileName> ScheduledFiles = new List<VideoIdFileName>();
         DispatcherTimer CloseTimer = new DispatcherTimer();
         DirectshortsScheduler directshortsScheduler = null;
+        DispatcherTimer CloseScrape = new DispatcherTimer();
         public AddressUpdate DoVideoLookUp = null;
         string TitleStr = "", DescStr = "";
         StatusTypes VStatusType = StatusTypes.PRIVATE;
@@ -128,7 +130,8 @@ namespace VideoGui
         TimeOnly CurrentTime = new TimeOnly();
         DateOnly CurrentDate = DateOnly.FromDateTime(DateTime.Now);
         public DateTime StartDate = DateTime.Now, EndDate = DateTime.Now, LastValidDate = DateTime.Now;
-        bool IsTest = false, AutoClose = false;
+        bool IsTest = false, AutoClose = false, AutoClosed = false;
+        public bool TimedOutClose = false;
         AutoCancel DoAutoCancel = null;
         List<DirectoriesProbe> Directories = new(); //Directories
         //string Title = "", Desc = "";
@@ -180,6 +183,7 @@ namespace VideoGui
                 Closing += (s, e) =>
                 {
                     IsClosing = true;
+                    CloseScrape.Stop();
                     canceltoken.Cancel();
                     cancelds();
                 };
@@ -1399,6 +1403,7 @@ namespace VideoGui
             }
         }
 
+
         List<string> lookups = new List<string>();
         private void ProcessNode(HtmlDocument doc, HtmlNode targetSpan, object sender = null)
         {
@@ -1425,6 +1430,20 @@ namespace VideoGui
                             lblUploading.Content = MaxNodes.ToString();
                         }
                     });
+                    bool timeractive = false;
+                    DispatcherTimer timer = new DispatcherTimer();
+                    timer.Interval = TimeSpan.FromSeconds(1);
+                    // timer event trigger
+                    timer.Tick += (s, e) =>
+                    {
+                        timeractive = true;
+                        timer.Stop();
+                        Dispatcher.BeginInvoke(new Action(() =>
+                        {
+                            SimulateWheelUpDown(wv2);
+                        }));
+                        timeractive = false;
+                    };
                     string divclassname = "right-section style-scope ytcp-video-list-cell-video";
                     string idclass = "style-scope ytcp-img-with-fallback";
                     string idNode = "style-scope ytcp-img-with-fallback";
@@ -1435,6 +1454,8 @@ namespace VideoGui
                     string DateNodeStr = " cell-body tablecell-date sortable column-sorted  style-scope ytcp-video-row";
                     //ist<HtmlNode> DateNode = doc.DocumentNode.SelectNodes($"//div[@class='{DateNodeStr}']").ToList();
                     string aclassname = " remove-default-style  style-scope ytcp-video-list-cell-video";
+
+                    timer.Start();
                     for (int i = 0; i < targetSpanList.Count; i++)
                     {
                         if (TimedOut || canceltoken.IsCancellationRequested) break;
@@ -1743,9 +1764,23 @@ namespace VideoGui
                                     DoAutoCancel.ShowActivated = true;
                                     DoAutoCancel.Show();
                                 }
+
+                                else if (lstMain.Items.Count == MaxNodes)
+                                {
+                                    CloseScrape.Interval = TimeSpan.FromSeconds(10);
+                                    CloseScrape.Tick += (s, e) =>
+                                    {
+                                        CloseScrape.Stop();
+                                        canceltoken.Cancel();
+                                        cancelds();
+                                        DoAutoCancel.Close();
+                                        TimedOutClose = true;
+                                        Close();
+                                    };
+                                    CloseScrape.Start();
+                                }
                             }
                         }
-
                     }
                 }
             }
@@ -3085,19 +3120,6 @@ namespace VideoGui
                         SimulateWheelUpDown(wv2);
                     }));
 
-                    /* Dispatcher.BeginInvoke(new Action(() =>
-                     {
-                         wv2.ExecuteScriptAsync("document.dispatchEvent(new WheelEvent('wheel', { deltaY: -100 }));");
-                         var crs = new CancellationTokenSource();
-                         crs.CancelAfter(TimeSpan.FromSeconds(2));
-                         while (!crs.IsCancellationRequested)
-                         {
-                             System.Windows.Forms.Application.DoEvents();
-                             Thread.Sleep(15);
-                         }
-                         wv2.ExecuteScriptAsync("document.dispatchEvent(new WheelEvent('wheel', { deltaY: 100 }));");
-                     }));
-                     Thread.Sleep(100);*/
                     timeractive = false;
                 };
 

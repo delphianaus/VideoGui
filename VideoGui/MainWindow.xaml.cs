@@ -344,7 +344,8 @@ namespace VideoGui
                 int MaxPerSlot = uploadsnumber.ToInt(100);
 
                 string TargetUrl = webAddressBuilder.AddFilterByDraftShorts().GetHTML();
-
+                OldgUrl = gUrl;
+                OldTarget = TargetUrl;
                 scraperModule = new ScraperModule(ModuleCallback, FinishScraper, gUrl, TargetUrl, 0);
 
 
@@ -358,6 +359,7 @@ namespace VideoGui
             }
         }
 
+        string OldTarget = "", OldgUrl = "";
         private object ModuleCallback(object ThisForm, object tld)
         {
             try
@@ -2794,6 +2796,7 @@ namespace VideoGui
 
                 Task.Run(() =>
                 {
+                    bool IsTimeOut = (scraperModule is ScraperModule sls) ? sls.TimedOutClose : false;
                     while (true)
                     {
                         if (!scraperModule.IsClosed && scraperModule.IsClosing)
@@ -2803,6 +2806,13 @@ namespace VideoGui
                         if (scraperModule.IsClosed) break;
                     }
                     scraperModule = null;
+                    if (IsTimeOut)
+                    {
+                        scraperModule = new ScraperModule(ModuleCallback, FinishScraper, OldgUrl, OldTarget, 0);
+                        Hide();
+                        scraperModule.ShowActivated = true;
+                        scraperModule.Show();
+                    }
                 });
             }
             catch (Exception ex)
