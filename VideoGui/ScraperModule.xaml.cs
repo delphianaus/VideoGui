@@ -118,6 +118,7 @@ namespace VideoGui
         DispatcherTimer CloseTimer = new DispatcherTimer();
         DirectshortsScheduler directshortsScheduler = null;
         DispatcherTimer CloseScrape = new DispatcherTimer();
+        DispatcherTimer TimerSimulate = new DispatcherTimer();
         public AddressUpdate DoVideoLookUp = null;
         string TitleStr = "", DescStr = "";
         StatusTypes VStatusType = StatusTypes.PRIVATE;
@@ -244,6 +245,10 @@ namespace VideoGui
                 InitializeComponent();
                 Closing += (s, e) =>
                 {
+                    if (TimerSimulate is not null)
+                    {
+                        TimerSimulate.Stop();
+                    }
                     IsClosing = true;
                     canceltoken.Cancel();
                     cancelds();
@@ -265,6 +270,9 @@ namespace VideoGui
                 wv2Dictionary.Add(9, wv2A9);//100
                 wv2Dictionary.Add(10, wv2A10);
                 ActiveWebView.Add(1, wv2);
+                
+
+
             }
             catch (Exception ex)
             {
@@ -560,6 +568,16 @@ namespace VideoGui
         {
             try
             {
+                TimerSimulate = new DispatcherTimer();
+                TimerSimulate.Interval = TimeSpan.FromSeconds(1);
+                TimerSimulate.Tick += (s, e) =>
+                {
+                    TimerSimulate.Stop();
+                    Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        SimulateWheelUpDown(wv2);
+                    }));
+                };
                 var env = await CoreWebView2Environment.CreateAsync(null, @"c:\stuff\scraper");
 
                 bool done = false;
@@ -1345,6 +1363,10 @@ namespace VideoGui
                 if (canceltoken.IsCancellationRequested) return;
                 if (html is not null)
                 {
+                    if (TimerSimulate is not null)
+                    {
+                        TimerSimulate.Start();
+                    }
                     var ehtml = Regex.Unescape(html);
                     if (ehtml is not null)
                     {
@@ -1459,6 +1481,7 @@ namespace VideoGui
                     for (int i = 0; i < targetSpanList.Count; i++)
                     {
                         if (TimedOut || canceltoken.IsCancellationRequested) break;
+                        TimerSimulate.Start();
                         var item = targetSpanList[i];
                         string fid = "";
                         foreach (var attr in item.ChildNodes.Where(child => child.Name == "h3").
@@ -1551,8 +1574,7 @@ namespace VideoGui
                                     double totalms = (DateTime.Now - q).TotalMilliseconds;
                                     lblWaiting.Content = $"{totalms.ToString("0.00")} ms";
                                     GetTitlesAndDesc(newidint);
-
-
+                                    TimerSimulate.Start();
                                 }
                                 else
                                 {
@@ -1662,7 +1684,6 @@ namespace VideoGui
                                                 CloseScrape.Stop();
                                                 canceltoken.Cancel();
                                                 cancelds();
-                                                DoAutoCancel.Close();
                                                 TimedOutClose = true;
                                                 Close();
                                             };
@@ -1787,7 +1808,6 @@ namespace VideoGui
                                         CloseScrape.Stop();
                                         canceltoken.Cancel();
                                         cancelds();
-                                        DoAutoCancel.Close();
                                         TimedOutClose = true;
                                         Close();
                                     };

@@ -373,7 +373,13 @@ namespace VideoGui
                 }
 
                 Dispatcher.Invoke(() => { lblShortNo.Content = "Finished"; });
-                File.Delete(shortsfile);
+                var logof = shortsfile.Replace("(shorts)", "(shorts_logo)");
+                //"D:\\filter\\120525\\dest\\VLINE Ararat To Southern Cross 060525 (shorts).mp4"
+                if (File.Exists(logof))
+                {
+                    File.Delete(logof);
+                }
+                //File.Delete(shortsfile);
                 string py = shortsfile.Replace(".mp4", ".py");
                 if (File.Exists(py))
                 {
