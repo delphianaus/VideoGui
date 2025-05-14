@@ -34,7 +34,7 @@ namespace VideoGui
         public bool IsClosing = false, IsClosed = false;
         public TitleSelectFrm DoTitleSelectFrm = null;
         public DescSelectFrm DoDescSelectFrm = null;
-
+        public int uploadedcnt = 0;
         public WebViewDebug webviewDebug = null;
         public SelectShortUpload(databasehook<object> _dbInit, OnFinish _DoOnFinished)
         {
@@ -317,6 +317,7 @@ namespace VideoGui
                     filesdone.AddRange(scraperModule.ScheduledOk);
                     int Uploaded = scraperModule.TotalScheduled;
                     int shortsleft = GetFileCount(rootfolder);
+                    uploadedcnt = scraperModule.uploadedcnt;
                     if (!Exc && shortsleft > 0 && Uploaded < txtTotalUploads.Text.ToInt())
                     {
                         int Maxuploads = (txtTotalUploads.Text != "") ? txtTotalUploads.Text.ToInt(100) : 100;
@@ -333,6 +334,7 @@ namespace VideoGui
                         scraperModule.Show();
                         return;
                     }
+                   
                 }
 
 

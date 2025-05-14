@@ -141,6 +141,7 @@ namespace VideoGui
         DispatcherTimer InternalTimer = new DispatcherTimer();
         TaskCompletionSource<bool> tcs = new TaskCompletionSource<bool>();
         public Nullable<DateTime> ReleaseDate = null, ReleaseEndDate = null;
+        public int uploadedcnt = 0;
         public EventTypes ScraperType = EventTypes.VideoUpload;
         private const int WM_MOUSEWHEEL = 0x020A;
         private const int WHEEL_DELTA = 120; // Standard wheel delta value
@@ -1185,6 +1186,7 @@ namespace VideoGui
                             nextaddress.Add(gUrl);
                             VideoFiles.Remove(filename1);
                             TotalScheduled++;
+                            uploadedcnt = TotalScheduled;
                         }
                     }
                 }

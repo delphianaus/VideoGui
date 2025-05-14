@@ -156,13 +156,13 @@ namespace VideoGui
         ObservableCollection<ScheduleMapItem> SchedulingItemsList = new ObservableCollection<ScheduleMapItem>();
         ObservableCollection<ScheduledActions> YTScheduledActionsList = new ObservableCollection<ScheduledActions>();
         ObservableCollection<Rematched> RematchedList = new ObservableCollection<Rematched>();
-        
+
         List<ShortsDirectory> EditableshortsDirectoryList = new List<ShortsDirectory>();
         CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
         CancellationTokenSource ProcessingCancellationTokenSource = new CancellationTokenSource();
         CollectionViewSource titletagsViewSource = new CollectionViewSource();
         CollectionViewSource availabletagsViewSource = new CollectionViewSource();
-        
+
 
         ObservableCollection<DraftShorts> DraftShortsList = new ObservableCollection<DraftShorts>();
         int TitleTagsSrc = -1;
@@ -2639,7 +2639,7 @@ namespace VideoGui
             {
                 if (thisForm is ScraperModule scs)
                 {
-                  
+
                     if (tld is CustomParams_SetTimeSpans STT)
                     {
                         scs.ScraperType = EventTypes.ShortsSchedule;
@@ -2652,7 +2652,7 @@ namespace VideoGui
                         {
                             filename = item.FileName;
                             vid = item.VideoId;
-                            
+
                             for (int i = 0; i < scs.lstMain.Items.Count; i++)
                             {
                                 object id = scs.lstMain.Items[i];
@@ -2727,7 +2727,7 @@ namespace VideoGui
                     {
                         int id = -1;
                         bool found = false;
-                        foreach (var item in DraftShortsList.Where(s => s.FileName == cit.filename  && s.VideoId == cit.id))
+                        foreach (var item in DraftShortsList.Where(s => s.FileName == cit.filename && s.VideoId == cit.id))
                         {
                             id = item.Id;
                             found = true;
@@ -2808,10 +2808,13 @@ namespace VideoGui
                     scraperModule = null;
                     if (IsTimeOut)
                     {
-                        scraperModule = new ScraperModule(ModuleCallback, FinishScraper, OldgUrl, OldTarget, 0);
-                        Hide();
-                        scraperModule.ShowActivated = true;
-                        scraperModule.Show();
+                        Dispatcher.Invoke(() =>
+                        {
+                            scraperModule = new ScraperModule(ModuleCallback, FinishScraper, OldgUrl, OldTarget, 0);
+                            Hide();
+                            scraperModule.ShowActivated = true;
+                            scraperModule.Show();
+                        });
                     }
                 });
             }
@@ -3066,7 +3069,7 @@ namespace VideoGui
         }
 
 
-       
+
 
         public string GetEncryptedString(byte[] encriptedString)
         {
@@ -3779,7 +3782,7 @@ namespace VideoGui
                 });
 
 
-               
+
                 //EVENTSDEFINITIONS
                 connectionString.ExecuteNonQuery("DELETE FROM UPLOADSRECORD WHERE UPLOAD_DATE <> CAST(GETDATE() AS DATE);");
                 connectionString.ExecuteReader("SELECT * FROM AVAILABLETAGS", (FbDataReader r) =>
@@ -8886,11 +8889,11 @@ namespace VideoGui
                 if (Data.Contains("|"))
                 {
                     string r = Data.Split('|')[1];
-                    dp = r+ " ";
+                    dp = r + " ";
                     fname = Data.Split('|')[0];
                 }
 
-                ThreadStatsHandlerXtra?.Invoke(fname, dp+"[Probing File" + probchar + "]");
+                ThreadStatsHandlerXtra?.Invoke(fname, dp + "[Probing File" + probchar + "]");
             }
             catch (Exception ex)
             {
@@ -9969,6 +9972,7 @@ namespace VideoGui
                         SelectShortUpload_onFinish);
                     selectShortUpload.ShowActivated = true;
                     selectShortUpload.ShowDialog();
+                    
                 }
             }
             catch (Exception ex)
@@ -9985,6 +9989,7 @@ namespace VideoGui
                 if (selectShortUpload is not null && !selectShortUpload.IsClosed)
                 {
                     selectShortUpload.Hide();
+                    int ucnt = selectShortUpload.uploadedcnt;
                     Task.Run(() =>
                     {
                         var cts = new CancellationTokenSource();
@@ -9994,6 +9999,17 @@ namespace VideoGui
                             Thread.Sleep(100);
                         }
                         selectShortUpload = null;
+                        if (ucnt > 0)
+                        {
+                            Dispatcher.Invoke(() =>
+                            {
+                                Nullable<DateTime> startdate = DateTime.Now, enddate = DateTime.Now.AddHours(10);
+                                List<ListScheduleItems> listSchedules2 = new();
+                                int _eventid = 0;
+                                SchMaxUploads = 100;
+                                ShowScraper(startdate, enddate, listSchedules2, SchMaxUploads, _eventid);
+                            });
+                        }
                     });
                 }
                 else
@@ -10056,7 +10072,7 @@ namespace VideoGui
                         //SelectReleaseScheduleFrm.PersistId
                         if (SelectReleaseScheduleFrm.IsClosing) SelectReleaseScheduleFrm.Close();
                         while (!SelectReleaseScheduleFrm.IsClosed)
-                        {                                                                   
+                        {
                             Thread.Sleep(100);
                         }
                         SelectReleaseScheduleFrm.Close();
