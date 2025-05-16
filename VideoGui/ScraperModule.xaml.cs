@@ -188,6 +188,7 @@ namespace VideoGui
                     CloseScrape.Stop();
                     canceltoken.Cancel();
                     cancelds();
+                    uploadedcnt = TotalScheduled;
                 };
                 Closed += (s, e) =>
                 {
@@ -253,6 +254,7 @@ namespace VideoGui
                     IsClosing = true;
                     canceltoken.Cancel();
                     cancelds();
+                    uploadedcnt = TotalScheduled;
                 };
                 Closed += (s, e) =>
                 {
@@ -335,7 +337,7 @@ namespace VideoGui
                 IsTest = _IsTest;
                 dbInitializer = _dbInit;
                 InitializeComponent();
-                Closing += (s, e) => { IsClosing = true; canceltoken.Cancel(); cancelds(); };
+                Closing += (s, e) => { IsClosing = true; canceltoken.Cancel(); cancelds(); uploadedcnt = TotalScheduled; };
                 Closed += (s, e) =>
                 {
                     IsClosed = true;
@@ -379,7 +381,7 @@ namespace VideoGui
                 IsUnlisted = false;
                 SlotsPerUpload = slotsperupload;
                 InitializeComponent();
-                Closing += (s, e) => { IsClosing = true; canceltoken.Cancel(); cancelds(); };
+                Closing += (s, e) => { IsClosing = true; canceltoken.Cancel(); cancelds(); uploadedcnt = TotalScheduled; };
                 Closed += (s, e) =>
                 {
                     IsClosed = true;
@@ -440,7 +442,7 @@ namespace VideoGui
                 IsUnlisted = false;
                 SlotsPerUpload = 2;
                 InitializeComponent();
-                Closing += (s, e) => { IsClosing = true; canceltoken.Cancel(); cancelds(); };
+                Closing += (s, e) => { IsClosing = true; canceltoken.Cancel(); cancelds(); uploadedcnt = TotalScheduled; };
                 Closed += (s, e) =>
                 {
                     IsClosed = true;

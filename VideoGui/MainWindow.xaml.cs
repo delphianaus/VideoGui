@@ -9986,7 +9986,7 @@ namespace VideoGui
             try
             {
                 Show();
-                if (selectShortUpload is not null && !selectShortUpload.IsClosed)
+                if (selectShortUpload is not null && selectShortUpload.IsClosed)
                 {
                     selectShortUpload.Hide();
                     int ucnt = selectShortUpload.uploadedcnt;
