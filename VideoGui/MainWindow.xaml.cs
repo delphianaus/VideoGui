@@ -2557,7 +2557,11 @@ namespace VideoGui
 
         private object selectShortUpload_Handler(object thisForm, object tld)
         {
-            if (tld is CustomParams_GetConnectionString CGCS)
+            if (tld is null)
+            {
+
+            }
+            else if (tld is CustomParams_GetConnectionString CGCS)
             {
                 CGCS.ConnectionString = GetConectionString();
                 return CGCS.ConnectionString;
@@ -2676,7 +2680,12 @@ namespace VideoGui
                             cgd.name = item.Description;
                             break;
                         }
-
+                        if ((!cgd.name.Contains("https://www.patreon.com/join/JustinsTrainJourneys"))
+                                && !cgd.name.Contains("www.patreon.com")))
+                            {
+                            cgd.name += Environment.NewLine + Environment.NewLine +
+                                 "Support Me On Patreon - https://www.patreon.com/join/JustinsTrainJourneys";
+                        }
                         return cgd.name;
                     }
                     else if (tld is CustomParams_GetTitle cgt)
@@ -2702,6 +2711,13 @@ namespace VideoGui
                             }
                             BaseStr = BaseStr.Trim();
                             cgt.name = BaseTitle.ToPascalCase() + " " + BaseStr;
+                            if ((!cgt.name.Contains("https://www.patreon.com/join/JustinsTrainJourneys"))
+                                && !cgt.name.Contains("www.patreon.com")))
+                            {
+                               cgt.name += Environment.NewLine+ Environment.NewLine+
+                                    "Support Me On Patreon - https://www.patreon.com/join/JustinsTrainJourneys";
+                            }
+                            
                             return cgt.name;
                             break;
                         }

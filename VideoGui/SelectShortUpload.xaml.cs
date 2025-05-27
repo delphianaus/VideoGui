@@ -62,7 +62,7 @@ namespace VideoGui
                 if (ofg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                 {
                     txtsrcdir.Text = ofg.SelectedFolder;
-
+                    
                     string connectionStr = dbInit?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
                     string ThisDir = ofg.SelectedFolder.Split(@"\").ToList().LastOrDefault();
 
@@ -89,7 +89,9 @@ namespace VideoGui
                             }
                         }
 
-
+                        key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                        key.SetValue("UploadPath", ofg.SelectedFolder);
+                        key?.Close();
 
                         btnEditTitle.IsChecked = false;
                         btnEditDesc.IsChecked = false;
@@ -322,7 +324,9 @@ namespace VideoGui
                     {
                         int Maxuploads = (txtTotalUploads.Text != "") ? txtTotalUploads.Text.ToInt(100) : 100;
                         int UploadsPerSlot = (txtMaxUpload.Text != "") ? txtMaxUpload.Text.ToInt(5) : 5;
-                        scraperModule = new ScraperModule(dbInit, doOnFinish, gUrl, Maxuploads, UploadsPerSlot);
+                        scraperModule = new ScraperModule(dbInit, doOnFinish, gUrl, Maxuploads, UploadsPerSlot,0, false);
+                        
+
                         scraperModule.ShowActivated = true;
                         scraperModule.ScheduledOk.AddRange(filesdone);
                         Hide();
@@ -396,13 +400,18 @@ namespace VideoGui
                     if (scraperModule is not null && !scraperModule.IsClosed)
                     {
                         if (scraperModule.IsClosing) scraperModule.Close();
-                        while (!scraperModule.IsClosed)
+                        while (!scraperModule.IsClosing)
                         {
                             Thread.Sleep(100);
                         }
                         scraperModule.Close();
                         scraperModule = null;
                     }
+                    if (scraperModule is not null && scraperModule.IsClosed)
+                    {
+                        scraperModule = null;
+                    }
+
                     if (scraperModule is null)
                     {
                         WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
