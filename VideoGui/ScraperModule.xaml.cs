@@ -567,6 +567,8 @@ namespace VideoGui
                 return false;
             }
         }
+
+        int WheelMove = 0;
         async void InitAsync()
         {
             try
@@ -580,6 +582,11 @@ namespace VideoGui
                     {
                         SimulateWheelUpDown(wv2);
                     }));
+                    WheelMove++;
+                    if (WheelMove < 10)
+                    {
+                        TimerSimulate.Start();
+                    }
                 };
                 var env = await CoreWebView2Environment.CreateAsync(null, @"c:\stuff\scraper");
 
@@ -1429,7 +1436,7 @@ namespace VideoGui
             }
         }
 
-
+        int WheelMoveNode = 0;
         List<string> lookups = new List<string>();
         private void ProcessNode(HtmlDocument doc, HtmlNode targetSpan, object sender = null)
         {
@@ -1469,6 +1476,12 @@ namespace VideoGui
                             SimulateWheelUpDown(wv2);
                         }));
                         timeractive = false;
+                        WheelMoveNode++;
+                        if (WheelMoveNode < 10)
+                        {
+                            timer.Start();
+                        }
+
                     };
                     string divclassname = "right-section style-scope ytcp-video-list-cell-video";
                     string idclass = "style-scope ytcp-img-with-fallback";
@@ -3138,6 +3151,7 @@ namespace VideoGui
             public int Y;
         }
 
+        int WheelBody = 0;
         private async Task<bool> ProcessUploadsBody(string Span_Name, string Script_Close, string connectStr)
         {
             int ExitCode = -1;
@@ -3157,7 +3171,11 @@ namespace VideoGui
                     {
                         SimulateWheelUpDown(wv2);
                     }));
-
+                    WheelBody++;
+                    if (WheelBody < 10)
+                    {
+                        timer.Start();
+                    }
                     timeractive = false;
                 };
 
