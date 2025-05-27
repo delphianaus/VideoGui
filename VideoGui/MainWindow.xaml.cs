@@ -2681,7 +2681,7 @@ namespace VideoGui
                             break;
                         }
                         if ((!cgd.name.Contains("https://www.patreon.com/join/JustinsTrainJourneys"))
-                                && !cgd.name.Contains("www.patreon.com")))
+                                && (!cgd.name.Contains("www.patreon.com")))
                             {
                             cgd.name += Environment.NewLine + Environment.NewLine +
                                  "Support Me On Patreon - https://www.patreon.com/join/JustinsTrainJourneys";
@@ -2712,7 +2712,7 @@ namespace VideoGui
                             BaseStr = BaseStr.Trim();
                             cgt.name = BaseTitle.ToPascalCase() + " " + BaseStr;
                             if ((!cgt.name.Contains("https://www.patreon.com/join/JustinsTrainJourneys"))
-                                && !cgt.name.Contains("www.patreon.com")))
+                                && (!cgt.name.Contains("www.patreon.com")))
                             {
                                cgt.name += Environment.NewLine+ Environment.NewLine+
                                     "Support Me On Patreon - https://www.patreon.com/join/JustinsTrainJourneys";
