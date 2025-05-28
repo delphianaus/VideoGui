@@ -2711,12 +2711,7 @@ namespace VideoGui
                             }
                             BaseStr = BaseStr.Trim();
                             cgt.name = BaseTitle.ToPascalCase() + " " + BaseStr;
-                            if ((!cgt.name.Contains("https://www.patreon.com/join/JustinsTrainJourneys"))
-                                && (!cgt.name.Contains("www.patreon.com")))
-                            {
-                               cgt.name += Environment.NewLine+ Environment.NewLine+
-                                    "Support Me On Patreon - https://www.patreon.com/join/JustinsTrainJourneys";
-                            }
+                           
                             
                             return cgt.name;
                             break;

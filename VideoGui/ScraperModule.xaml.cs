@@ -119,6 +119,7 @@ namespace VideoGui
         DirectshortsScheduler directshortsScheduler = null;
         DispatcherTimer CloseScrape = new DispatcherTimer();
         DispatcherTimer TimerSimulate = new DispatcherTimer();
+        DispatcherTimer timer = new DispatcherTimer();
         public AddressUpdate DoVideoLookUp = null;
         string TitleStr = "", DescStr = "";
         StatusTypes VStatusType = StatusTypes.PRIVATE;
@@ -186,6 +187,8 @@ namespace VideoGui
                 {
                     IsClosing = true;
                     CloseScrape.Stop();
+                    timer?.Stop();
+                    TimerSimulate?.Stop();
                     canceltoken.Cancel();
                     cancelds();
                     uploadedcnt = TotalScheduled;
@@ -247,10 +250,8 @@ namespace VideoGui
                 InitializeComponent();
                 Closing += (s, e) =>
                 {
-                    if (TimerSimulate is not null)
-                    {
-                        TimerSimulate.Stop();
-                    }
+                    TimerSimulate?.Stop();
+                    timer?.Stop();
                     IsClosing = true;
                     canceltoken.Cancel();
                     cancelds();
@@ -337,7 +338,15 @@ namespace VideoGui
                 IsTest = _IsTest;
                 dbInitializer = _dbInit;
                 InitializeComponent();
-                Closing += (s, e) => { IsClosing = true; canceltoken.Cancel(); cancelds(); uploadedcnt = TotalScheduled; };
+                Closing += (s, e) => 
+                {
+                    TimerSimulate?.Stop();
+                    IsClosing = true;
+                    timer?.Stop();
+                    canceltoken.Cancel(); 
+                    cancelds(); 
+                    uploadedcnt = TotalScheduled; 
+                };
                 Closed += (s, e) =>
                 {
                     IsClosed = true;
@@ -381,7 +390,15 @@ namespace VideoGui
                 IsUnlisted = false;
                 SlotsPerUpload = slotsperupload;
                 InitializeComponent();
-                Closing += (s, e) => { IsClosing = true; canceltoken.Cancel(); cancelds(); uploadedcnt = TotalScheduled; };
+                Closing += (s, e) => 
+                {
+                    TimerSimulate?.Stop();
+                    IsClosing = true;
+                    timer?.Stop();
+                    canceltoken.Cancel(); 
+                    cancelds(); 
+                    uploadedcnt = TotalScheduled; 
+                };
                 Closed += (s, e) =>
                 {
                     IsClosed = true;
@@ -442,7 +459,15 @@ namespace VideoGui
                 IsUnlisted = false;
                 SlotsPerUpload = 2;
                 InitializeComponent();
-                Closing += (s, e) => { IsClosing = true; canceltoken.Cancel(); cancelds(); uploadedcnt = TotalScheduled; };
+                Closing += (s, e) => 
+                {
+                    TimerSimulate?.Stop();
+                    timer?.Stop();
+                    IsClosing = true; 
+                    canceltoken.Cancel(); 
+                    cancelds(); 
+                    uploadedcnt = TotalScheduled; 
+                };
                 Closed += (s, e) =>
                 {
                     IsClosed = true;
@@ -3158,7 +3183,7 @@ namespace VideoGui
             try
             {
                 List<Uploads> clicks = new List<Uploads>();
-                DispatcherTimer timer = new DispatcherTimer();
+                
                 timer.Interval = TimeSpan.FromSeconds(1);
                 bool timeractive = false;
                 int scrollcnt = 0;
