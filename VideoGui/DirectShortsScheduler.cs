@@ -195,7 +195,7 @@ namespace VideoGui
                         video.Status.PublishAtDateTimeOffset = publishDateTime;
                         video.Status.PublishAt = publishDateTime;
                         video.Status.PrivacyStatus = "private";
-                        if (Desc_Str != "")
+                        if (Desc_Str != "" && Title_str != "")
                         {
 
                             int iidx = Title_str.IndexOf("#");
@@ -206,21 +206,26 @@ namespace VideoGui
                                 string p = Title_str.Substring(iidx);
                                 Title_str = rr + p;
                             }
+                            if (Desc_Str.Contains("https://www.patreon.com/c/JustinsTrainJourneys"))
+                            {
+                                Desc_Str = Desc_Str.Replace("https://www.patreon.com/c/JustinsTrainJourneys",
+                                    "https://www.patreon.com/join/JustinsTrainJourneys");
+                            }
+                            if (!Desc_Str.Contains("https://www.patreon.com/join/JustinsTrainJourneys"))
+                            {
+                               Desc_Str += "\n\nSupport Me On Patreon: https://www.patreon.com/join/JustinsTrainJourneys";
+                            }
+
                             video.Snippet.Description = Desc_Str;
                             video.Snippet.Title = Title_str;
-                        }
-                        var updateRequest = youtubeService.Videos.Update(video, $"Id,snippet,status");
-                        if (ScheduleNumber > 118)
-                        {
-                            if (true)
-                            {
 
-                            }
-                        }
-                        updateRequest.Execute();
-                        ScheduleNumber++;
+                            var updateRequest = youtubeService.Videos.Update(video, $"Id,snippet,status");
+                            
+                            updateRequest.Execute();
+                            ScheduleNumber++;
 
-                        LastValidDate = ScheduleAt;
+                            LastValidDate = ScheduleAt;
+                        }
                         //DoReportScheduled(ScheduleAt, videoId, Title_str);
 
                         return true;
