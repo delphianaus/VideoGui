@@ -8,6 +8,7 @@
         <local:CompareConverter x:Key="CompareConverter"/>
         <local:VideoSizeConverter x:Key="VideoSizeConverter"/>
         <local:VideoDetailsConverter x:Key="VideoDetailsConverter"/>
+        <local:CustomHeightConverter x:Key="CustomHeightConverter"/>
         <BitmapImage x:Key="Yes" UriSource="/icons/Yes.png"/>
         <BitmapImage x:Key="No" UriSource="/icons/No.png"/>
         <BitmapImage x:Key="GEN" UriSource="icons/GPUEncode.png"/>
