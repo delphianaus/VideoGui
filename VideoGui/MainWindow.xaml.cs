@@ -156,7 +156,7 @@ namespace VideoGui
         ObservableCollection<ScheduleMapItem> SchedulingItemsList = new ObservableCollection<ScheduleMapItem>();
         ObservableCollection<ScheduledActions> YTScheduledActionsList = new ObservableCollection<ScheduledActions>();
         ObservableCollection<Rematched> RematchedList = new ObservableCollection<Rematched>();
-
+        ObservableCollection<MultiShortsInfo> ShortsDirectoryList = new ObservableCollection<MultiShortsInfo>();
         List<ShortsDirectory> EditableshortsDirectoryList = new List<ShortsDirectory>();
         CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
         CancellationTokenSource ProcessingCancellationTokenSource = new CancellationTokenSource();
@@ -366,76 +366,65 @@ namespace VideoGui
             {
                 switch (ThisForm)
                 {
+                    case MultiShortsUploader frmMultiShortsUploader:
+                        {
+                            return formObjectHandler_MultiShortsUploader(tld, frmMultiShortsUploader);
+                        }
                     case TitleSelectFrm frmTitleSelect:
                         {
                             return formObjectHandler_TitleSelect(ThisForm, tld, frmTitleSelect);
-                            break;
                         }
                     case ScraperModule scraperModule:
                         {
                             return scraperModule_Handler(ThisForm, tld);
-                            break;
                         }
                     case SelectShortUpload selectShortUpload:
                         {
                             return selectShortUpload_Handler(ThisForm, tld);
-                            break;
                         }
                     case MasterTagSelectForm frmMasterTagSelectForm:
                         {
                             return formObjectHandler_MasterTagSelect(tld, frmMasterTagSelectForm);
-                            break;
                         }
                     case DescSelectFrm frmDescSelectFrm:
                         {
                             return formObjectHandler_DescSelect(tld, frmDescSelectFrm);
-                            break;
                         }
                     case ScheduleEventCreator scheduleEventCreatorFrm:
                         {
                             return formObjectHandler_scheduleEventCreator(tld, scheduleEventCreatorFrm);
-                            break;
                         }
-
                     case DirectoryTitleDescEditor directoryTitleDescEditor:
                         {
                             return formObjectHandler_DirectoryTitleDescEditor(tld, directoryTitleDescEditor);
-                            break;
                         }
                     case SelectReleaseSchedule selectReleaseSchedule:
                         {
                             return formObjectHandler_SelectReleaseSchedule(tld, selectReleaseSchedule);
-                            break;
                         }
                     case SchedulingSelectEditor schedulingSelectEditor:
                         {
                             return formObjectHandler_SchedulingSelectEditor(tld, schedulingSelectEditor);
-                            break;
                         }
                     case ScheduleActioner scheduleActioner:
                         {
                             return formObjectHandler_ScheduleActioner(tld, scheduleActioner);
-                            break;
                         }
                     case ActionScheduleSelector actionScheduleSelector:
                         {
                             return formObjectHandler_ActionScheduleSelector(tld, actionScheduleSelector);
-                            break;
                         }
                     case ManualScheduler manualScheduler:
                         {
                             return formObjectHandler_ManualScheduler(tld, manualScheduler);
-                            break;
                         }
                     case ComplexSchedular complexSchedular:
                         {
                             return formObjectHandler_ComplexSchedular(tld, complexSchedular);
-                            break;
                         }
                     case MediaImporter goProMediaImporter:
                         {
                             return formObjectHandler_GoProMediaImporter(tld, GoProMediaImporter);
-                            break;
                         }
 
                 }
@@ -447,6 +436,40 @@ namespace VideoGui
                 return null;
             }
 
+        }
+
+        private object formObjectHandler_MultiShortsUploader(object tld, MultiShortsUploader frmMultiShortsUploader)
+        {
+            try
+            {
+                if (tld is CustomParams_Initialize CPRE)
+                {
+                    RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                    string shortsdir = key.GetValueStr("UploadPath", @"D:\shorts\");
+                    key?.Close();
+                    ShortsDirectoryList.Clear();
+                    if (Path.Exists(shortsdir))
+                    {
+                        List<string> DirectoryList = Directory.EnumerateDirectories(shortsdir).ToList();
+                        foreach (string dir in DirectoryList)
+                        {
+                            var file_cnt = Directory.EnumerateFiles(dir, "*.mp4", SearchOption.AllDirectories).Count();
+                            if (file_cnt > 0)
+                            {
+                                ShortsDirectoryList.Add(new MultiShortsInfo(dir, file_cnt));
+                            }
+                        }
+                    }
+                    frmMultiShortsUploader.lstShortsDirectoryTitles.ItemsSource = ShortsDirectoryList;
+
+                }
+                return null;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"formObjectHandler_MultiShortsUploader {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+                return null;
+            }
         }
 
         private object formObjectHandler_GoProMediaImporter(object tld, MediaImporter goProMediaImporter)
@@ -2682,7 +2705,7 @@ namespace VideoGui
                         }
                         if ((!cgd.name.Contains("https://www.patreon.com/join/JustinsTrainJourneys"))
                                 && (!cgd.name.Contains("www.patreon.com")))
-                            {
+                        {
                             cgd.name += Environment.NewLine + Environment.NewLine +
                                  "Support Me On Patreon - https://www.patreon.com/join/JustinsTrainJourneys";
                         }
@@ -2711,8 +2734,8 @@ namespace VideoGui
                             }
                             BaseStr = BaseStr.Trim();
                             cgt.name = BaseTitle.ToPascalCase() + " " + BaseStr;
-                           
-                            
+
+
                             return cgt.name;
                             break;
                         }
@@ -9983,7 +10006,7 @@ namespace VideoGui
                         SelectShortUpload_onFinish);
                     selectShortUpload.ShowActivated = true;
                     selectShortUpload.ShowDialog();
-                    
+
                 }
             }
             catch (Exception ex)

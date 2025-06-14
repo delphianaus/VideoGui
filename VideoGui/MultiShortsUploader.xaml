@@ -3,15 +3,14 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:VideoGui"
-        mc:Ignorable="d"
-        Title="Multi Shorts Uploader" Height="276" Width="559">
-
+        xmlns:local="clr-namespace:VideoGui" Loaded="Window_Loaded"
+        SizeChanged="Window_SizeChanged" 
+        mc:Ignorable="d" WindowStartupLocation="Manual" WindowStyle="ToolWindow"
+        Title="Multi Shorts Uploader" Height="376" Width="559">
     <Grid Margin="0,0,0,3">
         <GroupBox Header="Active Shorts Directory" Name="grpshortsdir"
-                  BorderBrush="Black" BorderThickness="2"
-                  Height="150" VerticalAlignment="Top">
-            <Canvas x:Name="cnvshortsdir" Background="Red" Margin="0,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Height="126" Width="547">
+                  BorderBrush="Black" BorderThickness="2" VerticalAlignment="Top" Height="150">
+            <Canvas x:Name="cnvshortsdir" Margin="0,0,0,0">
                 <ListBox Name="lstShortsDirectoryTitles" Height="30" VerticalAlignment="Center" Canvas.Left="3"
                              Canvas.Top="1" Width="545" HorizontalAlignment="Left">
                     <ListBox.Template>
@@ -32,7 +31,7 @@
                 </ListBox>
                 <ListBox x:Name="lstShorts" 
                             Width="547"
-                             Canvas.Top="30" Background="Chocolate" 
+                             Canvas.Top="30"
                           HorizontalAlignment="Center" VerticalAlignment="Top" Height="97">
 
                     <ListBox.ItemTemplate>
@@ -53,5 +52,52 @@
 
             </Canvas>
         </GroupBox>
+        <GroupBox Name="grpschedules" 
+                  BorderBrush="Black" BorderThickness="2" VerticalAlignment="Bottom" Height="179" Margin="0,4,0,33" Header="Active Schedules">
+            <Canvas Name="cnvschedules">
+                <ListBox Name="lstActiveSchedulesTitles" Height="30" VerticalAlignment="Center" Canvas.Left="3"
+             Canvas.Top="1" Width="545" HorizontalAlignment="Left">
+                    <ListBox.Template>
+                        <ControlTemplate x:Name="GridControlss">
+                            <DockPanel LastChildFill="True" Margin="0,0,0,0" >
+                                <Grid DockPanel.Dock="Top" Height="30" >
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="110*"/>
+                                        <ColumnDefinition Width="145"/>
+                                        <ColumnDefinition Width="140"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Label Grid.Column="0" Content="Shorts Directory" />
+                                    <Label Grid.Column="1" Content="Number of Shorts"/>
+                                    <Label Grid.Column="3" Content="Last Uploaded"/>
+                                </Grid>
+                                <ItemsPresenter></ItemsPresenter>
+                            </DockPanel>
+                        </ControlTemplate>
+                    </ListBox.Template>
+                </ListBox>
+                <ListBox x:Name="lstActiveScheduleItems"
+                   Width="547" Canvas.Top="30" 
+                     HorizontalAlignment="Center" VerticalAlignment="Top" Height="127">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate x:Name="GridControlsA" >
+                            <Grid Margin="0,2" x:Name="gridwidths">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="0"/>
+                                    <ColumnDefinition Width="110*"/>
+                                    <ColumnDefinition Width="145"/>
+                                    <ColumnDefinition Width="140"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock x:Name="Id" Grid.Column="0" Margin="4,0,0,0" Width="0" Text="{Binding Id}"/>
+                                <TextBlock x:Name="ShortsDirectory" Grid.Column="1" Text="{Binding ShortsDir}"/>
+                                <TextBlock x:Name="NumberOfShorts" Grid.Column="2"  Text="{Binding NumberOfShorts}"/>
+                                <TextBlock x:Name="LastUploaded" Grid.Column="3"  Text="{Binding LastUploaded}"/>
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Canvas>
+        </GroupBox>
+        <Button Name="BtnClose" Content="Close" HorizontalAlignment="Right"
+                Margin="0,0,6,4" VerticalAlignment="Bottom" Height="25" Width="64" Click="BtnClose_Click"/>
     </Grid>
 </Window>

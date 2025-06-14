@@ -3,7 +3,7 @@
   <PropertyGroup>
 	  <Platforms>AnyCPU;x64</Platforms>
     <UseWPF>true</UseWPF>
-    <TargetFrameworks>net6.0-windows</TargetFrameworks>
+    <TargetFrameworks>net9.0-windows</TargetFrameworks>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
