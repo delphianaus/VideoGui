@@ -13,11 +13,11 @@ namespace VideoGui.Models
     public class SelectedShortsDirectories : INotifyPropertyChanged
     {
         private int _Id = -1, _LinkedShortsDirectoryId = -1, _NumberOfShorts = 0;
-        private string _ShortsDir = "";
+        private string _DirecoryName = "";
         private DateTime LastUploadedDate = DateTime.Now.Date.AddYears(-100);
         private bool _IsActive = false;
         public int Id { get => _Id; set { _Id = value; OnPropertyChanged(); } }
-        public string ShortsDir { get => _ShortsDir; set { _ShortsDir = value; OnPropertyChanged(); } }
+        public string DirecoryName { get => _DirecoryName; set { _DirecoryName = value; OnPropertyChanged(); } }
         public int NumberOfShorts { get => _NumberOfShorts; set { _NumberOfShorts = value; OnPropertyChanged(); } }
         public int LinkedShortsDirectoryId { get => _LinkedShortsDirectoryId; set { _LinkedShortsDirectoryId = value; OnPropertyChanged(); } }
         public string LastUploadedFile { get => GetUploadedDateString(); set { OnPropertyChanged(); } }
@@ -32,12 +32,11 @@ namespace VideoGui.Models
         {
             return (LastUploadedDate.Year < 2000) ?  "" : LastUploadedDate.ToString(@"dd.MM.yyyy");
         }   
-        public SelectedShortsDirectories(int _Id, string _ShortsDir,
-            int _LinkedShortsDirectoryId,
-            int _NumberOfShorts, bool _IsActive, DateTime _LastUploadedDate)
+        public SelectedShortsDirectories(int _Id, string _DirectoryName, bool _IsActive,
+            int _LinkedShortsDirectoryId, int _NumberOfShorts, DateTime _LastUploadedDate)
         {
             Id = _Id;
-            ShortsDir = _ShortsDir;
+            DirecoryName = _DirectoryName;
             IsShortActive = _IsActive;
             LinkedShortsDirectoryId = _LinkedShortsDirectoryId;
             NumberOfShorts = _NumberOfShorts;
@@ -50,8 +49,8 @@ namespace VideoGui.Models
                 Id = (reader["ID"] is int id) ? id : -1;
                 LinkedShortsDirectoryId = (reader["LINKEDSHORTSDIRECTORYID"] is int grp) ? grp : -1;
                 NumberOfShorts = (reader["NUMBEROFSHORTS"] is int GRP) ? GRP : -1;
-                ShortsDir = (reader["SHORTSDIR"] is string Desc) ? Desc : "";
-                IsShortActive = (reader["ISACTIVE"] is short IsActive) ? IsActive == 1 : false;
+                DirecoryName = (reader["DIRECTORYNAME"] is string Desc) ? Desc : "";
+                IsShortActive = (reader["ISSHORTSACTIVE"] is short IsActive) ? IsActive == 1 : false;
                 LastUploadedDate = (reader["LASTUPLOADEDDATE"] is DateTime date) ? date : DateTime.Now.Date.AddYears(-100);
             }
             catch (Exception ex)

@@ -129,6 +129,7 @@ namespace VideoGui
         public VideoCardSelector videoCardDetailsSelector;
         public ScraperModule scraperModule = null, scheduleScraperModule = null;
         public SelectShortUpload selectShortUpload = null;
+        public MultiShortsUploader multiShortsUploader = null;
         public MasterTagSelectForm MasterTagSelectFrm = null;
         public SelectReleaseSchedule SelectReleaseScheduleFrm = null;
         public DirectoryTitleDescEditor DirectoryTitleDescEditorFrm = null;
@@ -157,6 +158,7 @@ namespace VideoGui
         ObservableCollection<ScheduledActions> YTScheduledActionsList = new ObservableCollection<ScheduledActions>();
         ObservableCollection<Rematched> RematchedList = new ObservableCollection<Rematched>();
         ObservableCollection<MultiShortsInfo> ShortsDirectoryList = new ObservableCollection<MultiShortsInfo>();
+        ObservableCollection<SelectedShortsDirectories> SelectedShortsDirectoriesList = new ObservableCollection<SelectedShortsDirectories>();
         List<ShortsDirectory> EditableshortsDirectoryList = new List<ShortsDirectory>();
         CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
         CancellationTokenSource ProcessingCancellationTokenSource = new CancellationTokenSource();
@@ -442,10 +444,45 @@ namespace VideoGui
         {
             try
             {
-                if (tld is CustomParams_Initialize CPRE)
+                if (tld is CustomParams_MoveDirectory CPMD)
                 {
                     RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
-                    string shortsdir = key.GetValueStr("UploadPath", @"D:\shorts\");
+                    string shortsdir = key.GetValueStr("shortsdirectory", @"D:\shorts\");
+                    key?.Close();
+                    string oldpathdir = Path.Combine(shortsdir, CPMD.DirectoryName);
+                    if (Path.Exists(oldpathdir))
+                    {
+                        string newpathdir = Path.Combine(shortsdir,
+                            "done", CPMD.DirectoryName);
+                        string ShortsPath = Path.Combine(shortsdir, "done");
+                        List<string> FileToMove = Directory.EnumerateFiles(oldpathdir, "*.*", SearchOption.AllDirectories).ToList();
+                        foreach (string file in FileToMove)
+                        {
+                            string nw = file.Replace(shortsdir, ShortsPath + "\\");
+                            string NewPath = Path.GetDirectoryName(nw);
+                            if (!Directory.Exists(NewPath))
+                            {
+                                Directory.CreateDirectory(NewPath);
+                            }
+                            File.Move(file, nw);
+                        }
+                        Directory.Delete(oldpathdir, true);
+                        for (int i = 0; i < ShortsDirectoryList.Count; i++)
+                        {
+                            if (ShortsDirectoryList[i].DirectoryName ==
+                                CPMD.DirectoryName)
+                            {
+                                ShortsDirectoryList.RemoveAt(i);
+                                break;
+                            }
+                        }
+                    }
+                }
+                else if (tld is CustomParams_Initialize CPRE)
+                {
+                    RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                    string shortsdir = key.GetValueStr("shortsdirectory", @"D:\shorts\");
+                    string uploaddir = key.GetValueStr("UploadPath", "");
                     key?.Close();
                     ShortsDirectoryList.Clear();
                     if (Path.Exists(shortsdir))
@@ -453,15 +490,126 @@ namespace VideoGui
                         List<string> DirectoryList = Directory.EnumerateDirectories(shortsdir).ToList();
                         foreach (string dir in DirectoryList)
                         {
-                            var file_cnt = Directory.EnumerateFiles(dir, "*.mp4", SearchOption.AllDirectories).Count();
-                            if (file_cnt > 0)
+                            if (!dir.ToLower().EndsWith("done"))
                             {
-                                ShortsDirectoryList.Add(new MultiShortsInfo(dir, file_cnt));
+                                var file_cnt = Directory.EnumerateFiles(dir, "*.mp4", SearchOption.AllDirectories).Count();
+                                if (file_cnt > 0)
+                                {
+                                    ShortsDirectoryList.Add(new MultiShortsInfo(dir, file_cnt));
+                                }
+                            }
+                        }
+                        ;
+                    }
+                    bool found = false;
+                    int LinkedId = -1;
+                    if (uploaddir != "" && Path.Exists(uploaddir) &&
+                        Directory.EnumerateFiles(uploaddir, "*.mp4", SearchOption.AllDirectories).Count() > 0)
+                    {
+                        foreach (var fnd in EditableshortsDirectoryList)
+                        {
+                            if (fnd.Directory == uploaddir)
+                            {
+                                LinkedId = fnd.Id;
+                                break;
+                            }
+                        }
+
+                        bool processed = false;
+                        string filen = "";
+                        DateTime LastTimeUploaded = DateTime.Now.Date.AddYears(-100);
+                        string SQLB = "SELECT * FROM UploadsRecord ORDER BY RDB$RECORD_VERSION DESC ROWS 500;";
+                        connectionString.ExecuteReader(SQLB, (FbDataReader r) =>
+                        {
+                            filen = (r["UPLOADFILE"] is string f) ? f : "";
+                            var dt = (r["UPLOAD_DATE"] is DateTime d) ? d : DateTime.Now.Date.AddYears(-100);
+                            TimeSpan dtr = (r["UPLOAD_TIME"] is TimeSpan t1) ? t1 : new TimeSpan(); 
+                            if (filen.Contains("_") && !processed)
+                            {
+                                string Idx = filen.Split('_').LastOrDefault();
+                                if (Idx != "")
+                                {
+                                    LastTimeUploaded = dt.AtTime(TimeOnly.FromTimeSpan(dtr));
+                                    processed = true;
+                                }
+                            }
+                        });
+                        foreach (var _ in SelectedShortsDirectoriesList.Where(item => item.DirecoryName == uploaddir).Select(item => new { }))
+                        {
+                            found = true;
+                            break;
+                        }
+
+                        if (!found && uploaddir != "")
+                        {
+                            DateTime dtr = LastTimeUploaded.Date;
+                            TimeSpan dtt = LastTimeUploaded.TimeOfDay;
+                            int NumberofShorts = Directory.EnumerateFiles(uploaddir, "*.mp4", SearchOption.AllDirectories).Count();
+                            string sqlA = "SELECT ID FROM MULTISHORTSINFO WHERE" +
+                                " LINKEDSHORTSDIRECTORYID = @LINKEDID;";
+                            int id = connectionString.ExecuteScalar(sqlA, [("@LINKEDID", LinkedId)]).ToInt(-1);
+                            if (id != -1)
+                            {
+                                int NewId = -1;
+                                if (dtr.Year > 2000)
+                                {
+                                    sqlA = "INSERT INTO MULTISHORTSINFO (ISSHORTSACTIVE,NUMBEROFSHORTS," +
+                                        " LINKEDSHORTSDIRECTORYID,LASTUPLOADEDDATE,LASTUPLOADEDTIME)" +
+                                        "VALUES (1,@NUMBEROFSHORTS,@LINKEDID,@DT,@DTT) RETURNING ID;";
+                                    NewId = connectionString.ExecuteScalar(sqlA, [("@NUMBEROFSHORTS", NumberofShorts),
+                                    ("@LINKEDID", LinkedId), ("@DT", dtr),   ("@DTT", dtt)]).ToInt(-1);
+                                }
+                                else
+                                {
+                                    sqlA = "INSERT INTO MULTISHORTSINFO (ISSHORTSACTIVE,NUMBEROFSHORTS," +
+                                     " LINKEDSHORTSDIRECTORYID)" +
+                                     "VALUES (1,@NUMBEROFSHORTS,@LINKEDID,@DT,@DTT) RETURNING ID;";
+                                    NewId = connectionString.ExecuteScalar(sqlA, [("@NUMBEROFSHORTS", NumberofShorts),
+                                    ("@LINKEDID", LinkedId)]).ToInt(-1);
+                                }
+                                if (NewId != -1)
+                                {
+                                    sqlA = "SELECT ID FROM MULTISHORTSINFO WHERE ID = @ID;";
+                                    connectionString.ExecuteReader(sqlA, (FbDataReader r) =>
+                                    {
+                                        SelectedShortsDirectoriesList.Add(new(r));
+                                    });
+                                }
+                            }
+                            else
+                            {
+                                if (dtr.Year > 2000)
+                                {
+                                    sqlA = "UPDATE MULTISHORTSINFO SET NUMBEROFSHORTS = @NUMBEROFSHORTS," +
+                                        " LASTUPLOADEDDATE = @DT, LASTUPLOADEDTIME = @DTT WHERE" +
+                                        " LINKEDSHORTSDIRECTORYID = @LINKEDID;";
+                                    connectionString.ExecuteScalar(sqlA, [("@NUMBEROFSHORTS", NumberofShorts),
+                                    ("@LINKEDID", LinkedId), ("@DT", dtr),   ("@DTT", dtt)]);
+                                    foreach(var ip in SelectedShortsDirectoriesList.Where(item => item.DirecoryName == uploaddir)
+                                    {
+                                        ip.LastUploadedDateFile = dtr.AtTime(TimeOnly.FromTimeSpan(dtt));
+                                        ip.NumberOfShorts = NumberofShorts;
+                                        break;
+                                    };
+                                }
+                                else
+                                {
+                                    sqlA = "UPDATE MULTISHORTSINFO SET NUMBEROFSHORTS = @NUMBEROFSHORTS WHERE" +
+                                        " LINKEDSHORTSDIRECTORYID = @LINKEDID;";
+                                    connectionString.ExecuteScalar(sqlA, [("@NUMBEROFSHORTS", NumberofShorts),
+                                    ("@LINKEDID", LinkedId)]);
+                                    foreach(var ip in SelectedShortsDirectoriesList.Where(item => item.DirecoryName == uploaddir)
+                                    {
+                                        ip.NumberOfShorts = NumberofShorts;
+                                        break;
+                                    }
+                                }
                             }
                         }
                     }
-                    frmMultiShortsUploader.lstShortsDirectoryTitles.ItemsSource = ShortsDirectoryList;
 
+                    frmMultiShortsUploader.lstShorts.ItemsSource = ShortsDirectoryList;
+                    frmMultiShortsUploader.lstActiveScheduleItems.ItemsSource = SelectedShortsDirectoriesList;
                 }
                 return null;
             }
@@ -3642,6 +3790,12 @@ namespace VideoGui
                 sqlstring = $"CREATE TABLE REMATCHED({Id},OLDID INTEGER,NEWID INTEGER, DIRECTORY VARCHAR(500));";
                 connectionString.CreateTableIfNotExists(sqlstring);
 
+                sqlstring = $"CREATE TABLE MULTISHORTSINFO({Id},ISSHORTSACTIVE SHORT,NUMBEROFSHORTS INTEGER, " +
+                    "LINKEDSHORTSDIRECTORYID INTEGER, LASTUPLOADEDDATE DATE, LASTUPLOADEDTIME TIME);";
+                connectionString.CreateTableIfNotExists(sqlstring);
+
+
+
                 /*   reader["ID"] is int ,reader["SCHEDULENAMEID"] is int ,reader["ACTIONNAMEID"] is int 
                      reader["SCHEDULENAME"] is string , reader["ACTIONNAME"] is string , reader["MAX"] is int
                      reader["VIDEOTYPE"] is int, reader["SCHEDULED_DATE"] is DateOnly,  reader["SCHEDULED_TIME"] is TimeOnly 
@@ -3860,7 +4014,45 @@ namespace VideoGui
                         YTScheduledActionsList.Add(new ScheduledActions(r));
                     });
                 ObservableCollectionFilter.ActionsScheduleCollectionViewSource.Source = YTScheduledActionsList;
+                /*
+                  sqlstring = $"CREATE TABLE MULTISHORTSINFO({Id},ISSHORTSACTIVE SHORT,NUMBEROFSHORTS INTEGER, "+
+                    "LINKEDSHORTSDIRECTORYID INTEGER, LASTUPLOADEDDATE DATE, LASTUPLOADEDTIME TIME);";
+                 */
+                SelectedShortsDirectoriesList.Clear();
+                connectionString.ExecuteReader("SELECT * FROM MULTISHORTSINFO M INNER JOIN SHORTSDIRECTORY S ON M.LINKEDSHORTSDIRECTORYID = S.ID", (FbDataReader r) =>
+                {
+                    SelectedShortsDirectoriesList.Add(new SelectedShortsDirectories(r));
+                });
+                FilterActiveShortsDirlectoryList();
 
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+            }
+        }
+
+        public void FilterActiveShortsDirlectoryList()
+        {
+            try
+            {
+                int id = -1;
+                foreach (var t in SelectedShortsDirectoriesList.Where(t => t.IsShortActive && t.NumberOfShorts == 0))
+                {
+                    id = t.Id.ToInt(-1);
+                }
+                string sql = "DELETE FROM MULTISHORTSINFO WHERE ID = @ID;";
+                if (id != -1)
+                {
+                    foreach (var t in SelectedShortsDirectoriesList.Where(t => t.IsShortActive && t.NumberOfShorts == 0))
+                    {
+                        if (id != t.Id.ToInt(-1))
+                        {
+                            SelectedShortsDirectoriesList.Remove(t);
+                            connectionString.ExecuteNonQuery(sql, [("@ID", id)]);
+                        }
+                    }
+                }
             }
             catch (Exception ex)
             {
@@ -9971,47 +10163,86 @@ namespace VideoGui
         {
             try
             {
-                /*var filess = Directory.EnumerateFiles(@"D:\Filtered\Steamrails Goulburn Valley Explorer 270724", "*.mp4", SearchOption.AllDirectories).ToList();
-                var files = Directory.EnumerateFiles(@"D:\shorts\Steamrails Goulburn Valley Explorer 270724", "*.mp4", SearchOption.AllDirectories).ToList();
-                foreach(var filet in files)
+                if (!ShiftActiveWindowClosing)
                 {
-                    var fp = Path.GetFileName(filet);
-                    foreach(var filex in filess)
+                    if (selectShortUpload is not null && !selectShortUpload.IsClosed)
                     {
-                        if (fp == Path.GetFileName(filex))
+                        if (selectShortUpload.IsClosing) selectShortUpload.Close();
+                        while (!selectShortUpload.IsClosed)
                         {
-                            File.Delete(filet);
-                            File.Move(filex, filet);
-                            break;
+                            Thread.Sleep(100);
                         }
+                        selectShortUpload.Close();
+                        selectShortUpload = null;
                     }
-                }
-
-
-                return;*/
-                if (selectShortUpload is not null && !selectShortUpload.IsClosed)
-                {
-                    if (selectShortUpload.IsClosing) selectShortUpload.Close();
-                    while (!selectShortUpload.IsClosed)
+                    if (selectShortUpload is null)
                     {
-                        Thread.Sleep(100);
-                    }
-                    selectShortUpload.Close();
-                    selectShortUpload = null;
-                }
-                if (selectShortUpload is null)
-                {
-                    Hide();
-                    selectShortUpload = new SelectShortUpload(ModuleCallback,
-                        SelectShortUpload_onFinish);
-                    selectShortUpload.ShowActivated = true;
-                    selectShortUpload.ShowDialog();
+                        Hide();
+                        selectShortUpload = new SelectShortUpload(ModuleCallback,
+                            SelectShortUpload_onFinish);
+                        selectShortUpload.ShowActivated = true;
+                        selectShortUpload.ShowDialog();
 
+                    }
+                }
+                else
+                {
+                    if (multiShortsUploader is not null && !multiShortsUploader.IsClosed)
+                    {
+                        if (multiShortsUploader.IsClosing) multiShortsUploader.Close();
+                        while (!multiShortsUploader.IsClosed)
+                        {
+                            Thread.Sleep(100);
+                        }
+                        multiShortsUploader.Close();
+                        multiShortsUploader = null;
+                    }
+                    if (multiShortsUploader is null)
+                    {
+                        Hide();
+                        multiShortsUploader = new MultiShortsUploader(ModuleCallback,
+                            MultiShortsUploader_onFinish);
+                        multiShortsUploader.ShowActivated = true;
+                        multiShortsUploader.ShowDialog();
+                    }
                 }
             }
             catch (Exception ex)
             {
                 ex.LogWrite($"btnSetupload_Click {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
+            }
+        }
+
+        private void MultiShortsUploader_onFinish()
+        {
+            try
+            {
+                Show();
+                if (multiShortsUploader is not null && multiShortsUploader.IsClosed)
+                {
+                    multiShortsUploader.Hide();
+                    Task.Run(() =>
+                    {
+                        var cts = new CancellationTokenSource();
+                        cts.CancelAfter(1500);
+                        while (multiShortsUploader is not null && multiShortsUploader.IsClosing && !cts.Token.IsCancellationRequested)
+                        {
+                            Thread.Sleep(100);
+                        }
+                        multiShortsUploader = null;
+                    });
+                }
+                else
+                {
+                    if (multiShortsUploader is not null && multiShortsUploader.IsClosed)
+                    {
+                        multiShortsUploader = null;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"MultiShortsUploader_onFinish {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
         }
 

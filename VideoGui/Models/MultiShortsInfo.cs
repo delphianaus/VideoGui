@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -10,17 +11,17 @@ namespace VideoGui.Models
 {
     class MultiShortsInfo : INotifyPropertyChanged
     {
-        private string _ShortsDir = "";
+        private string _DirectoryName = "";
         private int _NumberOfShorts = 0;
 
-        public string ShortsDir { get => _ShortsDir; set { _ShortsDir = value; OnPropertyChanged(); } }
+        public string DirectoryName { get => _DirectoryName; set { _DirectoryName = value; OnPropertyChanged(); } }
         public int NumberOfShorts { get => _NumberOfShorts; set { _NumberOfShorts = value; OnPropertyChanged(); } }
 
         public MultiShortsInfo(string _ShortsDir, int _NumberOfShorts)
         {
             try
             {
-                ShortsDir = _ShortsDir.Split("\\").LastOrDefault().Trim();
+                DirectoryName = _ShortsDir.Split("\\").LastOrDefault().Trim();
                 NumberOfShorts = _NumberOfShorts;
             }
             catch (Exception ex)

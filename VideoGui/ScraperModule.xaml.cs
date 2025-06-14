@@ -120,6 +120,7 @@ namespace VideoGui
         DispatcherTimer CloseScrape = new DispatcherTimer();
         DispatcherTimer TimerSimulate = new DispatcherTimer();
         DispatcherTimer timer = new DispatcherTimer();
+        DispatcherTimer LocationTimer = new DispatcherTimer();
         public AddressUpdate DoVideoLookUp = null;
         string TitleStr = "", DescStr = "";
         StatusTypes VStatusType = StatusTypes.PRIVATE;
@@ -132,7 +133,8 @@ namespace VideoGui
         TimeOnly CurrentTime = new TimeOnly();
         DateOnly CurrentDate = DateOnly.FromDateTime(DateTime.Now);
         public DateTime StartDate = DateTime.Now, EndDate = DateTime.Now, LastValidDate = DateTime.Now;
-        bool IsTest = false, AutoClose = false, AutoClosed = false;
+        bool IsTest = false, AutoClose = false, AutoClosed = false, IsLocation = false,
+            IsMoving = false, HasMoved = false;
         public bool TimedOutClose = false;
         AutoCancel DoAutoCancel = null;
         List<DirectoriesProbe> Directories = new(); //Directories
@@ -146,7 +148,6 @@ namespace VideoGui
         public EventTypes ScraperType = EventTypes.VideoUpload;
         private const int WM_MOUSEWHEEL = 0x020A;
         private const int WHEEL_DELTA = 120; // Standard wheel delta value
-
 
 
 
@@ -167,6 +168,28 @@ namespace VideoGui
         [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         private static extern int GetClassName(IntPtr hWnd, System.Text.StringBuilder lpClassName, int nMaxCount);
         private delegate bool EnumWindowProc(IntPtr hWnd, IntPtr parameter);
+
+        public void DoLocationTimer()
+        {
+            try
+            {
+                LocationTimer.Interval = TimeSpan.FromSeconds(3);
+                LocationTimer.Tick += (s, e) => 
+                { 
+                    LocationTimer.Stop();
+                    RegistryKey key = "SOFTWARE\\Scraper".OpenSubKey(Registry.CurrentUser);
+                    key.SetValue("Webleft", Left);
+                    key.SetValue("Webtop", Top);
+                    key?.Close();
+                };
+                LocationTimer.Start();
+            }
+            catch(Exception ex) 
+            {
+                ex.LogWrite($"LocationTimer {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+        }
+
         public ScraperModule(databasehook<object> _dbInit, OnFinishId _OnFinish, List<string> directories, bool IsShort)
         {
             try
@@ -192,12 +215,20 @@ namespace VideoGui
                     canceltoken.Cancel();
                     cancelds();
                     uploadedcnt = TotalScheduled;
+                    LocationTimer.Stop();
+                    TimerSimulate.Stop();
                 };
                 Closed += (s, e) =>
                 {
                     IsClosed = true;
                     DoOnFinish?.Invoke(EventId);
                 };
+
+
+
+                
+
+               
                 webAddressBuilder = new WebAddressBuilder(null, null, "UCdMH7lMpKJRGbbszk5AUc7w");
                 wv2Dictionary.Add(1, wv2A1);//20
                 wv2Dictionary.Add(2, wv2A2);//30
@@ -239,7 +270,9 @@ namespace VideoGui
             {
                 ScraperType = EventTypes.ScapeSchedule;
                 DoOnFinish = _OnFinish;
+                
 
+               
 
                 TargetUrl = _TargetUrl;
                 AutoClose = true;
@@ -256,6 +289,8 @@ namespace VideoGui
                     canceltoken.Cancel();
                     cancelds();
                     uploadedcnt = TotalScheduled;
+                    LocationTimer.Stop();
+                    TimerSimulate.Stop();
                 };
                 Closed += (s, e) =>
                 {
@@ -274,7 +309,7 @@ namespace VideoGui
                 wv2Dictionary.Add(9, wv2A9);//100
                 wv2Dictionary.Add(10, wv2A10);
                 ActiveWebView.Add(1, wv2);
-                
+
 
 
             }
@@ -338,20 +373,25 @@ namespace VideoGui
                 IsTest = _IsTest;
                 dbInitializer = _dbInit;
                 InitializeComponent();
-                Closing += (s, e) => 
+                Closing += (s, e) =>
                 {
                     TimerSimulate?.Stop();
                     IsClosing = true;
                     timer?.Stop();
-                    canceltoken.Cancel(); 
-                    cancelds(); 
-                    uploadedcnt = TotalScheduled; 
+                    canceltoken.Cancel();
+                    cancelds();
+                    uploadedcnt = TotalScheduled;
+                    LocationTimer.Stop();
+                    TimerSimulate.Stop();
+
                 };
                 Closed += (s, e) =>
                 {
                     IsClosed = true;
                     DoOnFinish?.Invoke(EventId);
                 };
+                
+
                 webAddressBuilder = new WebAddressBuilder(null, null, "UCdMH7lMpKJRGbbszk5AUc7w");
                 wv2Dictionary.Add(1, wv2A1);//20
                 wv2Dictionary.Add(2, wv2A2);//30
@@ -390,20 +430,23 @@ namespace VideoGui
                 IsUnlisted = false;
                 SlotsPerUpload = slotsperupload;
                 InitializeComponent();
-                Closing += (s, e) => 
+                Closing += (s, e) =>
                 {
                     TimerSimulate?.Stop();
                     IsClosing = true;
                     timer?.Stop();
-                    canceltoken.Cancel(); 
-                    cancelds(); 
-                    uploadedcnt = TotalScheduled; 
+                    canceltoken.Cancel();
+                    cancelds();
+                    uploadedcnt = TotalScheduled;
+                    LocationTimer.Stop();
+                    TimerSimulate.Stop();
                 };
                 Closed += (s, e) =>
                 {
                     IsClosed = true;
                     DoOnFinish?.Invoke(EventId);
                 };
+                
                 webAddressBuilder = new WebAddressBuilder(null, null, "UCdMH7lMpKJRGbbszk5AUc7w");
                 wv2Dictionary.Add(1, wv2A1);//20
                 wv2Dictionary.Add(2, wv2A2);//30
@@ -459,20 +502,24 @@ namespace VideoGui
                 IsUnlisted = false;
                 SlotsPerUpload = 2;
                 InitializeComponent();
-                Closing += (s, e) => 
+                Closing += (s, e) =>
                 {
                     TimerSimulate?.Stop();
                     timer?.Stop();
-                    IsClosing = true; 
-                    canceltoken.Cancel(); 
-                    cancelds(); 
-                    uploadedcnt = TotalScheduled; 
+                    IsClosing = true;
+                    canceltoken.Cancel();
+                    cancelds();
+                    uploadedcnt = TotalScheduled;
+                    LocationTimer.Stop();
+                    TimerSimulate.Stop();
                 };
                 Closed += (s, e) =>
                 {
                     IsClosed = true;
                     DoOnFinish?.Invoke(EventId);
                 };
+               
+
                 webAddressBuilder = new WebAddressBuilder(null, null, "UCdMH7lMpKJRGbbszk5AUc7w");
                 wv2Dictionary.Add(1, wv2A1);//20
                 wv2Dictionary.Add(2, wv2A2);//30
@@ -598,7 +645,14 @@ namespace VideoGui
         {
             try
             {
-                TimerSimulate = new DispatcherTimer();
+                LocationChanged += (s, e) =>
+                {
+                    if (IsLoaded)
+                    {
+                        DoLocationTimer();
+                    }
+                };
+                
                 TimerSimulate.Interval = TimeSpan.FromSeconds(1);
                 TimerSimulate.Tick += (s, e) =>
                 {
@@ -3183,7 +3237,7 @@ namespace VideoGui
             try
             {
                 List<Uploads> clicks = new List<Uploads>();
-                
+
                 timer.Interval = TimeSpan.FromSeconds(1);
                 bool timeractive = false;
                 int scrollcnt = 0;
