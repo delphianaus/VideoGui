@@ -517,7 +517,11 @@ namespace VideoGui
         {
             try
             {
-                if (tld is CustomParams_AddDirectory CPAD)
+                if (tld is CustomParams_RemoveSelectedDirectory CPRSD)
+                {
+
+                }
+                else if (tld is CustomParams_AddDirectory CPAD)
                 {
                     int LinkedId = -1, DescId = -1, TitleId = -1;
                     foreach (var fnd in EditableshortsDirectoryList.Where(fnd => fnd.Directory == CPAD.DirectoryName))

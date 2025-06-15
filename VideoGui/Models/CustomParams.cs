@@ -426,6 +426,17 @@ namespace VideoGui.Models
             DirectoryName = _DirectoryName;
         }
     }
+
+    public class CustomParams_RemoveSelectedDirectory
+    {
+        public string DirectoryName = "";
+        public int Id = -1;
+        public CustomParams_RemoveSelectedDirectory(int _id,string _DirectoryName)
+        {
+            Id = _id;
+            DirectoryName = _DirectoryName;
+        }
+    }
     public class CustomParams_MoveDirectory
     {
         public string DirectoryName = "";

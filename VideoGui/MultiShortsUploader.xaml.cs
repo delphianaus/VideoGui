@@ -25,9 +25,9 @@ namespace VideoGui
     public partial class MultiShortsUploader : Window
     {
         databasehook<object> dbInit = null;
-        public bool IsClosing = false, IsClosed = false;
+        public bool IsClosing = false, IsClosed = false, Ready = false;
+        DispatcherTimer LocationChangedTimer = new DispatcherTimer();
         public static readonly DependencyProperty ColumnWidthProperty = DependencyProperty.Register("ColumnWidth", typeof(GridLength), typeof(MultiShortsUploader), new PropertyMetadata(new GridLength(390, GridUnitType.Pixel)));
-
         public GridLength ColumnWidth
         {
             get { return (GridLength)GetValue(ColumnWidthProperty); }
@@ -65,8 +65,6 @@ namespace VideoGui
             }
         }
 
-        DispatcherTimer LocationChangedTimer = new DispatcherTimer();
-        bool Ready = false;
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             try
@@ -132,6 +130,7 @@ namespace VideoGui
                         ActiveColumnWidth = new GridLength(e.NewSize.Width - 250, GridUnitType.Pixel);
                     }
 
+
                     if (e.HeightChanged || e.WidthChanged)
                     {
                         RegistryKey key = "SOFTWARE\\Scraper".OpenSubKey(Registry.CurrentUser);
@@ -148,7 +147,7 @@ namespace VideoGui
                 ex.LogWrite($"Window_SizeChanged {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-
+                
         private void mnuMoveDirectory_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -163,6 +162,46 @@ namespace VideoGui
                 ex.LogWrite($"mnuMoveDirectory_Click {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
+
+        private void mnuAddToSelected_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                try
+                {
+                    foreach (MultiShortsInfo info in lstShorts.SelectedItems)
+                    {
+                        dbInit?.Invoke(this, new CustomParams_AddDirectory(info.DirectoryName));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    ex.LogWrite($"mnuMoveDirectory_Click {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+                }
+
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"mnuAddToSelected_Click {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+
+        }
+
+        private void mnuRemoveSelected_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                foreach(SelectedShortsDirectories info in lstShorts.SelectedItems)
+                {
+                    dbInit?.Invoke(this, new CustomParams_RemoveSelectedDirectory(info.Id,info.DirecoryName));
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"mnuRemoveSelected_Click {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+        }
+
         private void BtnClose_Click(object sender, RoutedEventArgs e)
         {
             try

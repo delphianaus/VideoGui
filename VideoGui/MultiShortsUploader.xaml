@@ -50,6 +50,8 @@
                         <ContextMenu x:Key="MyElementMenu">
                             <MenuItem Name = "mnuMoveDirectory" Header="Move Directory" 
                              Click="mnuMoveDirectory_Click"/>
+                            <MenuItem Name = "mnuAddToSelected" Header="Add to Selected Directories"
+                             Click="mnuAddToSelected_Click"/>
                         </ContextMenu>
                         <!--Sets a context menu for each ListBoxItem in the current ListBox-->
                         <Style TargetType="{x:Type ListBoxItem}">
@@ -101,6 +103,16 @@
                             </Grid>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
+                    <ListBox.Resources>
+                        <ContextMenu x:Key="MyElementMenu">
+                            <MenuItem Name = "mnuRemoveSelected" Header="Remove Selected Directories"
+                              Click="mnuRemoveSelected_Click"/>
+                        </ContextMenu>
+                        <!--Sets a context menu for each ListBoxItem in the current ListBox-->
+                        <Style TargetType="{x:Type ListBoxItem}">
+                            <Setter Property="ContextMenu" Value="{StaticResource MyElementMenu}"/>
+                        </Style>
+                    </ListBox.Resources>
                 </ListBox>
             </Canvas>
         </GroupBox>
