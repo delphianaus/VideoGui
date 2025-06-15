@@ -75,6 +75,7 @@ using VideoGui.ffmpeg.Streams.Audio;
 using VideoGui.ffmpeg.Streams.Video;
 using VideoGui.Models;
 using VideoGui.Models.delegates;
+using Windows.Storage;
 using Xceed.Wpf.Toolkit.PropertyGrid.Editors;
 using static System.Net.Mime.MediaTypeNames;
 using static System.Net.WebRequestMethods;
@@ -440,11 +441,177 @@ namespace VideoGui
 
         }
 
+        public void InsertIntoMultiShortsInfo(int NumberofShorts, int LinkedId, DateTime LastTimeUploaded)
+        {
+            try
+            {
+                string sqlA = "";
+                int NewId = -1;
+                DateTime dtr = LastTimeUploaded.Date;
+                TimeSpan dtt = LastTimeUploaded.TimeOfDay;
+                int IsActive = SelectedShortsDirectoriesList.Count > 0 ? 1 : 0;
+                if (dtr.Year > 2000)
+                {
+                    sqlA = "INSERT INTO MULTISHORTSINFO (ISSHORTSACTIVE,NUMBEROFSHORTS," +
+                        " LINKEDSHORTSDIRECTORYID,LASTUPLOADEDDATE,LASTUPLOADEDTIME)" +
+                        "VALUES (@ISACTIVE,@NUMBEROFSHORTS,@LINKEDID,@DT,@DTT) RETURNING ID;";
+                    NewId = connectionString.ExecuteScalar(sqlA, [("@NUMBEROFSHORTS", NumberofShorts),
+                     ("@ISACTIVE", IsActive),("@LINKEDID", LinkedId), ("@DT", dtr), ("@DTT", dtt)]).ToInt(-1);
+                }
+                else
+                {
+                    sqlA = "INSERT INTO MULTISHORTSINFO (ISSHORTSACTIVE,NUMBEROFSHORTS," +
+                     " LINKEDSHORTSDIRECTORYID)" +
+                     "VALUES (@ISACTIVE,@NUMBEROFSHORTS,@LINKEDID,@DT,@DTT) RETURNING ID;";
+                    NewId = connectionString.ExecuteScalar(sqlA, [("@NUMBEROFSHORTS", NumberofShorts),
+                    ("@ISACTIVE", IsActive),("@LINKEDID", LinkedId)]).ToInt(-1);
+                }
+                if (NewId != -1)
+                {
+                    sqlA = "SELECT ID FROM MULTISHORTSINFO WHERE ID = @ID;";
+                    connectionString.ExecuteReader(sqlA, (FbDataReader r) =>
+                    {
+                        SelectedShortsDirectoriesList.Add(new(r));
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"InsertIntoMultiShorts {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+        }
+
+        public (DateTime, bool) CheckUploads(int LinkedId)
+        {
+            try
+            {
+                bool processed = false;
+                string filen = "";
+                DateTime LastTimeUploaded = DateTime.Now.Date.AddYears(-100);
+                string SQLB = "SELECT * FROM UploadsRecord ORDER BY RDB$RECORD_VERSION DESC ROWS 500;";
+                connectionString.ExecuteReader(SQLB, (FbDataReader r) =>
+                {
+                    filen = (r["UPLOADFILE"] is string f) ? f : "";
+                    var dt = (r["UPLOAD_DATE"] is DateTime d) ? d : DateTime.Now.Date.AddYears(-100);
+                    TimeSpan dtr = (r["UPLOAD_TIME"] is TimeSpan t1) ? t1 : new TimeSpan();
+                    if (filen.Contains("_") && !processed)
+                    {
+                        string Idx = filen.Split('_').LastOrDefault();
+                        if (Idx != "" && Idx == LinkedId.ToHex())
+                        {
+                            LastTimeUploaded = dt.AtTime(TimeOnly.FromTimeSpan(dtr));
+                            processed = true;
+                        }
+                    }
+                });
+                return (LastTimeUploaded, processed);
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"rds {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+                return (DateTime.Now.Date.AddYears(-100), false);
+            }
+        }
+
         private object formObjectHandler_MultiShortsUploader(object tld, MultiShortsUploader frmMultiShortsUploader)
         {
             try
             {
-                if (tld is CustomParams_MoveDirectory CPMD)
+                if (tld is CustomParams_AddDirectory CPAD)
+                {
+                    int LinkedId = -1, DescId = -1, TitleId = -1;
+                    foreach (var fnd in EditableshortsDirectoryList.Where(fnd => fnd.Directory == CPAD.DirectoryName))
+                    {
+                        LinkedId = fnd.Id;
+                        break;
+                    }
+                    if (LinkedId == -1)
+                    {
+                        string ssqla = "SELECT ID FROM TITLES WHERE DESCRIPTION = @P0;";
+                        int id = connectionString.ExecuteScalar(ssqla, [("@P0", CPAD.DirectoryName)]).ToInt(-1);
+                        if (id != -1)
+                        {
+                            ssqla = "INSERT INTO TITLES(DESCRIPTION,ISTAG,GROUPID) " +
+                                "VALUES(@P0,@P1,@P2) RETURNING ID;";
+                            id = connectionString.ExecuteScalar(ssqla, [("@P0", CPAD.DirectoryName),
+                                ("@P1", false), ("@P2", LinkedId)]).ToInt(-1);
+                            if (id != -1)
+                            {
+                                TitleId = id;
+                                ssqla = "SELECT * FROM TITLES WHERE ID = @ID";
+                                connectionString.ExecuteReader(ssqla, [("@ID", id)], (FbDataReader r) =>
+                                    {
+                                        TitlesList.Add(new Titles(r));
+                                    });
+                            }
+                        }
+                        else TitleId = id;
+                        ssqla = "SELECT ID FROM DESCRIPTIONS WHERE DESCRIPTION = @P0;";
+                        id = connectionString.ExecuteScalar(ssqla, [("@P0", CPAD.DirectoryName)]).ToInt(-1);
+                        string desc = Environment.NewLine + Environment.NewLine
+                             + "Follow me @ twitch.tv/justinstrainclips" +
+                             Environment.NewLine + Environment.NewLine +
+                             "Support Me On Patreon - https://www.patreon.com/join/JustinsTrainJourneys";
+                        ssqla = "SELECT ID FROM DESCRIPTIONS WHERE DESCRIPTION = @DESC AND " +
+                            "TITLETAGID = @TITLETAG AND ISSHORTVIDEO = @ISSHORTVIDEO AND ISTAG = @ISTAG;";
+                        id = connectionString.ExecuteScalar(ssqla, [("@DESC", CPAD.DirectoryName + desc),
+                              ("@TITLETAG", LinkedId), ("@NAME", CPAD.DirectoryName),
+                              ("@ISSHORTVIDEO", true), ("@ISTAG", false)]).ToInt(-1);
+                        if (id == -1)
+                        {
+                            ssqla = "INSERT INTO DESCRIPTIONS(DESCRIPTION,TITLETAGID,NAME,ISSHORTVIDEO, ISTAG) " +
+                                    "VALUES(@DESC,@TITLETAG,@NAME,@ISSHORTVIDEO,@ISTAG) RETURNING ID;";
+                            id = connectionString.ExecuteScalar(ssqla, [("@DESC", CPAD.DirectoryName+desc),
+                              ("@TITLETAG", LinkedId), ("@NAME", CPAD.DirectoryName),
+                              ("@ISSHORTVIDEO", true), ("@ISTAG", false)]).ToInt(-1);
+                            if (id != -1)
+                            {
+                                DescId = id;
+                                ssqla = "SELECT * FROM DESCRIPTIONS WHERE ID = @ID";
+                                connectionString.ExecuteReader(ssqla, [("@ID", id)], (FbDataReader r) =>
+                                {
+                                    DescriptionsList.Add(new(r));
+                                });
+                            }
+                        }
+                        else DescId = id;
+                        ssqla = "INSERT INTO SHORTSDIRECTORY(DIRECTORY,TITLEID,DESCRIPTIONID) " +
+                            "VALUES(@P0,@P1,@P2);";
+                        id = connectionString.ExecuteScalar(ssqla, [("@P0", CPAD.DirectoryName),
+                            ("@P1", TitleId), ("@P2", DescId)]).ToInt(-1);
+                        if (id != -1)
+                        {
+                            ssqla = "SELECT * FROM SHORTSDIRECTORY WHERE ID = @ID";
+                            connectionString.ExecuteReader(ssqla, [("@ID", id)], (FbDataReader r) =>
+                            {
+                                EditableshortsDirectoryList.Add(new ShortsDirectory(r));
+                            });
+                            LinkedId = id;
+                        }
+                    }
+                    bool found = false, processed = false;
+                    string uploaddir = CPAD.DirectoryName;
+                    DateTime LastTimeUploaded = DateTime.Now.Date.AddYears(-100);
+                    (LastTimeUploaded, processed) = CheckUploads(LinkedId);
+                    
+                    foreach (var _ in SelectedShortsDirectoriesList.Where(item => item.DirecoryName == uploaddir).Select(item => new { }))
+                    {
+                        found = true;
+                        break;
+                    }
+
+                    if (!found && uploaddir != "")
+                    {
+                        int NumberofShorts = Directory.EnumerateFiles(uploaddir, "*.mp4", SearchOption.AllDirectories).Count();
+                        string sqlA = "SELECT ID FROM MULTISHORTSINFO WHERE LINKEDSHORTSDIRECTORYID = @LINKEDID;";
+                        int id = connectionString.ExecuteScalar(sqlA, [("@LINKEDID", LinkedId)]).ToInt(-1);
+                        if (id != -1)
+                        {
+                            InsertIntoMultiShortsInfo(NumberofShorts, LinkedId, LastTimeUploaded);
+                        }
+                    }
+                }
+                else if (tld is CustomParams_MoveDirectory CPMD)
                 {
                     RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                     string shortsdir = key.GetValueStr("shortsdirectory", @"D:\shorts\");
@@ -452,8 +619,7 @@ namespace VideoGui
                     string oldpathdir = Path.Combine(shortsdir, CPMD.DirectoryName);
                     if (Path.Exists(oldpathdir))
                     {
-                        string newpathdir = Path.Combine(shortsdir,
-                            "done", CPMD.DirectoryName);
+                        string newpathdir = Path.Combine(shortsdir, "done", CPMD.DirectoryName);
                         string ShortsPath = Path.Combine(shortsdir, "done");
                         List<string> FileToMove = Directory.EnumerateFiles(oldpathdir, "*.*", SearchOption.AllDirectories).ToList();
                         foreach (string file in FileToMove)
@@ -469,8 +635,7 @@ namespace VideoGui
                         Directory.Delete(oldpathdir, true);
                         for (int i = 0; i < ShortsDirectoryList.Count; i++)
                         {
-                            if (ShortsDirectoryList[i].DirectoryName ==
-                                CPMD.DirectoryName)
+                            if (ShortsDirectoryList[i].DirectoryName == CPMD.DirectoryName)
                             {
                                 ShortsDirectoryList.RemoveAt(i);
                                 break;
@@ -488,109 +653,58 @@ namespace VideoGui
                     if (Path.Exists(shortsdir))
                     {
                         List<string> DirectoryList = Directory.EnumerateDirectories(shortsdir).ToList();
-                        foreach (string dir in DirectoryList)
+                        foreach (var dir in DirectoryList.Where(dir => !dir.ToLower().EndsWith("done")))
                         {
-                            if (!dir.ToLower().EndsWith("done"))
+                            var file_cnt = Directory.EnumerateFiles(dir, "*.mp4", SearchOption.AllDirectories).Count();
+                            if (file_cnt > 0)
                             {
-                                var file_cnt = Directory.EnumerateFiles(dir, "*.mp4", SearchOption.AllDirectories).Count();
-                                if (file_cnt > 0)
-                                {
-                                    ShortsDirectoryList.Add(new MultiShortsInfo(dir, file_cnt));
-                                }
+                                ShortsDirectoryList.Add(new MultiShortsInfo(dir, file_cnt));
                             }
                         }
-                        ;
                     }
                     bool found = false;
                     int LinkedId = -1;
                     if (uploaddir != "" && Path.Exists(uploaddir) &&
                         Directory.EnumerateFiles(uploaddir, "*.mp4", SearchOption.AllDirectories).Count() > 0)
                     {
-                        foreach (var fnd in EditableshortsDirectoryList)
+                        foreach (var fnd in EditableshortsDirectoryList.Where(fnd => fnd.Directory == uploaddir))
                         {
-                            if (fnd.Directory == uploaddir)
-                            {
-                                LinkedId = fnd.Id;
-                                break;
-                            }
+                            LinkedId = fnd.Id;
+                            break;
                         }
-
                         bool processed = false;
-                        string filen = "";
                         DateTime LastTimeUploaded = DateTime.Now.Date.AddYears(-100);
-                        string SQLB = "SELECT * FROM UploadsRecord ORDER BY RDB$RECORD_VERSION DESC ROWS 500;";
-                        connectionString.ExecuteReader(SQLB, (FbDataReader r) =>
-                        {
-                            filen = (r["UPLOADFILE"] is string f) ? f : "";
-                            var dt = (r["UPLOAD_DATE"] is DateTime d) ? d : DateTime.Now.Date.AddYears(-100);
-                            TimeSpan dtr = (r["UPLOAD_TIME"] is TimeSpan t1) ? t1 : new TimeSpan(); 
-                            if (filen.Contains("_") && !processed)
-                            {
-                                string Idx = filen.Split('_').LastOrDefault();
-                                if (Idx != "")
-                                {
-                                    LastTimeUploaded = dt.AtTime(TimeOnly.FromTimeSpan(dtr));
-                                    processed = true;
-                                }
-                            }
-                        });
+                        (LastTimeUploaded, processed) = CheckUploads(LinkedId);
                         foreach (var _ in SelectedShortsDirectoriesList.Where(item => item.DirecoryName == uploaddir).Select(item => new { }))
                         {
                             found = true;
                             break;
                         }
-
                         if (!found && uploaddir != "")
                         {
-                            DateTime dtr = LastTimeUploaded.Date;
-                            TimeSpan dtt = LastTimeUploaded.TimeOfDay;
                             int NumberofShorts = Directory.EnumerateFiles(uploaddir, "*.mp4", SearchOption.AllDirectories).Count();
                             string sqlA = "SELECT ID FROM MULTISHORTSINFO WHERE" +
                                 " LINKEDSHORTSDIRECTORYID = @LINKEDID;";
                             int id = connectionString.ExecuteScalar(sqlA, [("@LINKEDID", LinkedId)]).ToInt(-1);
                             if (id != -1)
                             {
-                                int NewId = -1;
-                                if (dtr.Year > 2000)
-                                {
-                                    sqlA = "INSERT INTO MULTISHORTSINFO (ISSHORTSACTIVE,NUMBEROFSHORTS," +
-                                        " LINKEDSHORTSDIRECTORYID,LASTUPLOADEDDATE,LASTUPLOADEDTIME)" +
-                                        "VALUES (1,@NUMBEROFSHORTS,@LINKEDID,@DT,@DTT) RETURNING ID;";
-                                    NewId = connectionString.ExecuteScalar(sqlA, [("@NUMBEROFSHORTS", NumberofShorts),
-                                    ("@LINKEDID", LinkedId), ("@DT", dtr),   ("@DTT", dtt)]).ToInt(-1);
-                                }
-                                else
-                                {
-                                    sqlA = "INSERT INTO MULTISHORTSINFO (ISSHORTSACTIVE,NUMBEROFSHORTS," +
-                                     " LINKEDSHORTSDIRECTORYID)" +
-                                     "VALUES (1,@NUMBEROFSHORTS,@LINKEDID,@DT,@DTT) RETURNING ID;";
-                                    NewId = connectionString.ExecuteScalar(sqlA, [("@NUMBEROFSHORTS", NumberofShorts),
-                                    ("@LINKEDID", LinkedId)]).ToInt(-1);
-                                }
-                                if (NewId != -1)
-                                {
-                                    sqlA = "SELECT ID FROM MULTISHORTSINFO WHERE ID = @ID;";
-                                    connectionString.ExecuteReader(sqlA, (FbDataReader r) =>
-                                    {
-                                        SelectedShortsDirectoriesList.Add(new(r));
-                                    });
-                                }
-                            }
+                                InsertIntoMultiShortsInfo(NumberofShorts, LinkedId, LastTimeUploaded);
+                            }                              
                             else
                             {
-                                if (dtr.Year > 2000)
+                                if (LastTimeUploaded.Date.Year > 2000)
                                 {
                                     sqlA = "UPDATE MULTISHORTSINFO SET NUMBEROFSHORTS = @NUMBEROFSHORTS," +
                                         " LASTUPLOADEDDATE = @DT, LASTUPLOADEDTIME = @DTT WHERE" +
                                         " LINKEDSHORTSDIRECTORYID = @LINKEDID;";
                                     connectionString.ExecuteScalar(sqlA, [("@NUMBEROFSHORTS", NumberofShorts),
-                                    ("@LINKEDID", LinkedId), ("@DT", dtr),   ("@DTT", dtt)]);
-                                    foreach(var ip in SelectedShortsDirectoriesList.Where(item => item.DirecoryName == uploaddir)
+                                    ("@LINKEDID", LinkedId), ("@DT", LastTimeUploaded.Date),   ("@DTT", LastTimeUploaded.TimeOfDay)]);
+                                    foreach (var ip in SelectedShortsDirectoriesList.Where(item => item.DirecoryName == uploaddir))
                                     {
-                                        ip.LastUploadedDateFile = dtr.AtTime(TimeOnly.FromTimeSpan(dtt));
+                                        ip.LastUploadedDateFile = LastTimeUploaded;
                                         ip.NumberOfShorts = NumberofShorts;
                                         break;
-                                    };
+                                    }
                                 }
                                 else
                                 {
@@ -598,7 +712,7 @@ namespace VideoGui
                                         " LINKEDSHORTSDIRECTORYID = @LINKEDID;";
                                     connectionString.ExecuteScalar(sqlA, [("@NUMBEROFSHORTS", NumberofShorts),
                                     ("@LINKEDID", LinkedId)]);
-                                    foreach(var ip in SelectedShortsDirectoriesList.Where(item => item.DirecoryName == uploaddir)
+                                    foreach (var ip in SelectedShortsDirectoriesList.Where(item => item.DirecoryName == uploaddir))
                                     {
                                         ip.NumberOfShorts = NumberofShorts;
                                         break;
@@ -606,8 +720,8 @@ namespace VideoGui
                                 }
                             }
                         }
-                    }
 
+                    }
                     frmMultiShortsUploader.lstShorts.ItemsSource = ShortsDirectoryList;
                     frmMultiShortsUploader.lstActiveScheduleItems.ItemsSource = SelectedShortsDirectoriesList;
                 }

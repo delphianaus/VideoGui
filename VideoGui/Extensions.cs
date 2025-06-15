@@ -174,6 +174,8 @@ namespace VideoGui
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
             }
         }
+
+        
         public static void AutoSizeLabel(this Label labelname, string content = "")
         {
             try
@@ -261,6 +263,10 @@ namespace VideoGui
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
                 return false;
             }
+        }
+        public static string ToHex(this int number)
+        {
+            return number.ToString("X");
         }
         public static double MeasureString(this FrameworkElement frameworkelement, string labelname, string content = "")
         {

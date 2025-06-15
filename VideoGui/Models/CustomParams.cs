@@ -418,7 +418,14 @@ namespace VideoGui.Models
         }
 
     }
-
+    public class CustomParams_AddDirectory
+    {
+        public string DirectoryName = "";
+        public CustomParams_AddDirectory(string _DirectoryName)
+        {
+            DirectoryName = _DirectoryName;
+        }
+    }
     public class CustomParams_MoveDirectory
     {
         public string DirectoryName = "";
