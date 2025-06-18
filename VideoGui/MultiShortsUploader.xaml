@@ -62,7 +62,8 @@
             </Canvas>
         </GroupBox>
         <GroupBox Name="grpschedules" BorderBrush="Black" BorderThickness="2" 
-                  VerticalAlignment="Bottom" Height="240" Header="Active Schedules" VerticalContentAlignment="Bottom" Margin="0,0,0,43">
+                  VerticalAlignment="Bottom" Height="240" Header="Active Schedules" 
+                  VerticalContentAlignment="Bottom" Margin="0,0,0,43">
             <Canvas Name="cnvschedules">
                 <ListBox Name="lstActiveSchedulesTitles" Height="30" VerticalAlignment="Center" Canvas.Left="3"
              Canvas.Top="1" Width="530" HorizontalAlignment="Left">

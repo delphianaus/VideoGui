@@ -9899,6 +9899,35 @@ namespace VideoGui
             }
         }
 
+        private void btnShortsInfo_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (multiShortsUploader is not null && !multiShortsUploader.IsClosed)
+                {
+                    if (multiShortsUploader.IsClosing) multiShortsUploader.Close();
+                    while (!multiShortsUploader.IsClosed)
+                    {
+                        Thread.Sleep(100);
+                    }
+                    multiShortsUploader.Close();
+                    multiShortsUploader = null;
+                }
+                if (multiShortsUploader is null)
+                {
+                    Hide();
+                    multiShortsUploader = new MultiShortsUploader(ModuleCallback,
+                        MultiShortsUploader_onFinish);
+                    multiShortsUploader.ShowActivated = true;
+                    multiShortsUploader.ShowDialog();
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"btnShortsInfo_Click {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
+            }
+        }
+
         private void ManualSchedulerFinish()
         {
             try

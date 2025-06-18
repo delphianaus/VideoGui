@@ -103,7 +103,6 @@
             <Image Source="/Icons/cancel.png" VerticalAlignment="Bottom"/>
         </Button>
         <ComboBox x:Name="CmbScanDirectory" HorizontalAlignment="Left" Margin="271,0,0,82" VerticalAlignment="Bottom" Width="164" LostFocus="CmbScanDirectory_LostFocus" KeyUp="CmbScanDirectory_KeyUp"/>
-        <Button Content="" HorizontalAlignment="Left" Height="26" Margin="87,0,0,81" VerticalAlignment="Bottom" Width="26" Click="Button_Click"/>
         <Button x:Name="BtnViewLog" Content="View Log" HorizontalAlignment="Left" Height="30" Margin="201,0,0,79" VerticalAlignment="Bottom" Click="BtnViewLog_Click" Width="57" />
         <StatusBar x:Name="statusbar1" Height="34" Margin="25,0,0,0" VerticalAlignment="Bottom">
             <Label x:Name="lblTotalStatus" Background="#FFBFBFBF" Width="62" Height="34" Content="Total Time" FontSize="11"/>
@@ -148,7 +147,7 @@
             <Button x:Name="btnYTSchedule" Content="Uploads Info" HorizontalAlignment="Center" Height="28" VerticalAlignment="Center" Width="70" Click="btnYTSchedule_Click"/>
 
         </StatusBar>
-        <Button x:Name="BtnFileFixer" Content="File Fixer" HorizontalAlignment="Left" Height="24" Margin="26,0,0,82" VerticalAlignment="Bottom" Width="53" Click="BtnFileFixer_Click"/>
+        <Button x:Name="btnShortsInfo" Content="Shorts" HorizontalAlignment="Left" Height="24" Margin="26,0,0,82" VerticalAlignment="Bottom" Width="77" Click="btnShortsInfo_Click"/>
         <Button x:Name="BtnVideoCardDetails" Content="" HorizontalAlignment="Left" Height="26" Margin="469,0,0,81" VerticalAlignment="Bottom" Width="25" Click="BtnVideoCardDetails_Click" RenderTransformOrigin="-0.864,0.693"/>
         <Button x:Name="btnEditDirectories" Content="Edit Dirs" Height="26" Margin="498,0,0,82" VerticalAlignment="Bottom" HorizontalAlignment="Left" Click="btnEditDirectories_Click" Width="45"/>
         <Button x:Name="btnEditSchedules" Content="Edit Schedules" Height="26" Margin="545,0,0,82" VerticalAlignment="Bottom" HorizontalAlignment="Left" Click="btnEditSchedules_Click" Width="75"/>
