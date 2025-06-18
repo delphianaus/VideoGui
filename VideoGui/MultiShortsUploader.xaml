@@ -11,21 +11,20 @@
         Title="Multi Shorts Uploader" Height="439" Width="559">
     <Grid Margin="0,0,0,3">
         <MSU:MultiListbox x:Name="msuShorts" Header="Active Shorts Directory" 
-           BorderBrush="Black" BorderThickness="2" Height="135" Width="557"
-           HorizontalAlignment="Left" VerticalAlignment="Top">
+           BorderBrush="Black" BorderThickness="2" Height="135" VerticalAlignment="Top" Width="558">
             <MSU:MultiListbox.ColumnDefinitions>
                 <MSU:MultiListboxColumnDefinition DataField="ID" Width="0" 
                     ComponentType="TextBlock"/>
                 <MSU:MultiListboxColumnDefinition HeaderText="Shorts Directory" 
-                   DataField="DirectoryName" Width="103" ComponentType="TextBlock"/>
+                   DataField="DirectoryName" Width="390" ComponentType="TextBlock"/>
                 <MSU:MultiListboxColumnDefinition HeaderText="Number Of Shorts" 
                    DataField="NumberOfShorts" Width="103" ComponentType="TextBlock"/>
             </MSU:MultiListbox.ColumnDefinitions>
             <MSU:MultiListbox.ItemsContextMenu>
                 <ContextMenu>
-                    <MenuItem Name="mnuMoveDirectory" Header="Move Directory" 
+                    <MenuItem Header="Move Directory" 
                               Click="mnuMoveDirectory_Click"/>
-                    <MenuItem Name="mnuAddToSelected" Header="Add to Selected Directories"
+                    <MenuItem  Header="Add to Selected Directories"
                               Click="mnuAddToSelected_Click"/>
                 </ContextMenu>
             </MSU:MultiListbox.ItemsContextMenu>
@@ -75,7 +74,9 @@
                             <MenuItem Name = "mnuAddToSelected" Header="Add to Selected Directories"
                              Click="mnuAddToSelected_Click"/>
                         </ContextMenu>
-                        --><!--Sets a context menu for each ListBoxItem in the current ListBox--><!--
+                        -->
+        <!--Sets a context menu for each ListBoxItem in the current ListBox-->
+        <!--
                         <Style TargetType="{x:Type ListBoxItem}">
                             <Setter Property="ContextMenu" Value="{StaticResource MyElementMenu}"/>
                         </Style>
@@ -83,10 +84,10 @@
                 </ListBox>
             </Canvas>
         </GroupBox>-->
-        
+
         <GroupBox Name="grpschedules" BorderBrush="Black" BorderThickness="2" 
-                  VerticalAlignment="Bottom" Height="240" Header="Active Schedules" 
-                  VerticalContentAlignment="Bottom" Margin="0,0,0,43">
+                  VerticalAlignment="Top" Height="198" Header="Active Schedules" 
+                  VerticalContentAlignment="Bottom" Margin="0,176,0,0">
             <Canvas Name="cnvschedules">
                 <ListBox Name="lstActiveSchedulesTitles" Height="30" VerticalAlignment="Center" Canvas.Left="3"
              Canvas.Top="1" Width="530" HorizontalAlignment="Left">

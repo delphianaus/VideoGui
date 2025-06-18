@@ -726,7 +726,7 @@ namespace VideoGui
                         }
 
                     }
-                    //frmMultiShortsUploader.lstShorts.ItemsSource = ShortsDirectoryList;
+                    frmMultiShortsUploader.msuShorts.ItemsSource = ShortsDirectoryList;
                     frmMultiShortsUploader.lstActiveScheduleItems.ItemsSource = SelectedShortsDirectoriesList;
                 }
                 return null;

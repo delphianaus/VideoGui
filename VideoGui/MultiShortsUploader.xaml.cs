@@ -118,13 +118,13 @@ namespace VideoGui
                         {
 
                         }
-                        //lstActiveScheduleItems.Height = cnvschedules.Height - 34;
+                        msuShorts.Height = e.NewSize.Height - 278;
                     }
                     if (e.WidthChanged)
                     {
                         lstActiveScheduleItems.Width = e.NewSize.Width - 26;
                         lstActiveSchedulesTitles.Width = e.NewSize.Width - 26;
-                        //lstShorts.Width = e.NewSize.Width - 26;
+                        msuShorts.Width = e.NewSize.Width - 25;
                         //lstShortsDirectoryTitles.Width = e.NewSize.Width - 26;
                         ColumnWidth = new GridLength(e.NewSize.Width - 165, GridUnitType.Pixel);
                         ActiveColumnWidth = new GridLength(e.NewSize.Width - 250, GridUnitType.Pixel);
