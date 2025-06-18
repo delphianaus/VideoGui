@@ -4,11 +4,33 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:VideoGui" Loaded="Window_Loaded"
+        xmlns:MSU="clr-namespace:VideoGui.components" 
         SizeChanged="Window_SizeChanged" 
+        
         mc:Ignorable="d" WindowStartupLocation="Manual" WindowStyle="ToolWindow"
         Title="Multi Shorts Uploader" Height="439" Width="559">
     <Grid Margin="0,0,0,3">
-        <GroupBox Header="Active Shorts Directory" Name="grpshortsdir"
+        <MSU:MultiListbox x:Name="msuShorts" Header="Active Shorts Directory" 
+           BorderBrush="Black" BorderThickness="2" Height="135" Width="557"
+           HorizontalAlignment="Left" VerticalAlignment="Top">
+            <MSU:MultiListbox.ColumnDefinitions>
+                <MSU:MultiListboxColumnDefinition DataField="ID" Width="0" 
+                    ComponentType="TextBlock"/>
+                <MSU:MultiListboxColumnDefinition HeaderText="Shorts Directory" 
+                   DataField="DirectoryName" Width="103" ComponentType="TextBlock"/>
+                <MSU:MultiListboxColumnDefinition HeaderText="Number Of Shorts" 
+                   DataField="NumberOfShorts" Width="103" ComponentType="TextBlock"/>
+            </MSU:MultiListbox.ColumnDefinitions>
+            <MSU:MultiListbox.ItemsContextMenu>
+                <ContextMenu>
+                    <MenuItem Name="mnuMoveDirectory" Header="Move Directory" 
+                              Click="mnuMoveDirectory_Click"/>
+                    <MenuItem Name="mnuAddToSelected" Header="Add to Selected Directories"
+                              Click="mnuAddToSelected_Click"/>
+                </ContextMenu>
+            </MSU:MultiListbox.ItemsContextMenu>
+        </MSU:MultiListbox>
+        <!--<GroupBox Header="Active Shorts Directory" Name="grpshortsdir"
                   BorderBrush="Black" BorderThickness="2" VerticalAlignment="Top" Height="140">
             <Canvas x:Name="cnvshortsdir" Margin="0,0,0,0">
                 <ListBox Name="lstShortsDirectoryTitles" Height="30" VerticalAlignment="Center" Canvas.Left="3"
@@ -53,14 +75,15 @@
                             <MenuItem Name = "mnuAddToSelected" Header="Add to Selected Directories"
                              Click="mnuAddToSelected_Click"/>
                         </ContextMenu>
-                        <!--Sets a context menu for each ListBoxItem in the current ListBox-->
+                        --><!--Sets a context menu for each ListBoxItem in the current ListBox--><!--
                         <Style TargetType="{x:Type ListBoxItem}">
                             <Setter Property="ContextMenu" Value="{StaticResource MyElementMenu}"/>
                         </Style>
                     </ListBox.Resources>
                 </ListBox>
             </Canvas>
-        </GroupBox>
+        </GroupBox>-->
+        
         <GroupBox Name="grpschedules" BorderBrush="Black" BorderThickness="2" 
                   VerticalAlignment="Bottom" Height="240" Header="Active Schedules" 
                   VerticalContentAlignment="Bottom" Margin="0,0,0,43">

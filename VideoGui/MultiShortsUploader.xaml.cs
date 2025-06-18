@@ -124,8 +124,8 @@ namespace VideoGui
                     {
                         lstActiveScheduleItems.Width = e.NewSize.Width - 26;
                         lstActiveSchedulesTitles.Width = e.NewSize.Width - 26;
-                        lstShorts.Width = e.NewSize.Width - 26;
-                        lstShortsDirectoryTitles.Width = e.NewSize.Width - 26;
+                        //lstShorts.Width = e.NewSize.Width - 26;
+                        //lstShortsDirectoryTitles.Width = e.NewSize.Width - 26;
                         ColumnWidth = new GridLength(e.NewSize.Width - 165, GridUnitType.Pixel);
                         ActiveColumnWidth = new GridLength(e.NewSize.Width - 250, GridUnitType.Pixel);
                     }
@@ -152,10 +152,10 @@ namespace VideoGui
         {
             try
             {
-                foreach (MultiShortsInfo info in lstShorts.SelectedItems)
-                {
-                    dbInit?.Invoke(this, new CustomParams_MoveDirectory(info.DirectoryName));
-                }
+                //foreach (MultiShortsInfo info in lstShorts.SelectedItems)
+                //{
+                //    dbInit?.Invoke(this, new CustomParams_MoveDirectory(info.DirectoryName));
+                //}
             }
             catch (Exception ex)
             {
@@ -169,10 +169,10 @@ namespace VideoGui
             {
                 try
                 {
-                    foreach (MultiShortsInfo info in lstShorts.SelectedItems)
+                    /*foreach (MultiShortsInfo info in lstShorts.SelectedItems)
                     {
                         dbInit?.Invoke(this, new CustomParams_AddDirectory(info.DirectoryName));
-                    }
+                    }*/
                 }
                 catch (Exception ex)
                 {
@@ -191,10 +191,10 @@ namespace VideoGui
         {
             try
             {
-                foreach(SelectedShortsDirectories info in lstShorts.SelectedItems)
+                /*foreach(SelectedShortsDirectories info in lstShorts.SelectedItems)
                 {
                     dbInit?.Invoke(this, new CustomParams_RemoveSelectedDirectory(info.Id,info.DirecoryName));
-                }
+                }*/
             }
             catch (Exception ex)
             {
