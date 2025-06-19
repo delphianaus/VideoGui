@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
+  <metadata>
+    <id>CustomComponents</id>
+    <version>1.0.0</version>
+    <authors>Justin Smyth</authors>
+    <description>Custom WPF Components including MultiListbox</description>
+    <repository type="git" commit="ac765551bce50d9492970ca10fff8360f96e3490" />
+    <dependencies>
+      <group targetFramework="net9.0-windows7.0">
+        <dependency id="DotNetProjects.Extended.Wpf.Toolkit" version="5.0.124" exclude="Build,Analyzers" />
+      </group>
+    </dependencies>
+    <frameworkReferences>
+      <group targetFramework="net9.0-windows7.0">
+        <frameworkReference name="Microsoft.WindowsDesktop.App.WPF" />
+      </group>
+    </frameworkReferences>
+  </metadata>
+  <files>
+    <file src="C:\VideoGui\src\CustomComponents\bin\Release\net9.0-windows\CustomComponents.dll" target="lib\net9.0-windows7.0\CustomComponents.dll" />
+  </files>
+</package>

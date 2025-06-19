@@ -5,7 +5,7 @@
     <version>1.0.0</version>
     <authors>Justin Smyth</authors>
     <description>Custom WPF Components including MultiListbox</description>
-    <repository type="git" commit="f5e287cb2d87aae47c7f649d66ae27f7dca4b056" />
+    <repository type="git" commit="ac765551bce50d9492970ca10fff8360f96e3490" />
     <dependencies>
       <group targetFramework="net9.0-windows7.0">
         <dependency id="DotNetProjects.Extended.Wpf.Toolkit" version="5.0.124" exclude="Build,Analyzers" />
