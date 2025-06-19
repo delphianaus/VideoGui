@@ -27,11 +27,14 @@ namespace VideoGui
         databasehook<object> dbInit = null;
         public bool IsClosing = false, IsClosed = false, Ready = false;
         DispatcherTimer LocationChangedTimer = new DispatcherTimer();
-        public static readonly DependencyProperty ColumnWidthProperty = DependencyProperty.Register("ColumnWidth", typeof(GridLength), typeof(MultiShortsUploader), new PropertyMetadata(new GridLength(390, GridUnitType.Pixel)));
-        public GridLength ColumnWidth
+        public static readonly DependencyProperty Column_WidthProperty = 
+            DependencyProperty.Register("Column_Width", 
+            typeof(GridLength), typeof(MultiShortsUploader), 
+            new PropertyMetadata(new GridLength(393, GridUnitType.Pixel)));
+        public GridLength Column_Width
         {
-            get { return (GridLength)GetValue(ColumnWidthProperty); }
-            set { SetValue(ColumnWidthProperty, value); }
+            get { return (GridLength)GetValue(Column_WidthProperty); }
+            set { SetValue(Column_WidthProperty, value); }
         }
 
         public static readonly DependencyProperty ActiveColumnWidthProperty = DependencyProperty.Register("ActiveColumnWidth", typeof(GridLength), typeof(MultiShortsUploader), new PropertyMetadata(new GridLength(309, GridUnitType.Pixel)));
@@ -81,8 +84,8 @@ namespace VideoGui
                 Height = (ActualHeight != _height && _height != 0) ? _height : Height;
                 Left = (Left != _left && _left != 0) ? _left : Left;
                 Top = (Top != _top && _top != 0) ? _top : Top;
-               
-                LocationChanged+= (s, e) => 
+                Column_Width = new GridLength(393, GridUnitType.Pixel);
+                LocationChanged += (s, e) => 
                 {
                     LocationChangedTimer.Stop();
                     LocationChangedTimer.Interval = TimeSpan.FromSeconds(3);
@@ -111,22 +114,14 @@ namespace VideoGui
                 {
                     if (e.HeightChanged)
                     {
-                        grpschedules.Height = e.NewSize.Height - 220;
-                        lstActiveScheduleItems.Height = e.NewSize.Height - 274;
-
-                        if (true)
-                        {
-
-                        }
+                        msuSchedules.Height = e.NewSize.Height - 274;
                         msuShorts.Height = e.NewSize.Height - 278;
                     }
                     if (e.WidthChanged)
                     {
-                        lstActiveScheduleItems.Width = e.NewSize.Width - 26;
-                        lstActiveSchedulesTitles.Width = e.NewSize.Width - 26;
+                        msuSchedules.Width = e.NewSize.Width - 25;
                         msuShorts.Width = e.NewSize.Width - 25;
-                        //lstShortsDirectoryTitles.Width = e.NewSize.Width - 26;
-                        ColumnWidth = new GridLength(e.NewSize.Width - 165, GridUnitType.Pixel);
+                        Column_Width = new GridLength(e.NewSize.Width - 165, GridUnitType.Pixel);
                         ActiveColumnWidth = new GridLength(e.NewSize.Width - 250, GridUnitType.Pixel);
                     }
 

@@ -670,7 +670,7 @@ namespace VideoGui.ffmpeg
                        WithWorkingDirectory(defaultpath);
                     _dest = DestFileName;
                 }
-                0await foreach (var commandEvent in cmd.ListenAsync())
+                await foreach (var commandEvent in cmd.ListenAsync())
                 {
                     switch (commandEvent)
                     {

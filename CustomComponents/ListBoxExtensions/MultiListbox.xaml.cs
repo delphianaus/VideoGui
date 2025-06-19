@@ -30,39 +30,11 @@ namespace CustomComponents.ListBoxExtensions
         public event RoutedEventHandler ItemLostFocus;
         public event RoutedEventHandler ItemGotFocus;
         public event SelectionChangedEventHandler ItemSelectionChanged;
-        #endregion
-
-        public static readonly DependencyProperty ToggleButtonStyleProperty =
-            DependencyProperty.Register(nameof(ToggleButtonStyle), typeof(Style), typeof(MultiListbox),
-                new PropertyMetadata(null));
-
-        public Style ToggleButtonStyle
-        {
-            get { return (Style)GetValue(ToggleButtonStyleProperty); }
-            set { SetValue(ToggleButtonStyleProperty, value); }
-        }
-
-        public static readonly DependencyProperty ToggleButtonWidthProperty =
-            DependencyProperty.Register(nameof(ToggleButtonWidth), typeof(double), typeof(MultiListbox),
-                new PropertyMetadata(double.NaN));
-
-        public double ToggleButtonWidth
-        {
-            get { return (double)GetValue(ToggleButtonWidthProperty); }
-            set { SetValue(ToggleButtonWidthProperty, value); }
-        }
-
-        public static readonly DependencyProperty ToggleButtonHeightProperty =
-            DependencyProperty.Register(nameof(ToggleButtonHeight), typeof(double), typeof(MultiListbox),
-                new PropertyMetadata(double.NaN));
-
-        public double ToggleButtonHeight
-        {
-            get { return (double)GetValue(ToggleButtonHeightProperty); }
-            set { SetValue(ToggleButtonHeightProperty, value); }
-        }
-
         public event RoutedEventHandler ToggleButtonClick;
+        public event RoutedEventHandler DateTimePickerLostFocus;
+        public event RoutedEventHandler DateTimePickerGotFocus;
+        public event KeyEventHandler DateTimePickerKeyUp;
+        #endregion
 
         public static readonly DependencyProperty ColumnDefinitionsProperty =
             DependencyProperty.Register(nameof(ColumnDefinitions), typeof(ObservableCollection<MultiListboxColumnDefinition>),
@@ -569,7 +541,7 @@ namespace CustomComponents.ListBoxExtensions
                 case "slider":
                     return Slider.ValueProperty;
                 default:
-                    return TextBlock.TextProperty;
+                    return GetDependencyPropertyByName(boundTo);
             }
         }
 
@@ -684,17 +656,17 @@ namespace CustomComponents.ListBoxExtensions
             // Apply ToggleButton properties if this is a ToggleButton
             if (controlType == typeof(ToggleButton))
             {
-                if (ToggleButtonStyle != null)
+                if (colDef.ToggleButtonStyle != null)
                 {
-                    factory.SetValue(ToggleButton.StyleProperty, ToggleButtonStyle);
+                    factory.SetValue(ToggleButton.StyleProperty, colDef.ToggleButtonStyle);
                 }
-                if (!double.IsNaN(ToggleButtonWidth))
+                if (!double.IsNaN(colDef.ToggleButtonWidth))
                 {
-                    factory.SetValue(FrameworkElement.WidthProperty, ToggleButtonWidth);
+                    factory.SetValue(FrameworkElement.WidthProperty, colDef.ToggleButtonWidth);
                 }
-                if (!double.IsNaN(ToggleButtonHeight))
+                if (!double.IsNaN(colDef.ToggleButtonHeight))
                 {
-                    factory.SetValue(FrameworkElement.HeightProperty, ToggleButtonHeight);
+                    factory.SetValue(FrameworkElement.HeightProperty, colDef.ToggleButtonHeight);
                 }
                 factory.AddHandler(ToggleButton.ClickEvent, new RoutedEventHandler((s, e) => ToggleButtonClick?.Invoke(s, e)));
             }
@@ -759,17 +731,17 @@ namespace CustomComponents.ListBoxExtensions
                 // Apply ToggleButton properties if this is a ToggleButton
                 if (controlType == typeof(ToggleButton))
                 {
-                    if (ToggleButtonStyle != null)
+                    if (colDef.ToggleButtonStyle != null)
                     {
-                        factory.SetValue(ToggleButton.StyleProperty, ToggleButtonStyle);
+                        factory.SetValue(ToggleButton.StyleProperty, colDef.ToggleButtonStyle);
                     }
-                    if (!double.IsNaN(ToggleButtonWidth))
+                    if (!double.IsNaN(colDef.ToggleButtonWidth))
                     {
-                        factory.SetValue(FrameworkElement.WidthProperty, ToggleButtonWidth);
+                        factory.SetValue(FrameworkElement.WidthProperty, colDef.ToggleButtonWidth);
                     }
-                    if (!double.IsNaN(ToggleButtonHeight))
+                    if (!double.IsNaN(colDef.ToggleButtonHeight))
                     {
-                        factory.SetValue(FrameworkElement.HeightProperty, ToggleButtonHeight);
+                        factory.SetValue(FrameworkElement.HeightProperty, colDef.ToggleButtonHeight);
                     }
                     factory.AddHandler(ToggleButton.ClickEvent, new RoutedEventHandler((s, e) => ToggleButtonClick?.Invoke(s, e)));
                 }
@@ -843,8 +815,9 @@ namespace CustomComponents.ListBoxExtensions
                         var headerTextBlock = new TextBlock
                         {
                             Text = colDef.HeaderText,
-                            Margin = new Thickness(5),
-                            VerticalAlignment = VerticalAlignment.Center
+                            Margin = colDef.HeaderMargin,
+                            HorizontalAlignment = colDef.HeaderHorizontalAlignment,
+                            VerticalAlignment = colDef.HeaderVerticalAlignment
                         };
                         Grid.SetColumn(headerTextBlock, _headerGrid.ColumnDefinitions.Count - 1);
                         _headerGrid.Children.Add(headerTextBlock);
@@ -870,26 +843,55 @@ namespace CustomComponents.ListBoxExtensions
                     {
                         var controlType = GetControlType(colDef.ComponentType.ToString());
                         var factory = new FrameworkElementFactory(controlType);
-                        factory.SetValue(FrameworkElement.MarginProperty, new Thickness(5));
-                        factory.SetValue(FrameworkElement.VerticalAlignmentProperty, VerticalAlignment.Center);
+                        factory.SetValue(FrameworkElement.MarginProperty, colDef.ContentMargin);
+                        factory.SetValue(FrameworkElement.HorizontalAlignmentProperty, colDef.ContentHorizontalAlignment);
+                        factory.SetValue(FrameworkElement.VerticalAlignmentProperty, colDef.ContentVerticalAlignment);
                         factory.SetValue(Grid.ColumnProperty, _itemGrid.ColumnDefinitions.Count - 1);
 
                         // Apply ToggleButton properties if this is a ToggleButton
                         if (controlType == typeof(ToggleButton))
                         {
-                            if (ToggleButtonStyle != null)
+                            if (colDef.ToggleButtonStyle != null)
                             {
-                                factory.SetValue(ToggleButton.StyleProperty, ToggleButtonStyle);
+                                factory.SetValue(ToggleButton.StyleProperty, colDef.ToggleButtonStyle);
                             }
-                            if (!double.IsNaN(ToggleButtonWidth))
+                            if (!double.IsNaN(colDef.ToggleButtonWidth))
                             {
-                                factory.SetValue(FrameworkElement.WidthProperty, ToggleButtonWidth);
+                                factory.SetValue(FrameworkElement.WidthProperty, colDef.ToggleButtonWidth);
                             }
-                            if (!double.IsNaN(ToggleButtonHeight))
+                            if (!double.IsNaN(colDef.ToggleButtonHeight))
                             {
-                                factory.SetValue(FrameworkElement.HeightProperty, ToggleButtonHeight);
+                                factory.SetValue(FrameworkElement.HeightProperty, colDef.ToggleButtonHeight);
                             }
                             factory.AddHandler(ToggleButton.ClickEvent, new RoutedEventHandler((s, e) => ToggleButtonClick?.Invoke(s, e)));
+                        }
+                        else if (controlType == typeof(DateTimePicker))
+                        {
+                            if (!string.IsNullOrEmpty(colDef.DateTimeFormat))
+                            {
+                                factory.SetValue(DateTimePicker.FormatProperty, colDef.DateTimeFormat);
+                            }
+                            if (!string.IsNullOrEmpty(colDef.DateTimeFormatString))
+                            {
+                                factory.SetValue(DateTimePicker.FormatStringProperty, colDef.DateTimeFormatString);
+                            }
+                            if (!string.IsNullOrEmpty(colDef.DateTimeTimeFormat))
+                            {
+                                factory.SetValue(DateTimePicker.TimeFormatProperty, colDef.DateTimeTimeFormat);
+                            }
+                            if (!string.IsNullOrEmpty(colDef.DateTimeTimeFormatString))
+                            {
+                                factory.SetValue(DateTimePicker.TimeFormatStringProperty, colDef.DateTimeTimeFormatString);
+                            }
+                            if (!double.IsNaN(colDef.DateTimeMinWidth))
+                            {
+                                factory.SetValue(FrameworkElement.MinWidthProperty, colDef.DateTimeMinWidth);
+                            }
+                            factory.SetValue(UIElement.FocusableProperty, colDef.DateTimeFocusable);
+                            
+                            factory.AddHandler(DateTimePicker.LostFocusEvent, new RoutedEventHandler((s, e) => DateTimePickerLostFocus?.Invoke(s, e)));
+                            factory.AddHandler(DateTimePicker.GotFocusEvent, new RoutedEventHandler((s, e) => DateTimePickerGotFocus?.Invoke(s, e)));
+                            factory.AddHandler(DateTimePicker.KeyUpEvent, new KeyEventHandler((s, e) => DateTimePickerKeyUp?.Invoke(s, e)));
                         }
 
                         // Set up the main binding
