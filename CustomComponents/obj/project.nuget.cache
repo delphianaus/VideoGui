@@ -1,11 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "46vLZ4Zwt/k=",
+  "dgSpecHash": "n8p8avghx+0=",
   "success": true,
   "projectFilePath": "C:\\VideoGui\\src\\CustomComponents\\CustomComponents.csproj",
   "expectedPackageFiles": [
-    "C:\\Users\\Justin\\.nuget\\packages\\dotnetprojects.extended.wpf.toolkit\\5.0.124\\dotnetprojects.extended.wpf.toolkit.5.0.124.nupkg.sha512",
-    "C:\\Users\\Justin\\.nuget\\packages\\microsoft.net.illink.tasks\\9.0.6\\microsoft.net.illink.tasks.9.0.6.nupkg.sha512"
+    "C:\\Users\\Justin\\.nuget\\packages\\dotnetprojects.extended.wpf.toolkit\\5.0.124\\dotnetprojects.extended.wpf.toolkit.5.0.124.nupkg.sha512"
   ],
   "logs": []
 }
