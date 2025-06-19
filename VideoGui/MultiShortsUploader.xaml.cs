@@ -30,20 +30,14 @@ namespace VideoGui
         public static readonly DependencyProperty Column_WidthProperty = 
             DependencyProperty.Register("Column_Width", 
             typeof(GridLength), typeof(MultiShortsUploader), 
-            new PropertyMetadata(new GridLength(393, GridUnitType.Pixel)));
+            new PropertyMetadata(new GridLength(363, GridUnitType.Pixel)));
         public GridLength Column_Width
         {
             get { return (GridLength)GetValue(Column_WidthProperty); }
             set { SetValue(Column_WidthProperty, value); }
         }
 
-        public static readonly DependencyProperty ActiveColumnWidthProperty = DependencyProperty.Register("ActiveColumnWidth", typeof(GridLength), typeof(MultiShortsUploader), new PropertyMetadata(new GridLength(309, GridUnitType.Pixel)));
-
-        public GridLength ActiveColumnWidth
-        {
-            get { return (GridLength)GetValue(ActiveColumnWidthProperty); }
-            set { SetValue(ActiveColumnWidthProperty, value); }
-        }
+        
         public MultiShortsUploader(databasehook<object> _dbInit, OnFinish _DoOnFinished)
         {
             try
@@ -114,18 +108,14 @@ namespace VideoGui
                 {
                     if (e.HeightChanged)
                     {
-                        msuSchedules.Height = e.NewSize.Height - 274;
-                        msuShorts.Height = e.NewSize.Height - 278;
+                        msuSchedules.Height = e.NewSize.Height - 269;
                     }
                     if (e.WidthChanged)
                     {
                         msuSchedules.Width = e.NewSize.Width - 25;
                         msuShorts.Width = e.NewSize.Width - 25;
-                        Column_Width = new GridLength(e.NewSize.Width - 165, GridUnitType.Pixel);
-                        ActiveColumnWidth = new GridLength(e.NewSize.Width - 250, GridUnitType.Pixel);
+                        Column_Width = new GridLength(e.NewSize.Width - 135, GridUnitType.Pixel);
                     }
-
-
                     if (e.HeightChanged || e.WidthChanged)
                     {
                         RegistryKey key = "SOFTWARE\\Scraper".OpenSubKey(Registry.CurrentUser);

@@ -5,9 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:VideoGui" Loaded="Window_Loaded"
         xmlns:MSU="clr-namespace:CustomComponents.ListBoxExtensions;assembly=CustomComponents"
-        SizeChanged="Window_SizeChanged" 
-        
-        mc:Ignorable="d" WindowStartupLocation="Manual" WindowStyle="ToolWindow"
+        SizeChanged="Window_SizeChanged" WindowStyle="ToolWindow"
+        mc:Ignorable="d" WindowStartupLocation="Manual" 
         Title="Multi Shorts Uploader" Height="439" Width="559">
     <Window.Resources>
         <BitmapImage x:Key="SET" UriSource="icons/set.png"/>
@@ -34,7 +33,7 @@
     </Window.Resources>
     <Grid Margin="0,0,0,3">
         <MSU:MultiListbox x:Name="msuShorts" Header="Active Shorts Directory" 
-           BorderBrush="Black" BorderThickness="2" Height="135" VerticalAlignment="Top" Width="558">
+           BorderBrush="Black" BorderThickness="2" Height="189" VerticalAlignment="Top" Width="558" Margin="0,0,1,0">
             <MSU:MultiListbox.ColumnDefinitions>
                 <MSU:MultiListboxColumnDefinition DataField="ID" Width="0" 
                     ComponentType="TextBlock"/>
@@ -45,40 +44,36 @@
             </MSU:MultiListbox.ColumnDefinitions>
             <MSU:MultiListbox.ItemsContextMenu>
                 <ContextMenu>
-                    <MenuItem Header="Move Directory" 
-                              Click="mnuMoveDirectory_Click"/>
-                    <MenuItem  Header="Add to Selected Directories"
-                              Click="mnuAddToSelected_Click"/>
+                    <MenuItem Header="Move Directory" Click="mnuMoveDirectory_Click"/>
+                    <MenuItem Header="Add to Selected Directories" Click="mnuAddToSelected_Click"/>
                 </ContextMenu>
             </MSU:MultiListbox.ItemsContextMenu>
         </MSU:MultiListbox>
-
         <MSU:MultiListbox x:Name="msuSchedules" Header="Active Schedules" Width="558"
              VerticalAlignment="Top"  VerticalContentAlignment="Bottom" 
-          Margin="0,176,0,0" BorderBrush="Black" BorderThickness="2" Height="198">
+          Margin="0,193,0,0" BorderBrush="Black" BorderThickness="2" Height="197">
             <MSU:MultiListbox.ColumnDefinitions>
                 <MSU:MultiListboxColumnDefinition DataField="ID" Width="0" 
                    ComponentType="TextBlock"/>
                 <MSU:MultiListboxColumnDefinition HeaderText="Shorts Directory" 
                  DataField="ShortsDir" WidthBinding="Column_Width" ComponentType="TextBlock"/>
+                <MSU:MultiListboxColumnDefinition HeaderText="Number of Shorts" 
+                 DataField="NumberOfShorts" Width="125" ComponentType="TextBlock"/>
                 <MSU:MultiListboxColumnDefinition HeaderText="Desc" 
                     ToggleButtonStyle="{StaticResource ToggleSetEditStyle}"
                     DataField="IsTitleAvailable" Width="60" ComponentType="ToggleButton"/>
                 <MSU:MultiListboxColumnDefinition HeaderText="Title" 
                     ToggleButtonStyle="{StaticResource ToggleSetEditStyle}"
                     DataField="IsDescAvailable" Width="60" ComponentType="ToggleButton"/>
-                <MSU:MultiListboxColumnDefinition HeaderText="Number of Shorts" 
-                 DataField="NumberOfShorts" Width="105" ComponentType="TextBlock"/>
                 <MSU:MultiListboxColumnDefinition HeaderText="Last Uploaded" 
                  DataField="LastUploaded" Width="105" ComponentType="TextBlock"/>
             </MSU:MultiListbox.ColumnDefinitions>
             <MSU:MultiListbox.ItemsContextMenu>
                 <ContextMenu>
-                    <MenuItem Header="Remove Selected Directories" 
-                              Click="mnuRemoveSelected_Click"/>
+                    <MenuItem Header="Remove Selected Directories" Click="mnuRemoveSelected_Click"/>
                 </ContextMenu>
             </MSU:MultiListbox.ItemsContextMenu>
-        </MSU:MultiListbox>           
+        </MSU:MultiListbox>
         <Button Name="BtnClose" Content="Close" HorizontalAlignment="Right"
                 Margin="0,0,6,4" VerticalAlignment="Bottom" Height="25" Width="64" Click="BtnClose_Click"/>
     </Grid>

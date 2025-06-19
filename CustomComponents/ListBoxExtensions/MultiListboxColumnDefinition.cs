@@ -195,6 +195,65 @@ namespace CustomComponents.ListBoxExtensions
             set => SetValue(DateTimeFocusableProperty, value);
         }
 
+        public static readonly DependencyProperty ButtonImageSourceProperty =
+            DependencyProperty.Register(nameof(ButtonImageSource), typeof(ImageSource), typeof(MultiListboxColumnDefinition));
+
+        public ImageSource ButtonImageSource
+        {
+            get => (ImageSource)GetValue(ButtonImageSourceProperty);
+            set => SetValue(ButtonImageSourceProperty, value);
+        }
+
+        public static readonly DependencyProperty CheckBoxVerticalContentAlignmentProperty =
+            DependencyProperty.Register(nameof(CheckBoxVerticalContentAlignment), typeof(VerticalAlignment), typeof(MultiListboxColumnDefinition),
+                new PropertyMetadata(VerticalAlignment.Center));
+
+        public VerticalAlignment CheckBoxVerticalContentAlignment
+        {
+            get => (VerticalAlignment)GetValue(CheckBoxVerticalContentAlignmentProperty);
+            set => SetValue(CheckBoxVerticalContentAlignmentProperty, value);
+        }
+
+        public static readonly DependencyProperty CheckBoxHorizontalContentAlignmentProperty =
+            DependencyProperty.Register(nameof(CheckBoxHorizontalContentAlignment), typeof(HorizontalAlignment), typeof(MultiListboxColumnDefinition),
+                new PropertyMetadata(HorizontalAlignment.Left));
+
+        public HorizontalAlignment CheckBoxHorizontalContentAlignment
+        {
+            get => (HorizontalAlignment)GetValue(CheckBoxHorizontalContentAlignmentProperty);
+            set => SetValue(CheckBoxHorizontalContentAlignmentProperty, value);
+        }
+
+        public static readonly DependencyProperty CheckBoxMarginProperty =
+            DependencyProperty.Register(nameof(CheckBoxMargin), typeof(Thickness), typeof(MultiListboxColumnDefinition),
+                new PropertyMetadata(new Thickness(5)));
+
+        public Thickness CheckBoxMargin
+        {
+            get => (Thickness)GetValue(CheckBoxMarginProperty);
+            set => SetValue(CheckBoxMarginProperty, value);
+        }
+
+        public static readonly DependencyProperty CheckBoxIsManipulationEnabledProperty =
+            DependencyProperty.Register(nameof(CheckBoxIsManipulationEnabled), typeof(bool), typeof(MultiListboxColumnDefinition),
+                new PropertyMetadata(false));
+
+        public bool CheckBoxIsManipulationEnabled
+        {
+            get => (bool)GetValue(CheckBoxIsManipulationEnabledProperty);
+            set => SetValue(CheckBoxIsManipulationEnabledProperty, value);
+        }
+
+        public static readonly DependencyProperty CheckBoxFocusableProperty =
+            DependencyProperty.Register(nameof(CheckBoxFocusable), typeof(bool), typeof(MultiListboxColumnDefinition),
+                new PropertyMetadata(true));
+
+        public bool CheckBoxFocusable
+        {
+            get => (bool)GetValue(CheckBoxFocusableProperty);
+            set => SetValue(CheckBoxFocusableProperty, value);
+        }
+
         public string DataField
         {
             get => (string)GetValue(DataFieldProperty);

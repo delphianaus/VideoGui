@@ -34,6 +34,10 @@ namespace CustomComponents.ListBoxExtensions
         public event RoutedEventHandler DateTimePickerLostFocus;
         public event RoutedEventHandler DateTimePickerGotFocus;
         public event KeyEventHandler DateTimePickerKeyUp;
+        public event EventHandler ComboBoxInitialized;
+        public event SelectionChangedEventHandler ComboBoxSelectionChanged;
+        public event RoutedEventHandler ComboBoxLostFocus;
+        public event RoutedEventHandler ComboBoxGotFocus;
         #endregion
 
         public static readonly DependencyProperty ColumnDefinitionsProperty =
@@ -864,6 +868,32 @@ namespace CustomComponents.ListBoxExtensions
                                 factory.SetValue(FrameworkElement.HeightProperty, colDef.ToggleButtonHeight);
                             }
                             factory.AddHandler(ToggleButton.ClickEvent, new RoutedEventHandler((s, e) => ToggleButtonClick?.Invoke(s, e)));
+                        }
+                        else if (controlType == typeof(CheckBox))
+                        {
+                            factory.SetValue(CheckBox.VerticalContentAlignmentProperty, colDef.CheckBoxVerticalContentAlignment);
+                            factory.SetValue(CheckBox.HorizontalContentAlignmentProperty, colDef.CheckBoxHorizontalContentAlignment);
+                            factory.SetValue(FrameworkElement.MarginProperty, colDef.CheckBoxMargin);
+                            factory.SetValue(UIElement.IsManipulationEnabledProperty, colDef.CheckBoxIsManipulationEnabled);
+                            factory.SetValue(UIElement.FocusableProperty, colDef.CheckBoxFocusable);
+                        }
+                        else if (controlType == typeof(Button))
+                        {
+                            if (colDef.ButtonImageSource != null)
+                            {
+                                var image = new FrameworkElementFactory(typeof(Image));
+                                image.SetValue(Image.SourceProperty, colDef.ButtonImageSource);
+                                image.SetValue(FrameworkElement.HorizontalAlignmentProperty, HorizontalAlignment.Center);
+                                image.SetValue(FrameworkElement.VerticalAlignmentProperty, VerticalAlignment.Center);
+                                factory.SetValue(Button.ContentProperty, image);
+                            }
+                        }
+                        else if (controlType == typeof(ComboBox))
+                        {
+                            factory.AddHandler(FrameworkElement.LoadedEvent, new RoutedEventHandler((s, e) => ComboBoxInitialized?.Invoke(s, e)));
+                            factory.AddHandler(ComboBox.SelectionChangedEvent, new SelectionChangedEventHandler((s, e) => ComboBoxSelectionChanged?.Invoke(s, e)));
+                            factory.AddHandler(ComboBox.LostFocusEvent, new RoutedEventHandler((s, e) => ComboBoxLostFocus?.Invoke(s, e)));
+                            factory.AddHandler(ComboBox.GotFocusEvent, new RoutedEventHandler((s, e) => ComboBoxGotFocus?.Invoke(s, e)));
                         }
                         else if (controlType == typeof(DateTimePicker))
                         {
