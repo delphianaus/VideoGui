@@ -116,6 +116,7 @@
     <PackageReference Include="WindowsAPICodePackShellExtensions" Version="8.0.8" />
     <ProjectReference Include="..\ToggleClass\ToggleClass.csproj" />
     <ProjectReference Include="..\NotifyIconWpf\NotifyIconWpf.csproj" />
+	<ProjectReference Include="..\CustomComponents\CustomComponents.csproj" />
 
   </ItemGroup>
 

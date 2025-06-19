@@ -1,10 +1,10 @@
-<UserControl x:Class="VideoGui.components.MultiListbox" 
+<UserControl x:Class="CustomComponents.ListBoxExtensions.MultiListbox" 
              x:Name="controlMultiListbox"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:VideoGui.components"
+             xmlns:local="clr-namespace:CustomComponents.ListBoxExtensions"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
 
@@ -49,19 +49,20 @@
                         </ControlTemplate>
                     </ListBox.Template>
                 </ListBox>
-                <ListBox x:Name="lstBoxUploadItems"
-                     HorizontalAlignment="Stretch"
-                     ScrollViewer.HorizontalScrollBarVisibility="Auto" 
-                     ScrollViewer.CanContentScroll="True" 
-                     ScrollViewer.VerticalScrollBarVisibility="Visible"
-                     IsManipulationEnabled="True" 
-                     VerticalAlignment="Top"
-                     MouseDoubleClick="lstBoxUploadItems_MouseDoubleClick"
-                     SelectionChanged="lstBoxUploadItems_SelectionChanged"
-                     LostFocus="lstBoxUploadItems_LostFocus"
-                     GotFocus="lstBoxUploadItems_GotFocus"
-                     Padding="0,0,0,0"
-                     ItemsSource="{Binding ItemsSource, RelativeSource={RelativeSource AncestorType={x:Type local:MultiListbox}}}" Margin="0,0,0,0">
+                <ListBox x:Name="lstBoxUploadItems" 
+                         DockPanel.Dock="Top"
+                         Height="Auto"
+                         ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                         ScrollViewer.CanContentScroll="True"
+                         ScrollViewer.VerticalScrollBarVisibility="Auto"
+                         IsManipulationEnabled="True" 
+                         HorizontalAlignment="Stretch"
+                         VerticalAlignment="Stretch"
+                         ItemsSource="{Binding ItemsSource, RelativeSource={RelativeSource AncestorType={x:Type local:MultiListbox}}}"
+                         SelectionChanged="lstBoxUploadItems_SelectionChanged"
+                         MouseDoubleClick="lstBoxUploadItems_MouseDoubleClick"
+                         LostFocus="lstBoxUploadItems_LostFocus"
+                         GotFocus="lstBoxUploadItems_GotFocus">
                     <ListBox.ItemContainerStyle>
                         <Style TargetType="{x:Type ListBoxItem}">
                             <Setter Property="ContextMenu" Value="{Binding RelativeSource={RelativeSource AncestorType={x:Type local:MultiListbox}}, Path=ItemsContextMenu}"/>

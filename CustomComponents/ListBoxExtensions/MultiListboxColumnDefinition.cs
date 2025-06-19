@@ -1,7 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Windows;
 
-namespace VideoGui.components
+namespace CustomComponents.ListBoxExtensions
 {
     public class MultiListboxColumnDefinition : DependencyObject
     {

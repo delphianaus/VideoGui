@@ -15,7 +15,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using Xceed.Wpf.Toolkit;
 
-namespace VideoGui.components
+namespace CustomComponents.ListBoxExtensions
 {
     public partial class MultiListbox : UserControl, INotifyPropertyChanged
     {
@@ -31,6 +31,38 @@ namespace VideoGui.components
         public event RoutedEventHandler ItemGotFocus;
         public event SelectionChangedEventHandler ItemSelectionChanged;
         #endregion
+
+        public static readonly DependencyProperty ToggleButtonStyleProperty =
+            DependencyProperty.Register(nameof(ToggleButtonStyle), typeof(Style), typeof(MultiListbox),
+                new PropertyMetadata(null));
+
+        public Style ToggleButtonStyle
+        {
+            get { return (Style)GetValue(ToggleButtonStyleProperty); }
+            set { SetValue(ToggleButtonStyleProperty, value); }
+        }
+
+        public static readonly DependencyProperty ToggleButtonWidthProperty =
+            DependencyProperty.Register(nameof(ToggleButtonWidth), typeof(double), typeof(MultiListbox),
+                new PropertyMetadata(double.NaN));
+
+        public double ToggleButtonWidth
+        {
+            get { return (double)GetValue(ToggleButtonWidthProperty); }
+            set { SetValue(ToggleButtonWidthProperty, value); }
+        }
+
+        public static readonly DependencyProperty ToggleButtonHeightProperty =
+            DependencyProperty.Register(nameof(ToggleButtonHeight), typeof(double), typeof(MultiListbox),
+                new PropertyMetadata(double.NaN));
+
+        public double ToggleButtonHeight
+        {
+            get { return (double)GetValue(ToggleButtonHeightProperty); }
+            set { SetValue(ToggleButtonHeightProperty, value); }
+        }
+
+        public event RoutedEventHandler ToggleButtonClick;
 
         public static readonly DependencyProperty ColumnDefinitionsProperty =
             DependencyProperty.Register(nameof(ColumnDefinitions), typeof(ObservableCollection<MultiListboxColumnDefinition>),
@@ -204,6 +236,8 @@ namespace VideoGui.components
 
         private Grid _headerGrid;
         private Grid _itemGrid;
+        private DataTemplate _cachedItemTemplate;
+        private Dictionary<string, FrameworkElementFactory> _columnFactories;
         private ObservableCollection<MultiListboxColumnDefinition> _pendingColumnDefinitions;
 
         public GridLength ColumnWidth
@@ -222,6 +256,7 @@ namespace VideoGui.components
             ColumnDefinitions = new ObservableCollection<MultiListboxColumnDefinition>();
             Loaded += MultiListbox_Loaded;
             SizeChanged += MultiListbox_SizeChanged;
+            this.DataContext = this;
         }
 
         private void InitializeScrollViewers()
@@ -387,16 +422,11 @@ namespace VideoGui.components
 
         private static void OnColumnDefinitionsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            var control = d as MultiListbox;
-            if (control != null)
+            if (d is MultiListbox multiListbox)
             {
-                if (control._headerGrid == null || control._itemGrid == null)
-                {
-                    // Store the definitions until we're loaded
-                    control._pendingColumnDefinitions = e.NewValue as ObservableCollection<MultiListboxColumnDefinition>;
-                    return;
-                }
-                control.ApplyColumnDefinitions();
+                multiListbox._columnFactories = null; // Force rebuild of factories
+                multiListbox._cachedItemTemplate = null; // Force rebuild of template
+                multiListbox.ApplyColumnDefinitions();
             }
         }
 
@@ -426,6 +456,8 @@ namespace VideoGui.components
                     return typeof(TimePicker);
                 case "datepicker":
                     return typeof(DatePicker);
+                case "datetimepicker":
+                    return typeof(DateTimePicker);
                 case "togglebutton":
                     return typeof(ToggleButton);
                 case "slider":
@@ -433,6 +465,43 @@ namespace VideoGui.components
                 default:
                     return typeof(TextBlock);
             }
+        }
+
+        private DependencyProperty GetDependencyPropertyByName(string propertyName)
+        {
+            if (string.IsNullOrEmpty(propertyName)) return null;
+
+            // Map of control types to check for the property
+            Type[] typesToCheck = new Type[]
+            {
+                typeof(TextBox),
+                typeof(TextBlock),
+                typeof(ComboBox),
+                typeof(CheckBox),
+                typeof(Label),
+                typeof(Button),
+                typeof(System.Windows.Controls.Image),
+                typeof(ProgressBar),
+                typeof(PasswordBox),
+                typeof(TimePicker),
+                typeof(DatePicker),
+                typeof(DateTimePicker),
+                typeof(ToggleButton),
+                typeof(Slider),
+                typeof(FrameworkElement) // Common base properties
+            };
+
+            foreach (var type in typesToCheck)
+            {
+                var fieldName = $"{propertyName}Property";
+                var field = type.GetField(fieldName, System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.FlattenHierarchy);
+                if (field != null)
+                {
+                    return field.GetValue(null) as DependencyProperty;
+                }
+            }
+
+            return null;
         }
 
         private DependencyProperty GetMainBindingProperty(string componentType, string boundTo = null)
@@ -453,6 +522,7 @@ namespace VideoGui.components
                     "image" => typeof(System.Windows.Controls.Image),
                     "timepicker" => typeof(TimePicker),
                     "datepicker" => typeof(DatePicker),
+                    "datetimepicker" => typeof(DateTimePicker),
                     "togglebutton" => typeof(ToggleButton),
                     "slider" => typeof(Slider),
                     _ => null
@@ -489,15 +559,17 @@ namespace VideoGui.components
                 case "passwordbox":
                     return PasswordBox.PasswordCharProperty;
                 case "timepicker":
-                    return TimePicker.CurrentDateTimePartProperty;
+                    return TimePicker.ValueProperty;
                 case "datepicker":
                     return DatePicker.SelectedDateProperty;
+                case "datetimepicker":
+                    return DateTimePicker.ValueProperty;
                 case "togglebutton":
                     return ToggleButton.IsCheckedProperty;
                 case "slider":
                     return Slider.ValueProperty;
                 default:
-                    return null;
+                    return TextBlock.TextProperty;
             }
         }
 
@@ -587,6 +659,158 @@ namespace VideoGui.components
             }
         }
 
+        private void BuildColumnFactories()
+        {
+            _columnFactories = new Dictionary<string, FrameworkElementFactory>();
+            if (ColumnDefinitions == null) return;
+
+            foreach (var colDef in ColumnDefinitions)
+            {
+                var factory = CreateColumnFactory(colDef);
+                if (factory != null)
+                {
+                    _columnFactories[colDef.DataField] = factory;
+                }
+            }
+        }
+
+        private FrameworkElementFactory CreateColumnFactory(MultiListboxColumnDefinition colDef)
+        {
+            var controlType = GetControlType(colDef.ComponentType.ToString());
+            var factory = new FrameworkElementFactory(controlType);
+            factory.SetValue(FrameworkElement.MarginProperty, new Thickness(5));
+            factory.SetValue(FrameworkElement.VerticalAlignmentProperty, VerticalAlignment.Center);
+
+            // Apply ToggleButton properties if this is a ToggleButton
+            if (controlType == typeof(ToggleButton))
+            {
+                if (ToggleButtonStyle != null)
+                {
+                    factory.SetValue(ToggleButton.StyleProperty, ToggleButtonStyle);
+                }
+                if (!double.IsNaN(ToggleButtonWidth))
+                {
+                    factory.SetValue(FrameworkElement.WidthProperty, ToggleButtonWidth);
+                }
+                if (!double.IsNaN(ToggleButtonHeight))
+                {
+                    factory.SetValue(FrameworkElement.HeightProperty, ToggleButtonHeight);
+                }
+                factory.AddHandler(ToggleButton.ClickEvent, new RoutedEventHandler((s, e) => ToggleButtonClick?.Invoke(s, e)));
+            }
+
+            // Set up the main binding
+            var binding = new Binding(colDef.DataField)
+            {
+                UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
+                Mode = BindingMode.TwoWay
+            };
+            var mainProperty = GetMainBindingProperty(colDef.ComponentType.ToString(), colDef.BoundTo);
+            if (mainProperty != null)
+            {
+                factory.SetBinding(mainProperty, binding);
+            }
+
+            // Set up additional bindings from BoundToProperties
+            if (colDef.BoundToProperties != null)
+            {
+                foreach (var boundTo in colDef.BoundToProperties)
+                {
+                    var additionalBinding = new Binding(boundTo.DataField)
+                    {
+                        UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
+                        Mode = BindingMode.TwoWay
+                    };
+                    var property = GetDependencyPropertyByName(boundTo.BoundTo);
+                    if (property != null)
+                    {
+                        factory.SetBinding(property, additionalBinding);
+                    }
+                }
+            }
+
+            return factory;
+        }
+
+        private void BuildItemTemplate()
+        {
+            if (ColumnDefinitions == null) return;
+
+            var gridFactory = new FrameworkElementFactory(typeof(Grid));
+            gridFactory.Name = "griddpl";
+            gridFactory.SetValue(Grid.BackgroundProperty, Brushes.White);
+
+            // Add column definitions
+            int columnIndex = 0;
+            foreach (var colDef in ColumnDefinitions)
+            {
+                // Add column definition
+                var colDefFactory = new FrameworkElementFactory(typeof(ColumnDefinition));
+                colDefFactory.SetValue(ColumnDefinition.WidthProperty, new GridLength(colDef.Width));
+                gridFactory.AppendChild(colDefFactory);
+
+                // Create control for this column
+                var controlType = GetControlType(colDef.ComponentType.ToString());
+                var factory = new FrameworkElementFactory(controlType);
+                factory.SetValue(FrameworkElement.MarginProperty, new Thickness(5));
+                factory.SetValue(FrameworkElement.VerticalAlignmentProperty, VerticalAlignment.Center);
+                factory.SetValue(Grid.ColumnProperty, columnIndex);
+
+                // Apply ToggleButton properties if this is a ToggleButton
+                if (controlType == typeof(ToggleButton))
+                {
+                    if (ToggleButtonStyle != null)
+                    {
+                        factory.SetValue(ToggleButton.StyleProperty, ToggleButtonStyle);
+                    }
+                    if (!double.IsNaN(ToggleButtonWidth))
+                    {
+                        factory.SetValue(FrameworkElement.WidthProperty, ToggleButtonWidth);
+                    }
+                    if (!double.IsNaN(ToggleButtonHeight))
+                    {
+                        factory.SetValue(FrameworkElement.HeightProperty, ToggleButtonHeight);
+                    }
+                    factory.AddHandler(ToggleButton.ClickEvent, new RoutedEventHandler((s, e) => ToggleButtonClick?.Invoke(s, e)));
+                }
+
+                // Set up the main binding
+                var binding = new Binding(colDef.DataField)
+                {
+                    UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
+                    Mode = BindingMode.TwoWay
+                };
+                var mainProperty = GetMainBindingProperty(colDef.ComponentType.ToString(), colDef.BoundTo);
+                if (mainProperty != null)
+                {
+                    factory.SetBinding(mainProperty, binding);
+                }
+
+                // Set up additional bindings from BoundToProperties
+                if (colDef.BoundToProperties != null)
+                {
+                    foreach (var boundTo in colDef.BoundToProperties)
+                    {
+                        var additionalBinding = new Binding(boundTo.DataField)
+                        {
+                            UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
+                            Mode = BindingMode.TwoWay
+                        };
+                        var property = GetDependencyPropertyByName(boundTo.BoundTo);
+                        if (property != null)
+                        {
+                            factory.SetBinding(property, additionalBinding);
+                        }
+                    }
+                }
+
+                gridFactory.AppendChild(factory);
+                columnIndex++;
+            }
+
+            _cachedItemTemplate = new DataTemplate { VisualTree = gridFactory };
+        }
+
         private void ApplyColumnDefinitions()
         {
             try
@@ -649,6 +873,24 @@ namespace VideoGui.components
                         factory.SetValue(FrameworkElement.MarginProperty, new Thickness(5));
                         factory.SetValue(FrameworkElement.VerticalAlignmentProperty, VerticalAlignment.Center);
                         factory.SetValue(Grid.ColumnProperty, _itemGrid.ColumnDefinitions.Count - 1);
+
+                        // Apply ToggleButton properties if this is a ToggleButton
+                        if (controlType == typeof(ToggleButton))
+                        {
+                            if (ToggleButtonStyle != null)
+                            {
+                                factory.SetValue(ToggleButton.StyleProperty, ToggleButtonStyle);
+                            }
+                            if (!double.IsNaN(ToggleButtonWidth))
+                            {
+                                factory.SetValue(FrameworkElement.WidthProperty, ToggleButtonWidth);
+                            }
+                            if (!double.IsNaN(ToggleButtonHeight))
+                            {
+                                factory.SetValue(FrameworkElement.HeightProperty, ToggleButtonHeight);
+                            }
+                            factory.AddHandler(ToggleButton.ClickEvent, new RoutedEventHandler((s, e) => ToggleButtonClick?.Invoke(s, e)));
+                        }
 
                         // Set up the main binding
                         var binding = new Binding(colDef.DataField)
