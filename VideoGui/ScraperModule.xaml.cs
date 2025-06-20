@@ -2407,7 +2407,22 @@ namespace VideoGui
                                 }
                             }
 
+                            /*int idxstr = TitleStr.IndexOf("#");
+                            if (idxstr != -1)
+                            {
+                                string TitleStrT = TitleStr.Substring(0, idxstr);
+                                if (TitleStrT != "")
+                                {
+                                    if (!TitleStrT.EndsWith(" "))
+                                    {
+                                        string s1t = TitleStr.Substring(idxstr, TitleStr.Length - idxstr);
+                                        string s2t = s1t.Substring(idxstr);
+                                        string s3t = s1t + " " + s2t;
+                                        TitleStr= (s3t != TitleStr) ? s3t : TitleStr;
+                                    }
+                                }
 
+                            }*/
                             LTitleStr = TitleStr;
                             LDescStr = DescStr;
                         }

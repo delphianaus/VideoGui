@@ -38,6 +38,11 @@ namespace CustomComponents.ListBoxExtensions
         public event SelectionChangedEventHandler ComboBoxSelectionChanged;
         public event RoutedEventHandler ComboBoxLostFocus;
         public event RoutedEventHandler ComboBoxGotFocus;
+
+        public IList SelectedItems
+        {
+            get { return lstBoxUploadItems.SelectedItems; }
+        }
         #endregion
 
         public static readonly DependencyProperty ColumnDefinitionsProperty =

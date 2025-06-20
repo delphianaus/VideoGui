@@ -197,14 +197,11 @@ namespace VideoGui
                         video.Status.PrivacyStatus = "private";
                         if (Desc_Str != "" && Title_str != "")
                         {
-
                             int iidx = Title_str.IndexOf("#");
                             if (iidx != -1)
                             {
                                 string r = Title_str.Substring(0, iidx - 1);
-                                string rr = r.ToPascalCase();
-                                string p = Title_str.Substring(iidx);
-                                Title_str = rr + p;
+                                Title_str= r.ToPascalCase()+ " " +Title_str.Substring(iidx);
                             }
                             if (Desc_Str.Contains("https://www.patreon.com/c/JustinsTrainJourneys"))
                             {

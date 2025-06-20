@@ -468,7 +468,16 @@ namespace VideoGui
                 }
                 if (NewId != -1)
                 {
-                    sqlA = "SELECT ID FROM MULTISHORTSINFO WHERE ID = @ID;";
+                    sqlA = "SELECT M.ID,M.ISSHORTSACTIVE,M.NUMBEROFSHORTS,"+
+                    "M.LASTUPLOADEDDATE,M.LASTUPLOADEDTIME "+
+                    ", S.ID as SHORTSDIRECTORY_ID, S.DIRECTORYNAME, S.TITLEID, S.DESCID, " +
+                    "(SELECT LIST(TAGID, ',') FROM TITLETAGS " +
+                    " WHERE GROUPID = S.TITLEID) AS LINKEDTITLEIDS, " +
+                    " (SELECT LIST(ID,',') FROM DESCRIPTIONS " +
+                    "WHERE ID = S.DESCID) AS LINKEDDESCIDS " +
+                    "FROM MULTISHORTSINFO M " +
+                    "INNER JOIN SHORTSDIRECTORY S ON M.LINKEDSHORTSDIRECTORYID = S.ID "+
+                    "WHERE ID = @ID;";
                     connectionString.ExecuteReader(sqlA, (FbDataReader r) =>
                     {
                         SelectedShortsDirectoriesList.Add(new(r));
@@ -3908,7 +3917,7 @@ namespace VideoGui
                 sqlstring = $"CREATE TABLE REMATCHED({Id},OLDID INTEGER,NEWID INTEGER, DIRECTORY VARCHAR(500));";
                 connectionString.CreateTableIfNotExists(sqlstring);
 
-                sqlstring = $"CREATE TABLE MULTISHORTSINFO({Id},ISSHORTSACTIVE SHORT,NUMBEROFSHORTS INTEGER, " +
+                sqlstring = $"CREATE TABLE MULTISHORTSINFO({Id},ISSHORTSACTIVE SMALLINT,NUMBEROFSHORTS INTEGER, " +
                     "LINKEDSHORTSDIRECTORYID INTEGER, LASTUPLOADEDDATE DATE, LASTUPLOADEDTIME TIME);";
                 connectionString.CreateTableIfNotExists(sqlstring);
 
@@ -4137,9 +4146,17 @@ namespace VideoGui
                     "LINKEDSHORTSDIRECTORYID INTEGER, LASTUPLOADEDDATE DATE, LASTUPLOADEDTIME TIME);";
                  */
                 SelectedShortsDirectoriesList.Clear();
-                connectionString.ExecuteReader("SELECT * FROM MULTISHORTSINFO M INNER JOIN SHORTSDIRECTORY S ON M.LINKEDSHORTSDIRECTORYID = S.ID", (FbDataReader r) =>
-                {
-                    SelectedShortsDirectoriesList.Add(new SelectedShortsDirectories(r));
+                connectionString.ExecuteReader("SELECT M.ID,M.ISSHORTSACTIVE,M.NUMBEROFSHORTS,"+
+                    "M.LASTUPLOADEDDATE,M.LASTUPLOADEDTIME "+
+                    ", S.ID as SHORTSDIRECTORY_ID, S.DIRECTORYNAME, S.TITLEID, S.DESCID, " +
+                    "(SELECT LIST(TAGID, ',') FROM TITLETAGS " +
+                    " WHERE GROUPID = S.TITLEID) AS LINKEDTITLEIDS, " +
+                    " (SELECT LIST(ID,',') FROM DESCRIPTIONS " +
+                    "WHERE ID = S.DESCID) AS LINKEDDESCIDS " +
+                    "FROM MULTISHORTSINFO M " +
+                    "INNER JOIN SHORTSDIRECTORY S ON M.LINKEDSHORTSDIRECTORYID = S.ID", 
+                (FbDataReader r) => {
+                      SelectedShortsDirectoriesList.Add(new SelectedShortsDirectories(r));
                 });
                 FilterActiveShortsDirlectoryList();
 
