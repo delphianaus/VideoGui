@@ -79,6 +79,73 @@ namespace CustomComponents.ListBoxExtensions
             set => SetValue(ToggleButtonHeightProperty, value);
         }
 
+        private RoutedEventHandler _toggleButtonClick;
+        public event RoutedEventHandler ToggleButtonClick
+        {
+            add { _toggleButtonClick += value; }
+            remove { _toggleButtonClick -= value; }
+        }
+
+        protected virtual void OnToggleButtonClick(object sender, RoutedEventArgs e)
+        {
+            _toggleButtonClick?.Invoke(sender, e);
+        }
+
+        internal void RaiseToggleButtonClick(object sender, RoutedEventArgs e)
+        {
+            OnToggleButtonClick(sender, e);
+        }
+
+        public static readonly DependencyProperty UseStyleDimensionsProperty =
+            DependencyProperty.Register(nameof(UseStyleDimensions), typeof(bool), typeof(MultiListboxColumnDefinition),
+                new PropertyMetadata(true));
+
+        public bool UseStyleDimensions
+        {
+            get => (bool)GetValue(UseStyleDimensionsProperty);
+            set => SetValue(UseStyleDimensionsProperty, value);
+        }
+
+        public static readonly DependencyProperty ToggleButtonMinWidthProperty =
+            DependencyProperty.Register(nameof(ToggleButtonMinWidth), typeof(double), typeof(MultiListboxColumnDefinition),
+                new PropertyMetadata(double.NaN));
+
+        public double ToggleButtonMinWidth
+        {
+            get => (double)GetValue(ToggleButtonMinWidthProperty);
+            set => SetValue(ToggleButtonMinWidthProperty, value);
+        }
+
+        public static readonly DependencyProperty ToggleButtonMaxWidthProperty =
+            DependencyProperty.Register(nameof(ToggleButtonMaxWidth), typeof(double), typeof(MultiListboxColumnDefinition),
+                new PropertyMetadata(double.NaN));
+
+        public double ToggleButtonMaxWidth
+        {
+            get => (double)GetValue(ToggleButtonMaxWidthProperty);
+            set => SetValue(ToggleButtonMaxWidthProperty, value);
+        }
+
+        public static readonly DependencyProperty ToggleButtonMinHeightProperty =
+            DependencyProperty.Register(nameof(ToggleButtonMinHeight), typeof(double), typeof(MultiListboxColumnDefinition),
+                new PropertyMetadata(double.NaN));
+
+        public double ToggleButtonMinHeight
+        {
+            get => (double)GetValue(ToggleButtonMinHeightProperty);
+            set => SetValue(ToggleButtonMinHeightProperty, value);
+        }
+
+        public static readonly DependencyProperty ToggleButtonMaxHeightProperty =
+            DependencyProperty.Register(nameof(ToggleButtonMaxHeight), typeof(double), typeof(MultiListboxColumnDefinition),
+                new PropertyMetadata(double.NaN));
+
+        public double ToggleButtonMaxHeight
+        {
+            get => (double)GetValue(ToggleButtonMaxHeightProperty);
+            set => SetValue(ToggleButtonMaxHeightProperty, value);
+        }
+
         public static readonly DependencyProperty HeaderMarginProperty =
             DependencyProperty.Register(nameof(HeaderMargin), typeof(Thickness), typeof(MultiListboxColumnDefinition),
                 new PropertyMetadata(new Thickness(5)));

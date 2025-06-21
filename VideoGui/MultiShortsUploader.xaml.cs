@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
@@ -27,9 +28,9 @@ namespace VideoGui
         databasehook<object> dbInit = null;
         public bool IsClosing = false, IsClosed = false, Ready = false;
         DispatcherTimer LocationChangedTimer = new DispatcherTimer();
-        public static readonly DependencyProperty Column_WidthProperty = 
-            DependencyProperty.Register("Column_Width", 
-            typeof(GridLength), typeof(MultiShortsUploader), 
+        public static readonly DependencyProperty Column_WidthProperty =
+            DependencyProperty.Register("Column_Width",
+            typeof(GridLength), typeof(MultiShortsUploader),
             new PropertyMetadata(new GridLength(363, GridUnitType.Pixel)));
         public GridLength Column_Width
         {
@@ -37,7 +38,7 @@ namespace VideoGui
             set { SetValue(Column_WidthProperty, value); }
         }
 
-        
+
         public MultiShortsUploader(databasehook<object> _dbInit, OnFinish _DoOnFinished)
         {
             try
@@ -66,7 +67,7 @@ namespace VideoGui
         {
             try
             {
-                dbInit?.Invoke(this, new CustomParams_Initialize()); 
+                dbInit?.Invoke(this, new CustomParams_Initialize());
                 Ready = true;
                 RegistryKey key = "SOFTWARE\\Scraper".OpenSubKey(Registry.CurrentUser);
                 var _width = key.GetValue("MSUWidth", ActualWidth).ToDouble();
@@ -79,17 +80,17 @@ namespace VideoGui
                 Left = (Left != _left && _left != 0) ? _left : Left;
                 Top = (Top != _top && _top != 0) ? _top : Top;
                 Column_Width = new GridLength(393, GridUnitType.Pixel);
-                LocationChanged += (s, e) => 
+                LocationChanged += (s, e) =>
                 {
                     LocationChangedTimer.Stop();
                     LocationChangedTimer.Interval = TimeSpan.FromSeconds(3);
-                    LocationChangedTimer.Tick += (s1, e1) => 
+                    LocationChangedTimer.Tick += (s1, e1) =>
                     {
                         LocationChangedTimer.Stop();
-                        RegistryKey key2 = "SOFTWARE\\Scraper".OpenSubKey(Registry.CurrentUser); 
-                        key2.SetValue("MSUleft", Left); 
-                        key2.SetValue("MSUtop", Top); 
-                        key2?.Close(); 
+                        RegistryKey key2 = "SOFTWARE\\Scraper".OpenSubKey(Registry.CurrentUser);
+                        key2.SetValue("MSUleft", Left);
+                        key2.SetValue("MSUtop", Top);
+                        key2?.Close();
                     };
                     LocationChangedTimer.Start();
                 };
@@ -132,7 +133,7 @@ namespace VideoGui
                 ex.LogWrite($"Window_SizeChanged {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-                
+
         private void mnuMoveDirectory_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -172,13 +173,91 @@ namespace VideoGui
 
         }
 
+        private void MultiListboxColumnDefinition_ToggleButtonClick(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (sender is ToggleButton t)
+                {
+                    if (t.Width > 0 && t.Height > 0)
+                    {
+
+                    }
+
+                }
+
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"MultiListboxColumnDefinition_ToggleButtonClick {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+        }
+        private T FindVisualChild<T>(DependencyObject obj, string name) where T : FrameworkElement
+        {
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(obj); i++)
+            {
+                var child = VisualTreeHelper.GetChild(obj, i);
+                if (child != null && child is T && ((T)child).Name == name)
+                {
+                    return (T)child;
+                }
+                else
+                {
+                    T childOfChild = FindVisualChild<T>(child, name);
+                    if (childOfChild != null)
+                    {
+                        return childOfChild;
+                    }
+                }
+            }
+            return null;
+        }
+        private void tx_Checked(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                foreach (var item in msuSchedules.Items)
+                {
+
+                    var container = msuSchedules.ItemContainerGenerator.ContainerFromItem(item) as ListBoxItem;
+                    if (container != null)
+                    {
+                        var border = VisualTreeHelper.GetChild(container, 0) as Border;
+                        if (border != null)
+                        {
+                            // Get the ContentPresenter inside the Border
+                            var contentPresenter = VisualTreeHelper.GetChild(border, 0) as ContentPresenter;
+                            if (contentPresenter != null)
+                            {
+                                // Get the Grid that's created by our ItemTemplate
+                                var grid = VisualTreeHelper.GetChild(contentPresenter, 0) as Grid;
+                                if (grid != null)
+                                {
+                                    foreach (var toggleButton in grid.Children.OfType<ToggleButton>())
+                                    {
+                                        toggleButton.Style = tx.Style;
+                                        ///toggleButton.Template = FindResource("ToggleSetEditStyle") as ControlTemplate;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                   
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"tx_Checked {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+        }
+
         private void mnuRemoveSelected_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                foreach(SelectedShortsDirectories info in msuShorts.SelectedItems)
+                foreach (SelectedShortsDirectories info in msuShorts.SelectedItems)
                 {
-                    dbInit?.Invoke(this, new CustomParams_RemoveSelectedDirectory(info.Id,info.DirecoryName));
+                    dbInit?.Invoke(this, new CustomParams_RemoveSelectedDirectory(info.Id, info.DirectoryName));
                 }
             }
             catch (Exception ex)

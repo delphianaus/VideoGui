@@ -26,7 +26,7 @@ namespace VideoGui.Models
         public int DescId { get => _DescId; set { _DescId = value; OnPropertyChanged(); } }
 
 
-        public ShortsDirectory(int id, string directory)
+        public ShortsDirectory(int id, string directory="")
         {
             try
             {

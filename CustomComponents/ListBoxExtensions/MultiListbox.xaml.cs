@@ -13,6 +13,8 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Shapes;
+using System.Windows.Threading;
 using Xceed.Wpf.Toolkit;
 
 namespace CustomComponents.ListBoxExtensions
@@ -31,6 +33,14 @@ namespace CustomComponents.ListBoxExtensions
         public event RoutedEventHandler ItemGotFocus;
         public event SelectionChangedEventHandler ItemSelectionChanged;
         public event RoutedEventHandler ToggleButtonClick;
+
+        /// <summary>
+        /// Gets the ItemContainerGenerator for the internal ListBox.
+        /// </summary>
+        public ItemContainerGenerator ItemContainerGenerator
+        {
+            get { return lstBoxUploadItems.ItemContainerGenerator; }
+        }
         public event RoutedEventHandler DateTimePickerLostFocus;
         public event RoutedEventHandler DateTimePickerGotFocus;
         public event KeyEventHandler DateTimePickerKeyUp;
@@ -38,6 +48,12 @@ namespace CustomComponents.ListBoxExtensions
         public event SelectionChangedEventHandler ComboBoxSelectionChanged;
         public event RoutedEventHandler ComboBoxLostFocus;
         public event RoutedEventHandler ComboBoxGotFocus;
+
+
+        public IList Items
+        {
+            get { return lstBoxUploadItems.Items; }
+        }
 
         public IList SelectedItems
         {
@@ -385,20 +401,64 @@ namespace CustomComponents.ListBoxExtensions
                 // Create and set the item template
                 var itemTemplate = new DataTemplate { VisualTree = gridFactory };
                 lstBoxUploadItems.ItemTemplate = itemTemplate;
+
+                // Apply any pending column definitions
+                if (_pendingColumnDefinitions != null)
+                {
+                    ColumnDefinitions = _pendingColumnDefinitions;
+                    _pendingColumnDefinitions = null;
+                }
+
+                ApplyColumnDefinitions();
+
+                // Give the template a chance to apply
+                Dispatcher.BeginInvoke(new Action(() => {
+                    foreach (var item in lstBoxUploadItems.Items)
+                    {
+                        var container = lstBoxUploadItems.ItemContainerGenerator.ContainerFromItem(item) as ListBoxItem;
+                        if (container != null)
+                        {
+                            var border = VisualTreeHelper.GetChild(container, 0) as Border;
+                            if (border != null)
+                            {
+                                var contentPresenter = VisualTreeHelper.GetChild(border, 0) as ContentPresenter;
+                                if (contentPresenter != null)
+                                {
+                                    var grid = VisualTreeHelper.GetChild(contentPresenter, 0) as Grid;
+                                    if (grid != null)
+                                    {
+                                        foreach (var child in grid.Children)
+                                        {
+                                            if (child is ToggleButton toggleButton)
+                                            {
+                                                var column = Grid.GetColumn(toggleButton);
+                                                var colDef = ColumnDefinitions[column];
+                                                if (colDef?.ToggleButtonStyle != null)
+                                                {
+                                                    toggleButton.Style = colDef.ToggleButtonStyle;
+                                                    
+                                                    // Set up binding for IsChecked to DataField
+                                                    if (!string.IsNullOrEmpty(colDef.DataField))
+                                                    {
+                                                        var toggleBinding = new Binding(colDef.DataField) { Mode = BindingMode.TwoWay };
+                                                        toggleButton.SetBinding(ToggleButton.IsCheckedProperty, toggleBinding);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }), DispatcherPriority.Loaded);
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"Error in MultiListbox_Loaded: {ex}");
             }
 
-            // Apply any pending column definitions
-            if (_pendingColumnDefinitions != null)
-            {
-                ColumnDefinitions = _pendingColumnDefinitions;
-                _pendingColumnDefinitions = null;
-            }
-
-            ApplyColumnDefinitions();
+           
         }
 
         private static void OnColumnDefinitionsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -844,7 +904,17 @@ namespace CustomComponents.ListBoxExtensions
                     }
                     else
                     {
-                        itemColumn.Width = new GridLength(colDef.Width);
+                        // For ToggleButton, ensure column is at least as wide as the button
+                        if (colDef.ComponentType.ToString().ToLower() == "togglebutton" && !double.IsNaN(colDef.ToggleButtonWidth))
+                        {
+                            itemColumn.Width = new GridLength(Math.Max(colDef.Width, colDef.ToggleButtonWidth));
+                            itemColumn.MinWidth = colDef.ToggleButtonWidth;
+                            
+                        }
+                        else
+                        {
+                            itemColumn.Width = new GridLength(colDef.Width);
+                        }
                     }
                     _itemGrid.ColumnDefinitions.Add(itemColumn);
 
@@ -852,29 +922,189 @@ namespace CustomComponents.ListBoxExtensions
                     {
                         var controlType = GetControlType(colDef.ComponentType.ToString());
                         var factory = new FrameworkElementFactory(controlType);
-                        factory.SetValue(FrameworkElement.MarginProperty, colDef.ContentMargin);
-                        factory.SetValue(FrameworkElement.HorizontalAlignmentProperty, colDef.ContentHorizontalAlignment);
-                        factory.SetValue(FrameworkElement.VerticalAlignmentProperty, colDef.ContentVerticalAlignment);
                         factory.SetValue(Grid.ColumnProperty, _itemGrid.ColumnDefinitions.Count - 1);
+                        
+                        // Set standard alignment and margin for all controls
+                        if (controlType == typeof(ToggleButton))
+                        {
+                            // For ToggleButton, center it in its cell
+                            factory.SetValue(FrameworkElement.HorizontalAlignmentProperty, HorizontalAlignment.Center);
+                            factory.SetValue(FrameworkElement.VerticalAlignmentProperty, VerticalAlignment.Center);
+                            factory.SetValue(FrameworkElement.MarginProperty, new Thickness(0));
+                        }
+                        else
+                        {
+                            factory.SetValue(FrameworkElement.HorizontalAlignmentProperty, colDef.ContentHorizontalAlignment);
+                            factory.SetValue(FrameworkElement.VerticalAlignmentProperty, colDef.ContentVerticalAlignment);
+                            factory.SetValue(FrameworkElement.MarginProperty, colDef.ContentMargin);
+                        }
 
                         // Apply ToggleButton properties if this is a ToggleButton
                         if (controlType == typeof(ToggleButton))
                         {
-                            if (colDef.ToggleButtonStyle != null)
+                            // Create the ToggleButton directly
+                            var toggleButton = new ToggleButton
                             {
-                                factory.SetValue(ToggleButton.StyleProperty, colDef.ToggleButtonStyle);
-                            }
-                            if (!double.IsNaN(colDef.ToggleButtonWidth))
-                            {
-                                factory.SetValue(FrameworkElement.WidthProperty, colDef.ToggleButtonWidth);
-                            }
-                            if (!double.IsNaN(colDef.ToggleButtonHeight))
-                            {
-                                factory.SetValue(FrameworkElement.HeightProperty, colDef.ToggleButtonHeight);
-                            }
-                            factory.AddHandler(ToggleButton.ClickEvent, new RoutedEventHandler((s, e) => ToggleButtonClick?.Invoke(s, e)));
+                                Width = colDef.ToggleButtonWidth,
+                                Height = colDef.ToggleButtonHeight,
+                                MinWidth = colDef.ToggleButtonWidth,
+                                MinHeight = colDef.ToggleButtonHeight,
+                                MaxWidth = colDef.ToggleButtonWidth,
+                                MaxHeight = colDef.ToggleButtonHeight,
+                                HorizontalAlignment = HorizontalAlignment.Center,
+                                VerticalAlignment = VerticalAlignment.Center,
+                                Visibility = Visibility.Visible,
+                                Style = colDef.ToggleButtonStyle
+                            };
+
+                            // Create a factory for the existing button
+                            factory = new FrameworkElementFactory(typeof(ToggleButton));
+                            factory.SetValue(FrameworkElement.NameProperty, "PART_ToggleButton");
+                            factory.SetValue(FrameworkElement.DataContextProperty, toggleButton);
+
+                            // Set size and alignment AFTER style
+                            factory.SetValue(FrameworkElement.StyleProperty, colDef.ToggleButtonStyle);
+                            factory.SetValue(FrameworkElement.WidthProperty, colDef.ToggleButtonWidth);
+                            factory.SetValue(FrameworkElement.HeightProperty, colDef.ToggleButtonHeight);
+                            factory.SetValue(FrameworkElement.MinWidthProperty, colDef.ToggleButtonWidth);
+                            factory.SetValue(FrameworkElement.MinHeightProperty, colDef.ToggleButtonHeight);
+                            factory.SetValue(FrameworkElement.MaxWidthProperty, colDef.ToggleButtonWidth);
+                            factory.SetValue(FrameworkElement.MaxHeightProperty, colDef.ToggleButtonHeight);
+                            factory.SetValue(FrameworkElement.HorizontalAlignmentProperty, HorizontalAlignment.Center);
+                            factory.SetValue(FrameworkElement.VerticalAlignmentProperty, VerticalAlignment.Center);
+                            factory.SetValue(UIElement.VisibilityProperty, Visibility.Visible);
+
+                            factory.SetValue(ToggleButton.IsCheckedProperty, false);
+
+                            // Add Loaded handler to ensure style and visibility
+                            factory.AddHandler(FrameworkElement.LoadedEvent, new RoutedEventHandler((s, e) => {
+                                var toggleButton = s as ToggleButton;
+                                if (toggleButton != null)
+                                {
+                                    System.Diagnostics.Debug.WriteLine($"ToggleButton Loaded - Current Style: {toggleButton.Style}");
+                                    if (colDef.ToggleButtonStyle != null)
+                                    {
+                                        System.Diagnostics.Debug.WriteLine("Applying style in Loaded event");
+                                        toggleButton.Style = colDef.ToggleButtonStyle;
+                                        System.Diagnostics.Debug.WriteLine($"Style after setting: {toggleButton.Style}");
+                                    }
+                                    toggleButton.Visibility = Visibility.Visible;
+                                }
+                            }));
+
+                            // Add click handler that routes to the column definition's event
+                            factory.AddHandler(ToggleButton.ClickEvent, new RoutedEventHandler((s, e) => {
+                                System.Diagnostics.Debug.WriteLine("ToggleButton clicked");
+                                var toggle = s as ToggleButton;
+                                System.Diagnostics.Debug.WriteLine($"Click - Width: {toggle.Width}, Height: {toggle.Height}, ActualWidth: {toggle.ActualWidth}, ActualHeight: {toggle.ActualHeight}");
+                                colDef.RaiseToggleButtonClick(s, e);
+                                ToggleButtonClick?.Invoke(s, e);
+                            }));
+
+                            // Add size changed handler to check dimensions and visual tree
+                            factory.AddHandler(FrameworkElement.SizeChangedEvent, new SizeChangedEventHandler((s, e) => {
+                                var toggle = s as ToggleButton;
+                                if (toggle != null)
+                                {
+                                    System.Diagnostics.Debug.WriteLine("\n=== ToggleButton Visual Tree After Size Changed ===\n");
+                                    System.Diagnostics.Debug.WriteLine($"ToggleButton: Width={toggle.Width}, Height={toggle.Height}, ActualWidth={toggle.ActualWidth}, ActualHeight={toggle.ActualHeight}");
+                                    var parent = VisualTreeHelper.GetParent(toggle);
+                                    while (parent != null)
+                                    {
+                                        var fe = parent as FrameworkElement;
+                                        if (fe != null)
+                                        {
+                                            System.Diagnostics.Debug.WriteLine($"Parent {fe.GetType().Name}: Width={fe.Width}, Height={fe.Height}, ActualWidth={fe.ActualWidth}, ActualHeight={fe.ActualHeight}");
+                                        }
+                                        parent = VisualTreeHelper.GetParent(parent);
+                                    }
+                                    System.Diagnostics.Debug.WriteLine("\n=== End Visual Tree ===\n");
+                                }
+                            }));
+
+                            // Add loaded handler to check initial state and template
+                            factory.AddHandler(FrameworkElement.LoadedEvent, new RoutedEventHandler((s, e) => {
+                                var toggle = s as ToggleButton;
+                                if (toggle != null)
+                                {
+                                    System.Diagnostics.Debug.WriteLine("\n=== ToggleButton Parent Hierarchy ===\n");
+                                    var current = toggle as DependencyObject;
+                                    while (current != null)
+                                    {
+                                        var fe = current as FrameworkElement;
+                                        if (fe != null)
+                                        {
+                                            System.Diagnostics.Debug.WriteLine($"Parent: {current.GetType().Name}");
+                                            System.Diagnostics.Debug.WriteLine($"  Width: {fe.Width}, ActualWidth: {fe.ActualWidth}");
+                                            System.Diagnostics.Debug.WriteLine($"  Height: {fe.Height}, ActualHeight: {fe.ActualHeight}");
+                                            System.Diagnostics.Debug.WriteLine($"  Visibility: {fe.Visibility}, IsVisible: {fe.IsVisible}");
+                                            if (current is Grid grid)
+                                            {
+                                                System.Diagnostics.Debug.WriteLine($"  Grid Columns: {grid.ColumnDefinitions.Count}");
+                                                for (int i = 0; i < grid.ColumnDefinitions.Count; i++)
+                                                {
+                                                    var col = grid.ColumnDefinitions[i];
+                                                    System.Diagnostics.Debug.WriteLine($"  Column {i}: Width={col.Width}, ActualWidth={col.ActualWidth}");
+                                                }
+                                            }
+                                        }
+                                        current = VisualTreeHelper.GetParent(current);
+                                    }
+
+                                    System.Diagnostics.Debug.WriteLine("\n=== ToggleButton Properties ===\n");
+                                    System.Diagnostics.Debug.WriteLine($"Width={toggle.Width}, ActualWidth={toggle.ActualWidth}");
+                                    System.Diagnostics.Debug.WriteLine($"Height={toggle.Height}, ActualHeight={toggle.ActualHeight}");
+                                    System.Diagnostics.Debug.WriteLine($"HorizontalAlignment={toggle.HorizontalAlignment}");
+                                    System.Diagnostics.Debug.WriteLine($"VerticalAlignment={toggle.VerticalAlignment}");
+                                    System.Diagnostics.Debug.WriteLine($"Margin={toggle.Margin}");
+                                    System.Diagnostics.Debug.WriteLine($"Style: {toggle.Style?.TargetType.Name}");
+                                    System.Diagnostics.Debug.WriteLine($"IsChecked: {toggle.IsChecked}");
+
+                                    // Check template and parts
+                                    if (toggle.Template != null)
+                                    {
+                                        toggle.ApplyTemplate();
+                                        var image = toggle.Template.FindName("PART_Image", toggle) as Image;
+                                        if (image != null)
+                                        {
+                                            System.Diagnostics.Debug.WriteLine($"Found PART_Image: Source={image.Source}");
+                                        }
+                                        else
+                                        {
+                                            System.Diagnostics.Debug.WriteLine("PART_Image not found in template");
+                                        }
+
+                                        // Monitor IsChecked changes
+                                        toggle.Checked += (s2, e2) => {
+                                            var img = toggle.Template.FindName("PART_Image", toggle) as Image;
+                                            System.Diagnostics.Debug.WriteLine($"Checked - Image Source: {img?.Source}");
+                                        };
+                                        toggle.Unchecked += (s2, e2) => {
+                                            var img = toggle.Template.FindName("PART_Image", toggle) as Image;
+                                            System.Diagnostics.Debug.WriteLine($"Unchecked - Image Source: {img?.Source}");
+                                        };
+                                    }
+                                    else
+                                    {
+                                        System.Diagnostics.Debug.WriteLine("No template applied");
+                                    }
+                                }
+                            }));
+
+                            // Add click handler to recheck dimensions
+                            factory.AddHandler(ToggleButton.ClickEvent, new RoutedEventHandler((s, e) => {
+                                var toggle = s as ToggleButton;
+                                if (toggle != null)
+                                {
+                                    System.Diagnostics.Debug.WriteLine("\n=== ToggleButton Click Visual Tree ===\n");
+                                    DumpVisualTree(toggle, 0);
+                                    System.Diagnostics.Debug.WriteLine("\n=== End Click Visual Tree ===\n");
+                                }
+                                colDef.RaiseToggleButtonClick(s, e);
+                                ToggleButtonClick?.Invoke(s, e);
+                            }));
                         }
-                        else if (controlType == typeof(CheckBox))
+                        if (controlType == typeof(CheckBox))
                         {
                             factory.SetValue(CheckBox.VerticalContentAlignmentProperty, colDef.CheckBoxVerticalContentAlignment);
                             factory.SetValue(CheckBox.HorizontalContentAlignmentProperty, colDef.CheckBoxHorizontalContentAlignment);
@@ -985,6 +1215,47 @@ namespace CustomComponents.ListBoxExtensions
         private void lstBoxUploadItems_GotFocus(object sender, RoutedEventArgs e)
         {
             ItemGotFocus?.Invoke(sender, e);
+        }
+
+        private void DumpVisualTree(DependencyObject element, int level)
+        {
+            if (element == null) return;
+
+            var indent = new string(' ', level * 4);
+            var fe = element as FrameworkElement;
+            if (fe != null)
+            {
+                System.Diagnostics.Debug.WriteLine($"{indent}Type: {element.GetType().Name}");
+                System.Diagnostics.Debug.WriteLine($"{indent}Name: {fe.Name}");
+                System.Diagnostics.Debug.WriteLine($"{indent}Width: {fe.Width}, ActualWidth: {fe.ActualWidth}");
+                System.Diagnostics.Debug.WriteLine($"{indent}Height: {fe.Height}, ActualHeight: {fe.ActualHeight}");
+                System.Diagnostics.Debug.WriteLine($"{indent}HorizontalAlignment: {fe.HorizontalAlignment}");
+                System.Diagnostics.Debug.WriteLine($"{indent}VerticalAlignment: {fe.VerticalAlignment}");
+                System.Diagnostics.Debug.WriteLine($"{indent}Margin: {fe.Margin}");
+                if (fe is Grid grid)
+                {
+                    System.Diagnostics.Debug.WriteLine($"{indent}Grid Columns: {grid.ColumnDefinitions.Count}");
+                    foreach (var col in grid.ColumnDefinitions)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"{indent}  Column Width: {col.Width}, MinWidth: {col.MinWidth}, ActualWidth: {col.ActualWidth}");
+                    }
+                }
+                System.Diagnostics.Debug.WriteLine("");
+            }
+
+            // Get visual children
+            int childCount = VisualTreeHelper.GetChildrenCount(element);
+            for (int i = 0; i < childCount; i++)
+            {
+                var child = VisualTreeHelper.GetChild(element, i);
+                DumpVisualTree(child, level + 1);
+            }
+
+            // Get logical children
+            if (element is ContentControl cc && cc.Content is DependencyObject content)
+            {
+                DumpVisualTree(content, level + 1);
+            }
         }
         #endregion
     }

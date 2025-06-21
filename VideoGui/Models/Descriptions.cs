@@ -40,6 +40,18 @@ namespace VideoGui.Models
                 ex.LogWrite($"Descriptions {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
             }
         }
+
+        public Descriptions(int _Id)
+        {
+            try
+            {
+                Id = _Id;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"Descriptions {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
         public Descriptions(int _TitleTagId, string _description, bool _IsShortVideo, string _TitleTag = "", string Name = "", bool _IsTag = false)
         {
             try

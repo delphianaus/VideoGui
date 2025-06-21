@@ -33,6 +33,10 @@ namespace VideoGui.Models
             VisualDescription = _visualDescription;
         }
 
+        public Titles(int _ID)
+        {
+            Id = _ID;
+        }
         public Titles(FbDataReader reader)
         {
             try

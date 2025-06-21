@@ -12,8 +12,8 @@
         <BitmapImage x:Key="SET" UriSource="icons/set.png"/>
         <BitmapImage x:Key="EDIT" UriSource="icons/edit.png"/>
         <Style x:Key="ToggleSetEditStyle" TargetType="{x:Type ToggleButton}">
-            <Setter Property="MinHeight" Value="28"/>
-            <Setter Property="MinWidth" Value="50"/>
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="Width" Value="50"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="{x:Type ToggleButton}">
@@ -35,8 +35,6 @@
         <MSU:MultiListbox x:Name="msuShorts" Header="Active Shorts Directory" 
            BorderBrush="Black" BorderThickness="2" Height="189" VerticalAlignment="Top" Width="558" Margin="0,0,1,0">
             <MSU:MultiListbox.ColumnDefinitions>
-                <MSU:MultiListboxColumnDefinition DataField="ID" Width="0" 
-                    ComponentType="TextBlock"/>
                 <MSU:MultiListboxColumnDefinition HeaderText="Shorts Directory" 
                    DataField="DirectoryName" Width="390" ComponentType="TextBlock"/>
                 <MSU:MultiListboxColumnDefinition HeaderText="Number Of Shorts" 
@@ -53,20 +51,22 @@
              VerticalAlignment="Top"  VerticalContentAlignment="Bottom" 
           Margin="0,193,0,0" BorderBrush="Black" BorderThickness="2" Height="197">
             <MSU:MultiListbox.ColumnDefinitions>
-                <MSU:MultiListboxColumnDefinition DataField="ID" Width="0" 
+                <MSU:MultiListboxColumnDefinition DataField="Id" Width="0" 
                    ComponentType="TextBlock"/>
                 <MSU:MultiListboxColumnDefinition HeaderText="Shorts Directory" 
-                 DataField="ShortsDir" WidthBinding="Column_Width" ComponentType="TextBlock"/>
+                 DataField="DirectoryName" Width="250" ComponentType="TextBlock"/>
                 <MSU:MultiListboxColumnDefinition HeaderText="Number of Shorts" 
                  DataField="NumberOfShorts" Width="125" ComponentType="TextBlock"/>
-                <MSU:MultiListboxColumnDefinition HeaderText="Desc" 
+                <MSU:MultiListboxColumnDefinition HeaderText="Title" ToggleButtonClick="MultiListboxColumnDefinition_ToggleButtonClick"
+                    ToggleButtonWidth="50" Width="50" ToggleButtonHeight="28"
                     ToggleButtonStyle="{StaticResource ToggleSetEditStyle}"
-                    DataField="IsTitleAvailable" Width="60" ComponentType="ToggleButton"/>
-                <MSU:MultiListboxColumnDefinition HeaderText="Title" 
+                    DataField="IsTitleAvailable" ComponentType="ToggleButton"/>
+                <MSU:MultiListboxColumnDefinition HeaderText="Desc" Width="50"
+                    ToggleButtonHeight="28" ToggleButtonWidth="50" 
                     ToggleButtonStyle="{StaticResource ToggleSetEditStyle}"
-                    DataField="IsDescAvailable" Width="60" ComponentType="ToggleButton"/>
+                    DataField="IsDescAvailable" ComponentType="ToggleButton"/>
                 <MSU:MultiListboxColumnDefinition HeaderText="Last Uploaded" 
-                 DataField="LastUploaded" Width="105" ComponentType="TextBlock"/>
+                 DataField="LastUploadedFile" Width="105" ComponentType="TextBlock"/>
             </MSU:MultiListbox.ColumnDefinitions>
             <MSU:MultiListbox.ItemsContextMenu>
                 <ContextMenu>
@@ -74,6 +74,9 @@
                 </ContextMenu>
             </MSU:MultiListbox.ItemsContextMenu>
         </MSU:MultiListbox>
+        <ToggleButton x:Name="tx" Style="{StaticResource ToggleSetEditStyle}" Width="50" Height="28"
+                      HorizontalAlignment="Right" VerticalAlignment="Bottom" 
+                      IsChecked="False" Margin="0,0,110,1" Checked="tx_Checked"/>
         <Button Name="BtnClose" Content="Close" HorizontalAlignment="Right"
                 Margin="0,0,6,4" VerticalAlignment="Bottom" Height="25" Width="64" Click="BtnClose_Click"/>
     </Grid>
