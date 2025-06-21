@@ -15,7 +15,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyDescriptionAttribute("Custom WPF Components including MultiListbox")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+cb2f26ecdeaa7c4864fd09e6b2b845a09211276c")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+db3f2b5b9987aa74e11fe7c964be158028a1eec8")]
 [assembly: System.Reflection.AssemblyProductAttribute("CustomComponents")]
 [assembly: System.Reflection.AssemblyTitleAttribute("CustomComponents")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
