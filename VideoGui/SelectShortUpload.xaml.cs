@@ -62,20 +62,18 @@ namespace VideoGui
                 if (ofg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                 {
                     txtsrcdir.Text = ofg.SelectedFolder;
-                    
                     string connectionStr = dbInit?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
                     string ThisDir = ofg.SelectedFolder.Split(@"\").ToList().LastOrDefault();
-
                     string sql = "select ID from SHORTSDIRECTORY WHERE DIRECTORYNAME = @P0";
                     int res = connectionStr.ExecuteScalar(sql.ToUpper(), [("@P0", ThisDir.ToUpper())]).ToInt(-1);
                     if (res == -1)
                     {
                         sql = "INSERT INTO SHORTSDIRECTORY(DIRECTORYNAME) VALUES (@P0) RETURNING ID";
-                        res = connectionStr.ExecuteScalar(sql.ToUpper(), [("@P0", ThisDir.ToUpper())]).ToInt(-1);
+                        res = connectionStr.ExecuteScalar(sql, [("@P0", ThisDir.ToUpper())]).ToInt(-1);
                         ShortsIndex = res;
                         dbInit?.Invoke(this, new CustomParams_Select(res));
                         sql = "SELECT ID FROM TITLES WHERE DESCRIPTION = @P0";
-                        int rres = connectionStr.ExecuteScalar(sql.ToUpper(), [("@P0", ThisDir.ToUpper())]).ToInt(-1);
+                        int rres = connectionStr.ExecuteScalar(sql, [("@P0", ThisDir.ToUpper())]).ToInt(-1);
                         if (rres == -1)
                         {
                             sql = "INSERT INTO TITLES(DESCRIPTION,ISTAG,GROUPID) VALUES (@P0,@P1,@P2) RETURNING ID";
@@ -596,7 +594,7 @@ namespace VideoGui
 
                     if (DoDescSelectFrm.IsDescChanged)
                     {
-                        dbInit?.Invoke(this, new CustomParams_Update(DoDescSelectFrm.TitleTagId, UpdateType.Description));
+                        dbInit?.Invoke(this, new CustomParams_Update(DoDescSelectFrm.Id, UpdateType.Description));
                     }
                     if (DoDescSelectFrm.IsClosed)
                     {

@@ -59,11 +59,11 @@
                  DataField="NumberOfShorts" Width="125" ComponentType="TextBlock"/>
                 <MSU:MultiListboxColumnDefinition HeaderText="Title" ToggleButtonClick="MultiListboxColumnDefinition_ToggleButtonClick"
                     ToggleButtonWidth="50" Width="50" ToggleButtonHeight="28"
-                    ToggleButtonStyle="{StaticResource ToggleSetEditStyle}"
+                    Style="{StaticResource ToggleSetEditStyle}"
                     DataField="IsTitleAvailable" ComponentType="ToggleButton"/>
                 <MSU:MultiListboxColumnDefinition HeaderText="Desc" Width="50"
                     ToggleButtonHeight="28" ToggleButtonWidth="50" 
-                    ToggleButtonStyle="{StaticResource ToggleSetEditStyle}"
+                    Style="{StaticResource ToggleSetEditStyle}"
                     DataField="IsDescAvailable" ComponentType="ToggleButton"/>
                 <MSU:MultiListboxColumnDefinition HeaderText="Last Uploaded" 
                  DataField="LastUploadedFile" Width="105" ComponentType="TextBlock"/>

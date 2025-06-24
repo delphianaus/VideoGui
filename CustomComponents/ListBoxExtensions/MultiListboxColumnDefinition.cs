@@ -28,6 +28,21 @@ namespace CustomComponents.ListBoxExtensions
         public static readonly DependencyProperty WidthProperty =
             DependencyProperty.Register(nameof(Width), typeof(double), typeof(MultiListboxColumnDefinition), new PropertyMetadata(100.0));
 
+        public static readonly DependencyProperty HeightProperty =
+            DependencyProperty.Register(nameof(Height), typeof(double), typeof(MultiListboxColumnDefinition), new PropertyMetadata(30.0));
+
+        public static readonly DependencyProperty MinWidthProperty =
+            DependencyProperty.Register(nameof(MinWidth), typeof(double), typeof(MultiListboxColumnDefinition), new PropertyMetadata(100.0));
+
+        public static readonly DependencyProperty MinHeightProperty =
+            DependencyProperty.Register(nameof(MinHeight), typeof(double), typeof(MultiListboxColumnDefinition), new PropertyMetadata(30.0));
+
+        public static readonly DependencyProperty MaxWidthProperty =
+            DependencyProperty.Register(nameof(MaxWidth), typeof(double), typeof(MultiListboxColumnDefinition), new PropertyMetadata(double.PositiveInfinity));
+
+        public static readonly DependencyProperty MaxHeightProperty =
+            DependencyProperty.Register(nameof(MaxHeight), typeof(double), typeof(MultiListboxColumnDefinition), new PropertyMetadata(double.PositiveInfinity));
+
         public static readonly DependencyProperty WidthBindingProperty =
             DependencyProperty.Register(nameof(WidthBinding), typeof(string), typeof(MultiListboxColumnDefinition), new PropertyMetadata(string.Empty));
 
@@ -49,14 +64,14 @@ namespace CustomComponents.ListBoxExtensions
             set => SetValue(BoundToPropertiesProperty, value);
         }
 
-        public static readonly DependencyProperty ToggleButtonStyleProperty =
-            DependencyProperty.Register(nameof(ToggleButtonStyle), typeof(Style), typeof(MultiListboxColumnDefinition),
+        public static readonly DependencyProperty StyleProperty =
+            DependencyProperty.Register(nameof(Style), typeof(Style), typeof(MultiListboxColumnDefinition),
                 new PropertyMetadata(null));
 
-        public Style ToggleButtonStyle
+        public Style Style
         {
-            get => (Style)GetValue(ToggleButtonStyleProperty);
-            set => SetValue(ToggleButtonStyleProperty, value);
+            get => (Style)GetValue(StyleProperty);
+            set => SetValue(StyleProperty, value);
         }
 
         public static readonly DependencyProperty ToggleButtonWidthProperty =
@@ -158,7 +173,7 @@ namespace CustomComponents.ListBoxExtensions
 
         public static readonly DependencyProperty ContentMarginProperty =
             DependencyProperty.Register(nameof(ContentMargin), typeof(Thickness), typeof(MultiListboxColumnDefinition),
-                new PropertyMetadata(new Thickness(5)));
+                new PropertyMetadata(new Thickness(0)));
 
         public Thickness ContentMargin
         {
@@ -333,6 +348,35 @@ namespace CustomComponents.ListBoxExtensions
             set => SetValue(WidthProperty, value);
         }
 
+        public double Height
+        {
+            get => (double)GetValue(HeightProperty);
+            set => SetValue(HeightProperty, value);
+        }
+
+        public double MinWidth
+        {
+            get => (double)GetValue(MinWidthProperty);
+            set => SetValue(MinWidthProperty, value);
+        }
+
+        public double MinHeight
+        {
+            get => (double)GetValue(MinHeightProperty);
+            set => SetValue(MinHeightProperty, value);
+        }
+
+        public double MaxWidth
+        {
+            get => (double)GetValue(MaxWidthProperty);
+            set => SetValue(MaxWidthProperty, value);
+        }
+
+        public double MaxHeight
+        {
+            get => (double)GetValue(MaxHeightProperty);
+            set => SetValue(MaxHeightProperty, value);
+        }
         public string WidthBinding
         {
             get => (string)GetValue(WidthBindingProperty);

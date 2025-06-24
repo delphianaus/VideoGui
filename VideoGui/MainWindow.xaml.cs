@@ -1908,7 +1908,7 @@ namespace VideoGui
                             frmDescSelectFrm.lstAllDescriptions.ItemsSource = DescriptionsList;
                             frmDescSelectFrm.chkIsShortVideo.IsChecked = IsShort;
                             frmDescSelectFrm.IsShortVideo = IsShort;
-                            frmDescSelectFrm.Id = ShortsDirectoryIndex;
+                            frmDescSelectFrm.Id = -1;
                             bool Found = false;
                             foreach (var item in DescriptionsList.Where(s => s.IsShortVideo == IsShort && s.TitleTagId == ShortsDirectoryIndex))
                             {
@@ -1918,6 +1918,7 @@ namespace VideoGui
                                 frmDescSelectFrm.chkIsShortVideo.IsChecked = item.IsShortVideo;
                                 frmDescSelectFrm.IsShortVideo = item.IsShortVideo;
                                 frmDescSelectFrm.TitleTagId = item.TitleTagId;
+                                frmDescSelectFrm.Id = item.Id;
                                 Found = true;
                                 break;
                             }
@@ -1951,6 +1952,7 @@ namespace VideoGui
                                         {
                                             item.DescId = idx;
                                         }
+                                        frmDescSelectFrm.Id = idx;
                                     }
                                     break;
                                 }
