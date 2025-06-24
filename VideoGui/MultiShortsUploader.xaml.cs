@@ -177,13 +177,18 @@ namespace VideoGui
         {
             try
             {
-                if (sender is ToggleButton t)
+                if (sender is ToggleButton t && t.DataContext is SelectedShortsDirectories info)
                 {
-                    if (t.Width > 0 && t.Height > 0)
+                    if (info.LinkedTitleId == "")
                     {
-
+                        info.LinkedTitleId = Guid.NewGuid().ToString();
+                        var r = info.IsTitleAvailable;// Goes to true when linkedTitleId != ""
                     }
-
+                    else
+                    {
+                        info.LinkedTitleId = "";
+                        var r = info.IsTitleAvailable;// goes to false when LinkedTitleId == ""
+                    }
                 }
 
             }
@@ -212,43 +217,10 @@ namespace VideoGui
             }
             return null;
         }
-        private void tx_Checked(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                foreach (var item in msuSchedules.Items)
-                {
 
-                    var container = msuSchedules.ItemContainerGenerator.ContainerFromItem(item) as ListBoxItem;
-                    if (container != null)
-                    {
-                        var border = VisualTreeHelper.GetChild(container, 0) as Border;
-                        if (border != null)
-                        {
-                            // Get the ContentPresenter inside the Border
-                            var contentPresenter = VisualTreeHelper.GetChild(border, 0) as ContentPresenter;
-                            if (contentPresenter != null)
-                            {
-                                // Get the Grid that's created by our ItemTemplate
-                                var grid = VisualTreeHelper.GetChild(contentPresenter, 0) as Grid;
-                                if (grid != null)
-                                {
-                                    foreach (var toggleButton in grid.Children.OfType<ToggleButton>())
-                                    {
-                                        toggleButton.Style = tx.Style;
-                                        ///toggleButton.Template = FindResource("ToggleSetEditStyle") as ControlTemplate;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                   
-                }
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite($"tx_Checked {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
-            }
+        private void MultiListboxColumnDefinition_ToggleButtonClick_1(object sender, RoutedEventArgs e)
+        {
+
         }
 
         private void mnuRemoveSelected_Click(object sender, RoutedEventArgs e)

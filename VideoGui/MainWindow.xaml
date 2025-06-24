@@ -98,7 +98,6 @@
         <ToggleButton x:Name="Fisheye" Style="{StaticResource  ToggleStyle3}"  Margin="1025,0,7,76" Height="24"  Width="Auto" HorizontalAlignment="Left" VerticalAlignment="Bottom"/>
 
         <Button x:Name="btnConfig" Content="Configuration" HorizontalAlignment="Left" Height="22" Margin="26,0,0,113" VerticalAlignment="Bottom" Click="BtnConfig_Click" Width="97"/>
-        <Button x:Name="BtnCompare" Content="File Compare" HorizontalAlignment="Left" Height="26" Margin="118,0,0,81" VerticalAlignment="Bottom" Click="BtnCompare_Click" Width="78" RenderTransformOrigin="0.475,1.233"/>
         <Button x:Name="DeleteSel"  HorizontalAlignment="Left" Height="26" Margin="440,0,0,79" VerticalAlignment="Bottom" Width="24" Click="DeleteSel_Click">
             <Image Source="/Icons/cancel.png" VerticalAlignment="Bottom"/>
         </Button>

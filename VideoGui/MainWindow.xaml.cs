@@ -125,7 +125,6 @@ namespace VideoGui
         public _StatsHandlerExtra ThreadStatsHandlerXtra;
         public IsFileInUse OnIsFileInUse;
         public Models.delegates.CompairFinished OnCompairFinished;
-        public SourceDestComp compareform;
         public VideoSizeChecker videoResCompare;
         public VideoCardSelector videoCardDetailsSelector;
         public ScraperModule scraperModule = null, scheduleScraperModule = null;
@@ -138,7 +137,6 @@ namespace VideoGui
         public ActionScheduleSelector actionScheduleSelector = null;
         public ManualScheduler manualScheduler = null;
         public ProcessSchedule ScheduleProccessor = null;
-        public ShowMatcher Swm;
         bool AutoClose = false;
         AutoCancel DoAutoCancel = null;
         List<ListScheduleItems> ScheduleListItems = new List<ListScheduleItems>();
@@ -734,7 +732,8 @@ namespace VideoGui
                                         " LINKEDSHORTSDIRECTORYID = @LINKEDID;";
                                     connectionString.ExecuteScalar(sqlA, [("@NUMBEROFSHORTS", NumberofShorts),
                                     ("@LINKEDID", LinkedId)]);
-                                    foreach (var ip in SelectedShortsDirectoriesList.Where(item => item.DirectoryName == uploaddir))
+                                    string updir = uploaddir.Split('\\').LastOrDefault();
+                                    foreach (var ip in SelectedShortsDirectoriesList.Where(item => item.DirectoryName == updir))
                                     {
                                         ip.NumberOfShorts = NumberofShorts;
                                         break;
@@ -744,7 +743,14 @@ namespace VideoGui
                         }
 
                     }
-                    frmMultiShortsUploader.msuShorts.ItemsSource = ShortsDirectoryList;
+                    else
+                    {
+                        if (true)
+                        {
+
+                        }
+                    }
+                        frmMultiShortsUploader.msuShorts.ItemsSource = ShortsDirectoryList;
                     frmMultiShortsUploader.msuSchedules.ItemsSource = SelectedShortsDirectoriesList;
                 }
                 return null;
@@ -11352,21 +11358,7 @@ namespace VideoGui
             }
         }
 
-        private void BtnCompare_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                string scandir = (CmbScanDirectory.SelectedIndex == 0) ? "" : CmbScanDirectory.Text;
-                OnCompairFinished = new CompairFinished(OnFinishCompair);
-                compareform = new SourceDestComp(OnCompairFinished, scandir);
-                Hide();
-                compareform.ShowDialog();
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
-            }
-        }
+        
         private void OnFinishCompair()
         {
             try
@@ -11544,20 +11536,7 @@ namespace VideoGui
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
             }
         }
-        private void Button_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                OnCompairFinished = new CompairFinished(OnFinishCompair);
-                Swm = new(OnCompairFinished);
-                Hide();
-                Swm.Show();
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
-            }
-        }
+        
         private void OpenLogFile_Click(object sender, RoutedEventArgs e)
         {
             try

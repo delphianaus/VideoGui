@@ -17,8 +17,8 @@ namespace VideoGui.Models
         private DateTime _LastUploadedDate = DateTime.Now.Date.AddYears(-100);
         private bool _IsActive = false;
 
-        public string LinkedDescId { get => _LinkedDescId; set { _LinkedDescId = value; OnPropertyChanged(); } }
-        public string LinkedTitleId { get => _LinkedTitleId; set { _LinkedTitleId = value; OnPropertyChanged(); } }
+        public string LinkedDescId { get => _LinkedDescId; set { _LinkedDescId = value;GetLinkedDescId(); OnPropertyChanged(); } }
+        public string LinkedTitleId { get => _LinkedTitleId; set { _LinkedTitleId = value; GetLinkedTitle(); OnPropertyChanged(); } }
         public int Id { get => _Id; set { _Id = value; OnPropertyChanged(); } }
         public int TitleId { get => _TitleId; set { _TitleId = value; OnPropertyChanged(); } }
         public int DescId { get => _DescId; set { _DescId = value; OnPropertyChanged(); } }
@@ -35,6 +35,7 @@ namespace VideoGui.Models
         protected void OnPropertyChanged([CallerMemberName] string name = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+           
         }
         public string GetUploadedDateString()
         {
@@ -49,6 +50,22 @@ namespace VideoGui.Models
             LinkedShortsDirectoryId = _LinkedShortsDirectoryId;
             NumberOfShorts = _NumberOfShorts;
             LastUploadedDateFile = _LastUploadedDate;
+        }
+
+        public void GetLinkedTitle()
+        {
+            if (LinkedTitleId is not null)
+            {
+                IsTitleAvailable = LinkedTitleId.Length > 0;
+            }
+        }
+
+        public void GetLinkedDescId()
+        {
+            if (LinkedDescId is not null)
+            {
+                IsDescAvailable = LinkedDescId.Length > 0;
+            }
         }
         public SelectedShortsDirectories(FbDataReader reader)
         {

@@ -1399,7 +1399,8 @@ namespace VideoGui
                 {
                     RematchedList.Add(new Rematched(r));
                 });
-
+                
+                
                 connectionString.ExecuteReader("SELECT * FROM SHORTSDIRECTORY", (FbDataReader r) =>
                 {
                     ShortsDirectoriesList.Add(new ShortsDirectory(r));
@@ -3205,6 +3206,7 @@ namespace VideoGui
         }
         public void SimulateMouseWheel(WebView2 webView, bool isUp)
         {
+            if (webView == null) return;
             var wih = new System.Windows.Interop.WindowInteropHelper(Window.GetWindow(webView));
             var handle = wih.Handle;
 

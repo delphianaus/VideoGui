@@ -94,6 +94,46 @@ namespace CustomComponents.ListBoxExtensions
             set => SetValue(ToggleButtonHeightProperty, value);
         }
 
+        public static readonly DependencyProperty HeaderMarginProperty =
+            DependencyProperty.Register(nameof(HeaderMargin), typeof(Thickness), typeof(MultiListboxColumnDefinition),
+                new PropertyMetadata(new Thickness(5)));
+
+        public Thickness HeaderMargin
+        {
+            get => (Thickness)GetValue(HeaderMarginProperty);
+            set => SetValue(HeaderMarginProperty, value);
+        }
+
+        public static readonly DependencyProperty HeaderHorizontalAlignmentProperty =
+            DependencyProperty.Register(nameof(HeaderHorizontalAlignment), typeof(HorizontalAlignment), typeof(MultiListboxColumnDefinition),
+                new PropertyMetadata(HorizontalAlignment.Left));
+
+        public HorizontalAlignment HeaderHorizontalAlignment
+        {
+            get => (HorizontalAlignment)GetValue(HeaderHorizontalAlignmentProperty);
+            set => SetValue(HeaderHorizontalAlignmentProperty, value);
+        }
+
+        public static readonly DependencyProperty HeaderVerticalAlignmentProperty =
+            DependencyProperty.Register(nameof(HeaderVerticalAlignment), typeof(VerticalAlignment), typeof(MultiListboxColumnDefinition),
+                new PropertyMetadata(VerticalAlignment.Center));
+
+        public VerticalAlignment HeaderVerticalAlignment
+        {
+            get => (VerticalAlignment)GetValue(HeaderVerticalAlignmentProperty);
+            set => SetValue(HeaderVerticalAlignmentProperty, value);
+        }
+
+        public static readonly DependencyProperty HeaderPaddingProperty =
+            DependencyProperty.Register(nameof(HeaderPadding), typeof(Thickness), typeof(MultiListboxColumnDefinition),
+                new PropertyMetadata(new Thickness(0)));
+
+        public Thickness HeaderPadding
+        {
+            get => (Thickness)GetValue(HeaderPaddingProperty);
+            set => SetValue(HeaderPaddingProperty, value);
+        }
+
         private RoutedEventHandler _toggleButtonClick;
         public event RoutedEventHandler ToggleButtonClick
         {
@@ -123,7 +163,7 @@ namespace CustomComponents.ListBoxExtensions
 
         public static readonly DependencyProperty ToggleButtonMinWidthProperty =
             DependencyProperty.Register(nameof(ToggleButtonMinWidth), typeof(double), typeof(MultiListboxColumnDefinition),
-                new PropertyMetadata(double.NaN));
+                new PropertyMetadata(0.0));
 
         public double ToggleButtonMinWidth
         {
@@ -133,7 +173,7 @@ namespace CustomComponents.ListBoxExtensions
 
         public static readonly DependencyProperty ToggleButtonMaxWidthProperty =
             DependencyProperty.Register(nameof(ToggleButtonMaxWidth), typeof(double), typeof(MultiListboxColumnDefinition),
-                new PropertyMetadata(double.NaN));
+                new PropertyMetadata(double.PositiveInfinity));
 
         public double ToggleButtonMaxWidth
         {
@@ -143,7 +183,7 @@ namespace CustomComponents.ListBoxExtensions
 
         public static readonly DependencyProperty ToggleButtonMinHeightProperty =
             DependencyProperty.Register(nameof(ToggleButtonMinHeight), typeof(double), typeof(MultiListboxColumnDefinition),
-                new PropertyMetadata(double.NaN));
+                new PropertyMetadata(0.0));
 
         public double ToggleButtonMinHeight
         {
@@ -153,22 +193,12 @@ namespace CustomComponents.ListBoxExtensions
 
         public static readonly DependencyProperty ToggleButtonMaxHeightProperty =
             DependencyProperty.Register(nameof(ToggleButtonMaxHeight), typeof(double), typeof(MultiListboxColumnDefinition),
-                new PropertyMetadata(double.NaN));
+                new PropertyMetadata(double.PositiveInfinity));
 
         public double ToggleButtonMaxHeight
         {
             get => (double)GetValue(ToggleButtonMaxHeightProperty);
             set => SetValue(ToggleButtonMaxHeightProperty, value);
-        }
-
-        public static readonly DependencyProperty HeaderMarginProperty =
-            DependencyProperty.Register(nameof(HeaderMargin), typeof(Thickness), typeof(MultiListboxColumnDefinition),
-                new PropertyMetadata(new Thickness(5)));
-
-        public Thickness HeaderMargin
-        {
-            get => (Thickness)GetValue(HeaderMarginProperty);
-            set => SetValue(HeaderMarginProperty, value);
         }
 
         public static readonly DependencyProperty ContentMarginProperty =
@@ -179,26 +209,6 @@ namespace CustomComponents.ListBoxExtensions
         {
             get => (Thickness)GetValue(ContentMarginProperty);
             set => SetValue(ContentMarginProperty, value);
-        }
-
-        public static readonly DependencyProperty HeaderHorizontalAlignmentProperty =
-            DependencyProperty.Register(nameof(HeaderHorizontalAlignment), typeof(HorizontalAlignment), typeof(MultiListboxColumnDefinition),
-                new PropertyMetadata(HorizontalAlignment.Left));
-
-        public HorizontalAlignment HeaderHorizontalAlignment
-        {
-            get => (HorizontalAlignment)GetValue(HeaderHorizontalAlignmentProperty);
-            set => SetValue(HeaderHorizontalAlignmentProperty, value);
-        }
-
-        public static readonly DependencyProperty HeaderVerticalAlignmentProperty =
-            DependencyProperty.Register(nameof(HeaderVerticalAlignment), typeof(VerticalAlignment), typeof(MultiListboxColumnDefinition),
-                new PropertyMetadata(VerticalAlignment.Center));
-
-        public VerticalAlignment HeaderVerticalAlignment
-        {
-            get => (VerticalAlignment)GetValue(HeaderVerticalAlignmentProperty);
-            set => SetValue(HeaderVerticalAlignmentProperty, value);
         }
 
         public static readonly DependencyProperty ContentHorizontalAlignmentProperty =
