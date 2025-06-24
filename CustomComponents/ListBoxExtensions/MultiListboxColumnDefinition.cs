@@ -29,13 +29,13 @@ namespace CustomComponents.ListBoxExtensions
             DependencyProperty.Register(nameof(Width), typeof(double), typeof(MultiListboxColumnDefinition), new PropertyMetadata(100.0));
 
         public static readonly DependencyProperty HeightProperty =
-            DependencyProperty.Register(nameof(Height), typeof(double), typeof(MultiListboxColumnDefinition), new PropertyMetadata(30.0));
+            DependencyProperty.Register(nameof(Height), typeof(double), typeof(MultiListboxColumnDefinition), new PropertyMetadata(15.0));
 
         public static readonly DependencyProperty MinWidthProperty =
             DependencyProperty.Register(nameof(MinWidth), typeof(double), typeof(MultiListboxColumnDefinition), new PropertyMetadata(100.0));
 
         public static readonly DependencyProperty MinHeightProperty =
-            DependencyProperty.Register(nameof(MinHeight), typeof(double), typeof(MultiListboxColumnDefinition), new PropertyMetadata(30.0));
+            DependencyProperty.Register(nameof(MinHeight), typeof(double), typeof(MultiListboxColumnDefinition), new PropertyMetadata(15.0));
 
         public static readonly DependencyProperty MaxWidthProperty =
             DependencyProperty.Register(nameof(MaxWidth), typeof(double), typeof(MultiListboxColumnDefinition), new PropertyMetadata(double.PositiveInfinity));

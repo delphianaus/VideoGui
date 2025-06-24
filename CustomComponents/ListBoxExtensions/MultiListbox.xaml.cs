@@ -158,12 +158,12 @@ namespace CustomComponents.ListBoxExtensions
             UpdateAdjustedGroupBoxWidth();
             UpdateItemsListBoxHeight();
         }
-
+        double desired_height = 30.0;
         private void UpdateItemsListBoxHeight()
         {
             if (lstBoxUploadItems != null)
             {
-                double headerHeight = 30;
+                double headerHeight = desired_height;
                 double availableHeight = ActualHeight - headerHeight;
                 if (BorderMargin != null)
                 {
@@ -209,7 +209,7 @@ namespace CustomComponents.ListBoxExtensions
 
         public static readonly DependencyProperty BorderThicknessProperty =
             DependencyProperty.Register(nameof(BorderThickness), typeof(double), typeof(MultiListbox),
-                new PropertyMetadata(2.0));
+                new PropertyMetadata(1.0));
 
         public double BorderThickness
         {
@@ -349,7 +349,7 @@ namespace CustomComponents.ListBoxExtensions
                 // Create a new item template with a Grid
                 var gridFactory = new FrameworkElementFactory(typeof(Grid));
                 gridFactory.SetValue(FrameworkElement.MarginProperty, new Thickness(0, 0, 0, 0));
-                gridFactory.SetValue(FrameworkElement.HeightProperty, 35.0);
+                gridFactory.SetValue(FrameworkElement.HeightProperty, desired_height);
                 gridFactory.SetValue(Panel.BackgroundProperty, Brushes.White);
 
                 // Store reference to the grid factory for later use
