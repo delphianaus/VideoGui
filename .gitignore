@@ -40,3 +40,9 @@
 /ToggleClass/bin/x64/Debug/net9.0-windows/ToggleClass.dll
 /NotifyIconWpf/bin/x64/Debug/net9.0-windows/NotifyIconWpf.pdb
 /ToggleClass/bin/x64/Debug/net9.0-windows/ToggleClass.pdb
+/CustomComponents/obj/CustomComponents.csproj.nuget.g.props
+/CustomComponents/obj/Debug/net9.0-windows/CustomComponents.GeneratedMSBuildEditorConfig.editorconfig
+/CustomComponents/obj/CustomComponents.csproj.nuget.dgspec.json
+/CustomComponents/obj/project.assets.json
+/CustomComponents/obj/project.nuget.cache
+/CustomComponents/obj/Debug/net9.0-windows/CustomComponents.assets.cache
