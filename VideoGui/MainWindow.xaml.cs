@@ -439,8 +439,8 @@ namespace VideoGui
 
         }
 
-        public void InsertIntoMultiShortsInfo(int NumberofShorts, 
-            int LinkedId, DateTime LastTimeUploaded, bool _IsActive= false)
+        public void InsertIntoMultiShortsInfo(int NumberofShorts,
+            int LinkedId, DateTime LastTimeUploaded, bool _IsActive = false)
         {
             try
             {
@@ -467,9 +467,9 @@ namespace VideoGui
                 }
                 if (NewId != -1)
                 {
-                    sqlA = "SELECT M.ID,M.ISSHORTSACTIVE,M.NUMBEROFSHORTS,"+
+                    sqlA = "SELECT M.ID,M.ISSHORTSACTIVE,M.NUMBEROFSHORTS," +
                     "M.LASTUPLOADEDDATE,M.LASTUPLOADEDTIME , S.DIRECTORYNAME, S.TITLEID, S.DESCID, " +
-                    "(SELECT LIST(TAGID, ',') FROM TITLETAGS WHERE GROUPID = S.TITLEID) AS LINKEDTITLEIDS,"+
+                    "(SELECT LIST(TAGID, ',') FROM TITLETAGS WHERE GROUPID = S.TITLEID) AS LINKEDTITLEIDS," +
                     " (SELECT LIST(ID,',') FROM DESCRIPTIONS WHERE ID = S.DESCID) AS LINKEDDESCIDS " +
                     "FROM MULTISHORTSINFO M " +
                     "INNER JOIN SHORTSDIRECTORY S ON M.LINKEDSHORTSDIRECTORYID = S.ID " +
@@ -548,7 +548,7 @@ namespace VideoGui
                             });
                         }
 
-                        
+
                         sql = "SELECT ID FROM TITLES WHERE DESCRIPTION = @P0;";
                         int id = TitlesList.Where(t => t.Description == CPAD.DirectoryName).FirstOrDefault(new Titles(-1)).Id;
                         if (id == -1)
@@ -572,7 +572,7 @@ namespace VideoGui
                              + "Follow me @ twitch.tv/justinstrainclips" +
                              Environment.NewLine + Environment.NewLine +
                              "Support Me On Patreon - https://www.patreon.com/join/JustinsTrainJourneys";
-                        id = DescriptionsList.Where(t => t.TitleTagId == LinkedId && 
+                        id = DescriptionsList.Where(t => t.TitleTagId == LinkedId &&
                            t.Name == CPAD.DirectoryName && t.IsShortVideo).
                            FirstOrDefault(new Descriptions(-1)).Id;
                         if (id == -1)
@@ -676,7 +676,7 @@ namespace VideoGui
                     int LinkedId = -1;
 
 
-                    
+
 
                     if (uploaddir != "" && Path.Exists(uploaddir) &&
                         Directory.EnumerateFiles(uploaddir, "*.mp4", SearchOption.AllDirectories).Count() > 0)
@@ -709,7 +709,7 @@ namespace VideoGui
                             if (id == -1)
                             {
                                 InsertIntoMultiShortsInfo(NumberofShorts, LinkedId, LastTimeUploaded, true);
-                            }                              
+                            }
                             else
                             {
                                 if (LastTimeUploaded.Date.Year > 2000)
@@ -750,7 +750,7 @@ namespace VideoGui
 
                         }
                     }
-                        frmMultiShortsUploader.msuShorts.ItemsSource = ShortsDirectoryList;
+                    frmMultiShortsUploader.msuShorts.ItemsSource = ShortsDirectoryList;
                     frmMultiShortsUploader.msuSchedules.ItemsSource = SelectedShortsDirectoriesList;
                 }
                 return null;
@@ -2872,9 +2872,113 @@ namespace VideoGui
 
         private object selectShortUpload_Handler(object thisForm, object tld)
         {
-            if (tld is null)
+            if (tld is CustomParams_UpdateMultishortsByDir CPAD)
             {
+                string sql = "";
+                int LinkedId = -1, DescId = -1, TitleId = -1;
+                LinkedId = EditableshortsDirectoryList.Where(fnd => fnd.Directory.ToLower() ==
+                CPAD.DirectoryName.ToLower()).FirstOrDefault(new ShortsDirectory(-1)).Id;
+                if (LinkedId == -1)
+                {
+                    sql = "INSERT INTO SHORTSDIRECTORY(DIRECTORYNAME,TITLEID,DESCID) " +
+                        "VALUES(@P0,@P1,@P2) RETURNING ID;";
+                    LinkedId = connectionString.ExecuteScalar(sql, [("@P0", CPAD.DirectoryName),
+                            ("@P1", -1), ("@P2", -1)]).ToInt(-1);
 
+                    if (LinkedId != -1)
+                    {
+                        sql = "SELECT * FROM SHORTSDIRECTORY WHERE ID = @ID";
+                        connectionString.ExecuteReader(sql, [("@ID", LinkedId)], (FbDataReader r) =>
+                        {
+                            EditableshortsDirectoryList.Add(new ShortsDirectory(r));
+                        });
+                    }
+
+
+                    sql = "SELECT ID FROM TITLES WHERE DESCRIPTION = @P0;";
+                    int id = TitlesList.Where(t => t.Description == CPAD.DirectoryName).FirstOrDefault(new Titles(-1)).Id;
+                    if (id == -1)
+                    {
+                        sql = "INSERT INTO TITLES(DESCRIPTION,ISTAG,GROUPID) " +
+                            "VALUES(@P0,@P1,@P2) RETURNING ID;";
+                        id = connectionString.ExecuteScalar(sql, [("@P0", CPAD.DirectoryName),
+                                ("@P1", false), ("@P2", LinkedId)]).ToInt(-1);
+                        if (id != -1)
+                        {
+                            TitleId = id;
+                            sql = "SELECT * FROM TITLES WHERE ID = @ID";
+                            connectionString.ExecuteReader(sql, [("@ID", id)], (FbDataReader r) =>
+                            {
+                                TitlesList.Add(new Titles(r));
+                            });
+                        }
+                    }
+                    else TitleId = id;
+                    string desc = Environment.NewLine + Environment.NewLine
+                         + "Follow me @ twitch.tv/justinstrainclips" +
+                         Environment.NewLine + Environment.NewLine +
+                         "Support Me On Patreon - https://www.patreon.com/join/JustinsTrainJourneys";
+                    id = DescriptionsList.Where(t => t.TitleTagId == LinkedId &&
+                       t.Name == CPAD.DirectoryName && t.IsShortVideo).
+                       FirstOrDefault(new Descriptions(-1)).Id;
+                    if (id == -1)
+                    {
+                        sql = "INSERT INTO DESCRIPTIONS(DESCRIPTION,TITLETAGID,NAME,ISSHORTVIDEO, ISTAG) " +
+                                "VALUES(@DESC,@TITLETAG,@NAME,@ISSHORTVIDEO,@ISTAG) RETURNING ID;";
+                        id = connectionString.ExecuteScalar(sql, [("@DESC", CPAD.DirectoryName+desc),
+                              ("@TITLETAG", LinkedId), ("@NAME", CPAD.DirectoryName),
+                              ("@ISSHORTVIDEO", true), ("@ISTAG", false)]).ToInt(-1);
+                        if (id != -1)
+                        {
+                            DescId = id;
+                            sql = "SELECT * FROM DESCRIPTIONS WHERE ID = @ID";
+                            connectionString.ExecuteReader(sql, [("@ID", id)], (FbDataReader r) =>
+                            {
+                                DescriptionsList.Add(new(r));
+                            });
+                        }
+                    }
+                    else DescId = id;
+                    sql = "UPDATE SHORTSDIRECTORY SET TITLEID=@TITLEID,DESCID=@DESCID WHERE ID=@ID;";
+                    connectionString.ExecuteScalar(sql, [("@ID", LinkedId),
+                            ("@TITLEID", TitleId), ("@DESCID", DescId)]);
+                }
+                bool found = false, processed = false;
+                DateTime LastTimeUploaded = DateTime.Now.Date.AddYears(-100);
+                (LastTimeUploaded, processed) = CheckUploads(LinkedId);
+                foreach (var _ in SelectedShortsDirectoriesList.Where(item => item.DirectoryName == CPAD.DirectoryName).Select(item => new { }))
+                {
+                    found = true;
+                    break;
+                }
+                if (!found && CPAD.DirectoryName != "")
+                {
+                    RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                    string shorts_dir1 = key.GetValueStr("shortsdirectory", @"D:\shorts\");
+                    key?.Close();
+                    string SearchDir1 = Path.Combine(shorts_dir1, CPAD.DirectoryName);
+                    int NumberofShorts = Directory.EnumerateFiles(SearchDir1, "*.mp4", SearchOption.AllDirectories).Count();
+                    string sqlA = "SELECT ID FROM MULTISHORTSINFO WHERE LINKEDSHORTSDIRECTORYID = @LINKEDID;";
+                    int id = connectionString.ExecuteScalar(sqlA, [("@LINKEDID", LinkedId)]).ToInt(-1);
+                    if (id == -1)
+                    {
+                        InsertIntoMultiShortsInfo(NumberofShorts, LinkedId, LastTimeUploaded);
+                    }
+                    else
+                    {
+                         UpdateMultiShortsInfo(NumberofShorts, LinkedId, LastTimeUploaded, CPAD.DirectoryName);
+                    }
+                }
+
+
+            }
+            if (tld is CustomParams_InsertMultiShortsInfo cpsi)
+            {
+                InsertIntoMultiShortsInfo(cpsi.numberofShorts, cpsi.linkedId, cpsi.lastTimeUploaded, cpsi.IsActive);
+            }
+            else if (tld is CustomParams_UpdateMultiShortsInfo cpup)
+            {
+                UpdateMultiShortsInfo(cpup.numberofShorts, cpup.linkedId, cpup.lastTimeUploaded, cpup.uploaddir);
             }
             else if (tld is CustomParams_GetConnectionString CGCS)
             {
@@ -2927,6 +3031,45 @@ namespace VideoGui
             }
 
             return null;
+        }
+
+        private void UpdateMultiShortsInfo(int NumberofShorts, int LinkedId, DateTime LastTimeUploaded, string uploaddir)
+        {
+            try
+            {
+                string updir = uploaddir.Split('\\').LastOrDefault();
+                string sql = "";
+                if (LastTimeUploaded.Date.Year > 2000)
+                {
+                    sql = "UPDATE MULTISHORTSINFO SET NUMBEROFSHORTS = @NUMBEROFSHORTS," +
+                        " LASTUPLOADEDDATE = @DT, LASTUPLOADEDTIME = @DTT WHERE" +
+                        " LINKEDSHORTSDIRECTORYID = @LINKEDID;";
+                    connectionString.ExecuteScalar(sql, [("@NUMBEROFSHORTS", NumberofShorts),
+                                    ("@LINKEDID", LinkedId), ("@DT", LastTimeUploaded.Date),   ("@DTT", LastTimeUploaded.TimeOfDay)]);
+                    foreach (var ip in SelectedShortsDirectoriesList.Where(item => item.DirectoryName == uploaddir))
+                    {
+                        ip.LastUploadedDateFile = LastTimeUploaded;
+                        ip.NumberOfShorts = NumberofShorts;
+                        break;
+                    }
+                }
+                else
+                {
+                    sql = "UPDATE MULTISHORTSINFO SET NUMBEROFSHORTS = @NUMBEROFSHORTS WHERE" +
+                        " LINKEDSHORTSDIRECTORYID = @LINKEDID;";
+                    connectionString.ExecuteScalar(sql, [("@NUMBEROFSHORTS", NumberofShorts),
+                                    ("@LINKEDID", LinkedId)]);
+                    foreach (var ip in SelectedShortsDirectoriesList.Where(item => item.DirectoryName == updir))
+                    {
+                        ip.NumberOfShorts = NumberofShorts;
+                        break;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite(MethodBase.GetCurrentMethod().Name + " " + ex.Message);
+            }
         }
 
         public string OnGetAllTags(int Id)
@@ -4163,15 +4306,16 @@ namespace VideoGui
                     "LINKEDSHORTSDIRECTORYID INTEGER, LASTUPLOADEDDATE DATE, LASTUPLOADEDTIME TIME);";
                  */
                 SelectedShortsDirectoriesList.Clear();
-                connectionString.ExecuteReader("SELECT M.ID,M.ISSHORTSACTIVE,M.NUMBEROFSHORTS,"+
+                connectionString.ExecuteReader("SELECT M.ID,M.ISSHORTSACTIVE,M.NUMBEROFSHORTS," +
                     "M.LASTUPLOADEDDATE,M.LASTUPLOADEDTIME,M.LINKEDSHORTSDIRECTORYID " +
                     ", S.ID as SHORTSDIRECTORY_ID, S.DIRECTORYNAME, S.TITLEID, S.DESCID, " +
                     "(SELECT LIST(TAGID, ',') FROM TITLETAGS WHERE GROUPID = S.TITLEID) AS LINKEDTITLEIDS, " +
                     "(SELECT LIST(ID,',') FROM DESCRIPTIONS WHERE ID = S.DESCID) AS LINKEDDESCIDS " +
                     "FROM MULTISHORTSINFO M " +
-                    "INNER JOIN SHORTSDIRECTORY S ON M.LINKEDSHORTSDIRECTORYID = S.ID", 
-                (FbDataReader r) => {
-                      SelectedShortsDirectoriesList.Add(new SelectedShortsDirectories(r));
+                    "INNER JOIN SHORTSDIRECTORY S ON M.LINKEDSHORTSDIRECTORYID = S.ID",
+                (FbDataReader r) =>
+                {
+                    SelectedShortsDirectoriesList.Add(new SelectedShortsDirectories(r));
                 });
                 FilterActiveShortsDirlectoryList();
 
@@ -11358,7 +11502,7 @@ namespace VideoGui
             }
         }
 
-        
+
         private void OnFinishCompair()
         {
             try
@@ -11536,7 +11680,7 @@ namespace VideoGui
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
             }
         }
-        
+
         private void OpenLogFile_Click(object sender, RoutedEventArgs e)
         {
             try

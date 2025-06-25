@@ -6,10 +6,43 @@ using System.Reflection;
 using System.Security.Permissions;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Controls.Primitives;
 using VideoGui.Models.delegates;
+using Windows.ApplicationModel.Background;
 
 namespace VideoGui.Models
 {
+    public class CustomParams_UpdateMultiShortsInfo
+    {
+        public int linkedId = 0;
+        public int numberofShorts = 0;
+        public DateTime lastTimeUploaded = DateTime.Now.Date.AddYears(-100);
+        public string uploaddir ="";
+
+        public CustomParams_UpdateMultiShortsInfo(int linkedId, int numberofShorts, string uploaddir)
+        {
+            this.linkedId = linkedId;
+            this.numberofShorts = numberofShorts;
+            this.uploaddir = uploaddir;
+        }
+
+        public CustomParams_UpdateMultiShortsInfo(int linkedId, int numberofShorts, DateTime lastTimeUploaded, string uploaddir)
+        {
+            this.linkedId = linkedId;
+            this.numberofShorts = numberofShorts;
+            this.lastTimeUploaded = lastTimeUploaded;
+            this.uploaddir = uploaddir;
+        }
+    }
+
+    public class CustomParams_UpdateMultishortsByDir
+    {
+        public string DirectoryName = "";
+        public CustomParams_UpdateMultishortsByDir(string DirectoryName)
+        {
+            this.DirectoryName = DirectoryName;
+        }
+    }
 
     public class CustomParams_InsertTags
     {
@@ -129,6 +162,22 @@ namespace VideoGui.Models
         {
             id = _id;
             RemoveAll = All;
+        }
+    }
+
+    public class CustomParams_InsertMultiShortsInfo
+    {
+        public int numberofShorts;
+        public int linkedId;
+        public DateTime lastTimeUploaded;
+        public bool IsActive;
+
+        public CustomParams_InsertMultiShortsInfo(int numberofShorts, int linkedId, DateTime lastTimeUploaded, bool v)
+        {
+            this.numberofShorts = numberofShorts;
+            this.linkedId = linkedId;
+            this.lastTimeUploaded = lastTimeUploaded;
+            this.IsActive = v;
         }
     }
     public class CustomParams_GetBaseDirectory

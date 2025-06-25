@@ -51,6 +51,10 @@ namespace VideoGui.Models
             NumberOfShorts = _NumberOfShorts;
             LastUploadedDateFile = _LastUploadedDate;
         }
+        public SelectedShortsDirectories()
+        {
+            Id = -1;
+        }
 
         public void GetLinkedTitle()
         {
