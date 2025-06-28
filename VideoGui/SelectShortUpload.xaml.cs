@@ -50,6 +50,7 @@ namespace VideoGui
         {
             try
             {
+                int LinkedId = -1;
                 RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                 string rootfolder = key.GetValueStr("UploadPath", @"D:\shorts\");
                 string MaxUploads = key.GetValueStr("MaxUploads", "100");
@@ -61,10 +62,16 @@ namespace VideoGui
                 ofg.Title = "Select Shorts Upload Directory";
                 if (ofg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                 {
+                    //Get TitleId
+                    //Get DescId
+                    //InsertUpdate into SHORTSDIRECTORY(TITLEID,DESCID,DIRECTORYNAME) Returning ID as LinkedId
+
                     txtsrcdir.Text = ofg.SelectedFolder;
                     string connectionStr = dbInit?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
                     string ThisDir = ofg.SelectedFolder.Split(@"\").ToList().LastOrDefault();
-                    string sql = "select ID from SHORTSDIRECTORY WHERE DIRECTORYNAME = @P0";
+                    var ress = dbInit?.Invoke(this, new CustomParams_InsertIntoShortsDirectory(ThisDir));// ToInt(-1)
+                    if (ress is int res && res != -1) LinkedId = res;
+                    /*string sql = "select ID from SHORTSDIRECTORY WHERE DIRECTORYNAME = @P0";
                     int res = connectionStr.ExecuteScalar(sql.ToUpper(), [("@P0", ThisDir.ToUpper())]).ToInt(-1);
                     if (res == -1)
                     {
@@ -109,48 +116,45 @@ namespace VideoGui
                                 dbInit?.Invoke(this, new CustomParams_UpdateTitleById(res, titleid));
                             }
 
-                        }
-                        sql = "SELECT ID FROM MULTISHORTSINFO WHERE" +
-                                " LINKEDSHORTSDIRECTORYID = @LINKEDID;";
-                        int id = connectionStr.ExecuteScalar(sql, [("@LINKEDID", LinkedId)]).ToInt(-1);
-                        if (id == -1)
-                        {
-                           // InsertIntoMultiShortsInfo(NumberofShorts, LinkedId, LastTimeUploaded, true);
-                           // add customparam_insert into tbl multi shorts info
-                            dbInit?.Invoke(this, 
-                                new CustomParams_InsertMultiShortsInfo(NumberofShorts, LinkedId, LastTimeUploaded, true));
-                        }
-                        else
-                        {
-                            dbInit?.Invoke(this, new CustomParams_UpdateMultiShortsInfo(LinkedId, NumberofShorts, 
-                                LastTimeUploaded, uploaddir));
-                        }
+                        }*/
 
-                        key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
-                        key.SetValue("UploadPath", ofg.SelectedFolder);
-                        key?.Close();
-
-                        btnEditTitle.IsChecked = false;
-                        btnEditDesc.IsChecked = false;
+                    /*string sql = "SELECT ID FROM MULTISHORTSINFO WHERE" +
+                            " LINKEDSHORTSDIRECTORYID = @LINKEDID;";
+                    int id = connectionStr.ExecuteScalar(sql, [("@LINKEDID", LinkedId)]).ToInt(-1);
+                    if (id == -1)
+                    {
+                        // InsertIntoMultiShortsInfo(NumberofShorts, LinkedId, LastTimeUploaded, true);
+                        // add customparam_insert into tbl multi shorts info
+                        dbInit?.Invoke(this,
+                            new CustomParams_InsertMultiShortsInfo(NumberofShorts, LinkedId, LastTimeUploaded, true));
                     }
                     else
                     {
-                        ShortsIndex = res;
-                        dbInit?.Invoke(this, new CustomParams_Select(res));
+                        dbInit?.Invoke(this, new CustomParams_UpdateMultiShortsInfo(LinkedId, NumberofShorts,
+                            LastTimeUploaded, uploaddir));
+                    }*/
 
-                        string connectStr = dbInit?.Invoke(this, new CustomParams_GetConnectionString()) is string con1n ? con1n : "";
-                        connectStr.ExecuteReader(GetShortsDirectorySql(res), (FbDataReader r) =>
-                        {
-                            int titleid = r["TITLEID"].ToInt(-1);
-                            int descid = r["DESCID"].ToInt(-1);
-                            string LinkedTitleId = r["LINKEDTITLEIDS"] is string TITD ? TITD : "";
-                            string LinkedDescId = r["LINKEDDESCIDS"] is string DITD ? DITD : "";
-                            btnEditTitle.IsChecked = titleid != -1 && LinkedTitleId != "";
-                            btnEditDesc.IsChecked = descid != -1 && LinkedDescId != "";
-                        });
+                    key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                    key.SetValue("UploadPath", ofg.SelectedFolder);
+                    key?.Close();
+
+                    btnEditTitle.IsChecked = false;
+                    btnEditDesc.IsChecked = false;
+                    ShortsIndex = LinkedId;
+                    dbInit?.Invoke(this, new CustomParams_Select(LinkedId));
+
+                    string connectStr = dbInit?.Invoke(this, new CustomParams_GetConnectionString()) is string con1n ? con1n : "";
+                    connectStr.ExecuteReader(GetShortsDirectorySql(LinkedId), (FbDataReader r) =>
+                    {
+                        int titleid = r["TITLEID"].ToInt(-1);
+                        int descid = r["DESCID"].ToInt(-1);
+                        string LinkedTitleId = r["LINKEDTITLEIDS"] is string TITD ? TITD : "";
+                        string LinkedDescId = r["LINKEDDESCIDS"] is string DITD ? DITD : "";
+                        btnEditTitle.IsChecked = titleid != -1 && LinkedTitleId != "";
+                        btnEditDesc.IsChecked = descid != -1 && LinkedDescId != "";
+                    });
 
 
-                    }
 
                     RegistryKey key2 = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                     key2.SetValue("UploadPath", txtsrcdir.Text);
@@ -164,7 +168,7 @@ namespace VideoGui
                     }
                     key2?.Close();
                     List<string> files = Directory.EnumerateFiles(ofg.SelectedFolder, "*.mp4", SearchOption.AllDirectories).ToList();
-                    foreach (var filename in files.Where(filename => !filename.Contains("_") && res != -1))
+                    foreach (var filename in files.Where(filename => !filename.Contains("_") && LinkedId != -1))
                     {
                         string fnx = filename.Split(@"\").ToList().LastOrDefault();
                         string drx = filename.Replace(fnx, "");
@@ -186,8 +190,8 @@ namespace VideoGui
                             File.Move(filename, newfile);
                         }
                     }
-                    lblShortNo.Content = files.Count.ToString();
                 }
+                //lblShortNo.Content = files.Count.ToString();
             }
             catch (Exception ex)
             {
@@ -199,7 +203,7 @@ namespace VideoGui
             try
             {
                 bool processed = false;
-                string filen = ""; 
+                string filen = "";
                 string connectionStr = dbInit?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
                 DateTime LastTimeUploaded = DateTime.Now.Date.AddYears(-100);
                 string SQLB = "SELECT * FROM UploadsRecord ORDER BY RDB$RECORD_VERSION DESC ROWS 500;";
@@ -392,8 +396,8 @@ namespace VideoGui
                     {
                         int Maxuploads = (txtTotalUploads.Text != "") ? txtTotalUploads.Text.ToInt(100) : 100;
                         int UploadsPerSlot = (txtMaxUpload.Text != "") ? txtMaxUpload.Text.ToInt(5) : 5;
-                        scraperModule = new ScraperModule(dbInit, doOnFinish, gUrl, Maxuploads, UploadsPerSlot,0, false);
-                        
+                        scraperModule = new ScraperModule(dbInit, doOnFinish, gUrl, Maxuploads, UploadsPerSlot, 0, false);
+
 
                         scraperModule.ShowActivated = true;
                         scraperModule.ScheduledOk.AddRange(filesdone);
@@ -414,7 +418,7 @@ namespace VideoGui
                             dbInit?.Invoke(this, new CustomParams_UpdateMultishortsByDir(DirectoryPath));
                         }
                     }
-                   
+
                 }
 
 
@@ -499,7 +503,7 @@ namespace VideoGui
                             Maxuploads = lblShortNo.Content.ToInt();
                         }
 
-                        scraperModule = new ScraperModule(dbInit, doOnFinish, gUrl, Maxuploads, UploadsPerSlot, 0,true);
+                        scraperModule = new ScraperModule(dbInit, doOnFinish, gUrl, Maxuploads, UploadsPerSlot, 0, true);
 
                         scraperModule.ShowActivated = true;
                         Hide();
@@ -610,37 +614,31 @@ namespace VideoGui
         {
             try
             {
-                try
+                if (DoDescSelectFrm is not null && DoDescSelectFrm.IsActive)
                 {
-                    if (DoDescSelectFrm is not null && DoDescSelectFrm.IsActive)
-                    {
-                        DoDescSelectFrm.Close();
-                        DoDescSelectFrm = null;
-                    }
-                    if (ShortsIndex == -1)
-                    {
-                        string dir = txtsrcdir.Text;
-                        string connectionStr =
-                            dbInit?.Invoke(this, new CustomParams_GetConnectionString())
-                            is string conn ? conn : "";
-                        string DirName = dir.Split(@"\").ToList().LastOrDefault();
-                        string sqla = "SELECT ID FROM SHORTSDIRECTORY WHERE DIRECTORYNAME = @DIRECTORYNAME";
-                        ShortsIndex = connectionStr.ExecuteScalar(sqla,
-                            [("@DIRECTORYNAME", DirName)]).ToInt(-1);
-                    }
-                    DoDescSelectFrm = new DescSelectFrm(OnSelectFormClose, dbInit, true);
-                    Hide();
-                    DoDescSelectFrm.Show();
+                    DoDescSelectFrm.Close();
+                    DoDescSelectFrm = null;
                 }
-                catch (Exception ex)
+                if (ShortsIndex == -1)
                 {
-                    ex.LogWrite($"{this} DoDescSelectCreate {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+                    string dir = txtsrcdir.Text;
+                    string connectionStr =
+                        dbInit?.Invoke(this, new CustomParams_GetConnectionString())
+                        is string conn ? conn : "";
+                    string DirName = dir.Split(@"\").ToList().LastOrDefault();
+                    string sqla = "SELECT ID FROM SHORTSDIRECTORY WHERE DIRECTORYNAME = @DIRECTORYNAME";
+                    ShortsIndex = connectionStr.ExecuteScalar(sqla,
+                        [("@DIRECTORYNAME", DirName)]).ToInt(-1);
                 }
+                DoDescSelectFrm = new DescSelectFrm(OnSelectFormClose, dbInit, true);
+                Hide();
+                DoDescSelectFrm.Show();
             }
             catch (Exception ex)
             {
-                ex.LogWrite($"btnEditTitle_Click {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
+                ex.LogWrite($"{this} DoDescSelectCreate {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
             }
+
         }
 
         private void OnSelectFormClose()
@@ -691,6 +689,8 @@ namespace VideoGui
         {
 
         }
+
+
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
@@ -786,5 +786,5 @@ namespace VideoGui
         }
     }
 
-    
+
 }

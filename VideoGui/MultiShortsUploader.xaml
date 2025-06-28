@@ -63,9 +63,10 @@
                  DataField="NumberOfShorts" Width="105" ComponentType="TextBlock"/>
                 <MSU:MultiListboxColumnDefinition HeaderText="Title" Width="50" 
                     Style="{StaticResource ToggleSetEditStyle}" HeaderPadding="3,0,0,0"
+                    ToggleButtonClick="Title_ToggleButtonClick"
                     DataField="IsDescAvailable" ComponentType="ToggleButton"/>
                 <MSU:MultiListboxColumnDefinition HeaderText="Desc" 
-                    Width="50" ToggleButtonClick="MultiListboxColumnDefinition_ToggleButtonClick"
+                    Width="50" ToggleButtonClick="Desc_ToggleButtonClick"
                     Style="{StaticResource ToggleSetEditStyle}"
                     DataField="IsTitleAvailable" ComponentType="ToggleButton"/>
                 <MSU:MultiListboxColumnDefinition HeaderText="Last Uploaded" 
@@ -80,6 +81,8 @@
             </MSU:MultiListbox.ItemsContextMenu>
         </MSU:MultiListbox>
         <Button Name="BtnClose" Content="Close" HorizontalAlignment="Right"
-                Margin="0,0,6,4" VerticalAlignment="Bottom" Height="25" Width="64" Click="BtnClose_Click"/>
+                Margin="0,0,6,4" VerticalAlignment="Bottom" Height="25" Width="94" Click="BtnClose_Click"/>
+        <Button x:Name="BtnRunUploaders" Content="Run Uploader" HorizontalAlignment="Left"
+            Margin="6,0,0,4" VerticalAlignment="Bottom" Height="25" Width="94" Click="BtnClose_Click"/>
     </Grid>
 </Window>

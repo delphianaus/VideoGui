@@ -35,6 +35,14 @@ namespace VideoGui.Models
         }
     }
 
+    public class CustomParams_InsertIntoShortsDirectory
+    {
+        public string DirectoryName = "";
+        public CustomParams_InsertIntoShortsDirectory(string DirectoryName)
+        {
+            this.DirectoryName = DirectoryName;
+        }
+    }
     public class CustomParams_UpdateMultishortsByDir
     {
         public string DirectoryName = "";
@@ -80,10 +88,25 @@ namespace VideoGui.Models
     {
         public int Id { get; set; } = -1;
         public int Title { get; set; } = -1;
-        public CustomParams_UpdateTitleById(int _id, int _title)
+        public int LinkedId { get; set; } = -1;
+        public CustomParams_UpdateTitleById(int _id, int _title, int _LinkedId = -1)
         {
             Id = _id;
             Title = _title;
+            LinkedId = _LinkedId;
+        }
+    }
+
+    public class CustomParams_UpdateDescById
+    {
+        public int Id { get; set; } = -1;
+        public int Desc { get; set; } = -1;
+        public int LinkedId { get; set; } = -1;
+        public CustomParams_UpdateDescById(int _id, int _desc, int _LinkedId = -1)
+        {
+            Id = _id;
+            Desc = _desc;
+            LinkedId = _LinkedId;
         }
     }
     public class CustomParams_Save

@@ -1,4 +1,5 @@
-﻿using Microsoft.Win32;
+﻿using FirebirdSql.Data.FirebirdClient;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,6 +27,9 @@ namespace VideoGui
     public partial class MultiShortsUploader : Window
     {
         databasehook<object> dbInit = null;
+        public TitleSelectFrm DoTitleSelectFrm = null;
+        public DescSelectFrm DoDescSelectFrm = null;
+        string connectionStr = "";
         public bool IsClosing = false, IsClosed = false, Ready = false;
         DispatcherTimer LocationChangedTimer = new DispatcherTimer();
         public static readonly DependencyProperty Column_WidthProperty =
@@ -56,6 +60,13 @@ namespace VideoGui
                     key?.Close();
                 };
                 Closed += (s, e) => { IsClosed = true; _DoOnFinished?.Invoke(); };
+                RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                string dir = key.GetValueStr("UploadPath", @"D:\shorts");
+                key?.Close();
+                string DirName = dir.Split(@"\").ToList().LastOrDefault();
+                string sqla = "SELECT ID FROM SHORTSDIRECTORY WHERE DIRECTORYNAME = @DIRECTORYNAME";
+                ShortsIndex = connectionStr.ExecuteScalar(sqla,
+                    [("@DIRECTORYNAME", DirName)]).ToInt(-1);
             }
             catch (Exception ex)
             {
@@ -67,6 +78,9 @@ namespace VideoGui
         {
             try
             {
+                connectionStr =
+                      dbInit?.Invoke(this, new CustomParams_GetConnectionString())
+                      is string conn ? conn : "";
                 dbInit?.Invoke(this, new CustomParams_Initialize());
                 Ready = true;
                 RegistryKey key = "SOFTWARE\\Scraper".OpenSubKey(Registry.CurrentUser);
@@ -173,31 +187,7 @@ namespace VideoGui
 
         }
 
-        private void MultiListboxColumnDefinition_ToggleButtonClick(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                if (sender is ToggleButton t && t.DataContext is SelectedShortsDirectories info)
-                {
-                    if (info.LinkedTitleId == "")
-                    {
-                        info.LinkedTitleId = Guid.NewGuid().ToString();
-                        var r = info.IsTitleAvailable;// Goes to true when linkedTitleId != ""
-                    }
-                    else
-                    {
-                        info.LinkedTitleId = "";
-                        var r = info.IsTitleAvailable;// goes to false when LinkedTitleId == ""
-                    }
-                }
-
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite($"MultiListboxColumnDefinition_ToggleButtonClick {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
-            }
-        }
-        private T FindVisualChild<T>(DependencyObject obj, string name) where T : FrameworkElement
+        /*private T FindVisualChild<T>(DependencyObject obj, string name) where T : FrameworkElement
         {
             for (int i = 0; i < VisualTreeHelper.GetChildrenCount(obj); i++)
             {
@@ -216,12 +206,226 @@ namespace VideoGui
                 }
             }
             return null;
-        }
+        }*/
 
-        private void MultiListboxColumnDefinition_ToggleButtonClick_1(object sender, RoutedEventArgs e)
+        private void DoDescSelectCreate(int DescId=-1)
         {
+            try
+            {
+                if (DoDescSelectFrm is not null && DoDescSelectFrm.IsActive)
+                {
+                    DoDescSelectFrm.Close();
+                    DoDescSelectFrm = null;
+                }
 
+                RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                string dir = key.GetValueStr("UploadPath", @"D:\shorts");
+                key?.Close();
+                string DirName = dir.Split(@"\").ToList().LastOrDefault();
+                string sqla = "SELECT ID FROM SHORTSDIRECTORY WHERE DIRECTORYNAME = @DIRECTORYNAME";
+                ShortsIndex = connectionStr.ExecuteScalar(sqla,
+                    [("@DIRECTORYNAME", DirName)]).ToInt(-1);
+
+                DoDescSelectFrm = new DescSelectFrm(OnSelectFormClose, dbInit, true);
+                Hide();
+                DoDescSelectFrm.Id = DescId;
+                DoDescSelectFrm.Show();
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"DoDescSelectCreate {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
         }
+
+        private void OnSelectFormClose()
+        {
+            try
+            {
+                if (DoDescSelectFrm is not null)
+                {
+                    int id = DoDescSelectFrm.Id;
+                    int descid = -1;
+                    string sql = "SELECT DESCID FROM SHORTSDIRECTORY WHERE ID = @ID";
+                    descid = connectionStr.ExecuteScalar(sql, [("@ID", id)]).ToInt(-1);
+                    if ((descid == -1 || descid != DoDescSelectFrm.TitleTagId))
+                    {
+                        sql = "UPDATE SHORTSDIRECTORY SET DESCID = @DESCID WHERE ID = @ID";
+                        connectionStr.ExecuteNonQuery(sql, [("@ID", ShortsIndex), ("@DESCID", DoDescSelectFrm.TitleTagId)]);
+                    }
+                    string linkeddescid = "";
+                    sql = GetShortsDirectorySql(DoDescSelectFrm.Id);
+                    connectionStr.ExecuteReader(sql, (FbDataReader r) =>
+                    {
+                        linkeddescid = (r["LINKEDDESCIDS"] is string did ? did : "");
+                    });
+
+                    //btnEditDesc.IsChecked = (descid != -1 && linkeddescid != "");
+
+                    if (DoDescSelectFrm.IsDescChanged)
+                    {
+                        dbInit?.Invoke(this, new CustomParams_UpdateDescById(
+                            ShortsIndex, DoDescSelectFrm.Id, LinkedId));
+                        //dbInit?.Invoke(this, new CustomParams_Update(DoDescSelectFrm.Id, UpdateType.Description));
+                    }
+                    if (DoDescSelectFrm.IsClosed)
+                    {
+                        DoDescSelectFrm = null;
+                    }
+                }
+                Show();
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"{this} OnSelectFormClose {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
+
+        public string GetShortsDirectorySql(int index = -1)
+        {
+            try
+            {
+                return "SELECT S.ID, S.DIRECTORYNAME, S.TITLEID, S.DESCID, " +
+                       "(SELECT LIST(TAGID, ',') FROM TITLETAGS " +
+                       " WHERE GROUPID = S.TITLEID) AS LINKEDTITLEIDS, " +
+                       " (SELECT LIST(ID,',') FROM DESCRIPTIONS " +
+                       "WHERE ID = S.DESCID) AS LINKEDDESCIDS " +
+                       "FROM SHORTSDIRECTORY S" +
+                (index != -1 ? $" WHERE S.ID = {index} " : "");
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"{this} GetShortsDirectorySql {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+                return "";
+            }
+        }
+
+
+        private void Desc_ToggleButtonClick(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (sender is ToggleButton t && t.DataContext is SelectedShortsDirectories info)
+                {
+                    LinkedId = info.LinkedShortsDirectoryId;
+                    DoDescSelectCreate(info.DescId);
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"Desc_ToggleButtonClick {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+        }
+
+        int LinkedId = -1;
+        private void Title_ToggleButtonClick(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (sender is ToggleButton t && t.DataContext is SelectedShortsDirectories info)
+                {
+
+                    LinkedId = info.LinkedShortsDirectoryId;
+                    DoTitleSelectCreate(info.TitleId);
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"Title_ToggleButtonClick {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+        }
+        public void DoTitleSelectCreate(int TitleId=-1)
+        {
+            try
+            {
+                RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                string dir = key.GetValueStr("UploadPath", @"D:\shorts");
+                key?.Close();
+                string DirName = dir.Split(@"\").ToList().LastOrDefault();
+                string sqla = "SELECT ID FROM SHORTSDIRECTORY WHERE DIRECTORYNAME = @DIRECTORYNAME";
+                ShortsIndex = connectionStr.ExecuteScalar(sqla,
+                    [("@DIRECTORYNAME", DirName)]).ToInt(-1);
+
+                if (DoTitleSelectFrm is not null)
+                {
+                    if (!DoTitleSelectFrm.IsClosing && !DoTitleSelectFrm.IsClosed)
+                    {
+                        DoTitleSelectFrm.Close();
+                        DoTitleSelectFrm = new TitleSelectFrm(DoOnFinishTitleSelect, dbInit, true);
+                        Hide();
+                        DoTitleSelectFrm.TitleId = TitleId;
+                        DoTitleSelectFrm.Show();
+                    }
+                }
+                else
+                {
+                    DoTitleSelectFrm = new TitleSelectFrm(DoOnFinishTitleSelect, dbInit, true);
+                    Hide();
+                    DoTitleSelectFrm.TitleId = TitleId;
+                    DoTitleSelectFrm.Show();
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"{this} DoTitleSelectCreate {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
+        int ShortsIndex = -1;
+        private void DoOnFinishTitleSelect()
+        {
+            try
+            {
+                if (DoTitleSelectFrm is not null)
+                {
+                    bool found = false;
+                    int titleid = -1;
+
+                    if (ShortsIndex == -1)
+                    {
+                        RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                        string dir = key.GetValueStr("UploadPath", @"D:\shorts");
+                        key?.Close();
+                        string DirName = dir.Split(@"\").ToList().LastOrDefault();
+                        string sqla = "SELECT ID FROM SHORTSDIRECTORY WHERE DIRECTORYNAME = @DIRECTORYNAME";
+                        ShortsIndex = connectionStr.ExecuteScalar(sqla,
+                            [("@DIRECTORYNAME", DirName)]).ToInt(-1);
+                    }
+                    string sql = "Select TITLEID FROM SHORTSDIRECTORY WHERE ID = @ID";
+                    titleid = connectionStr.ExecuteScalar(sql, [("@ID", ShortsIndex)]).ToInt(-1);
+
+                    if ((titleid == -1 || titleid != DoTitleSelectFrm.TitleId))
+                    {
+                        sql = "UPDATE SHORTSDIRECTORY SET TITLEID = @TITLEID WHERE ID = @ID";
+                        connectionStr.ExecuteNonQuery(sql, [("@ID", ShortsIndex), ("@TITLEID", DoTitleSelectFrm.TitleId)]);
+                    }
+
+                    string linkedtitleid = "";
+
+
+                    sql = GetShortsDirectorySql(ShortsIndex);
+                    connectionStr.ExecuteReader(sql, (FbDataReader r) =>
+                    {
+                        linkedtitleid = (r["LINKEDTITLEIDS"] is string tidt ? tidt : "");
+                    });
+
+                    if (DoTitleSelectFrm.IsTitleChanged)
+                    {
+
+                        dbInit?.Invoke(this, new CustomParams_UpdateTitleById(
+                           ShortsIndex, DoTitleSelectFrm.TitleId, LinkedId));
+                    }
+                    if (DoTitleSelectFrm.IsClosed)
+                    {
+                        DoTitleSelectFrm = null;
+                    }
+                }
+                Show();
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"{this} DoOnFinishTitleSelect {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
+
 
         private void mnuRemoveSelected_Click(object sender, RoutedEventArgs e)
         {

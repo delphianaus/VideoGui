@@ -45,11 +45,11 @@
                     Width="32" Canvas.Left="356" Canvas.Top="44" HorizontalAlignment="Center" VerticalAlignment="Top" KeyDown="txtTotalUploads_KeyDown"/>
                 <ToggleButton x:Name="btnEditTitle" Style="{DynamicResource ToggleStyle1}" 
                       Height="24" Width="40" HorizontalAlignment="Left" Click="btnEditTitle_Click"
-                  VerticalAlignment="Center" Canvas.Left="427" Canvas.Top="40"/>
+                  VerticalAlignment="Center" Canvas.Left="427" Canvas.Top="40" Checked="btnEditTitle_Checked_1"/>
                 <Label Content="Title" Canvas.Left="392" Canvas.Top="40" HorizontalAlignment="Left" VerticalAlignment="Center" Width="33"/>
                 <ToggleButton x:Name="btnEditDesc" Style="{DynamicResource ToggleStyle1}" 
                     Height="24" Width="40" Click="btnEditDesc_Click" Canvas.Left="512" 
-                    Canvas.Top="40" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                    Canvas.Top="40" HorizontalAlignment="Left" VerticalAlignment="Center" Checked="btnEditDesc_Checked"/>
                 <Label Content="Desc" Canvas.Left="472" Canvas.Top="40" HorizontalAlignment="Left" 
                        VerticalAlignment="Center" />
             </Canvas>

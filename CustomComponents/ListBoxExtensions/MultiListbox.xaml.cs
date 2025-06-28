@@ -165,10 +165,7 @@ namespace CustomComponents.ListBoxExtensions
             {
                 double headerHeight = desired_height;
                 double availableHeight = ActualHeight - headerHeight;
-                if (BorderMargin != null)
-                {
-                    availableHeight -= (BorderMargin.Top + BorderMargin.Bottom);
-                }
+                availableHeight -= (BorderMargin.Top + BorderMargin.Bottom);
                 lstBoxUploadItems.Height = Math.Max(0, availableHeight);
             }
         }
@@ -431,7 +428,7 @@ namespace CustomComponents.ListBoxExtensions
                                 if (mainProperty != null)
                                 {
                                     controlFactory.SetBinding(mainProperty, new Binding(colDef.DataField));
-                                    
+
                                     // For TextBlocks, set TextAlignment based on ContentHorizontalAlignment
                                     if (controlType == typeof(TextBlock))
                                     {
@@ -478,7 +475,8 @@ namespace CustomComponents.ListBoxExtensions
                 ApplyColumnDefinitions();
 
                 // Give the template a chance to apply
-                Dispatcher.BeginInvoke(new Action(() => {
+                Dispatcher.BeginInvoke(new Action(() =>
+                {
                     foreach (var item in lstBoxUploadItems.Items)
                     {
                         var container = lstBoxUploadItems.ItemContainerGenerator.ContainerFromItem(item) as ListBoxItem;
@@ -517,7 +515,8 @@ namespace CustomComponents.ListBoxExtensions
                                                     // Remove any existing handlers
                                                     toggleButton.Click -= (s, e) => colDef.RaiseToggleButtonClick(s, e);
                                                     toggleButton.Click -= (s, e) => ToggleButtonClick?.Invoke(s, e);
-                                                    toggleButton.Click += (s, e) => {
+                                                    toggleButton.Click += (s, e) =>
+                                                    {
                                                         colDef.RaiseToggleButtonClick(s, e);
                                                         ToggleButtonClick?.Invoke(s, e);
                                                     };
@@ -670,7 +669,7 @@ namespace CustomComponents.ListBoxExtensions
                     control.Width = colDef.ToggleButtonWidth;
                     control.Height = colDef.ToggleButtonHeight;
                     control.HorizontalAlignment = HorizontalAlignment.Left;
-                    
+
                     // Only apply style if it's meant for ToggleButton
                     if (colDef.Style != null && colDef.Style.TargetType == typeof(ToggleButton))
                     {
@@ -1170,7 +1169,8 @@ namespace CustomComponents.ListBoxExtensions
                 if (columnIndex >= 0 && columnIndex < ColumnDefinitions.Count)
                 {
                     var colDef = ColumnDefinitions[columnIndex];
-                    Dispatcher.BeginInvoke(new Action(() => {
+                    Dispatcher.BeginInvoke(new Action(() =>
+                    {
                         child.Margin = colDef.HeaderMargin;
                         child.Padding = colDef.HeaderPadding;
                         child.HorizontalAlignment = colDef.HeaderHorizontalAlignment;
@@ -1288,12 +1288,14 @@ namespace CustomComponents.ListBoxExtensions
                             factory.SetValue(Grid.ColumnProperty, _itemGrid.ColumnDefinitions.Count - 1);
 
                             // Add Loaded handler to ensure style and visibility
-                            factory.AddHandler(FrameworkElement.LoadedEvent, new RoutedEventHandler((s, e) => {
+                            factory.AddHandler(FrameworkElement.LoadedEvent, new RoutedEventHandler((s, e) =>
+                            {
                                 var toggleButton = s as ToggleButton;
                                 if (toggleButton != null)
                                 {
                                     // Apply all visual properties and style after template is applied (step 2)
-                                    Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() => {
+                                    Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() =>
+                                    {
                                         toggleButton.Width = colDef.ToggleButtonWidth;
                                         toggleButton.Height = colDef.ToggleButtonHeight;
                                         toggleButton.MinWidth = colDef.ToggleButtonWidth;
@@ -1311,10 +1313,12 @@ namespace CustomComponents.ListBoxExtensions
                                         {
                                             toggleButton.ApplyTemplate();
                                             var image = toggleButton.Template.FindName("PART_Image", toggleButton) as Image;
-                                            toggleButton.Checked += (s2, e2) => {
+                                            toggleButton.Checked += (s2, e2) =>
+                                            {
                                                 var img = toggleButton.Template.FindName("PART_Image", toggleButton) as Image;
                                             };
-                                            toggleButton.Unchecked += (s2, e2) => {
+                                            toggleButton.Unchecked += (s2, e2) =>
+                                            {
                                                 var img = toggleButton.Template.FindName("PART_Image", toggleButton) as Image;
                                                 if (img != null)
                                                 {
@@ -1338,7 +1342,8 @@ namespace CustomComponents.ListBoxExtensions
                             }));
 
                             // Add loaded handler to check initial state and template
-                            factory.AddHandler(FrameworkElement.LoadedEvent, new RoutedEventHandler((s, e) => {
+                            factory.AddHandler(FrameworkElement.LoadedEvent, new RoutedEventHandler((s, e) =>
+                            {
                                 var toggle = s as ToggleButton;
                                 if (toggle != null)
                                 {
@@ -1347,10 +1352,12 @@ namespace CustomComponents.ListBoxExtensions
                                     {
                                         toggle.ApplyTemplate();
                                         var image = toggle.Template.FindName("PART_Image", toggle) as Image;
-                                        toggle.Checked += (s2, e2) => {
+                                        toggle.Checked += (s2, e2) =>
+                                        {
                                             var img = toggle.Template.FindName("PART_Image", toggle) as Image;
                                         };
-                                        toggle.Unchecked += (s2, e2) => {
+                                        toggle.Unchecked += (s2, e2) =>
+                                        {
                                             var img = toggle.Template.FindName("PART_Image", toggle) as Image;
                                         };
                                     }
@@ -1358,7 +1365,8 @@ namespace CustomComponents.ListBoxExtensions
                             }));
 
                             // Add click handler that routes to the column definition's event
-                            factory.AddHandler(ToggleButton.ClickEvent, new RoutedEventHandler((s, e) => {
+                            factory.AddHandler(ToggleButton.ClickEvent, new RoutedEventHandler((s, e) =>
+                            {
                                 var toggle = s as ToggleButton;
                                 colDef.RaiseToggleButtonClick(s, e);
                                 ToggleButtonClick?.Invoke(s, e);
@@ -1366,7 +1374,8 @@ namespace CustomComponents.ListBoxExtensions
                         }
                         if (controlType == typeof(CheckBox))
                         {
-                            factory.AddHandler(FrameworkElement.LoadedEvent, new RoutedEventHandler((s, e) => {
+                            factory.AddHandler(FrameworkElement.LoadedEvent, new RoutedEventHandler((s, e) =>
+                            {
                                 var checkBox = s as CheckBox;
                                 if (checkBox != null)
                                 {
@@ -1376,7 +1385,8 @@ namespace CustomComponents.ListBoxExtensions
                         }
                         else if (controlType == typeof(Button))
                         {
-                            factory.AddHandler(FrameworkElement.LoadedEvent, new RoutedEventHandler((s, e) => {
+                            factory.AddHandler(FrameworkElement.LoadedEvent, new RoutedEventHandler((s, e) =>
+                            {
                                 var button = s as Button;
                                 if (button != null)
                                 {
@@ -1391,7 +1401,8 @@ namespace CustomComponents.ListBoxExtensions
                         }
                         else if (controlType == typeof(ComboBox))
                         {
-                            factory.AddHandler(FrameworkElement.LoadedEvent, new RoutedEventHandler((s, e) => {
+                            factory.AddHandler(FrameworkElement.LoadedEvent, new RoutedEventHandler((s, e) =>
+                            {
                                 var comboBox = s as ComboBox;
                                 if (comboBox != null)
                                 {
@@ -1405,7 +1416,8 @@ namespace CustomComponents.ListBoxExtensions
                         }
                         else if (controlType == typeof(DateTimePicker))
                         {
-                            factory.AddHandler(FrameworkElement.LoadedEvent, new RoutedEventHandler((s, e) => {
+                            factory.AddHandler(FrameworkElement.LoadedEvent, new RoutedEventHandler((s, e) =>
+                            {
                                 var datePicker = s as DateTimePicker;
                                 if (datePicker != null)
                                 {
