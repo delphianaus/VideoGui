@@ -27,7 +27,8 @@ namespace VideoGui
         public string BaseTitle = "";
 
         bool IsUploadsBuilder = false;
-        public TitleSelectFrm(OnFinish __ShowEditor, databasehook<Object> dbhook,bool _IsUploadsBuilder = false)
+        public TitleSelectFrm(OnFinish __ShowEditor, databasehook<Object> dbhook,
+            bool _IsUploadsBuilder = false, int _TitleId = -1)
         {
             try
             {
@@ -39,6 +40,9 @@ namespace VideoGui
                 Closed += (s, e) => { IsClosed = true; IsTitleChanged = false; __ShowEditor?.Invoke(); };
                 IsUploadsBuilder = _IsUploadsBuilder;
                 InitializeComponent();
+                TitleId = _TitleId;
+                dbhookup?.Invoke(this, new CustomParams_SetFilterId(_TitleId));
+                
                 /*txtTitle.Text = _Title; Handle this in onload?.Invoke.
                 BaseTitle = _Title;
                 txtBaseTitle.Content = $"({_Title})";*/
@@ -153,11 +157,6 @@ namespace VideoGui
             try
             {
                 dbhookup?.Invoke(this, new CustomParams_Initialize(IsUploadsBuilder));
-                Thread.Sleep(100);
-                if (TagsGrp.Items.Count > 0)
-                {
-
-                }
             }
             catch (Exception ex)
             {

@@ -97,7 +97,7 @@ namespace VideoGui
                 return "";
             }
         }
-        public void DoTitleSelectCreate()
+        public void DoTitleSelectCreate(int TitleId = -1)
         {
             try
             {
@@ -108,14 +108,15 @@ namespace VideoGui
                     if (!DoTitleSelectFrm.IsClosing && !DoTitleSelectFrm.IsClosed)
                     {
                         DoTitleSelectFrm.Close();
-                        DoTitleSelectFrm = new TitleSelectFrm(DoOnFinishTitleSelect, ModuleCallBack, true);
+                        DoTitleSelectFrm = new TitleSelectFrm(DoOnFinishTitleSelect, 
+                            ModuleCallBack, true, TitleId);
                         Hide();
                         DoTitleSelectFrm.Show();
                     }
                 }
                 else
                 {
-                    DoTitleSelectFrm = new TitleSelectFrm(DoOnFinishTitleSelect, ModuleCallBack, true);
+                    DoTitleSelectFrm = new TitleSelectFrm(DoOnFinishTitleSelect, ModuleCallBack, true, TitleId);
                     Hide();
                     DoTitleSelectFrm.Show();
                 }
@@ -126,7 +127,7 @@ namespace VideoGui
             }
         }
 
-        public void DoDescSelectCreate()
+        public void DoDescSelectCreate(int DescId = -1)
         {
             try
             {
@@ -136,7 +137,7 @@ namespace VideoGui
                     DoDescSelectFrm = null;
                 }
 
-                DoDescSelectFrm = new DescSelectFrm(OnSelectFormClose, ModuleCallBack, true);
+                DoDescSelectFrm = new DescSelectFrm(OnSelectFormClose, ModuleCallBack, true, DescId);
                 Hide();
                 DoDescSelectFrm.Show();
             }

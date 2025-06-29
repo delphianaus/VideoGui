@@ -20,12 +20,14 @@ namespace VideoGui
         public bool IsShortVideo = false, IsDescChanged = false, IsClosed = false, 
             IsClosing = false;
         public int Id = -1, LinkedId = -1, TitleTagId = -1;
-        public DescSelectFrm(OnFinish _DoOnFinish, databasehook<Object> _DoDbHook, bool _IsUploadsBuilder = false)
+        public DescSelectFrm(OnFinish _DoOnFinish, databasehook<Object> _DoDbHook,
+            bool _IsUploadsBuilder = false, int _id = -1)
         {
             try
             {
                 DoOnFinish = _DoOnFinish;
                 DoDbHook = _DoDbHook;
+                Id = _id;
                 IsUploadsBuilder = _IsUploadsBuilder;
                 Closing += (s, e) => { IsClosing = true; };
                 Closed += (s, e) => { IsClosed = true; IsDescChanged = false; _DoOnFinish?.Invoke(); };
@@ -98,12 +100,7 @@ namespace VideoGui
         {
             try
             {
-                if (Desc != txtDesc.Text)
-                {
-                    IsDescChanged = true;
-                    var p = new CustomParams_AddDescription(Id, txtDescName.Text, txtDesc.Text);
-                    DoDbHook?.Invoke(this, p);
-                }
+               
                 DoOnFinish?.Invoke();
             }
             catch (Exception ex)

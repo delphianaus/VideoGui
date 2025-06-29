@@ -17,7 +17,7 @@ namespace VideoGui.Models
         public int linkedId = 0;
         public int numberofShorts = 0;
         public DateTime lastTimeUploaded = DateTime.Now.Date.AddYears(-100);
-        public string uploaddir ="";
+        public string uploaddir = "";
 
         public CustomParams_UpdateMultiShortsInfo(int linkedId, int numberofShorts, string uploaddir)
         {
@@ -34,7 +34,30 @@ namespace VideoGui.Models
             this.uploaddir = uploaddir;
         }
     }
-
+    public class CustomParams_SetIndex
+    {
+        public int index = 0;
+        public CustomParams_SetIndex(int index)
+        {
+            this.index = index;
+        }
+    }
+    public class CustomParams_LookUpId
+    {
+        public string DirectoryName = "";
+        public CustomParams_LookUpId(string DirectoryName)
+        {
+            this.DirectoryName = DirectoryName;
+        }
+    }
+    public class CustomParams_LookUpTitleId
+    {
+        public string DirectoryName = "";
+        public CustomParams_LookUpTitleId(string DirectoryName)
+        {
+            this.DirectoryName = DirectoryName;
+        }
+    }
     public class CustomParams_InsertIntoShortsDirectory
     {
         public string DirectoryName = "";
@@ -279,6 +302,15 @@ namespace VideoGui.Models
         }
     }
 
+    public class CustomParams_SetFilterId
+    {
+        public int FilterId { get; set; } = 0;
+        public CustomParams_SetFilterId(int _FilterId)
+        {
+            FilterId = _FilterId;
+        }
+    }
+
     public class CustomParams_Get
     {
         public dataUpdatType dataUpdatType { get; set; } = dataUpdatType.Get;
@@ -405,6 +437,34 @@ namespace VideoGui.Models
         }
 
     }
+
+    public class CustomParams_GetDirectory
+    {
+        public string DirectoryName { get; set; } = "";
+        public CustomParams_GetDirectory(string _DirectoryName)
+        {
+            DirectoryName = _DirectoryName;
+        }
+    }
+
+    public class CustomParams_GetDescIdByDirectory
+    {
+        public string DirectoryName { get; set; } = "";
+        public CustomParams_GetDescIdByDirectory(string _DirectoryName)
+        {
+            DirectoryName = _DirectoryName;
+        }
+    }
+    public class CustomParams_DescUpdate
+    {
+        public string DirectoryName { get; set; } = "";
+        public string Description { get; set; } = "";
+        public CustomParams_DescUpdate(string _DirectoryName, string _Description)
+        {
+            DirectoryName = _DirectoryName;
+            Description = _Description;
+        }
+    }
     public class CustomParams_AddDescription
     {
         public int Id { get; set; } = -1;
@@ -471,7 +531,14 @@ namespace VideoGui.Models
         }
     }
 
-   
+    public class CustomParams_GetCurrentDescId
+    {
+        public int Id { get; set; } = -1;
+        public CustomParams_GetCurrentDescId(int _id)
+        {
+            Id = _id;
+        }
+    }
 
     public class CustomParams_GetConnectionString()
     {
@@ -503,7 +570,7 @@ namespace VideoGui.Models
     {
         public string DirectoryName = "";
         public int Id = -1;
-        public CustomParams_RemoveSelectedDirectory(int _id,string _DirectoryName)
+        public CustomParams_RemoveSelectedDirectory(int _id, string _DirectoryName)
         {
             Id = _id;
             DirectoryName = _DirectoryName;

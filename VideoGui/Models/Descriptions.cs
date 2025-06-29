@@ -28,7 +28,7 @@ namespace VideoGui.Models
             try
             {
                 Id = reader["ID"].ToInt();
-                Description = reader["DESCRIPTION"].ToString();
+                Description = reader["DESCRIPTION"].ToString().ToUpper();
                 TitleTagId = reader["TITLETAGID"].ToInt();
                 Name = reader["NAME"].ToString();
                 TitleTag = reader["NAME"].ToString();

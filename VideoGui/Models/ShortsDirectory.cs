@@ -43,7 +43,7 @@ namespace VideoGui.Models
             try
             {
                 Id = (reader["ID"] is int ID) ? ID : -1;
-                Directory = (reader["DIRECTORYNAME"] is string DIR) ? DIR : "";
+                Directory = (reader["DIRECTORYNAME"] is string DIR) ? DIR.ToUpper() : "";
                 TitleId = (reader["TITLEID"] is int TID) ? TID : -1;
                 DescId = (reader["DESCID"] is int DID) ? DID : -1;
                 LinkedTitleIds = (reader["LINKEDTITLEIDS"] is string LTID) ? LTID : "";

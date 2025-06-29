@@ -18,6 +18,7 @@ using System.Windows.Shapes;
 using System.Windows.Threading;
 using VideoGui.Models;
 using VideoGui.Models.delegates;
+using Windows.Graphics.DirectX.Direct3D11;
 
 namespace VideoGui
 {
@@ -208,7 +209,7 @@ namespace VideoGui
             return null;
         }*/
 
-        private void DoDescSelectCreate(int DescId=-1)
+        private void DoDescSelectCreate(int DescId = -1)
         {
             try
             {
@@ -222,13 +223,19 @@ namespace VideoGui
                 string dir = key.GetValueStr("UploadPath", @"D:\shorts");
                 key?.Close();
                 string DirName = dir.Split(@"\").ToList().LastOrDefault();
-                string sqla = "SELECT ID FROM SHORTSDIRECTORY WHERE DIRECTORYNAME = @DIRECTORYNAME";
-                ShortsIndex = connectionStr.ExecuteScalar(sqla,
-                    [("@DIRECTORYNAME", DirName)]).ToInt(-1);
-
-                DoDescSelectFrm = new DescSelectFrm(OnSelectFormClose, dbInit, true);
+                var r = dbInit?.Invoke(this, new CustomParams_GetDirectory(DirName));
+                if (r is not null)
+                {
+                    ShortsIndex = r.ToInt(-1);
+                    var rt = dbInit?.Invoke(this, new CustomParams_GetCurrentDescId(ShortsIndex));
+                    if (rt is not null)
+                    {
+                        DescId = rt.ToInt(-1);
+                    }
+                }
+                DoDescSelectFrm = new DescSelectFrm(OnSelectFormClose, dbInit, true, DescId);
                 Hide();
-                DoDescSelectFrm.Id = DescId;
+                //DoDescSelectFrm.Id = DescId;
                 DoDescSelectFrm.Show();
             }
             catch (Exception ex)
@@ -241,32 +248,30 @@ namespace VideoGui
         {
             try
             {
+                Show();
                 if (DoDescSelectFrm is not null)
                 {
-                    int id = DoDescSelectFrm.Id;
+                    bool Updated = false;
                     int descid = -1;
-                    string sql = "SELECT DESCID FROM SHORTSDIRECTORY WHERE ID = @ID";
-                    descid = connectionStr.ExecuteScalar(sql, [("@ID", id)]).ToInt(-1);
-                    if ((descid == -1 || descid != DoDescSelectFrm.TitleTagId))
+                    string Desc = DoDescSelectFrm.txtDesc.Text;
+                    string Dir = DoDescSelectFrm.txtDescName.Text;
+                    var r = dbInit?.Invoke(this, new CustomParams_DescUpdate(Dir, Desc));
+                    if (r is IdhasUpdated idhasUpdated)
                     {
-                        sql = "UPDATE SHORTSDIRECTORY SET DESCID = @DESCID WHERE ID = @ID";
-                        connectionStr.ExecuteNonQuery(sql, [("@ID", ShortsIndex), ("@DESCID", DoDescSelectFrm.TitleTagId)]);
+                        Updated = idhasUpdated.hasUpdated;
+                        descid = idhasUpdated.id;
                     }
-                    string linkeddescid = "";
-                    sql = GetShortsDirectorySql(DoDescSelectFrm.Id);
-                    connectionStr.ExecuteReader(sql, (FbDataReader r) =>
+                    if (Updated)
                     {
-                        linkeddescid = (r["LINKEDDESCIDS"] is string did ? did : "");
-                    });
-
+                        string linkeddescid = "";
+                        string sql = GetShortsDirectorySql(DoDescSelectFrm.Id);
+                        connectionStr.ExecuteReader(sql, (FbDataReader r) =>
+                        {
+                            linkeddescid = (r["LINKEDDESCIDS"] is string did ? did : "");
+                        });
+                    }
                     //btnEditDesc.IsChecked = (descid != -1 && linkeddescid != "");
 
-                    if (DoDescSelectFrm.IsDescChanged)
-                    {
-                        dbInit?.Invoke(this, new CustomParams_UpdateDescById(
-                            ShortsIndex, DoDescSelectFrm.Id, LinkedId));
-                        //dbInit?.Invoke(this, new CustomParams_Update(DoDescSelectFrm.Id, UpdateType.Description));
-                    }
                     if (DoDescSelectFrm.IsClosed)
                     {
                         DoDescSelectFrm = null;
@@ -325,6 +330,7 @@ namespace VideoGui
                 {
 
                     LinkedId = info.LinkedShortsDirectoryId;
+                    dbInit?.Invoke(this, new CustomParams_SetIndex(LinkedId));
                     DoTitleSelectCreate(info.TitleId);
                 }
             }
@@ -333,34 +339,27 @@ namespace VideoGui
                 ex.LogWrite($"Title_ToggleButtonClick {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-        public void DoTitleSelectCreate(int TitleId=-1)
+        int SelectedTitleId = -1;
+        public void DoTitleSelectCreate(int TitleId = -1)
         {
             try
             {
-                RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
-                string dir = key.GetValueStr("UploadPath", @"D:\shorts");
-                key?.Close();
-                string DirName = dir.Split(@"\").ToList().LastOrDefault();
-                string sqla = "SELECT ID FROM SHORTSDIRECTORY WHERE DIRECTORYNAME = @DIRECTORYNAME";
-                ShortsIndex = connectionStr.ExecuteScalar(sqla,
-                    [("@DIRECTORYNAME", DirName)]).ToInt(-1);
 
+                SelectedTitleId = TitleId;
                 if (DoTitleSelectFrm is not null)
                 {
                     if (!DoTitleSelectFrm.IsClosing && !DoTitleSelectFrm.IsClosed)
                     {
                         DoTitleSelectFrm.Close();
-                        DoTitleSelectFrm = new TitleSelectFrm(DoOnFinishTitleSelect, dbInit, true);
+                        DoTitleSelectFrm = new TitleSelectFrm(DoOnFinishTitleSelect, dbInit, true, TitleId);
                         Hide();
-                        DoTitleSelectFrm.TitleId = TitleId;
                         DoTitleSelectFrm.Show();
                     }
                 }
                 else
                 {
-                    DoTitleSelectFrm = new TitleSelectFrm(DoOnFinishTitleSelect, dbInit, true);
+                    DoTitleSelectFrm = new TitleSelectFrm(DoOnFinishTitleSelect, dbInit, true, TitleId);
                     Hide();
-                    DoTitleSelectFrm.TitleId = TitleId;
                     DoTitleSelectFrm.Show();
                 }
             }
@@ -374,49 +373,31 @@ namespace VideoGui
         {
             try
             {
-                if (DoTitleSelectFrm is not null)
+                if (DoTitleSelectFrm is not null && DoTitleSelectFrm.IsClosed)
                 {
                     bool found = false;
-                    int titleid = -1;
-
-                    if (ShortsIndex == -1)
+                    RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                    string dir = key.GetValueStr("UploadPath", @"D:\shorts");
+                    key?.Close();
+                    string DirName = dir.Split(@"\").ToList().LastOrDefault();
+                    var r = dbInit?.Invoke(this, new CustomParams_LookUpId(DirName));
+                    if (r is not null)
                     {
-                        RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
-                        string dir = key.GetValueStr("UploadPath", @"D:\shorts");
-                        key?.Close();
-                        string DirName = dir.Split(@"\").ToList().LastOrDefault();
-                        string sqla = "SELECT ID FROM SHORTSDIRECTORY WHERE DIRECTORYNAME = @DIRECTORYNAME";
-                        ShortsIndex = connectionStr.ExecuteScalar(sqla,
-                            [("@DIRECTORYNAME", DirName)]).ToInt(-1);
+                        ShortsIndex = r.ToInt(-1);
                     }
-                    string sql = "Select TITLEID FROM SHORTSDIRECTORY WHERE ID = @ID";
-                    titleid = connectionStr.ExecuteScalar(sql, [("@ID", ShortsIndex)]).ToInt(-1);
-
-                    if ((titleid == -1 || titleid != DoTitleSelectFrm.TitleId))
+                    string sql = "";
+                    if ((SelectedTitleId != DoTitleSelectFrm.TitleId))
                     {
                         sql = "UPDATE SHORTSDIRECTORY SET TITLEID = @TITLEID WHERE ID = @ID";
                         connectionStr.ExecuteNonQuery(sql, [("@ID", ShortsIndex), ("@TITLEID", DoTitleSelectFrm.TitleId)]);
                     }
-
                     string linkedtitleid = "";
-
-
                     sql = GetShortsDirectorySql(ShortsIndex);
                     connectionStr.ExecuteReader(sql, (FbDataReader r) =>
                     {
                         linkedtitleid = (r["LINKEDTITLEIDS"] is string tidt ? tidt : "");
                     });
-
-                    if (DoTitleSelectFrm.IsTitleChanged)
-                    {
-
-                        dbInit?.Invoke(this, new CustomParams_UpdateTitleById(
-                           ShortsIndex, DoTitleSelectFrm.TitleId, LinkedId));
-                    }
-                    if (DoTitleSelectFrm.IsClosed)
-                    {
-                        DoTitleSelectFrm = null;
-                    }
+                    DoTitleSelectFrm = null;
                 }
                 Show();
             }
