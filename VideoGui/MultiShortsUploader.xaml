@@ -63,10 +63,10 @@
                  DataField="NumberOfShorts" Width="105" ComponentType="TextBlock"/>
                 <MSU:MultiListboxColumnDefinition HeaderText="Title" Width="50" 
                     Style="{StaticResource ToggleSetEditStyle}" HeaderPadding="3,0,0,0"
-                    ToggleButtonClick="Title_ToggleButtonClick"
+                    Click="Title_ToggleButtonClick"
                     DataField="IsDescAvailable" ComponentType="ToggleButton"/>
                 <MSU:MultiListboxColumnDefinition HeaderText="Desc" 
-                    Width="50" ToggleButtonClick="Desc_ToggleButtonClick"
+                    Width="50" Click="Desc_ToggleButtonClick"
                     Style="{StaticResource ToggleSetEditStyle}"
                     DataField="IsTitleAvailable" ComponentType="ToggleButton"/>
                 <MSU:MultiListboxColumnDefinition HeaderText="Last Uploaded" 

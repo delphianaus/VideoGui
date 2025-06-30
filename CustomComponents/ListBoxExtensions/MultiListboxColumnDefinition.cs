@@ -29,13 +29,13 @@ namespace CustomComponents.ListBoxExtensions
             DependencyProperty.Register(nameof(Width), typeof(double), typeof(MultiListboxColumnDefinition), new PropertyMetadata(100.0));
 
         public static readonly DependencyProperty HeightProperty =
-            DependencyProperty.Register(nameof(Height), typeof(double), typeof(MultiListboxColumnDefinition), new PropertyMetadata(15.0));
+            DependencyProperty.Register(nameof(Height), typeof(double), typeof(MultiListboxColumnDefinition), new PropertyMetadata(30.0));
 
         public static readonly DependencyProperty MinWidthProperty =
             DependencyProperty.Register(nameof(MinWidth), typeof(double), typeof(MultiListboxColumnDefinition), new PropertyMetadata(100.0));
 
         public static readonly DependencyProperty MinHeightProperty =
-            DependencyProperty.Register(nameof(MinHeight), typeof(double), typeof(MultiListboxColumnDefinition), new PropertyMetadata(15.0));
+            DependencyProperty.Register(nameof(MinHeight), typeof(double), typeof(MultiListboxColumnDefinition), new PropertyMetadata(30.0));
 
         public static readonly DependencyProperty MaxWidthProperty =
             DependencyProperty.Register(nameof(MaxWidth), typeof(double), typeof(MultiListboxColumnDefinition), new PropertyMetadata(double.PositiveInfinity));
@@ -50,8 +50,8 @@ namespace CustomComponents.ListBoxExtensions
             DependencyProperty.Register(nameof(ComponentType), typeof(string), typeof(MultiListboxColumnDefinition), new PropertyMetadata("TextBlock"));
 
         public static readonly DependencyProperty BoundToProperty =
-            DependencyProperty.Register(nameof(BoundTo), 
-                typeof(string), typeof(MultiListboxColumnDefinition), 
+            DependencyProperty.Register(nameof(BoundTo),
+                typeof(string), typeof(MultiListboxColumnDefinition),
                 new PropertyMetadata("Text"));
 
         public static readonly DependencyProperty BoundToPropertiesProperty =
@@ -134,21 +134,98 @@ namespace CustomComponents.ListBoxExtensions
             set => SetValue(HeaderPaddingProperty, value);
         }
 
-        private RoutedEventHandler _toggleButtonClick;
-        public event RoutedEventHandler ToggleButtonClick
+        // click
+        private RoutedEventHandler _Click;
+        public event RoutedEventHandler Click
         {
-            add { _toggleButtonClick += value; }
-            remove { _toggleButtonClick -= value; }
+            add { _Click += value; }
+            remove { _Click -= value; }
+        }
+        protected virtual void OnClick(object sender, RoutedEventArgs e)
+        {
+            _Click?.Invoke(sender, e);
+        }
+        internal void RaiseClick(object sender, RoutedEventArgs e)
+        {
+            OnClick(sender, e);
         }
 
-        protected virtual void OnToggleButtonClick(object sender, RoutedEventArgs e)
+        // textChanged
+        private RoutedEventHandler _TextChanged;
+        public event RoutedEventHandler TextChanged
         {
-            _toggleButtonClick?.Invoke(sender, e);
+            add { _TextChanged += value; }
+            remove { _TextChanged -= value; }
+        }
+        protected virtual void OnTextChanged(object sender, RoutedEventArgs e)
+        {
+            _TextChanged?.Invoke(sender, e);
+        }
+        internal void RaiseTextChanged(object sender, TextChangedEventArgs e)
+        {
+            OnTextChanged(sender, e);
+        }
+        // selection changed event
+        private SelectionChangedEventHandler _SelectionChanged;
+        public event SelectionChangedEventHandler SelectionChanged
+        {
+            add { _SelectionChanged += value; }
+            remove { _SelectionChanged -= value; }
         }
 
-        internal void RaiseToggleButtonClick(object sender, RoutedEventArgs e)
+        protected virtual void OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            OnToggleButtonClick(sender, e);
+            _SelectionChanged?.Invoke(sender, e);
+        }
+        internal void RaiseSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            OnSelectionChanged(sender, e);
+        }
+        //RaiseLostFocus
+        private RoutedEventHandler _RaiseLostFocus;
+        public event RoutedEventHandler RaiseLostFocus
+        {
+            add { _RaiseLostFocus += value; }
+            remove { _RaiseLostFocus -= value; }
+        }
+        protected virtual void OnRaiseLostFocus(object sender, RoutedEventArgs e)
+        {
+            _RaiseLostFocus?.Invoke(sender, e);
+        }
+        internal void RaiseLostFocusEvent(object sender, RoutedEventArgs e)
+        {
+            OnRaiseLostFocus(sender, e);
+        }
+        //RaiseGotFocus
+        private RoutedEventHandler _RaiseGotFocus;
+        public event RoutedEventHandler RaiseGotFocus
+        {
+            add { _RaiseGotFocus += value; }
+            remove { _RaiseGotFocus -= value; }
+        }
+        protected virtual void OnRaiseGotFocus(object sender, RoutedEventArgs e)
+        {
+            _RaiseGotFocus?.Invoke(sender, e);
+        }
+        internal void RaiseGotFocusEvent(object sender, RoutedEventArgs e)
+        {
+            OnRaiseGotFocus(sender, e);
+        }
+
+        //RaiseInitialized
+        private EventHandler _RaiseInitialized;
+        public event EventHandler RaiseInitialized
+        {
+            add { _RaiseInitialized += value; }
+            remove { _RaiseInitialized -= value; }
+        }
+        protected virtual void OnRaiseInitialized(object sender, EventArgs e)
+        {
+            _RaiseInitialized?.Invoke(sender, e);
+        }
+        internal void RaiseInitializedEvent(object sender, EventArgs e)
+        {
+            OnRaiseInitialized(sender, e);
         }
 
         public static readonly DependencyProperty UseStyleDimensionsProperty =

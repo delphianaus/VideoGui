@@ -32,7 +32,11 @@ namespace CustomComponents.ListBoxExtensions
         public event RoutedEventHandler ItemLostFocus;
         public event RoutedEventHandler ItemGotFocus;
         public event SelectionChangedEventHandler ItemSelectionChanged;
-        public event RoutedEventHandler ToggleButtonClick;
+        public event RoutedEventHandler Click, LostFocus, GotFocus;
+        public event TextChangedEventHandler TextChanged;
+        public event SelectionChangedEventHandler SelectionChanged;
+        public event EventHandler Initialized;
+
 
         /// <summary>
         /// Gets the ItemContainerGenerator for the internal ListBox.
@@ -46,8 +50,7 @@ namespace CustomComponents.ListBoxExtensions
         public event KeyEventHandler DateTimePickerKeyUp;
         public event EventHandler ComboBoxInitialized;
         public event SelectionChangedEventHandler ComboBoxSelectionChanged;
-        public event RoutedEventHandler ComboBoxLostFocus;
-        public event RoutedEventHandler ComboBoxGotFocus;
+
 
 
         public IList Items
@@ -158,14 +161,17 @@ namespace CustomComponents.ListBoxExtensions
             UpdateAdjustedGroupBoxWidth();
             UpdateItemsListBoxHeight();
         }
-        double desired_height = 30.0;
+
         private void UpdateItemsListBoxHeight()
         {
             if (lstBoxUploadItems != null)
             {
-                double headerHeight = desired_height;
+                double headerHeight = 30;
                 double availableHeight = ActualHeight - headerHeight;
-                availableHeight -= (BorderMargin.Top + BorderMargin.Bottom);
+                if (BorderMargin != null)
+                {
+                    availableHeight -= (BorderMargin.Top + BorderMargin.Bottom);
+                }
                 lstBoxUploadItems.Height = Math.Max(0, availableHeight);
             }
         }
@@ -206,7 +212,7 @@ namespace CustomComponents.ListBoxExtensions
 
         public static readonly DependencyProperty BorderThicknessProperty =
             DependencyProperty.Register(nameof(BorderThickness), typeof(double), typeof(MultiListbox),
-                new PropertyMetadata(1.0));
+                new PropertyMetadata(2.0));
 
         public double BorderThickness
         {
@@ -346,7 +352,7 @@ namespace CustomComponents.ListBoxExtensions
                 // Create a new item template with a Grid
                 var gridFactory = new FrameworkElementFactory(typeof(Grid));
                 gridFactory.SetValue(FrameworkElement.MarginProperty, new Thickness(0, 0, 0, 0));
-                gridFactory.SetValue(FrameworkElement.HeightProperty, desired_height);
+                gridFactory.SetValue(FrameworkElement.HeightProperty, 35.0);
                 gridFactory.SetValue(Panel.BackgroundProperty, Brushes.White);
 
                 // Store reference to the grid factory for later use
@@ -511,15 +517,7 @@ namespace CustomComponents.ListBoxExtensions
                                                     toggleButton.Visibility = Visibility.Visible;
                                                     toggleButton.Style = (colDef?.Style is not null && colDef.Style.TargetType == typeof(ToggleButton)) ? colDef.Style : null;
 
-                                                    // Set up click event
-                                                    // Remove any existing handlers
-                                                    toggleButton.Click -= (s, e) => colDef.RaiseToggleButtonClick(s, e);
-                                                    toggleButton.Click -= (s, e) => ToggleButtonClick?.Invoke(s, e);
-                                                    toggleButton.Click += (s, e) =>
-                                                    {
-                                                        colDef.RaiseToggleButtonClick(s, e);
-                                                        ToggleButtonClick?.Invoke(s, e);
-                                                    };
+                                                    HandleClickEvents<ToggleButton>(toggleButton, colDef);
 
                                                     // Set up binding
                                                     var binding = new Binding(colDef.DataField)
@@ -534,30 +532,39 @@ namespace CustomComponents.ListBoxExtensions
                                             {
                                                 var column = Grid.GetColumn(textBox);
                                                 var colDef = ColumnDefinitions[column];
+                                                HandleInitialized<TextBox>(textBox, colDef);
+                                                HandleFocusEvents<TextBox>(textBox, colDef);
                                                 SetCustomBindings<TextBox>(textBox, colDef);
                                             }
                                             else if (child is ComboBox comboBox)
                                             {
                                                 var column = Grid.GetColumn(comboBox);
                                                 var colDef = ColumnDefinitions[column];
+
+                                                HandleInitialized<ComboBox>(comboBox, colDef);
+                                                HandleSelectionChangedEvent<ComboBox>(comboBox, colDef);
+                                                HandleFocusEvents<ComboBox>(comboBox, colDef);
                                                 SetCustomBindings<ComboBox>(comboBox, colDef);
                                             }
                                             else if (child is CheckBox checkBox)
                                             {
                                                 var column = Grid.GetColumn(checkBox);
                                                 var colDef = ColumnDefinitions[column];
+                                                HandleClickEvents<CheckBox>(checkBox, colDef);  
                                                 SetCustomBindings<CheckBox>(checkBox, colDef);
                                             }
                                             else if (child is TextBlock textBlock)
                                             {
                                                 var column = Grid.GetColumn(textBlock);
                                                 var colDef = ColumnDefinitions[column];
+                                                HandleFocusEvents<TextBlock>(textBlock, colDef);
                                                 SetCustomBindings<TextBlock>(textBlock, colDef);
                                             }
                                             else if (child is Label label)
                                             {
                                                 var column = Grid.GetColumn(label);
                                                 var colDef = ColumnDefinitions[column];
+
                                                 SetCustomBindings<Label>(label, colDef);
                                             }
                                             else if (child is Button button)
@@ -566,16 +573,19 @@ namespace CustomComponents.ListBoxExtensions
                                                 var colDef = ColumnDefinitions[column];
                                                 button.HorizontalAlignment = colDef.ContentHorizontalAlignment;
                                                 button.VerticalAlignment = colDef.ContentVerticalAlignment;
+                                                HandleClickEvents<Button>(button, colDef);
                                                 SetCustomBindings<Button>(button, colDef);
                                             }
                                             else if (child is System.Windows.Controls.Image image)
                                             {
                                                 var column = Grid.GetColumn(image);
                                                 var colDef = ColumnDefinitions[column];
+
                                                 if (colDef != null)
                                                 {
                                                     image.HorizontalAlignment = colDef.ContentHorizontalAlignment;
                                                     image.VerticalAlignment = colDef.ContentVerticalAlignment;
+                                                    HandleInitialized<Image>(image, colDef);
                                                     SetCustomBindings<Image>(image, colDef);
                                                 }
                                             }
@@ -583,6 +593,7 @@ namespace CustomComponents.ListBoxExtensions
                                             {
                                                 var column = Grid.GetColumn(progressBar);
                                                 var colDef = ColumnDefinitions[column];
+
                                                 if (colDef != null)
                                                 {
                                                     progressBar.HorizontalAlignment = colDef.ContentHorizontalAlignment;
@@ -594,6 +605,7 @@ namespace CustomComponents.ListBoxExtensions
                                             {
                                                 var column = Grid.GetColumn(slider);
                                                 var colDef = ColumnDefinitions[column];
+
                                                 if (colDef != null)
                                                 {
                                                     slider.HorizontalAlignment = colDef.ContentHorizontalAlignment;
@@ -605,6 +617,7 @@ namespace CustomComponents.ListBoxExtensions
                                             {
                                                 var column = Grid.GetColumn(passwordBox);
                                                 var colDef = ColumnDefinitions[column];
+                                                HandleFocusEvents<PasswordBox>(passwordBox, colDef);
                                                 if (colDef != null)
                                                 {
                                                     passwordBox.HorizontalAlignment = colDef.ContentHorizontalAlignment;
@@ -616,6 +629,7 @@ namespace CustomComponents.ListBoxExtensions
                                             {
                                                 var column = Grid.GetColumn(timePicker);
                                                 var colDef = ColumnDefinitions[column];
+
                                                 if (colDef != null)
                                                 {
                                                     timePicker.HorizontalAlignment = colDef.ContentHorizontalAlignment;
@@ -627,6 +641,7 @@ namespace CustomComponents.ListBoxExtensions
                                             {
                                                 var column = Grid.GetColumn(datePicker);
                                                 var colDef = ColumnDefinitions[column];
+
                                                 if (colDef != null)
                                                 {
                                                     datePicker.HorizontalAlignment = colDef.ContentHorizontalAlignment;
@@ -638,6 +653,7 @@ namespace CustomComponents.ListBoxExtensions
                                             {
                                                 var column = Grid.GetColumn(dateTimePicker);
                                                 var colDef = ColumnDefinitions[column];
+
                                                 SetCustomBindings<DateTimePicker>(dateTimePicker, colDef);
                                             }
                                         }
@@ -654,6 +670,90 @@ namespace CustomComponents.ListBoxExtensions
             }
 
 
+        }
+
+        private void HandleSelectionChangedEvent<T>(T control, MultiListboxColumnDefinition colDef) where T : FrameworkElement
+        {
+            if (control is ComboBox b)
+            {
+                // Remove any existing handlers
+                b.SelectionChanged -= (s, e) => SelectionChanged?.Invoke(s, e);
+                b.SelectionChanged -= (s, e) => colDef.RaiseSelectionChanged(s, e);
+
+                // Add new handler
+                b.SelectionChanged += (s, e) =>
+                {
+                    colDef.RaiseSelectionChanged(s, e);
+                    SelectionChanged?.Invoke(s, e);
+                };
+            }
+        }
+        private void HandleClickEvents<T>(T control, MultiListboxColumnDefinition colDef) where T : FrameworkElement
+        {
+            if (control is Button b)
+            {
+                b.Click += (s, e) => colDef.RaiseClick(s, e);
+                b.Click -= (s, e) => Click?.Invoke(s, e);
+                b.Click += (s, e) =>
+                {
+                    colDef.RaiseClick(s, e);
+                    Click?.Invoke(s, e);
+                };
+            }
+            else if (control is CheckBox c)
+            {
+                c.Click += (s, e) => colDef.RaiseClick(s, e);
+                c.Click -= (s, e) => Click?.Invoke(s, e);
+                c.Click += (s, e) =>
+                {
+                    colDef.RaiseClick(s, e);
+                    Click?.Invoke(s, e);
+                };
+            }
+            else if (control is ToggleButton r)
+            {
+                r.Click += (s, e) => colDef.RaiseClick(s, e);
+                r.Click -= (s, e) => Click?.Invoke(s, e);
+                r.Click += (s, e) =>
+                {
+                    colDef.RaiseClick(s, e);
+                    Click?.Invoke(s, e);
+                };
+            }
+        }
+
+        private void HandleInitialized<T>(T control, MultiListboxColumnDefinition colDef) where T : FrameworkElement
+        {
+            // Remove any existing handlers
+            control.Initialized -= (s, e) => Initialized?.Invoke(s, e);
+            control.Initialized -= (s, e) => colDef.RaiseInitializedEvent(s, e);
+
+            // Add new handler
+            control.Initialized += (s, e) => {
+                colDef.RaiseInitializedEvent(s, e);
+                Initialized?.Invoke(s, e);
+            };
+        }
+
+        private void HandleFocusEvents<T>(T control, MultiListboxColumnDefinition colDef) where T : FrameworkElement
+        {
+            // Remove any existing handlers
+            control.LostFocus -= (s, e) => LostFocus?.Invoke(s, e);
+            control.LostFocus -= (s, e) => colDef.RaiseLostFocusEvent(s, e);
+            control.GotFocus -= (s, e) => GotFocus?.Invoke(s, e);
+            control.GotFocus -= (s, e) => colDef.RaiseGotFocusEvent(s, e);
+
+            // Add new handlers
+            control.LostFocus += (s, e) =>
+            {
+                colDef.RaiseLostFocusEvent(s, e);
+                LostFocus?.Invoke(s, e);
+            };
+            control.GotFocus += (s, e) =>
+            {
+                colDef.RaiseGotFocusEvent(s, e);
+                GotFocus?.Invoke(s, e);
+            };
         }
 
         private void SetCustomBindings<T>(T control, MultiListboxColumnDefinition? colDef) where T : FrameworkElement
@@ -1049,7 +1149,30 @@ namespace CustomComponents.ListBoxExtensions
                 {
                     factory.SetValue(FrameworkElement.HeightProperty, colDef.ToggleButtonHeight);
                 }
-                factory.AddHandler(ToggleButton.ClickEvent, new RoutedEventHandler((s, e) => ToggleButtonClick?.Invoke(s, e)));
+                factory.AddHandler(ToggleButton.ClickEvent, new RoutedEventHandler((s, e) => Click?.Invoke(s, e)));
+            }
+            else if (controlType == typeof(Button))
+            {
+                factory.AddHandler(Button.ClickEvent, new RoutedEventHandler((s, e) => Click?.Invoke(s, e)));
+                factory.AddHandler(Button.LostFocusEvent, new RoutedEventHandler((s, e) => LostFocus?.Invoke(s, e)));
+                factory.AddHandler(Button.GotFocusEvent, new RoutedEventHandler((s, e) => GotFocus?.Invoke(s, e)));
+            }
+            else if (controlType == typeof(CheckBox))
+            {
+                factory.AddHandler(CheckBox.ClickEvent, new RoutedEventHandler((s, e) => Click?.Invoke(s, e)));
+                factory.AddHandler(CheckBox.LostFocusEvent, new RoutedEventHandler((s, e) => LostFocus?.Invoke(s, e)));
+                factory.AddHandler(CheckBox.GotFocusEvent, new RoutedEventHandler((s, e) => GotFocus?.Invoke(s, e)));
+            }
+            else if (controlType == typeof(ComboBox))
+            {
+                factory.AddHandler(ComboBox.SelectionChangedEvent, new SelectionChangedEventHandler((s, e) => SelectionChanged?.Invoke(s, e)));
+                factory.AddHandler(ComboBox.LostFocusEvent, new RoutedEventHandler((s, e) => LostFocus?.Invoke(s, e)));
+                factory.AddHandler(ComboBox.GotFocusEvent, new RoutedEventHandler((s, e) => GotFocus?.Invoke(s, e)));
+            }
+            else if (controlType == typeof(TextBox))
+            {
+                factory.AddHandler(TextBox.LostFocusEvent, new RoutedEventHandler((s, e) => LostFocus?.Invoke(s, e)));
+                factory.AddHandler(TextBox.GotFocusEvent, new RoutedEventHandler((s, e) => GotFocus?.Invoke(s, e)));
             }
 
             // Set up the main binding
@@ -1121,7 +1244,7 @@ namespace CustomComponents.ListBoxExtensions
                     {
                         factory.SetValue(FrameworkElement.HeightProperty, colDef.ToggleButtonHeight);
                     }
-                    factory.AddHandler(ToggleButton.ClickEvent, new RoutedEventHandler((s, e) => ToggleButtonClick?.Invoke(s, e)));
+                    factory.AddHandler(ToggleButton.ClickEvent, new RoutedEventHandler((s, e) => Click?.Invoke(s, e)));
                 }
 
                 // Set up the main binding
@@ -1208,6 +1331,8 @@ namespace CustomComponents.ListBoxExtensions
             }
         }
 
+       
+
         private void ApplyColumnDefinitions()
         {
             try
@@ -1272,19 +1397,11 @@ namespace CustomComponents.ListBoxExtensions
                         var controlType = GetControlType(colDef.ComponentType.ToString());
                         var factory = new FrameworkElementFactory(controlType);
                         factory.SetValue(Grid.ColumnProperty, _itemGrid.ColumnDefinitions.Count - 1);
-
-                        // Visual properties will be set in ApplyVisualProperties
-
-                        // Apply ToggleButton properties if this is a ToggleButton
                         if (controlType == typeof(ToggleButton))
                         {
-                            // Create the ToggleButton directly
                             var toggleButton = new ToggleButton();
-
-                            // Create a factory for the existing button
                             factory = new FrameworkElementFactory(typeof(ToggleButton));
                             factory.SetValue(FrameworkElement.NameProperty, "PART_ToggleButton");
-                            //factory.SetValue(FrameworkElement.DataContextProperty, toggleButton);
                             factory.SetValue(Grid.ColumnProperty, _itemGrid.ColumnDefinitions.Count - 1);
 
                             // Add Loaded handler to ensure style and visibility
@@ -1368,8 +1485,8 @@ namespace CustomComponents.ListBoxExtensions
                             factory.AddHandler(ToggleButton.ClickEvent, new RoutedEventHandler((s, e) =>
                             {
                                 var toggle = s as ToggleButton;
-                                colDef.RaiseToggleButtonClick(s, e);
-                                ToggleButtonClick?.Invoke(s, e);
+                                colDef.RaiseClick(s, e);
+                                Click?.Invoke(s, e);
                             }));
                         }
                         if (controlType == typeof(CheckBox))
@@ -1410,9 +1527,24 @@ namespace CustomComponents.ListBoxExtensions
                                     ComboBoxInitialized?.Invoke(s, e);
                                 }
                             }));
-                            factory.AddHandler(ComboBox.SelectionChangedEvent, new SelectionChangedEventHandler((s, e) => ComboBoxSelectionChanged?.Invoke(s, e)));
-                            factory.AddHandler(ComboBox.LostFocusEvent, new RoutedEventHandler((s, e) => ComboBoxLostFocus?.Invoke(s, e)));
-                            factory.AddHandler(ComboBox.GotFocusEvent, new RoutedEventHandler((s, e) => ComboBoxGotFocus?.Invoke(s, e)));
+                            factory.AddHandler(ComboBox.SelectionChangedEvent, new SelectionChangedEventHandler((s, e) =>
+                            {
+                                var comboBox = s as ComboBox;
+                                SelectionChanged?.Invoke(s, e);
+                                colDef.RaiseSelectionChanged(s, e);
+                            }));
+                            factory.AddHandler(ComboBox.LostFocusEvent, new RoutedEventHandler((s, e) =>
+                            {
+                                var comboBox = s as ComboBox;
+                                LostFocus?.Invoke(s, e);
+                                colDef.RaiseLostFocusEvent(s, e);
+                            }));
+                            factory.AddHandler(ComboBox.GotFocusEvent, new RoutedEventHandler((s, e) =>
+                            {
+                                var comboBox = s as ComboBox;
+                                GotFocus?.Invoke(s, e);
+                                colDef.RaiseGotFocusEvent(s, e);
+                            }));
                         }
                         else if (controlType == typeof(DateTimePicker))
                         {

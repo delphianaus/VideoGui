@@ -81,11 +81,13 @@ using WinRT.Interop;
 using Xceed.Wpf.Toolkit.PropertyGrid.Editors;
 using static System.Net.Mime.MediaTypeNames;
 using static System.Net.WebRequestMethods;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 using static System.Windows.Forms.AxHost;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.TextBox;
 using Application = System.Windows.Application;
 using File = System.IO.File;
 using FolderBrowserDialog = FolderBrowserEx.FolderBrowserDialog;
+using Object = System.Object;
 using Path = System.IO.Path;
 using Window = System.Windows.Window;
 
@@ -3030,7 +3032,53 @@ namespace VideoGui
 
         private object selectShortUpload_Handler(object thisForm, object tld)
         {
-            if (tld is CustomParams_GetDescIdByDirectory CGGG)
+            if (tld is CustomParams_RematchedUpdate rfu)
+            {
+                string sql = "SELECT ID FROM SHORTSDIRECTORY WHERE DIRECTORYNAME = @P0";
+                var sid = connectionString.ExecuteScalar(sql, [("@P0", rfu.directory)]).ToInt(-1);
+                int OldId = -1, NewId = -1;
+                foreach (var item in RematchedList.Where(r => r.OldId == rfu.newid))
+                {
+                    OldId = item.OldId;
+                    NewId = item.NewId;
+                    break;
+                }
+                if (OldId == -1)
+                {
+                    sql = "SELECT NEWID,OLDID FROM REMATCHED WHERE OLDID = @P0";
+                    connectionString.ExecuteReader(sql, [("@P0", rfu.newid)], (r) =>
+                    {
+                        OldId = (r["OLDID"] is int oldid) ? oldid : -1;
+                        NewId = (r["NEWID"] is int newid) ? newid : -1;
+                    });
+                }
+
+                if ((OldId == -1 && NewId == -1))
+                {
+                    sql = "INSERT INTO REMATCHED(NEWID,OLDID) VALUES (@P0,@P1) returning ID";
+                    int idx = connectionString.ExecuteScalar(sql, 
+                        [("@P0", rfu.newid), ("@P1", sid)]).ToInt(-1);
+                    RematchedList.Add(new Rematched(idx,rfu.newid, sid, ""));
+                    return true;
+                }
+                else
+                {
+                    if (NewId != sid)
+                    {
+                        sql = "UPDATE REMATCHED SET NEWID = @P0 WHERE OLDID = @P1";
+                        connectionString.ExecuteNonQuery(sql,
+                            [("@P0", sid), ("@P1", OldId)]);
+                        foreach(var r in RematchedList.Where(s => s.OldId == OldId))
+                        {
+                            r.NewId = sid;
+                            break;
+                        }
+                        return true;
+                    }
+                    return true;
+                }
+            }
+            else if (tld is CustomParams_GetDescIdByDirectory CGGG)
             {
                 string Dir = CGGG.DirectoryName.ToUpper();
                 foreach (var item in EditableshortsDirectoryList.Where(
@@ -6942,7 +6990,7 @@ namespace VideoGui
             try
             {
                 Ping myPing = new Ping();
-                String host = "1.1.1.1";
+                string host = "1.1.1.1";
                 byte[] buffer = new byte[32];
                 int timeout = 1000;
                 PingOptions pingOptions = new PingOptions();
@@ -8927,7 +8975,7 @@ namespace VideoGui
         {
             try
             {
-                String Card = string.Empty;
+                string Card = string.Empty;
                 ManagementObjectSearcher searcher =
                  new("SELECT * FROM Win32_VideoController");
                 foreach (ManagementObject mo in searcher.Get())

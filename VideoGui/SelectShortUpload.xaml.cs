@@ -321,7 +321,7 @@ namespace VideoGui
                     if ((SelectedTitleId != DoTitleSelectFrm.TitleId))
                     {
                         sql = "UPDATE SHORTSDIRECTORY SET TITLEID = @TITLEID WHERE ID = @ID";
-                        connectionStr.ExecuteNonQuery(sql, 
+                        connectionStr.ExecuteNonQuery(sql,
                             [("@ID", ShortsIndex), ("@TITLEID", DoTitleSelectFrm.TitleId)]);
                     }
 
@@ -468,6 +468,16 @@ namespace VideoGui
                             {
                                 Valid = false;
                             }
+                        }
+                        if (!Valid)
+                        {   
+                            string dir = selFolder.Split(@"\").ToList().LastOrDefault().ToUpper();
+                            var r = dbInit?.Invoke(this, new 
+                                CustomParams_RematchedUpdate(ShortsIndex, dir));
+                            if (r is bool res) Valid = res;
+
+                            //todo do in modulecallback 
+
                         }
                     }
 

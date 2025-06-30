@@ -107,6 +107,16 @@ namespace VideoGui.Models
             VideoId = _videoId;
         }
     }
+    public class CustomParams_RematchedUpdate
+    {
+        public int newid { get; set; } = -1;
+        public string directory { get; set; } = "";
+        public CustomParams_RematchedUpdate(int _newid, string _directory)
+        {
+            newid = _newid;
+            directory = _directory;
+        }
+    }
     public class CustomParams_UpdateTitleById
     {
         public int Id { get; set; } = -1;
