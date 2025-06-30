@@ -679,17 +679,29 @@ namespace VideoGui
                     string uploaddir = key.GetValueStr("UploadPath", "");
                     key?.Close();
                     ShortsDirectoryList.Clear();
-                    if (Path.Exists(shortsdir))
+                    if (Environment.MachineName.Contains("Prometheus") && File.Exists(@"C:\videogui\files.txt"))
                     {
+                        List<string> FileLst = File.ReadAllLines(@"C:\videogui\files.txt").ToList();
+                        foreach (var file in FileLst)
+                        {
+                            string[] f = file.Split('|');
+                            ShortsDirectoryList.Add(new MultiShortsInfo(f[0], f[1].ToInt(-1)));
+                        }
+                    }
+                    else if (Path.Exists(shortsdir))
+                    {
+    //                    List<string> FileLst = new();
                         List<string> DirectoryList = Directory.EnumerateDirectories(shortsdir).ToList();
                         foreach (var dir in DirectoryList.Where(dir => !dir.ToLower().EndsWith("done")))
                         {
                             var file_cnt = Directory.EnumerateFiles(dir, "*.mp4", SearchOption.AllDirectories).Count();
                             if (file_cnt > 0)
                             {
+  //                              FileLst.Add($"{dir}|{file_cnt}");
                                 ShortsDirectoryList.Add(new MultiShortsInfo(dir, file_cnt));
                             }
                         }
+//                        File.WriteAllLines(@"c:\videogui\files.txt", FileLst);
                     }
                     bool found = false;
                     int LinkedId = -1;
