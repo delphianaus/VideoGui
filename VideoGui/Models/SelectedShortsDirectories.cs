@@ -2,22 +2,32 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Drawing;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Security.Permissions;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
+using Windows.Devices.PointOfService.Provider;
+using Windows.Security.Isolation;
+
 
 namespace VideoGui.Models
 {
     public class SelectedShortsDirectories : INotifyPropertyChanged
     {
         private int _Id = -1, _LinkedShortsDirectoryId = -1, _NumberOfShorts = 0, _TitleId = -1, _DescId = -1;
-        private string _DirectoryName = "", _LinkedDescId = "" , _LinkedTitleId = "";      
+        private string _DirectoryName = "", _LinkedDescId = "", _LinkedTitleId = "";
         private DateTime _LastUploadedDate = DateTime.Now.Date.AddYears(-100);
         private bool _IsActive = false;
+        private FontWeight _FontWeight = FontWeights.Normal;
+        private Color _Color = Color.Black;
 
-        public string LinkedDescId { get => _LinkedDescId; set { _LinkedDescId = value;GetLinkedDescId(); OnPropertyChanged(); } }
+        public FontWeight Active_FontWeight { get => _FontWeight; set { _FontWeight = value; OnPropertyChanged(); } }
+        public Color Active_Color { get => _Color; set { _Color = value; OnPropertyChanged(); } }
+        public string LinkedDescId { get => _LinkedDescId; set { _LinkedDescId = value; GetLinkedDescId(); OnPropertyChanged(); } }
         public string LinkedTitleId { get => _LinkedTitleId; set { _LinkedTitleId = value; GetLinkedTitle(); OnPropertyChanged(); } }
         public int Id { get => _Id; set { _Id = value; OnPropertyChanged(); } }
         public int TitleId { get => _TitleId; set { _TitleId = value; OnPropertyChanged(); } }
@@ -27,20 +37,19 @@ namespace VideoGui.Models
         public int LinkedShortsDirectoryId { get => _LinkedShortsDirectoryId; set { _LinkedShortsDirectoryId = value; OnPropertyChanged(); } }
         public string LastUploadedFile { get => GetUploadedDateString(); set { OnPropertyChanged(); } }
         public DateTime LastUploadedDateFile { get => _LastUploadedDate; set { _LastUploadedDate = value; OnPropertyChanged(); } }
-        
         public bool IsTitleAvailable { get => LinkedTitleId.Length > 0; set {; OnPropertyChanged(); } }
         public bool IsDescAvailable { get => LinkedDescId.Length > 0; set {; OnPropertyChanged(); } }
-        public bool IsShortActive { get => _IsActive; set { _IsActive = value; OnPropertyChanged(); } }
+        public bool IsShortActive { get => _IsActive; set { _IsActive = value; SetActive(value); OnPropertyChanged(); } }
         public event PropertyChangedEventHandler PropertyChanged;
         protected void OnPropertyChanged([CallerMemberName] string name = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
-           
+
         }
         public string GetUploadedDateString()
         {
-            return (_LastUploadedDate.Year < 2000) ?  "" : _LastUploadedDate.ToString(@"dd.MM.yyyy");
-        }   
+            return (_LastUploadedDate.Year < 2000) ? "" : _LastUploadedDate.ToString(@"dd.MM.yyyy");
+        }
         public SelectedShortsDirectories(int _Id, string _DirectoryName, bool _IsActive,
             int _LinkedShortsDirectoryId, int _NumberOfShorts, DateTime _LastUploadedDate)
         {
@@ -62,6 +71,12 @@ namespace VideoGui.Models
             {
                 IsTitleAvailable = LinkedTitleId.Length > 0;
             }
+        }
+
+        public void SetActive(bool value)
+        {
+            Active_FontWeight = value ? FontWeights.Bold : FontWeights.Normal;
+            Active_Color = value ? Color.Red : Color.Black;
         }
 
         public void GetLinkedDescId()

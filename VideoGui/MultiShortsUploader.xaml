@@ -57,7 +57,8 @@
                    ComponentType="TextBlock"/>
                 <MSU:MultiListboxColumnDefinition HeaderText="Shorts Directory" 
                  ContentVerticalAlignment="Center" ContentMargin="0,0,0,0"
-                 DataField="DirectoryName" Width="325" ComponentType="TextBlock"/>
+                 DataField="DirectoryName,Active_FontWeight,Active_FontColor" Width="325" 
+                 BoundTo="TextBlock,FontStyle,Foreground"/>
                 <MSU:MultiListboxColumnDefinition HeaderText="Number of Shorts" HeaderPadding="8,0,0,0"
                  ContentHorizontalAlignment="Center"  ContentMargin="0,0,0,0"
                  DataField="NumberOfShorts" Width="105" ComponentType="TextBlock"/>
