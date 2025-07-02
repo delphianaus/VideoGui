@@ -459,11 +459,11 @@ namespace VideoGui
                         {
                             ShortsIndex = fidres;
                         }
-                        sql = "update MULTISHORTS set ISSHORTSACTIVE = @ACTIVE where LINKEDSHORTSDIRECTORYID = @ID;";
+                        string sql = "update MULTISHORTS set ISSHORTSACTIVE = @ACTIVE where LINKEDSHORTSDIRECTORYID = @ID;";
                         connectionStr.ExecuteNonQuery(sql, [("@ACTIVE", 1), ("@ID", ShortsIndex)]);
                         sql = "update MULTISHORTS set ISSHORTSACTIVE = @ACTIVE where LINKEDSHORTSDIRECTORYID != @ID;";
                         connectionStr.ExecuteNonQuery(sql, [("@ACTIVE", 0), ("@ID", ShortsIndex)]);
-                        string sql = "SELECT DIRECTORYNAME FROM SHORTSDIRECTORY WHERE ID = @P0";
+                        sql = "SELECT DIRECTORYNAME FROM SHORTSDIRECTORY WHERE ID = @P0";
                         var ddirname = connectionStr.ExecuteScalar(sql, [("@P0", ShortsIndex)]);
                         if (ddirname is string dirname)
                         {

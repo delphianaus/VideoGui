@@ -61,7 +61,8 @@
                  BoundTo="Text,FontWeight,Foreground" ComponentType="TextBlock"/>
                 <MSU:MultiListboxColumnDefinition HeaderText="Number of Shorts" HeaderPadding="8,0,0,0"
                  ContentHorizontalAlignment="Center"  ContentMargin="0,0,0,0"
-                 DataField="NumberOfShorts" Width="105" ComponentType="TextBlock"/>
+                 DataField="NumberOfShorts,AutoFontWeight,AutoFontColor" 
+                 BoundTo="Text,FontWeight,Foreground" Width="105" ComponentType="TextBlock"/>
                 <MSU:MultiListboxColumnDefinition HeaderText="Title" Width="50" 
                     Style="{StaticResource ToggleSetEditStyle}" HeaderPadding="3,0,0,0"
                     Click="Title_ToggleButtonClick"
@@ -73,7 +74,8 @@
                 <MSU:MultiListboxColumnDefinition HeaderText="Last Uploaded" 
                    ContentVerticalAlignment="Center"
                    ContentHorizontalAlignment="Center" ContentMargin="0,0,0,0"
-                 DataField="LastUploadedFile" Width="88" ComponentType="TextBlock"/>
+                   BoundTo="Text,FontWeight,Foreground" Width="88" 
+                 DataField="LastUploadedFile,FontWeight,Foreground" ComponentType="TextBlock"/>
             </MSU:MultiListbox.ColumnDefinitions>
             <MSU:MultiListbox.ItemsContextMenu>
                 <ContextMenu>
