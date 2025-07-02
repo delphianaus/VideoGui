@@ -1252,6 +1252,18 @@ namespace VideoGui
                         File.Delete(file);
                         NodeUpdate(Span_Name, ScheduledGet);
                         lstMain.Items.Insert(0, $"{file} Deleted");
+                        string sgl = "SELECT ID FROM sHORTSDIRECTORY WHERE DIRECTORYNAME = @P0";
+                        int sid = connectStr.ExecuteScalar(sgl.ToUpper(), [("@P0", DirectoryPath)]).ToInt(-1);
+                        if (sid != -1)
+                        {
+                            sgl = "UPDATE MULTISHORTSINFO SET LASTUPLOADEDDATE = @P1, LASTUPLOADEDTIME = @P2 "+
+                                "WHERE LINKEDSHORTSDIRECTORYID = @iD";
+                            connectStr.ExecuteNonQuery(sgl.ToUpper(), 
+                                [("@P1", DateTime.Now.Date), ("@P2", DateTime.Now.TimeOfDay),
+                                ("@iD", sid)]);
+
+
+                        }
                         int res = -1;
                         string fname = Path.GetFileNameWithoutExtension(file);
                         string sql = "select ID from UPLOADSRECORD WHERE UPLOADFILE = @P0 AND UPLOADTYPE = 0";
@@ -1267,6 +1279,8 @@ namespace VideoGui
                             connectStr.ExecuteNonQuery(sql.ToUpper(), [("@P0", res), ("@P1", DateTime.Now.Date),
                                 ("@P2", DateTime.Now.TimeOfDay)]);
                         }
+
+
                         if (ScheduledOk.IndexOf(filename1) == -1)
                         {
                             ScheduledOk.Add(filename1);
@@ -1357,7 +1371,7 @@ namespace VideoGui
                 ex.LogWrite($"SendKeys_Tick {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-
+        string DirectoryPath = "";
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             try
@@ -1367,6 +1381,11 @@ namespace VideoGui
                 var _height = key.GetValue("WebHeight", ActualHeight).ToDouble();
                 var _left = key.GetValue("Webleft", Left).ToDouble();
                 var _top = key.GetValue("Webtop", Top).ToDouble();
+                string rootfolder = key.GetValueStr("UploadPath", @"D:\shorts");
+                if (Directory.Exists(rootfolder))
+                {
+                    DirectoryPath = rootfolder.Split(@"\").ToList().LastOrDefault();
+                }
                 Left = (Left != _left && _left != 0) ? _left : Left;
                 Top = (Top != _top && _top != 0) ? _top : Top;
                 Width = (ActualWidth != _width && _width != 0) ? _width : Width;
