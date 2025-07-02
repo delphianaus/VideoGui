@@ -25,6 +25,22 @@ namespace CustomComponents.ListBoxExtensions
         public static readonly DependencyProperty DataFieldProperty =
             DependencyProperty.Register(nameof(DataField), typeof(string), typeof(MultiListboxColumnDefinition), new PropertyMetadata(string.Empty));
 
+        public string DataField
+        {
+            get => (string)GetValue(DataFieldProperty);
+            set => SetValue(DataFieldProperty, value);
+        }
+
+        public IEnumerable<string> GetFields(string Fields)
+        {
+            var dataField = Fields;
+            if (string.IsNullOrWhiteSpace(dataField))
+                return Enumerable.Empty<string>();
+
+            return dataField.Split(new[] { ',', '|' }, StringSplitOptions.RemoveEmptyEntries)
+                           .Select(f => f.Trim());
+        }
+
         public static readonly DependencyProperty WidthProperty =
             DependencyProperty.Register(nameof(Width), typeof(double), typeof(MultiListboxColumnDefinition), new PropertyMetadata(100.0));
 
@@ -421,12 +437,6 @@ namespace CustomComponents.ListBoxExtensions
         {
             get => (bool)GetValue(CheckBoxFocusableProperty);
             set => SetValue(CheckBoxFocusableProperty, value);
-        }
-
-        public string DataField
-        {
-            get => (string)GetValue(DataFieldProperty);
-            set => SetValue(DataFieldProperty, value);
         }
 
         public double Width

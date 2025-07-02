@@ -57,8 +57,8 @@
                    ComponentType="TextBlock"/>
                 <MSU:MultiListboxColumnDefinition HeaderText="Shorts Directory" 
                  ContentVerticalAlignment="Center" ContentMargin="0,0,0,0"
-                 DataField="DirectoryName,Active_FontWeight,Active_FontColor" Width="325" 
-                 BoundTo="TextBlock,FontStyle,Foreground"/>
+                 DataField="DirectoryName,AutoFontWeight,AutoFontColor" Width="325" 
+                 BoundTo="Text,FontWeight,Foreground" ComponentType="TextBlock"/>
                 <MSU:MultiListboxColumnDefinition HeaderText="Number of Shorts" HeaderPadding="8,0,0,0"
                  ContentHorizontalAlignment="Center"  ContentMargin="0,0,0,0"
                  DataField="NumberOfShorts" Width="105" ComponentType="TextBlock"/>
@@ -85,5 +85,7 @@
                 Margin="0,0,6,4" VerticalAlignment="Bottom" Height="25" Width="94" Click="BtnClose_Click"/>
         <Button x:Name="BtnRunUploaders" Content="Run Uploader" HorizontalAlignment="Left"
             Margin="6,0,0,4" VerticalAlignment="Bottom" Height="25" Width="94" Click="BtnClose_Click"/>
+        <TextBlock Name="Status" HorizontalAlignment="Left" Margin="121,0,0,10" TextWrapping="Wrap" 
+                   Text="Status:" VerticalAlignment="Bottom" Width="94" Foreground="Red"/>
     </Grid>
 </Window>

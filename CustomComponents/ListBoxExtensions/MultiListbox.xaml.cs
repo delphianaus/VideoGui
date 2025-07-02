@@ -653,7 +653,7 @@ namespace CustomComponents.ListBoxExtensions
                                             {
                                                 var column = Grid.GetColumn(dateTimePicker);
                                                 var colDef = ColumnDefinitions[column];
-
+                                                HandleFocusEvents<DateTimePicker>(dateTimePicker, colDef);
                                                 SetCustomBindings<DateTimePicker>(dateTimePicker, colDef);
                                             }
                                         }
@@ -811,57 +811,48 @@ namespace CustomComponents.ListBoxExtensions
 
                 control.HorizontalAlignment = colDef.ContentHorizontalAlignment;
                 control.VerticalAlignment = colDef.ContentVerticalAlignment;
-                control.Margin = colDef.ContentMargin;
-                List<string> DataFields = new List<string>();
-                List<string> BoundTos = new List<string>();
-                if (!string.IsNullOrEmpty(colDef.DataField))
+                if (colDef.DataField.Contains(",") || colDef.DataField.Contains("|"))
                 {
-                    if (colDef.DataField.Contains(","))
+                    if (true)
                     {
-                        // Process DataFields - remove empty entries
-                        DataFields = colDef.DataField.Split(',', StringSplitOptions.RemoveEmptyEntries)
-                            .Select(f => f.Trim()).ToList();
-
-                        // Process BoundTos - keep empty entries as they indicate default property binding
-                        if (colDef.BoundTo?.Contains(",") == true)
-                        {
-                            BoundTos = colDef.BoundTo.Split(',').ToList();
-                        }
-                    }
-                    else
-                    {
-                        DataFields.Add(colDef.DataField.Trim());
-                        BoundTos.Add(colDef.BoundTo?.Trim() ?? string.Empty);
                     }
                 }
-
-                int MaxCount = DataFields.Count == BoundTos.Count ? DataFields.Count : 1;
-                for (int i = 0; i < MaxCount; i++)
+                if (!string.IsNullOrEmpty(colDef.DataField))
                 {
-                    if (!string.IsNullOrEmpty(DataFields[i]))
+                    if (colDef.DataField.Contains(",") || colDef.DataField.Contains("|"))
                     {
-                        var binding = new Binding(DataFields[i].Trim())
+                        // Process DataFields - remove empty entries
+                        var DataFields = colDef.GetFields(colDef.DataField).ToList();
+                        var BoundTos = colDef.GetFields(colDef.BoundTo).ToList();
+                        int MaxCount = DataFields.Count == BoundTos.Count ? DataFields.Count : 1;
+                        for (int i = 0; i < MaxCount; i++)
                         {
-                            UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
-                            Mode = BindingMode.TwoWay
-                        };
+                            if (!string.IsNullOrEmpty(DataFields[i]))
+                            {
+                                var binding = new Binding(DataFields[i].Trim())
+                                {
+                                    UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
+                                    Mode = BindingMode.TwoWay
+                                };
 
-                        if (!string.IsNullOrEmpty(BoundTos[i]))
-                        {
-                            // Get the property to bind to based on the BoundTo field
-                            var boundProperty = GetMainBindingProperty(colDef.ComponentType.ToString(), BoundTos[i].Trim());
-                            if (boundProperty != null)
-                            {
-                                BindingOperations.SetBinding(control, boundProperty, binding);
-                            }
-                        }
-                        else
-                        {
-                            // If no specific BoundTo is provided, use the default main property for the component type
-                            var mainProperty = GetMainBindingProperty(colDef.ComponentType.ToString(), string.Empty);
-                            if (mainProperty != null)
-                            {
-                                BindingOperations.SetBinding(control, mainProperty, binding);
+                                if (!string.IsNullOrEmpty(BoundTos[i]))
+                                {
+                                    // Get the property to bind to based on the BoundTo field
+                                    var boundProperty = GetMainBindingProperty(colDef.ComponentType.ToString(), BoundTos[i].Trim());
+                                    if (boundProperty != null)
+                                    {
+                                        BindingOperations.SetBinding(control, boundProperty, binding);
+                                    }
+                                }
+                                else
+                                {
+                                    // If no specific BoundTo is provided, use the default main property for the component type
+                                    var mainProperty = GetMainBindingProperty(colDef.ComponentType.ToString(), string.Empty);
+                                    if (mainProperty != null)
+                                    {
+                                        BindingOperations.SetBinding(control, mainProperty, binding);
+                                    }
+                                }
                             }
                         }
                     }
@@ -981,11 +972,12 @@ namespace CustomComponents.ListBoxExtensions
                     _ => null
                 };
 
-                if (type != null)
+                if (type != null || !string.IsNullOrEmpty(boundTo))
                 {
                     // Get the DependencyProperty field by name
                     var fieldName = $"{boundTo}Property";
                     var field = type.GetField(fieldName, System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+                    var ret = field?.GetValue(null) as DependencyProperty;
                     return field?.GetValue(null) as DependencyProperty;
                 }
             }

@@ -1,4 +1,4 @@
-﻿using FirebirdSql.Data.FirebirdClient;
+using FirebirdSql.Data.FirebirdClient;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -10,8 +10,10 @@ using System.Security.Permissions;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Media;
 using Windows.Devices.PointOfService.Provider;
 using Windows.Security.Isolation;
+using Color = System.Windows.Media.Color;
 
 
 namespace VideoGui.Models
@@ -23,10 +25,21 @@ namespace VideoGui.Models
         private DateTime _LastUploadedDate = DateTime.Now.Date.AddYears(-100);
         private bool _IsActive = false;
         private FontWeight _FontWeight = FontWeights.Normal;
-        private Color _Color = Color.Black;
+        private SolidColorBrush _Color = new SolidColorBrush(Colors.Black);
 
-        public FontWeight Active_FontWeight { get => _FontWeight; set { _FontWeight = value; OnPropertyChanged(); } }
-        public Color Active_Color { get => _Color; set { _Color = value; OnPropertyChanged(); } }
+        public bool IsActive
+        {
+            get => _IsActive;
+            set
+            {
+                _IsActive = value;
+                SetActive(value);
+                OnPropertyChanged();
+            }
+        }
+
+        public FontWeight AutoFontWeight { get => _FontWeight; set { _FontWeight = value; OnPropertyChanged(); } }
+        public SolidColorBrush AutoFontColor { get => _Color; set { _Color = value; OnPropertyChanged(); } }
         public string LinkedDescId { get => _LinkedDescId; set { _LinkedDescId = value; GetLinkedDescId(); OnPropertyChanged(); } }
         public string LinkedTitleId { get => _LinkedTitleId; set { _LinkedTitleId = value; GetLinkedTitle(); OnPropertyChanged(); } }
         public int Id { get => _Id; set { _Id = value; OnPropertyChanged(); } }
@@ -34,12 +47,13 @@ namespace VideoGui.Models
         public int DescId { get => _DescId; set { _DescId = value; OnPropertyChanged(); } }
         public string DirectoryName { get => _DirectoryName; set { _DirectoryName = value; OnPropertyChanged(); } }
         public int NumberOfShorts { get => _NumberOfShorts; set { _NumberOfShorts = value; OnPropertyChanged(); } }
+
         public int LinkedShortsDirectoryId { get => _LinkedShortsDirectoryId; set { _LinkedShortsDirectoryId = value; OnPropertyChanged(); } }
         public string LastUploadedFile { get => GetUploadedDateString(); set { OnPropertyChanged(); } }
         public DateTime LastUploadedDateFile { get => _LastUploadedDate; set { _LastUploadedDate = value; OnPropertyChanged(); } }
         public bool IsTitleAvailable { get => LinkedTitleId.Length > 0; set {; OnPropertyChanged(); } }
         public bool IsDescAvailable { get => LinkedDescId.Length > 0; set {; OnPropertyChanged(); } }
-        public bool IsShortActive { get => _IsActive; set { _IsActive = value; SetActive(value); OnPropertyChanged(); } }
+        public bool IsShortActive { get => IsActive; set { IsActive = value; } }
         public event PropertyChangedEventHandler PropertyChanged;
         protected void OnPropertyChanged([CallerMemberName] string name = null)
         {
@@ -59,6 +73,7 @@ namespace VideoGui.Models
             LinkedShortsDirectoryId = _LinkedShortsDirectoryId;
             NumberOfShorts = _NumberOfShorts;
             LastUploadedDateFile = _LastUploadedDate;
+            SetActive(_IsActive);
         }
         public SelectedShortsDirectories()
         {
@@ -75,8 +90,8 @@ namespace VideoGui.Models
 
         public void SetActive(bool value)
         {
-            Active_FontWeight = value ? FontWeights.Bold : FontWeights.Normal;
-            Active_Color = value ? Color.Red : Color.Black;
+            AutoFontWeight = value ? FontWeights.Bold : FontWeights.Normal;  // Reversed this line
+            AutoFontColor = value ? new SolidColorBrush(Colors.Red) : new SolidColorBrush(Colors.Black);            // This line was correct
         }
 
         public void GetLinkedDescId()
@@ -100,6 +115,7 @@ namespace VideoGui.Models
                 TitleId = (reader["TITLEID"] is int titleid) ? titleid : -1;
                 LinkedDescId = (reader["LINKEDDESCIDS"] is string linkedDescId) ? linkedDescId : "";
                 LinkedTitleId = (reader["LINKEDTITLEIDS"] is string linkedTitleId) ? linkedTitleId : "";
+                SetActive(IsShortActive);   
             }
             catch (Exception ex)
             {

@@ -3150,6 +3150,11 @@ namespace VideoGui
                     int IDX = InsertUpdateShorts(CPISD.DirectoryName, _TitleId, _DescId);
                     ShortsDirectoryIndex = IDX;
                 }
+
+                string sql = "update MULTISHORTS set ISSHORTSACTIVE = @ACTIVE where LINKEDSHORTSDIRECTORYID = @ID;";
+                connectionString.ExecuteNonQuery(sql, [("@ACTIVE", 1), ("@ID", ShortsDirectoryIndex)]);
+                sql = "update MULTISHORTS set ISSHORTSACTIVE = @ACTIVE where LINKEDSHORTSDIRECTORYID != @ID;";
+                connectionString.ExecuteNonQuery(sql, [("@ACTIVE", 0), ("@ID", ShortsDirectoryIndex)]);
                 string linkedtitleids = "", linkeddescids = "";
                 connectionString.ExecuteReader(GetUploadReleaseBuilderSql(ShortsDirectoryIndex), (FbDataReader r) =>
                 {
