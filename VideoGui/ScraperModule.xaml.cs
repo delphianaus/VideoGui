@@ -1253,7 +1253,7 @@ namespace VideoGui
                         NodeUpdate(Span_Name, ScheduledGet);
                         lstMain.Items.Insert(0, $"{file} Deleted");
                         string sgl = "SELECT ID FROM sHORTSDIRECTORY WHERE DIRECTORYNAME = @P0";
-                        int sid = connectStr.ExecuteScalar(sgl.ToUpper(), [("@P0", DirectoryPath)]).ToInt(-1);
+                        int sid = connectStr.ExecuteScalar(sgl.ToUpper(), [("@P0", DirectoryPath.ToUpper())]).ToInt(-1);
                         if (sid != -1)
                         {
                             sgl = "UPDATE MULTISHORTSINFO SET LASTUPLOADEDDATE = @P1, LASTUPLOADEDTIME = @P2 "+
