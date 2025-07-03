@@ -79,24 +79,6 @@ namespace VideoGui
             }
         }
 
-        public string GetShortsDirectorySql(int index = -1)
-        {
-            try
-            {
-                return "SELECT S.ID, S.DIRECTORYNAME, S.TITLEID, S.DESCID, " +
-                       "(SELECT LIST(TAGID, ',') FROM TITLETAGS " +
-                       " WHERE GROUPID = S.TITLEID) AS LINKEDTITLEIDS, " +
-                       " (SELECT LIST(ID,',') FROM DESCRIPTIONS " +
-                       "WHERE TITLETAGID = S.DESCID) AS LINKEDDESCIDS " +
-                       "FROM SHORTSDIRECTORY S" +
-                (index != -1 ? $" WHERE S.ID = {index} " : "");
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite($"{this} GetShortsDirectorySql {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
-                return "";
-            }
-        }
         public void DoTitleSelectCreate(int TitleId = -1)
         {
             try

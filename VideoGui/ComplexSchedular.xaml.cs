@@ -203,39 +203,6 @@ namespace VideoGui
             }
         }
 
-        public void CreateTemplate(int srcwidth = 200, int destwidth = 240, int timeswidth = 127, int RecordAge = 30, int processingwidth = 30,
-            int ProcessingsActionsWidth = 100)
-        {
-            try
-            {
-                var xamlString =
-               "<DataTemplate xmlns=\"http://schemas.microsoft.com/winfx/2006/xaml/presentation\">" +
-                  "<Grid Margin=\"0,2\">" +
-                    "<Grid.ColumnDefinitions>" +
-                        "<ColumnDefinition Width=\"0\"/>" +
-                       $"<ColumnDefinition Width=\"{srcwidth}\"/>" +
-                       $"<ColumnDefinition Width=\"{destwidth}\"/>" +
-                       $"<ColumnDefinition Width=\"{timeswidth}\"/>" +
-                       $"<ColumnDefinition Width=\"{RecordAge}\"/>" +
-                       $"<ColumnDefinition Width=\"{processingwidth}\"/>" +
-                       $"<ColumnDefinition Width=\"{ProcessingsActionsWidth}\"/>" +
-                    "</Grid.ColumnDefinitions>" +
-                    "<TextBlock Name=\"Idx\" Grid.Column=\"0\" Text=\"{Binding Id}\" Width=\"0\"/>" +
-                    "<TextBlock Name=\"SRC\" Grid.Column=\"1\" Text=\"{Binding SRC}\" Width=\"" + srcwidth.ToString() + "}\"/>" +
-                    "<TextBlock Name=\"DEST\" Grid.Column=\"2\" Text=\"{Binding DEST}\" Width=\"" + destwidth.ToString() + "\"/>" +
-                    "<TextBlock Name=\"Times\" Grid.Column=\"3\" Text=\"{Binding Times}\" Width=\"" + timeswidth.ToString() + "\"/>" +
-                    "<TextBlock Name=\"RecordAge\" Grid.Column=\"4\" Text=\"{Binding RecordAge}\" Width=\"" + RecordAge.ToString() + "30\"/>" +
-                    "<TextBlock Name=\"ProcessingType\" Grid.Column=\"5\" Text=\"{Binding ProceessingType}\" Width=\"" + processingwidth.ToString() + "\"/>" +
-                    "<TextBlock Name=\"ProcessingActions\" Grid.Column=\"6\" Text=\"{Binding ProcessingActions}\" Width=\"" + ProcessingsActionsWidth.ToString() + "\"/>" +
-                  "</Grid>" +
-               "</DataTemplate>";
-                var dataTemplate = (DataTemplate)XamlReader.Parse(xamlString);
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
-            }
-        }
         private void mnuChangeFilenameHeader_Click(object sender, RoutedEventArgs e)
         {
             try
