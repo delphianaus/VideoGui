@@ -3392,6 +3392,7 @@ namespace VideoGui
                         if (sid != -1)
                         {
                             sgl = "UPDATE MULTISHORTSINFO SET LASTUPLOADEDDATE = @P1, LASTUPLOADEDTIME = @P2 " +
+                                  "DIRECTORYNAME = @P0"+
                                 "WHERE LINKEDSHORTSDIRECTORYID = @iD";
                             connectionString.ExecuteNonQuery(sgl.ToUpper(),
                                 [("@P1", DateTime.Now.Date), ("@P2", DateTime.Now.TimeOfDay),
@@ -3403,8 +3404,10 @@ namespace VideoGui
                         res = connectionString.ExecuteScalar(sql.ToUpper(), [("@P0", fname)]).ToInt(-1);
                         if (res == -1)
                         {
-                            sql = "INSERT INTO UPLOADSRECORD(UPLOADFILE, UPLOAD_DATE, UPLOAD_TIME,UPLOADTYPE) VALUES (@P0,@P1,@P2,@P3) RETURNING ID";
-                            res = connectionString.ExecuteScalar(sql.ToUpper(), [("@P0", fname), ("@P1", DateTime.Now.Date), ("@P2", DateTime.Now.TimeOfDay), ("@P3", 0)]).ToInt(-1);
+                            sql = "INSERT INTO UPLOADSRECORD(UPLOADFILE, UPLOAD_DATE, UPLOAD_TIME,UPLOADTYPE,DIRECTORYNAME) "+
+                                "VALUES (@P0,@P1,@P2,@P3,@P4) RETURNING ID";
+                            res = connectionString.ExecuteScalar(sql.ToUpper(), [("@P0", fname), ("@P1", DateTime.Now.Date), 
+                                ("@P2", DateTime.Now.TimeOfDay), ("@P3", 0), ("@P4", CPUSS.DirectoryName.ToUpper())]).ToInt(-1);
                         }
                         else
                         {
@@ -4292,6 +4295,8 @@ namespace VideoGui
                 sqlstring = $"create table UPLOADSRECORD({Id},UPLOADFILE varchar(256), UPLOAD_DATE DATE, UPLOAD_TIME TIME,UPLOADTYPE INTEGER)";
                 connectionString.CreateTableIfNotExists(sqlstring);
                 connectionString.AddFieldToTable("UPLOADSRECORD", "UPLOADTYPE", "INTEGER", 0);
+                connectionString.AddFieldToTable("UPLOADSRECORD", "DIRECTORYNAME", "VARCHAR(256)", "");
+
 
                 sqlstring = $"create table PLANINGQUES({Id},SOURCE varchar(500),SourceDir varchar(500))";
                 connectionString.CreateTableIfNotExists(sqlstring);
