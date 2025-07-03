@@ -62,7 +62,16 @@ namespace VideoGui.Models
         }
         public string GetUploadedDateString()
         {
-            return (_LastUploadedDate.Year < 2000) ? "" : _LastUploadedDate.ToString(@"dd.MM.yyyy");
+            if (_LastUploadedDate.Year < 2000) return "";
+
+            string data = $"   {_LastUploadedDate.ToString("dd/MM/yyyy")}";
+            //{ActionScheduleStart.Value.ToString("HH:mm")} - {ActionScheduleEnd.Value.ToString("HH:mm")}";
+            var start = _LastUploadedDate.TimeOfDay;
+            string dx = $":{start.Minutes}:{start.Seconds}";
+
+            data += (start.Hours > 12) ? $" {start.Hours - 12}{dx} PM" : $" {start.Hours}{dx} AM";
+        
+            return data;
         }
         public SelectedShortsDirectories(int _Id, string _DirectoryName, bool _IsActive,
             int _LinkedShortsDirectoryId, int _NumberOfShorts, DateTime _LastUploadedDate)
@@ -110,7 +119,9 @@ namespace VideoGui.Models
                 NumberOfShorts = (reader["NUMBEROFSHORTS"] is int GRP) ? GRP : -1;
                 DirectoryName = (reader["DIRECTORYNAME"] is string Desc) ? Desc : "";
                 IsShortActive = (reader["ISSHORTSACTIVE"] is short IsActive) ? IsActive == 1 : false;
-                LastUploadedDateFile = (reader["LASTUPLOADEDDATE"] is DateTime date) ? date : DateTime.Now.Date.AddYears(-100);
+                TimeSpan tp = (reader["LASTUPLOADEDDATE"] is TimeSpan tsk) ? tsk : new TimeSpan(0, 0, 0);
+                LastUploadedDateFile = (reader["LASTUPLOADEDTIME"] is DateTime date) ? date.AtTime(TimeOnly.FromTimeSpan(tp)) : DateTime.Now.Date.AddYears(-100);
+                
                 DescId = (reader["DESCID"] is int descid) ? descid : -1;
                 TitleId = (reader["TITLEID"] is int titleid) ? titleid : -1;
                 LinkedDescId = (reader["LINKEDDESCIDS"] is string linkedDescId) ? linkedDescId : "";

@@ -166,7 +166,7 @@ namespace CustomComponents.ListBoxExtensions
         {
             if (lstBoxUploadItems != null)
             {
-                double headerHeight = 30;
+                double headerHeight = 20;//was 30
                 double availableHeight = ActualHeight - headerHeight;
                 if (BorderMargin != null)
                 {
@@ -532,6 +532,7 @@ namespace CustomComponents.ListBoxExtensions
                                             {
                                                 var column = Grid.GetColumn(textBox);
                                                 var colDef = ColumnDefinitions[column];
+                                                
                                                 HandleInitialized<TextBox>(textBox, colDef);
                                                 HandleFocusEvents<TextBox>(textBox, colDef);
                                                 SetCustomBindings<TextBox>(textBox, colDef);
@@ -557,6 +558,8 @@ namespace CustomComponents.ListBoxExtensions
                                             {
                                                 var column = Grid.GetColumn(textBlock);
                                                 var colDef = ColumnDefinitions[column];
+                                                //textBlock.Height = 25;
+                                                textBlock.Padding = new Thickness(0, 6, 0, 0);
                                                 HandleFocusEvents<TextBlock>(textBlock, colDef);
                                                 SetCustomBindings<TextBlock>(textBlock, colDef);
                                             }

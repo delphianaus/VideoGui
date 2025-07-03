@@ -66,9 +66,10 @@
                     <ListBox.ItemContainerStyle>
                         <Style TargetType="{x:Type ListBoxItem}">
                             <Setter Property="ContextMenu" Value="{Binding RelativeSource={RelativeSource AncestorType={x:Type local:MultiListbox}}, Path=ItemsContextMenu}"/>
-                            <Setter Property="Height" Value="35"/>
-                            <Setter Property="Padding" Value="0"/>
-                            <Setter Property="Margin" Value="0"/>
+                            <Setter Property="MinHeight" Value="25"/>
+                            <Setter Property="MaxHeight" Value="35"/>
+                            <Setter Property="Background" Value="White"/>
+                            <Setter Property="VerticalContentAlignment" Value="Center"/>
                         </Style>
                     </ListBox.ItemContainerStyle>
                     <ListBox.Template>
@@ -86,10 +87,9 @@
                     </ListBox.Template>
                     <ListBox.ItemTemplate>
                         <DataTemplate>
-                            <Grid Background="White" Height="30">
-                                <Grid.ColumnDefinitions>
-                                </Grid.ColumnDefinitions>
-                            </Grid>
+                            <TextBlock Text="{Binding}" 
+                                     TextAlignment="Center"
+                                     Background="White" />
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>

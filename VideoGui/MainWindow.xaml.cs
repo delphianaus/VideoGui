@@ -679,6 +679,7 @@ namespace VideoGui
                     string uploaddir = key.GetValueStr("UploadPath", "");
                     key?.Close();
                     ShortsDirectoryList.Clear();
+                    
                     if (Environment.MachineName.Contains("Prometheus") && File.Exists(@"C:\videogui\files.txt"))
                     {
                         List<string> FileLst = File.ReadAllLines(@"C:\videogui\files.txt").ToList();
@@ -4529,6 +4530,45 @@ namespace VideoGui
                         }
                     }
                 });
+
+                string uploadId = "";
+                DateOnly dts = new();
+                TimeOnly tts = new();
+                connectionString.ExecuteReader("SELECT * FROM REMATCHED", (FbDataReader r) =>
+                {
+                    RematchedList.Add(new Rematched(r));
+                });
+                string SQL = "SELECT * FROM UploadsRecord ORDER BY RDB$RECORD_VERSION DESC ROWS 1;";
+                int Id = -1;
+                DateTime newDate = DateTime.Now.Date.AddYears(-100);
+                connectionString.ExecuteReader(SQL, (FbDataReader r) =>
+                {
+                    uploadId = (r["UPLOADFILE"] is string f) ? f : "";
+                    var dt = (r["UPLOAD_DATE"] is DateTime d) ? d : DateTime.Now.Date.AddYears(-100);
+                    TimeSpan dtr = (r["UPLOAD_TIME"] is TimeSpan t1) ? t1 : new TimeSpan();
+                    dts = DateOnly.FromDateTime(dt);
+                    tts = TimeOnly.FromTimeSpan(dtr);
+                    newDate = dt.Date.AtTime(TimeOnly.FromTimeSpan(dtr));
+                });
+                if (uploadId.Contains("_"))
+                {
+                    Id = uploadId.Split('_')[1].ToInt(-1);
+                    if (Id != -1)
+                    {
+                        foreach(var item in RematchedList.Where(s => s.OldId == Id))
+                        {
+                            Id = item.NewId;
+                            break;
+                        }
+
+
+                        SQL = "UPDATE MULTISHORTSINFO SET ISSHORTSACTIVE=1,LASTUPLOADEDDATE=@LID,LASTUPLOADEDTIME=@LIT" +
+                            " WHERE LINKEDSHORTSDIRECTORYID=@LINKEDID";
+                        connectionString.ExecuteScalar(SQL, [("@LID", dts), ("@LIT", tts), ("@ID", Id), ("@LINKEDID", Id)]);
+                        SQL = "UPDATE MULTISHORTSINFO SET ISSHORTSACTIVE=0 LINKEDSHORTSDIRECTORYID!=@LINKEDID";
+                        connectionString.ExecuteScalar(SQL, [("@LINKEDID", Id)]);
+                    }
+                }
                 connectionString.ExecuteReader("SELECT * FROM AUTOINSERTHISTORY Order By DELETIONDATE desc", (FbDataReader r) =>
                 {
                     ComplexProcessingJobHistory.Add(new ComplexJobHistory(r));
@@ -4563,10 +4603,7 @@ namespace VideoGui
                     EventDefinitionsList.Add(new EventDefinition(r));
                 });
 
-                connectionString.ExecuteReader("SELECT * FROM REMATCHED", (FbDataReader r) =>
-                {
-                    RematchedList.Add(new Rematched(r));
-                });
+                
                 connectionString.ExecuteReader("SELECT * FROM DRAFTSHORTS", (FbDataReader r) =>
                 {
                     DraftShortsList.Add(new DraftShorts(r));
@@ -4633,6 +4670,23 @@ namespace VideoGui
                 {
                     SelectedShortsDirectoriesList.Add(new SelectedShortsDirectories(r));
                 });
+
+                foreach(var t in SelectedShortsDirectoriesList)
+                {
+                    if (t.LinkedShortsDirectoryId != Id && Id != -1)
+                    {
+                        t.IsShortActive = false;
+                        t.LastUploadedDateFile = DateTime.Now.Date.AddYears(-100);
+                    }
+                    else if (t.LinkedShortsDirectoryId == Id && Id != -1)
+                    {
+                        t.IsShortActive = true;
+                        if (newDate.Year > 2000)
+                        {
+                            t.LastUploadedDateFile = newDate;
+                        }
+                    }
+                }
                 FilterActiveShortsDirlectoryList();
 
             }

@@ -146,7 +146,7 @@
             <Button x:Name="btnYTSchedule" Content="Uploads Info" HorizontalAlignment="Center" Height="28" VerticalAlignment="Center" Width="70" Click="btnYTSchedule_Click"/>
 
         </StatusBar>
-        <Button x:Name="btnShortsInfo" Content="Shorts" HorizontalAlignment="Left" Height="24" Margin="26,0,0,82" VerticalAlignment="Bottom" Width="77" Click="btnShortsInfo_Click"/>
+        <Button x:Name="btnShortsInfo" Content="Shorts" HorizontalAlignment="Left" Height="24" Margin="26,0,0,82" VerticalAlignment="Bottom" Width="97" Click="btnShortsInfo_Click"/>
         <Button x:Name="BtnVideoCardDetails" Content="" HorizontalAlignment="Left" Height="26" Margin="469,0,0,81" VerticalAlignment="Bottom" Width="25" Click="BtnVideoCardDetails_Click" RenderTransformOrigin="-0.864,0.693"/>
         <Button x:Name="btnEditDirectories" Content="Edit Dirs" Height="26" Margin="498,0,0,82" VerticalAlignment="Bottom" HorizontalAlignment="Left" Click="btnEditDirectories_Click" Width="45"/>
         <Button x:Name="btnEditSchedules" Content="Edit Schedules" Height="26" Margin="545,0,0,82" VerticalAlignment="Bottom" HorizontalAlignment="Left" Click="btnEditSchedules_Click" Width="75"/>
