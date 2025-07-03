@@ -117,6 +117,33 @@ namespace VideoGui.Models
             directory = _directory;
         }
     }
+
+    public class CustomParams_UpdateStats
+    {
+        public string DirectoryName = "";
+        public CustomParams_UpdateStats(string DirectoryName)
+        {
+            this.DirectoryName = DirectoryName;
+        }
+    }
+
+    public class CustomParams_UpdateUploadsRecords
+    {
+        public List<string> DirectoryName = new();
+        public CustomParams_UpdateUploadsRecords(List<string> DirectoryName)
+        {
+            this.DirectoryName = DirectoryName;
+        }
+    }
+
+    public class CustomParams_GetUploadsRecCnt
+    {
+        public bool IsLast24Hours { get; set; } = false;    
+        public CustomParams_GetUploadsRecCnt(bool IsLast24Hours)
+        {
+            this.IsLast24Hours = IsLast24Hours;
+        }
+    }
     public class CustomParams_UpdateTitleById
     {
         public int Id { get; set; } = -1;
@@ -567,12 +594,26 @@ namespace VideoGui.Models
         }
 
     }
+
+    public class CustomParams_TitleDesc
+    {
+        string id = "";
+    }
     public class CustomParams_AddDirectory
     {
         public string DirectoryName = "";
         public CustomParams_AddDirectory(string _DirectoryName)
         {
             DirectoryName = _DirectoryName;
+        }
+    }
+
+    public class CustomParams_GetShortsDirectoryById
+    {
+        public int Id = -1;
+        public CustomParams_GetShortsDirectoryById(int _id)
+        {
+            Id = _id;
         }
     }
 

@@ -127,7 +127,7 @@ namespace VideoGui
         WebAddressBuilder webAddressBuilder = null;
         databasehook<object> dbInitializer = null;
         List<Rematched> RematchedList = new(); // <shortname>
-        List<ShortsDirectory> ShortsDirectories = new();
+       // List<ShortsDirectory> ShortsDirectories = new();
         OnFinishId DoOnFinish = null;
         System.Threading.Timer UploadsTimer = null;
         TimeOnly CurrentTime = new TimeOnly();
@@ -174,8 +174,8 @@ namespace VideoGui
             try
             {
                 LocationTimer.Interval = TimeSpan.FromSeconds(3);
-                LocationTimer.Tick += (s, e) => 
-                { 
+                LocationTimer.Tick += (s, e) =>
+                {
                     LocationTimer.Stop();
                     RegistryKey key = "SOFTWARE\\Scraper".OpenSubKey(Registry.CurrentUser);
                     key.SetValue("Webleft", Left);
@@ -184,7 +184,7 @@ namespace VideoGui
                 };
                 LocationTimer.Start();
             }
-            catch(Exception ex) 
+            catch (Exception ex)
             {
                 ex.LogWrite($"LocationTimer {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
@@ -226,9 +226,9 @@ namespace VideoGui
 
 
 
-                
 
-               
+
+
                 webAddressBuilder = new WebAddressBuilder(null, null, "UCdMH7lMpKJRGbbszk5AUc7w");
                 wv2Dictionary.Add(1, wv2A1);//20
                 wv2Dictionary.Add(2, wv2A2);//30
@@ -270,9 +270,9 @@ namespace VideoGui
             {
                 ScraperType = EventTypes.ScapeSchedule;
                 DoOnFinish = _OnFinish;
-                
 
-               
+
+
 
                 TargetUrl = _TargetUrl;
                 AutoClose = true;
@@ -390,7 +390,7 @@ namespace VideoGui
                     IsClosed = true;
                     DoOnFinish?.Invoke(EventId);
                 };
-                
+
 
                 webAddressBuilder = new WebAddressBuilder(null, null, "UCdMH7lMpKJRGbbszk5AUc7w");
                 wv2Dictionary.Add(1, wv2A1);//20
@@ -446,7 +446,7 @@ namespace VideoGui
                     IsClosed = true;
                     DoOnFinish?.Invoke(EventId);
                 };
-                
+
                 webAddressBuilder = new WebAddressBuilder(null, null, "UCdMH7lMpKJRGbbszk5AUc7w");
                 wv2Dictionary.Add(1, wv2A1);//20
                 wv2Dictionary.Add(2, wv2A2);//30
@@ -518,7 +518,7 @@ namespace VideoGui
                     IsClosed = true;
                     DoOnFinish?.Invoke(EventId);
                 };
-               
+
 
                 webAddressBuilder = new WebAddressBuilder(null, null, "UCdMH7lMpKJRGbbszk5AUc7w");
                 wv2Dictionary.Add(1, wv2A1);//20
@@ -652,7 +652,7 @@ namespace VideoGui
                         DoLocationTimer();
                     }
                 };
-                
+
                 TimerSimulate.Interval = TimeSpan.FromSeconds(1);
                 TimerSimulate.Tick += (s, e) =>
                 {
@@ -1058,8 +1058,8 @@ namespace VideoGui
                     string connectStr = dbInitializer?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
 
                     SendKeysString = "";
-                    int res = GetUploadsRecCnt(connectStr, false);
-
+                    int res = -1;// GetUploadsRecCnt(connectStr, false);
+                    if (dbInitializer?.Invoke(this, new CustomParams_GetUploadsRecCnt(false)) is int cnt) res = cnt;
                     TotalScheduled = res;
                     lblTotal.Content = TotalScheduled.ToString();
                     SetMargin(StatusBar);
@@ -1195,44 +1195,11 @@ namespace VideoGui
                 HasExited = true;
             }
         }
-
-        public int GetUploadsRecCnt(string connectionStr, bool last24hrs = false)
-        {
-            try
-            {
-                string sql = "select count(Id) from UPLOADSRECORD WHERE UPLOAD_DATE = @P0 AND UPLOADTYPE = 0";
-                if (last24hrs)
-                {
-                    sql = "SELECT Count(Id) FROM UPLOADSRECORD WHERE UPLOAD_DATE = CURRENT_DATE AND " +
-                    "UPLOAD_TIME >= CURRENT_TIME - 1 AND UPLOADTYPE = 0 OR UPLOAD_DATE = CURRENT_DATE - 1 " +
-                    "AND UPLOAD_TIME >= CURRENT_TIME - 1 AND UPLOADTYPE = 0 AND UPLOADSRECORD.UPLOADFILE NOT LIKE '%mp4'";
-                }
-                return connectionStr.ExecuteScalar(sql, [("@p0", DateTime.Now.Date)]).ToInt(-1);
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite($"GetUploadsRecCnt {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
-                return -1;
-            }
-
-        }
-
         public void InsertIntoUploadFiles(List<string> videofiles, string connectStr)
         {
             try
             {
-                //int Max = videofiles.Count, num = 1;
-                //string DataStr = "";
-                foreach (var item in videofiles)
-                {
-                    string fname = Path.GetFileNameWithoutExtension(item);
-                    string sql = "SELECT ID FROM UPLOADSRECORD WHERE UPLOADFILE = @P0 AND UPLOADTYPE = 0";
-                    int id = connectStr.ExecuteScalar(sql.ToUpper(), [("@P0", fname)]).ToInt(-1);
-                    if (id != -1) continue;
-                    sql = "INSERT INTO UPLOADSRECORD(UPLOADFILE, UPLOAD_DATE, UPLOAD_TIME,UPLOADTYPE) VALUES (@P0,@P1,@P2,@P3) RETURNING ID";
-                    id = connectStr.ExecuteScalar(sql.ToUpper(), [("@P0", fname),
-                        ("@P1", DateTime.Now.Date), ("@P2", DateTime.Now.TimeOfDay), ("@P3", 0)]).ToInt(-1);
-                }
+                dbInitializer?.Invoke(this, new CustomParams_UpdateUploadsRecords(videofiles));
             }
             catch (Exception ex)
             {
@@ -1252,35 +1219,8 @@ namespace VideoGui
                         File.Delete(file);
                         NodeUpdate(Span_Name, ScheduledGet);
                         lstMain.Items.Insert(0, $"{file} Deleted");
-                        string sgl = "SELECT ID FROM sHORTSDIRECTORY WHERE DIRECTORYNAME = @P0";
-                        int sid = connectStr.ExecuteScalar(sgl.ToUpper(), [("@P0", DirectoryPath.ToUpper())]).ToInt(-1);
-                        if (sid != -1)
-                        {
-                            sgl = "UPDATE MULTISHORTSINFO SET LASTUPLOADEDDATE = @P1, LASTUPLOADEDTIME = @P2 "+
-                                "WHERE LINKEDSHORTSDIRECTORYID = @iD";
-                            connectStr.ExecuteNonQuery(sgl.ToUpper(), 
-                                [("@P1", DateTime.Now.Date), ("@P2", DateTime.Now.TimeOfDay),
-                                ("@iD", sid)]);
-
-
-                        }
-                        int res = -1;
-                        string fname = Path.GetFileNameWithoutExtension(file);
-                        string sql = "select ID from UPLOADSRECORD WHERE UPLOADFILE = @P0 AND UPLOADTYPE = 0";
-                        res = connectStr.ExecuteScalar(sql.ToUpper(), [("@P0", fname)]).ToInt(-1);
-                        if (res == -1)
-                        {
-                            sql = "INSERT INTO UPLOADSRECORD(UPLOADFILE, UPLOAD_DATE, UPLOAD_TIME,UPLOADTYPE) VALUES (@P0,@P1,@P2,@P3) RETURNING ID";
-                            res = connectStr.ExecuteScalar(sql.ToUpper(), [("@P0", fname), ("@P1", DateTime.Now.Date), ("@P2", DateTime.Now.TimeOfDay), ("@P3", 0)]).ToInt(-1);
-                        }
-                        else
-                        {
-                            sql = "UPDATE UPLOADSRECORD SET UPLOAD_DATE = @P1, UPLOAD_TIME = @P2 WHERE ID = @P0";
-                            connectStr.ExecuteNonQuery(sql.ToUpper(), [("@P0", res), ("@P1", DateTime.Now.Date),
-                                ("@P2", DateTime.Now.TimeOfDay)]);
-                        }
-
-
+                        // Below to be moved to HandlerObject using dbInit
+                        dbInitializer?.Invoke(this, new CustomParams_UpdateStats(file));
                         if (ScheduledOk.IndexOf(filename1) == -1)
                         {
                             ScheduledOk.Add(filename1);
@@ -1418,8 +1358,8 @@ namespace VideoGui
                 {
                     RematchedList.Add(new Rematched(r));
                 });
-                
-                
+
+
                 connectionString.ExecuteReader("SELECT * FROM SHORTSDIRECTORY", (FbDataReader r) =>
                 {
                     ShortsDirectoriesList.Add(new ShortsDirectory(r));
@@ -2335,6 +2275,7 @@ namespace VideoGui
                                             {
                                                 newidint = itx.NewId;
                                             }
+
                                             GetTitlesAndDesc(newidint);
 
 
@@ -2385,7 +2326,15 @@ namespace VideoGui
                 string connectionStr = dbInitializer?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
                 int TitleId = -1, DescId = -1, idr = -1;
                 if (LastId == -1 || LastId != id)
-                {
+                {   
+                    if (dbInitializer?.Invoke(this, new CustomParams_GetShortsDirectoryById(id)) is TurlpeDualString tds)
+                    {
+                        TitleStr = tds.turlpe1;
+                        DescStr = tds.turlpe2;
+                    }
+                    
+                    /*
+                    
                     bool fnd = false;
                     foreach (var dir in ShortsDirectoriesList.Where(dir => dir.Id == id))
                     {
@@ -2405,17 +2354,17 @@ namespace VideoGui
                             TitleId = (r["TITLEID"] is int tid) ? tid : -1;
                             DescId = (r["DESCID"] is int did) ? did : -1;
                         });
-                    }
+                    }*/
                     LastId = idr;
                     if (idr != -1)
                     {
-                        if (DescId != -1)
+                        /*if (DescId != -1)
                         {
                             DescStr = dbInitializer?.Invoke(this, new CustomParams_GetDesc(id, DescId)) is string s ? s : "";
-                        }
+                        }*/
                         if (TitleId != -1)
                         {
-                            TitleStr = dbInitializer?.Invoke(this, new CustomParams_GetTitle(id, TitleId)) is string s1 ? s1 : "";
+                            //itleStr = dbInitializer?.Invoke(this, new CustomParams_GetTitle(id, TitleId)) is string s1 ? s1 : "";
                             var r = TitleStr.Split(" ").ToList<string>().Where(s => !s.StartsWith("#") &&
                             s != "" && s.ToLower() != "vline").ToList<string>();
                             foreach (var item in r)
@@ -3518,20 +3467,18 @@ namespace VideoGui
                                     html = html[..(index - 1)];
                                     filename = html.Replace("\n", "").Replace("\r", "").Trim();
 
-                                    if (!filename.Contains("_"))
-                                    {
-                                        if (true)
-                                        {
-
-                                        }
-                                    }
-
                                     if (filename.Contains("_") && IsVideoLookup && ScraperType == EventTypes.UploadTest)
                                     {
                                         string idp = filename.Split("_").ToArray<string>().ToList().LastOrDefault().Trim();
                                         if (idp is not null && idp != "")
                                         {
-                                            int TitleId = -1;
+                                            if (dbInitializer?.Invoke(this, new CustomParams_AddDirectory(idp)) is TurlpeDualString tds)
+                                            {
+                                                TitleStr = tds.turlpe1;
+                                                DescStr = tds.turlpe2;
+                                            }
+                                            
+                                            /*int TitleId = -1;
                                             int DescId = -1;
                                             int Id = -1;
                                             string connectionStr = dbInitializer?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
@@ -3554,7 +3501,7 @@ namespace VideoGui
                                                     DescStr = dbInitializer?.Invoke(this, new CustomParams_GetDesc(DescId, Id)) is string d ? d : "";
                                                 }
                                             }
-
+                                            */
                                             if (TitleStr != "")
                                             {
                                                 if ((sender as WebView2).CoreWebView2 != null)

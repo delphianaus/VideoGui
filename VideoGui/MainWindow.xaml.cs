@@ -528,7 +528,7 @@ namespace VideoGui
             {
                 if (tld is CustomParams_SetIndex cpsii)
                 {
-                    ShortsDirectoryIndex = cpsii.index; 
+                    ShortsDirectoryIndex = cpsii.index;
                 }
                 if (tld is CustomParams_LookUpId pclki)
                 {
@@ -690,18 +690,18 @@ namespace VideoGui
                     }
                     else if (Path.Exists(shortsdir))
                     {
-    //                    List<string> FileLst = new();
+                        //                    List<string> FileLst = new();
                         List<string> DirectoryList = Directory.EnumerateDirectories(shortsdir).ToList();
                         foreach (var dir in DirectoryList.Where(dir => !dir.ToLower().EndsWith("done")))
                         {
                             var file_cnt = Directory.EnumerateFiles(dir, "*.mp4", SearchOption.AllDirectories).Count();
                             if (file_cnt > 0)
                             {
-  //                              FileLst.Add($"{dir}|{file_cnt}");
+                                //                              FileLst.Add($"{dir}|{file_cnt}");
                                 ShortsDirectoryList.Add(new MultiShortsInfo(dir, file_cnt));
                             }
                         }
-//                        File.WriteAllLines(@"c:\videogui\files.txt", FileLst);
+                        //                        File.WriteAllLines(@"c:\videogui\files.txt", FileLst);
                     }
                     bool found = false;
                     int LinkedId = -1;
@@ -3044,6 +3044,40 @@ namespace VideoGui
 
         private object selectShortUpload_Handler(object thisForm, object tld)
         {
+            if (tld is CustomParams_GetShortsDirectoryById pcGSD)
+            {
+                int TitleId = -1, DescId = -1, idx = pcGSD.Id;
+                foreach (var item in EditableshortsDirectoryList.Where(s => s.Id == idx))
+                {
+                    TitleId = item.TitleId;
+                    DescId = item.DescId;
+                    break;
+                }
+                string Title = (TitleId == -1) ? "" : TitlesList.Where(s => s.Id == TitleId).
+                    FirstOrDefault(new Titles(-1)).Description; 
+                string Desc = (DescId == -1) ? "" : DescriptionsList.Where(s => s.Id == DescId).
+                    FirstOrDefault(new Descriptions(-1)).Description;
+                return new TurlpeDualString(Title, Desc, idx);
+            }
+
+            if (tld is CustomParams_AddDirectory cpAPD)
+            {
+                string Title = "", Desc = "";
+                int TitleId = -1, DescId = -1;
+                int idx = InsertUpdateShorts(cpAPD.DirectoryName);
+                if (idx != -1)
+                {
+                    foreach (var item in EditableshortsDirectoryList.Where(s => s.Id == idx))
+                    {
+                        TitleId = item.TitleId;
+                        DescId = item.DescId;
+                        break;
+                    }
+                }
+                Title = (TitleId == -1) ? "" : TitlesList.Where(s => s.Id == TitleId).FirstOrDefault(new Titles(-1)).Description;
+                Desc = (DescId == -1) ? "" : DescriptionsList.Where(s => s.Id == DescId).FirstOrDefault(new Descriptions(-1)).Description;
+                return new TurlpeDualString(Title, Desc, idx);
+            }
             if (tld is CustomParams_RematchedUpdate rfu)
             {
                 string sql = "SELECT ID FROM SHORTSDIRECTORY WHERE DIRECTORYNAME = @P0";
@@ -3068,9 +3102,9 @@ namespace VideoGui
                 if ((OldId == -1 && NewId == -1))
                 {
                     sql = "INSERT INTO REMATCHED(NEWID,OLDID) VALUES (@P0,@P1) returning ID";
-                    int idx = connectionString.ExecuteScalar(sql, 
+                    int idx = connectionString.ExecuteScalar(sql,
                         [("@P0", rfu.newid), ("@P1", sid)]).ToInt(-1);
-                    RematchedList.Add(new Rematched(idx,rfu.newid, sid, ""));
+                    RematchedList.Add(new Rematched(idx, rfu.newid, sid, ""));
                     return true;
                 }
                 else
@@ -3080,7 +3114,7 @@ namespace VideoGui
                         sql = "UPDATE REMATCHED SET NEWID = @P0 WHERE OLDID = @P1";
                         connectionString.ExecuteNonQuery(sql,
                             [("@P0", sid), ("@P1", OldId)]);
-                        foreach(var r in RematchedList.Where(s => s.OldId == OldId))
+                        foreach (var r in RematchedList.Where(s => s.OldId == OldId))
                         {
                             r.NewId = sid;
                             break;
@@ -3306,7 +3340,79 @@ namespace VideoGui
             {
                 if (thisForm is ScraperModule scs)
                 {
-
+                    if (tld is CustomParams_AddDirectory cpAPD)
+                    {
+                        string Title = "", Desc = "";
+                        int TitleId = -1, DescId = -1;
+                        int idx = InsertUpdateShorts(cpAPD.DirectoryName);
+                        if (idx != -1)
+                        {
+                            foreach(var item in EditableshortsDirectoryList.Where(s => s.Id == idx))
+                            {
+                                TitleId = item.TitleId;
+                                DescId = item.DescId;
+                                break;
+                            }
+                        }
+                        Title = (TitleId == -1) ? "" : TitlesList.Where(s => s.Id == TitleId).FirstOrDefault(new Titles(-1)).Description;
+                        Desc = (DescId == -1) ? "" : DescriptionsList.Where(s => s.Id == DescId).FirstOrDefault(new Descriptions(-1)).Description;
+                        return new TurlpeDualString(Title, Desc, idx);
+                    }
+                    if (tld is CustomParams_GetUploadsRecCnt cpGURC)
+                    {
+                        string sql = "select count(Id) from UPLOADSRECORD WHERE UPLOAD_DATE = @P0 AND UPLOADTYPE = 0";
+                        if (cpGURC.IsLast24Hours)
+                        {
+                            sql = "SELECT Count(Id) FROM UPLOADSRECORD WHERE UPLOAD_DATE = CURRENT_DATE AND " +
+                            "UPLOAD_TIME >= CURRENT_TIME - 1 AND UPLOADTYPE = 0 OR UPLOAD_DATE = CURRENT_DATE - 1 " +
+                            "AND UPLOAD_TIME >= CURRENT_TIME - 1 AND UPLOADTYPE = 0 AND UPLOADSRECORD.UPLOADFILE NOT LIKE '%mp4'";
+                        }
+                        return connectionString.ExecuteScalar(sql, [("@p0", DateTime.Now.Date)]).ToInt(-1);
+                    }
+                    if (tld is CustomParams_UpdateUploadsRecords CPUUR)
+                    {
+                        foreach (var file in CPUUR.DirectoryName)
+                        {
+                            string fname = Path.GetFileNameWithoutExtension(file.ToUpper());
+                            string sql = "SELECT ID FROM UPLOADSRECORD WHERE UPLOADFILE = @P0 AND UPLOADTYPE = 0";
+                            int id = connectionString.ExecuteScalar(sql.ToUpper(), [("@P0", fname)]).ToInt(-1);
+                            if (id == -1)
+                            {
+                                sql = "INSERT INTO UPLOADSRECORD(UPLOADFILE, UPLOAD_DATE, UPLOAD_TIME,UPLOADTYPE) VALUES (@P0,@P1,@P2,@P3) RETURNING ID";
+                                id = connectionString.ExecuteScalar(sql.ToUpper(), [("@P0", fname),
+                            ("@P1", DateTime.Now.Date), ("@P2", DateTime.Now.TimeOfDay), ("@P3", 0)]).ToInt(-1);
+                            }
+                        }
+                    }
+                    if (tld is CustomParams_UpdateStats CPUSS)
+                    {
+                        string sgl = "SELECT ID FROM sHORTSDIRECTORY WHERE DIRECTORYNAME = @P0";
+                        int sid = connectionString.ExecuteScalar(sgl.ToUpper(),
+                            [("@P0", CPUSS.DirectoryName.ToUpper())]).ToInt(-1);
+                        if (sid != -1)
+                        {
+                            sgl = "UPDATE MULTISHORTSINFO SET LASTUPLOADEDDATE = @P1, LASTUPLOADEDTIME = @P2 " +
+                                "WHERE LINKEDSHORTSDIRECTORYID = @iD";
+                            connectionString.ExecuteNonQuery(sgl.ToUpper(),
+                                [("@P1", DateTime.Now.Date), ("@P2", DateTime.Now.TimeOfDay),
+                                ("@iD", sid)]);
+                        }
+                        int res = -1;
+                        string fname = Path.GetFileNameWithoutExtension(CPUSS.DirectoryName.ToUpper());
+                        string sql = "select ID from UPLOADSRECORD WHERE UPLOADFILE = @P0 AND UPLOADTYPE = 0";
+                        res = connectionString.ExecuteScalar(sql.ToUpper(), [("@P0", fname)]).ToInt(-1);
+                        if (res == -1)
+                        {
+                            sql = "INSERT INTO UPLOADSRECORD(UPLOADFILE, UPLOAD_DATE, UPLOAD_TIME,UPLOADTYPE) VALUES (@P0,@P1,@P2,@P3) RETURNING ID";
+                            res = connectionString.ExecuteScalar(sql.ToUpper(), [("@P0", fname), ("@P1", DateTime.Now.Date), ("@P2", DateTime.Now.TimeOfDay), ("@P3", 0)]).ToInt(-1);
+                        }
+                        else
+                        {
+                            sql = "UPDATE UPLOADSRECORD SET UPLOAD_DATE = @P1, UPLOAD_TIME = @P2 WHERE ID = @P0";
+                            connectionString.ExecuteNonQuery(sql.ToUpper(), [("@P0", res), ("@P1", DateTime.Now.Date),
+                                ("@P2", DateTime.Now.TimeOfDay)]);
+                        }
+                    }
                     if (tld is CustomParams_SetTimeSpans STT)
                     {
                         scs.ScraperType = EventTypes.ShortsSchedule;

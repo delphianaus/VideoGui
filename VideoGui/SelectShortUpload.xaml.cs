@@ -720,6 +720,20 @@ namespace VideoGui
                 {
                     string ThisDir = rootfolder.Split(@"\").ToList().LastOrDefault();
                     connectionStr = dbInit?.Invoke(this, new CustomParams_GetConnectionString()) is string con2 ? con2 : "";
+                    if (dbInit?.Invoke(this, new CustomParams_AddDirectory(ThisDir.ToUpper())) is TurlpeDualString tds)
+                    {
+                        connectionStr.ExecuteReader(GetShortsDirectorySql(tds.Id), (FbDataReader r) =>
+                        {
+                            int titleid = r["TITLEID"].ToInt(-1);
+                            int descid = r["DESCID"].ToInt(-1);
+                            string LinkedTitleId = r["LINKEDTITLEIDS"] is string TITD ? TITD : "";
+                            string LinkedDescId = r["LINKEDDESCIDS"] is string DITD ? DITD : "";
+                            btnEditTitle.IsChecked = titleid != -1 && LinkedTitleId != "";
+                            btnEditDesc.IsChecked = descid != -1 && LinkedDescId != "";
+                        });
+                    }
+                    /*
+                    
                     string sql = "select ID from SHORTSDIRECTORY WHERE DIRECTORYNAME = @P0";
                     int res = connectionStr.ExecuteScalar(sql.ToUpper(), [("@P0", ThisDir.ToUpper())]).ToInt(-1);
                     if (res == -1)
@@ -779,6 +793,8 @@ namespace VideoGui
                             btnEditDesc.IsChecked = descid != -1 && LinkedDescId != "";
                         });
                     }
+
+                    */
 
                 }
             }
