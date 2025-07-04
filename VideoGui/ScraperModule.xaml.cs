@@ -2330,41 +2330,10 @@ namespace VideoGui
                     if (dbInitializer?.Invoke(this, new CustomParams_GetShortsDirectoryById(id)) is TurlpeDualString tds)
                     {
                         TitleStr = tds.turlpe1;
-                        DescStr = tds.turlpe2;
-                        /*
-                         Follow me @ twitch.tv/justinstrainclips
-
-                         Support Me On Patreon - https://www.patreon.com/join/JustinsTrainJourneys
-                         * 
-                         */
-                        string a1 = "Follow me @ https://twitch.tv/justinstrainclips";
-                        string a2 = "Support Me On Patreon @ https://www.patreon.com/join/JustinsTrainJourneys";
-                        if (DescStr.Contains(a1.ToUpper()))
-                        {
-                            DescStr = DescStr.Replace(a1.ToUpper(), a1);
-                        }
-
-                        if (DescStr.Contains(a2.ToUpper()))
-                        {
-                            DescStr = DescStr.Replace(a2.ToUpper(), a2);
-                        }
-
-                        string dateStr = DescStr.Replace("\n", " ").Replace("\r", " ")
-                             .Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)
-                            .FirstOrDefault(item => item.All(char.IsDigit) && item.Length == 6);
-                        int idxp = DescStr.IndexOf(dateStr);
-                        if (idxp != -1)
-                        {
-                            string rDescStr = DescStr.Substring(0, idxp).Trim();
-                            string pDesc = rDescStr.ToPascalCase();
-                            if (pDesc != rDescStr)
-                            {
-                                DescStr = DescStr.Replace(rDescStr, pDesc, StringComparison.Ordinal);
-                            }
-                        }
+                        DescStr = CleanUpDesc(tds.turlpe2);
                         idr = tds.Id;
                     }
-                    
+
                     /*
                     
                     bool fnd = false;
@@ -2438,6 +2407,33 @@ namespace VideoGui
             catch (Exception ex)
             {
                 ex.LogWrite($"GetTitlesData {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
+            }
+        }
+
+        private string CleanUpDesc(string DescStr)
+        {
+            try
+            {
+                string a1 = "Follow me @ https://twitch.tv/justinstrainclips";
+                string a2 = "Support Me On Patreon @ https://www.patreon.com/join/JustinsTrainJourneys";
+                DescStr = (DescStr.Contains(a1.ToUpper())) ? DescStr.Replace(a1.ToUpper(), a1) : DescStr;
+                DescStr = (DescStr.Contains(a2.ToUpper())) ? DescStr.Replace(a2.ToUpper(), a2) : DescStr;
+                string dateStr = DescStr.Replace("\n", " ").Replace("\r", " ")
+                     .Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)
+                    .FirstOrDefault(item => item.All(char.IsDigit) && item.Length == 6);
+                int idxp = DescStr.IndexOf(dateStr);
+                if (idxp != -1)
+                {
+                    string rDescStr = DescStr.Substring(0, idxp).Trim();
+                    string pDesc = rDescStr.ToPascalCase();
+                    DescStr = (pDesc != rDescStr) ? DescStr.Replace(rDescStr, pDesc, StringComparison.Ordinal) : DescStr;
+                }
+                return DescStr;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"CleanUpDesc {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+                return DescStr;
             }
         }
 
