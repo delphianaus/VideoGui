@@ -2349,26 +2349,19 @@ namespace VideoGui
                             DescStr = DescStr.Replace(a2.ToUpper(), a2);
                         }
 
-                        string dateStr = "";
-                        var item_str = DescStr.Replace("\r", " ").Split(' ').ToList();
-                        foreach (var item in item_str.Where(item => item.All(char.IsDigit) && item.Length == 6))
-                        {
-                            dateStr = item;
-                        }
+                        string dateStr = DescStr.Replace("\n", " ").Replace("\r", " ")
+                             .Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)
+                            .FirstOrDefault(item => item.All(char.IsDigit) && item.Length == 6);
                         int idxp = DescStr.IndexOf(dateStr);
                         if (idxp != -1)
                         {
-                            string rDescStr = DescStr.Substring(0, idxp).Trim();   
-                            if (rDescStr != "")
+                            string rDescStr = DescStr.Substring(0, idxp).Trim();
+                            string pDesc = rDescStr.ToPascalCase();
+                            if (pDesc != rDescStr)
                             {
-                                string pDesc = rDescStr.ToPascalCase();
-                                if (pDesc != rDescStr)
-                                {
-                                    DescStr = DescStr.Replace(rDescStr, pDesc);
-                                }
+                                DescStr = DescStr.Replace(rDescStr, pDesc, StringComparison.Ordinal);
                             }
                         }
-
                         idr = tds.Id;
                     }
                     
