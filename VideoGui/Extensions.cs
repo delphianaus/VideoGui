@@ -1932,7 +1932,7 @@ namespace VideoGui
 
         }
 
-        public static string ToPascalCase(this string original, string parameter = "VLINE")
+        public static string ToPascalCase(this string original, string parameter = "VLINE|NSW|VIC")
         {
             Regex invalidCharsRgx = new Regex("[^_a-zA-Z0-9]");
             Regex whiteSpace = new Regex(@"(?<=\s)");

@@ -10,6 +10,7 @@
     <Authors>Justin Smyth</Authors>
     <Company>SmythConsulting PTY LTD</Company>
     <Description>Custom WPF Components including MultiListbox</Description>
+    <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
 
   <ItemGroup>

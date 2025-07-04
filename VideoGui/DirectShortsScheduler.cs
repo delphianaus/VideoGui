@@ -203,12 +203,12 @@ namespace VideoGui
                                 string r = Title_str.Substring(0, iidx - 1);
                                 Title_str= r.ToPascalCase()+ " " +Title_str.Substring(iidx);
                             }
-                            if (Desc_Str.Contains("https://www.patreon.com/c/JustinsTrainJourneys"))
+                            if (Desc_Str.ToLower().Contains("https://www.patreon.com/c/JustinsTrainJourneys".ToLower()))
                             {
                                 Desc_Str = Desc_Str.Replace("https://www.patreon.com/c/JustinsTrainJourneys",
                                     "https://www.patreon.com/join/JustinsTrainJourneys");
                             }
-                            if (!Desc_Str.Contains("https://www.patreon.com/join/JustinsTrainJourneys"))
+                            if (!Desc_Str.ToLower().Contains("https://www.patreon.com/join/JustinsTrainJourneys".ToLower()))
                             {
                                Desc_Str += "\n\nSupport Me On Patreon: https://www.patreon.com/join/JustinsTrainJourneys";
                             }

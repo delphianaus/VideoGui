@@ -78,18 +78,21 @@ using VideoGui.Models.delegates;
 using Windows.AI.MachineLearning;
 using Windows.Storage;
 using WinRT.Interop;
+using Xceed.Wpf.Toolkit;
 using Xceed.Wpf.Toolkit.PropertyGrid.Editors;
 using static System.Net.Mime.MediaTypeNames;
 using static System.Net.WebRequestMethods;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using static System.Windows.Forms.AxHost;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.TextBox;
+using static VideoGui.ffmpeg.Probe.ProbeModel;
 using Application = System.Windows.Application;
 using File = System.IO.File;
 using FolderBrowserDialog = FolderBrowserEx.FolderBrowserDialog;
 using Object = System.Object;
 using Path = System.IO.Path;
-using Window = System.Windows.Window;
+using Stream = System.IO.Stream;
+
 
 
 namespace VideoGui
@@ -679,7 +682,7 @@ namespace VideoGui
                     string uploaddir = key.GetValueStr("UploadPath", "");
                     key?.Close();
                     ShortsDirectoryList.Clear();
-                    
+
                     if (Environment.MachineName.Contains("Prometheus") && File.Exists(@"C:\videogui\files.txt"))
                     {
                         List<string> FileLst = File.ReadAllLines(@"C:\videogui\files.txt").ToList();
@@ -3055,10 +3058,26 @@ namespace VideoGui
                     break;
                 }
                 string Title = (TitleId == -1) ? "" : TitlesList.Where(s => s.Id == TitleId).
-                    FirstOrDefault(new Titles(-1)).Description; 
+                    FirstOrDefault(new Titles(-1)).Description;
+                string BaseStr = " ";
+                if (TitleId != -1)
+                {
+                    foreach (var item2 in TitleTagsList.Where(s => s.GroupId == TitleId))
+                    {
+                        if (!BaseStr.Contains($"#{item2.Description}"))
+                        {
+                            BaseStr += $"#{item2.Description} ";
+                        }
+                    } 
+                    Title += BaseStr;
+                }
+                
+               
+
                 string Desc = (DescId == -1) ? "" : DescriptionsList.Where(s => s.Id == DescId).
                     FirstOrDefault(new Descriptions(-1)).Description;
-                return new TurlpeDualString(Title, Desc, idx);
+
+                return new TurlpeDualString(Title.Trim(), Desc, idx);
             }
 
             if (tld is CustomParams_AddDirectory cpAPD)
@@ -3077,7 +3096,19 @@ namespace VideoGui
                 }
                 Title = (TitleId == -1) ? "" : TitlesList.Where(s => s.Id == TitleId).FirstOrDefault(new Titles(-1)).Description;
                 Desc = (DescId == -1) ? "" : DescriptionsList.Where(s => s.Id == DescId).FirstOrDefault(new Descriptions(-1)).Description;
-                return new TurlpeDualString(Title, Desc, idx);
+                string BaseStr = " ";
+                if (TitleId != -1)
+                {
+                    foreach (var item2 in TitleTagsList.Where(s => s.GroupId == TitleId))
+                    {
+                        if (!BaseStr.Contains($"#{item2.Description}"))
+                        {
+                            BaseStr += $"#{item2.Description} ";
+                        }
+                    }
+                    Title += BaseStr;
+                }
+                return new TurlpeDualString(Title.Trim(), Desc, idx);
             }
             if (tld is CustomParams_RematchedUpdate rfu)
             {
@@ -3341,6 +3372,33 @@ namespace VideoGui
             {
                 if (thisForm is ScraperModule scs)
                 {
+                    if (tld is CustomParams_GetShortsDirectoryById pcGSD)
+                    {
+                        int TitleId = -1, DescId = -1, idx = pcGSD.Id;
+                        foreach (var item in EditableshortsDirectoryList.Where(s => s.Id == idx))
+                        {
+                            TitleId = item.TitleId;
+                            DescId = item.DescId;
+                            break;
+                        }
+                        string Title = (TitleId == -1) ? "" : TitlesList.Where(s => s.Id == TitleId).
+                            FirstOrDefault(new Titles(-1)).Description;
+                        string Desc = (DescId == -1) ? "" : DescriptionsList.Where(s => s.Id == DescId).
+                            FirstOrDefault(new Descriptions(-1)).Description;
+                        string BaseStr = " ";
+                        if (TitleId != -1)
+                        {
+                            foreach (var item2 in TitleTagsList.Where(s => s.GroupId == TitleId))
+                            {
+                                if (!BaseStr.Contains($"#{item2.Description}"))
+                                {
+                                    BaseStr += $"#{item2.Description} ";
+                                }
+                            }
+                            Title += BaseStr;
+                        }
+                        return new TurlpeDualString(Title.Trim(), Desc, idx);
+                    }
                     if (tld is CustomParams_AddDirectory cpAPD)
                     {
                         string Title = "", Desc = "";
@@ -3348,7 +3406,7 @@ namespace VideoGui
                         int idx = InsertUpdateShorts(cpAPD.DirectoryName);
                         if (idx != -1)
                         {
-                            foreach(var item in EditableshortsDirectoryList.Where(s => s.Id == idx))
+                            foreach (var item in EditableshortsDirectoryList.Where(s => s.Id == idx))
                             {
                                 TitleId = item.TitleId;
                                 DescId = item.DescId;
@@ -3357,7 +3415,20 @@ namespace VideoGui
                         }
                         Title = (TitleId == -1) ? "" : TitlesList.Where(s => s.Id == TitleId).FirstOrDefault(new Titles(-1)).Description;
                         Desc = (DescId == -1) ? "" : DescriptionsList.Where(s => s.Id == DescId).FirstOrDefault(new Descriptions(-1)).Description;
-                        return new TurlpeDualString(Title, Desc, idx);
+                        string BaseStr = " ";
+                        if (TitleId != -1)
+                        {
+                            foreach (var item2 in TitleTagsList.Where(s => s.GroupId == TitleId))
+                            {
+                                if (!BaseStr.Contains($"#{item2.Description}"))
+                                {
+                                    BaseStr += $"#{item2.Description} ";
+                                }
+                            }
+                            Title += BaseStr;
+                        }
+
+                        return new TurlpeDualString(Title.Trim(), Desc, idx);
                     }
                     if (tld is CustomParams_GetUploadsRecCnt cpGURC)
                     {
@@ -3393,7 +3464,7 @@ namespace VideoGui
                         if (sid != -1)
                         {
                             sgl = "UPDATE MULTISHORTSINFO SET LASTUPLOADEDDATE = @P1, LASTUPLOADEDTIME = @P2 " +
-                                  "DIRECTORYNAME = @P0"+
+                                  "DIRECTORYNAME = @P0" +
                                 "WHERE LINKEDSHORTSDIRECTORYID = @iD";
                             connectionString.ExecuteNonQuery(sgl.ToUpper(),
                                 [("@P1", DateTime.Now.Date), ("@P2", DateTime.Now.TimeOfDay),
@@ -3405,9 +3476,9 @@ namespace VideoGui
                         res = connectionString.ExecuteScalar(sql.ToUpper(), [("@P0", fname)]).ToInt(-1);
                         if (res == -1)
                         {
-                            sql = "INSERT INTO UPLOADSRECORD(UPLOADFILE, UPLOAD_DATE, UPLOAD_TIME,UPLOADTYPE,DIRECTORYNAME) "+
+                            sql = "INSERT INTO UPLOADSRECORD(UPLOADFILE, UPLOAD_DATE, UPLOAD_TIME,UPLOADTYPE,DIRECTORYNAME) " +
                                 "VALUES (@P0,@P1,@P2,@P3,@P4) RETURNING ID";
-                            res = connectionString.ExecuteScalar(sql.ToUpper(), [("@P0", fname), ("@P1", DateTime.Now.Date), 
+                            res = connectionString.ExecuteScalar(sql.ToUpper(), [("@P0", fname), ("@P1", DateTime.Now.Date),
                                 ("@P2", DateTime.Now.TimeOfDay), ("@P3", 0), ("@P4", CPUSS.DirectoryName.ToUpper())]).ToInt(-1);
                         }
                         else
@@ -4555,7 +4626,7 @@ namespace VideoGui
                     Id = uploadId.Split('_')[1].ToInt(-1);
                     if (Id != -1)
                     {
-                        foreach(var item in RematchedList.Where(s => s.OldId == Id))
+                        foreach (var item in RematchedList.Where(s => s.OldId == Id))
                         {
                             Id = item.NewId;
                             break;
@@ -4603,7 +4674,7 @@ namespace VideoGui
                     EventDefinitionsList.Add(new EventDefinition(r));
                 });
 
-                
+
                 connectionString.ExecuteReader("SELECT * FROM DRAFTSHORTS", (FbDataReader r) =>
                 {
                     DraftShortsList.Add(new DraftShorts(r));
@@ -4659,19 +4730,31 @@ namespace VideoGui
                     "LINKEDSHORTSDIRECTORYID INTEGER, LASTUPLOADEDDATE DATE, LASTUPLOADEDTIME TIME);";
                  */
                 SelectedShortsDirectoriesList.Clear();
-                connectionString.ExecuteReader("SELECT M.ID,M.ISSHORTSACTIVE,M.NUMBEROFSHORTS," +
-                    "M.LASTUPLOADEDDATE,M.LASTUPLOADEDTIME,M.LINKEDSHORTSDIRECTORYID " +
-                    ", S.ID as SHORTSDIRECTORY_ID, S.DIRECTORYNAME, S.TITLEID, S.DESCID, " +
-                    "(SELECT LIST(TAGID, ',') FROM TITLETAGS WHERE GROUPID = S.TITLEID) AS LINKEDTITLEIDS, " +
-                    "(SELECT LIST(ID,',') FROM DESCRIPTIONS WHERE ID = S.DESCID) AS LINKEDDESCIDS " +
-                    "FROM MULTISHORTSINFO M " +
-                    "INNER JOIN SHORTSDIRECTORY S ON M.LINKEDSHORTSDIRECTORYID = S.ID",
-                (FbDataReader r) =>
+                string sql = "SELECT " +
+                  "M.ID, M.ISSHORTSACTIVE, M.NUMBEROFSHORTS, " +
+                  "M.LASTUPLOADEDDATE, M.LASTUPLOADEDTIME, M.LINKEDSHORTSDIRECTORYID, " +
+                  "COALESCE(S2.ID, S1.ID) as SHORTSDIRECTORY_ID, " +
+                  "COALESCE(S2.DIRECTORYNAME, S1.DIRECTORYNAME) as DIRECTORYNAME, " +
+                  "COALESCE(S2.TITLEID, S1.TITLEID) as TITLEID, " +
+                  "COALESCE(S2.DESCID, S1.DESCID) as DESCID, " +
+                  "COALESCE(" +
+                  "(SELECT LIST(TAGID, ',') FROM TITLETAGS WHERE GROUPID = S2.TITLEID), " +
+                  "(SELECT LIST(TAGID, ',') FROM TITLETAGS WHERE GROUPID = S1.TITLEID)" +
+                  ") AS LINKEDTITLEIDS, " + "COALESCE(" +
+                  "(SELECT LIST(ID,',') FROM DESCRIPTIONS WHERE ID = S2.DESCID), " +
+                  "(SELECT LIST(ID,',') FROM DESCRIPTIONS WHERE ID = S1.DESCID)" +
+                  ") AS LINKEDDESCIDS " + "FROM MULTISHORTSINFO M " +
+                  "LEFT JOIN (" + "REMATCHED R " +
+                  "INNER JOIN SHORTSDIRECTORY S2 ON R.OLDID = S2.ID" +
+                  ") ON M.LINKEDSHORTSDIRECTORYID = R.NEWID " +
+                  "LEFT JOIN SHORTSDIRECTORY S1 ON M.LINKEDSHORTSDIRECTORYID = S1.ID " +
+                 "WHERE COALESCE(S2.ID, S1.ID) IS NOT NULL";
+                connectionString.ExecuteReader(sql,(FbDataReader r) =>
                 {
                     SelectedShortsDirectoriesList.Add(new SelectedShortsDirectories(r));
                 });
 
-                foreach(var t in SelectedShortsDirectoriesList)
+                foreach (var t in SelectedShortsDirectoriesList)
                 {
                     if (t.LinkedShortsDirectoryId != Id && Id != -1)
                     {
@@ -11208,7 +11291,7 @@ namespace VideoGui
                 key?.SetValue("Width", MainWindowX.ActualWidth);//876
                 key?.SetValue("Height", MainWindowX.ActualHeight);//444
                 int maxid = -1;
-                switch (MainWindowX.WindowState)
+                /*switch (MainWindowX.WindowState)
                 {
                     case WindowState.Normal:
                         {
@@ -11225,7 +11308,7 @@ namespace VideoGui
                             maxid = 2;
                             break;
                         }
-                }
+                }*/
                 key?.SetValue("WindowState", maxid);//444
                 key?.Close();
 

@@ -719,7 +719,6 @@ namespace VideoGui
                 if (rootfolder != "")
                 {
                     string ThisDir = rootfolder.Split(@"\").ToList().LastOrDefault();
-                    connectionStr = dbInit?.Invoke(this, new CustomParams_GetConnectionString()) is string con2 ? con2 : "";
                     if (dbInit?.Invoke(this, new CustomParams_AddDirectory(ThisDir.ToUpper())) is TurlpeDualString tds)
                     {
                         connectionStr.ExecuteReader(GetShortsDirectorySql(tds.Id), (FbDataReader r) =>

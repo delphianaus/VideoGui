@@ -2331,6 +2331,45 @@ namespace VideoGui
                     {
                         TitleStr = tds.turlpe1;
                         DescStr = tds.turlpe2;
+                        /*
+                         Follow me @ twitch.tv/justinstrainclips
+
+                         Support Me On Patreon - https://www.patreon.com/join/JustinsTrainJourneys
+                         * 
+                         */
+                        string a1 = "Follow me @ https://twitch.tv/justinstrainclips";
+                        string a2 = "Support Me On Patreon @ https://www.patreon.com/join/JustinsTrainJourneys";
+                        if (DescStr.Contains(a1.ToUpper()))
+                        {
+                            DescStr = DescStr.Replace(a1.ToUpper(), a1);
+                        }
+
+                        if (DescStr.Contains(a2.ToUpper()))
+                        {
+                            DescStr = DescStr.Replace(a2.ToUpper(), a2);
+                        }
+
+                        string dateStr = "";
+                        var item_str = DescStr.Replace("\r", " ").Split(' ').ToList();
+                        foreach (var item in item_str.Where(item => item.All(char.IsDigit) && item.Length == 6))
+                        {
+                            dateStr = item;
+                        }
+                        int idxp = DescStr.IndexOf(dateStr);
+                        if (idxp != -1)
+                        {
+                            string rDescStr = DescStr.Substring(0, idxp).Trim();   
+                            if (rDescStr != "")
+                            {
+                                string pDesc = rDescStr.ToPascalCase();
+                                if (pDesc != rDescStr)
+                                {
+                                    DescStr = DescStr.Replace(rDescStr, pDesc);
+                                }
+                            }
+                        }
+
+                        idr = tds.Id;
                     }
                     
                     /*
@@ -2362,7 +2401,7 @@ namespace VideoGui
                         {
                             DescStr = dbInitializer?.Invoke(this, new CustomParams_GetDesc(id, DescId)) is string s ? s : "";
                         }*/
-                        if (TitleId != -1)
+                        if (TitleStr != "")
                         {
                             //itleStr = dbInitializer?.Invoke(this, new CustomParams_GetTitle(id, TitleId)) is string s1 ? s1 : "";
                             var r = TitleStr.Split(" ").ToList<string>().Where(s => !s.StartsWith("#") &&
