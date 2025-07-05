@@ -88,9 +88,18 @@ namespace VideoGui
                 connectionStr =
                       dbInit?.Invoke(this, new CustomParams_GetConnectionString())
                       is string conn ? conn : "";
+                RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                string rootfolder = key.GetValueStr("UploadPath", @"D:\shorts");
+                string uploadsnumber = key.GetValueStr("UploadNumber", "5");
+                string MaxUploads = key.GetValueStr("MaxUploads", "100");
+                key?.Close();
+                //bool found = false;
+                txtMaxUpload.Text = (uploadsnumber != "") ? uploadsnumber : txtMaxUpload.Text;
+                txtTotalUploads.Text = (MaxUploads != "") ? MaxUploads : txtTotalUploads.Text;
+
                 dbInit?.Invoke(this, new CustomParams_Initialize());
                 Ready = true;
-                RegistryKey key = "SOFTWARE\\Scraper".OpenSubKey(Registry.CurrentUser);
+                key = "SOFTWARE\\Scraper".OpenSubKey(Registry.CurrentUser);
                 var _width = key.GetValue("MSUWidth", ActualWidth).ToDouble();
                 var _height = key.GetValue("MSUHeight", ActualHeight).ToDouble();
                 var _left = key.GetValue("MSUleft", Left).ToDouble();
