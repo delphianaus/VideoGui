@@ -375,7 +375,7 @@ namespace VideoGui
                 InitializeComponent();
                 Closing += (s, e) =>
                 {
-                    Simulate?.Stop();
+                    TimerSimulate?.Stop();
                     IsClosing = true;
                     timer?.Stop();
                     canceltoken.Cancel();

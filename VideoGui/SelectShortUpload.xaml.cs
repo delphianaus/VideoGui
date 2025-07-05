@@ -413,7 +413,7 @@ namespace VideoGui
                         string DirectoryPath = rootfolder.Split(@"\").ToList().LastOrDefault();
                         if (DirectoryPath != "")
                         {
-                            dbInit?.Invoke(this, new CustomParams_UpdateMultishortsByDir(DirectoryPath));
+                            dbInit?.Invoke(this, new CustomParams_UpdateMultishortsByDir(DirectoryPath,""));
                         }
                     }
 
