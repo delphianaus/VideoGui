@@ -73,7 +73,7 @@ namespace VideoGui
                 string sqla = "SELECT ID FROM SHORTSDIRECTORY WHERE DIRECTORYNAME = @DIRECTORYNAME";
                 ShortsIndex = connectionStr.ExecuteScalar(sqla,
                     [("@DIRECTORYNAME", DirName)]).ToInt(-1);
-                
+
             }
             catch (Exception ex)
             {
@@ -297,7 +297,7 @@ namespace VideoGui
             {
                 return "SELECT S.ID, S.DIRECTORYNAME, S.TITLEID, S.DESCID, " +
                        "(SELECT LIST(TAGID, ',') FROM TITLETAGS " +
-                       " WHERE GROUPID = S.TITLEID) AS LINKEDTITLEIDS, " +
+                       " WHERE GROUPID = S.ID) AS LINKEDTITLEIDS, " +
                        " (SELECT LIST(ID,',') FROM DESCRIPTIONS " +
                        "WHERE ID = S.DESCID) AS LINKEDDESCIDS " +
                        "FROM SHORTSDIRECTORY S" +
@@ -413,6 +413,7 @@ namespace VideoGui
             }
         }
 
+        int SchMaxUploads = 100;
         private void BtnRunUploaders_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -482,6 +483,7 @@ namespace VideoGui
                 string gUrl = webAddressBuilder.Dashboard().Address;
                 RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                 string rootfolder = key.GetValueStr("UploadPath", @"D:\shorts");
+                string BaseDIr = key.GetValueStr("shortsdirectory", @"D:\shorts");
                 key?.Close();
                 // update shorts left.
 
@@ -493,15 +495,34 @@ namespace VideoGui
                     filesdone.AddRange(scraperModule.ScheduledOk);
                     int Uploaded = scraperModule.TotalScheduled;
                     int shortsleft = Directory.EnumerateFiles(rootfolder, "*.mp4", SearchOption.AllDirectories).ToList().Count();
-                    foreach (var f in msuSchedules.ItemsSource)
+                    foreach (var rp in msuSchedules.ItemsSource.OfType<SelectedShortsDirectories>().Where(x => x.IsActive))
                     {
-                        if (f is SelectedShortsDirectories rp && rp.IsActive)
+                        rp.NumberOfShorts = cnt;
+                        if (cnt == 0) rp.IsActive = false;
+                        break;
+                    }
+
+                    for (int i = msuSchedules.Items.Count - 1; i >= 0; i--)
+                    {
+                        if (msuSchedules.Items[i] is SelectedShortsDirectories rp && rp.NumberOfShorts == 0)
                         {
-                            rp.NumberOfShorts = cnt;
-                            break;
+                            msuSchedules.Items.RemoveAt(i);
                         }
                     }
 
+                    for (int i = 0; i < msuSchedules.Items.Count; i++)
+                    {
+                        if (msuSchedules.Items[i] is SelectedShortsDirectories rp && Directory.Exists(Path.Combine(BaseDIr, rp.DirectoryName)))
+                        {
+                            int ns = Directory.EnumerateFiles(Path.Combine(BaseDIr, rp.DirectoryName), "*.mp4", SearchOption.AllDirectories).Count();
+                            if (ns > 0)
+                            {
+                                rp.NumberOfShorts = ns;
+                                shortsleft = ns;
+                                break;
+                            }
+                        }
+                    }
 
 
                     if (!Exc && shortsleft > 0 && Uploaded < txtTotalUploads.Text.ToInt())
@@ -509,8 +530,6 @@ namespace VideoGui
                         int Maxuploads = (txtTotalUploads.Text != "") ? txtTotalUploads.Text.ToInt(100) : 100;
                         int UploadsPerSlot = (txtMaxUpload.Text != "") ? txtMaxUpload.Text.ToInt(5) : 5;
                         scraperModule = new ScraperModule(dbInit, doOnFinish, gUrl, Maxuploads, UploadsPerSlot, 0, false);
-
-
                         scraperModule.ShowActivated = true;
                         scraperModule.ScheduledOk.AddRange(filesdone);
                         Hide();
@@ -524,11 +543,22 @@ namespace VideoGui
                     }
                     else
                     {
-                        string DirectoryPath = rootfolder.Split(@"\").ToList().LastOrDefault();
-                        if (DirectoryPath != "")
+                        int ucnt = Uploaded;
+                        Task.Run(() =>
                         {
-                            dbInit?.Invoke(this, new CustomParams_UpdateMultishortsByDir(DirectoryPath));
-                        }
+                            var cts = new CancellationTokenSource();
+                            if (ucnt > 0)
+                            {
+                                Dispatcher.Invoke(() =>
+                                {
+                                    Nullable<DateTime> startdate = DateTime.Now, enddate = DateTime.Now.AddHours(10);
+                                    List<ListScheduleItems> listSchedules2 = new();
+                                    int _eventid = 0;
+                                    SchMaxUploads = 100;
+                                    ShowScraper(startdate, enddate, listSchedules2, SchMaxUploads, _eventid);
+                                });
+                            }
+                        });
                     }
 
                 }
@@ -539,6 +569,90 @@ namespace VideoGui
                 ex.LogWrite($"doOnFinish {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
         }
+
+        public void ShowScraper(Nullable<DateTime> startdate = null, Nullable<DateTime> enddate = null,
+            List<ListScheduleItems> _listSchedules = null, int SchMaxUploads = 100, int _eventid = 0)
+        {
+            try
+            {
+                if (scraperModule is not null)
+                {
+                    if (!scraperModule.IsClosed && !scraperModule.IsClosing)
+                    {
+                        scraperModule.Close();
+                    }
+                    while (true)
+                    {
+                        if (!scraperModule.IsClosed && scraperModule.IsClosing)
+                        {
+                            Thread.Sleep(250);
+                        }
+                        if (scraperModule.IsClosed) break;
+                    }
+                    scraperModule = null;
+                }
+                WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
+                string gUrl = webAddressBuilder.Dashboard().Address;
+
+                RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                string uploadsnumber = key.GetValueStr("UploadNumber", "5");
+                string MaxUploads = key.GetValueStr("MaxUploads", "100");
+                key?.Close();
+                int MaxShorts = MaxUploads.ToInt(80);
+                int MaxPerSlot = uploadsnumber.ToInt(100);
+
+                string TargetUrl = webAddressBuilder.AddFilterByDraftShorts().GetHTML();
+                OldgUrl = gUrl;
+                OldTarget = TargetUrl;
+                scraperModule = new ScraperModule(dbInit, FinishScraper, gUrl, TargetUrl, 0);
+
+
+                Hide();
+                scraperModule.ShowActivated = true;
+                scraperModule.Show();
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"ShowScraper {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+        }
+        private void FinishScraper(int id)
+        {
+            try
+            {
+                Show();
+
+                Task.Run(() =>
+                {
+                    bool IsTimeOut = (scraperModule is ScraperModule sls) ? sls.TimedOutClose : false;
+                    while (true)
+                    {
+                        if (!scraperModule.IsClosed && scraperModule.IsClosing)
+                        {
+                            Thread.Sleep(250);
+                        }
+                        if (scraperModule.IsClosed) break;
+                    }
+                    scraperModule = null;
+                    if (IsTimeOut)
+                    {
+                        Dispatcher.Invoke(() =>
+                        {
+                            scraperModule = new ScraperModule(dbInit, FinishScraper, OldgUrl, OldTarget, 0);
+                            Hide();
+                            scraperModule.ShowActivated = true;
+                            scraperModule.Show();
+                        });
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"FinishScraper {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+        }
+
+        string OldTarget , OldgUrl;
         private void txtMaxUpload_KeyDown(object sender, KeyEventArgs e)
         {
             try
