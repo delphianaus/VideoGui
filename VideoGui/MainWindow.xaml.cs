@@ -3068,11 +3068,11 @@ namespace VideoGui
                         {
                             BaseStr += $"#{item2.Description} ";
                         }
-                    } 
+                    }
                     Title += BaseStr;
                 }
-                
-               
+
+
 
                 string Desc = (DescId == -1) ? "" : DescriptionsList.Where(s => s.Id == DescId).
                     FirstOrDefault(new Descriptions(-1)).Description;
@@ -3446,17 +3446,16 @@ namespace VideoGui
                         foreach (var file in CPUUR.DirectoryName)
                         {
 
-                                string fname = Path.GetFileNameWithoutExtension(file.ToUpper());
-                                string sql = "SELECT ID FROM UPLOADSRECORD WHERE UPLOADFILE = @P0 AND UPLOADTYPE = 0";
-                                int id = connectionString.ExecuteScalar(sql.ToUpper(), [("@P0", fname)]).ToInt(-1);
-                                if (id == -1)
-                                {
-                                    sql = "INSERT INTO UPLOADSRECORD(UPLOADFILE, UPLOAD_DATE, UPLOAD_TIME,UPLOADTYPE,DIRECTORYNAME)" +
-                                        " VALUES (@P0,@P1,@P2,@P3,@P4) RETURNING ID";
-                                    id = connectionString.ExecuteScalar(sql.ToUpper(), [("@P0", fname),
-                            ("@P1", DateTime.Now.Date), ("@P2", DateTime.Now.TimeOfDay), ("@P3", 0),
-                                ("@P4",  )]).ToInt(-1);
-                                }
+                            string fname = Path.GetFileNameWithoutExtension(file.ToUpper());
+                            string sql = "SELECT ID FROM UPLOADSRECORD WHERE UPLOADFILE = @P0 AND UPLOADTYPE = 0";
+                            int id = connectionString.ExecuteScalar(sql.ToUpper(), [("@P0", fname)]).ToInt(-1);
+                            if (id == -1)
+                            {
+                                sql = "INSERT INTO UPLOADSRECORD(UPLOADFILE, UPLOAD_DATE, UPLOAD_TIME,UPLOADTYPE,DIRECTORYNAME)" +
+                                    " VALUES (@P0,@P1,@P2,@P3,@P4) RETURNING ID";
+                                id = connectionString.ExecuteScalar(sql.ToUpper(), [("@P0", fname),
+                                      ("@P1", DateTime.Now.Date), ("@P2", DateTime.Now.TimeOfDay), ("@P3", 0),
+                                      ("@P4", CPUUR.ParentDirectory)]).ToInt(-1);
                             }
                         }
                     }
@@ -4753,7 +4752,7 @@ namespace VideoGui
                   ") ON M.LINKEDSHORTSDIRECTORYID = R.NEWID " +
                   "LEFT JOIN SHORTSDIRECTORY S1 ON M.LINKEDSHORTSDIRECTORYID = S1.ID " +
                  "WHERE COALESCE(S2.ID, S1.ID) IS NOT NULL";
-                connectionString.ExecuteReader(sql,(FbDataReader r) =>
+                connectionString.ExecuteReader(sql, (FbDataReader r) =>
                 {
                     SelectedShortsDirectoriesList.Add(new SelectedShortsDirectories(r));
                 });
@@ -10580,7 +10579,7 @@ namespace VideoGui
                     });
 
                     int Id = -1;
-                    for(int i = SelectedShortsDirectoriesList.Count - 1; i >= 0; i--)
+                    for (int i = SelectedShortsDirectoriesList.Count - 1; i >= 0; i--)
                     {
                         if (SelectedShortsDirectoriesList[i].IsActive &&
                             SelectedShortsDirectoriesList[i].NumberOfShorts == 0)
@@ -10593,7 +10592,7 @@ namespace VideoGui
                     }
 
                     bool fnd = false;
-                    foreach(var item in SelectedShortsDirectoriesList.Where(s=>s.IsActive))
+                    foreach (var item in SelectedShortsDirectoriesList.Where(s => s.IsActive))
                     {
                         fnd = true;
                         string UploadFile = "";
@@ -10623,7 +10622,7 @@ namespace VideoGui
                                     DateTime LastUpload = dtr.AtTime(TimeOnly.FromTimeSpan(ttr));
                                     item.LastUploadedDateFile = LastUpload;
                                     sqlaa = "UPDATE MULTISHORTSINFO SET LASTUPLOADEDDATE = @P0, LASTUPLOADEDTIME = @P1 WHERE ID = @P2;";
-                                    connectionString.ExecuteNonQuery(sqlaa, [("@P0", LastUpload.Date), ("@P1", LastUpload.TimeOfDay), 
+                                    connectionString.ExecuteNonQuery(sqlaa, [("@P0", LastUpload.Date), ("@P1", LastUpload.TimeOfDay),
                                         ("@P2", item.Id)]);
                                     Processed = true;
                                 }
@@ -10638,11 +10637,11 @@ namespace VideoGui
                         if (SelectedShortsDirectoriesList.Count > 0)
                         {
                             SelectedShortsDirectoriesList[0].IsActive = true;
-                            string uploadDirectory = SelectedShortsDirectoriesList[0].DirectoryName; 
+                            string uploadDirectory = SelectedShortsDirectoriesList[0].DirectoryName;
                             string sqlaa = "UPDATE MULTISHORTSINFO SET ISSHORTSACTIVE = 1 WHERE ID = @ID;";
                             connectionString.ExecuteNonQuery(sqlaa, [("@ID", SelectedShortsDirectoriesList[0].Id)]);
                             int Id_uploadPath = SelectedShortsDirectoriesList[0].LinkedShortsDirectoryId;
-                            foreach(var item in EditableshortsDirectoryList.Where(s=>s.Id == Id_uploadPath))
+                            foreach (var item in EditableshortsDirectoryList.Where(s => s.Id == Id_uploadPath))
                             {
                                 if (uploadDirectory == item.Directory)
                                 {

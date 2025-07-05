@@ -375,7 +375,7 @@ namespace VideoGui
                 InitializeComponent();
                 Closing += (s, e) =>
                 {
-                    TimerSimulate?.Stop();
+                    Simulate?.Stop();
                     IsClosing = true;
                     timer?.Stop();
                     canceltoken.Cancel();
@@ -1200,7 +1200,7 @@ namespace VideoGui
             try
             {
                 
-                dbInitializer?.Invoke(this, new CustomParams_UpdateUploadsRecords(videofiles));
+                dbInitializer?.Invoke(this, new CustomParams_UpdateUploadsRecords(videofiles, DirectoryPath));
             }
             catch (Exception ex)
             {
@@ -1521,7 +1521,6 @@ namespace VideoGui
                         {
                             timer.Start();
                         }
-
                     };
                     string divclassname = "right-section style-scope ytcp-video-list-cell-video";
                     string idclass = "style-scope ytcp-img-with-fallback";
@@ -3265,13 +3264,17 @@ namespace VideoGui
                     List<HtmlNode> Nodes = GetNodes(html, Span_Name);
                     if (html.ToLower().Contains("daily limit"))
                     {
-
                         if (DoUploadsCnt() < 100)
                         {
-                            //dbInitializer?.Invoke(this, new CustomParams_Wait());
                             await BuildFiles();
                             Close();
                         }
+                    }
+                    if (VideoFiles.Count == 1 && Regex.IsMatch(html.ToLower(), @"processing will begin shortly|your video template has been saved as draft|saving|save and close|title-row style-scope ytcp-uploads-dialog"))
+                    {
+                        
+                        InsertIntoUploadFiles(VideoFiles, connectStr);
+                        ExitDialog = true;
                     }
                     if (html.ToLower().Contains("uploads complete"))
                     {
@@ -3326,7 +3329,6 @@ namespace VideoGui
                                 CompleteCnt++;
                                 UploadedHandler(Span_Name, connectStr, filename1);
                                 InsertIntoUploadFiles(new List<string> { filename1 }, connectStr);
-
                             }
                             if (Regex.IsMatch(Nodes[i].InnerText, @"Waiting"))
                             {
