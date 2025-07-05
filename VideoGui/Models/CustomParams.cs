@@ -69,9 +69,11 @@ namespace VideoGui.Models
     public class CustomParams_UpdateMultishortsByDir
     {
         public string DirectoryName = "";
-        public CustomParams_UpdateMultishortsByDir(string DirectoryName)
+        public string ParentDirectory = "";
+        public CustomParams_UpdateMultishortsByDir(string DirectoryName, string parentDirectory)
         {
             this.DirectoryName = DirectoryName;
+            ParentDirectory = parentDirectory;
         }
     }
 
@@ -129,10 +131,13 @@ namespace VideoGui.Models
 
     public class CustomParams_UpdateUploadsRecords
     {
+        public string ParentDirectory { get; set; } = "";
         public List<string> DirectoryName = new();
-        public CustomParams_UpdateUploadsRecords(List<string> DirectoryName)
+        public CustomParams_UpdateUploadsRecords(List<string> DirectoryName, string ParentDirectory)
         {
             this.DirectoryName = DirectoryName;
+            this.ParentDirectory = ParentDirectory;
+
         }
     }
 

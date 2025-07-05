@@ -3445,14 +3445,18 @@ namespace VideoGui
                     {
                         foreach (var file in CPUUR.DirectoryName)
                         {
-                            string fname = Path.GetFileNameWithoutExtension(file.ToUpper());
-                            string sql = "SELECT ID FROM UPLOADSRECORD WHERE UPLOADFILE = @P0 AND UPLOADTYPE = 0";
-                            int id = connectionString.ExecuteScalar(sql.ToUpper(), [("@P0", fname)]).ToInt(-1);
-                            if (id == -1)
-                            {
-                                sql = "INSERT INTO UPLOADSRECORD(UPLOADFILE, UPLOAD_DATE, UPLOAD_TIME,UPLOADTYPE) VALUES (@P0,@P1,@P2,@P3) RETURNING ID";
-                                id = connectionString.ExecuteScalar(sql.ToUpper(), [("@P0", fname),
-                            ("@P1", DateTime.Now.Date), ("@P2", DateTime.Now.TimeOfDay), ("@P3", 0)]).ToInt(-1);
+
+                                string fname = Path.GetFileNameWithoutExtension(file.ToUpper());
+                                string sql = "SELECT ID FROM UPLOADSRECORD WHERE UPLOADFILE = @P0 AND UPLOADTYPE = 0";
+                                int id = connectionString.ExecuteScalar(sql.ToUpper(), [("@P0", fname)]).ToInt(-1);
+                                if (id == -1)
+                                {
+                                    sql = "INSERT INTO UPLOADSRECORD(UPLOADFILE, UPLOAD_DATE, UPLOAD_TIME,UPLOADTYPE,DIRECTORYNAME)" +
+                                        " VALUES (@P0,@P1,@P2,@P3,@P4) RETURNING ID";
+                                    id = connectionString.ExecuteScalar(sql.ToUpper(), [("@P0", fname),
+                            ("@P1", DateTime.Now.Date), ("@P2", DateTime.Now.TimeOfDay), ("@P3", 0),
+                                ("@P4",  )]).ToInt(-1);
+                                }
                             }
                         }
                     }
@@ -4367,7 +4371,7 @@ namespace VideoGui
                 sqlstring = $"create table UPLOADSRECORD({Id},UPLOADFILE varchar(256), UPLOAD_DATE DATE, UPLOAD_TIME TIME,UPLOADTYPE INTEGER)";
                 connectionString.CreateTableIfNotExists(sqlstring);
                 connectionString.AddFieldToTable("UPLOADSRECORD", "UPLOADTYPE", "INTEGER", 0);
-                connectionString.AddFieldToTable("UPLOADSRECORD", "DIRECTORYNAME", "VARCHAR(256)", "");
+                connectionString.AddFieldToTable("UPLOADSRECORD", "DIRECTORYNAME", "VARCHAR(255)");
 
 
                 sqlstring = $"create table PLANINGQUES({Id},SOURCE varchar(500),SourceDir varchar(500))";

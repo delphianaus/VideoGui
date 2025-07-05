@@ -1199,6 +1199,7 @@ namespace VideoGui
         {
             try
             {
+                
                 dbInitializer?.Invoke(this, new CustomParams_UpdateUploadsRecords(videofiles));
             }
             catch (Exception ex)
