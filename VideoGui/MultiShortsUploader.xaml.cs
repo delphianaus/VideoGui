@@ -2,9 +2,12 @@
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -19,6 +22,7 @@ using System.Windows.Threading;
 using VideoGui.Models;
 using VideoGui.Models.delegates;
 using Windows.Graphics.DirectX.Direct3D11;
+using Path = System.IO.Path;
 
 namespace VideoGui
 {
@@ -31,6 +35,7 @@ namespace VideoGui
         public TitleSelectFrm DoTitleSelectFrm = null;
         public DescSelectFrm DoDescSelectFrm = null;
         string connectionStr = "";
+        ScraperModule scraperModule = null;
         public bool IsClosing = false, IsClosed = false, Ready = false;
         DispatcherTimer LocationChangedTimer = new DispatcherTimer();
         public static readonly DependencyProperty Column_WidthProperty =
@@ -408,7 +413,184 @@ namespace VideoGui
             }
         }
 
+        private void BtnRunUploaders_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                bool Valid = true;
+                RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                string rootfolder = key.GetValueStr("UploadPath", "");
+                key?.Close();
+                if (Directory.Exists(rootfolder))
+                {
+                    List<string> files = Directory.EnumerateFiles(rootfolder, "*.mp4", SearchOption.AllDirectories).ToList();
+                    string firstfile = files.FirstOrDefault();
+                    if (firstfile is not null && File.Exists(firstfile))
+                    {
+                        string fid = Path.GetFileNameWithoutExtension(firstfile).Split('_').LastOrDefault();
+                        string DirName = rootfolder.Split(@"\").ToList().LastOrDefault();
+                        var r = dbInit?.Invoke(this, new CustomParams_LookUpId(DirName));
+                        ShortsIndex = (r is not null) ? r.ToInt(-1) : ShortsIndex;
+                        var r1r = dbInit?.Invoke(this, new CustomParams_RematchedUpdate(ShortsIndex, DirName));
+                        if (r1r is bool res) Valid = res;
+                    }
+                }
 
+                if (Valid)
+                {
+                    if (scraperModule is not null && !scraperModule.IsClosed)
+                    {
+                        if (scraperModule.IsClosing) scraperModule.Close();
+                        while (!scraperModule.IsClosing)
+                        {
+                            Thread.Sleep(100);
+                        }
+                        scraperModule.Close();
+                        scraperModule = null;
+                    }
+                    if (scraperModule is not null && scraperModule.IsClosed)
+                    {
+                        scraperModule = null;
+                    }
+
+                    if (scraperModule is null)
+                    {
+                        WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
+                        string gUrl = webAddressBuilder.Dashboard().Address;
+                        int Maxuploads = (txtTotalUploads.Text != "") ? txtTotalUploads.Text.ToInt(100) : 100;
+                        int UploadsPerSlot = (txtMaxUpload.Text != "") ? txtMaxUpload.Text.ToInt(5) : 5;
+
+                        scraperModule = new ScraperModule(dbInit, doOnFinish, gUrl, Maxuploads, UploadsPerSlot, 0, true);
+
+                        scraperModule.ShowActivated = true;
+                        Hide();
+                        scraperModule.Show();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"BtnRunUploaders_Click {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+
+        }
+        private void doOnFinish(int id)
+        {
+            try
+            {
+                WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
+                string gUrl = webAddressBuilder.Dashboard().Address;
+                RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                string rootfolder = key.GetValueStr("UploadPath", @"D:\shorts");
+                key?.Close();
+                // update shorts left.
+
+                int cnt = Directory.EnumerateFiles(rootfolder, "*.mp4", SearchOption.AllDirectories).ToList().Count();
+                if (scraperModule != null && !scraperModule.KilledUploads)
+                {
+                    List<string> filesdone = new List<string>();
+                    bool Exc = scraperModule.Exceeded;
+                    filesdone.AddRange(scraperModule.ScheduledOk);
+                    int Uploaded = scraperModule.TotalScheduled;
+                    int shortsleft = Directory.EnumerateFiles(rootfolder, "*.mp4", SearchOption.AllDirectories).ToList().Count();
+                    foreach (var f in msuSchedules.ItemsSource)
+                    {
+                        if (f is SelectedShortsDirectories rp && rp.IsActive)
+                        {
+                            rp.NumberOfShorts = cnt;
+                            break;
+                        }
+                    }
+
+
+
+                    if (!Exc && shortsleft > 0 && Uploaded < txtTotalUploads.Text.ToInt())
+                    {
+                        int Maxuploads = (txtTotalUploads.Text != "") ? txtTotalUploads.Text.ToInt(100) : 100;
+                        int UploadsPerSlot = (txtMaxUpload.Text != "") ? txtMaxUpload.Text.ToInt(5) : 5;
+                        scraperModule = new ScraperModule(dbInit, doOnFinish, gUrl, Maxuploads, UploadsPerSlot, 0, false);
+
+
+                        scraperModule.ShowActivated = true;
+                        scraperModule.ScheduledOk.AddRange(filesdone);
+                        Hide();
+                        Process[] webView2Processes = Process.GetProcessesByName("MicrosoftEdgeWebview2");
+                        foreach (Process process in webView2Processes)
+                        {
+                            process.Kill();
+                        }
+                        scraperModule.Show();
+                        return;
+                    }
+                    else
+                    {
+                        string DirectoryPath = rootfolder.Split(@"\").ToList().LastOrDefault();
+                        if (DirectoryPath != "")
+                        {
+                            dbInit?.Invoke(this, new CustomParams_UpdateMultishortsByDir(DirectoryPath));
+                        }
+                    }
+
+                }
+                Show();
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"doOnFinish {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
+            }
+        }
+        private void txtMaxUpload_KeyDown(object sender, KeyEventArgs e)
+        {
+            try
+            {
+                if (e.Key == Key.Enter)
+                {
+                    RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                    key.SetValue("UploadNumber", txtMaxUpload.Text);
+                    key?.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"txtMaxUpload_KeyDown {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
+            }
+        }
+
+        private void txtTotalUploads_KeyDown(object sender, KeyEventArgs e)
+        {
+            try
+            {
+                if (e.Key == Key.Enter)
+                {
+                    RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                    key.SetValue("MaxUploads", txtTotalUploads.Text);
+                    key?.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"txtMaxUpload_KeyDown {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
+            }
+        }
+
+        private void txtMaxUpload_LostFocus(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                string uploadnmb = key.GetValueStr("UploadNumber", "5");
+                if (uploadnmb is string str && str != txtMaxUpload.Text)
+                {
+                    key.SetValue("UploadNumber", txtMaxUpload.Text);
+                }
+                key?.Close();
+
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"txtMaxUpload_LostFocus {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
+            }
+        }
         private void mnuRemoveSelected_Click(object sender, RoutedEventArgs e)
         {
             try

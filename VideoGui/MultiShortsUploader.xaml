@@ -86,6 +86,12 @@
         <Button Name="BtnClose" Content="Close" HorizontalAlignment="Right"
                 Margin="0,0,6,4" VerticalAlignment="Bottom" Height="25" Width="94" Click="BtnClose_Click"/>
         <Button x:Name="BtnRunUploaders" Content="Run Uploader" HorizontalAlignment="Left"
-            Margin="6,0,0,4" VerticalAlignment="Bottom" Height="25" Width="94" Click="BtnClose_Click"/>
+            Margin="6,0,0,4" VerticalAlignment="Bottom" Height="25" Width="94" Click="BtnRunUploaders_Click"/>
+        <Label Content="Uploads Per Slot" Margin="108,0,0,4" HorizontalAlignment="Left" VerticalAlignment="Bottom"/>
+        <TextBox x:Name="txtMaxUpload" Text="5" TextWrapping="Wrap" 
+            KeyDown="txtMaxUpload_KeyDown" LostFocus="txtMaxUpload_LostFocus" Margin="208,397,315,5" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="20" Height="20"/>
+        <Label Content="Max Uploads" Margin="234,0,0,4" VerticalAlignment="Bottom" HorizontalAlignment="Left"/>
+        <TextBox x:Name="txtTotalUploads" Text="100" TextWrapping="Wrap" 
+            KeyDown="txtTotalUploads_KeyDown" Margin="320,0,0,4" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="30" Height="20"/>
     </Grid>
 </Window>

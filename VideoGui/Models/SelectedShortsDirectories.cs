@@ -67,8 +67,10 @@ namespace VideoGui.Models
             string data = $"   {_LastUploadedDate.ToString("dd/MM/yyyy")}";
             //{ActionScheduleStart.Value.ToString("HH:mm")} - {ActionScheduleEnd.Value.ToString("HH:mm")}";
             var start = _LastUploadedDate.TimeOfDay;
-            string dx = $":{start.Minutes}:{start.Seconds}";
-
+            string fillA1 = (start.Minutes < 10) ? "0" : "";
+            string fillA2 = (start.Seconds < 10) ? "0" : "";
+            string dx = $":{fillA1}{start.Minutes}:{fillA2}{start.Seconds}";
+            
             data += (start.Hours > 12) ? $" {start.Hours - 12}{dx} PM" : $" {start.Hours}{dx} AM";
         
             return data;

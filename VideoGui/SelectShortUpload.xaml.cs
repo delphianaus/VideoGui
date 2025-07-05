@@ -357,7 +357,7 @@ namespace VideoGui
             {
                 return "SELECT S.ID, S.DIRECTORYNAME, S.TITLEID, S.DESCID, " +
                        "(SELECT LIST(TAGID, ',') FROM TITLETAGS " +
-                       " WHERE GROUPID = S.TITLEID) AS LINKEDTITLEIDS, " +
+                       " WHERE GROUPID = S.ID) AS LINKEDTITLEIDS, " +
                        " (SELECT LIST(ID,',') FROM DESCRIPTIONS " +
                        "WHERE ID = S.DESCID) AS LINKEDDESCIDS " +
                        "FROM SHORTSDIRECTORY S" +
@@ -519,11 +519,6 @@ namespace VideoGui
 
                         scraperModule.ShowActivated = true;
                         Hide();
-                        // Process[] webView2Processes = Process.GetProcessesByName("MicrosoftEdgeWebview2");
-                        // foreach (Process process in webView2Processes)
-                        //  {
-                        //       process.Kill();
-                        //   }
                         scraperModule.Show();
                     }
                 }
@@ -721,7 +716,8 @@ namespace VideoGui
                     string ThisDir = rootfolder.Split(@"\").ToList().LastOrDefault();
                     if (dbInit?.Invoke(this, new CustomParams_AddDirectory(ThisDir.ToUpper())) is TurlpeDualString tds)
                     {
-                        connectionStr.ExecuteReader(GetShortsDirectorySql(tds.Id), (FbDataReader r) =>
+                        string sqle = GetShortsDirectorySql(tds.Id);
+                        connectionStr.ExecuteReader(sqle, (FbDataReader r) =>
                         {
                             int titleid = r["TITLEID"].ToInt(-1);
                             int descid = r["DESCID"].ToInt(-1);

@@ -1598,28 +1598,6 @@ namespace VideoGui
                                     bool fnd = false;
                                     DateTime q = DateTime.Now;
                                     string newid = vidoeid.Split('_').LastOrDefault().Trim();
-                                    /* 
-                                    foreach (var itx in RematchedList.Where(s => s.OldId == 47))
-                                    {
-                                        fnd = true;
-                                        break;
-                                    }
-                                    if (!fnd) RematchedList.Add(new Rematched { OldId = 47, NewId = 62 });
-                                    fnd = false;
-                                    foreach (var itx in RematchedList.Where(s => s.OldId == 49))
-                                    {
-                                        fnd = true;
-                                        break;
-                                    }
-                                    if (!fnd) RematchedList.Add(new Rematched { OldId = 49, NewId = 63 });
-                                    fnd = false;
-                                    foreach (var itx in RematchedList.Where(s => s.OldId == 48))
-                                    {
-                                        fnd = true;
-                                        break;
-                                    }
-                                    if (!fnd) RematchedList.Add(new Rematched { OldId = 48, NewId = 64 });
-                                    */
                                     int newidint = newid.ToInt(-1);
                                     int oldid = newidint;
                                     foreach (var itx in RematchedList.Where(

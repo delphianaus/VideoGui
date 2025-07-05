@@ -112,8 +112,7 @@
             <Label x:Name="lblQueInfo" HorizontalAlignment="Left" Height="28" VerticalAlignment="Center" Width="45"/>
             <Label x:Name="lblAccelStatus" Background="#FFBFBFBF" Width="67" Height="34" Content="Accel HW" FontSize="11"/>
             <Label x:Name="lbAccelHW" Content="" HorizontalAlignment="Left" Height="28" VerticalAlignment="Center" Width="80"/>
-            <Button x:Name="btnRunTest" Content="Audio Joiner" HorizontalAlignment="Left" Height="28" VerticalAlignment="Top" Width="70" Click="btnRunTest_Click"/>
-            <Button x:Name="btnScriptEditor" Content="Script Injector" HorizontalAlignment="Left" Height="28" VerticalAlignment="Center" Width="77" Click="btnScriptEditor_Click"/>
+            <Button x:Name="btnScriptEditor" Content="Script Injector" HorizontalAlignment="Left" Height="28" VerticalAlignment="Center" Width="77" Click="btnScriptEditor_Click" RenderTransformOrigin="4.338,-1.891"/>
             <Button x:Name="btnMediaImporter" Content="Import Footage" HorizontalAlignment="Left" Height="28" VerticalAlignment="Center" Width="89" Click="btnMediaImporter_Click"/>
             <Button x:Name="btnShortsCreator" Content="Create Shorts" HorizontalAlignment="Left" Height="28" VerticalAlignment="Top" Width="74" Click="btnShortsCreator_Click"/>
             <Button x:Name="btnVIdeoEdit" Content="Edit Points" HorizontalAlignment="Center" Height="28" VerticalAlignment="Center" Width="63" Click="btnVIdeoEdit_Click"/>
@@ -152,6 +151,7 @@
         <Button x:Name="btnEditSchedules" Content="Edit Schedules" Height="26" Margin="545,0,0,82" VerticalAlignment="Bottom" HorizontalAlignment="Left" Click="btnEditSchedules_Click" Width="86"/>
         <Button x:Name="btnEditActions" Content="Edit Actions" Height="26" Margin="636,0,0,82" VerticalAlignment="Bottom" HorizontalAlignment="Left" Click="btnEditActions_Click" Width="68"/>
         <Button x:Name="btnSchedule" Content="Scheduler" Height="26" Margin="711,0,0,82" VerticalAlignment="Bottom" HorizontalAlignment="Left" Click="btnSchedule_Click" Width="68"/>
+        <Button x:Name="btnRunTest" Content="Audio Joiner" HorizontalAlignment="Left" Height="26" VerticalAlignment="Top" Width="89" Click="btnRunTest_Click" Margin="789,540,0,0"/>
     </Grid>
 
 </Window>
