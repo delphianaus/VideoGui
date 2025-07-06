@@ -66,11 +66,11 @@
                 <MSU:MultiListboxColumnDefinition HeaderText="Title" Width="50" 
                    Style="{StaticResource ToggleSetEditStyle}" HeaderPadding="3,0,0,0"
                    Click="Title_ToggleButtonClick"
-                   DataField="IsDescAvailable" ComponentType="ToggleButton"/>
+                   DataField="IsTitleAvailable" ComponentType="ToggleButton"/>
                 <MSU:MultiListboxColumnDefinition HeaderText="Desc" 
                   Width="50" Click="Desc_ToggleButtonClick"
                   Style="{StaticResource ToggleSetEditStyle}"
-                  DataField="IsTitleAvailable" ComponentType="ToggleButton"/>
+                  DataField="IsDescAvailable" ComponentType="ToggleButton"/>
                 <MSU:MultiListboxColumnDefinition HeaderText="   Last Uploaded" 
                    ContentVerticalAlignment="Center"
                    ContentHorizontalAlignment="Center" ContentMargin="0,0,0,0"

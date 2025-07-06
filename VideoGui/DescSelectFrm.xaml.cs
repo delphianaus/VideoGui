@@ -88,7 +88,7 @@ namespace VideoGui
         {
             try
             {
-                DoDbHook?.Invoke(this, IsUploadsBuilder ? new CustomParams_Initialize(IsUploadsBuilder) : null);
+                DoDbHook?.Invoke(this, IsUploadsBuilder ? new CustomParams_Initialize(IsUploadsBuilder, Id) : null);
             }
             catch (Exception ex)
             {

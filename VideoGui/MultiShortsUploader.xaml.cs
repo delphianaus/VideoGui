@@ -284,6 +284,10 @@ namespace VideoGui
                         {
                             linkeddescid = (r["LINKEDDESCIDS"] is string did ? did : "");
                         });
+                        foreach (var sch in msuSchedules.Items.OfType<SelectedShortsDirectories>().Where(x => x.LinkedShortsDirectoryId == ShortsIndex))
+                        {
+                            sch.LinkedDescId = linkeddescid;
+                        }
                     }
                     //btnEditDesc.IsChecked = (descid != -1 && linkeddescid != "");
 
@@ -327,6 +331,7 @@ namespace VideoGui
                 if (sender is ToggleButton t && t.DataContext is SelectedShortsDirectories info)
                 {
                     LinkedId = info.LinkedShortsDirectoryId;
+                    t.IsChecked = info.IsDescAvailable;
                     DoDescSelectCreate(info.DescId);
                 }
             }
@@ -384,6 +389,7 @@ namespace VideoGui
             }
         }
         int ShortsIndex = -1;
+
         private void DoOnFinishTitleSelect()
         {
             try
@@ -412,6 +418,10 @@ namespace VideoGui
                     {
                         linkedtitleid = (r["LINKEDTITLEIDS"] is string tidt ? tidt : "");
                     });
+                    foreach (var sch in msuSchedules.Items.OfType<SelectedShortsDirectories>().Where(x => x.LinkedShortsDirectoryId == ShortsIndex))
+                    {
+                        sch.LinkedTitleId = linkedtitleid;
+                    }
                     DoTitleSelectFrm = null;
                 }
                 Show();
@@ -441,8 +451,12 @@ namespace VideoGui
                         string DirName = rootfolder.Split(@"\").ToList().LastOrDefault();
                         var r = dbInit?.Invoke(this, new CustomParams_LookUpId(DirName));
                         ShortsIndex = (r is not null) ? r.ToInt(-1) : ShortsIndex;
-                        var r1r = dbInit?.Invoke(this, new CustomParams_RematchedUpdate(ShortsIndex, DirName));
-                        if (r1r is bool res) Valid = res;
+                        if (ShortsIndex == -1)
+                        {
+                            var r1r = dbInit?.Invoke(this, new CustomParams_RematchedUpdate(ShortsIndex, DirName));
+                            if (r1r is bool res) Valid = res;
+                        }
+                        else Valid = true;
                     }
                 }
 
@@ -552,10 +566,39 @@ namespace VideoGui
                     }
                     else
                     {
+                        bool Processed = false;
                         int ucnt = Uploaded;
+                        foreach (var rp in msuSchedules.ItemsSource.OfType<SelectedShortsDirectories>().Where(x => x.IsActive))
+                        {
+                            rp.NumberOfShorts = shortsleft;
+                            int linkedId = rp.LinkedShortsDirectoryId;
+                            string SQLB = "SELECT * FROM UploadsRecord ORDER BY RDB$RECORD_VERSION DESC ROWS 100;";
+                            connectionStr.ExecuteReader(SQLB, (FbDataReader r) =>
+                            {
+                                if (Processed) return;
+                                string UploadFile = (r["UPLOADFILE"] is string f) ? f : "";
+                                int idx = UploadFile.Split('_').LastOrDefault().ToInt(-1);
+                                if (dbInit?.Invoke(this, new CustomParams_RematchedLookup(idx)) is int trs)
+                                {
+                                    idx = trs;
+                                }
+                                
+                                if (idx == linkedId)
+                                {
+                                    DateTime dtr = (r["UPLOAD_DATE"] is DateTime dt) ? dt : DateTime.Now.AddYears(-200);
+                                    TimeSpan ttr = (r["UPLOAD_TIME"] is TimeSpan ts) ? ts : TimeSpan.Zero;
+                                    if (dtr.Year > 2000)
+                                    {
+                                        rp.LastUploadedDateFile = dtr.AtTime(TimeOnly.FromTimeSpan(ttr));
+                                    }
+                                }
+                            });
+                        }
                         Task.Run(() =>
                         {
                             var cts = new CancellationTokenSource();
+
+
                             if (ucnt > 0)
                             {
                                 Dispatcher.Invoke(() =>
@@ -661,7 +704,7 @@ namespace VideoGui
             }
         }
 
-        string OldTarget , OldgUrl;
+        string OldTarget, OldgUrl;
         private void txtMaxUpload_KeyDown(object sender, KeyEventArgs e)
         {
             try

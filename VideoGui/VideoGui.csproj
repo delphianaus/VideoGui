@@ -12,8 +12,8 @@
     <StartupObject>VideoGui.App</StartupObject>
     <ApplicationIcon>Properties\computer.ico</ApplicationIcon>
     <Platforms>x64</Platforms>
-    <AssemblyVersion>1.0.0.375</AssemblyVersion>
-    <FileVersion>1.0.0.375</FileVersion>
+    <AssemblyVersion>1.0.0.376</AssemblyVersion>
+    <FileVersion>1.0.0.376</FileVersion>
     <Nullable>annotations</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <UseWindowsForms>True</UseWindowsForms>
@@ -90,22 +90,22 @@
 
   <ItemGroup>
     <PackageReference Include="AsyncAwaitBestPractices" Version="9.0.0" />
-    <PackageReference Include="CliWrap" Version="3.8.2" />
+    <PackageReference Include="CliWrap" Version="3.9.0" />
     <PackageReference Include="Coravel" Version="6.0.2" />
     <PackageReference Include="DotNetProjects.Extended.Wpf.Toolkit" Version="5.0.124" />
-    <PackageReference Include="FirebirdSql.Data.FirebirdClient" Version="10.3.2" />
+    <PackageReference Include="FirebirdSql.Data.FirebirdClient" Version="10.3.3" />
     <PackageReference Include="FolderBrowserEx" Version="1.0.1" />
-    <PackageReference Include="Google.Apis" Version="1.69.0" />
-    <PackageReference Include="Google.Apis.Auth" Version="1.69.0" />
-    <PackageReference Include="Google.Apis.YouTube.v3" Version="1.69.0.3707" />
-    <PackageReference Include="HtmlAgilityPack" Version="1.12.0" />
+    <PackageReference Include="Google.Apis" Version="1.70.0" />
+    <PackageReference Include="Google.Apis.Auth" Version="1.70.0" />
+    <PackageReference Include="Google.Apis.YouTube.v3" Version="1.69.0.3764" />
+    <PackageReference Include="HtmlAgilityPack" Version="1.12.1" />
     <PackageReference Include="MediaInfo.Wrapper.Core" Version="21.9.3" />
     <PackageReference Include="Microsoft.AspNet.WebApi.Client" Version="6.0.0" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.0-preview.1.25080.5" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.0-preview.1.25080.5" />
     <PackageReference Include="Microsoft.NETCore.Platforms" Version="8.0.0-preview.7.23375.6" />
-	<PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3171-prerelease" />
+	<PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3351.48" />
     <PackageReference Include="Nancy" Version="2.0.0" />
     <PackageReference Include="runtime.native.System.Net.Http" Version="4.3.1" />
     <PackageReference Include="Squid-Box.SevenZipSharp" Version="1.6.2.24" />

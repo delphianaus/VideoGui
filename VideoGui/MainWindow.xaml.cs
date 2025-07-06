@@ -533,6 +533,14 @@ namespace VideoGui
                 {
                     ShortsDirectoryIndex = cpsii.index;
                 }
+                if (tld is CustomParams_RematchedLookup cpRL)
+                {
+                    foreach(var item in RematchedList.Where(s=>s.OldId == cpRL.oldId))
+                    {
+                        return item.NewId;    
+                    }
+                }
+
                 if (tld is CustomParams_LookUpId pclki)
                 {
                     string dir = pclki.DirectoryName.ToUpper();
@@ -2531,7 +2539,9 @@ namespace VideoGui
 
                             frmTitleSelect.TitleId = TitleId;
                             string BaseStr = frmTitleSelect.BaseTitle + " ";
-                            foreach (var item in TitleTagsList.Where(s => s.GroupId == ShortsDirectoryIndex))
+                            TitleTagsSrc = ShortsDirectoryIndex;
+                            int Tid = EditableshortsDirectoryList.Where(s => s.Id == ShortsDirectoryIndex).FirstOrDefault().TitleId;
+                            foreach (var item in TitleTagsList.Where(s => s.GroupId == Tid))
                             {
                                 if (!BaseStr.Contains($"#{item.Description}"))
                                 {
@@ -2554,7 +2564,7 @@ namespace VideoGui
                             BaseStr = BaseStr.Trim();
                             frmTitleSelect.txtTitle.Text = BaseStr.Trim();
                             frmTitleSelect.lblTitleLength.Content = BaseStr.Trim().Length;
-                            int Tid = EditableshortsDirectoryList.Where(s => s.Id == ShortsDirectoryIndex).FirstOrDefault().TitleId;
+                           
                             if (TitlesList.Where(s => s.Id == Tid).Count() > 0)
                             {
 
@@ -2571,7 +2581,7 @@ namespace VideoGui
                                 availabletagsViewSource.Source = availableTagsList;
                                 availabletagsViewSource.SortDescriptions.Add(new SortDescription("Tag", ListSortDirection.Ascending));
                                 availabletagsViewSource.Filter += (object sender, FilterEventArgs e) =>
-                                {
+                                    {
                                     if (e.Item is AvailableTags availTag)
                                     {
                                         bool fndx = false;

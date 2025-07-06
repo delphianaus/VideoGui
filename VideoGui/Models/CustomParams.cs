@@ -119,7 +119,14 @@ namespace VideoGui.Models
             directory = _directory;
         }
     }
-
+    public class CustomParams_RematchedLookup
+    {
+        public int oldId { get; set; } = -1;
+        public CustomParams_RematchedLookup(int _Oldid)
+        {
+            oldId = _Oldid;
+        }
+    }
     public class CustomParams_UpdateStats
     {
         public string DirectoryName = "";
