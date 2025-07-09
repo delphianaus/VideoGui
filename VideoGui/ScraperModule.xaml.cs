@@ -1053,6 +1053,14 @@ namespace VideoGui
                     if (ShortsDirectoriesList.Count == 0) ShortsDirectoriesList.Add(new ShortsDirectory(-1, UploadPath));
                     Files.Clear();
                     Files.AddRange(Directory.EnumerateFiles("z:\\", "*.mp4", SearchOption.AllDirectories).ToList());
+                    for(int i =Files.Count - 1; i >= 0; i--)
+                    {
+                        if (!Files[i].Contains("_"))
+                        {
+                            Files.RemoveAt(i);
+                        }
+                    }
+
 
                     int max = 0;
                     string connectStr = dbInitializer?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
@@ -1596,8 +1604,13 @@ namespace VideoGui
                                 if (!WaitingFileName)
                                 {
                                     bool fnd = false;
+                                    string newid = "";
                                     DateTime q = DateTime.Now;
-                                    string newid = vidoeid.Split('_').LastOrDefault().Trim();
+                                    if (vidoeid.Contains('_'))
+                                    {
+                                        newid = vidoeid.Split('_').LastOrDefault().Trim();
+                                    }
+                                    else newid = "93";
                                     int newidint = newid.ToInt(-1);
                                     int oldid = newidint;
                                     foreach (var itx in RematchedList.Where(
@@ -3435,7 +3448,11 @@ namespace VideoGui
                     NodeUpdate(Span_Name, ScheduledGet);
                     if (found) continue;// gets next html and looks for waiting video
                 }
-
+                var htmlcheck1 = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
+                if (Regex.IsMatch(htmlcheck1, @"Uploads complete|processing will begin shortly|your video template has been saved as draft|saving|save and close|title-row style-scope ytcp-uploads-dialog|daily limit"))
+                {
+                    return false;
+                }
                 return true;
             }
             catch (Exception ex)

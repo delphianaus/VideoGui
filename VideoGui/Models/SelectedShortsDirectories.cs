@@ -49,7 +49,7 @@ namespace VideoGui.Models
         public int NumberOfShorts { get => _NumberOfShorts; set { _NumberOfShorts = value; OnPropertyChanged(); } }
 
         public int LinkedShortsDirectoryId { get => _LinkedShortsDirectoryId; set { _LinkedShortsDirectoryId = value; OnPropertyChanged(); } }
-        public string LastUploadedFile { get => GetUploadedDateString(); set { OnPropertyChanged(); } }
+        public string LastUploadedFile { get => LastUploadedDateFile.ToDisplayString(); set { OnPropertyChanged(); } }
         public DateTime LastUploadedDateFile { get => _LastUploadedDate; set { _LastUploadedDate = value; OnPropertyChanged(); } }
         public bool IsTitleAvailable { get => LinkedTitleId.Length > 0; set {; OnPropertyChanged(); } }
         public bool IsDescAvailable { get => LinkedDescId.Length > 0; set {; OnPropertyChanged(); } }

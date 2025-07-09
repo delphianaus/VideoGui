@@ -75,7 +75,7 @@
                    ContentVerticalAlignment="Center"
                    ContentHorizontalAlignment="Center" ContentMargin="0,0,0,0"
                    DataField="LastUploadedFile,AutoFontWeight,AutoFontColor"
-                   BoundTo="Text,FontWeight,Foreground" Width="140" ComponentType="TextBlock"/>
+                   BoundTo="Text,FontWeight,Foreground" Width="180" ComponentType="TextBlock"/>
             </MSU:MultiListbox.ColumnDefinitions>
             <MSU:MultiListbox.ItemsContextMenu>
                 <ContextMenu>

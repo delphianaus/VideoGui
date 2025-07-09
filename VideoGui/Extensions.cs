@@ -1931,7 +1931,25 @@ namespace VideoGui
 
 
         }
-
+        public static string ToDisplayString(this DateTime _LastUploadedDate)
+        {
+            try
+            {
+                if (_LastUploadedDate.Year < 2000) return "";
+                string data = $"   {_LastUploadedDate.ToString("dd/MM/yyyy")}";
+                var start = _LastUploadedDate.TimeOfDay;
+                string fillA1 = (start.Minutes < 10) ? "0" : "";
+                string fillA2 = (start.Seconds < 10) ? "0" : "";
+                string dx = $":{fillA1}{start.Minutes}:{fillA2}{start.Seconds}";
+                data += (start.Hours > 12) ? $" {start.Hours - 12}{dx} PM" : $" {start.Hours}{dx} AM";
+                return data;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"ToDisplayString {MethodBase.GetCurrentMethod().Name} {ex.Message}");
+                return "";
+            }
+        }
         public static string ToPascalCase(this string original, string parameter = "VLINE|NSW|VIC")
         {
             Regex invalidCharsRgx = new Regex("[^_a-zA-Z0-9]");
