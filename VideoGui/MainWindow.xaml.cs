@@ -4790,19 +4790,37 @@ namespace VideoGui
                 {
                     SelectedShortsDirectoriesList.Add(new SelectedShortsDirectories(r));
                 });
+                RegistryKey key = "SOFTWARE\\Scraper".OpenSubKey(Registry.CurrentUser);
+                string BaseDirectory = key?.GetValueStr("shortsdirectory", @"d:\shorts");
+                key?.Close();
 
                 foreach (var t in SelectedShortsDirectoriesList)
                 {
                     bool fnd = EditableshortsDirectoryList.
                         Any(s => s.Directory.ToLower() == t.DirectoryName.ToLower()) != null;
-                    if (!fnd)
+
+                    int Idx = InsertUpdateShorts(t.DirectoryName);
+                    t.LinkedShortsDirectoryId = Idx;
+                    sql = "UPDATE MULTISHORTSINFO SET LINKEDSHORTSDIRECTORYID = @ID WHERE ID = @ID2;";
+                    connectionString.ExecuteScalar(sql, [("@ID", Idx), ("@ID2", t.Id)]);
+                    string newpath = Path.Combine(BaseDirectory, t.DirectoryName);
+                    if (Directory.Exists(newpath))
                     {
-                        int Idx = InsertUpdateShorts(t.DirectoryName);
-                        if (Idx != -1)
+                        List<string> files =
+                            Directory.EnumerateFiles(newpath, "*.mp4", SearchOption.AllDirectories).ToList().
+                            Where(s => s.Contains("_")).ToList();
+                        foreach (var f in files)
                         {
-                            t.LinkedShortsDirectoryId = Idx;
-                            sql = "UPDATE MULTISHORTSINFO SET LINKEDSHORTSDIRECTORYID = @ID WHERE ID = @ID2;";
-                            connectionString.ExecuteScalar(sql, [("@ID", Idx), ("@ID2", t.Id)]);
+                            string fn = Path.GetFileNameWithoutExtension(f);
+                            string ext = Path.GetExtension(f);
+                            string path = Path.GetDirectoryName(f);
+                            int idxa = fn.IndexOf("_");
+                            string newfn = fn.Substring(0, idxa)+$"_{t.LinkedShortsDirectoryId}";
+                            if (fn != newfn)
+                            {
+                                string newf2 = Path.Combine(path, newfn+ ext);
+                                File.Move(f, newf2);
+                            }
                         }
                     }
                 }
@@ -10714,7 +10732,7 @@ namespace VideoGui
                         fnd = true;
                         string UploadFile = "";
                         bool Processed = false;
-                        int idx = -1; 
+                        int idx = -1;
                         DateTime dtr = new();
                         TimeSpan ttr = new();
                         string SQLB = "SELECT * FROM UploadsRecord ORDER BY RDB$RECORD_VERSION DESC ROWS 100;";
@@ -10725,7 +10743,7 @@ namespace VideoGui
                             dtr = (r["UPLOAD_DATE"] is DateTime d) ? d : DateTime.Now.Date.AddYears(-100);
                             ttr = (r["UPLOAD_TIME"] is TimeSpan t1) ? t1 : new TimeSpan();
                             idx = (UploadFile.Contains("_")) ? UploadFile.Split('_').LastOrDefault().ToInt(-1) : 93;
-                            
+
                         });
                         if (idx == item.LinkedShortsDirectoryId)
                         {
@@ -10741,7 +10759,7 @@ namespace VideoGui
                             }
                             if (found)
                             {
-                                
+
                                 DateTime LastUpload = dtr.AtTime(TimeOnly.FromTimeSpan(ttr));
                                 item.LastUploadedDateFile = LastUpload;
                                 sqlaa = "UPDATE MULTISHORTSINFO SET LASTUPLOADEDDATE = @P0, LASTUPLOADEDTIME = @P1 WHERE ID = @P2;";
