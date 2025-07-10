@@ -709,21 +709,10 @@ namespace VideoGui
                 {
                     RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                     string shortsdir = key.GetValueStr("shortsdirectory", @"D:\shorts\");
-                    string uploaddir = key.GetValueStr("UploadPath", "");
+                    string uploaddir = FindUploadPath();
                     key?.Close();
 
-
-                    if (Environment.MachineName.Contains("Prometheus") && File.Exists(@"C:\videogui\files.txt"))
-                    {
-                        ShortsDirectoryList.Clear();
-                        List<string> FileLst = File.ReadAllLines(@"C:\videogui\files.txt").ToList();
-                        foreach (var file in FileLst)
-                        {
-                            string[] f = file.Split('|');
-                            ShortsDirectoryList.Add(new MultiShortsInfo(f[0], f[1].ToInt(-1)));
-                        }
-                    }
-                    else if (Path.Exists(shortsdir))
+                    if (Path.Exists(shortsdir))
                     {
                         //                    List<string> FileLst = new();
                         List<string> DirectoryList = Directory.EnumerateDirectories(shortsdir).ToList();
@@ -799,6 +788,33 @@ namespace VideoGui
             {
                 ex.LogWrite($"formObjectHandler_MultiShortsUploader {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
                 return null;
+            }
+        }
+
+        public string FindUploadPath()
+        {
+            try
+            {
+                RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                string shortsdir = key.GetValueStr("shortsdirectory", @"D:\shorts\");
+                string uploaddir = key.GetValueStr("UploadPath", "");
+                key?.Close();
+                if (!Path.Exists(uploaddir))
+                {
+                    foreach (var dir in from dir in Directory.EnumerateDirectories(shortsdir).ToList()
+                                        let p = dir.Split('\\').LastOrDefault()
+                                        where p == uploaddir.Split('\\').LastOrDefault()
+                                        select dir)
+                    {
+                        return dir;
+                    }
+                }
+                return uploaddir;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"FindUploadPath {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+                return "";
             }
         }
 
@@ -1924,7 +1940,7 @@ namespace VideoGui
 
 
                                 RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
-                                string rootfolder = key.GetValueStr("UploadPath", @"D:\shorts\");
+                                string rootfolder = FindUploadPath();
                                 key?.Close();
                                 string ThisDir = rootfolder.Split(@"\").ToList().LastOrDefault();
                                 if (ThisDir != "")
@@ -2433,7 +2449,7 @@ namespace VideoGui
                             if (tld is CustomParams_Update p && p is not null)
                             {
                                 RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
-                                string rootfolder = key.GetValueStr("UploadPath", @"D:\shorts\");
+                                string rootfolder = FindUploadPath();// key.GetValueStr("UploadPath", @"D:\shorts\");
                                 key?.Close();
                                 string ThisDir = rootfolder.Split(@"\").ToList().LastOrDefault();
                                 if (ThisDir != "")
@@ -2517,7 +2533,7 @@ namespace VideoGui
                                 if (BaseStrX == "")
                                 {
                                     RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
-                                    string rootfolder = key.GetValueStr("UploadPath", @"D:\shorts");
+                                    string rootfolder = FindUploadPath();
                                     key?.Close();
                                     BaseStrX = rootfolder.Split(@"\").ToList().LastOrDefault();
                                 }
@@ -3998,7 +4014,7 @@ namespace VideoGui
                 WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
                 string gUrl = webAddressBuilder.Dashboard().Address;
                 RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
-                string rootfolder = key.GetValueStr("UploadPath", @"D:\shorts");
+                string rootfolder = FindUploadPath();
                 key?.Close();
                 int cnt = Directory.EnumerateFiles(rootfolder, "*.mp4", SearchOption.AllDirectories).ToList().Count();
                 if (scraperModule != null && !scraperModule.KilledUploads)
@@ -12280,7 +12296,7 @@ namespace VideoGui
                     if ((MainWindowX.Height != 0) && (MainWindowX.Width != 0) &&
                         (MainWindowX.Height != double.NaN) && (MainWindowX.Width != double.NaN))
                     {
-                        brdlstbox.Height = MainWindowX.Height - 258;
+                        brdlstbox.Height = MainWindowX.Height - 218;
                         brdlstbox.Width = MainWindowX.Width - 25;
                         lstBoxJobs.MinWidth = brdlstbox.Width - 10;
                         lstBoxJobs.Width = lstBoxJobs.MinWidth;

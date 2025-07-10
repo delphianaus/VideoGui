@@ -67,7 +67,7 @@ namespace VideoGui
                 };
                 Closed += (s, e) => { IsClosed = true; _DoOnFinished?.Invoke(); };
                 RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
-                string dir = key.GetValueStr("UploadPath", @"D:\shorts");
+                string dir = FindUploadPath();
                 key?.Close();
                 string DirName = dir.Split(@"\").ToList().LastOrDefault();
                 string sqla = "SELECT ID FROM SHORTSDIRECTORY WHERE DIRECTORYNAME = @DIRECTORYNAME";
@@ -81,6 +81,38 @@ namespace VideoGui
             }
         }
 
+
+        public string FindUploadPath()
+        {
+            try
+            {
+                RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                string shortsdir = key.GetValueStr("shortsdirectory", @"D:\shorts\");
+                string uploaddir = key.GetValueStr("UploadPath", "");
+                key?.Close();
+                if (!Path.Exists(uploaddir))
+                {
+                    string NewPath = uploaddir.Split('\\').LastOrDefault();
+                    List<string> dirs = Directory.EnumerateDirectories(shortsdir).
+                        ToList().Where(dir => !dir.ToLower().EndsWith(NewPath.ToLower())).ToList();
+                    if (dirs.Count > 0)
+                    {
+                        return dirs.FirstOrDefault();
+                    }
+                    string uploadsNewPath = Path.Combine(shortsdir, NewPath);
+                    if (Path.Exists(uploadsNewPath))
+                    {
+                        uploaddir = uploadsNewPath;
+                    }
+                }
+                return uploaddir;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"FindUploadPath {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+                return "";
+            }
+        }
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             try
@@ -89,7 +121,7 @@ namespace VideoGui
                       dbInit?.Invoke(this, new CustomParams_GetConnectionString())
                       is string conn ? conn : "";
                 RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
-                string rootfolder = key.GetValueStr("UploadPath", @"D:\shorts");
+                string rootfolder = FindUploadPath();
                 string uploadsnumber = key.GetValueStr("UploadNumber", "5");
                 string MaxUploads = key.GetValueStr("MaxUploads", "100");
                 key?.Close();
@@ -235,7 +267,7 @@ namespace VideoGui
                 }
 
                 RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
-                string dir = key.GetValueStr("UploadPath", @"D:\shorts");
+                string dir =  FindUploadPath();
                 key?.Close();
                 string DirName = dir.Split(@"\").ToList().LastOrDefault();
                 var r = dbInit?.Invoke(this, new CustomParams_GetDirectory(DirName));
@@ -398,7 +430,7 @@ namespace VideoGui
                 {
                     bool found = false;
                     RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
-                    string dir = key.GetValueStr("UploadPath", @"D:\shorts");
+                    string dir = FindUploadPath();
                     key?.Close();
                     string DirName = dir.Split(@"\").ToList().LastOrDefault();
                     var r = dbInit?.Invoke(this, new CustomParams_LookUpId(DirName));
@@ -442,7 +474,7 @@ namespace VideoGui
 
                 bool Valid = true, Processed = false;
                 RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
-                string rootfolder = key.GetValueStr("UploadPath", "");
+                string rootfolder = FindUploadPath();
                 string shortsdir = key.GetValueStr("shortsdirectory", "");
                 string SQLB = "SELECT * FROM UploadsRecord ORDER BY RDB$RECORD_VERSION DESC ROWS 100;";
                 connectionStr.ExecuteReader(SQLB, (FbDataReader r) =>
@@ -598,7 +630,7 @@ namespace VideoGui
                 WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
                 string gUrl = webAddressBuilder.Dashboard().Address;
                 RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
-                string rootfolder = key.GetValueStr("UploadPath", @"D:\shorts");
+                string rootfolder = FindUploadPath();
                 string BaseDIr = key.GetValueStr("shortsdirectory", @"D:\shorts");
                 key?.Close();
                 // update shorts left.

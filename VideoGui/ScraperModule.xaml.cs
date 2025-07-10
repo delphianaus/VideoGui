@@ -973,7 +973,7 @@ namespace VideoGui
                 string _dest = UploadPath;
                 string DefaultPath = Environment.SystemDirectory;
                 RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
-                _dest = key.GetValueStr("UploadPath", "");
+                _dest = FindUploadPath();
                 key.Close();
                 ExecuteAsNonAdmin($"{_dest}");
                 ExecuteAsAdmin($"{_dest}");
@@ -984,6 +984,31 @@ namespace VideoGui
             }
         }
 
+        public string FindUploadPath()
+        {
+            try
+            {
+                RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                string shortsdir = key.GetValueStr("shortsdirectory", @"D:\shorts\");
+                string uploaddir = key.GetValueStr("UploadPath", "");
+                key?.Close();
+                if (!Path.Exists(uploaddir))
+                {
+                    string NewPath = uploaddir.Split('\\').LastOrDefault();
+                    string uploadsNewPath = Path.Combine(shortsdir, NewPath);
+                    if (Path.Exists(uploadsNewPath))
+                    {
+                        uploaddir = uploadsNewPath;
+                    }
+                }
+                return uploaddir;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"FindUploadPath {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+                return "";
+            }
+        }
         public List<HtmlNode> GetNodes(string html, string Span_Name)
         {
             try
@@ -1330,7 +1355,7 @@ namespace VideoGui
                 var _height = key.GetValue("WebHeight", ActualHeight).ToDouble();
                 var _left = key.GetValue("Webleft", Left).ToDouble();
                 var _top = key.GetValue("Webtop", Top).ToDouble();
-                string rootfolder = key.GetValueStr("UploadPath", @"D:\shorts");
+                string rootfolder = FindUploadPath();
                 if (Directory.Exists(rootfolder))
                 {
                     DirectoryPath = rootfolder.Split(@"\").ToList().LastOrDefault();
@@ -2051,7 +2076,7 @@ namespace VideoGui
                             clickupload = false;
                             //UploadNewVideos();
                             RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
-                            string _dest = key.GetValueStr("UploadPath", "");
+                            string _dest = FindUploadPath();
                             key.Close();
                             UploadPath = _dest;
                             int r = DoUploadsCnt();
