@@ -1999,7 +1999,10 @@ namespace VideoGui
                                 {
                                     frmDescSelectFrm.txtDesc.Text = itemr.Directory +
                                            Environment.NewLine + Environment.NewLine
-                                           + "Follow me @ twitch.tv/justinstrainclips"; ;
+                                           + "Follow me @ twitch.tv/justinstrainclips"
+                                           + Environment.NewLine + Environment.NewLine +
+                                          "Support Me On Patreon - https://www.patreon.com/join/JustinsTrainJourneys";
+
                                     frmDescSelectFrm.txtDescName.Text = itemr.Directory;
                                     frmDescSelectFrm.TitleTagId = ShortsDirectoryIndex;
                                     Found = true;
@@ -2551,8 +2554,8 @@ namespace VideoGui
                                         linkedtitleids = (r["LINKEDTITLEIDS"] is string ldid1 ? ldid1 : "");
                                         linkeddescids = (r["LINKEDDESCIDS"] is string lditt ? lditt : "");
                                     });
-                                    selectShortUpload.UpdateTitleId(ShortsDirectoryIndex, linkedtitleids);
-                                    selectShortUpload.UpdateDescId(ShortsDirectoryIndex, linkeddescids);
+                                    if (linkedtitleids != "") selectShortUpload.UpdateTitleId(ShortsDirectoryIndex, linkedtitleids);
+                                    if (linkeddescids != "") selectShortUpload.UpdateDescId(ShortsDirectoryIndex, linkeddescids);
                                 }
                                 else
                                 {
@@ -2906,9 +2909,10 @@ namespace VideoGui
             try
             {
                 string sql = "";
-                int LinkedId = -1, id = TitlesList.Where(t => t.Description == Description).FirstOrDefault(new Titles(-1)).Id;
+                int LinkedId = -1, id = TitlesList.Where(t => t.Description.ToLower() == Description.ToLower()).FirstOrDefault(new Titles(-1)).Id;
                 if (id == -1)
                 {
+                    sql = "SELECT * FROM TITLES WHERE DESCRIPTION = @P0 AND ISTAG = @P1 AND GROUPID = @P2";
                     sql = "INSERT INTO TITLES(DESCRIPTION,ISTAG,GROUPID) " +
                         "VALUES(@P0,@P1,@P2) RETURNING ID;";
                     int _GroupId = (GroupId == -1) ? LinkedId : GroupId;
@@ -2984,6 +2988,7 @@ namespace VideoGui
         {
             try
             {
+                if (descr == "") return -1;
                 string sql = "";
                 string desc = GetDefaultDescription();
                 int id = DescriptionsList.Where(t => t.TitleTagId == LinkedId &&
@@ -2994,7 +2999,7 @@ namespace VideoGui
                     sql = "INSERT INTO DESCRIPTIONS(DESCRIPTION,TITLETAGID,NAME,ISSHORTVIDEO, ISTAG) " +
                             "VALUES(@DESC,@TITLETAG,@NAME,@ISSHORTVIDEO,@ISTAG) RETURNING ID;";
                     id = connectionString.ExecuteScalar(sql, [("@DESC", descr+desc),
-                          ("@TITLETAG", LinkedId), ("@NAME", desc.ToUpper()),
+                          ("@TITLETAG", LinkedId), ("@NAME", descr.ToUpper()),
                           ("@ISSHORTVIDEO", true), ("@ISTAG", false)]).ToInt(-1);
                     if (id != -1)
                     {
@@ -4831,17 +4836,49 @@ namespace VideoGui
                             string ext = Path.GetExtension(f);
                             string path = Path.GetDirectoryName(f);
                             int idxa = fn.IndexOf("_");
-                            string newfn = fn.Substring(0, idxa)+$"_{t.LinkedShortsDirectoryId}";
+                            string newfn = fn.Substring(0, idxa) + $"_{t.LinkedShortsDirectoryId}";
                             if (fn != newfn)
                             {
-                                string newf2 = Path.Combine(path, newfn+ ext);
+                                string newf2 = Path.Combine(path, newfn + ext);
                                 File.Move(f, newf2);
                             }
                         }
                     }
                 }
                 FilterActiveShortsDirlectoryList();
+                /*bool _fnd = false;
+                int _i = 0;
+                foreach(var d in DescriptionsList.Where(s=>!s.IsTag))
+                {
+                    foreach(var t in DescriptionsList.Where(s=>!s.IsTag && s.Id != d.Id))
+                    {
+                        if (d.Name.ToLower() == t.Name.ToLower() || 
+                            d.Description.ToLower() == t.Name.ToLower())
+                        {
+                            sql = "DELETE FROM DESCRIPTIONS WHERE ID = @ID;";
+                            connectionString.ExecuteScalar(sql, [("@ID", t.Id)]);
+                            _i++;
+                        }
+                    }
+                }
+                if (true)
+                {
 
+                }
+
+                foreach (var shortdir in EditableshortsDirectoryList)
+                {
+                    int _TitleId = -1, _DescId = -1;
+                   
+                    _TitleId = InsertUpdateTitle(shortdir.Directory, shortdir.Id);
+                    sql = "UPDATE SHORTSDIRECTORY SET TITLEID = @TID WHERE ID = @ID";
+                    connectionString.ExecuteScalar(sql, [("@TID", _TitleId), ("@ID", shortdir.Id)]);
+                   
+                    _DescId = InsertUpdateDescription(shortdir.Directory, shortdir.Id);
+                    sql = "UPDATE SHORTSDIRECTORY SET DESCID = @DID WHERE ID = @ID";
+                    connectionString.ExecuteScalar(sql, [("@DID", _DescId), ("@ID", shortdir.Id)]);
+                }           
+                */
             }
             catch (Exception ex)
             {
