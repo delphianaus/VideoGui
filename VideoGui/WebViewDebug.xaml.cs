@@ -127,7 +127,7 @@ namespace VideoGui
                     p.Left = Width - 692;
                     lstMain.Width = Width - 25;
                     StatusBar.Width = Width - 5;
-                    RegistryKey key = "SOFTWARE\\Scraper".OpenSubKey(Registry.CurrentUser);
+                    RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                     key.SetValue("debugWebWidth", ActualWidth);
                     key.SetValue("debugWebHeight", ActualHeight);
                     key.SetValue("debugWebleft", Left);
@@ -156,7 +156,7 @@ namespace VideoGui
         {
             try
             {
-                RegistryKey key = "SOFTWARE\\Scraper".OpenSubKey(Registry.CurrentUser);
+                RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                 var _width = key.GetValue("debugWebWidth", ActualWidth).ToDouble();
                 var _height = key.GetValue("debugWebHeight", ActualHeight).ToDouble();
                 var _left = key.GetValue("debugWebleft", Left).ToDouble();

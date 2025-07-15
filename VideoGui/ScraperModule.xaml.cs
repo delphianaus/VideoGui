@@ -74,6 +74,7 @@ using File = System.IO.File;
 using HtmlDocument = HtmlAgilityPack.HtmlDocument;
 using MouseEventArgs = System.Windows.Input.MouseEventArgs;
 using Path = System.IO.Path;
+using String = System.String;
 using Task = System.Threading.Tasks.Task;
 using WebView2 = Microsoft.Web.WebView2.Wpf.WebView2;
 using Window = System.Windows.Window;
@@ -177,7 +178,7 @@ namespace VideoGui
                 LocationTimer.Tick += (s, e) =>
                 {
                     LocationTimer.Stop();
-                    RegistryKey key = "SOFTWARE\\Scraper".OpenSubKey(Registry.CurrentUser);
+                    RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                     key.SetValue("Webleft", Left);
                     key.SetValue("Webtop", Top);
                     key?.Close();
@@ -989,8 +990,8 @@ namespace VideoGui
             try
             {
                 RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
-                string shortsdir = key.GetValueStr("shortsdirectory", @"D:\shorts\");
-                string uploaddir = key.GetValueStr("UploadPath", "");
+                string shortsdir = key?.GetValueStr("shortsdirectory", @"D:\shorts\");
+                string uploaddir = key?.GetValueStr("UploadPath", "");
                 key?.Close();
                 if (!Path.Exists(uploaddir))
                 {
@@ -1350,7 +1351,7 @@ namespace VideoGui
         {
             try
             {
-                RegistryKey key = "SOFTWARE\\Scraper".OpenSubKey(Registry.CurrentUser);
+                RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                 var _width = key.GetValue("WebWidth", ActualWidth).ToDouble();
                 var _height = key.GetValue("WebHeight", ActualHeight).ToDouble();
                 var _left = key.GetValue("Webleft", Left).ToDouble();
@@ -2379,8 +2380,9 @@ namespace VideoGui
                         {
                             DescStr = dbInitializer?.Invoke(this, new CustomParams_GetDesc(id, DescId)) is string s ? s : "";
                         }*/
-                        if (TitleStr != "")
-                        {
+                        
+                        if (TitleStr.NotNullOrEmpty() && DescStr.NotNullOrEmpty())
+                        { 
                             //itleStr = dbInitializer?.Invoke(this, new CustomParams_GetTitle(id, TitleId)) is string s1 ? s1 : "";
                             var r = TitleStr.Split(" ").ToList<string>().Where(s => !s.StartsWith("#") &&
                             s != "" && s.ToLower() != "vline").ToList<string>();
@@ -3151,7 +3153,7 @@ namespace VideoGui
 
                     lstMain.Width = Width - 25;
                     StatusBar.Width = Width - 5;
-                    RegistryKey key = "SOFTWARE\\Scraper".OpenSubKey(Registry.CurrentUser);
+                    RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                     key.SetValue("WebWidth", ActualWidth);
                     key.SetValue("WebHeight", ActualHeight);
                     key.SetValue("Webleft", Left);

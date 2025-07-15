@@ -58,7 +58,7 @@ namespace VideoGui
                 Closing += (s, e) =>
                 {
                     IsClosing = true;
-                    RegistryKey key = "SOFTWARE\\Scraper".OpenSubKey(Registry.CurrentUser);
+                    RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                     key.SetValue("MSUWidth", ActualWidth);
                     key.SetValue("MSUHeight", ActualHeight);
                     key.SetValue("MSUleft", Left);
@@ -126,8 +126,8 @@ namespace VideoGui
                 string rootfolder = FindUploadPath();
                 string uploadsnumber = key.GetValueStr("UploadNumber", "5");
                 string MaxUploads = key.GetValueStr("MaxUploads", "100");
-                txtMaxUpload.Text = !string.IsNullOrEmpty(uploadsnumber) ? uploadsnumber : txtMaxUpload.Text;
-                txtTotalUploads.Text = !string.IsNullOrEmpty(MaxUploads) ? MaxUploads : txtTotalUploads.Text;
+                txtMaxUpload.Text = uploadsnumber.NotNullOrEmpty() ? uploadsnumber : txtMaxUpload.Text;
+                txtTotalUploads.Text = MaxUploads.NotNullOrEmpty() ? MaxUploads : txtTotalUploads.Text;
                 dbInit?.Invoke(this, new CustomParams_Initialize());
                 key?.Close();
 
@@ -198,14 +198,10 @@ namespace VideoGui
                     }
                     if (e.HeightChanged || e.WidthChanged)
                     {
-                        using (RegistryKey key = Registry.CurrentUser.OpenSubKey("SOFTWARE\\VideoProcessor", true))
-                        {
-                            if (key != null)
-                            {
-                                key.SetValue("MSUWidth", ActualWidth);
-                                key.SetValue("MSUHeight", ActualHeight);
-                            }
-                        }
+                        RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                        key?.SetValue("MSUWidth", ActualWidth);
+                        key?.SetValue("MSUHeight", ActualHeight);
+                        key?.Close();
                     }
                 }
             }

@@ -4811,7 +4811,7 @@ namespace VideoGui
                 {
                     SelectedShortsDirectoriesList.Add(new SelectedShortsDirectories(r));
                 });
-                RegistryKey key = "SOFTWARE\\Scraper".OpenSubKey(Registry.CurrentUser);
+                RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                 string BaseDirectory = key?.GetValueStr("shortsdirectory", @"d:\shorts");
                 key?.Close();
 

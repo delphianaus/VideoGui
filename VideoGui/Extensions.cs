@@ -204,7 +204,10 @@ namespace VideoGui
                 return false;
             }
         }
-
+        public static bool NotNullOrEmpty(this string obj)
+        {
+            return !string.IsNullOrEmpty(obj);
+        }
         public static bool IfBetweenTimeSpans(this TimeSpan span1, TimeSpan spanA, TimeSpan spanB)
         {
             try
