@@ -324,6 +324,7 @@ namespace CustomComponents.ListBoxExtensions
             if (control != null)
             {
                 control.lstBoxUploadItems.ItemsSource = e.NewValue as IEnumerable;
+                control.RebuildItemTemplate();
             }
         }
 
@@ -331,6 +332,206 @@ namespace CustomComponents.ListBoxExtensions
         {
             get => (ObservableCollection<MultiListboxColumnDefinition>)GetValue(ColumnDefinitionsProperty);
             set => SetValue(ColumnDefinitionsProperty, value);
+        }
+
+        private void RebuildItemTemplate()
+        {
+            if (!IsLoaded) return;
+            
+            try
+            {
+                InitializeScrollViewers();
+                _headerGrid = ((ControlTemplate)lstTitles.Template).FindName("griddpl", lstTitles) as Grid;
+                if (_headerGrid == null)
+                {
+                    Debug.WriteLine("Failed to find header grid");
+                    return;
+                }
+
+                // Clear existing header content
+                _headerGrid.ColumnDefinitions.Clear();
+                _headerGrid.Children.Clear();
+
+                BuildAndApplyTemplate();
+
+                // Apply any pending column definitions
+                if (_pendingColumnDefinitions != null)
+                {
+                    ColumnDefinitions = _pendingColumnDefinitions;
+                    _pendingColumnDefinitions = null;
+                }
+
+                ApplyColumnDefinitions();
+
+                // Update visual tree
+                UpdateVisualTree();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error rebuilding template: {ex}");
+            }
+        }
+
+        private void UpdateVisualTree()
+        {
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                foreach (var item in lstBoxUploadItems.Items)
+                {
+                    var container = lstBoxUploadItems.ItemContainerGenerator.ContainerFromItem(item) as ListBoxItem;
+                    if (container != null)
+                    {
+                        var border = VisualTreeHelper.GetChild(container, 0) as Border;
+                        if (border != null)
+                        {
+                            var contentPresenter = VisualTreeHelper.GetChild(border, 0) as ContentPresenter;
+                            if (contentPresenter != null)
+                            {
+                                var grid = VisualTreeHelper.GetChild(contentPresenter, 0) as Grid;
+                                if (grid != null)
+                                {
+                                    foreach (var child in grid.Children)
+                                    {
+                                        if (child is FrameworkElement element)
+                                        {
+                                            element.UpdateLayout();
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }));
+        }
+
+        private void BuildAndApplyTemplate()
+        {
+            // Create a new item template with a Grid
+            var gridFactory = new FrameworkElementFactory(typeof(Grid));
+            gridFactory.SetValue(FrameworkElement.MarginProperty, new Thickness(0, 0, 0, 0));
+            gridFactory.SetValue(FrameworkElement.HeightProperty, 35.0);
+            gridFactory.SetValue(Panel.BackgroundProperty, Brushes.White);
+
+            // Store reference to the grid factory for later use
+            _itemGrid = new Grid(); // Temporary grid just for column definitions
+
+            // Add each column definition and control
+            int columnIndex = 0;
+            foreach (var colDef in ColumnDefinitions)
+            {
+                // Add column definition and controls
+                AddColumnToTemplate(gridFactory, colDef, columnIndex);
+                columnIndex++;
+            }
+
+            // Create and set the item template
+            var itemTemplate = new DataTemplate { VisualTree = gridFactory };
+            lstBoxUploadItems.ItemTemplate = itemTemplate;
+        }
+
+        private void AddColumnToTemplate(FrameworkElementFactory gridFactory, MultiListboxColumnDefinition colDef, int columnIndex)
+        {
+            // Add column definition
+            var colDefFactory = new FrameworkElementFactory(typeof(ColumnDefinition));
+            if (!string.IsNullOrEmpty(colDef.WidthBinding))
+            {
+                var binding = new Binding(colDef.WidthBinding)
+                {
+                    RelativeSource = new RelativeSource(RelativeSourceMode.FindAncestor, typeof(MultiListbox), 1)
+                };
+                colDefFactory.SetBinding(ColumnDefinition.WidthProperty, binding);
+
+                // Add matching column definition to header grid
+                var headerColDef = new ColumnDefinition();
+                headerColDef.SetBinding(ColumnDefinition.WidthProperty, binding);
+                _headerGrid.ColumnDefinitions.Add(headerColDef);
+            }
+            else
+            {
+                colDefFactory.SetValue(ColumnDefinition.WidthProperty, new GridLength(colDef.Width));
+                _headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(colDef.Width) });
+            }
+            gridFactory.AppendChild(colDefFactory);
+
+            // Add header text
+            var headerTextBlock = new TextBlock
+            {
+                Text = colDef.HeaderText,
+                Margin = colDef.HeaderMargin,
+                Padding = colDef.HeaderPadding,
+                VerticalAlignment = colDef.HeaderVerticalAlignment,
+                HorizontalAlignment = colDef.HeaderHorizontalAlignment
+            };
+            Grid.SetColumn(headerTextBlock, columnIndex);
+            _headerGrid?.Children.Add(headerTextBlock);
+
+            // Add control for this column if it has a data field
+            if (!string.IsNullOrEmpty(colDef.DataField))
+            {
+                AddControlToTemplate(gridFactory, colDef, columnIndex);
+            }
+        }
+
+        private Type GetControlType(Type requestedType)
+        {
+            // If no specific type is requested, default to TextBlock
+            if (requestedType == null)
+                return typeof(TextBlock);
+
+            // Ensure the type is a FrameworkElement
+            if (!typeof(FrameworkElement).IsAssignableFrom(requestedType))
+                return typeof(TextBlock);
+
+            return requestedType;
+        }
+
+        private void AddControlToTemplate(FrameworkElementFactory gridFactory, MultiListboxColumnDefinition colDef, int columnIndex)
+        {
+            var controlType = GetControlType(colDef.ControlType);
+            var controlFactory = new FrameworkElementFactory(controlType.Name);
+            
+            // Set the column for the control
+            controlFactory.SetValue(Grid.ColumnProperty, columnIndex);
+            
+            // Apply common properties
+            controlFactory.SetValue(FrameworkElement.MarginProperty, colDef.ItemMargin);
+            if (typeof(Control).IsAssignableFrom(controlType))
+            {
+                controlFactory.SetValue(Control.PaddingProperty, colDef.ItemPadding);
+            }
+            controlFactory.SetValue(FrameworkElement.VerticalAlignmentProperty, colDef.ItemVerticalAlignment);
+            controlFactory.SetValue(FrameworkElement.HorizontalAlignmentProperty, colDef.ItemHorizontalAlignment);
+            
+            // Set up the binding
+            var bindingProperty = GetMainBindingProperty(controlType.Name);
+            if (bindingProperty != null)
+            {
+                var binding = new Binding(colDef.DataField);
+                controlFactory.SetBinding(bindingProperty, binding);
+            }
+            
+            // Add the control to the grid
+            gridFactory.AppendChild(controlFactory);
+        }
+
+        private DependencyProperty GetMainBindingProperty(string controlTypeName)
+        {
+            switch (controlTypeName)
+            {
+                case "TextBox":
+                    return TextBox.TextProperty;
+                case "TextBlock":
+                    return TextBlock.TextProperty;
+                case "CheckBox":
+                    return CheckBox.IsCheckedProperty;
+                case "ComboBox":
+                    return ComboBox.SelectedItemProperty;
+                case "DatePicker":
+                    return DatePicker.SelectedDateProperty;
+                default:
+                    return TextBlock.TextProperty; // Default to TextBlock.Text
+            }
         }
 
         private void MultiListbox_Loaded(object sender, RoutedEventArgs e)
@@ -433,7 +634,12 @@ namespace CustomComponents.ListBoxExtensions
                                 var mainProperty = GetMainBindingProperty(colDef.ComponentType.ToString(), colDef.BoundTo);
                                 if (mainProperty != null)
                                 {
-                                    controlFactory.SetBinding(mainProperty, new Binding(colDef.DataField));
+                                    var binding = new Binding(colDef.DataField)
+                                    {
+                                        UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
+                                        Mode = BindingMode.TwoWay
+                                    };
+                                    controlFactory.SetBinding(mainProperty, binding);
 
                                     // For TextBlocks, set TextAlignment based on ContentHorizontalAlignment
                                     if (controlType == typeof(TextBlock))

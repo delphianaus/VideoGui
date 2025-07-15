@@ -5,8 +5,9 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:VideoGui" 
         xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
-        mc:Ignorable="d" ResizeMode="CanResize" 
-        WindowStartupLocation="CenterScreen" WindowStyle="ToolWindow" 
+        mc:Ignorable="d" 
+        ResizeMode="CanResize" WindowStartupLocation="CenterScreen" 
+        WindowStyle="ToolWindow" 
         Title="YouTube Uploader Module" Height="450" Width="800" Loaded="Window_Loaded" 
         SizeChanged="Window_SizeChanged" KeyDown="mainwindow_KeyDown" Icon="/Icons/computer.ico" ShowInTaskbar="False">
     <Grid UseLayoutRounding="True" x:Name="gridmain">

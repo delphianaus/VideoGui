@@ -1,3 +1,4 @@
+using System;
 using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
@@ -46,6 +47,51 @@ namespace CustomComponents.ListBoxExtensions
 
         public static readonly DependencyProperty HeightProperty =
             DependencyProperty.Register(nameof(Height), typeof(double), typeof(MultiListboxColumnDefinition), new PropertyMetadata(30.0));
+
+        public static readonly DependencyProperty ControlTypeProperty =
+            DependencyProperty.Register(nameof(ControlType), typeof(Type), typeof(MultiListboxColumnDefinition), new PropertyMetadata(typeof(TextBlock)));
+
+        public Type ControlType
+        {
+            get => (Type)GetValue(ControlTypeProperty);
+            set => SetValue(ControlTypeProperty, value);
+        }
+
+        public static readonly DependencyProperty ItemMarginProperty =
+            DependencyProperty.Register(nameof(ItemMargin), typeof(Thickness), typeof(MultiListboxColumnDefinition), new PropertyMetadata(new Thickness(2)));
+
+        public Thickness ItemMargin
+        {
+            get => (Thickness)GetValue(ItemMarginProperty);
+            set => SetValue(ItemMarginProperty, value);
+        }
+
+        public static readonly DependencyProperty ItemPaddingProperty =
+            DependencyProperty.Register(nameof(ItemPadding), typeof(Thickness), typeof(MultiListboxColumnDefinition), new PropertyMetadata(new Thickness(2)));
+
+        public Thickness ItemPadding
+        {
+            get => (Thickness)GetValue(ItemPaddingProperty);
+            set => SetValue(ItemPaddingProperty, value);
+        }
+
+        public static readonly DependencyProperty ItemVerticalAlignmentProperty =
+            DependencyProperty.Register(nameof(ItemVerticalAlignment), typeof(VerticalAlignment), typeof(MultiListboxColumnDefinition), new PropertyMetadata(VerticalAlignment.Center));
+
+        public VerticalAlignment ItemVerticalAlignment
+        {
+            get => (VerticalAlignment)GetValue(ItemVerticalAlignmentProperty);
+            set => SetValue(ItemVerticalAlignmentProperty, value);
+        }
+
+        public static readonly DependencyProperty ItemHorizontalAlignmentProperty =
+            DependencyProperty.Register(nameof(ItemHorizontalAlignment), typeof(HorizontalAlignment), typeof(MultiListboxColumnDefinition), new PropertyMetadata(HorizontalAlignment.Left));
+
+        public HorizontalAlignment ItemHorizontalAlignment
+        {
+            get => (HorizontalAlignment)GetValue(ItemHorizontalAlignmentProperty);
+            set => SetValue(ItemHorizontalAlignmentProperty, value);
+        }
 
         public static readonly DependencyProperty MinWidthProperty =
             DependencyProperty.Register(nameof(MinWidth), typeof(double), typeof(MultiListboxColumnDefinition), new PropertyMetadata(100.0));

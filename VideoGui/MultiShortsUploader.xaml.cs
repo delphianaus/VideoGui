@@ -1,4 +1,4 @@
-﻿using FirebirdSql.Data.FirebirdClient;
+using FirebirdSql.Data.FirebirdClient;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
@@ -113,6 +113,8 @@ namespace VideoGui
                 return "";
             }
         }
+
+        DispatcherTimer LocationChanger = new DispatcherTimer();
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             try
@@ -124,23 +126,15 @@ namespace VideoGui
                 string rootfolder = FindUploadPath();
                 string uploadsnumber = key.GetValueStr("UploadNumber", "5");
                 string MaxUploads = key.GetValueStr("MaxUploads", "100");
-                key?.Close();
-                //bool found = false;
-                txtMaxUpload.Text = (uploadsnumber != "") ? uploadsnumber : txtMaxUpload.Text;
-                txtTotalUploads.Text = (MaxUploads != "") ? MaxUploads : txtTotalUploads.Text;
-
+                txtMaxUpload.Text = !string.IsNullOrEmpty(uploadsnumber) ? uploadsnumber : txtMaxUpload.Text;
+                txtTotalUploads.Text = !string.IsNullOrEmpty(MaxUploads) ? MaxUploads : txtTotalUploads.Text;
                 dbInit?.Invoke(this, new CustomParams_Initialize());
-                Ready = true;
-                key = "SOFTWARE\\Scraper".OpenSubKey(Registry.CurrentUser);
-                var _width = key.GetValue("MSUWidth", ActualWidth).ToDouble();
-                var _height = key.GetValue("MSUHeight", ActualHeight).ToDouble();
-                var _left = key.GetValue("MSUleft", Left).ToDouble();
-                var _top = key.GetValue("MSUtop", Top).ToDouble();
-                this.WindowStartupLocation = WindowStartupLocation.Manual;
-                Width = (ActualWidth != _width && _width != 0) ? _width : Width;
-                Height = (ActualHeight != _height && _height != 0) ? _height : Height;
-                Left = (Left != _left && _left != 0) ? _left : Left;
-                Top = (Top != _top && _top != 0) ? _top : Top;
+                key?.Close();
+
+
+                LocationChanger.Interval = TimeSpan.FromMilliseconds(10);
+                LocationChanger.Tick += LocationChanger_Tick;
+                LocationChanger.Start();
                 Column_Width = new GridLength(393, GridUnitType.Pixel);
                 LocationChanged += (s, e) =>
                 {
@@ -149,17 +143,40 @@ namespace VideoGui
                     LocationChangedTimer.Tick += (s1, e1) =>
                     {
                         LocationChangedTimer.Stop();
-                        RegistryKey key2 = "SOFTWARE\\Scraper".OpenSubKey(Registry.CurrentUser);
-                        key2.SetValue("MSUleft", Left);
-                        key2.SetValue("MSUtop", Top);
+                        RegistryKey key2 = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                        key2?.SetValue("MSUleft", Left);
+                        key2?.SetValue("MSUtop", Top);
                         key2?.Close();
                     };
                     LocationChangedTimer.Start();
                 };
+                Ready = true;
             }
             catch (Exception ex)
             {
                 ex.LogWrite($"Window_Loaded {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+        }
+
+        private void LocationChanger_Tick(object? sender, EventArgs e)
+        {
+            try
+            {
+                LocationChanger.Stop();
+                RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                var _width = key.GetValue("MSUWidth", ActualWidth).ToDouble();
+                var _height = key.GetValue("MSUHeight", ActualHeight).ToDouble();
+                var _left = key.GetValue("MSUleft", Left).ToDouble();
+                var _top = key.GetValue("MSUtop", Top).ToDouble();
+                key?.Close();
+                Left = (Left != _left && _left != 0) ? _left : Left;
+                Top = (Top != _top && _top != 0) ? _top : Top;
+                Width = (ActualWidth != _width && _width != 0) ? _width : Width;
+                Height = (ActualHeight != _height && _height != 0) ? _height : Height;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"LocationChanger_Tick {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
 
@@ -181,12 +198,14 @@ namespace VideoGui
                     }
                     if (e.HeightChanged || e.WidthChanged)
                     {
-                        RegistryKey key = "SOFTWARE\\Scraper".OpenSubKey(Registry.CurrentUser);
-                        key.SetValue("MSUWidth", ActualWidth);
-                        key.SetValue("MSUHeight", ActualHeight);
-                        key.SetValue("MSUleft", Left);
-                        key.SetValue("MSUtop", Top);
-                        key?.Close();
+                        using (RegistryKey key = Registry.CurrentUser.OpenSubKey("SOFTWARE\\VideoProcessor", true))
+                        {
+                            if (key != null)
+                            {
+                                key.SetValue("MSUWidth", ActualWidth);
+                                key.SetValue("MSUHeight", ActualHeight);
+                            }
+                        }
                     }
                 }
             }
@@ -267,7 +286,7 @@ namespace VideoGui
                 }
 
                 RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
-                string dir =  FindUploadPath();
+                string dir = FindUploadPath();
                 key?.Close();
                 string DirName = dir.Split(@"\").ToList().LastOrDefault();
                 var r = dbInit?.Invoke(this, new CustomParams_GetDirectory(DirName));
@@ -495,7 +514,7 @@ namespace VideoGui
                         IsProcessing = false;
                         newdir = sch.DirectoryName;
                         LinkedId = sch.LinkedShortsDirectoryId;
-                       
+
                         PathToCheck = Path.Combine(shortsdir, newdir);
                         if (Directory.Exists(PathToCheck))
                         {
@@ -503,7 +522,7 @@ namespace VideoGui
                             if (cnt_files > 0)
                             {
                                 rootfolder = PathToCheck;
-                                key.SetValue("UploadPath", rootfolder); 
+                                key.SetValue("UploadPath", rootfolder);
                                 if (LinkedId == -1)
                                 {
                                     LinkedId = sch.LinkedShortsDirectoryId;
@@ -529,10 +548,10 @@ namespace VideoGui
 
 
                     }
-                    
+
 
                     if (PathToCheck == "")
-                    {   
+                    {
                         LinkedId = -1;
                         var item = msuSchedules.Items.OfType<SelectedShortsDirectories>().FirstOrDefault();
                         if (item is not null)
@@ -678,7 +697,7 @@ namespace VideoGui
                                     key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                                     key.SetValue("UploadPath", newpath);
                                     key?.Close();
-                                    var Idx = dbInit?.Invoke(this,new CustomParams_GetDirectory(item.DirectoryName));
+                                    var Idx = dbInit?.Invoke(this, new CustomParams_GetDirectory(item.DirectoryName));
                                     if (Idx is int _id)
                                     {
                                         if (item.Id != _id)
@@ -733,7 +752,7 @@ namespace VideoGui
                     }
                     else
                     {
-                        Show ();
+                        Show();
                         bool Processed = false;
                         int ucnt = Uploaded;
                         foreach (var rp in msuSchedules.ItemsSource.OfType<SelectedShortsDirectories>().Where(x => x.IsActive))

@@ -5,8 +5,10 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:VideoGui" Loaded="Window_Loaded"
         xmlns:MSU="clr-namespace:CustomComponents.ListBoxExtensions;assembly=CustomComponents"
-        SizeChanged="Window_SizeChanged" WindowStyle="ToolWindow"
-        mc:Ignorable="d" WindowStartupLocation="Manual" 
+        SizeChanged="Window_SizeChanged" 
+        ResizeMode="CanResize" WindowStartupLocation="CenterScreen" 
+        WindowStyle="ToolWindow"
+        mc:Ignorable="d" 
         Title="Multi Shorts Uploader" Height="439" Width="559">
     <Window.Resources>
         <BitmapImage x:Key="SET" UriSource="icons/set.png"/>
