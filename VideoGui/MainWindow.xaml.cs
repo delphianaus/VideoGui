@@ -476,6 +476,7 @@ namespace VideoGui
                 }
                 if (NewId != -1)
                 {
+                    CancellationTokenSource cts = new CancellationTokenSource();
                     sqlA = "SELECT " +
                   "M.ID, M.ISSHORTSACTIVE, M.NUMBEROFSHORTS, " +
                   "M.LASTUPLOADEDDATE, M.LASTUPLOADEDTIME, M.LINKEDSHORTSDIRECTORYID, " +
@@ -495,9 +496,10 @@ namespace VideoGui
                   ") ON M.LINKEDSHORTSDIRECTORYID = R.NEWID " +
                   "LEFT JOIN SHORTSDIRECTORY S1 ON M.LINKEDSHORTSDIRECTORYID = S1.ID " +
                  "WHERE COALESCE(S2.ID, S1.ID) IS NOT NULL AND M.ID = @ID";
-                    connectionString.ExecuteReader(sqlA, [("@ID", NewId)], (FbDataReader r) =>
+                    connectionString.ExecuteReader(sqlA, [("@ID", NewId)], cts, (FbDataReader r) =>
                     {
                         SelectedShortsDirectoriesList.Add(new(r));
+                        cts.Cancel();
                     });
                     if (true)
                     {
@@ -519,9 +521,10 @@ namespace VideoGui
             {
                 bool processed = false;
                 string filen = "";
+                CancellationTokenSource cts = new CancellationTokenSource();
                 DateTime LastTimeUploaded = DateTime.Now.Date.AddYears(-100);
                 string SQLB = "SELECT * FROM UploadsRecord ORDER BY RDB$RECORD_VERSION DESC ROWS 500;";
-                connectionString.ExecuteReader(SQLB, (FbDataReader r) =>
+                connectionString.ExecuteReader(SQLB, cts,(FbDataReader r) =>
                 {
                     filen = (r["UPLOADFILE"] is string f) ? f : "";
                     var dt = (r["UPLOAD_DATE"] is DateTime d) ? d : DateTime.Now.Date.AddYears(-100);
@@ -533,6 +536,7 @@ namespace VideoGui
                         {
                             LastTimeUploaded = dt.AtTime(TimeOnly.FromTimeSpan(dtr));
                             processed = true;
+                            cts.Cancel();
                         }
                     }
                 });
@@ -609,12 +613,14 @@ namespace VideoGui
                     string LinkedDesc = "", sql = "UPDATE SHORTSDIRECTORY SET DESCID=@DESCID WHERE ID=@ID;";
                     connectionString.ExecuteScalar(sql, [("@DESCID", CPUDI.Desc), ("@ID", CPUDI.Id)]);
                     sql = GetShortsDirectorySql(CPUDI.LinkedId);
-                    connectionString.ExecuteReader(sql, (FbDataReader r) =>
+                    CancellationTokenSource cts = new CancellationTokenSource();
+                    connectionString.ExecuteReader(sql, cts, (FbDataReader r) =>
                     {
                         if (LinkedDesc == "")
                         {
                             LinkedDesc = (r["LINKEDDESCIDS"] is string lt) ? lt : "";
                         }
+                        cts.Cancel();
                     });
                     foreach (var item in SelectedShortsDirectoriesList.Where(s => s.Id == CPUDI.Id))
                     {
@@ -635,12 +641,14 @@ namespace VideoGui
                     string LinkedTitle = "", sql = "UPDATE SHORTSDIRECTORY SET TITLEID=@TITLEID WHERE ID=@ID;";
                     connectionString.ExecuteScalar(sql, [("@TITLEID", CPUTI.Title), ("@ID", CPUTI.Id)]);
                     sql = GetShortsDirectorySql(CPUTI.LinkedId);
-                    connectionString.ExecuteReader(sql, (FbDataReader r) =>
+                    CancellationTokenSource cts = new CancellationTokenSource();
+                    connectionString.ExecuteReader(sql, cts, (FbDataReader r) =>
                     {
                         if (LinkedTitle == "")
                         {
                             LinkedTitle = (r["LINKEDTITLEIDS"] is string lt) ? lt : "";
                         }
+                        cts.Cancel();
                     });
                     foreach (var item in SelectedShortsDirectoriesList.Where(s => s.Id == CPUTI.Id))
                     {
@@ -654,7 +662,9 @@ namespace VideoGui
                 }
                 else if (tld is CustomParams_RemoveSelectedDirectory CPRSD)
                 {
-
+                    string s = "DELETE FROM MULTISHORTSINFO WHERE ID = @ID;";
+                    connectionString.ExecuteScalar(s, [("@ID", CPRSD.Id)]);
+                    SelectedShortsDirectoriesList.Remove(SelectedShortsDirectoriesList.Where(s => s.Id == CPRSD.Id).FirstOrDefault());
                 }
                 else if (tld is CustomParams_AddDirectory CPAD)
                 {
@@ -1184,10 +1194,12 @@ namespace VideoGui
                             ("@SCHEDULED_TIME_END", ScheduleTimeEnd),("@ACTION_DATE", ActionDate)]).ToInt(-1);
                         if (idx != -1)
                         {
+                            CancellationTokenSource cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
                             sqla = "SELECT * FROM YTACTIONS WHERE ID = @ID;";
-                            connectionString.ExecuteReader(sqla, [("@ID", idx)], (FbDataReader r) =>
+                            connectionString.ExecuteReader(sqla, [("@ID", idx)], cts,(FbDataReader r) =>
                             {
                                 YTScheduledActionsList.Add(new ScheduledActions(r));
+                                cts.Cancel();
                             });
                         }
                     }
@@ -1694,9 +1706,11 @@ namespace VideoGui
                         TitleId = cpu.id;
                         sql = GetShortsDirectorySql(ShortsDirectoryIndex);
                         string LinkedTitleIds = "";
-                        connectionString.ExecuteReader(sql, (FbDataReader r) =>
+                        CancellationTokenSource cts = new CancellationTokenSource();
+                        connectionString.ExecuteReader(sql, cts ,(FbDataReader r) =>
                         {
                             LinkedTitleIds = (r["LINKEDTITLEIDS"] is string lkd) ? lkd : "";
+                            cts.Cancel();
                         });
                         foreach (var item in EditableshortsDirectoryList.Where(s => s.Id == ShortsDirectoryIndex))
                         {
@@ -1714,9 +1728,11 @@ namespace VideoGui
                         DescId = cpu.id;
                         string LinkedDescIds = "";
                         sql = GetShortsDirectorySql(ShortsDirectoryIndex);
-                        connectionString.ExecuteReader(sql, (FbDataReader r) =>
+                        CancellationTokenSource cts = new CancellationTokenSource();
+                        connectionString.ExecuteReader(sql, cts,(FbDataReader r) =>
                         {
                             LinkedDescIds = (r["LINKEDDESCIDS"] is string lkd) ? lkd : "";
+                            cts.Cancel();
                         });
                         foreach (var item in EditableshortsDirectoryList.Where(s => s.Id == ShortsDirectoryIndex))
                         {
@@ -1961,9 +1977,11 @@ namespace VideoGui
                                     }
                                     string linkeddescids = "";
                                     string sqla = GetUploadReleaseBuilderSql(res);
-                                    connectionString.ExecuteReader(sqla, (FbDataReader r) =>
+                                    CancellationTokenSource cts = new CancellationTokenSource();
+                                    connectionString.ExecuteReader(sqla, cts,(FbDataReader r) =>
                                     {
                                         linkeddescids = (r["LINKEDDESCIDS"] is string ldid ? ldid : "");
+                                        cts.Cancel();
                                     });
 
                                     selectShortUpload.UpdateDescId(p.id, linkeddescids);
@@ -2016,9 +2034,11 @@ namespace VideoGui
                                     if (idx != -1)
                                     {
                                         sql = $"SELECT * FROM DESCRIPTIONS WHERE ID = {idx}";
-                                        connectionString.ExecuteReader(sql, (dr) =>
+                                        CancellationTokenSource cts = new CancellationTokenSource();
+                                        connectionString.ExecuteReader(sql,cts, (dr) =>
                                         {
                                             DescriptionsList.Add(new Descriptions(dr));
+                                            cts.Cancel();
                                         });
                                         sql = "UPDATE SHORTSDIRECTORY SET DESCID = @P1 WHERE ID = @P0";
                                         connectionString.ExecuteScalar(sql, [("@P0", ShortsDirectoryIndex), ("@P1", idx)]);
@@ -2466,9 +2486,11 @@ namespace VideoGui
                                         res = connectionString.ExecuteScalar(sql, [("@P0", res), ("@P1", p.id)]).ToInt(-1);
                                     }
                                     string linkedtitleids = "";
-                                    connectionString.ExecuteReader(GetUploadReleaseBuilderSql(res), (FbDataReader r) =>
+                                    CancellationTokenSource cts = new CancellationTokenSource();
+                                    connectionString.ExecuteReader(GetUploadReleaseBuilderSql(res), cts,(FbDataReader r) =>
                                     {
                                         linkedtitleids = (r["LINKEDTITLEIDS"] is string ldid ? ldid : "");
+                                        cts.Cancel();
                                     });
                                     selectShortUpload.UpdateTitleId(p.id, linkedtitleids);
                                 }
@@ -2549,10 +2571,12 @@ namespace VideoGui
                                     int IDX = InsertUpdateShorts(BaseStrX, TitleId, DescId);
                                     ShortsDirectoryIndex = IDX;
                                     string linkedtitleids = "", linkeddescids = "";
+                                    CancellationTokenSource cts = new CancellationTokenSource();
                                     connectionString.ExecuteReader(GetUploadReleaseBuilderSql(ShortsDirectoryIndex), (FbDataReader r) =>
                                     {
                                         linkedtitleids = (r["LINKEDTITLEIDS"] is string ldid1 ? ldid1 : "");
                                         linkeddescids = (r["LINKEDDESCIDS"] is string lditt ? lditt : "");
+                                        cts.Cancel();
                                     });
                                     if (linkedtitleids != "") selectShortUpload.UpdateTitleId(ShortsDirectoryIndex, linkedtitleids);
                                     if (linkeddescids != "") selectShortUpload.UpdateDescId(ShortsDirectoryIndex, linkeddescids);
@@ -2560,10 +2584,12 @@ namespace VideoGui
                                 else
                                 {
                                     string linkedtitleids2 = "", linkeddescids2 = "";
+                                    CancellationTokenSource cts = new CancellationTokenSource();
                                     connectionString.ExecuteReader(GetUploadReleaseBuilderSql(ShortsDirectoryIndex), (FbDataReader r) =>
                                     {
                                         linkedtitleids2 = (r["LINKEDTITLEIDS"] is string ldid ? ldid : "");
                                         linkeddescids2 = (r["LINKEDDESCIDS"] is string ldit ? ldit : "");
+                                        cts.Cancel();
                                     });
                                     selectShortUpload.UpdateTitleId(ShortsDirectoryIndex, linkedtitleids2);
                                     selectShortUpload.UpdateDescId(ShortsDirectoryIndex, linkeddescids2);
@@ -2922,9 +2948,11 @@ namespace VideoGui
                     {
                         TitleId = id;
                         sql = "SELECT * FROM TITLES WHERE ID = @ID";
-                        connectionString.ExecuteReader(sql, [("@ID", id)], (FbDataReader r) =>
+                        CancellationTokenSource cts = new CancellationTokenSource(2000);
+                        connectionString.ExecuteReader(sql, [("@ID", id)], cts,(FbDataReader r) =>
                         {
                             TitlesList.Add(new Titles(r));
+                            cts.Cancel();
                         });
                     }
                 }
@@ -3005,9 +3033,11 @@ namespace VideoGui
                     {
                         DescId = id;
                         sql = "SELECT * FROM DESCRIPTIONS WHERE ID = @ID";
-                        connectionString.ExecuteReader(sql, [("@ID", id)], (FbDataReader r) =>
+                        CancellationTokenSource cts = new CancellationTokenSource(2000);
+                        connectionString.ExecuteReader(sql, [("@ID", id)], cts,(FbDataReader r) =>
                         {
                             DescriptionsList.Add(new(r));
+                            cts.Cancel();
                         });
                     }
                 }
@@ -3038,9 +3068,11 @@ namespace VideoGui
                     if (LinkedId != -1)
                     {
                         sql = "SELECT * FROM SHORTSDIRECTORY WHERE ID = @ID";
-                        connectionString.ExecuteReader(sql, [("@ID", LinkedId)], (FbDataReader r) =>
+                        CancellationTokenSource cts = new CancellationTokenSource(2000);
+                        connectionString.ExecuteReader(sql, [("@ID", LinkedId)],cts, (FbDataReader r) =>
                         {
                             EditableshortsDirectoryList.Add(new ShortsDirectory(r));
+                            cts.Cancel();
                         });
                     }
                     if (TitleId == -1) TitleId = InsertUpdateTitle(DirectoryName.ToUpper());
@@ -3178,11 +3210,13 @@ namespace VideoGui
                 }
                 if (OldId == -1)
                 {
+                    CancellationTokenSource cts = new CancellationTokenSource(2000);
                     sql = "SELECT NEWID,OLDID FROM REMATCHED WHERE OLDID = @P0";
-                    connectionString.ExecuteReader(sql, [("@P0", rfu.newid)], (r) =>
+                    connectionString.ExecuteReader(sql, [("@P0", rfu.newid)], cts,(r) =>
                     {
                         OldId = (r["OLDID"] is int oldid) ? oldid : -1;
                         NewId = (r["NEWID"] is int newid) ? newid : -1;
+                        cts.Cancel();
                     });
                 }
 
@@ -3277,10 +3311,12 @@ namespace VideoGui
                 sql = "update MULTISHORTS set ISSHORTSACTIVE = @ACTIVE where LINKEDSHORTSDIRECTORYID != @ID;";
                 connectionString.ExecuteNonQuery(sql, [("@ACTIVE", 0), ("@ID", ShortsDirectoryIndex)]);
                 string linkedtitleids = "", linkeddescids = "";
+                CancellationTokenSource cts = new CancellationTokenSource();
                 connectionString.ExecuteReader(GetUploadReleaseBuilderSql(ShortsDirectoryIndex), (FbDataReader r) =>
                 {
                     linkedtitleids = (r["LINKEDTITLEIDS"] is string ldid1 ? ldid1 : "");
                     linkeddescids = (r["LINKEDDESCIDS"] is string lditt ? lditt : "");
+                    cts.Cancel();
                 });
                 selectShortUpload.UpdateTitleId(ShortsDirectoryIndex, linkedtitleids);
                 selectShortUpload.UpdateDescId(ShortsDirectoryIndex, linkeddescids);
@@ -3317,9 +3353,11 @@ namespace VideoGui
                 if (!EditableshortsDirectoryList.Any(s => s.Id == SPS.Id))
                 {
                     string sql = "SELECT * FROM SHORTSDIRECTORY WHERE ID = @ID";
-                    connectionString.ExecuteReader(sql, [("@ID", SPS.Id)], (FbDataReader r) =>
+                    CancellationTokenSource cts = new CancellationTokenSource();
+                    connectionString.ExecuteReader(sql, [("@ID", SPS.Id)],cts, (FbDataReader r) =>
                     {
                         EditableshortsDirectoryList.Add(new ShortsDirectory(r));
+                        cts.Cancel();
                     });
                     TitleTagsSrc = SPS.Id;
 
@@ -3336,9 +3374,11 @@ namespace VideoGui
                 if (!TitlesList.Any(s => s.Id == SPU.Title))
                 {
                     string sql = "SELECT * FROM TITLES WHERE ID = @ID";
-                    connectionString.ExecuteReader(sql, [("@ID", SPU.Title)], (FbDataReader r) =>
+                    CancellationTokenSource cts = new CancellationTokenSource();
+                    connectionString.ExecuteReader(sql, [("@ID", SPU.Title)], cts,(FbDataReader r) =>
                     {
                         TitlesList.Add(new Titles(r));
+                        cts.Cancel();
                     });
                 }
 
@@ -3658,9 +3698,11 @@ namespace VideoGui
                             if (idxx != -1)
                             {
                                 sql = "SELECT * FROM DRAFTSHORTS WHERE ID = @ID";
+                                CancellationTokenSource cts = new CancellationTokenSource(2000);
                                 connectionString.ExecuteReader(sql, [("@ID", idxx)], (FbDataReader r) =>
                                 {
                                     DraftShortsList.Add(new DraftShorts(r));
+                                    cts.Cancel();
                                 });
 
                             }
@@ -4846,14 +4888,13 @@ namespace VideoGui
                     }
                 }
                 FilterActiveShortsDirlectoryList();
-                /*bool _fnd = false;
+                bool _fnd = false;
                 int _i = 0;
-                foreach(var d in DescriptionsList.Where(s=>!s.IsTag))
+                foreach (var d in DescriptionsList.Where(s => !s.IsTag))
                 {
-                    foreach(var t in DescriptionsList.Where(s=>!s.IsTag && s.Id != d.Id))
+                    foreach (var t in DescriptionsList.Where(s => !s.IsTag && s.Id != d.Id))
                     {
-                        if (d.Name.ToLower() == t.Name.ToLower() || 
-                            d.Description.ToLower() == t.Name.ToLower())
+                        if (d.Name.ToLower() == t.Name.ToLower())
                         {
                             sql = "DELETE FROM DESCRIPTIONS WHERE ID = @ID;";
                             connectionString.ExecuteScalar(sql, [("@ID", t.Id)]);
@@ -4861,24 +4902,37 @@ namespace VideoGui
                         }
                     }
                 }
-                if (true)
+                foreach (var shorts in EditableshortsDirectoryList)
                 {
-
+                    int Idx = shorts.Id;
+                    int cnt = DescriptionsList.Where(s => s.TitleTagId == Idx).Count();
+                    if (cnt == 0)
+                    {
+                        int descid = InsertUpdateDescription(shorts.Directory, Idx);
+                        if (descid != -1)
+                        {
+                            string s = "UPDATE SHORTSDIRECTORY SET DESCID = @DESCID WHERE ID = @ID;";
+                            connectionString.ExecuteScalar(s, [("@DESCID", descid), ("@ID", Idx)]);
+                            shorts.DescId = descid;
+                        }
+                    }
+                    else if (cnt == 1)
+                    {
+                        int did = DescriptionsList.Where(s => s.TitleTagId == Idx).First().Id;
+                        if (did != shorts.DescId)
+                        {
+                            string s = "UPDATE SHORTSDIRECTORY SET DESCID = @DESCID WHERE ID = @ID;";
+                            connectionString.ExecuteScalar(s, [("@DESCID", did), ("@ID", Idx)]);
+                            shorts.DescId = did;
+                        }
+                    }
                 }
 
-                foreach (var shortdir in EditableshortsDirectoryList)
-                {
-                    int _TitleId = -1, _DescId = -1;
-                   
-                    _TitleId = InsertUpdateTitle(shortdir.Directory, shortdir.Id);
-                    sql = "UPDATE SHORTSDIRECTORY SET TITLEID = @TID WHERE ID = @ID";
-                    connectionString.ExecuteScalar(sql, [("@TID", _TitleId), ("@ID", shortdir.Id)]);
-                   
-                    _DescId = InsertUpdateDescription(shortdir.Directory, shortdir.Id);
-                    sql = "UPDATE SHORTSDIRECTORY SET DESCID = @DID WHERE ID = @ID";
-                    connectionString.ExecuteScalar(sql, [("@DID", _DescId), ("@ID", shortdir.Id)]);
-                }           
-                */
+
+
+
+
+
             }
             catch (Exception ex)
             {
@@ -7561,6 +7615,43 @@ namespace VideoGui
                 });
             }
         }
+
+
+        private string GetCpuInfo()
+        {
+            try
+            {
+                string result = "";
+                // Method 1: Using WMI (Windows Management Instrumentation)
+                using (ManagementObjectSearcher searcher =
+                    new ManagementObjectSearcher("SELECT * FROM Win32_Processor"))
+                {
+                    foreach (ManagementObject obj in searcher.Get())
+                    {
+
+                        result = $"|{obj["Name"]}|{obj["Manufacturer"]}\n";
+                        /*
+                            $"Architecture: {obj["Architecture"]}\n" +
+                            $"Number of Cores: {obj["NumberOfCores"]}\n" +
+                            $"Clock Speed: {obj["MaxClockSpeed"]} MHz";*/
+                    }
+                }
+
+                /*// Method 2: Using Environment (simpler but less detailed)
+                string processorArchitecture = Environment.GetEnvironmentVariable("PROCESSOR_ARCHITECTURE");
+                string processorIdentifier = Environment.GetEnvironmentVariable("PROCESSOR_IDENTIFIER");
+
+                CpuInfoText.Text += $"\n\nEnvironment Variables:\n" +
+                    $"Processor Architecture: {processorArchitecture}\n" +
+                    $"Processor Identifier: {processorIdentifier}";*/
+                return result;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+                return "";
+            }
+        }
         private async Task RunConversion(string SourceFile, string DestFile, JobListDetails job, _StatsHandler stats_handle)
         {
             int LineNum = 0;
@@ -7576,29 +7667,30 @@ namespace VideoGui
                 int H264Target = key.GetValueInt("h264Target", -1);
                 bool ChkAutoAAC_IsChecked = key.GetValueBool("ChkAutoAAC", true);
                 bool _GPUEncode = this.IsChecked("GPUEncode"), _X265Output = this.IsChecked("X265Output");
-                key.Close();
-
-
+                key?.Close();
                 string myStrQuote = "\"";
                 (chkresized, overrider, job.InProcess) = (ResizeEnable, job.X264Override, true);
                 Video = CheckForGraphicsCard();
                 lbAccelHW.AutoSizeLabel(Video);
                 LineNum = 1;
                 ffmpeg.VideoCodec Encoder = ffmpeg.VideoCodec.h264;
-                HardwareAccelerator HardwareAcceleration = HardwareAccelerator.cuda;// "qsv";
-                LineNum = 2;
-                if (Video.Contains("AMD") || Video.Contains("Radeon")) HardwareAcceleration = HardwareAccelerator.amf;
+                string HWInfo = GetCpuInfo();
+                HardwareAccelerator HardwareAcceleration = HardwareAccelerator.software;// "qsv";
+                if (HWInfo.ToLower().Contains("intel")) HardwareAcceleration = HardwareAccelerator.qsv;
+                if (HWInfo.ToLower().Contains("amd")) HardwareAcceleration = HardwareAccelerator.amf;
+                if (Video.Contains("AMD") || Video.Contains("Radeon"))
+                {
+                    HardwareAcceleration = HardwareAccelerator.amf;
+                }
                 if (_GPUEncode)
                 {
                     if ((!overrider) && (_X265Output))
                     {
-                        LineNum = 3;
                         if (Video.Contains("NVIDIA")) Encoder = ffmpeg.VideoCodec.hevc_nvenc;
                         else if (Video.Contains("AMD") || (Video.Contains("Radeon"))) Encoder = ffmpeg.VideoCodec.hevc_amf;
                     }
                     else
                     {
-                        LineNum = 4;
                         if (H264Target == 2)
                         {
                             if (Video.Contains("NVIDIA")) Encoder = ffmpeg.VideoCodec.h264_nvenc;

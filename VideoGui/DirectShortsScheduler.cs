@@ -143,10 +143,11 @@ namespace VideoGui
             try
             {
                 byte[] clientSecret = Array.Empty<byte>();
-
-                connectionString.ExecuteReader("SELECT * FROM SETTINGS WHERE SETTINGNAME = 'CLIENT_SECRET';", (FbDataReader r) =>
+                CancellationTokenSource cts = new CancellationTokenSource();
+                connectionString.ExecuteReader("SELECT * FROM SETTINGS WHERE SETTINGNAME = 'CLIENT_SECRET';", cts,(FbDataReader r) =>
                 {
                     clientSecret = (r["SETTINGBLOB"] is System.Byte[] res) ? CryptData(res) : Array.Empty<byte>();
+                    cts.Cancel();
                 });
                 return (clientSecret.Length > 0) ? new MemoryStream(clientSecret) : new MemoryStream();
             }

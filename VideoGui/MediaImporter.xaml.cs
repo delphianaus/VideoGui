@@ -56,8 +56,8 @@ namespace VideoGui
         databasehook<object> ModuleCallBack;
 
         double DockPanelWidth = 348;
-        public MediaImporter(databasehook<object> _ModuleCallback,FileImporterClear _FileImporterClear,
-            ImportRecordAdd _ImportRec, CheckImports _CheckImports, 
+        public MediaImporter(databasehook<object> _ModuleCallback, FileImporterClear _FileImporterClear,
+            ImportRecordAdd _ImportRec, CheckImports _CheckImports,
             ReOrderFiles _ReOrderFiles, ClearTimes doClearTimes,
             SetFromTime doSetFromTime, SetToTime doSetToTime)
         {
@@ -184,7 +184,7 @@ namespace VideoGui
             try
             {
                 ModuleCallBack?.Invoke(this, new CustomParams_DataSelect(2));
-                
+
                 RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                 string Root = key.GetValueStr("MediaImporterSource", "c:\\");
                 key?.Close();
@@ -200,7 +200,7 @@ namespace VideoGui
                 {
                     folder = folderBrowserDialog.SelectedFolder;
                     var Flist = folder.Split("\\").ToList();
-                    int cnt = Flist.Count-1;
+                    int cnt = Flist.Count - 1;
                     if (cnt > 0)
                     {
                         string fldr = Flist[cnt];
@@ -434,19 +434,19 @@ namespace VideoGui
 
                 lstSchedules.Width = StackHeader2.Width - 2;
                 lstSchedules.Height = frmImport.Height - 190;
-                
-                
+
+
                 Canvas.SetLeft(btnClose, frmImport.Width - 124);
                 stkmain.Height = frmImport.Height - 16;
                 brd1.Height = StackHeader0.Height - 4;
-               
+
                 txtsrcdir.Width = frmImport.Width - 200;
                 Canvas.SetLeft(btnSelectSourceDir, frmImport.Width - 63);
                 stkFilterControls.Height = frmImport.Height - 158;
                 brdControls1.Height = stkFilterControls.Height;
-                Canvas.SetTop(btnMove, frmImport.Height - 196); 
+                Canvas.SetTop(btnMove, frmImport.Height - 196);
                 Canvas.SetTop(btnSelectAll, frmImport.Height - 227);
-                lstItems.Width = StackHeader2.Width-2;// stackpanel width + 200
+                lstItems.Width = StackHeader2.Width - 2;// stackpanel width + 200
 
             }
             catch (Exception ex)
@@ -521,13 +521,13 @@ namespace VideoGui
         {
             try
             {
-                if (e.Key == Key.Enter)  
+                if (e.Key == Key.Enter)
                 {
                     var data = txtStart.Text.FromStrToTimeSpan();
                     DoSetFromTime?.Invoke(data);
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
             }
@@ -618,16 +618,11 @@ namespace VideoGui
         {
             try
             {
-                if (lstSchedules.SelectedItems.Count > 0)
+                if (e.OriginalSource is MenuItem mnu && mnu.DataContext is FileInfoGoPro fpgx)
                 {
-                    var p = lstSchedules.SelectedItems[lstSchedules.SelectedItems.Count - 1];
-                    if (p is FileInfoGoPro fpgx)
-                    {
-                        DoSetFromTime?.Invoke(fpgx.TimeData);
-                        txtStart.Text = fpgx.TimeData.ToFFmpeg().Replace(".000", "");
-                        Thread.Sleep(100);
-
-                    }
+                    DoSetFromTime?.Invoke(fpgx.TimeData);
+                    txtStart.Text = fpgx.TimeData.ToFFmpeg().Replace(".000", "");
+                    Thread.Sleep(100);
                 }
             }
             catch (Exception ex)
@@ -640,15 +635,11 @@ namespace VideoGui
         {
             try
             {
-                if (lstSchedules.SelectedItems.Count > 0)
+                if (e.OriginalSource is MenuItem mnu && mnu.DataContext is FileInfoGoPro fpgx)
                 {
-                    var p = lstSchedules.SelectedItems[lstSchedules.SelectedItems.Count - 1];
-                    if (p is FileInfoGoPro fpgx)
-                    {
-                        DoSetToTime?.Invoke(fpgx.TimeData);
-                        txtEnd.Text = fpgx.TimeData.ToFFmpeg().Replace(".000", "");
-                        Thread.Sleep(100);
-                    }
+                    DoSetToTime?.Invoke(fpgx.TimeData);
+                    txtEnd.Text = fpgx.TimeData.ToFFmpeg().Replace(".000", "");
+                    Thread.Sleep(100);
                 }
             }
             catch (Exception ex)

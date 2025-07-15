@@ -145,9 +145,9 @@ namespace VideoGui
                     btnEditDesc.IsChecked = false;
                     ShortsIndex = LinkedId;
                     dbInit?.Invoke(this, new CustomParams_Select(LinkedId));
-
+                    CancellationTokenSource cts = new CancellationTokenSource();
                     string connectStr = dbInit?.Invoke(this, new CustomParams_GetConnectionString()) is string con1n ? con1n : "";
-                    connectStr.ExecuteReader(GetShortsDirectorySql(LinkedId), (FbDataReader r) =>
+                    connectStr.ExecuteReader(GetShortsDirectorySql(LinkedId),cts, (FbDataReader r) =>
                     {
                         int titleid = r["TITLEID"].ToInt(-1);
                         int descid = r["DESCID"].ToInt(-1);
@@ -155,6 +155,7 @@ namespace VideoGui
                         string LinkedDescId = r["LINKEDDESCIDS"] is string DITD ? DITD : "";
                         btnEditTitle.IsChecked = titleid != -1 && LinkedTitleId != "";
                         btnEditDesc.IsChecked = descid != -1 && LinkedDescId != "";
+                        cts.Cancel();
                     });
 
 
@@ -327,9 +328,11 @@ namespace VideoGui
 
                     string linkedtitleid = "";
                     sql = GetShortsDirectorySql(ShortsIndex);
-                    connectionStr.ExecuteReader(sql, (FbDataReader r) =>
+                    CancellationTokenSource cts = new CancellationTokenSource();
+                    connectionStr.ExecuteReader(sql, cts,(FbDataReader r) =>
                     {
                         linkedtitleid = (r["LINKEDTITLEIDS"] is string tidt ? tidt : "");
+                        cts.Cancel();
                     });
                     btnEditTitle.IsChecked = (linkedtitleid != "" && DoTitleSelectFrm.TitleId != -1);
                     //GetShortsDirectorySql(DoTitleSelectFrm.PersistId);
@@ -668,9 +671,11 @@ namespace VideoGui
                     }
 
                     int descid = DoDescSelectFrm.Id;
-                    connectionStr.ExecuteReader(GetShortsDirectorySql(ShortsIndex), (FbDataReader r) =>
+                    CancellationTokenSource cts = new CancellationTokenSource();
+                    connectionStr.ExecuteReader(GetShortsDirectorySql(ShortsIndex), cts,(FbDataReader r) =>
                     {
                         linkeddescid = (r["LINKEDDESCIDS"] is string did ? did : "");
+                        cts.Cancel();
                     });
                     btnEditDesc.IsChecked = (descid != -1 && linkeddescid != "");
 
@@ -717,7 +722,8 @@ namespace VideoGui
                     if (dbInit?.Invoke(this, new CustomParams_AddDirectory(ThisDir.ToUpper())) is TurlpeDualString tds)
                     {
                         string sqle = GetShortsDirectorySql(tds.Id);
-                        connectionStr.ExecuteReader(sqle, (FbDataReader r) =>
+                        CancellationTokenSource cts = new CancellationTokenSource();
+                        connectionStr.ExecuteReader(sqle, cts,(FbDataReader r) =>
                         {
                             int titleid = r["TITLEID"].ToInt(-1);
                             int descid = r["DESCID"].ToInt(-1);
@@ -725,6 +731,7 @@ namespace VideoGui
                             string LinkedDescId = r["LINKEDDESCIDS"] is string DITD ? DITD : "";
                             btnEditTitle.IsChecked = titleid != -1 && LinkedTitleId != "";
                             btnEditDesc.IsChecked = descid != -1 && LinkedDescId != "";
+                            cts.Cancel();
                         });
                     }
                     /*

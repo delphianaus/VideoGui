@@ -327,9 +327,11 @@ namespace VideoGui
                     {
                         string linkeddescid = "";
                         string sql = GetShortsDirectorySql(DoDescSelectFrm.Id);
-                        connectionStr.ExecuteReader(sql, (FbDataReader r) =>
+                        CancellationTokenSource cts = new CancellationTokenSource(10000);
+                        connectionStr.ExecuteReader(sql, cts, (FbDataReader r) =>
                         {
                             linkeddescid = (r["LINKEDDESCIDS"] is string did ? did : "");
+                            cts.Cancel();
                         });
                         foreach (var sch in msuSchedules.Items.OfType<SelectedShortsDirectories>().Where(x => x.LinkedShortsDirectoryId == ShortsIndex))
                         {
@@ -461,9 +463,11 @@ namespace VideoGui
                     }
                     string linkedtitleid = "";
                     sql = GetShortsDirectorySql(ShortsIndex);
-                    connectionStr.ExecuteReader(sql, (FbDataReader r) =>
+                    CancellationTokenSource cts = new CancellationTokenSource();
+                    connectionStr.ExecuteReader(sql, cts,(FbDataReader r) =>
                     {
                         linkedtitleid = (r["LINKEDTITLEIDS"] is string tidt ? tidt : "");
+                        cts.Cancel();
                     });
                     foreach (var sch in msuSchedules.Items.OfType<SelectedShortsDirectories>().Where(x => x.LinkedShortsDirectoryId == ShortsIndex))
                     {
@@ -945,7 +949,7 @@ namespace VideoGui
         {
             try
             {
-                foreach (SelectedShortsDirectories info in msuShorts.SelectedItems)
+                if (e.OriginalSource is MenuItem mnu && mnu.DataContext is SelectedShortsDirectories info)
                 {
                     dbInit?.Invoke(this, new CustomParams_RemoveSelectedDirectory(info.Id, info.DirectoryName));
                 }

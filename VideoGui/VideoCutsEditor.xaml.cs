@@ -80,7 +80,8 @@ namespace VideoGui
                     bool Loaded = false;
                     if (idx != -1)
                     {
-                        ConnectionString.ExecuteReader($"SELECT * FROM AUTOEDITS WHERE ID = @ID", [("@ID", idx)], (FbDataReader reader) =>
+                        CancellationTokenSource cts = new ();
+                        ConnectionString.ExecuteReader($"SELECT * FROM AUTOEDITS WHERE ID = @ID", [("@ID", idx)], cts, (FbDataReader reader) =>
                         {
                             string DestDir = (reader["DESTINATION"] is string des) ? des : "";
                             string Target = (reader["TARGET"] is string target) ? target : "";
@@ -95,30 +96,28 @@ namespace VideoGui
                             txtSegment.IsEnabled = true;
                             txtThreash.IsEnabled = true;
                             BtnCalc.IsEnabled = true;
+                            cts.Cancel();
                         });
                     }
                     else
                     {
-                        string r,Last = txtsrcdir.Text.Split("\\").ToList().LastOrDefault();
+                        string r, Last = txtsrcdir.Text.Split("\\").ToList().LastOrDefault();
                         if (Last.Length >= 6)
                         {
-                            var done = false;
                             r = Last.Substring(Last.Length - 6, 6);
-                            ConnectionString.ExecuteReader("select * from autoedits WHERE source CONTAINING @P0", [("@P0", r)], (FbDataReader reader) =>
+                            CancellationTokenSource cts = new CancellationTokenSource();
+                            ConnectionString.ExecuteReader("select * from autoedits WHERE source CONTAINING @P0", [("@P0", r)], cts, (FbDataReader reader) =>
                             {
-                                if (!done)
-                                {
-                                    string DestDir = (reader["DESTINATION"] is string des) ? des : "";
-                                    string Target = (reader["TARGET"] is string target) ? target : "";
-                                    string Segment = (reader["SEGMENT"] is string segment) ? segment : "";
-                                    string Threashhold = (reader["THRESHHOLD"] is string theashhold) ? theashhold : "";
-                                    txxtEditDirectory.Text = (DestDir != "") ? DestDir : txxtEditDirectory.Text;
-                                    txtSegment.Text = (Segment != "") ? Segment : txtSegment.Text;
-                                    txtThreash.Text = (Threashhold != "") ? Threashhold : txtThreash.Text;
-                                    txtTarget.Text = (Target != "") ? Target : txtTarget.Text;
-                                    Loaded = true;
-                                    done = true;
-                                }
+                                string DestDir = (reader["DESTINATION"] is string des) ? des : "";
+                                string Target = (reader["TARGET"] is string target) ? target : "";
+                                string Segment = (reader["SEGMENT"] is string segment) ? segment : "";
+                                string Threashhold = (reader["THRESHHOLD"] is string theashhold) ? theashhold : "";
+                                txxtEditDirectory.Text = (DestDir != "") ? DestDir : txxtEditDirectory.Text;
+                                txtSegment.Text = (Segment != "") ? Segment : txtSegment.Text;
+                                txtThreash.Text = (Threashhold != "") ? Threashhold : txtThreash.Text;
+                                txtTarget.Text = (Target != "") ? Target : txtTarget.Text;
+                                Loaded = true;
+                                cts.Cancel();
                             });
                         }
 
@@ -150,7 +149,7 @@ namespace VideoGui
                     else
                     {
                         Target = txtTarget.Text.FromStrToTimeSpan();
-                        
+
                     }
                     int Threash = txtThreash.Text.ToInt(-1);
                     if (Threash == -1) Threash = 70;
@@ -415,7 +414,7 @@ namespace VideoGui
                         ("@P3", txtTarget.Text), ("@P4", txtSegment.Text), ("@P5", txtThreash.Text)]).ToInt(-1);
                     if (idx != -1)
                     {
-                     
+
                     }
 
                 }

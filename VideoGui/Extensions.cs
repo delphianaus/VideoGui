@@ -715,6 +715,35 @@ namespace VideoGui
             }
         }
 
+        public static void ExecuteReader(this string connectionStr, string sql, List<(string, object)>? parameters, CancellationTokenSource cts,
+            OnFirebirdReader Reader)
+        {
+            try
+            {
+                using (var connection = new FbConnection(connectionStr))
+                {
+                    connection.Open();
+                    using (var command = new FbCommand(sql, connection))
+                    {
+                        parameters?.ForEach(x => command.Parameters.AddWithValue(x.Item1, x.Item2));
+                        using (var cmd = command.ExecuteReader())
+
+                        {
+                            while (cmd.Read() && !cts.IsCancellationRequested)
+                            {
+                                Reader?.Invoke(cmd);
+                            }
+                        }
+                    }
+                    connection.Close();
+                }
+
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"ExecuteReader {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
         public static void ExecuteReader(this string connectionStr, string sql, OnFirebirdReader Reader)
         {
             try
@@ -727,6 +756,34 @@ namespace VideoGui
                         using (var cmd = command.ExecuteReader())
                         {
                             while (cmd.Read())
+                            {
+                                Reader?.Invoke(cmd);
+                            }
+                        }
+                    }
+                    connection.Close();
+                }
+
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"ExecuteReader {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
+
+        public static void ExecuteReader(this string connectionStr, string sql, CancellationTokenSource cts,
+            OnFirebirdReader Reader)
+        {
+            try
+            {
+                using (var connection = new FbConnection(connectionStr))
+                {
+                    connection.Open();
+                    using (var command = new FbCommand(sql, connection))
+                    {
+                        using (var cmd = command.ExecuteReader())
+                        {
+                            while (cmd.Read() && !cts.IsCancellationRequested)
                             {
                                 Reader?.Invoke(cmd);
                             }

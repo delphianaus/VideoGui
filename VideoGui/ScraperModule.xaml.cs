@@ -2347,7 +2347,10 @@ namespace VideoGui
                     if (dbInitializer?.Invoke(this, new CustomParams_GetShortsDirectoryById(id)) is TurlpeDualString tds)
                     {
                         TitleStr = tds.turlpe1;
-                        DescStr = CleanUpDesc(tds.turlpe2);
+                        if (tds.turlpe2 is not null && tds.turlpe2 != "")
+                        {
+                            DescStr = CleanUpDesc(tds.turlpe2);
+                        }
                         idr = tds.Id;
                     }
 
