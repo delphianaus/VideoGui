@@ -7682,6 +7682,10 @@ namespace VideoGui
                 {
                     HardwareAcceleration = HardwareAccelerator.amf;
                 }
+                if (Video.Contains("NVIDIA") && !HWInfo.ToLower().Contains("intel"))
+                {
+                    HardwareAcceleration = HardwareAccelerator.cuda;
+                }
                 if (_GPUEncode)
                 {
                     if ((!overrider) && (_X265Output))
