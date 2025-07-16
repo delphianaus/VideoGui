@@ -686,6 +686,13 @@ namespace VideoGui
             }
         }
 
+        public static void CreatePathIfNotExists(this string path)
+        {
+            if (!Directory.Exists(path) && path.NotNullOrEmpty())
+            {
+                Directory.CreateDirectory(path);
+            }
+        }
         public static void ExecuteReader(this string connectionStr, string sql, List<(string, object)>? parameters, OnFirebirdReader Reader)
         {
             try

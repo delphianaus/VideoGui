@@ -524,7 +524,7 @@ namespace VideoGui
                 CancellationTokenSource cts = new CancellationTokenSource();
                 DateTime LastTimeUploaded = DateTime.Now.Date.AddYears(-100);
                 string SQLB = "SELECT * FROM UploadsRecord ORDER BY RDB$RECORD_VERSION DESC ROWS 500;";
-                connectionString.ExecuteReader(SQLB, cts,(FbDataReader r) =>
+                connectionString.ExecuteReader(SQLB, cts, (FbDataReader r) =>
                 {
                     filen = (r["UPLOADFILE"] is string f) ? f : "";
                     var dt = (r["UPLOAD_DATE"] is DateTime d) ? d : DateTime.Now.Date.AddYears(-100);
@@ -1196,7 +1196,7 @@ namespace VideoGui
                         {
                             CancellationTokenSource cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
                             sqla = "SELECT * FROM YTACTIONS WHERE ID = @ID;";
-                            connectionString.ExecuteReader(sqla, [("@ID", idx)], cts,(FbDataReader r) =>
+                            connectionString.ExecuteReader(sqla, [("@ID", idx)], cts, (FbDataReader r) =>
                             {
                                 YTScheduledActionsList.Add(new ScheduledActions(r));
                                 cts.Cancel();
@@ -1707,7 +1707,7 @@ namespace VideoGui
                         sql = GetShortsDirectorySql(ShortsDirectoryIndex);
                         string LinkedTitleIds = "";
                         CancellationTokenSource cts = new CancellationTokenSource();
-                        connectionString.ExecuteReader(sql, cts ,(FbDataReader r) =>
+                        connectionString.ExecuteReader(sql, cts, (FbDataReader r) =>
                         {
                             LinkedTitleIds = (r["LINKEDTITLEIDS"] is string lkd) ? lkd : "";
                             cts.Cancel();
@@ -1729,7 +1729,7 @@ namespace VideoGui
                         string LinkedDescIds = "";
                         sql = GetShortsDirectorySql(ShortsDirectoryIndex);
                         CancellationTokenSource cts = new CancellationTokenSource();
-                        connectionString.ExecuteReader(sql, cts,(FbDataReader r) =>
+                        connectionString.ExecuteReader(sql, cts, (FbDataReader r) =>
                         {
                             LinkedDescIds = (r["LINKEDDESCIDS"] is string lkd) ? lkd : "";
                             cts.Cancel();
@@ -1978,7 +1978,7 @@ namespace VideoGui
                                     string linkeddescids = "";
                                     string sqla = GetUploadReleaseBuilderSql(res);
                                     CancellationTokenSource cts = new CancellationTokenSource();
-                                    connectionString.ExecuteReader(sqla, cts,(FbDataReader r) =>
+                                    connectionString.ExecuteReader(sqla, cts, (FbDataReader r) =>
                                     {
                                         linkeddescids = (r["LINKEDDESCIDS"] is string ldid ? ldid : "");
                                         cts.Cancel();
@@ -2035,7 +2035,7 @@ namespace VideoGui
                                     {
                                         sql = $"SELECT * FROM DESCRIPTIONS WHERE ID = {idx}";
                                         CancellationTokenSource cts = new CancellationTokenSource();
-                                        connectionString.ExecuteReader(sql,cts, (dr) =>
+                                        connectionString.ExecuteReader(sql, cts, (dr) =>
                                         {
                                             DescriptionsList.Add(new Descriptions(dr));
                                             cts.Cancel();
@@ -2487,7 +2487,7 @@ namespace VideoGui
                                     }
                                     string linkedtitleids = "";
                                     CancellationTokenSource cts = new CancellationTokenSource();
-                                    connectionString.ExecuteReader(GetUploadReleaseBuilderSql(res), cts,(FbDataReader r) =>
+                                    connectionString.ExecuteReader(GetUploadReleaseBuilderSql(res), cts, (FbDataReader r) =>
                                     {
                                         linkedtitleids = (r["LINKEDTITLEIDS"] is string ldid ? ldid : "");
                                         cts.Cancel();
@@ -2949,7 +2949,7 @@ namespace VideoGui
                         TitleId = id;
                         sql = "SELECT * FROM TITLES WHERE ID = @ID";
                         CancellationTokenSource cts = new CancellationTokenSource(2000);
-                        connectionString.ExecuteReader(sql, [("@ID", id)], cts,(FbDataReader r) =>
+                        connectionString.ExecuteReader(sql, [("@ID", id)], cts, (FbDataReader r) =>
                         {
                             TitlesList.Add(new Titles(r));
                             cts.Cancel();
@@ -3034,7 +3034,7 @@ namespace VideoGui
                         DescId = id;
                         sql = "SELECT * FROM DESCRIPTIONS WHERE ID = @ID";
                         CancellationTokenSource cts = new CancellationTokenSource(2000);
-                        connectionString.ExecuteReader(sql, [("@ID", id)], cts,(FbDataReader r) =>
+                        connectionString.ExecuteReader(sql, [("@ID", id)], cts, (FbDataReader r) =>
                         {
                             DescriptionsList.Add(new(r));
                             cts.Cancel();
@@ -3069,7 +3069,7 @@ namespace VideoGui
                     {
                         sql = "SELECT * FROM SHORTSDIRECTORY WHERE ID = @ID";
                         CancellationTokenSource cts = new CancellationTokenSource(2000);
-                        connectionString.ExecuteReader(sql, [("@ID", LinkedId)],cts, (FbDataReader r) =>
+                        connectionString.ExecuteReader(sql, [("@ID", LinkedId)], cts, (FbDataReader r) =>
                         {
                             EditableshortsDirectoryList.Add(new ShortsDirectory(r));
                             cts.Cancel();
@@ -3212,7 +3212,7 @@ namespace VideoGui
                 {
                     CancellationTokenSource cts = new CancellationTokenSource(2000);
                     sql = "SELECT NEWID,OLDID FROM REMATCHED WHERE OLDID = @P0";
-                    connectionString.ExecuteReader(sql, [("@P0", rfu.newid)], cts,(r) =>
+                    connectionString.ExecuteReader(sql, [("@P0", rfu.newid)], cts, (r) =>
                     {
                         OldId = (r["OLDID"] is int oldid) ? oldid : -1;
                         NewId = (r["NEWID"] is int newid) ? newid : -1;
@@ -3354,7 +3354,7 @@ namespace VideoGui
                 {
                     string sql = "SELECT * FROM SHORTSDIRECTORY WHERE ID = @ID";
                     CancellationTokenSource cts = new CancellationTokenSource();
-                    connectionString.ExecuteReader(sql, [("@ID", SPS.Id)],cts, (FbDataReader r) =>
+                    connectionString.ExecuteReader(sql, [("@ID", SPS.Id)], cts, (FbDataReader r) =>
                     {
                         EditableshortsDirectoryList.Add(new ShortsDirectory(r));
                         cts.Cancel();
@@ -3375,7 +3375,7 @@ namespace VideoGui
                 {
                     string sql = "SELECT * FROM TITLES WHERE ID = @ID";
                     CancellationTokenSource cts = new CancellationTokenSource();
-                    connectionString.ExecuteReader(sql, [("@ID", SPU.Title)], cts,(FbDataReader r) =>
+                    connectionString.ExecuteReader(sql, [("@ID", SPU.Title)], cts, (FbDataReader r) =>
                     {
                         TitlesList.Add(new Titles(r));
                         cts.Cancel();
@@ -4568,8 +4568,11 @@ namespace VideoGui
                 sqlstring = $"CREATE TABLE MULTISHORTSINFO({Id},ISSHORTSACTIVE SMALLINT,NUMBEROFSHORTS INTEGER, " +
                     "LINKEDSHORTSDIRECTORYID INTEGER, LASTUPLOADEDDATE DATE, LASTUPLOADEDTIME TIME);";
                 connectionString.CreateTableIfNotExists(sqlstring);
-
-
+                sqlstring = $"CREATE TABLE CONVERTERSETTINGS({Id},ISDEFAULT SMALLINT,MINBITRATE VARCHAR(255)"+
+                    ",MAXBITRATE VARCHAR(255),BITRATEBUFFER VARCHAR(255),VIDEOWIDTH VARCHAR(255),"+
+                    "VIDEOHEIGHT VARCHAR(255),ARMODULAS VARCHAR(255), RESIZEENABLE SMALLINT,"+
+                    "ARROUNDENABLE SMALLINT,ARSCALINGENABLED SMALLINT,VSYNCEABLE SMALLINT);";
+                connectionString.CreateTableIfNotExists(sqlstring);
 
                 /*   reader["ID"] is int ,reader["SCHEDULENAMEID"] is int ,reader["ACTIONNAMEID"] is int 
                      reader["SCHEDULENAME"] is string , reader["ACTIONNAME"] is string , reader["MAX"] is int
@@ -5611,9 +5614,6 @@ namespace VideoGui
             }
         }
 
-
-
-
         private void Window_KeyDown_EventHandler(object sender, System.Windows.Input.KeyEventArgs e)
         {
             try
@@ -5746,13 +5746,11 @@ namespace VideoGui
                     Dispatcher.Invoke(() => LoadSelectForm());
                     return;
                 }
-                // LogWrite(MethodBase.GetCurrentMethod().Name.ToString() + " Button_ClickAsync");
                 RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                 string SourceDirectory720p = key.GetValueStr("SourceDirectory720p", string.Empty);
                 string SourceDirectory1080p = key.GetValueStr("SourceDirectory1080p", string.Empty);
                 string SourceDirectory4K = key.GetValueStr("SourceDirectory4K", string.Empty);
                 string SourceDirectory4KAdobe = key.GetValueStr("SourceDirectory4KAdobe", string.Empty);
-
                 key?.Close();
                 SelectFiles(SourceDirectory720p, SourceDirectory1080p, SourceDirectory4K, SourceDirectory4KAdobe);
             }
@@ -5988,22 +5986,35 @@ namespace VideoGui
                 string TwitchStreamKey = string.Empty;
                 RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                 DestDirectory720p = key.GetValueStr("DestDirectory720p");
+                DestDirectory720p.CreatePathIfNotExists();
                 DestDirectory1080p = key.GetValueStr("DestDirectory1080p");
+                DestDirectory1080p.CreatePathIfNotExists();
                 DestDirectoryTwitch = key.GetValueStr("DestDirectoryTwitch");
+                DestDirectoryTwitch.CreatePathIfNotExists();
                 DestDirectory4K = key.GetValueStr("DestDirectory4k");
+                DestDirectory4K.CreatePathIfNotExists();
                 TwitchStreamKey = key.GetValueStr("TwitchStreamKey", "live_1061414984_Vu5NrETzHYqB1f4bZO12dxaCOfUkxf");
                 DestDirectoryAdobe4K = key.GetValueStr("DestDirectoryAdobe4k");
+                DestDirectoryAdobe4K.CreatePathIfNotExists();
                 DoneDirectory720p = key.GetValueStr("CompDirectory720p");
+                DoneDirectory720p.CreatePathIfNotExists();
                 DoneDirectory1080p = key.GetValueStr("CompDirectory1080p");
+                DoneDirectory1080p.CreatePathIfNotExists();
                 DoneDirectory4K = key.GetValueStr("CompDirectory4K");
+                DoneDirectory4K.CreatePathIfNotExists();
                 DoneDirectoryAdobe4K = key.GetValueStr("CompDirectory4KAdobe");
+                DoneDirectory4K.CreatePathIfNotExists();
                 SourceDirectory1080p = key.GetValueStr("SourceDirectory1080p");
+                SourceDirectory1080p.CreatePathIfNotExists();
                 SourceDirectory720p = key.GetValueStr("SourceDirectory720p");
+                SourceDirectory720p.CreatePathIfNotExists();
                 SourceDirectory4K = key.GetValueStr("SourceDirectory4K");
                 bool ChkAutoAAC_IsChecked = key.GetValueBool("ChkAutoAAC", true);
                 bool ChkReEncode_IsChecked = key.GetValueBool("reencodefile", true);
                 SourceDirectoryAdobe4K = key.GetValueStr("SourceDirectory4KAdobe");
+                SourceDirectoryAdobe4K.CreatePathIfNotExists();
                 ErrorDirectory = key.GetValueStr("ErrorDirectory");
+                ErrorDirectory.CreatePathIfNotExists();
                 totaltasks = key.GetValueInt("maxthreads", 10);
                 total1080ptasks = key.GetValueInt("max1080pthreads", 1);
                 total4kTasks = key.GetValueInt("max4Kthreads", 3);// 1 for laptop. 2 for desktop
@@ -7242,13 +7253,10 @@ namespace VideoGui
                     }
                     key?.Close();
                 }
-                LineNum = 7;
                 key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
-                LoadedKey = (key != null);
                 List<string> Profiles = new();
                 List<string> LogFiles = new List<string>();
                 string searchpath = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
-                LineNum = 8;
                 this.Dispatcher.Invoke(() =>
                 {
                     LogFiles = Directory.EnumerateFiles(searchpath, "*-log.log", SearchOption.AllDirectories).ToList<string>();
@@ -7257,28 +7265,27 @@ namespace VideoGui
                 {
                     if (logfile.Contains("."))
                     {
-                        LineNum = 9;
                         string s = Path.GetFileNameWithoutExtension(logfile);
                         string date = s.Substring(0, s.Length - 4);
-
-                        LineNum = 10;
                         DateTime logDate = DateTime.ParseExact(date, "dd_MM_yyyy", CultureInfo.InvariantCulture);
                         TimeSpan LogDateSpan = logDate - DateTime.Now;
-                        LineNum = 11;
                         if (LogDateSpan.TotalDays > 5)
                         {
                             System.IO.File.Delete(logfile);
                         }
-                        LineNum = 12;
                     }
                 }
                 LineNum = 13;
                 this.Dispatcher.Invoke(() => { InitTitleLength = MainWindowX.Title.Length; });
                 txtDestPath = key.GetValueStr("DestDirectory", defaultdrive);
+                txtDestPath.CreatePathIfNotExists();
                 txtDonepath = key.GetValueStr("CompDirectory", defaultdrive);
+                txtDonepath.CreatePathIfNotExists();
                 txtErrorPath = key.GetValueStr("ErrorDirectory", defaultdrive);
+                txtErrorPath.CreatePathIfNotExists();
                 backupserver = key.GetValueStr("backupserver", "127.0.0.1");
                 backupDone1080p = key.GetValueStr("1080pDoneBackupPath", "");
+                backupDone1080p.CreatePathIfNotExists();
                 backupDone = key.GetValueStr("DoneBackupPath", "");
                 backupCompleted = key.GetValueStr("unc_completedpath", "");
                 backupun = key.GetValueStr("backupsettings", "");
@@ -7299,12 +7306,10 @@ namespace VideoGui
                     }
                 }
 
-                LineNum = 15;
-                if (key.RegistryValueExists("BitRateSettings"))
+                if (!LoadConverterSettingsFromDB() && key.RegistryValueExists("BitRateSettings"))
                 {
                     string SelProfile = key.GetValueStr("SelectedProfile", string.Empty);
                     Profiles.AddRange(key.GetValueStrs("BitRateSettings"));
-                    LineNum = 16;
                     if (SelProfile != "")
                     {
                         foreach (string profstr in Profiles)
@@ -7324,6 +7329,21 @@ namespace VideoGui
                                     ArRoundEnable = settingslist[8].ToBool();
                                     ArScalingEnabled = settingslist[9].ToBool();
                                     VSyncEnable = settingslist[10].ToBool();
+                                    // Insert
+
+                                    string SQL = "INSERT INTO CONVERTERSETTINGS (" +
+                                        "ISDEFAULT,MINBITRATE,MAXBITRATE,BITRATEBUFFER," +
+                                        "VIDEOWIDTH,VIDEOHEIGHT,ARMODULAS,RESIZEENABLE," +
+                                        "ARROUNDENABLE,ARSCALINGENABLE,VSYNCEABLE)" +
+                                        "VALUES(@ISDEFAULT,@MINBITRATE,@MAXBITRATE,@BITRATEBUFFER," +
+                                        "@VIDEOWIDTH,@VIDEOHEIGHT,@ARMODULAS,@RESIZEENABLE," +
+                                        "@ARROUNDENABLE,@ARSCALINGENABLE,@VSYNCEABLE)";
+                                    connectionString.ExecuteScalar(SQL, [("@ISDEFAULT", true),
+                                        ("@MINBITRATE", MinBitRate), ("@MAXBITRATE", MaxBitRate),
+                                        ("@BITRATEBUFFER", BitRateBuffer), ("@VIDEOWIDTH", VideoWidth),
+                                        ("@VIDEOHEIGHT", VideoHeight), ("@ARMODULAS", ArModulas),
+                                        ("@RESIZEENABLE", ResizeEnable), ("@ARROUNDENABLE", ArRoundEnable),
+                                        ("@ARSCALINGENABLE", ArScalingEnabled), ("@VSYNCEABLE", VSyncEnable)]);
                                 }
                             }
                         }
@@ -7355,6 +7375,19 @@ namespace VideoGui
                             ArRoundEnable = settingslist[8].ToBool();
                             ArScalingEnabled = settingslist[9].ToBool();
                             VSyncEnable = settingslist[10].ToBool();
+                            string SQL = "INSERT INTO CONVERTERSETTINGS (" +
+                                       "ISDEFAULT,MINBITRATE,MAXBITRATE,BITRATEBUFFER," +
+                                       "VIDEOWIDTH,VIDEOHEIGHT,ARMODULAS,RESIZEENABLE," +
+                                       "ARROUNDENABLE,ARSCALINGENABLE,VSYNCEABLE)" +
+                                       "VALUES(@ISDEFAULT,@MINBITRATE,@MAXBITRATE,@BITRATEBUFFER," +
+                                       "@VIDEOWIDTH,@VIDEOHEIGHT,@ARMODULAS,@RESIZEENABLE," +
+                                       "@ARROUNDENABLE,@ARSCALINGENABLE,@VSYNCEABLE)";
+                            connectionString.ExecuteScalar(SQL, [("@ISDEFAULT", true),
+                                        ("@MINBITRATE", MinBitRate), ("@MAXBITRATE", MaxBitRate),
+                                        ("@BITRATEBUFFER", BitRateBuffer), ("@VIDEOWIDTH", VideoWidth),
+                                        ("@VIDEOHEIGHT", VideoHeight), ("@ARMODULAS", ArModulas),
+                                        ("@RESIZEENABLE", ResizeEnable), ("@ARROUNDENABLE", ArRoundEnable),
+                                        ("@ARSCALINGENABLE", ArScalingEnabled), ("@VSYNCEABLE", VSyncEnable)]);
                         }
                         Profiles.Add(result);
                         LineNum = 18;
@@ -7368,29 +7401,7 @@ namespace VideoGui
                         LineNum = 20;
                     }
                 }
-                SavedDirectories.Add("\\\\10.10.1.90\\tv.shows\\Docos");
-                SavedDirectories.Add("\\\\10.10.1.90\\tv.shows\\ActionShows");
-                SavedDirectories.Add("\\\\10.10.1.90\\tv.shows\\FoodShows");
-                SavedDirectories.Add("\\\\10.10.1.90\\tv.shows\\processed");
-                SavedDirectories.Add("\\\\10.10.1.90\\processed");
-                SavedDirectories.Clear();
-                LineNum = 21;
-                if (key.GetValueNames().Contains("ComparitorList"))
-                {
-                    string[] arr = key.GetValueStrs("ComparitorList");
-                    SavedDirectories = arr?.ToList<string>();
-                    this.AddItems("CmbScanDirectory", "Default");
-                    foreach (var scandir in SavedDirectories.Where(scandir => scandir != "Default"))
-                    {
-                        this.AddItems("CmbScanDirectory", scandir);
-                    }
-                }
-                int Index = key.GetValueInt("ComparitorListIndex");
-                if (Index <= this.GetCount("CmbScanDirectory"))
-                {
-                    this.SetSelectedIndex("CmbScanDirectory", Index);
-                }
-                LineNum = 22;
+                
                 this.SetChecked("GPUEncode", key.GetValueBool("GPUEncode", true));
                 this.SetChecked("Fisheye", key.GetValueBool("FishEyeRemoval", false));
 
@@ -7409,6 +7420,39 @@ namespace VideoGui
             catch (Exception ex)
             {
                 ex.LogWrite($"LoadSettings LineNum {LineNum} {MethodBase.GetCurrentMethod().Name}");
+            }
+        }
+
+        public bool LoadConverterSettingsFromDB()
+        {
+            try
+            {
+                bool result = false;
+                CancellationTokenSource cts = new();
+                string sql = "SELECT * FROM CONVERTERSETTINGS WHERE ISDEFAULT = @ISDEFAULT";
+                connectionString.ExecuteReader(sql, [("@ISDEFAULT", true)], cts,
+                    (FbDataReader r) =>
+                    {
+                        result = true;
+                        MinBitRate = r["MINBITRATE"] is string minbr ? minbr : "675K";
+                        MaxBitRate = r["MAXBITRATE"] is string maxbr ? maxbr : "1150K";
+                        BitRateBuffer = r["BITRATEBUFFER"] is string bb ? bb : "1200K";
+                        VideoWidth = r["VIDEOWIDTH"] is string vw ? vw : "720";
+                        VideoHeight = r["VIDEOHEIGHT"] is string vh ? vh : "";
+                        ArModulas = r["ARMODULAS"] is string ar ? ar : "16";
+                        ResizeEnable = r["RESIZEENABLE"] is Int16 RS ? RS == 1 : false; ;
+                        ArRoundEnable = r["ARROUNDENABLE"] is Int16 AE ? AE == 1 : false;
+                        ArScalingEnabled = r["ARSCALINGENABLE"] is Int16 SE ? SE == 1 : false;
+                        VSyncEnable = r["VSYNCEABLE"] is Int16 VE ? VE == 1 : false;
+                        cts.Cancel();
+                    });
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"LoadConverterSettingsFromDB {MethodBase.GetCurrentMethod().Name} {ex.Message} {ex.StackTrace}");
+                return false;
             }
         }
         private bool CheckInternet()
@@ -7708,12 +7752,10 @@ namespace VideoGui
                         {
                             if (!job.Mpeg4ASP) (Encoder, _GPUEncode) = (ffmpeg.VideoCodec.mpeg4, false);
                         }
-                        LineNum = 5;
                     }
                 }
                 else
                 {
-                    LineNum = 6;
                     if (!_X265Output)
                     {  // ASP // AVC // H264
                         Encoder = (H264Target == 0) ? ffmpeg.VideoCodec.libxvid :
@@ -7725,17 +7767,14 @@ namespace VideoGui
                         }
                     }
                     else Encoder = ffmpeg.VideoCodec.libx265;
-                    LineNum = 7;
                 }
                 string AppPath = GetExePath();
                 double totalseconds = 0;
-                LineNum = 8;
                 //SourceFile = SourceFile.Contains(" ") ? myStrQuote + SourceFile + myStrQuote : SourceFile;
                 try
                 {
                     if (job.IsMulti && !job.IsMuxed)
                     {
-                        LineNum = 9;
                         List<string> Files = new List<string>();
                         string filename = "";
                         foreach (string sp in job.GetCutList())
@@ -7743,7 +7782,6 @@ namespace VideoGui
                             filename = sp.Replace("file '", "").Replace("'", "");
                             Files.Add(filename);
                         }
-                        LineNum = 10;
                         ffmpegbridge FileIndexer = new ffmpegbridge();
                         FileIndexer.ReadDuration(Files);
 
@@ -7751,19 +7789,15 @@ namespace VideoGui
                         {
                             Thread.Sleep(100);
                         }
-                        LineNum = 11;
                         List<(string, double)> FileInfos = new List<(string, double)>();
                         FileInfos.AddRange(FileIndexer.FileInfoList);
-                        LineNum = 12;
                         totalseconds = FileIndexer.GetDuration().TotalSeconds;
                         job.TotalSeconds = totalseconds;
-                        LineNum = 13;
                         // Add Get List of files and durations 
                         FileIndexer = null;
 
                         job.TotalSeconds = totalseconds;
                         bool fnx = false;
-                        LineNum = 14;
                         string srcdir = job.MultiSourceDir.Split('\\').ToList().LastOrDefault();
 
                         foreach (var _ in SourceFileInfos.Where(imt => imt.SourceDirectory == srcdir).Select(imt => new { }))
@@ -7771,7 +7805,6 @@ namespace VideoGui
                             fnx = true;
                             break;
                         }
-                        LineNum = 15;
                         if (!fnx)
                         {
                             TimeSpan StartPos = TimeSpan.Zero;
@@ -7788,7 +7821,6 @@ namespace VideoGui
                             FileInfos = null;
 
                         }
-                        LineNum = 16;
                     }
                     else
                     {
@@ -7801,46 +7833,35 @@ namespace VideoGui
 
                             Thread.Sleep(100);
                         }
-                        LineNum = 18;
                         ffmpegbridge FileIndexer = new ffmpegbridge();
                         FileIndexer.ReadDuration(SourceFile);
                         while (!FileIndexer.Finished)
                         {
                             Thread.Sleep(100);
                         }
-                        LineNum = 19;
                         totalseconds = FileIndexer.GetDuration().TotalSeconds;
                         FileIndexer = null;
-                        LineNum = 20;
                     }
-                    LineNum = 21;
                 }
                 catch (Exception ex1)
                 {
                     if (job.IsMulti && !job.IsMuxed)
                     {
-                        LineNum = 22;
                         List<string> Cuts = job.GetCutList();
                         List<string> Files = Cuts.Select(sp => sp.Replace("file ", "").Replace("'", "").Trim()).ToList();
                         string dstfn = "", srcfile, destfn = Path.GetFileNameWithoutExtension(DestFile);
                         foreach (string pr in Files)
                         {
-                            LineNum = 23;
                             dstfn = ErrorDirectory + "\\" + destfn + "_" + Path.GetFileName(pr);
                             MoveIfExists(pr, dstfn);
-                            LineNum = 24;
                         }
-                        LineNum = 25;
                         dstfn = ErrorDirectory + "\\" + Path.GetFileName(job.MultiFile);
                         MoveIfExists(job.MultiFile, dstfn);
-                        LineNum = 26;
                     }
                     else
                     {
-                        LineNum = 27;
                         SourceFile = SourceFile.Contains(" ") ? myStrQuote + SourceFile + myStrQuote : SourceFile;
                         MoveIfExists(SourceFile, ErrorDirectory + "\\" + Path.GetFileName(SourceFile));
-                        LineNum = 28;
                     }
                     this.Dispatcher.Invoke(() =>
                     {
@@ -9896,10 +9917,15 @@ namespace VideoGui
                 RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                 string SourceDirectory = key.GetValueStr("SourceDirectory", string.Empty);
                 DestDirectory720p = key.GetValueStr("DestDirectory720p", string.Empty);
+                DestDirectory720p.CreatePathIfNotExists();
                 DestDirectory1080p = key.GetValueStr("DestDirectory1080p", string.Empty);
+                DestDirectory1080p.CreatePathIfNotExists();
                 DestDirectory4K = key.GetValueStr("DestDirectory4K", string.Empty);
+                DestDirectory4K.CreatePathIfNotExists();
                 DestDirectoryAdobe4K = key.GetValueStr("DestDirectoryAdobe4k", string.Empty);
-                DestDirectoryTwitch = key.GetValueStr("DestDirectoryTwitch", "");
+                DestDirectoryAdobe4K.CreatePathIfNotExists();
+                DestDirectoryTwitch = key.GetValueStr("DestDirectoryTwitch", string.Empty);
+                DestDirectoryTwitch.CreatePathIfNotExists();
                 key.Close();
                 SourceList.AddRange(ProcessingJobs.Select(jobs => jobs.SourcePath));
                 Progressbar1.Maximum = 100;

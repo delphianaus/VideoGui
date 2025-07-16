@@ -676,7 +676,10 @@ namespace VideoGui
                             msuSchedules.Items.RemoveAt(i);
                         }
                     }
-                    if (cnt == 0)
+
+                    
+
+                    if (cnt == 0 )
                     {
                         int acnt = 0;
                         foreach (var rp in msuSchedules.ItemsSource.OfType<SelectedShortsDirectories>().Where(x => x.IsActive))
@@ -788,7 +791,7 @@ namespace VideoGui
 
                             if (ucnt > 0)
                             {
-                                Hide();
+                                
                                 Dispatcher.Invoke(() =>
                                 {
                                     Nullable<DateTime> startdate = DateTime.Now, enddate = DateTime.Now.AddHours(10);

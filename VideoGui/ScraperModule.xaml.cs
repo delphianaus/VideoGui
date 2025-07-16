@@ -3305,19 +3305,28 @@ namespace VideoGui
                     }
                     bool found = false;
                     List<HtmlNode> Nodes = GetNodes(html, Span_Name);
-                    if (html.ToLower().Contains("daily limit"))
+                    if (html.ToLower().ContainsAll(new string[] {"daily","upload","limit"}))
                     {
+                        Exceeded = true;
+                        finished = true;  
+                        ExitDialog = true;
                         if (DoUploadsCnt() < 100)
                         {
                             await BuildFiles();
                             Close();
                         }
+                        break;
                     }
                     if (VideoFiles.Count == 1 && Regex.IsMatch(html.ToLower(), @"processing will begin shortly|your video template has been saved as draft|saving|save and close|title-row style-scope ytcp-uploads-dialog"))
                     {
-                        
+                        string[] files = Directory.GetFiles("Z:\\", VideoFiles[0]+".*", SearchOption.AllDirectories);
+                        if (files.Count() > 0)
+                        {
+                            File.Delete(files[0]);
+                        }
                         InsertIntoUploadFiles(VideoFiles, connectStr);
                         ExitDialog = true;
+                        break;
                     }
                     if (html.ToLower().Contains("uploads complete"))
                     {
@@ -3402,6 +3411,10 @@ namespace VideoGui
                                         if (ehtml is not null && ehtml.Contains("Daily upload limit reached"))
                                         {
                                             Exceeded = true;
+                                            finished = true;
+                                            ExitDialog = true;
+                                            cts.Cancel();
+                                            Close();
                                         }
                                         if (ExitDialog || Exceeded)
                                         {
