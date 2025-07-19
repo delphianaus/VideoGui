@@ -175,7 +175,7 @@ namespace VideoGui
             }
         }
 
-        
+
         public static void AutoSizeLabel(this Label labelname, string content = "")
         {
             try

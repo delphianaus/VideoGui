@@ -144,7 +144,7 @@ namespace VideoGui
             {
                 byte[] clientSecret = Array.Empty<byte>();
                 CancellationTokenSource cts = new CancellationTokenSource();
-                connectionString.ExecuteReader("SELECT * FROM SETTINGS WHERE SETTINGNAME = 'CLIENT_SECRET';", cts,(FbDataReader r) =>
+                connectionString.ExecuteReader("SELECT * FROM SETTINGS WHERE SETTINGNAME = 'CLIENT_SECRET';", cts, (FbDataReader r) =>
                 {
                     clientSecret = (r["SETTINGBLOB"] is System.Byte[] res) ? CryptData(res) : Array.Empty<byte>();
                     cts.Cancel();
@@ -157,7 +157,7 @@ namespace VideoGui
                 return new MemoryStream();
             }
         }
-        public async Task<bool> ApplyVideoSchedule(string videoId, string Title_str, string Desc_Str, DateTime ScheduleAt) //ApplyVideoSchedule(string videoId, string title_str, string Desc_Str,DateTime ScheduleAt)
+        public async Task<FinishType> ApplyVideoSchedule(string videoId, string Title_str, string Desc_Str, DateTime ScheduleAt) //ApplyVideoSchedule(string videoId, string title_str, string Desc_Str,DateTime ScheduleAt)
         {
             try
             {
@@ -202,7 +202,7 @@ namespace VideoGui
                             if (iidx != -1)
                             {
                                 string r = Title_str.Substring(0, iidx - 1);
-                                Title_str= r.ToPascalCase()+ " " +Title_str.Substring(iidx);
+                                Title_str = r.ToPascalCase() + " " + Title_str.Substring(iidx);
                             }
                             if (Desc_Str.ToLower().Contains("https://www.patreon.com/c/JustinsTrainJourneys".ToLower()))
                             {
@@ -211,29 +211,25 @@ namespace VideoGui
                             }
                             if (!Desc_Str.ToLower().Contains("https://www.patreon.com/join/JustinsTrainJourneys".ToLower()))
                             {
-                               Desc_Str += "\n\nSupport Me On Patreon: https://www.patreon.com/join/JustinsTrainJourneys";
+                                Desc_Str += "\n\nSupport Me On Patreon: https://www.patreon.com/join/JustinsTrainJourneys";
                             }
 
                             video.Snippet.Description = Desc_Str;
                             video.Snippet.Title = Title_str;
-
                             var updateRequest = youtubeService.Videos.Update(video, $"Id,snippet,status");
-                            
                             updateRequest.Execute();
                             ScheduleNumber++;
-
                             LastValidDate = ScheduleAt;
+                            return FinishType.Scheduled;
                         }
-                        //DoReportScheduled(ScheduleAt, videoId, Title_str);
-
-                        return true;
+                        return FinishType.LookUpError;
                     }
                     else
                     {
                         AvailableSchedules.Add(ScheduleAt);
                     }
                 }
-                return false;
+                return FinishType.Finished;
             }
             catch (Exception ex)
             {
@@ -246,14 +242,15 @@ namespace VideoGui
                     CanSchedule = false;
                     DoReportScheduled?.Invoke(DateTime.Now, "", ls);
                 }
+                else DoReportScheduled?.Invoke(DateTime.Now, videoId, message);
                 ex.LogWrite($"ApplyVideoSchedule {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
                 AvailableSchedules.Add(ScheduleAt);
-                return false;
+                return FinishType.Error;
             }
         }
 
 
-        public bool ScheduleVideo(string videoId, string TitleStr, string DescStr, bool UseNewStart)
+        public FinishType ScheduleVideo(string videoId, string TitleStr, string DescStr, bool UseNewStart)
         {
             try
             {
@@ -270,17 +267,17 @@ namespace VideoGui
                         return ApplyVideoSchedule(videoId, TitleStr, DescStr, newSchedule).ConfigureAwait(false).GetAwaiter().GetResult();
                     }
                 }
-                else return false;
+                else return FinishType.Error;
             }
             catch (Exception ex)
             {
                 ex.LogWrite($"ScheduleVideo {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
-                return false;
+                return FinishType.Error;
             }
         }
 
 
-        public bool DoSchedule(string videoId, string TitleStr, string DescStr)
+        public FinishType DoSchedule(string videoId, string TitleStr, string DescStr)
         {
             try
             {
@@ -325,7 +322,7 @@ namespace VideoGui
                         if (!IsTest)
                         {
                             var r = ApplyVideoSchedule(videoId, TitleStr, DescStr, ScheduleDate).ConfigureAwait(false).GetAwaiter().GetResult();
-                            if (r)
+                            if (r == FinishType.Scheduled)
                             {
                                 DoReportScheduled(ScheduleDate, videoId, TitleStr);
                                 CurrentTime = CurrentTime.Add(GapTime);
@@ -337,22 +334,22 @@ namespace VideoGui
                             DoReportScheduled(ScheduleDate, videoId, TitleStr);
                             ScheduleNumber++;
                             CurrentTime = CurrentTime.Add(GapTime);
-                            return true;
+                            return FinishType.InTest;
                         }
 
                     }
                     else if (ScheduleDate > EndDate)
                     {
                         DoOnFinishSchedulesComplete.Invoke();
-                        return false;
+                        return FinishType.Finished;
                     }
                 }
-                return false;
+                return FinishType.GapTimeZero;
             }
             catch (Exception ex)
             {
                 ex.LogWrite($"DoSchedule {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
-                return false;
+                return FinishType.Error;
             }
         }
 

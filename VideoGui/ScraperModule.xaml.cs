@@ -128,7 +128,7 @@ namespace VideoGui
         WebAddressBuilder webAddressBuilder = null;
         databasehook<object> dbInitializer = null;
         List<Rematched> RematchedList = new(); // <shortname>
-       // List<ShortsDirectory> ShortsDirectories = new();
+                                               // List<ShortsDirectory> ShortsDirectories = new();
         OnFinishId DoOnFinish = null;
         System.Threading.Timer UploadsTimer = null;
         TimeOnly CurrentTime = new TimeOnly();
@@ -1079,7 +1079,7 @@ namespace VideoGui
                     if (ShortsDirectoriesList.Count == 0) ShortsDirectoriesList.Add(new ShortsDirectory(-1, UploadPath));
                     Files.Clear();
                     Files.AddRange(Directory.EnumerateFiles("z:\\", "*.mp4", SearchOption.AllDirectories).ToList());
-                    for(int i =Files.Count - 1; i >= 0; i--)
+                    for (int i = Files.Count - 1; i >= 0; i--)
                     {
                         if (!Files[i].Contains("_"))
                         {
@@ -1233,7 +1233,7 @@ namespace VideoGui
         {
             try
             {
-                
+
                 dbInitializer?.Invoke(this, new CustomParams_UpdateUploadsRecords(videofiles, DirectoryPath));
             }
             catch (Exception ex)
@@ -1684,11 +1684,29 @@ namespace VideoGui
                                 bool Ok = false;
                                 if (directshortsScheduler is not null)
                                 {
-                                    Ok = directshortsScheduler.ScheduleVideo(Id, TitleStr, DescStr, false);
-                                    DoNextNode = Ok;
-                                    if (!Ok)
+                                    var HandlerOk = directshortsScheduler.ScheduleVideo(Id, TitleStr, DescStr, false);
+                                    DoNextNode = HandlerOk == FinishType.Scheduled;
+                                    if (HandlerOk == FinishType.Error)
                                     {
                                         lstMain.Items.Insert(0, $"Error on Scheduling Detected.");
+                                        canceltoken.Cancel();
+                                        break;
+                                    }
+                                    else if (HandlerOk == FinishType.LookUpError)
+                                    {
+                                        lstMain.Items.Insert(0, $"Lookup Error on Scheduling Detected.");
+                                        canceltoken.Cancel();
+                                        break;
+                                    }
+                                    else if (HandlerOk == FinishType.GapTimeZero)
+                                    {
+                                        lstMain.Items.Insert(0, $"Gap Is Zero Error on Scheduling Detected.");
+                                        canceltoken.Cancel();
+                                        break;
+                                    }
+                                    else if (HandlerOk == FinishType.Finished)
+                                    {
+                                        lstMain.Items.Insert(0, $"Scheduling Complete.");
                                         canceltoken.Cancel();
                                         break;
                                     }
@@ -1733,7 +1751,6 @@ namespace VideoGui
 
                                         if (lstCnt == 0 && lstMain.Items.Count == MaxNodes)
                                         {
-
                                             if (DoAutoCancel is not null)
                                             {
                                                 if (DoAutoCancel.IsClosing) DoAutoCancel.Close();
@@ -1837,8 +1854,6 @@ namespace VideoGui
                                 {
                                     ProcessWV2Completed_ShortsScheduler(x.Result, sender);
                                 }, TaskScheduler.FromCurrentSynchronizationContext());
-
-
                             }
                         }
                         else
@@ -1846,17 +1861,13 @@ namespace VideoGui
                             if (lstMain.Items.Count > 0)
                             {
                                 int lstCnt2 = lstMain.Items.Count;
-                                foreach (var itemssx in lstMain.Items)
+                                foreach (var item in lstMain.Items.OfType<string>().Where(item => item.Contains("_")))
                                 {
-                                    if (itemssx.ToString().Contains("_"))
-                                    {
-                                        lstCnt2--;
-                                    }
+                                    lstCnt2--;
                                 }
 
                                 if (lstCnt2 == 0 && lstMain.Items.Count == MaxNodes)
                                 {
-
                                     if (DoAutoCancel is not null)
                                     {
                                         if (DoAutoCancel.IsClosing) DoAutoCancel.Close();
@@ -1872,7 +1883,6 @@ namespace VideoGui
                                     DoAutoCancel.ShowActivated = true;
                                     DoAutoCancel.Show();
                                 }
-
                                 else if (lstMain.Items.Count == MaxNodes)
                                 {
                                     CloseScrape.Interval = TimeSpan.FromSeconds(10);
@@ -2043,11 +2053,7 @@ namespace VideoGui
                 ex.LogWrite($"ProcessWV2 {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-
-
         bool InsertAtZero = false;
-
-
         private async void ProcessWV2(string html, object sender)
         {
             try
@@ -2075,7 +2081,6 @@ namespace VideoGui
                         {
                             wv2.AllowDrop = true;
                             clickupload = false;
-                            //UploadNewVideos();
                             RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                             string _dest = FindUploadPath();
                             key.Close();
@@ -2172,7 +2177,6 @@ namespace VideoGui
                 }
                 if (sender is WebView2 webView2Instance)
                 {
-                    //string url = webView2Instance.Source.ToString();
                     var task = webView2Instance.ExecuteScriptAsync("document.body.innerHTML");
                     if (ScraperType != EventTypes.ShortsSchedule && ScraperType != EventTypes.ScapeSchedule)
                     {
@@ -2201,11 +2205,7 @@ namespace VideoGui
                 if (sender is WebView2 webView2Instance)
                 {
                     var task = webView2Instance.ExecuteScriptAsync("document.body.innerHTML");
-
                     task.ContinueWith(x => { ProcessWV2(x.Result, sender); }, TaskScheduler.FromCurrentSynchronizationContext());
-
-
-                    // task.ContinueWith(x => { ProcessWV2(x.Result, sender); }, TaskScheduler.FromCurrentSynchronizationContext());
                 }
             }
             catch (Exception ex)
@@ -2292,10 +2292,7 @@ namespace VideoGui
                                             {
                                                 newidint = itx.NewId;
                                             }
-
                                             GetTitlesAndDesc(newidint);
-
-
                                             WaitingFileName = false;
                                             return;
                                         }
@@ -2343,7 +2340,7 @@ namespace VideoGui
                 string connectionStr = dbInitializer?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
                 int TitleId = -1, DescId = -1, idr = -1;
                 if (LastId == -1 || LastId != id)
-                {   
+                {
                     if (dbInitializer?.Invoke(this, new CustomParams_GetShortsDirectoryById(id)) is TurlpeDualString tds)
                     {
                         TitleStr = tds.turlpe1;
@@ -2383,9 +2380,9 @@ namespace VideoGui
                         {
                             DescStr = dbInitializer?.Invoke(this, new CustomParams_GetDesc(id, DescId)) is string s ? s : "";
                         }*/
-                        
+
                         if (TitleStr.NotNullOrEmpty() && DescStr.NotNullOrEmpty())
-                        { 
+                        {
                             //itleStr = dbInitializer?.Invoke(this, new CustomParams_GetTitle(id, TitleId)) is string s1 ? s1 : "";
                             var r = TitleStr.Split(" ").ToList<string>().Where(s => !s.StartsWith("#") &&
                             s != "" && s.ToLower() != "vline").ToList<string>();
@@ -3305,10 +3302,10 @@ namespace VideoGui
                     }
                     bool found = false;
                     List<HtmlNode> Nodes = GetNodes(html, Span_Name);
-                    if (html.ToLower().ContainsAll(new string[] {"daily","upload","limit"}))
+                    if (html.ToLower().ContainsAll(new string[] { "daily", "upload", "limit" }))
                     {
                         Exceeded = true;
-                        finished = true;  
+                        finished = true;
                         ExitDialog = true;
                         if (DoUploadsCnt() < 100)
                         {
@@ -3319,7 +3316,7 @@ namespace VideoGui
                     }
                     if (VideoFiles.Count == 1 && Regex.IsMatch(html.ToLower(), @"processing will begin shortly|your video template has been saved as draft|saving|save and close|title-row style-scope ytcp-uploads-dialog"))
                     {
-                        string[] files = Directory.GetFiles("Z:\\", VideoFiles[0]+".*", SearchOption.AllDirectories);
+                        string[] files = Directory.GetFiles("Z:\\", VideoFiles[0] + ".*", SearchOption.AllDirectories);
                         if (files.Count() > 0)
                         {
                             File.Delete(files[0]);
@@ -3546,7 +3543,7 @@ namespace VideoGui
                                                 TitleStr = tds.turlpe1;
                                                 DescStr = tds.turlpe2;
                                             }
-                                            
+
                                             /*int TitleId = -1;
                                             int DescId = -1;
                                             int Id = -1;

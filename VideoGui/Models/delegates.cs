@@ -10,7 +10,7 @@ using FirebirdSql.Data.FirebirdClient;
 
 namespace VideoGui.Models.delegates
 {
-
+    public enum FinishType { Finished, Scheduled, Error, InTest, GapTimeZero, LookUpError };
     public enum ButtonReturnType { NotPresent, Disabled, Enabled };
     public enum FilterTypes { DestinationDirectory, DestinationFileName, SourceDirectory };
     public enum FilterClass { Current, Historic };

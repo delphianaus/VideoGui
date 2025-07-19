@@ -42,6 +42,16 @@ namespace VideoGui.Models
             this.index = index;
         }
     }
+
+    public class CustomParams_RemoveMulitShortsInfoById
+    {
+        public int id = -1;
+        public CustomParams_RemoveMulitShortsInfoById(int id)
+        {
+            this.id = id;
+        }
+    }
+
     public class CustomParams_LookUpId
     {
         public string DirectoryName = "";

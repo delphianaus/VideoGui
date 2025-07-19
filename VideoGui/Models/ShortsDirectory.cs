@@ -20,7 +20,7 @@ namespace VideoGui.Models
         public string LinkedTitleIds { get => _LinkedTitleIds; set { _LinkedTitleIds = value; OnPropertyChanged(); } }
         public string LinkedDescIds { get => _LinkedDescIds; set { _LinkedDescIds = value; OnPropertyChanged(); } }
         public bool IsTitleAvailable { get => _TitleId != -1 && _LinkedTitleIds != ""; set { IsTitleAvailable = value; OnPropertyChanged(); } }
-        public bool IsDescAvailable { get => _DescId != -1 && _LinkedDescIds != ""; set { IsDescAvailable = value; OnPropertyChanged(); } }
+        public bool IsDescAvailable { get => _DescId != -1; set { IsDescAvailable = value; OnPropertyChanged(); } }
 
         public int TitleId { get => _TitleId; set { _TitleId = value; OnPropertyChanged(); } }
         public int DescId { get => _DescId; set { _DescId = value; OnPropertyChanged(); } }

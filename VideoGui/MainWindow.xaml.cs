@@ -553,6 +553,23 @@ namespace VideoGui
         {
             try
             {
+                if (tld is CustomParams_RemoveMulitShortsInfoById cpRMSI)
+                {
+                    frmMultiShortsUploader.msuSchedules.ItemsSource = null;
+                    for(int i = frmMultiShortsUploader.msuSchedules.Items.Count - 1; i >= 0; i--)
+                    {
+                        if (SelectedShortsDirectoriesList[i].NumberOfShorts == 0)
+                        {
+                            SelectedShortsDirectoriesList.RemoveAt(i);
+                            string sql = "DELETE FROM MULTISHORTSINFO WHERE"+
+                                " LINKEDSHORTSDIRECTORYID = @LINKEDID;";
+                            connectionString.ExecuteScalar(sql, [("@LINKEDID", 
+                                SelectedShortsDirectoriesList[i].LinkedShortsDirectoryId)]);
+                        }
+                    }
+                    frmMultiShortsUploader.msuSchedules.ItemsSource = SelectedShortsDirectoriesList;
+                    return null;
+                }
                 if (tld is CustomParams_SetIndex cpsii)
                 {
                     ShortsDirectoryIndex = cpsii.index;
@@ -4930,7 +4947,15 @@ namespace VideoGui
                         }
                     }
                 }
+                foreach(var item in EditableshortsDirectoryList)
+                {
+                    if (item.DescId == 1)
+                    {
 
+                    }
+
+
+                }
 
 
 
