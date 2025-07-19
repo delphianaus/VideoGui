@@ -3220,38 +3220,51 @@ namespace VideoGui
         }
         public void SimulateMouseWheel(WebView2 webView, bool isUp)
         {
-            if (webView == null) return;
-            var wih = new System.Windows.Interop.WindowInteropHelper(Window.GetWindow(webView));
-            var handle = wih.Handle;
+            try
+            {
+                if (webView == null) return;
+                var wih = new System.Windows.Interop.WindowInteropHelper(Window.GetWindow(webView));
+                var handle = wih.Handle;
 
-            // Get WebView position
-            Point position = webView.PointToScreen(new Point(webView.ActualWidth / 2, webView.ActualHeight / 2));
+                // Get WebView position
+                Point position = webView.PointToScreen(new Point(webView.ActualWidth / 2, webView.ActualHeight / 2));
 
-            // Create parameters for the message
-            IntPtr lParam = MakeLParam((int)position.X, (int)position.Y);
-            IntPtr wParam = MakeWParam(0, isUp ? WHEEL_DELTA : -WHEEL_DELTA);
+                // Create parameters for the message
+                IntPtr lParam = MakeLParam((int)position.X, (int)position.Y);
+                IntPtr wParam = MakeWParam(0, isUp ? WHEEL_DELTA : -WHEEL_DELTA);
 
-            // Send the wheel message
-            SendMessage(handle, WM_MOUSEWHEEL, wParam, lParam);
-
+                // Send the wheel message
+                SendMessage(handle, WM_MOUSEWHEEL, wParam, lParam);
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"SimulateMouseWheel {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
         }
         public void SimulateWheelUpDown(WebView2 webView)
         {
-            // Ensure we're on the UI thread
-            webView.Dispatcher.Invoke(() =>
+            try
             {
-                // Focus the WebView
-                webView.Focus();
+                // Ensure we're on the UI thread
+                webView.Dispatcher.Invoke(() =>
+                {
+                    // Focus the WebView
+                    webView.Focus();
 
-                // Wheel Up
-                SimulateMouseWheel(webView, true);
+                    // Wheel Up
+                    SimulateMouseWheel(webView, true);
 
-                // Small delay
-                System.Threading.Thread.Sleep(100);
+                    // Small delay
+                    System.Threading.Thread.Sleep(100);
 
-                // Wheel Down
-                SimulateMouseWheel(webView, false);
-            });
+                    // Wheel Down
+                    SimulateMouseWheel(webView, false);
+                });
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"SimulateWheelUpDown {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
         }
 
         [StructLayout(LayoutKind.Sequential)]
