@@ -134,16 +134,11 @@ namespace VideoGui
         public Models.delegates.CompairFinished OnCompairFinished;
         public VideoSizeChecker videoResCompare;
         public VideoCardSelector videoCardDetailsSelector;
-        public ScraperModule scraperModule = null, scheduleScraperModule = null;
+        //public ScraperModule scraperModule = null;//, scheduleScraperModule = null;
         public SelectShortUpload selectShortUpload = null;
-        public MultiShortsUploader multiShortsUploader = null;
         public MasterTagSelectForm MasterTagSelectFrm = null;
         public SelectReleaseSchedule SelectReleaseScheduleFrm = null;
-        public DirectoryTitleDescEditor DirectoryTitleDescEditorFrm = null;
-        public SchedulingSelectEditor schedulingSelectEditor = null;
-        public ActionScheduleSelector actionScheduleSelector = null;
-        public ManualScheduler manualScheduler = null;
-        public ProcessSchedule ScheduleProccessor = null;
+        // public ProcessSchedule ScheduleProccessor = null;
         bool AutoClose = false;
         AutoCancel DoAutoCancel = null;
         List<ListScheduleItems> ScheduleListItems = new List<ListScheduleItems>();
@@ -183,7 +178,6 @@ namespace VideoGui
         private Object thisfLock = new Object();
         private Object thispLock = new Object();
         private Object thissLock = new Object();
-        public ShortsCreator frmShortsCreator = null;
         public object statslocker = new(), ProcessingJobslocker = new(), ProbeLock = new();
         public int LockedDeviceID = 0, SourceIndex = 0;
         public object StatsLock = new();
@@ -233,9 +227,8 @@ namespace VideoGui
         List<Task> mytasklist = new List<Task>();
         List<string> _720PFiles = new(), _1080PFiles = new(), _4KFiles = new();
         List<ConverterProgressInfo> ProgressInfoDisplay = new List<ConverterProgressInfo>();
-        public AudioJoiner AutoJoinerFrm = null;
         string TitleStr = "", DescStr = "";
-        ComplexSchedular complexfrm = null;
+        //ComplexSchedular complexfrm = null;
         private ConverterProgress ConverterProgressEventHandler = new ConverterProgress();
         private ObservableCollectionFilters ObservableCollectionFilter;
         public DirectoryTitleDescEditor directoryTitleDescEditor = null;
@@ -279,12 +272,13 @@ namespace VideoGui
                 bool res = false;
                 if (ObservableCollectionFilter is not null)
                 {
-                    {
+                    /* move to init
+                     * {
                         if (DirectoryTitleDescEditorFrm is not null)
                         {
                             DirectoryTitleDescEditorFrm.DoTitleSelectFrm.SetTitleTag(TitleId);
                         }
-                    }
+                    }*/
                 }
                 return res;
             }
@@ -325,22 +319,7 @@ namespace VideoGui
         {
             try
             {
-                if (scraperModule is not null)
-                {
-                    if (!scraperModule.IsClosed && !scraperModule.IsClosing)
-                    {
-                        scraperModule.Close();
-                    }
-                    while (true)
-                    {
-                        if (!scraperModule.IsClosed && scraperModule.IsClosing)
-                        {
-                            Thread.Sleep(250);
-                        }
-                        if (scraperModule.IsClosed) break;
-                    }
-                    scraperModule = null;
-                }
+
                 WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
                 string gUrl = webAddressBuilder.Dashboard().Address;
 
@@ -354,12 +333,12 @@ namespace VideoGui
                 string TargetUrl = webAddressBuilder.AddFilterByDraftShorts().GetHTML();
                 OldgUrl = gUrl;
                 OldTarget = TargetUrl;
-                scraperModule = new ScraperModule(ModuleCallback, FinishScraper, gUrl, TargetUrl, 0);
+                var __scraperModule = new ScraperModule(ModuleCallback, FinishScraper, gUrl, TargetUrl, 0);
 
 
                 Hide();
-                scraperModule.ShowActivated = true;
-                scraperModule.Show();
+                __scraperModule.ShowActivated = true;
+                __scraperModule.Show();
             }
             catch (Exception ex)
             {
@@ -555,19 +534,19 @@ namespace VideoGui
             {
                 if (tld is CustomParams_RemoveMulitShortsInfoById cpRMSI)
                 {
-                    frmMultiShortsUploader.msuSchedules.ItemsSource = null;
-                    for(int i = frmMultiShortsUploader.msuSchedules.Items.Count - 1; i >= 0; i--)
+                    //frmMultiShortsUploader.msuSchedules.ItemsSource = null;
+                    for (int i = frmMultiShortsUploader.msuSchedules.Items.Count - 1; i >= 0; i--)
                     {
                         if (SelectedShortsDirectoriesList[i].NumberOfShorts == 0)
                         {
                             SelectedShortsDirectoriesList.RemoveAt(i);
-                            string sql = "DELETE FROM MULTISHORTSINFO WHERE"+
+                            string sql = "DELETE FROM MULTISHORTSINFO WHERE" +
                                 " LINKEDSHORTSDIRECTORYID = @LINKEDID;";
-                            connectionString.ExecuteScalar(sql, [("@LINKEDID", 
+                            connectionString.ExecuteScalar(sql, [("@LINKEDID",
                                 SelectedShortsDirectoriesList[i].LinkedShortsDirectoryId)]);
                         }
                     }
-                    frmMultiShortsUploader.msuSchedules.ItemsSource = SelectedShortsDirectoriesList;
+                    //frmMultiShortsUploader.msuSchedules.ItemsSource = SelectedShortsDirectoriesList;
                     return null;
                 }
                 if (tld is CustomParams_SetIndex cpsii)
@@ -741,18 +720,19 @@ namespace VideoGui
 
                     if (Path.Exists(shortsdir))
                     {
-                        //                    List<string> FileLst = new();
+                        ShortsDirectoryList.Clear();
                         List<string> DirectoryList = Directory.EnumerateDirectories(shortsdir).ToList();
                         foreach (var dir in DirectoryList.Where(dir => !dir.ToLower().EndsWith("done")))
                         {
-                            var file_cnt = Directory.EnumerateFiles(dir, "*.mp4", SearchOption.AllDirectories).Count();
-                            if (file_cnt > 0)
+                            var files = Directory.EnumerateFiles(dir, "*.*", SearchOption.AllDirectories)
+                               .Where(f => f.EndsWith(".mp4", StringComparison.OrdinalIgnoreCase) ||
+                               f.EndsWith(".mkv", StringComparison.OrdinalIgnoreCase));
+                            if (files.Any())
                             {
-                                //                              FileLst.Add($"{dir}|{file_cnt}");
-                                ShortsDirectoryList.Add(new MultiShortsInfo(dir, file_cnt));
+                                ShortsDirectoryList.Add(new MultiShortsInfo(dir, files.Count()));
                             }
+
                         }
-                        //                        File.WriteAllLines(@"c:\videogui\files.txt", FileLst);
                     }
                     bool found = false;
                     int LinkedId = -1;
@@ -806,6 +786,32 @@ namespace VideoGui
 
                         }
                     }
+                    CancellationTokenSource cts = new();
+                    string filen = "", shortdirectoryId = "";
+                    DateTime LastUploaded = DateTime.Now.Date.AddYears(-100);
+                    string SQLB = "SELECT * FROM UploadsRecord ORDER BY RDB$RECORD_VERSION DESC ROWS 1;";
+                    connectionString.ExecuteReader(SQLB, cts, (FbDataReader r) =>
+                    {
+                        filen = (r["UPLOADFILE"] is string f) ? f : "";
+                        var dt = (r["UPLOAD_DATE"] is DateTime d) ? d : DateTime.Now.Date.AddYears(-100);
+                        TimeSpan dtr = (r["UPLOAD_TIME"] is TimeSpan t1) ? t1 : new TimeSpan();
+                        if (filen.Contains("_"))
+                        {
+                            shortdirectoryId = filen.Split('_').LastOrDefault();
+                            LastUploaded = dt.AtTime(TimeOnly.FromTimeSpan(dtr));
+                            cts.Cancel();
+                        }
+                    });
+
+                    if (shortdirectoryId.NotNullOrEmpty() && shortdirectoryId.ToInt(-1) != -1)
+                    {
+                        foreach (var item in SelectedShortsDirectoriesList.Where(s => s.IsActive).Where(item => item.LinkedShortsDirectoryId == shortdirectoryId.ToInt()))
+                        {
+                            item.LastUploadedDateFile = LastUploaded;
+                            break;
+                        }
+                    }
+
                     frmMultiShortsUploader.msuShorts.ItemsSource = ShortsDirectoryList;
                     frmMultiShortsUploader.msuSchedules.ItemsSource = SelectedShortsDirectoriesList;
                 }
@@ -3760,7 +3766,7 @@ namespace VideoGui
             }
         }
 
-        private void FinishScraper(int id)
+        private void FinishScraper(object thisform, int id)
         {
             try
             {
@@ -3768,25 +3774,28 @@ namespace VideoGui
 
                 Task.Run(() =>
                 {
-                    bool IsTimeOut = (scraperModule is ScraperModule sls) ? sls.TimedOutClose : false;
-                    while (true)
+                    if (thisform is ScraperModule scraperModulex)
                     {
-                        if (!scraperModule.IsClosed && scraperModule.IsClosing)
+                        bool IsTimeOut = (scraperModulex is ScraperModule sls) ? sls.TimedOutClose : false;
+                        while (true)
                         {
-                            Thread.Sleep(250);
+                            if (!scraperModulex.IsClosed && scraperModulex.IsClosing)
+                            {
+                                Thread.Sleep(250);
+                            }
+                            if (scraperModulex.IsClosed) break;
                         }
-                        if (scraperModule.IsClosed) break;
-                    }
-                    scraperModule = null;
-                    if (IsTimeOut)
-                    {
-                        Dispatcher.Invoke(() =>
+                        scraperModulex = null;
+                        if (IsTimeOut)
                         {
-                            scraperModule = new ScraperModule(ModuleCallback, FinishScraper, OldgUrl, OldTarget, 0);
-                            Hide();
-                            scraperModule.ShowActivated = true;
-                            scraperModule.Show();
-                        });
+                            Dispatcher.Invoke(() =>
+                            {
+                                var scraperModules = new ScraperModule(ModuleCallback, FinishScraper, OldgUrl, OldTarget, 0);
+                                Hide();
+                                scraperModules.ShowActivated = true;
+                                scraperModules.Show();
+                            });
+                        }
                     }
                 });
             }
@@ -3800,7 +3809,8 @@ namespace VideoGui
         {
             try
             {
-                bool res = false;
+                /*
+                 * bool res = false;
                 if (ObservableCollectionFilter is not null)
                 {
                     ObservableCollectionFilter.HistoricCollectionViewSource.Source = ComplexProcessingJobHistory;
@@ -3809,8 +3819,8 @@ namespace VideoGui
                         complexfrm.lstSchedules.ItemsSource = ObservableCollectionFilter.HistoricCollectionViewSource.View;
                         res = true;
                     }
-                }
-                return res;
+                }*/
+                return true ;
             }
             catch (Exception ex)
             {
@@ -3823,7 +3833,10 @@ namespace VideoGui
         {
             try
             {
-                if (ObservableCollectionFilter is not null)
+                /*
+                 * move to init.
+                 * 
+                 * if (ObservableCollectionFilter is not null)
                 {
                     ObservableCollectionFilter.CurrentCollectionViewSource.Source = ComplexProcessingJobList;
                     if (complexfrm is not null && complexfrm.IsLoaded)
@@ -3831,7 +3844,7 @@ namespace VideoGui
                         complexfrm.lstSchedules.ItemsSource = ObservableCollectionFilter.CurrentCollectionViewSource.View;
                         return true;
                     }
-                }
+                }*/
                 return false;
             }
             catch (Exception ex)
@@ -3875,73 +3888,7 @@ namespace VideoGui
 
 
 
-        private void DoScrapeSchedule(EventDefinition eventdef)
-        {
-            try
-            {
-                //event id => ScrapeInfoTable.Id
-                //ScrapeType Int
-                //ScrapeCustomCommand String , ie Title="TEMPLATE"
-                //ScrapeTableDestination string
-                bool ready = true;
-                int ScrapeType = -1;
-                string ScrapeCustomCommand = "", TableDestination = "";
-                string sql = $"SELECT * FROM SCRAPETABLEINFO WHERE EVENTID = {eventdef.Id}";
-                connectionString.ExecuteReader(sql, (FbDataReader r) =>
-                {
-                    if (ready)
-                    {
-                        ScrapeType = (r["SCRAPETYPE"] is int i) ? i : 0;
-                        ScrapeCustomCommand = (r["SCRAPECOMMAND"] is string s) ? s : "";
-                        TableDestination = (r["TABLEDESTINATION"] is string ss) ? ss : "";
-                        ready = false;
-                    }
-                });
-                bool IsTitle = false, IsDesc = false;
-                if (ScrapeCustomCommand != "" && ScrapeCustomCommand.Contains("|"))
-                {
-                    List<string> ScrapeList = ScrapeCustomCommand.Split('|').ToList();
-                    foreach (string s in ScrapeList)
-                    {
-                        if (s.Contains("title="))
-                        {
-                            (IsTitle, TitleStr) = (true, s.Replace("title=", ""));
-                        }
-                        if (s.Contains("desc="))
-                        {
-                            (IsDesc, DescStr) = (true, s.Replace("desc=", ""));
-                        }
-                    }
-                }
-                // BIT 0 = Shorts , 1 = Full Videos , 2 = DRAFT , 3 = UNLISTED
-                // BIT 4 = SCHEDULED , 5 = PRIVATE . BIT 6 = PUBLIC
-                bool IsShorts = (ScrapeType & 1) == 1;
-                bool IsFullVideos = (ScrapeType & 2) == 2;
-                WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
-                if (IsTitle) webAddressBuilder = webAddressBuilder.AddFilterByTitle(TitleStr, false);
-                if (IsDesc) webAddressBuilder = webAddressBuilder.AddFilterByDesc(DescStr, false);
-                List<StatusTypes> statusTypes = new List<StatusTypes>();
-                if ((ScrapeType & 4) == 4) statusTypes.Add(StatusTypes.DRAFT);
-                if ((ScrapeType & 8) == 8) statusTypes.Add(StatusTypes.UNLISTED);
-                if ((ScrapeType & 16) == 16) statusTypes.Add(StatusTypes.HAS_SCHEDULE);
-                if ((ScrapeType & 32) == 32) statusTypes.Add(StatusTypes.PRIVATE);
-                if ((ScrapeType & 64) == 64) statusTypes.Add(StatusTypes.PUBLIC);
-                webAddressBuilder.AddFilterByVisibilityStatus(statusTypes);
-                webAddressBuilder.IsShorts = (IsShorts && !IsFullVideos) ? true : false;
-                string url = webAddressBuilder.Finalize().Address;
 
-                scraperModule = new ScraperModule(ModuleCallback, ScraperSchedule_OnFinish,
-                    url, eventdef.Id);
-                Hide();
-                scraperModule.ShowActivated = true;
-                scraperModule.Show();
-
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite($"DoScrapeSchedule {MethodBase.GetCurrentMethod().Name} {this} {eventdef} {ex.Message}");
-            }
-        }
         int AutoCloseUd = -1;
         private void DoAutoCancelClose()
         {
@@ -3959,70 +3906,11 @@ namespace VideoGui
                 {
                     connectionString.ExecuteNonQuery($"DELETE FROM EVENTS WHERE ID = {AutoCloseUd};");
                 }
-                if (scraperModule is not null && !scraperModule.IsClosed)
-                {
-                    if (scraperModule.IsClosing) scraperModule.Close();
-                    while (!scraperModule.IsClosed)
-                    {
-                        Thread.Sleep(100);
-                        System.Windows.Forms.Application.DoEvents();
-                    }
-                    scraperModule.Close();
-                    scraperModule = null;
-                }
             }
             catch (Exception ex)
             {
                 ex.LogWrite($"DoAutoCancelClose {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
-        }
-        private void ScraperSchedule_OnFinish(int id)
-        {
-            try
-            {
-                if (AutoClose)
-                {
-                    AutoCloseUd = id;
-                    if (DoAutoCancel is not null)
-                    {
-                        if (DoAutoCancel.IsClosing) DoAutoCancel.Close();
-                        while (!DoAutoCancel.IsClosed)
-                        {
-                            Thread.Sleep(100);
-                            System.Windows.Forms.Application.DoEvents();
-                        }
-                        DoAutoCancel.Close();
-                        DoAutoCancel = null;
-                    }
-                    DoAutoCancel = new AutoCancel(DoAutoCancelClose, "", 5, "Scheduling Finished");
-                    DoAutoCancel.ShowActivated = true;
-                    DoAutoCancel.Show();
-                }
-                else
-                {
-                    Show();
-                    if (id != -1)
-                    {
-                        connectionString.ExecuteNonQuery($"DELETE FROM EVENTS WHERE ID = {id};");
-                    }
-                    if (scraperModule is not null && !scraperModule.IsClosed)
-                    {
-                        if (scraperModule.IsClosing) scraperModule.Close();
-                        while (!scraperModule.IsClosed)
-                        {
-                            Thread.Sleep(100);
-                            System.Windows.Forms.Application.DoEvents();
-                        }
-                        scraperModule.Close();
-                        scraperModule = null;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite($"DoScrapeSchedule {MethodBase.GetCurrentMethod().Name} {this} {id} {ex.Message}");
-            }
-
         }
 
         private void DoFullSchedule(EventDefinition eventdef)
@@ -4071,48 +3959,51 @@ namespace VideoGui
                 return -1;
             }
         }
-        private void uploadonfinish(int id)
+        private void uploadonfinish(object sender, int id)
         {
             try
             {
-                WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
-                string gUrl = webAddressBuilder.Dashboard().Address;
-                RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
-                string rootfolder = FindUploadPath();
-                key?.Close();
-                int cnt = Directory.EnumerateFiles(rootfolder, "*.mp4", SearchOption.AllDirectories).ToList().Count();
-                if (scraperModule != null && !scraperModule.KilledUploads)
+                if (sender is ScraperModule sm)
                 {
-                    List<string> filesdone = new List<string>();
-                    bool Exc = scraperModule.Exceeded;
-                    filesdone.AddRange(scraperModule.ScheduledOk);
-                    int Uploaded = scraperModule.TotalScheduled;
-                    int shortsleft = GetFileCount(rootfolder);
-                    if (!Exc && shortsleft > 0 && Uploaded < MaxUploads)
+                    WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
+                    string gUrl = webAddressBuilder.Dashboard().Address;
+                    RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                    string rootfolder = FindUploadPath();
+                    key?.Close();
+                    int cnt = Directory.EnumerateFiles(rootfolder, "*.mp4", SearchOption.AllDirectories).ToList().Count();
+                    if (sm != null && !sm.KilledUploads)
                     {
-                        scraperModule = new ScraperModule(ModuleCallback, uploadonfinish, gUrl, MaxUploads, 15);
-                        scraperModule.ShowActivated = true;
-                        scraperModule.ScheduledOk.AddRange(filesdone);
-                        Hide();
-                        var rr = GetEncryptedString(new int[] { 187, 54, 76, 68, 254, 212, 193, 85, 230,
-                            88, 9, 166, 209, 171, 74, 122, 47, 247, 153, 225, 226 }.Select(i => (byte)i).ToArray());
-                        Process[] webView2Processes = Process.GetProcessesByName(rr);
-                        foreach (Process process in webView2Processes)
+                        List<string> filesdone = new List<string>();
+                        bool Exc = sm.Exceeded;
+                        filesdone.AddRange(sm.ScheduledOk);
+                        int Uploaded = sm.TotalScheduled;
+                        int shortsleft = GetFileCount(rootfolder);
+                        if (!Exc && shortsleft > 0 && Uploaded < MaxUploads)
                         {
-                            process.Kill();
+                            var xxscraperModule = new ScraperModule(ModuleCallback, uploadonfinish, gUrl, MaxUploads, 15);
+                            xxscraperModule.ShowActivated = true;
+                            xxscraperModule.ScheduledOk.AddRange(filesdone);
+                            Hide();
+                            var rr = GetEncryptedString(new int[] { 187, 54, 76, 68, 254, 212, 193, 85, 230,
+                            88, 9, 166, 209, 171, 74, 122, 47, 247, 153, 225, 226 }.Select(i => (byte)i).ToArray());
+                            Process[] webView2Processes = Process.GetProcessesByName(rr);
+                            foreach (Process process in webView2Processes)
+                            {
+                                process.Kill();
+                            }
+                            xxscraperModule.Show();
+                            return;
                         }
-                        scraperModule.Show();
-                        return;
                     }
-                }
 
-                Show();
-                if (id != -1)
-                {
-                    string sql = $"DELETE FROM EVENTS WHERE ID = {id};";
-                    connectionString.ExecuteNonQuery(sql);
+                    Show();
+                    if (id != -1)
+                    {
+                        string sql = $"DELETE FROM EVENTS WHERE ID = {id};";
+                        connectionString.ExecuteNonQuery(sql);
+                    }
+                    IsUploading = false;
                 }
-                IsUploading = false;
             }
             catch (Exception ex)
             {
@@ -4120,93 +4011,6 @@ namespace VideoGui
             }
         }
 
-        bool IsSchedulingShorts = false;
-
-        private void DoShortsSchedule(EventDefinition eventdef)
-        {
-            try
-            {
-                IsSchedulingShorts = true;
-                // ScheduleList ID , ScheduleID, eventID
-                // Get ScheduleID from EventID
-                // get ScheduleMap From ScheduleiD
-                // Scrape Draft Videos from shortfeed & Schedule Each 
-                string sql = "SELECT APS.STARTHOUR,APS.ENDHOUR, APS.GAP, APS.DAYS , ESD.SCHEDULEDATE FROM EVENTSCHEDULES ES JOIN SCHEDULES SP ON ES.EVENTID = SP.ID " +
-                    $" JOIN APPLIEDSCHEDULE APS ON SP.ID = APS.SCHEDULEID WHERE EVENTID = {eventdef.Id} AND SP.ISSCHEDULE = 1;";
-                bool UseThis = false;
-                ScheduleListItems.Clear();
-                connectionString.ExecuteReader(sql, (FbDataReader r) =>
-                {
-                    int day = (r[4] is int d) ? d : 0;
-                    UseThis = (day == 0) ? UseThis : ((day & 1) == 1 && DateTime.Now.DayOfWeek == DayOfWeek.Sunday) ? true :
-                      ((day & 2) == 2 && DateTime.Now.DayOfWeek == DayOfWeek.Monday) ? true :
-                      ((day & 4) == 4 && DateTime.Now.DayOfWeek == DayOfWeek.Tuesday) ? true :
-                      ((day & 8) == 8 && DateTime.Now.DayOfWeek == DayOfWeek.Wednesday) ? true :
-                      ((day & 16) == 16 && DateTime.Now.DayOfWeek == DayOfWeek.Thursday) ? true :
-                      ((day & 32) == 32 && DateTime.Now.DayOfWeek == DayOfWeek.Friday) ? true :
-                      ((day & 64) == 64 && DateTime.Now.DayOfWeek == DayOfWeek.Saturday) ? true : UseThis;
-                    if (UseThis)
-                    {
-                        ScheduleListItems.Add(new ListScheduleItems(new TimeOnly(r[0].ToInt(0), 0), new TimeOnly(r[1].ToInt(0), 0), r[2].ToInt(0)));
-                    }
-                });
-                if (ScheduleListItems.Count > 0)
-                {
-                    DateTime Start = DateTime.Now;
-                    DateTime End = DateTime.Now;
-                    Nullable<DateOnly> SStart = null;
-                    Nullable<DateOnly> SEnd = null;
-                    TimeOnly EStart = TimeOnly.FromTimeSpan(TimeSpan.Zero);
-                    TimeOnly EEnd = TimeOnly.FromTimeSpan(TimeSpan.Zero);
-                    sql = $"SELECT * FROM EVENTSCHEDULEDATE WHERE EVENTID = {eventdef.Id};";
-                    int cnt = -1;
-                    connectionString.ExecuteReader(sql, (FbDataReader r) =>
-                    {
-                        if (cnt == -1)
-                        {
-                            SStart = (r[0] is DateOnly d) ? d : SStart;
-                            SEnd = (r[1] is DateOnly d1) ? d1 : SEnd;
-                            EStart = (r[2] is TimeOnly t) ? t : EStart;
-                            EEnd = (r[3] is TimeOnly t1) ? t1 : EEnd;
-                            cnt++;
-                        }
-                    });
-                    if (SStart is not null && SEnd is not null)
-                    {
-                        Start = SStart.Value.ToDateTime(EStart);
-                        End = SEnd.Value.ToDateTime(EEnd);
-                        WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
-                        string gUrl = webAddressBuilder.AddFilterByDraftShorts().Address;
-                        scraperModule = new ScraperModule(ModuleCallback, ShortsScheduler_OnFinish,
-                            gUrl, Start, End, SchMaxUploads, ScheduleListItems, eventdef.Id, true);//, false, true, 0, 0);
-                        scraperModule.ShowActivated = true;
-                    }
-
-                }
-
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite($"DoShortsSchedule {MethodBase.GetCurrentMethod().Name} {this} {eventdef} {ex.Message}");
-            }
-        }
-
-        private void ShortsScheduler_OnFinish(int id)
-        {
-            try
-            {
-                if (id != -1)
-                {
-                    string sql = $"DELETE FROM EVENTS WHERE ID = {id};";
-                    connectionString.ExecuteNonQuery(sql);
-                }
-
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite($"ShortsScheduler_OnFinish {MethodBase.GetCurrentMethod().Name} {this} {id} {ex.Message}");
-            }
-        }
 
         private void SetupTicker()
         {
@@ -4249,21 +4053,6 @@ namespace VideoGui
                         LogName = LogName.Replace("_", "/").Trim() + " 00:00:00";
                         DateTime rt = DateTime.Now.AddYears(-100);
                         string fmt = "dd/MM/yyyy hh:mm:ss";
-                        //if (DateTime.TryParseExact(LogName, fmt, CultureInfo.InvariantCulture, DateTimeStyles.None, out rt))
-                        //{
-                        //    TimeSpan AS = DateTime.Now - rt;
-                        //    if (AS.TotalDays > 4)
-                        //    {
-                        //        File.Delete(sPath);
-                        //
-                        //
-                        //    }
-                        //}
-                        //else
-                        //{/
-                        //    string s = "Invalid Date";
-                        // }
-
                     }
                 }
                 DateTime LogDate = DateTime.Now.AddYears(-100);
@@ -4477,45 +4266,30 @@ namespace VideoGui
                     }
                 }
 
-
                 sqlstring = $"create table MonitoredDeletion({Id},DestinationFile varchar(500))";
                 connectionString.CreateTableIfNotExists(sqlstring);
-
                 sqlstring = $"create table UPLOADSRECORD({Id},UPLOADFILE varchar(256), UPLOAD_DATE DATE, UPLOAD_TIME TIME,UPLOADTYPE INTEGER)";
                 connectionString.CreateTableIfNotExists(sqlstring);
                 connectionString.AddFieldToTable("UPLOADSRECORD", "UPLOADTYPE", "INTEGER", 0);
                 connectionString.AddFieldToTable("UPLOADSRECORD", "DIRECTORYNAME", "VARCHAR(255)");
-
-
                 sqlstring = $"create table PLANINGQUES({Id},SOURCE varchar(500),SourceDir varchar(500))";
                 connectionString.CreateTableIfNotExists(sqlstring);
-
                 sqlstring = $"create table SETTINGS({Id},SETTINGNAME varchar(250),SETTING varchar(250))";
                 connectionString.CreateTableIfNotExists(sqlstring);
-
-
                 sqlstring = $"create table PLANINGCUTS({Id}, PLANNINGQUEID INTEGER,STARTA BIGINT  ,ENDA BIGINT , " +
                     " CUTNO SMALLINT , FILENAME VARCHAR(500))";
                 connectionString.CreateTableIfNotExists(sqlstring);
-
                 sqlstring = $"create table DRAFTSHORTS({Id}, VIDEOID VARCHAR(255), FILENAME VARCHAR(500))";
                 connectionString.CreateTableIfNotExists(sqlstring);
-
                 sqlstring = $"create table ProcessingLog({Id},Source varchar(500),Destination varchar(500),InProcess SmallInt);";
                 connectionString.CreateTableIfNotExists(sqlstring);
-
-
                 sqlstring = $"create table SHORTSDIRECTORY({Id},DIRECTORYNAME varchar(500), TITLEID INTEGER);";
                 connectionString.CreateTableIfNotExists(sqlstring);
-
                 connectionString.AddFieldToTable("SHORTSDIRECTORY", "TITLEID", "INTEGER", -1);
                 connectionString.AddFieldToTable("SHORTSDIRECTORY", "DESCID", "INTEGER", -1);
-
-
                 sqlstring = $"create table AutoEdits({Id},Source varchar(500),Destination varchar(500),Threshhold varchar(255)," +
                     "Segment varchar(255),Target varchar(255));".ToUpper();
                 connectionString.CreateTableIfNotExists(sqlstring);
-
                 sqlstring = $"delete from ProcessingLog where InProcess = 1;";
                 connectionString.ExecuteNonQuery(sqlstring);
                 sqlstring = $"CREATE TABLE AVAILABLETAGS({Id},TAG VARCHAR(500));";
@@ -4528,10 +4302,8 @@ namespace VideoGui
                 connectionString.CreateTableIfNotExists(sqlstring);
                 connectionString.AddFieldToTable("TITLES", "GROUPID", "INTEGER", -1);
                 connectionString.AddFieldToTable("TITLES", "ISTAG", "INTEGER", -1);
-
                 sqlstring = $"CREATE TABLE DESCRIPTIONS({Id},NAME VARCHAR(250),DESCRIPTION VARCHAR(2500),TITLETAGID INTEGER, ISSHORTVIDEO SMALLINT, ISTAG SMALLINT);";
                 connectionString.CreateTableIfNotExists(sqlstring);
-
                 sqlstring = $"CREATE TABLE SCHEDULEDPOOL({Id},NAME VARCHAR(250));";
                 connectionString.CreateTableIfNotExists(sqlstring);
                 sqlstring = $"CREATE TABLE SCHEDULEDPOOLS({Id},POOLID INTEGER, DIRECTORY VARCHAR(512));";
@@ -4546,7 +4318,6 @@ namespace VideoGui
                 connectionString.CreateTableIfNotExists(sqlstring);
                 sqlstring = $"CREATE TABLE SCHEDULES({Id},NAME VARCHAR(250), ISSCHEDULE SMALLINT, SCHEDULEID INTEGER);";
                 connectionString.CreateTableIfNotExists(sqlstring);
-
                 connectionString.AddFieldToTable("SCHEDULES", "SCHEDULEID", "INTEGER", -1);
                 connectionString.CreateTableIfNotExists(sqlstring);
                 connectionString.AddFieldToTable("SCHEDULES", "SOURCE", "INTEGER", -1);
@@ -4557,46 +4328,30 @@ namespace VideoGui
                 connectionString.CreateTableIfNotExists(sqlstring);
                 connectionString.AddFieldToTable("SETTINGS", "SETTINGDATE", "DATE");
                 connectionString.AddFieldToTable("SETTINGS", "SETTINGTIME", "TIME");
-                //connectionString.AddFieldToTable("SETTINGS", "SETTINGBLOB", "BLOB");
-
-
-
-
-
                 sqlstring = $"CREATE TABLE VIDEOSCHEDULE({Id},SCHEDULEID INTEGER, SCHEDULETIME TIME,DAYS INTEGER);";
                 connectionString.CreateTableIfNotExists(sqlstring);
                 sqlstring = $"CREATE TABLE APPLIEDSCHEDULE({Id},SCHEDULEID INTEGER, STARTHOUR SMALLINT,ENDHOUR SMALLINT,GAP SMALLINT,DAYS INTEGER);";
                 connectionString.CreateTableIfNotExists(sqlstring);
                 sqlstring = $"CREATE TABLE SCRAPEINFOTABLE({Id},EVENTID INTEGER, SCRAPETYPE INTEGER, SCRAPECOMMAND VARCHAR(255), TABLEDESTINATION VARCHAR(255));";
                 connectionString.CreateTableIfNotExists(sqlstring);
-
                 connectionString.AddFieldToTable("DESCRIPTIONS", "ISTAG", "SMALLINT", 0);
                 connectionString.CreateTableIfNotExists($"CREATE TABLE RUNNINGID({Id}, ACTIVE SMALLINT)");
                 sqlstring = $"INSERT INTO RUNNINGID(ACTIVE) VALUES(0) RETURNING ID;";
-
+                connectionString.CreateTableIfNotExists(sqlstring);
                 sqlstring = $"CREATE TABLE SCHEDULINGITEMS({Id},SCHEDULINGID INTEGER,SSTART TIME,SEND TIME,GAP INTEGER);";
                 connectionString.CreateTableIfNotExists(sqlstring);
                 sqlstring = $"CREATE TABLE SCHEDULINGNAMES({Id},NAME VARCHAR(250));";
                 connectionString.CreateTableIfNotExists(sqlstring);
-
                 sqlstring = $"CREATE TABLE REMATCHED({Id},OLDID INTEGER,NEWID INTEGER, DIRECTORY VARCHAR(500));";
                 connectionString.CreateTableIfNotExists(sqlstring);
-
                 sqlstring = $"CREATE TABLE MULTISHORTSINFO({Id},ISSHORTSACTIVE SMALLINT,NUMBEROFSHORTS INTEGER, " +
                     "LINKEDSHORTSDIRECTORYID INTEGER, LASTUPLOADEDDATE DATE, LASTUPLOADEDTIME TIME);";
                 connectionString.CreateTableIfNotExists(sqlstring);
-                sqlstring = $"CREATE TABLE CONVERTERSETTINGS({Id},ISDEFAULT SMALLINT,MINBITRATE VARCHAR(255)"+
-                    ",MAXBITRATE VARCHAR(255),BITRATEBUFFER VARCHAR(255),VIDEOWIDTH VARCHAR(255),"+
-                    "VIDEOHEIGHT VARCHAR(255),ARMODULAS VARCHAR(255), RESIZEENABLE SMALLINT,"+
+                sqlstring = $"CREATE TABLE CONVERTERSETTINGS({Id},ISDEFAULT SMALLINT,MINBITRATE VARCHAR(255)" +
+                    ",MAXBITRATE VARCHAR(255),BITRATEBUFFER VARCHAR(255),VIDEOWIDTH VARCHAR(255)," +
+                    "VIDEOHEIGHT VARCHAR(255),ARMODULAS VARCHAR(255), RESIZEENABLE SMALLINT," +
                     "ARROUNDENABLE SMALLINT,ARSCALINGENABLED SMALLINT,VSYNCEABLE SMALLINT);";
                 connectionString.CreateTableIfNotExists(sqlstring);
-
-                /*   reader["ID"] is int ,reader["SCHEDULENAMEID"] is int ,reader["ACTIONNAMEID"] is int 
-                     reader["SCHEDULENAME"] is string , reader["ACTIONNAME"] is string , reader["MAX"] is int
-                     reader["VIDEOTYPE"] is int, reader["SCHEDULED_DATE"] is DateOnly,  reader["SCHEDULED_TIME"] is TimeOnly 
-                     reader["ACTION_DATE"] is DateOnly, reader["ACTION_TIME"] is TimeOnly 
-                     reader["COMPLETED_DATE"] is DateOnly, reader["COMPLETED_TIME"] is TimeOnly    
-                     IsActioned = (reader["ISACTIONED"] is int   */
                 sqlstring = $"CREATE TABLE YTACTIONS({Id}, SCHEDULENAMEID INTEGER, SCHEDULENAME VARCHAR(255)," +
                              "ACTIONNAME VARCHAR(255), MAXSCHEDULES INTEGER, VIDEOTYPE INTEGER, SCHEDULED_DATE DATE, SCHEDULED_TIME_START TIME, SCHEDULED_TIME_END TIME," +
                              "ACTION_DATE DATE, ACTION_TIME TIME, COMPLETED_DATE DATE, COMPLETED_TIME TIME, ISACTIONED SMALLINT);";
@@ -4670,31 +4425,15 @@ namespace VideoGui
             }
         }
 
-        public bool DoesAutoInsertExists(string filename)
-        {
-            try
-            {
-                string sqlstring = $"select Id from AutoInsert where destfname = @FILENAME";
-                int idx = connectionString.ExecuteScalar(sqlstring, [("@FILENAME", filename)]).ToInt(-1);
-                return (idx != -1) ? true : false;
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
-                return false;
-            }
-        }
-
-
-        public void CloseDialogComplexEditor()
+        public void CloseDialogComplexEditor(object sender, int e)
         {
 
             try
             {
-                if (complexfrm != null)
+                Show();
+                if (sender is ComplexSchedular cf)
                 {
-                    Show();
-                    complexfrm = null;
+                    cf = null;
                 }
             }
             catch (Exception ex)
@@ -4702,7 +4441,6 @@ namespace VideoGui
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
             }
         }
-
 
         public void LoadFromDb()
         {
@@ -4947,7 +4685,7 @@ namespace VideoGui
                         }
                     }
                 }
-                foreach(var item in EditableshortsDirectoryList)
+                foreach (var item in EditableshortsDirectoryList)
                 {
                     if (item.DescId == 1)
                     {
@@ -5015,35 +4753,6 @@ namespace VideoGui
                 return "";
             }
         }
-
-        public string OnGetTitle(int id)
-        {
-            try
-            {
-                foreach (var tag in TitlesList)
-                {
-                    if (tag.Id == id)
-                    {
-                        return tag.Description;
-                    }
-                }
-                return "";
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite($"OnGetAllTags {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
-                return "";
-            }
-        }
-
-
-
-
-
-
-
-
-
 
         public void AddRecord(bool IsElapsed, bool Is720P, bool IsShorts, int IsCreateShorts,
         bool IsTrimEncode, bool IsCutEncode, bool IsDeleteMonitored, bool IsPersistantSource,
@@ -5374,16 +5083,13 @@ namespace VideoGui
         {
             try
             {
-                if (complexfrm == null)
-                {
-                    complexfrm = new ComplexSchedular(ModuleCallback, AddRecord, DeleteRecord, CloseDialogComplexEditor,
-                         LocalSetFilterAge, LocalSetFilterString, GetFilterAges, GetFilterString);
-                    Hide();
-                    complexfrm.ShowDialog();
-                    Show();
-                    complexfrm = null;
+                var _complexfrm = new ComplexSchedular(ModuleCallback, AddRecord, DeleteRecord, CloseDialogComplexEditor,
+                     LocalSetFilterAge, LocalSetFilterString, GetFilterAges, GetFilterString);
+                Hide();
+                _complexfrm.ShowDialog();
+                Show();
+                _complexfrm = null;
 
-                }
             }
             catch (Exception ex)
             {
@@ -5445,9 +5151,7 @@ namespace VideoGui
 
 
 
-                ScheduleProccessor = new ProcessSchedule(OnProcessSchedule);
 
-                EventTimer = new System.Threading.Timer(TimerEvent_Handler, null, 0, 1000);
 
                 var x = GetEncryptedString(new int[] { 151, 41, 70, 82, 244, 202,
                     219, 75, 205, 126, 1, 168, 154, 153, 87, 125 }.Select(i => (byte)i).ToArray());
@@ -5517,127 +5221,9 @@ namespace VideoGui
             return encvar;
         }
 
-        private void OnProcessSchedule(int id, DateTime start, DateTime end, int max, int ScheduleID)
-        {
-            try
-            {
-                List<ListScheduleItems> _listItems = SchedulingItemsList.Where(s => s.ScheduleId == ScheduleID)
-                   .Select(s => new ListScheduleItems(s.Start, s.End, s.Gap)).ToList();
-                Nullable<DateTime> startdate = start, enddate = end;
-                WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
-                if (scheduleScraperModule is not null)
-                {
-                    if (!scheduleScraperModule.IsClosed && !scheduleScraperModule.IsClosing)
-                    {
-                        scheduleScraperModule.Close();
-                    }
-                    while (true)
-                    {
-                        if (!scheduleScraperModule.IsClosed && scheduleScraperModule.IsClosing)
-                        {
-                            Thread.Sleep(250);
-                        }
-                        if (scheduleScraperModule.IsClosed) break;
-                    }
-                    scheduleScraperModule = null;
-                }
-                string gUrl = webAddressBuilder.AddFilterByDraftShorts().GetHTML();
-                scheduleScraperModule = new ScraperModule(ModuleCallback, mnl_scraper_OnFinish, gUrl,
-                            startdate, enddate, max, _listItems, 0, true);
-                Hide();
-                scheduleScraperModule.ShowActivated = true;
-                scheduleScraperModule.Show();
-            }
 
-            catch (Exception ex)
-            {
-                ex.LogWrite($"OnProcessSchedule {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
-            }
-        }
 
-        private void FinishScraper_schedule(int id)
-        {
-            try
-            {
-                Show();
-                Task.Run(() =>
-                {
-                    while (true)
-                    {
-                        if (!scheduleScraperModule.IsClosed && scheduleScraperModule.IsClosing)
-                        {
-                            Thread.Sleep(250);
-                        }
-                        if (scheduleScraperModule.IsClosed) break;
-                    }
-                    scheduleScraperModule = null;
 
-                });
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite($"FinishScraper_schedule {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
-            }
-        }
-
-        private void TimerEvent_Handler(object? state)
-        {
-            try
-            {
-                if (YTScheduledActionsList.Count == 0 || (YTScheduledActionsList.Where(s => s.AppliedAction.HasValue &&
-                    s.AppliedAction.Value.Date != DateTime.Now.Date && s.VideoActionType == 0 && !s.IsActioned &&
-                   !s.CompletedScheduledDate.HasValue).Count() == 0))
-                {
-                    EventTimer.Change(TimeSpan.Zero, TimeSpan.FromSeconds(30));
-                }
-                else
-                {
-                    EventTimer.Change(TimeSpan.Zero, TimeSpan.FromMinutes(2));
-                    foreach (var yt in YTScheduledActionsList.Where(s => s.AppliedAction.HasValue && s.AppliedAction.Value.Date != DateTime.Now.Date && s.VideoActionType == 0 && !s.IsActioned && !s.CompletedScheduledDate.HasValue))
-                    {
-                        bool actionAvailable = false, isClear = false, isReady = false;
-                        var now = DateTime.Now;
-                        var today = now.Date;
-                        var actionTime = yt.AppliedAction.Value.TimeOfDay;
-                        if (yt.AppliedAction.HasValue && yt.AppliedAction.Value.Date == today &&
-                            yt.VideoActionType == 0 && !yt.IsActioned && !yt.CompletedScheduledDate.HasValue)
-                        {
-                            var timeA = actionTime - TimeSpan.FromHours(4);
-                            var timeB = actionTime + TimeSpan.FromMinutes(1);
-                            var timeC = actionTime + TimeSpan.FromMinutes(30);
-                            var timeD = actionTime + TimeSpan.FromMinutes(4);
-                            actionAvailable = actionTime.IfBetweenTimeSpans(timeA, timeB);
-                            isClear = timeC - actionTime >= TimeSpan.FromMinutes(15);
-                            isReady = timeD - actionTime >= TimeSpan.FromMinutes(4);
-                        }
-                        if (isClear)
-                        {
-                            EventTimer.Change(TimeSpan.Zero, TimeSpan.FromMinutes(30));
-                        }
-                        else if (actionAvailable && !isClear)
-                        {
-                            EventTimer.Change(TimeSpan.Zero, isReady ? TimeSpan.FromMinutes(5) : TimeSpan.FromMinutes(10));
-                            if (isReady)
-                            {
-                                var scheduleDate = yt.ActionSchedule.Value;
-                                var scheduleStart = TimeOnly.FromTimeSpan(yt.ActionScheduleStart.Value);
-                                var scheduleEnd = TimeOnly.FromTimeSpan(yt.ActionScheduleEnd.Value);
-                                var start = new DateTime(scheduleDate.Year, scheduleDate.Month, scheduleDate.Day, scheduleStart.Hour, scheduleStart.Minute, scheduleStart.Second);
-                                var end = new DateTime(scheduleDate.Year, scheduleDate.Month, scheduleDate.Day, scheduleEnd.Hour, scheduleEnd.Minute, scheduleEnd.Second);
-                                this.Dispatcher.Invoke(() =>
-                                {
-                                    ScheduleProccessor?.Invoke(yt.Id, start, end, yt.Max, yt.ScheduleNameId);
-                                });
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite($"TimerEvent_Handler {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
-            }
-        }
 
         private void Window_KeyDown_EventHandler(object sender, System.Windows.Input.KeyEventArgs e)
         {
@@ -5849,17 +5435,15 @@ namespace VideoGui
                     if (Job != null)
                     {
                         bool found = false;
-                        for (int i = 0; i < ProcessingJobs.Count; i++)
+                        foreach (var v in ProcessingJobs.Where(v => v.FileNoExt == record))
                         {
-                            if (ProcessingJobs[i].FileNoExt == record)
-                            {
-                                Thread.Sleep(100);
-                                ProcessingJobs[i].Fileinfo = filename;
-                                string pr = record + "|" + ProcessingJobs[i].Fileinfo;
-                                found = true;
-                                break;
-                            }
+                            Thread.Sleep(100);
+                            v.Fileinfo = filename;
+                            string pr = record + "|" + v.Fileinfo;
+                            found = true;
+                            break;
                         }
+
                         if (!found)
                         {
                             bool rt = false;
@@ -7426,7 +7010,7 @@ namespace VideoGui
                         LineNum = 20;
                     }
                 }
-                
+
                 this.SetChecked("GPUEncode", key.GetValueBool("GPUEncode", true));
                 this.SetChecked("Fisheye", key.GetValueBool("FishEyeRemoval", false));
 
@@ -9289,10 +8873,13 @@ namespace VideoGui
         {
             try
             {
-                var CollectionView = new CollectionViewSource();
+               /* 
+                * do in init.
+                * var CollectionView = new CollectionViewSource();
                 CollectionView.Source = ComplexProcessingJobHistory;
                 CollectionView.Filter += new FilterEventHandler(CollectionFilter);
                 complexfrm.lstSchedules.ItemsSource = (System.Collections.IEnumerable)CollectionView;
+           */
             }
             catch (Exception ex)
             {
@@ -10481,7 +10068,7 @@ namespace VideoGui
             }
         }
 
-        public void AudioJoiner_OnClose()
+        public void AudioJoiner_OnClose(object sender, int id)
         {
             try
             {
@@ -10492,14 +10079,16 @@ namespace VideoGui
                 string ExeName = GetEncryptedString(new int[] { 170, 57, 73, 91, 225, 194, 201, 29, 247, 101, 8 }.Select(i => (byte)i).ToArray());
                 ManagementObjectSearcher searcher = new($"SELECT * FROM Win32_Process where name = {myStrQuote}{ExeName}{myStrQuote}");
                 ix = searcher.Get().OfType<ManagementObject>().Count();
-
-                while (AutoJoinerFrm.IsActive && !cts.IsCancellationRequested && ix > 0)
+                if (sender is AudioJoiner ajf)
                 {
-                    Thread.Sleep(100);
-                    ManagementObjectSearcher searcher1 = new($"SELECT * FROM Win32_Process where name = {myStrQuote}{ExeName}{myStrQuote}");
-                    ix = searcher1.Get().OfType<ManagementObject>().Count();
+                    while (ajf.IsActive && !cts.IsCancellationRequested && ix > 0)
+                    {
+                        Thread.Sleep(100);
+                        ManagementObjectSearcher searcher1 = new($"SELECT * FROM Win32_Process where name = {myStrQuote}{ExeName}{myStrQuote}");
+                        ix = searcher1.Get().OfType<ManagementObject>().Count();
+                    }
+                    ajf = null;
                 }
-                AutoJoinerFrm = null;
                 Show();
             }
             catch (Exception ex)
@@ -10512,7 +10101,7 @@ namespace VideoGui
         {
             try
             {
-                AutoJoinerFrm = new AudioJoiner(AudioJoiner_OnClose);
+                var _AutoJoinerFrm = new AudioJoiner(AudioJoiner_OnClose);
                 Hide();
                 var r = GetEncryptedString(new int[] { 151, 41, 70, 82, 244, 202, 219, 75, 205, 126,
                     1, 168, 154, 153, 87, 125 }.Select(i => (byte)i).ToArray());
@@ -10521,7 +10110,7 @@ namespace VideoGui
                     KillOrphanProcess(r);
                 });
 
-                AutoJoinerFrm.ShowDialog();
+                _AutoJoinerFrm.ShowDialog();
             }
             catch (Exception ex)
             {
@@ -10670,22 +10259,12 @@ namespace VideoGui
         {
             try
             {
-                if (schedulingSelectEditor is not null)
-                {
-                    if (schedulingSelectEditor.IsClosing) schedulingSelectEditor.Close();
-                    while (!schedulingSelectEditor.IsClosed)
-                    {
-                        Thread.Sleep(100);
-                        System.Windows.Forms.Application.DoEvents();
-                    }
-                    schedulingSelectEditor.Close();
-                    schedulingSelectEditor = null;
-                }
 
-                schedulingSelectEditor = new SchedulingSelectEditor(SchedulingEditorOnFinish, ModuleCallback);
-                schedulingSelectEditor.ShowActivated = true;
+
+                var _schedulingSelectEditor = new SchedulingSelectEditor(SchedulingEditorOnFinish, ModuleCallback);
+                _schedulingSelectEditor.ShowActivated = true;
                 Hide();
-                schedulingSelectEditor.Show();
+                _schedulingSelectEditor.Show();
             }
             catch (Exception ex)
             {
@@ -10693,20 +10272,20 @@ namespace VideoGui
             }
         }
 
-        private void SchedulingEditorOnFinish()
+        private void SchedulingEditorOnFinish(object sender, int id)
         {
             try
             {
                 Show();
                 Task.Run(() =>
                 {
-                    if (schedulingSelectEditor is not null && !schedulingSelectEditor.IsClosed)
+                    if (sender is SchedulingSelectEditor se && !se.IsClosed)
                     {
-                        while (schedulingSelectEditor.IsClosing)
+                        while (se.IsClosing)
                         {
                             Thread.Sleep(100);
                         }
-                        schedulingSelectEditor = null;
+                        se = null;
                     }
                 });
             }
@@ -10733,22 +10312,10 @@ namespace VideoGui
         {
             try
             {
-                if (actionScheduleSelector is not null)
-                {
-                    if (actionScheduleSelector.IsClosing) actionScheduleSelector.Close();
-                    while (!actionScheduleSelector.IsClosed)
-                    {
-                        Thread.Sleep(100);
-                        System.Windows.Forms.Application.DoEvents();
-                    }
-                    actionScheduleSelector.Close();
-                    actionScheduleSelector = null;
-                }
-
-                actionScheduleSelector = new ActionScheduleSelector(ActionScheduleSelectorFinish, ModuleCallback);
-                actionScheduleSelector.ShowActivated = true;
+                var _actionScheduleSelector = new ActionScheduleSelector(ActionScheduleSelectorFinish, ModuleCallback);
+                _actionScheduleSelector.ShowActivated = true;
                 Hide();
-                actionScheduleSelector.Show();
+                _actionScheduleSelector.Show();
             }
             catch (Exception ex)
             {
@@ -10765,21 +10332,10 @@ namespace VideoGui
         {
             try
             {
-                if (manualScheduler is not null)
-                {
-                    if (manualScheduler.IsClosing) manualScheduler.Close();
-                    while (!manualScheduler.IsClosed)
-                    {
-                        Thread.Sleep(100);
-                        System.Windows.Forms.Application.DoEvents();
-                    }
-                    manualScheduler.Close();
-                    manualScheduler = null;
-                }
-                manualScheduler = new ManualScheduler(ModuleCallback, ManualSchedulerFinish);
-                manualScheduler.ShowActivated = true;
+                var _manualScheduler = new ManualScheduler(ModuleCallback, ManualSchedulerFinish);
+                _manualScheduler.ShowActivated = true;
                 Hide();
-                manualScheduler.Show();
+                _manualScheduler.Show();
             }
             catch (Exception ex)
             {
@@ -10791,193 +10347,181 @@ namespace VideoGui
         {
             try
             {
-                if (multiShortsUploader is not null && !multiShortsUploader.IsClosed)
+
+                Hide();
+                SelectedShortsDirectoriesList.Clear();
+                string sql = "SELECT " +
+              "M.ID, M.ISSHORTSACTIVE, M.NUMBEROFSHORTS, " +
+              "M.LASTUPLOADEDDATE, M.LASTUPLOADEDTIME, M.LINKEDSHORTSDIRECTORYID, " +
+              "COALESCE(S2.ID, S1.ID) as SHORTSDIRECTORY_ID, " +
+              "COALESCE(S2.DIRECTORYNAME, S1.DIRECTORYNAME) as DIRECTORYNAME, " +
+              "COALESCE(S2.TITLEID, S1.TITLEID) as TITLEID, " +
+              "COALESCE(S2.DESCID, S1.DESCID) as DESCID, " +
+              "COALESCE(" +
+              "(SELECT LIST(TAGID, ',') FROM TITLETAGS WHERE GROUPID = S2.TITLEID), " +
+              "(SELECT LIST(TAGID, ',') FROM TITLETAGS WHERE GROUPID = S1.TITLEID)" +
+              ") AS LINKEDTITLEIDS, " + "COALESCE(" +
+              "(SELECT LIST(ID,',') FROM DESCRIPTIONS WHERE ID = S2.DESCID), " +
+              "(SELECT LIST(ID,',') FROM DESCRIPTIONS WHERE ID = S1.DESCID)" +
+              ") AS LINKEDDESCIDS " + "FROM MULTISHORTSINFO M " +
+              "LEFT JOIN (" + "REMATCHED R " +
+              "INNER JOIN SHORTSDIRECTORY S2 ON R.OLDID = S2.ID" +
+              ") ON M.LINKEDSHORTSDIRECTORYID = R.NEWID " +
+              "LEFT JOIN SHORTSDIRECTORY S1 ON M.LINKEDSHORTSDIRECTORYID = S1.ID " +
+             "WHERE COALESCE(S2.ID, S1.ID) IS NOT NULL";
+                connectionString.ExecuteReader(sql, (FbDataReader r) =>
                 {
-                    if (multiShortsUploader.IsClosing) multiShortsUploader.Close();
-                    while (!multiShortsUploader.IsClosed)
+                    SelectedShortsDirectoriesList.Add(new SelectedShortsDirectories(r));
+                });
+
+                bool _Active = false;
+                var activeItems = SelectedShortsDirectoriesList.Where(item => item.IsActive).ToList();
+                if (activeItems.Count > 1)
+                {
+                    foreach (var item in activeItems.Skip(1))
                     {
-                        Thread.Sleep(100);
+                        item.IsActive = false;
+                        string SQL = "UPDATE MULTISHORTSINFO SET ISSHORTSACTIVE = 0 WHERE ID = @ID;";
+                        connectionString.ExecuteScalar(SQL, [("@ID", item.Id)]);
                     }
-                    multiShortsUploader.Close();
-                    multiShortsUploader = null;
                 }
-                if (multiShortsUploader is null)
+                int Id = -1;
+                bool fnd = false;
+                RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                string BaseDIr = key.GetValueStr("shortsdirectory", @"D:\shorts");
+                key?.Close();
+                for (int i = SelectedShortsDirectoriesList.Count - 1; i >= 0; i--)
                 {
-                    Hide();
-                    SelectedShortsDirectoriesList.Clear();
-                    string sql = "SELECT " +
-                  "M.ID, M.ISSHORTSACTIVE, M.NUMBEROFSHORTS, " +
-                  "M.LASTUPLOADEDDATE, M.LASTUPLOADEDTIME, M.LINKEDSHORTSDIRECTORYID, " +
-                  "COALESCE(S2.ID, S1.ID) as SHORTSDIRECTORY_ID, " +
-                  "COALESCE(S2.DIRECTORYNAME, S1.DIRECTORYNAME) as DIRECTORYNAME, " +
-                  "COALESCE(S2.TITLEID, S1.TITLEID) as TITLEID, " +
-                  "COALESCE(S2.DESCID, S1.DESCID) as DESCID, " +
-                  "COALESCE(" +
-                  "(SELECT LIST(TAGID, ',') FROM TITLETAGS WHERE GROUPID = S2.TITLEID), " +
-                  "(SELECT LIST(TAGID, ',') FROM TITLETAGS WHERE GROUPID = S1.TITLEID)" +
-                  ") AS LINKEDTITLEIDS, " + "COALESCE(" +
-                  "(SELECT LIST(ID,',') FROM DESCRIPTIONS WHERE ID = S2.DESCID), " +
-                  "(SELECT LIST(ID,',') FROM DESCRIPTIONS WHERE ID = S1.DESCID)" +
-                  ") AS LINKEDDESCIDS " + "FROM MULTISHORTSINFO M " +
-                  "LEFT JOIN (" + "REMATCHED R " +
-                  "INNER JOIN SHORTSDIRECTORY S2 ON R.OLDID = S2.ID" +
-                  ") ON M.LINKEDSHORTSDIRECTORYID = R.NEWID " +
-                  "LEFT JOIN SHORTSDIRECTORY S1 ON M.LINKEDSHORTSDIRECTORYID = S1.ID " +
-                 "WHERE COALESCE(S2.ID, S1.ID) IS NOT NULL";
-                    connectionString.ExecuteReader(sql, (FbDataReader r) =>
+                    string DirName = SelectedShortsDirectoriesList[i].DirectoryName;
+                    int NumberOfShorts = 0;
+                    string NewDir = Path.Combine(BaseDIr, DirName);
+                    if (Path.Exists(NewDir))
                     {
-                        SelectedShortsDirectoriesList.Add(new SelectedShortsDirectories(r));
-                    });
-
-                    bool _Active = false;
-                    var activeItems = SelectedShortsDirectoriesList.Where(item => item.IsActive).ToList();
-                    if (activeItems.Count > 1)
-                    {
-                        foreach (var item in activeItems.Skip(1))
-                        {
-                            item.IsActive = false;
-                            string SQL = "UPDATE MULTISHORTSINFO SET ISSHORTSACTIVE = 0 WHERE ID = @ID;";
-                            connectionString.ExecuteScalar(SQL, [("@ID", item.Id)]);
-                        }
+                        NumberOfShorts = Directory.GetFiles(NewDir, "*.mp4", SearchOption.AllDirectories).Length;
                     }
-                    int Id = -1;
-                    bool fnd = false;
-                    RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
-                    string BaseDIr = key.GetValueStr("shortsdirectory", @"D:\shorts");
-                    key?.Close();
-                    for (int i = SelectedShortsDirectoriesList.Count - 1; i >= 0; i--)
+                    else NumberOfShorts = 0;
+                    if (SelectedShortsDirectoriesList[i].NumberOfShorts != NumberOfShorts)
                     {
-                        string DirName = SelectedShortsDirectoriesList[i].DirectoryName;
-                        int NumberOfShorts = 0;
-                        string NewDir = Path.Combine(BaseDIr, DirName);
-                        if (Path.Exists(NewDir))
-                        {
-                            NumberOfShorts = Directory.GetFiles(NewDir, "*.mp4", SearchOption.AllDirectories).Length;
-                        }
-                        else NumberOfShorts = 0;
-                        if (SelectedShortsDirectoriesList[i].NumberOfShorts != NumberOfShorts)
-                        {
-                            SelectedShortsDirectoriesList[i].NumberOfShorts = NumberOfShorts;
-                        }
-                        if (SelectedShortsDirectoriesList[i].IsActive &&
-                            SelectedShortsDirectoriesList[i].NumberOfShorts == 0)
-                        {
-                            Id = SelectedShortsDirectoriesList[i].Id;
-                            SelectedShortsDirectoriesList.RemoveAt(i);
-                            string sqlaa = "DELETE FROM MULTISHORTSINFO WHERE ID = @ID;";
-                            connectionString.ExecuteNonQuery(sqlaa, [("@ID", Id)]);
-                            fnd = true;
-                        }
+                        SelectedShortsDirectoriesList[i].NumberOfShorts = NumberOfShorts;
                     }
-                    if (fnd)
+                    if (SelectedShortsDirectoriesList[i].IsActive &&
+                        SelectedShortsDirectoriesList[i].NumberOfShorts == 0)
                     {
-                        int ActiveShortsCount = SelectedShortsDirectoriesList.Where(s => s.IsActive).Count();
-                        if (ActiveShortsCount == 0)
-                        {
-                            foreach (var item in SelectedShortsDirectoriesList)
-                            {
-                                item.IsActive = true;
-                                sql = "UPDATE MULTISHORTSINFO SET ISSHORTSACTIVE = 1 WHERE ID = @ID;";
-                                connectionString.ExecuteNonQuery(sql, [("@ID", item.Id)]);
-                                string DirName = item.DirectoryName;
-                                key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
-                                string NewP = Path.Combine(BaseDIr, item.DirectoryName);
-                                key.SetValue("UploadPath", NewP);
-                                key?.Close();
-                                string uf = "";
-                                bool done = false;
-                                sql = "SELECT * FROM UploadsRecord ORDER BY RDB$RECORD_VERSION DESC ROWS 100;";
-                                connectionString.ExecuteReader(sql, (FbDataReader r) =>
-                                {
-                                    if (!done)
-                                    {
-                                        uf = (r["UPLOADFILE"] is string f) ? f : "";
-                                        DateTime dtr = (r["UPLOAD_DATE"] is DateTime d) ? d : DateTime.Now.Date.AddYears(-100);
-                                        TimeSpan ttr = (r["UPLOAD_TIME"] is TimeSpan t1) ? t1 : new TimeSpan();
-                                        DateTime dt = dtr.AtTime(TimeOnly.FromTimeSpan(ttr));
-                                        int idx = uf.Split('_').LastOrDefault().ToInt(-1);
-                                        if (idx != -1)
-                                        {
-                                            string DirectoryName = "";
-                                            foreach (var zr in RematchedList.Where(s => s.OldId == idx))
-                                            {
-                                                idx = zr.NewId;
-                                                break;
-                                            }
-                                            foreach (var rr in EditableshortsDirectoryList.Where(s => s.Id == idx))
-                                            {
-                                                DirectoryName = rr.Directory;
-                                                break;
-                                            }
-                                            if (DirectoryName != "" && dt.Year > 2000)
-                                            {
-                                                string info = $" [Lastupload from {DirectoryName} @ {dt.ToDisplayString()}]";
-                                                Title += info;
-                                            }
-                                        }
-                                        done = true;
-                                    }
-                                });
-                                break;
-                            }
-                        }
-                        else
-                        {
-
-                        }
-                    }
-                    foreach (var item in SelectedShortsDirectoriesList.
-                        Where(s => s.IsActive && s.NumberOfShorts > 0))
-                    {
+                        Id = SelectedShortsDirectoriesList[i].Id;
+                        SelectedShortsDirectoriesList.RemoveAt(i);
+                        string sqlaa = "DELETE FROM MULTISHORTSINFO WHERE ID = @ID;";
+                        connectionString.ExecuteNonQuery(sqlaa, [("@ID", Id)]);
                         fnd = true;
-                        string UploadFile = "";
-                        bool Processed = false;
-                        int idx = -1;
-                        DateTime dtr = new();
-                        TimeSpan ttr = new();
-                        string SQLB = "SELECT * FROM UploadsRecord ORDER BY RDB$RECORD_VERSION DESC ROWS 100;";
-                        connectionString.ExecuteReader(SQLB, (FbDataReader r) =>
+                    }
+                }
+                if (fnd)
+                {
+                    int ActiveShortsCount = SelectedShortsDirectoriesList.Where(s => s.IsActive).Count();
+                    if (ActiveShortsCount == 0)
+                    {
+                        foreach (var item in SelectedShortsDirectoriesList)
                         {
-                            if (Processed) return;
-                            UploadFile = (r["UPLOADFILE"] is string f) ? f : "";
-                            dtr = (r["UPLOAD_DATE"] is DateTime d) ? d : DateTime.Now.Date.AddYears(-100);
-                            ttr = (r["UPLOAD_TIME"] is TimeSpan t1) ? t1 : new TimeSpan();
-                            idx = (UploadFile.Contains("_")) ? UploadFile.Split('_').LastOrDefault().ToInt(-1) : 93;
-
-                        });
-                        if (idx == item.LinkedShortsDirectoryId)
-                        {
-                            bool found = false;
-                            string uploadDirectory = item.DirectoryName;
-                            string sqlaa = "UPDATE MULTISHORTSINFO SET ISSHORTSACTIVE = 1 WHERE ID = @ID;";
-                            connectionString.ExecuteNonQuery(sqlaa, [("@ID", item.Id)]);
-                            int Id_uploadPath = item.LinkedShortsDirectoryId;
-                            foreach (var item1 in EditableshortsDirectoryList.Where(s => s.Id == Id_uploadPath))
+                            item.IsActive = true;
+                            sql = "UPDATE MULTISHORTSINFO SET ISSHORTSACTIVE = 1 WHERE ID = @ID;";
+                            connectionString.ExecuteNonQuery(sql, [("@ID", item.Id)]);
+                            string DirName = item.DirectoryName;
+                            key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                            string NewP = Path.Combine(BaseDIr, item.DirectoryName);
+                            key.SetValue("UploadPath", NewP);
+                            key?.Close();
+                            string uf = "";
+                            bool done = false;
+                            sql = "SELECT * FROM UploadsRecord ORDER BY RDB$RECORD_VERSION DESC ROWS 100;";
+                            connectionString.ExecuteReader(sql, (FbDataReader r) =>
                             {
-                                found = true;
-                                break;
-                            }
-                            if (found)
-                            {
-
-                                DateTime LastUpload = dtr.AtTime(TimeOnly.FromTimeSpan(ttr));
-                                item.LastUploadedDateFile = LastUpload;
-                                sqlaa = "UPDATE MULTISHORTSINFO SET LASTUPLOADEDDATE = @P0, LASTUPLOADEDTIME = @P1 WHERE ID = @P2;";
-                                connectionString.ExecuteNonQuery(sqlaa, [("@P0", LastUpload.Date), ("@P1", LastUpload.TimeOfDay),
-                                        ("@P2", item.Id)]);
-                                Processed = true;
-                            }
+                                if (!done)
+                                {
+                                    uf = (r["UPLOADFILE"] is string f) ? f : "";
+                                    DateTime dtr = (r["UPLOAD_DATE"] is DateTime d) ? d : DateTime.Now.Date.AddYears(-100);
+                                    TimeSpan ttr = (r["UPLOAD_TIME"] is TimeSpan t1) ? t1 : new TimeSpan();
+                                    DateTime dt = dtr.AtTime(TimeOnly.FromTimeSpan(ttr));
+                                    int idx = uf.Split('_').LastOrDefault().ToInt(-1);
+                                    if (idx != -1)
+                                    {
+                                        string DirectoryName = "";
+                                        foreach (var zr in RematchedList.Where(s => s.OldId == idx))
+                                        {
+                                            idx = zr.NewId;
+                                            break;
+                                        }
+                                        foreach (var rr in EditableshortsDirectoryList.Where(s => s.Id == idx))
+                                        {
+                                            DirectoryName = rr.Directory;
+                                            break;
+                                        }
+                                        if (DirectoryName.NotNullOrEmpty() && dt.Year > 2000)
+                                        {
+                                            string info = $" [Lastupload from {DirectoryName} @ {dt.ToDisplayString()}]";
+                                            Title += info;
+                                        }
+                                    }
+                                    done = true;
+                                }
+                            });
+                            break;
                         }
+                    }
+                    else
+                    {
 
-                        break;
+                    }
+                }
+                foreach (var item in SelectedShortsDirectoriesList.
+                    Where(s => s.IsActive && s.NumberOfShorts > 0))
+                {
+                    fnd = true;
+                    string UploadFile = "";
+                    bool Processed = false;
+                    int idx = -1;
+                    DateTime dtr = new();
+                    TimeSpan ttr = new();
+                    string SQLB = "SELECT * FROM UploadsRecord ORDER BY RDB$RECORD_VERSION DESC ROWS 100;";
+                    connectionString.ExecuteReader(SQLB, (FbDataReader r) =>
+                    {
+                        if (Processed) return;
+                        UploadFile = (r["UPLOADFILE"] is string f) ? f : "";
+                        dtr = (r["UPLOAD_DATE"] is DateTime d) ? d : DateTime.Now.Date.AddYears(-100);
+                        ttr = (r["UPLOAD_TIME"] is TimeSpan t1) ? t1 : new TimeSpan();
+                        idx = (UploadFile.Contains("_")) ? UploadFile.Split('_').LastOrDefault().ToInt(-1) : 93;
+
+                    });
+                    if (idx == item.LinkedShortsDirectoryId)
+                    {
+                        bool found = false;
+                        string uploadDirectory = item.DirectoryName;
+                        string sqlaa = "UPDATE MULTISHORTSINFO SET ISSHORTSACTIVE = 1 WHERE ID = @ID;";
+                        connectionString.ExecuteNonQuery(sqlaa, [("@ID", item.Id)]);
+                        int Id_uploadPath = item.LinkedShortsDirectoryId;
+                        foreach (var item1 in EditableshortsDirectoryList.Where(s => s.Id == Id_uploadPath))
+                        {
+                            found = true;
+                            break;
+                        }
+                        if (found)
+                        {
+
+                            DateTime LastUpload = dtr.AtTime(TimeOnly.FromTimeSpan(ttr));
+                            item.LastUploadedDateFile = LastUpload;
+                            sqlaa = "UPDATE MULTISHORTSINFO SET LASTUPLOADEDDATE = @P0, LASTUPLOADEDTIME = @P1 WHERE ID = @P2;";
+                            connectionString.ExecuteNonQuery(sqlaa, [("@P0", LastUpload.Date), ("@P1", LastUpload.TimeOfDay),
+                                        ("@P2", item.Id)]);
+                            Processed = true;
+                        }
                     }
 
-
-                    multiShortsUploader = new MultiShortsUploader(ModuleCallback,
-                        MultiShortsUploader_onFinish);
-                    multiShortsUploader.ShowActivated = true;
-                    multiShortsUploader.ShowDialog();
+                    break;
                 }
+
+
+                var _multiShortsUploader = new MultiShortsUploader(ModuleCallback,
+                    MultiShortsUploader_onFinish);
+                _multiShortsUploader.ShowActivated = true;
+                _multiShortsUploader.ShowDialog();
             }
             catch (Exception ex)
             {
@@ -10985,60 +10529,45 @@ namespace VideoGui
             }
         }
 
-        private void ManualSchedulerFinish()
+        private void ManualSchedulerFinish(object sender, int id)
         {
             try
             {
                 Show();
-                bool IsTest = false;
-                int max = 0;
-                Nullable<DateTime> startdate = null, enddate = null;
-                if (manualScheduler is not null && !manualScheduler.IsClosed)
+                if (sender is ManualScheduler manualScheduler)
                 {
-                    if (manualScheduler.IsClosing) manualScheduler.Close();
-                    while (!manualScheduler.IsClosed)
+                    bool IsTest = false;
+                    int max = 0;
+                    Nullable<DateTime> startdate = null, enddate = null;
+
+                    if (manualScheduler.RunSchedule)
                     {
-                        Thread.Sleep(100);
-                    }
-                }
-                if (manualScheduler.RunSchedule)
-                {
-                    if (manualScheduler.HasValues)
-                    {
-                        max = manualScheduler.txtMaxSchedules.Text.ToInt(0);
-                        startdate = manualScheduler.ReleaseDate.Value;
-                        enddate = manualScheduler.ReleaseDate.Value;
-                        TimeOnly tsa = manualScheduler.StartTime.Value;
-                        TimeOnly tsb = manualScheduler.EndTime.Value;
-                        startdate = startdate.Value.Date.Add(tsa.ToTimeSpan());
-                        enddate = enddate.Value.Date.Add(tsb.ToTimeSpan());
-                        IsTest = manualScheduler.TestMode;
-                    }
-                    manualScheduler = null;
-                    string sqla = "SELECT ID FROM SETTINGS WHERE SETTINGNAME = @P0";
-                    int iScheduleID = connectionString.ExecuteScalar(sqla, [("@P0", "CURRENTSCHEDULINGID")]).ToInt(-1);
-                    if (iScheduleID != -1 && startdate.HasValue && enddate.HasValue && max > 0)
-                    {
-                        if (scheduleScraperModule is not null)
+                        if (manualScheduler.HasValues)
                         {
-                            if (scheduleScraperModule.IsClosing) scheduleScraperModule.Close();
-                            while (!scheduleScraperModule.IsClosed)
-                            {
-                                Thread.Sleep(100);
-                                System.Windows.Forms.Application.DoEvents();
-                            }
-                            scheduleScraperModule.Close();
-                            scheduleScraperModule = null;
+                            max = manualScheduler.txtMaxSchedules.Text.ToInt(0);
+                            startdate = manualScheduler.ReleaseDate.Value;
+                            enddate = manualScheduler.ReleaseDate.Value;
+                            TimeOnly tsa = manualScheduler.StartTime.Value;
+                            TimeOnly tsb = manualScheduler.EndTime.Value;
+                            startdate = startdate.Value.Date.Add(tsa.ToTimeSpan());
+                            enddate = enddate.Value.Date.Add(tsb.ToTimeSpan());
+                            IsTest = manualScheduler.TestMode;
                         }
-                        List<ListScheduleItems> _listItems = SchedulingItemsList.Where(s => s.ScheduleId == iScheduleID)
-                         .Select(s => new ListScheduleItems(s.Start, s.End, s.Gap)).ToList();
-                        WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
-                        string gUrl = webAddressBuilder.AddFilterByDraftShorts().GetHTML();
-                        scheduleScraperModule = new ScraperModule(ModuleCallback, mnl_scraper_OnFinish, gUrl,
-                            startdate, enddate, max, _listItems, 0, IsTest);
-                        scheduleScraperModule.ShowActivated = true;
-                        Hide();
-                        scheduleScraperModule.Show();
+                        manualScheduler = null;
+                        string sqla = "SELECT ID FROM SETTINGS WHERE SETTINGNAME = @P0";
+                        int iScheduleID = connectionString.ExecuteScalar(sqla, [("@P0", "CURRENTSCHEDULINGID")]).ToInt(-1);
+                        if (iScheduleID != -1 && startdate.HasValue && enddate.HasValue && max > 0)
+                        {
+                            List<ListScheduleItems> _listItems = SchedulingItemsList.Where(s => s.ScheduleId == iScheduleID)
+                             .Select(s => new ListScheduleItems(s.Start, s.End, s.Gap)).ToList();
+                            WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
+                            string gUrl = webAddressBuilder.AddFilterByDraftShorts().GetHTML();
+                            var _scheduleScraperModule = new ScraperModule(ModuleCallback, mnl_scraper_OnFinish, gUrl,
+                                startdate, enddate, max, _listItems, 0, IsTest);
+                            _scheduleScraperModule.ShowActivated = true;
+                            Hide();
+                            _scheduleScraperModule.Show();
+                        }
                     }
                 }
             }
@@ -11048,23 +10577,24 @@ namespace VideoGui
             }
         }
 
-        private void mnl_scraper_OnFinish(int id)
+        private void mnl_scraper_OnFinish(object sender, int id)
         {
             try
             {
+                // use of local variable to avoid closure issues
                 Show();
                 Task.Run(() =>
                 {
-                    if (scheduleScraperModule is not null && !scheduleScraperModule.IsClosed)
+                    /*if (sender is ScraperModule ss && !ss.IsClosed)
                     {
-                        if (scheduleScraperModule.IsClosing) scheduleScraperModule.Close();
-                        while (!scheduleScraperModule.IsClosed)
+                        if (ss.IsClosing) ss.Close();
+                        while (!ss.IsClosed)
                         {
                             Thread.Sleep(100);
                         }
-                        scheduleScraperModule.Close();
-                        scheduleScraperModule = null;
-                    }
+                        ss.Close();
+                        ss = null;
+                    }*/
                 });
             }
             catch (Exception ex)
@@ -11073,22 +10603,20 @@ namespace VideoGui
             }
         }
 
-        private void ActionScheduleSelectorFinish()
+        private void ActionScheduleSelectorFinish(object sender, int id)
         {
             try
             {
                 Show();
                 Task.Run(() =>
                 {
-                    if (actionScheduleSelector is not null && !actionScheduleSelector.IsClosed)
+                    if (sender is ActionScheduleSelector asx && !asx.IsClosed)
                     {
-                        if (actionScheduleSelector.IsClosing) actionScheduleSelector.Close();
-                        while (!actionScheduleSelector.IsClosed)
+                        while (asx.IsClosing)
                         {
                             Thread.Sleep(100);
                         }
-                        actionScheduleSelector.Close();
-                        actionScheduleSelector = null;
+                        asx = null;
                     }
                 });
             }
@@ -11130,20 +10658,12 @@ namespace VideoGui
         {
             try
             {
-                if (directoryTitleDescEditor is not null && !directoryTitleDescEditor.IsClosed)
-                {
-                    if (selectShortUpload.IsClosing) selectShortUpload.Close();
-                    while (!directoryTitleDescEditor.IsClosed)
-                    {
-                        Thread.Sleep(100);
-                    }
-                    directoryTitleDescEditor.Close();
-                    directoryTitleDescEditor = null;
-                }
-                directoryTitleDescEditor = new DirectoryTitleDescEditor(ModuleCallback, directoryEditorOnFinish);
-                directoryTitleDescEditor.ShowActivated = true;
+
+                var _directoryTitleDescEditor = new DirectoryTitleDescEditor(ModuleCallback,
+                    directoryEditorOnFinish);
+                _directoryTitleDescEditor.ShowActivated = true;
                 Hide();
-                directoryTitleDescEditor.Show();
+                _directoryTitleDescEditor.Show();
             }
             catch (Exception ex)
             {
@@ -11151,22 +10671,20 @@ namespace VideoGui
             }
         }
 
-        private void directoryEditorOnFinish()
+        private void directoryEditorOnFinish(object sender, int id)
         {
             try
             {
                 Show();
                 Task.Run(() =>
                 {
-                    if (directoryTitleDescEditor is not null && !directoryTitleDescEditor.IsClosed)
+                    if (sender is DirectoryTitleDescEditor dt && !dt.IsClosed)
                     {
-                        if (selectShortUpload.IsClosing) selectShortUpload.Close();
-                        while (!directoryTitleDescEditor.IsClosed)
+                        while (!dt.IsClosing)
                         {
                             Thread.Sleep(100);
                         }
-                        directoryTitleDescEditor.Close();
-                        directoryTitleDescEditor = null;
+                        dt = null;
                     }
                 });
 
@@ -11286,12 +10804,23 @@ namespace VideoGui
             }
         }
 
-        public void OnShortsCreatorFinish()
+        public void OnShortsCreatorFinish(object sender, int e)
         {
             try
             {
-                frmShortsCreator = null;
                 Show();
+                Task.Run(() =>
+                {
+                    if (sender is ShortsCreator r)
+                    {
+
+                        while (r.IsClosing)
+                        {
+                            Thread.Sleep(100);
+                        }
+                        r = null;
+                    }
+                });
             }
             catch (Exception ex)
             {
@@ -11302,20 +10831,15 @@ namespace VideoGui
         {
             try
             {
-                if (frmShortsCreator == null)
-                {
-                    frmShortsCreator = new ShortsCreator(OnShortsCreatorFinish);
-                    Hide();
-                    var t = GetEncryptedString(new int[] { 151, 41, 70, 82, 244, 202, 219,
+                var _frmShortsCreator = new ShortsCreator(OnShortsCreatorFinish);
+                Hide();
+                var t = GetEncryptedString(new int[] { 151, 41, 70, 82, 244, 202, 219,
                         75, 205, 126, 1, 168, 154, 153, 87, 125 }.Select(i => (byte)i).ToArray());
-                    Task.Run(() =>
-                    {
-                        KillOrphanProcess(t);
-                    });
-
-
-                    frmShortsCreator.Show();
-                }
+                Task.Run(() =>
+                {
+                    KillOrphanProcess(t);
+                });
+                _frmShortsCreator.Show();
             }
             catch (Exception ex)
             {
@@ -11369,46 +10893,21 @@ namespace VideoGui
             {
                 if (!ShiftActiveWindowClosing)
                 {
-                    if (selectShortUpload is not null && !selectShortUpload.IsClosed)
-                    {
-                        if (selectShortUpload.IsClosing) selectShortUpload.Close();
-                        while (!selectShortUpload.IsClosed)
-                        {
-                            Thread.Sleep(100);
-                        }
-                        selectShortUpload.Close();
-                        selectShortUpload = null;
-                    }
-                    if (selectShortUpload is null)
-                    {
-                        Hide();
-                        selectShortUpload = new SelectShortUpload(ModuleCallback,
-                            SelectShortUpload_onFinish);
-                        selectShortUpload.ShowActivated = true;
-                        selectShortUpload.ShowDialog();
 
-                    }
+                    Hide();
+                    var _selectShortUpload = new SelectShortUpload(ModuleCallback,
+                        SelectShortUpload_onFinish);
+                    _selectShortUpload.ShowActivated = true;
+                    _selectShortUpload.ShowDialog();
                 }
                 else
                 {
-                    if (multiShortsUploader is not null && !multiShortsUploader.IsClosed)
-                    {
-                        if (multiShortsUploader.IsClosing) multiShortsUploader.Close();
-                        while (!multiShortsUploader.IsClosed)
-                        {
-                            Thread.Sleep(100);
-                        }
-                        multiShortsUploader.Close();
-                        multiShortsUploader = null;
-                    }
-                    if (multiShortsUploader is null)
-                    {
-                        Hide();
-                        multiShortsUploader = new MultiShortsUploader(ModuleCallback,
-                            MultiShortsUploader_onFinish);
-                        multiShortsUploader.ShowActivated = true;
-                        multiShortsUploader.ShowDialog();
-                    }
+
+                    Hide();
+                    var _multiShortsUploader = new MultiShortsUploader(ModuleCallback,
+                        MultiShortsUploader_onFinish);
+                    _multiShortsUploader.ShowActivated = true;
+                    _multiShortsUploader.ShowDialog();
                 }
             }
             catch (Exception ex)
@@ -11417,30 +10916,17 @@ namespace VideoGui
             }
         }
 
-        private void MultiShortsUploader_onFinish()
+        private void MultiShortsUploader_onFinish(object sender, int id)
         {
             try
             {
                 Show();
-                if (multiShortsUploader is not null && !multiShortsUploader.IsClosed)
+                if (sender is MultiShortsUploader msu)
                 {
                     Task.Run(() =>
                     {
-                        var cts = new CancellationTokenSource();
-                        cts.CancelAfter(1500);
-                        while (multiShortsUploader is not null && multiShortsUploader.IsClosing && !cts.Token.IsCancellationRequested)
-                        {
-                            Thread.Sleep(100);
-                        }
-                        multiShortsUploader = null;
+                        msu = null;
                     });
-                }
-                else
-                {
-                    if (multiShortsUploader is not null && multiShortsUploader.IsClosed)
-                    {
-                        multiShortsUploader = null;
-                    }
                 }
             }
             catch (Exception ex)
@@ -11449,24 +10935,25 @@ namespace VideoGui
             }
         }
 
-        private void SelectShortUpload_onFinish()
+        private void SelectShortUpload_onFinish(object sender, int id)
         {
             try
             {
                 Show();
-                if (selectShortUpload is not null && selectShortUpload.IsClosed)
+
+                if (sender is SelectShortUpload su && su.IsClosed)
                 {
-                    selectShortUpload.Hide();
-                    int ucnt = selectShortUpload.uploadedcnt;
+                    su.Hide();
+                    int ucnt = su.uploadedcnt;
                     Task.Run(() =>
                     {
                         var cts = new CancellationTokenSource();
                         cts.CancelAfter(1500);
-                        while (selectShortUpload is not null && selectShortUpload.IsClosing && !cts.Token.IsCancellationRequested)
+                        while (su.IsClosing && !cts.Token.IsCancellationRequested)
                         {
                             Thread.Sleep(100);
                         }
-                        selectShortUpload = null;
+                        su = null;
                         if (ucnt > 0)
                         {
                             Dispatcher.Invoke(() =>
@@ -11480,14 +10967,6 @@ namespace VideoGui
                         }
                     });
                 }
-                else
-                {
-                    if (selectShortUpload is not null && selectShortUpload.IsClosed)
-                    {
-                        selectShortUpload = null;
-                    }
-                }
-
             }
             catch (Exception ex)
             {
@@ -11499,23 +10978,11 @@ namespace VideoGui
         {
             try
             {
-                if (DirectoryTitleDescEditorFrm is not null)
-                {
-                    if (!DirectoryTitleDescEditorFrm.IsClosed)
-                    {
-                        if (DirectoryTitleDescEditorFrm.IsClosing) DirectoryTitleDescEditorFrm.Close();
-                        while (!DirectoryTitleDescEditorFrm.IsClosed)
-                        {
-                            Thread.Sleep(100);
-                        }
-                        DirectoryTitleDescEditorFrm.Close();
-                        DirectoryTitleDescEditorFrm = null;
-                    }
-                }
-                DirectoryTitleDescEditorFrm = new DirectoryTitleDescEditor(ModuleCallback, directoryEditorOnFinish);
-                DirectoryTitleDescEditorFrm.ShowActivated = true;
+
+                var _DirectoryTitleDescEditorFrm = new DirectoryTitleDescEditor(ModuleCallback, directoryEditorOnFinish);
+                _DirectoryTitleDescEditorFrm.ShowActivated = true;
                 Hide();
-                DirectoryTitleDescEditorFrm.Show();
+                _DirectoryTitleDescEditorFrm.Show();
 
             }
             catch (Exception ex)
@@ -11535,19 +11002,10 @@ namespace VideoGui
                 string AppliedSchedules = key.GetValueStr("AppliedSchedules", "");
                 if (AppliedSchedules != "" || AppliedSchedulesList.Count == 0)
                 {
-                    if (SelectReleaseScheduleFrm is not null && !SelectReleaseScheduleFrm.IsClosed)
-                    {
-                        //SelectReleaseScheduleFrm.PersistId
-                        if (SelectReleaseScheduleFrm.IsClosing) SelectReleaseScheduleFrm.Close();
-                        while (!SelectReleaseScheduleFrm.IsClosed)
-                        {
-                            Thread.Sleep(100);
-                        }
-                        SelectReleaseScheduleFrm.Close();
-                        SelectReleaseScheduleFrm = null;
-                    }
-                    SelectReleaseScheduleFrm = new SelectReleaseSchedule(ScheduleOnFinish, ModuleCallback, false);
-
+                    var _SelectReleaseScheduleFrm = new SelectReleaseSchedule(ScheduleOnFinish, ModuleCallback, false);
+                    _SelectReleaseScheduleFrm.ShowActivated = true;
+                    Hide();
+                    _SelectReleaseScheduleFrm.Show();
                 }
                 key?.Close();
 
@@ -11559,17 +11017,14 @@ namespace VideoGui
             }
         }
 
-        private void ScheduleOnFinish()
+        private void ScheduleOnFinish(object sender, int id)
         {
             try
             {
                 Show();
-                if (SelectReleaseScheduleFrm is not null)
+                if (sender is SelectReleaseSchedule srs)
                 {
-                    if (SelectReleaseScheduleFrm.IsClosed)
-                    {
-                        SelectReleaseScheduleFrm = null;
-                    }
+                    srs = null;
                 }
 
             }

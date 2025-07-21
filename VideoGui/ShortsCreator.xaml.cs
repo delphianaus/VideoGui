@@ -39,17 +39,18 @@ namespace VideoGui
         List<string> Data = new List<string>();
         List<string> EData = new List<string>();
         CancellationTokenSource cancellationToken = new CancellationTokenSource();
-        OnFinish DoOnFinish;
         public OnStart DoOnStart;
         public OnProgress DoOnProgress;
         public OnStop DoOnStop;
         public OnAviDemuxStart DoOnAviDemuxStart;
         public OnAviDemuxEnd DoOnAviDemuxEnd;
         int NumberShorts = 0;
-        public ShortsCreator(OnFinish _DoOnFinish)
-        {
+        public bool IsClosing = false, IsClosed = false;
+        public ShortsCreator(OnFinishIdObj _DoOnFinish)
+        {  
             InitializeComponent();
-            DoOnFinish = _DoOnFinish;
+            Closing += (s, e) => { IsClosing = true; };
+            Closed += (s, e) => { IsClosed = true; _DoOnFinish?.Invoke(this,-1); };
         }
 
 
@@ -853,10 +854,7 @@ namespace VideoGui
             }
         }
 
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
-        {
-            DoOnFinish?.Invoke();
-        }
+        
 
 
         private void Window_Loaded(object sender, RoutedEventArgs e)

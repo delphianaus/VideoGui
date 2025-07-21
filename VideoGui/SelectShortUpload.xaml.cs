@@ -38,13 +38,13 @@ namespace VideoGui
         public int uploadedcnt = 0;
         public WebViewDebug webviewDebug = null;
         string connectionStr = "";
-        public SelectShortUpload(databasehook<object> _dbInit, OnFinish _DoOnFinished)
+        public SelectShortUpload(databasehook<object> _dbInit, OnFinishIdObj _DoOnFinished)
         {
             InitializeComponent();
             dbInit = _dbInit;
             connectionStr = dbInit?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
             Closing += (s, e) => { IsClosing = true; };
-            Closed += (s, e) => { IsClosed = true; _DoOnFinished?.Invoke(); };
+            Closed += (s, e) => { IsClosed = true; _DoOnFinished?.Invoke(this,-1); };
         }
 
         int ShortsIndex = -1;
@@ -147,7 +147,7 @@ namespace VideoGui
                     dbInit?.Invoke(this, new CustomParams_Select(LinkedId));
                     CancellationTokenSource cts = new CancellationTokenSource();
                     string connectStr = dbInit?.Invoke(this, new CustomParams_GetConnectionString()) is string con1n ? con1n : "";
-                    connectStr.ExecuteReader(GetShortsDirectorySql(LinkedId),cts, (FbDataReader r) =>
+                    connectStr.ExecuteReader(GetShortsDirectorySql(LinkedId), cts, (FbDataReader r) =>
                     {
                         int titleid = r["TITLEID"].ToInt(-1);
                         int descid = r["DESCID"].ToInt(-1);
@@ -329,7 +329,7 @@ namespace VideoGui
                     string linkedtitleid = "";
                     sql = GetShortsDirectorySql(ShortsIndex);
                     CancellationTokenSource cts = new CancellationTokenSource();
-                    connectionStr.ExecuteReader(sql, cts,(FbDataReader r) =>
+                    connectionStr.ExecuteReader(sql, cts, (FbDataReader r) =>
                     {
                         linkedtitleid = (r["LINKEDTITLEIDS"] is string tidt ? tidt : "");
                         cts.Cancel();
@@ -374,7 +374,7 @@ namespace VideoGui
         }
 
 
-        private void doOnFinish(int id)
+        private void doOnFinish(object sender, int id)
         {
             try
             {
@@ -385,7 +385,7 @@ namespace VideoGui
                 key?.Close();
                 int cnt = Directory.EnumerateFiles(rootfolder, "*.mp4", SearchOption.AllDirectories).ToList().Count();
                 lblShortNo.Content = cnt.ToString();
-                if (scraperModule != null && !scraperModule.KilledUploads)
+                if (sender != null && sender is ScraperModule scraperModulex && !scraperModulex.KilledUploads)
                 {
                     List<string> filesdone = new List<string>();
                     bool Exc = scraperModule.Exceeded;
@@ -397,18 +397,18 @@ namespace VideoGui
                     {
                         int Maxuploads = (txtTotalUploads.Text != "") ? txtTotalUploads.Text.ToInt(100) : 100;
                         int UploadsPerSlot = (txtMaxUpload.Text != "") ? txtMaxUpload.Text.ToInt(5) : 5;
-                        scraperModule = new ScraperModule(dbInit, doOnFinish, gUrl, Maxuploads, UploadsPerSlot, 0, false);
+                        var tscraperModule = new ScraperModule(dbInit, doOnFinish, gUrl, Maxuploads, UploadsPerSlot, 0, false);
 
 
-                        scraperModule.ShowActivated = true;
-                        scraperModule.ScheduledOk.AddRange(filesdone);
+                        tscraperModule.ShowActivated = true;
+                        tscraperModule.ScheduledOk.AddRange(filesdone);
                         Hide();
                         Process[] webView2Processes = Process.GetProcessesByName("MicrosoftEdgeWebview2");
                         foreach (Process process in webView2Processes)
                         {
                             process.Kill();
                         }
-                        scraperModule.Show();
+                        tscraperModule.Show();
                         return;
                     }
                     else
@@ -416,7 +416,7 @@ namespace VideoGui
                         string DirectoryPath = rootfolder.Split(@"\").ToList().LastOrDefault();
                         if (DirectoryPath != "")
                         {
-                            dbInit?.Invoke(this, new CustomParams_UpdateMultishortsByDir(DirectoryPath,""));
+                            dbInit?.Invoke(this, new CustomParams_UpdateMultishortsByDir(DirectoryPath, ""));
                         }
                     }
 
@@ -477,9 +477,9 @@ namespace VideoGui
                             }
                         }
                         if (!Valid)
-                        {   
+                        {
                             string dir = selFolder.Split(@"\").ToList().LastOrDefault().ToUpper();
-                            var r = dbInit?.Invoke(this, new 
+                            var r = dbInit?.Invoke(this, new
                                 CustomParams_RematchedUpdate(ShortsIndex, dir));
                             if (r is bool res) Valid = res;
 
@@ -492,38 +492,24 @@ namespace VideoGui
 
                 if (Valid)
                 {
-                    if (scraperModule is not null && !scraperModule.IsClosed)
+
+
+
+                    WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
+                    string gUrl = webAddressBuilder.Dashboard().Address;
+                    int Maxuploads = (txtTotalUploads.Text != "") ? txtTotalUploads.Text.ToInt(100) : 100;
+                    int UploadsPerSlot = (txtMaxUpload.Text != "") ? txtMaxUpload.Text.ToInt(5) : 5;
+                    if (Maxuploads > lblShortNo.Content.ToInt())
                     {
-                        if (scraperModule.IsClosing) scraperModule.Close();
-                        while (!scraperModule.IsClosing)
-                        {
-                            Thread.Sleep(100);
-                        }
-                        scraperModule.Close();
-                        scraperModule = null;
-                    }
-                    if (scraperModule is not null && scraperModule.IsClosed)
-                    {
-                        scraperModule = null;
+                        Maxuploads = lblShortNo.Content.ToInt();
                     }
 
-                    if (scraperModule is null)
-                    {
-                        WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
-                        string gUrl = webAddressBuilder.Dashboard().Address;
-                        int Maxuploads = (txtTotalUploads.Text != "") ? txtTotalUploads.Text.ToInt(100) : 100;
-                        int UploadsPerSlot = (txtMaxUpload.Text != "") ? txtMaxUpload.Text.ToInt(5) : 5;
-                        if (Maxuploads > lblShortNo.Content.ToInt())
-                        {
-                            Maxuploads = lblShortNo.Content.ToInt();
-                        }
+                    var xscraperModule = new ScraperModule(dbInit, doOnFinish, gUrl, Maxuploads, UploadsPerSlot, 0, true);
 
-                        scraperModule = new ScraperModule(dbInit, doOnFinish, gUrl, Maxuploads, UploadsPerSlot, 0, true);
+                    xscraperModule.ShowActivated = true;
+                    Hide();
+                    xscraperModule.Show();
 
-                        scraperModule.ShowActivated = true;
-                        Hide();
-                        scraperModule.Show();
-                    }
                 }
             }
             catch (Exception ex)
@@ -672,7 +658,7 @@ namespace VideoGui
 
                     int descid = DoDescSelectFrm.Id;
                     CancellationTokenSource cts = new CancellationTokenSource();
-                    connectionStr.ExecuteReader(GetShortsDirectorySql(ShortsIndex), cts,(FbDataReader r) =>
+                    connectionStr.ExecuteReader(GetShortsDirectorySql(ShortsIndex), cts, (FbDataReader r) =>
                     {
                         linkeddescid = (r["LINKEDDESCIDS"] is string did ? did : "");
                         cts.Cancel();
@@ -723,7 +709,7 @@ namespace VideoGui
                     {
                         string sqle = GetShortsDirectorySql(tds.Id);
                         CancellationTokenSource cts = new CancellationTokenSource();
-                        connectionStr.ExecuteReader(sqle, cts,(FbDataReader r) =>
+                        connectionStr.ExecuteReader(sqle, cts, (FbDataReader r) =>
                         {
                             int titleid = r["TITLEID"].ToInt(-1);
                             int descid = r["DESCID"].ToInt(-1);

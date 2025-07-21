@@ -27,22 +27,19 @@ namespace VideoGui
     {
         databasehook<Object> ModuleCallBack = null;
         public bool IsClosed = false, IsClosing = false, IsCopy = false;
-        ActionScheduleSelector frmActionScheduleSelector = null;
-        SchedulingSelectEditor frmSchedulingSelectEditor = null;
-        SelectReleaseSchedule selectReleaseSchedule = null;
         Nullable<DateTime> actionDate = null, completeDate = null;
         Nullable<DateOnly> scheduleDate = null;
         Nullable<TimeSpan> scheduleTimeStart = null, scheduleTimeEnd = null;
         public int actionScheduleID = -1;
 
-        public ScheduleActioner(OnFinish DoOnFinish, databasehook<Object> _ModuleCallBack)
+        public ScheduleActioner(OnFinishIdObj DoOnFinish, databasehook<Object> _ModuleCallBack)
         {
             try
             {
                 InitializeComponent();
                 ModuleCallBack = _ModuleCallBack;
                 Closing += (s, e) => { IsClosing = true; };
-                Closed += (s, e) => { IsClosed = true; DoOnFinish?.Invoke(); };
+                Closed += (s, e) => { IsClosed = true; DoOnFinish?.Invoke(this,-1); };
             }
             catch (Exception ex)
             {
@@ -68,23 +65,10 @@ namespace VideoGui
         {
             try
             {
-                if (selectReleaseSchedule is not null)
-                {
-                    if (!selectReleaseSchedule.IsClosed)
-                    {
-                        selectReleaseSchedule.Close();
-                        while (!selectReleaseSchedule.IsClosed)
-                        {
-                            Thread.Sleep(100);
-                            System.Windows.Forms.Application.DoEvents();
-                        }
-                    }
-                    selectReleaseSchedule = null;
-                }
-                selectReleaseSchedule = new SelectReleaseSchedule(selectReleaseSchedule_OnFinish, ModuleCallBack);
+                var _selectReleaseSchedule = new SelectReleaseSchedule(selectReleaseSchedule_OnFinish, ModuleCallBack);
                 Hide();
-                selectReleaseSchedule.ShowActivated = true;
-                selectReleaseSchedule.Show();
+                _selectReleaseSchedule.ShowActivated = true;
+                _selectReleaseSchedule.Show();
             }
             catch (Exception ex)
             {
@@ -92,24 +76,16 @@ namespace VideoGui
             }
         }
 
-        private void selectReleaseSchedule_OnFinish()
+        private void selectReleaseSchedule_OnFinish(object sender, int id)
         {
             try
             {
                 Show();
                 int LastId = -1;
-                if (selectReleaseSchedule is not null)
+                if (sender is SelectReleaseSchedule srs)
                 {
-                    txtSchName.Text = (selectReleaseSchedule.SelectedId != -1) ? selectReleaseSchedule.SelectedItem : txtSchName.Text;
-                    if (selectReleaseSchedule.IsClosing)
-                    {
-                        while (selectReleaseSchedule is not null && !selectReleaseSchedule.IsClosed)
-                        {
-                            Thread.Sleep(100);
-                            System.Windows.Forms.Application.DoEvents();
-                            if (selectReleaseSchedule is null) break;
-                        }
-                    }
+                    txtSchName.Text = (srs.SelectedId != -1) ? srs.SelectedItem : txtSchName.Text;
+                    srs = null;
                 }
             }
             catch (Exception ex)
@@ -118,59 +94,16 @@ namespace VideoGui
             }
         }
 
-        private void SchedulingSelectEditor_OnFinish()
-        {
-            try
-            {
-                Show();
-                int LastId = -1;
-                if (frmSchedulingSelectEditor is not null)
-                {
-                    LastId = frmSchedulingSelectEditor.TitleId;
-                    txtSchName.Text = (LastId != -1) ? frmSchedulingSelectEditor.Title : txtSchName.Text;
-                    if (frmSchedulingSelectEditor.IsClosing)
-                    {
-                        while (frmSchedulingSelectEditor.IsClosing)
-                        {
-                            Thread.Sleep(100);
-                            System.Windows.Forms.Application.DoEvents();
-                            if (frmSchedulingSelectEditor is null) break;
-                        }
-                    }
-                    if (frmSchedulingSelectEditor.IsClosed)
-                    {
-                        frmSchedulingSelectEditor = null;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite($"SchedulingSelectEditor_OnFinish - {this} {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
-            }
-        }
+       
 
         private void BtnSelectAction_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                if (frmActionScheduleSelector is not null)
-                {
-                    if (!frmActionScheduleSelector.IsClosed)
-                    {
-                        frmActionScheduleSelector.Close();
-                        while (!frmActionScheduleSelector.IsClosed)
-                        {
-                            Thread.Sleep(100);
-                            System.Windows.Forms.Application.DoEvents();
-                        }
-                    }
-                    frmActionScheduleSelector = null;
-                }
-                frmActionScheduleSelector = new ActionScheduleSelector(ActionScheduleSelector_OnFinish, ModuleCallBack);
+                var _frmActionScheduleSelector = new ActionScheduleSelector(ActionScheduleSelector_OnFinish, ModuleCallBack);
                 Hide();
-                frmActionScheduleSelector.ShowActivated = true;
-                frmActionScheduleSelector.Show();
-
+                _frmActionScheduleSelector.ShowActivated = true;
+                _frmActionScheduleSelector.Show();
             }
             catch (Exception ex)
             {
@@ -251,26 +184,20 @@ namespace VideoGui
             }
         }
 
-        private void ActionScheduleSelector_OnFinish()
+        private void ActionScheduleSelector_OnFinish(object sender, int id)
         {
             try
             {
                 Show();
-                if (frmActionScheduleSelector is not null)
+                if (sender is ActionScheduleSelector ast)
                 {
-                    txtActionName.Text = (frmActionScheduleSelector.PersistId != -1) ? frmActionScheduleSelector.Title : txtActionName.Text;
-                    if (!frmActionScheduleSelector.IsClosing)
+                    txtActionName.Text = (ast.PersistId != -1) ? ast.Title : "";
+                    if (ast.IsClosing)
                     {
-                        while (!frmActionScheduleSelector.IsClosed)
-                        {
-                            Thread.Sleep(100);
-                            System.Windows.Forms.Application.DoEvents();
-                        }
+                       Thread.Sleep(100);
+                       System.Windows.Forms.Application.DoEvents();
                     }
-                    if (frmActionScheduleSelector.IsClosed)
-                    {
-                        frmActionScheduleSelector = null;
-                    }
+                    ast = null;
                 }
             }
             catch (Exception ex)

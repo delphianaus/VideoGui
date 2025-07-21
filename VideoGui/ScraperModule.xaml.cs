@@ -129,7 +129,7 @@ namespace VideoGui
         databasehook<object> dbInitializer = null;
         List<Rematched> RematchedList = new(); // <shortname>
                                                // List<ShortsDirectory> ShortsDirectories = new();
-        OnFinishId DoOnFinish = null;
+        OnFinishIdObj DoOnFinish = null;
         System.Threading.Timer UploadsTimer = null;
         TimeOnly CurrentTime = new TimeOnly();
         DateOnly CurrentDate = DateOnly.FromDateTime(DateTime.Now);
@@ -191,7 +191,7 @@ namespace VideoGui
             }
         }
 
-        public ScraperModule(databasehook<object> _dbInit, OnFinishId _OnFinish, List<string> directories, bool IsShort)
+        public ScraperModule(databasehook<object> _dbInit, OnFinishIdObj _OnFinish, List<string> directories, bool IsShort)
         {
             try
             {
@@ -222,7 +222,7 @@ namespace VideoGui
                 Closed += (s, e) =>
                 {
                     IsClosed = true;
-                    DoOnFinish?.Invoke(EventId);
+                    DoOnFinish?.Invoke(this, EventId);
                 };
 
 
@@ -265,7 +265,7 @@ namespace VideoGui
             }
         }
         string TargetUrl = "";
-        public ScraperModule(databasehook<object> _dbInit, OnFinishId _OnFinish, string _Default_url, string _TargetUrl, int _EventId)
+        public ScraperModule(databasehook<object> _dbInit, OnFinishIdObj _OnFinish, string _Default_url, string _TargetUrl, int _EventId)
         {
             try
             {
@@ -296,7 +296,7 @@ namespace VideoGui
                 Closed += (s, e) =>
                 {
                     IsClosed = true;
-                    DoOnFinish?.Invoke(EventId);
+                    DoOnFinish?.Invoke(this, EventId);
                 };
                 webAddressBuilder = new WebAddressBuilder(null, ReportNewAddress, "UCdMH7lMpKJRGbbszk5AUc7w");
                 wv2Dictionary.Add(1, wv2A1);//20
@@ -355,7 +355,7 @@ namespace VideoGui
             }
         }
 
-        public ScraperModule(databasehook<object> _dbInit, OnFinishId _OnFinish, string _Default_url,
+        public ScraperModule(databasehook<object> _dbInit, OnFinishIdObj _OnFinish, string _Default_url,
             Nullable<DateTime> Start, Nullable<DateTime> End, int MaxUoploads,
             List<ListScheduleItems> _listSchedules, int _eventid, bool _IsTest)
         {
@@ -389,7 +389,7 @@ namespace VideoGui
                 Closed += (s, e) =>
                 {
                     IsClosed = true;
-                    DoOnFinish?.Invoke(EventId);
+                    DoOnFinish?.Invoke(this, EventId);
                 };
 
 
@@ -413,7 +413,7 @@ namespace VideoGui
         }
 
         public bool NewSession = false;
-        public ScraperModule(databasehook<object> _dbInit, OnFinishId _OnFinish, string _Default_url,
+        public ScraperModule(databasehook<object> _dbInit, OnFinishIdObj _OnFinish, string _Default_url,
             int maxuploads = 100, int slotsperupload = 5, int _EventId = -1, bool _NewSession = false)
         {
             try
@@ -445,7 +445,7 @@ namespace VideoGui
                 Closed += (s, e) =>
                 {
                     IsClosed = true;
-                    DoOnFinish?.Invoke(EventId);
+                    DoOnFinish?.Invoke(this, EventId);
                 };
 
                 webAddressBuilder = new WebAddressBuilder(null, null, "UCdMH7lMpKJRGbbszk5AUc7w");
@@ -488,7 +488,7 @@ namespace VideoGui
             }
         }
 
-        public ScraperModule(databasehook<object> _dbInit, OnFinishId _OnFinish, string _Default_url, WebView2 wb2)
+        public ScraperModule(databasehook<object> _dbInit, OnFinishIdObj _OnFinish, string _Default_url, WebView2 wb2)
         {
             try
             {
@@ -517,7 +517,7 @@ namespace VideoGui
                 Closed += (s, e) =>
                 {
                     IsClosed = true;
-                    DoOnFinish?.Invoke(EventId);
+                    DoOnFinish?.Invoke(this, EventId);
                 };
 
 

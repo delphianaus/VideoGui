@@ -45,11 +45,8 @@ namespace VideoGui
         public RemoveRecordDelegate DoRemoveRecord;
         public SetFilterAge DoSetFilterAge;
         public SetFilterString DoSetFilterString;
-        public ComplexFinished ComplexOnClose;
-        
         public GetFilerString DoGetFilerString;
         databasehook<object> ModuleCallBack = null;
-
         public GetFilterAges DoGetFilterAges;
         public Visibility deletemenuvisible = Visibility.Visible;
         public Visibility AgeFilter = Visibility.Collapsed;
@@ -57,10 +54,10 @@ namespace VideoGui
         public CustomStringEntry SourceDirectoryEntry = null;
         public CustomStringEntry DestinationDirectoryEntry = null;
         public CustomStringEntry DestinationFileEntry = null;
-
+        public bool IsClosing = false, IsClosed = false;
         public ComplexSchedular(databasehook<object> _ModuleCallBack, AddRecordDelegate _AdddRecord,
             RemoveRecordDelegate _RemoveRecord,
-            ComplexFinished _ComplexFinished, SetFilterAge _SetFilterAge,
+            OnFinishIdObj _ComplexFinished, SetFilterAge _SetFilterAge,
             SetFilterString _SetFilterString, GetFilterAges _GetFilterAges,
             GetFilerString _GetFilterString)
         {
@@ -73,12 +70,17 @@ namespace VideoGui
                 DoAddRecord = _AdddRecord;
                 DoGetFilterAges = _GetFilterAges;
                 DoRemoveRecord = _RemoveRecord;
-                ComplexOnClose = _ComplexFinished;
-                
-
                 DoSetFilterAge = _SetFilterAge;
                 DoSetFilterString = _SetFilterString;
                 DoGetFilerString = _GetFilterString;
+                Closed += (s, e) => 
+                {
+                    IsClosing = false;
+                    IsClosed = true;
+                    _ComplexFinished?.Invoke(this, -1); 
+                };
+                Closing += (s, e) => { IsClosing = true; };
+                SetupHandlers();
             }
             catch (Exception ex)
             {

@@ -1,4 +1,4 @@
-﻿<Window x:Name="frmMultiShortsUploader" x:Class="VideoGui.MultiShortsUploader"
+<Window x:Name="frmMultiShortsUploader" x:Class="VideoGui.MultiShortsUploader"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -33,67 +33,88 @@
             </Setter>
         </Style>
     </Window.Resources>
-    <Grid Margin="0,0,0,3">
-        <MSU:MultiListbox x:Name="msuShorts" Header="Active Shorts Directory" 
-           BorderBrush="Black" BorderThickness="2" Height="189" VerticalAlignment="Top" Width="558" Margin="0,0,1,0">
-            <MSU:MultiListbox.ColumnDefinitions>
-                <MSU:MultiListboxColumnDefinition HeaderText="Shorts Directory" 
+    <ScrollViewer x:Name="MainScroller" VerticalScrollBarVisibility="Hidden" 
+                  HorizontalScrollBarVisibility="Disabled" HorizontalAlignment="Left" VerticalAlignment="Top">
+        <Grid Width="560" Height="873" x:Name="MainGrid" HorizontalAlignment="Left" VerticalAlignment="Top">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <!-- Loading Panel -->
+                <RowDefinition Height="Auto"/>
+                <!-- Main Content -->
+            </Grid.RowDefinitions>
+
+            <!-- Loading Panel -->
+            <Canvas x:Name="LoadingPanel" Height="420" HorizontalAlignment="Left" Width="556" VerticalAlignment="Top">
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Canvas.Left="179" Canvas.Top="189">
+                    <TextBlock Text="Loading..." FontSize="24" HorizontalAlignment="Center" Margin="0,0,0,10"/>
+                    <ProgressBar IsIndeterminate="True" Width="200" Height="20"/>
+                </StackPanel>
+            </Canvas>
+
+            <!-- Main Content -->
+            <Canvas x:Name="MainContent" Grid.Row="1" Height="420" 
+                    HorizontalAlignment="Left" Width="558" VerticalAlignment="Top">
+                <MSU:MultiListbox x:Name="msuShorts" Header="Active Shorts Directory" 
+                   BorderBrush="Black" BorderThickness="2" VerticalAlignment="Center" Width="560" HorizontalAlignment="Left" Height="154">
+                    <MSU:MultiListbox.ColumnDefinitions>
+                        <MSU:MultiListboxColumnDefinition HeaderText="Shorts Directory" 
                     ContentMargin="0,0,0,0"
                    DataField="DirectoryName" Width="400" ComponentType="TextBlock"/>
-                <MSU:MultiListboxColumnDefinition HeaderText="Number Of Shorts"
+                        <MSU:MultiListboxColumnDefinition HeaderText="Number Of Shorts"
                    ContentHorizontalAlignment="Center"  ContentMargin="0,0,0,0" 
                    DataField="NumberOfShorts" Width="105" ComponentType="TextBlock"/>
-            </MSU:MultiListbox.ColumnDefinitions>
-            <MSU:MultiListbox.ItemsContextMenu>
-                <ContextMenu>
-                    <MenuItem Header="Move Directory" Click="mnuMoveDirectory_Click"/>
-                    <MenuItem Header="Add to Selected Directories" Click="mnuAddToSelected_Click"/>
-                </ContextMenu>
-            </MSU:MultiListbox.ItemsContextMenu>
-        </MSU:MultiListbox>
-        <MSU:MultiListbox x:Name="msuSchedules" Header="Active Schedules" Width="558"
+                    </MSU:MultiListbox.ColumnDefinitions>
+                    <MSU:MultiListbox.ItemsContextMenu>
+                        <ContextMenu>
+                            <MenuItem Header="Move Directory" Click="mnuMoveDirectory_Click"/>
+                            <MenuItem Header="Add to Selected Directories" Click="mnuAddToSelected_Click"/>
+                        </ContextMenu>
+                    </MSU:MultiListbox.ItemsContextMenu>
+                </MSU:MultiListbox>
+                <MSU:MultiListbox x:Name="msuSchedules" Header="Active Schedules" Width="560" Canvas.Top="164"
              VerticalAlignment="Top"  VerticalContentAlignment="Bottom" 
-          Margin="0,193,0,0" BorderBrush="Black" BorderThickness="2" Height="197">
-            <MSU:MultiListbox.ColumnDefinitions>
-                <MSU:MultiListboxColumnDefinition DataField="Id" Width="0" 
+           BorderBrush="Black" BorderThickness="2" Height="211" HorizontalAlignment="Center">
+                    <MSU:MultiListbox.ColumnDefinitions>
+                        <MSU:MultiListboxColumnDefinition DataField="Id" Width="0" 
                    ComponentType="TextBlock"/>
-                <MSU:MultiListboxColumnDefinition HeaderText="Shorts Directory" 
+                        <MSU:MultiListboxColumnDefinition HeaderText="Shorts Directory" 
                  ContentVerticalAlignment="Center" ContentMargin="0,0,0,0"
                  DataField="DirectoryName,AutoFontWeight,AutoFontColor" Width="325" 
                  BoundTo="Text,FontWeight,Foreground" ComponentType="TextBlock"/>
-                <MSU:MultiListboxColumnDefinition HeaderText="Number of Shorts" 
+                        <MSU:MultiListboxColumnDefinition HeaderText="Number of Shorts" 
                  ContentHorizontalAlignment="Center" 
                  DataField="NumberOfShorts,AutoFontWeight,AutoFontColor" 
                  BoundTo="Text,FontWeight,Foreground" Width="105" ComponentType="TextBlock"/>
-                <MSU:MultiListboxColumnDefinition HeaderText="Title" Width="50" 
+                        <MSU:MultiListboxColumnDefinition HeaderText="Title" Width="50" 
                    Style="{StaticResource ToggleSetEditStyle}" HeaderPadding="3,0,0,0"
                    Click="Title_ToggleButtonClick"
-                   DataField="IsTitleAvailable" ComponentType="ToggleButton"/>
-                <MSU:MultiListboxColumnDefinition HeaderText="Desc" 
+                                           DataField="IsTitleAvailable" ComponentType="ToggleButton"/>
+                        <MSU:MultiListboxColumnDefinition HeaderText="Desc" 
                   Width="50" Click="Desc_ToggleButtonClick"
                   Style="{StaticResource ToggleSetEditStyle}"
                   DataField="IsDescAvailable" ComponentType="ToggleButton"/>
-                <MSU:MultiListboxColumnDefinition HeaderText="   Last Uploaded" 
+                        <MSU:MultiListboxColumnDefinition HeaderText="   Last Uploaded" 
                    ContentVerticalAlignment="Center"
                    ContentHorizontalAlignment="Center" ContentMargin="0,0,0,0"
                    DataField="LastUploadedFile,AutoFontWeight,AutoFontColor"
                    BoundTo="Text,FontWeight,Foreground" Width="180" ComponentType="TextBlock"/>
-            </MSU:MultiListbox.ColumnDefinitions>
-            <MSU:MultiListbox.ItemsContextMenu>
-                <ContextMenu>
-                    <MenuItem Header="Remove Selected Directories" Click="mnuRemoveSelected_Click"/>
-                </ContextMenu>
-            </MSU:MultiListbox.ItemsContextMenu>
-        </MSU:MultiListbox>
-        <Button Name="BtnClose" Content="Close" HorizontalAlignment="Right"
-                Margin="0,0,6,4" VerticalAlignment="Bottom" Height="25" Width="94" Click="BtnClose_Click"/>
-        <Button x:Name="BtnRunUploaders" Content="Run Uploader" HorizontalAlignment="Left"
-            Margin="6,0,0,4" VerticalAlignment="Bottom" Height="25" Width="94" Click="BtnRunUploaders_Click"/>
-        <Label Content="Uploads Per Slot" Margin="108,0,0,4" HorizontalAlignment="Left" VerticalAlignment="Bottom"/>
-        <TextBox x:Name="txtMaxUpload" Text="5" TextWrapping="Wrap" 
-            KeyDown="txtMaxUpload_KeyDown" LostFocus="txtMaxUpload_LostFocus" Margin="208,397,315,5" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="20" Height="20"/>
-        <Label Content="Max Uploads" Margin="234,0,0,4" VerticalAlignment="Bottom" HorizontalAlignment="Left"/>
-        <TextBox x:Name="txtTotalUploads" Text="100" TextWrapping="Wrap" 
-            KeyDown="txtTotalUploads_KeyDown" Margin="320,0,0,4" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="30" Height="20"/>
-    </Grid>
+                    </MSU:MultiListbox.ColumnDefinitions>
+                    <MSU:MultiListbox.ItemsContextMenu>
+                        <ContextMenu>
+                            <MenuItem Header="Remove Selected Directories" Click="mnuRemoveSelected_Click"/>
+                        </ContextMenu>
+                    </MSU:MultiListbox.ItemsContextMenu>
+                </MSU:MultiListbox>
+                <Button Name="BtnClose" Content="Close" HorizontalAlignment="Center" VerticalAlignment="Top" Height="25" Width="94" Click="BtnClose_Click" Canvas.Left="438" Canvas.Top="388"/>
+                <Button x:Name="BtnRunUploaders" Content="Run Uploader" HorizontalAlignment="Center" VerticalAlignment="Top" Height="25" Width="94" Click="BtnRunUploaders_Click" Canvas.Left="8" Canvas.Top="388"/>
+                <Label x:Name="lblupload" Content="Uploads Per Slot" HorizontalAlignment="Center" VerticalAlignment="Top" Canvas.Left="108" Canvas.Top="388"/>
+                <TextBox x:Name="txtMaxUpload" Text="5" TextWrapping="Wrap" 
+            KeyDown="txtMaxUpload_KeyDown" LostFocus="txtMaxUpload_LostFocus" VerticalAlignment="Top" HorizontalAlignment="Center" Width="20" Height="20" Canvas.Left="208" Canvas.Top="390"/>
+                <Label x:Name="lblmax" Content="Max Uploads" VerticalAlignment="Top" HorizontalAlignment="Center" Canvas.Left="234" Canvas.Top="388"/>
+                <TextBox x:Name="txtTotalUploads" Text="100" TextWrapping="Wrap" 
+            KeyDown="txtTotalUploads_KeyDown" VerticalAlignment="Top" 
+                             HorizontalAlignment="Center" Width="30" Height="20" Canvas.Left="320" Canvas.Top="390"/>
+            </Canvas>
+        </Grid>
+    </ScrollViewer>
 </Window>

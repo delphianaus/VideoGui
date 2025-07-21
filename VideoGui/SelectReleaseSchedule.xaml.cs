@@ -23,24 +23,26 @@ namespace VideoGui
     /// </summary>
     public partial class SelectReleaseSchedule : Window
     {
-        OnFinish DoOnFinish = null;
         public bool IsApplied = false,  IsClosing = false, IsClosed = false;
         databasehook<object> dbInitialzer = null;
         public string SelectedItem = "";
         public int SelectedId = -1;
-        public SchedulingSelectEditor schedulingSelectEditor = null;
 
 
-        public SelectReleaseSchedule(OnFinish _OnFinish, databasehook<object> _dbInitialzer, bool Is_Applied = false)
+        public SelectReleaseSchedule(OnFinishIdObj _OnFinish, databasehook<object> _dbInitialzer, bool Is_Applied = false)
         {
             try
             {
                 InitializeComponent();
                 IsApplied = Is_Applied;
-                DoOnFinish = _OnFinish;
                 dbInitialzer = _dbInitialzer;
                 Closing += (s, e) => { IsClosing = true; };
-                Closed += (s, e) => { IsClosed = true; _OnFinish?.Invoke(); };
+                Closed += (s, e) => 
+                { 
+                    dbInitialzer?.Invoke(this, new CustomParams_Finish(txtScheduleName.Text)); 
+                    IsClosed = true; 
+                    _OnFinish?.Invoke(this,-1); 
+                };
             }
             catch (Exception ex)
             {
@@ -71,23 +73,12 @@ namespace VideoGui
                 {
                     if (SMN != null && SMN.Id != -1)
                     {
-                        if (schedulingSelectEditor is not null)
-                        {
-                            if (schedulingSelectEditor.IsClosing) schedulingSelectEditor.Close();
-                            while (!schedulingSelectEditor.IsClosed)
-                            {
-                                Thread.Sleep(100);
-                                System.Windows.Forms.Application.DoEvents();
-                            }
-                            schedulingSelectEditor.Close();
-                            schedulingSelectEditor = null;
-                        }
-
-                        schedulingSelectEditor = new SchedulingSelectEditor(SchedulingEditorOnFinish, dbInitialzer);
-                        schedulingSelectEditor.ShowActivated = true;
-                        schedulingSelectEditor.TitleId = SMN.Id;
+                        
+                        var _schedulingSelectEditor = new SchedulingSelectEditor(SchedulingEditorOnFinish, dbInitialzer);
+                        _schedulingSelectEditor.ShowActivated = true;
+                        _schedulingSelectEditor.TitleId = SMN.Id;
                         Hide();
-                        schedulingSelectEditor.Show();
+                        _schedulingSelectEditor.Show();
 
                     }
                 }
@@ -98,20 +89,20 @@ namespace VideoGui
             }
         }
 
-        private void SchedulingEditorOnFinish()
+        private void SchedulingEditorOnFinish(object sender, int id)
         {
             try
             {
                 Show();
                 Task.Run(() =>
                 {
-                    if (schedulingSelectEditor is not null && !schedulingSelectEditor.IsClosed)
+                    if (sender is SchedulingSelectEditor se && !se.IsClosed)
                     {
-                        while (schedulingSelectEditor.IsClosing)
+                        while (se.IsClosing)
                         {
                             Thread.Sleep(100);
                         }
-                        schedulingSelectEditor = null;
+                        se = null;
                     }
                 });
             }
@@ -137,18 +128,7 @@ namespace VideoGui
             }
         }
 
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
-        {
-            try
-            {
-                dbInitialzer?.Invoke(this, new CustomParams_Finish(txtScheduleName.Text));
-                DoOnFinish?.Invoke();
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite($"Window_Closing {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
-            }
-        }
+       
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {

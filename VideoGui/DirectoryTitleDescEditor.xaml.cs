@@ -214,7 +214,7 @@ namespace VideoGui
             }
         }
 
-        public DirectoryTitleDescEditor(databasehook<object> _dbInit, OnFinish _DoOnFinished)
+        public DirectoryTitleDescEditor(databasehook<object> _dbInit, OnFinishIdObj _DoOnFinished)
         {
             try
             {
@@ -224,7 +224,7 @@ namespace VideoGui
                 Closed += (s, e) =>
                 {
                     IsClosed = true;
-                    _DoOnFinished?.Invoke();
+                    _DoOnFinished?.Invoke(this,-1);
                 };
             }
             catch (Exception ex)

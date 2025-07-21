@@ -22,36 +22,21 @@ namespace VideoGui
     /// </summary>
     public partial class SchedulingSelectEditor : Window
     {
-        OnFinish DoOnFinish = null;
-        SelectReleaseSchedule SRS = null;
         databasehook<object> dbInitialzer = null;
         public bool IsClosing = false, IsClosed = false;
         public int TitleId = -1;
-        public SchedulingSelectEditor(OnFinish _OnFinish, databasehook<object> _dbInitialzer)
+        public SchedulingSelectEditor(OnFinishIdObj _OnFinish, databasehook<object> _dbInitialzer)
         {
             try
             {
                 InitializeComponent();
                 Closing += (s, e) => { IsClosing = true; };
-                Closed += (s, e) => { IsClosed = true; _OnFinish?.Invoke(); };
-                DoOnFinish = _OnFinish;
+                Closed += (s, e) => { IsClosed = true; _OnFinish?.Invoke(this,-1); };
                 dbInitialzer = _dbInitialzer;
             }
             catch (Exception ex)
             {
                 ex.LogWrite($"SchedulingSelectEditor Constuctor {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
-            }
-        }
-
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
-        {
-            try
-            {
-                DoOnFinish?.Invoke();
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite($"Window_Closing {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
             }
         }
 
@@ -154,7 +139,7 @@ namespace VideoGui
             }
         }
 
-        private void DoShow()
+        private void DoShow(object sender, int id)
         {
             try
             {
@@ -170,18 +155,10 @@ namespace VideoGui
         {
             try
             {
-                if (SRS is not null)
-                {
-                    SRS.Close();
-                    SRS = null;
-                }
-
-                SRS = new SelectReleaseSchedule(() => { DoShow(); }, dbInitialzer);
-                SRS.Show();
-                if (SRS is not null)
-                {
-                    Hide();
-                }
+                Hide();
+                var _SRS = new SelectReleaseSchedule(DoShow, dbInitialzer);
+                _SRS.ShowActivated = true;  
+                _SRS.Show();
             }
             catch (Exception ex)
             {

@@ -72,14 +72,14 @@ namespace VideoGui
             }
         }
 
-        public ManualScheduler(databasehook<Object> _ModuleCallBack, OnFinish DoOnFinish)
+        public ManualScheduler(databasehook<Object> _ModuleCallBack, OnFinishIdObj DoOnFinish)
         {
             try
             {
                 InitializeComponent();
                 ModuleCallBack = _ModuleCallBack;
                 Closing += (s, e) => { GetValues(); IsClosing = true; };
-                Closed += (s, e) => { IsClosed = true; DoOnFinish?.Invoke(); };
+                Closed += (s, e) => { IsClosed = true; DoOnFinish?.Invoke(this, -1); };
             }
             catch (Exception ex)
             {

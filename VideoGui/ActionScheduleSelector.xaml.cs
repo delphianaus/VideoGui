@@ -27,15 +27,14 @@ namespace VideoGui
         public bool IsClosed = false, IsClosing = false;
         public string Title = "";
         public int TitleId = -1;
-        ScheduleActioner frmScheduleActioner = null;
-        public ActionScheduleSelector(OnFinish DoOnFinish, databasehook<Object> _ModuleCallBack)
+        public ActionScheduleSelector(OnFinishIdObj DoOnFinish, databasehook<Object> _ModuleCallBack)
         {
             try
             {
                 InitializeComponent();
                 ModuleCallBack = _ModuleCallBack;
                 Closing += (s, e) => { IsClosing = true; };
-                Closed += (s, e) => { IsClosed = true; DoOnFinish?.Invoke(); };
+                Closed += (s, e) => { IsClosed = true; DoOnFinish?.Invoke(this,-1); };
             }
             catch (Exception ex)
             {
@@ -91,22 +90,13 @@ namespace VideoGui
         {
             try
             {
-                if (frmScheduleActioner is not null && !frmScheduleActioner.IsClosed)
-                {
-                    if (frmScheduleActioner.IsClosing) frmScheduleActioner.Close();
-                    while (!frmScheduleActioner.IsClosed)
-                    {
-                        Thread.Sleep(100);
-                    }
-                    frmScheduleActioner.Close();
-                    frmScheduleActioner = null;
-                }
-                frmScheduleActioner = new ScheduleActioner(scheduleActioner_onfinish,ModuleCallBack);
+                
+                var _frmScheduleActioner = new ScheduleActioner(scheduleActioner_onfinish,ModuleCallBack);
                 Hide();
-                frmScheduleActioner.ShowActivated = true;
-                frmScheduleActioner.IsCopy = IsCopy;
-                if (id != -1) frmScheduleActioner.actionScheduleID = id;
-                frmScheduleActioner.Show();
+                _frmScheduleActioner.ShowActivated = true;
+                _frmScheduleActioner.IsCopy = IsCopy;
+                if (id != -1) _frmScheduleActioner.actionScheduleID = id;
+                _frmScheduleActioner.Show();
             }
             catch (Exception ex)
             {
@@ -114,22 +104,16 @@ namespace VideoGui
             }
         }
 
-        private void scheduleActioner_onfinish()
+        private void scheduleActioner_onfinish(object sender, int id)
         {
             try
             {
                 Show();
                 Task.Run(() =>
                 {
-                    if (frmScheduleActioner is not null && !frmScheduleActioner.IsClosed)
+                    if (sender is ScheduleActioner frm)
                     {
-                        if (frmScheduleActioner.IsClosing) frmScheduleActioner.Close();
-                        while (!frmScheduleActioner.IsClosed)
-                        {
-                            Thread.Sleep(100);
-                        }
-                        frmScheduleActioner.Close();
-                        frmScheduleActioner = null;
+                        frm = null;
                     }
                 });
             }

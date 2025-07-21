@@ -365,6 +365,11 @@ namespace CustomComponents.ListBoxExtensions
 
                 // Update visual tree
                 UpdateVisualTree();
+
+                if (true)
+                {
+
+                }
             }
             catch (Exception ex)
             {

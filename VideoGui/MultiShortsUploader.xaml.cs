@@ -36,8 +36,10 @@ namespace VideoGui
         public DescSelectFrm DoDescSelectFrm = null;
         string connectionStr = "";
         ScraperModule scraperModule = null;
-        public bool IsClosing = false, IsClosed = false, Ready = false;
+        public bool IsClosing = false, IsClosed = false, Ready = false, IsFirstResize = false;
+        private bool _isFirstResize = true;
         DispatcherTimer LocationChangedTimer = new DispatcherTimer();
+        DispatcherTimer LocationChanger = new DispatcherTimer();
         public static readonly DependencyProperty Column_WidthProperty =
             DependencyProperty.Register("Column_Width",
             typeof(GridLength), typeof(MultiShortsUploader),
@@ -49,7 +51,7 @@ namespace VideoGui
         }
 
 
-        public MultiShortsUploader(databasehook<object> _dbInit, OnFinish _DoOnFinished)
+        public MultiShortsUploader(databasehook<object> _dbInit, OnFinishIdObj _DoOnFinished)
         {
             try
             {
@@ -65,7 +67,7 @@ namespace VideoGui
                     key.SetValue("MSUtop", Top);
                     key?.Close();
                 };
-                Closed += (s, e) => { IsClosed = true; _DoOnFinished?.Invoke(); };
+                Closed += (s, e) => { IsClosed = true; _DoOnFinished?.Invoke(this, -1); };
                 RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                 string dir = FindUploadPath();
                 key?.Close();
@@ -114,7 +116,7 @@ namespace VideoGui
             }
         }
 
-        DispatcherTimer LocationChanger = new DispatcherTimer();
+
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             try
@@ -130,7 +132,7 @@ namespace VideoGui
                 txtTotalUploads.Text = MaxUploads.NotNullOrEmpty() ? MaxUploads : txtTotalUploads.Text;
                 dbInit?.Invoke(this, new CustomParams_Initialize());
                 key?.Close();
-
+                Ready = false;
 
                 LocationChanger.Interval = TimeSpan.FromMilliseconds(10);
                 LocationChanger.Tick += LocationChanger_Tick;
@@ -150,7 +152,7 @@ namespace VideoGui
                     };
                     LocationChangedTimer.Start();
                 };
-                Ready = true;
+
             }
             catch (Exception ex)
             {
@@ -173,6 +175,36 @@ namespace VideoGui
                 Top = (Top != _top && _top != 0) ? _top : Top;
                 Width = (ActualWidth != _width && _width != 0) ? _width : Width;
                 Height = (ActualHeight != _height && _height != 0) ? _height : Height;
+                MainGrid.Width = Width;
+                MainGrid.Height = Height;
+                LoadingPanel.Height = Height;
+                LoadingPanel.Width = Width;
+                MainScroller.Width = Width;
+                MainScroller.Height = Height;
+                MainContent.Width = Width;
+                MainContent.Height = Height;
+                msuShorts.Width = Width - 15;
+                msuSchedules.Width = msuShorts.Width;
+                msuShorts.Height = 191;
+                msuSchedules.Height = Height - (msuShorts.Height) - 77;
+                var msuShortsBottom = Canvas.GetBottom(msuShorts);
+                Canvas.SetTop(msuSchedules, msuShorts.Height);
+                Canvas.SetTop(BtnClose, Height - 68);
+                Canvas.SetTop(BtnRunUploaders, Height - 68);
+                Canvas.SetLeft(BtnClose, Width - BtnClose.Width - 25);
+                Canvas.SetTop(txtTotalUploads, Height - 66);
+                Canvas.SetTop(txtMaxUpload, Height - 66);
+                Canvas.SetTop(lblupload, Height - 68);
+                Canvas.SetTop(lblmax, Height - 68);
+                LoadingPanel.Visibility = Visibility.Collapsed;
+                MainContent.Visibility = Visibility.Visible;
+                if (IsFirstResize)
+                {
+                    IsFirstResize = false;
+                    LoadingPanel.Height = 0;
+                    MainScroller.ScrollToVerticalOffset(439); // Scroll to the main content
+                }
+                Ready = true;
             }
             catch (Exception ex)
             {
@@ -186,14 +218,36 @@ namespace VideoGui
             {
                 if (IsLoaded && Ready)
                 {
+                    if (_isFirstResize)
+                    {
+                        _isFirstResize = false;
+                        LoadingPanel.Visibility = Visibility.Collapsed;
+                        MainContent.Visibility = Visibility.Visible;
+                    }
                     if (e.HeightChanged)
                     {
-                        msuSchedules.Height = e.NewSize.Height - 269;
+                        MainGrid.Height = e.NewSize.Height;
+                        LoadingPanel.Height = e.NewSize.Height;
+                        MainScroller.Height = e.NewSize.Height;
+                        MainContent.Height = e.NewSize.Height;
+                        msuSchedules.Height = Height - (msuShorts.Height) - 77;
+                        var msuShortsBottom = Canvas.GetBottom(msuShorts);
+                        Canvas.SetTop(msuSchedules, msuShorts.Height);
+                        Canvas.SetTop(BtnClose, e.NewSize.Height - 68);
+                        Canvas.SetTop(BtnRunUploaders, e.NewSize.Height - 68);
+                        Canvas.SetTop(txtTotalUploads, e.NewSize.Height - 66);
+                        Canvas.SetTop(txtMaxUpload, e.NewSize.Height - 66);
+                        Canvas.SetTop(lblupload, e.NewSize.Height - 68);
+                        Canvas.SetTop(lblmax, e.NewSize.Height - 68);
                     }
                     if (e.WidthChanged)
                     {
-                        msuSchedules.Width = e.NewSize.Width - 25;
-                        msuShorts.Width = e.NewSize.Width - 25;
+                        MainScroller.Width = e.NewSize.Width;
+                        MainGrid.Width = e.NewSize.Width;
+                        MainContent.Width = e.NewSize.Width;
+                        msuShorts.Width = e.NewSize.Width - 15;
+                        msuSchedules.Width = msuShorts.Width;
+                        Canvas.SetLeft(BtnClose, e.NewSize.Width - BtnClose.Width - 25);
                         Column_Width = new GridLength(e.NewSize.Width - 135, GridUnitType.Pixel);
                     }
                     if (e.HeightChanged || e.WidthChanged)
@@ -464,7 +518,7 @@ namespace VideoGui
                     string linkedtitleid = "";
                     sql = GetShortsDirectorySql(ShortsIndex);
                     CancellationTokenSource cts = new CancellationTokenSource();
-                    connectionStr.ExecuteReader(sql, cts,(FbDataReader r) =>
+                    connectionStr.ExecuteReader(sql, cts, (FbDataReader r) =>
                     {
                         linkedtitleid = (r["LINKEDTITLEIDS"] is string tidt ? tidt : "");
                         cts.Cancel();
@@ -631,192 +685,185 @@ namespace VideoGui
             }
 
         }
-        private void doOnFinish(int id)
+        private void doOnFinish(object sender, int id)
         {
             try
             {
-                WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
-                string gUrl = webAddressBuilder.Dashboard().Address;
-                RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
-                string rootfolder = FindUploadPath();
-                string BaseDir = key.GetValueStr("shortsdirectory", @"D:\shorts");
-                key?.Close();
-                int cnt = Directory.EnumerateFiles(rootfolder, "*.mp4", SearchOption.AllDirectories).ToList().Count();
-                if (scraperModule is not null && !scraperModule.KilledUploads)
+                if (sender is ScraperModule sa)
                 {
-                    List<string> filesdone = new List<string>();
-                    bool Exc = scraperModule.Exceeded;
-                    filesdone.AddRange(scraperModule.ScheduledOk);
-                    int Uploaded = scraperModule.TotalScheduled;
-                    int shortsleft = Directory.EnumerateFiles(rootfolder, "*.mp4", SearchOption.AllDirectories).ToList().Count();
-                    foreach (var rp in msuSchedules.ItemsSource.OfType<SelectedShortsDirectories>().Where(x => x.IsActive))
-                    {
-                        rp.NumberOfShorts = cnt;
-                        if (cnt == 0) rp.IsActive = false;
-                        string DirPath = rp.DirectoryName;
-                        string newpath = Path.Combine(BaseDir, DirPath);
-                        if (Path.Exists(newpath))
-                        {
-                            shortsleft = Directory.EnumerateFiles(newpath, "*.mp4", SearchOption.AllDirectories).ToList().Count();
-                            rp.NumberOfShorts = shortsleft;
-                            string sql = "UPDATE MULTISHORTSINFO SET NUMBEROFSHORTS = @NUMBEROFSHORTS WHERE LINKEDSHORTSDIRECTORYID = @LINKEDSHORTSDIRECTORYID";
-                            connectionStr.ExecuteNonQuery(sql,
-                                [("@NUMBEROFSHORTS", shortsleft),
-                                ("@LINKEDSHORTSDIRECTORYID", rp.LinkedShortsDirectoryId)]);
-                        }
-                    }
 
-                    bool remove = !msuSchedules.ItemsSource.OfType<SelectedShortsDirectories>().Any(x => x.NumberOfShorts == 0);
-
-
-                    if (remove)
-                    {
-
-                        dbInit?.Invoke(this, new CustomParams_RemoveMulitShortsInfoById(-1));
-                    }
                     
-
-                    if (cnt == 0 )
+                    WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
+                    string gUrl = webAddressBuilder.Dashboard().Address;
+                    RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                    string rootfolder = FindUploadPath();
+                    string BaseDir = key.GetValueStr("shortsdirectory", @"D:\shorts");
+                    key?.Close();
+                    int cnt = Directory.EnumerateFiles(rootfolder, "*.mp4", SearchOption.AllDirectories).ToList().Count();
+                    if (!sa.KilledUploads&& sa.TotalScheduled > 0)
                     {
-                        int acnt = 0;
+                        List<string> filesdone = new List<string>();
+                        bool Exc = sa.Exceeded;
+                        filesdone.AddRange(sa.ScheduledOk);
+                        int Uploaded = sa.TotalScheduled;
+                        int shortsleft = Directory.EnumerateFiles(rootfolder, "*.mp4", SearchOption.AllDirectories).ToList().Count();
                         foreach (var rp in msuSchedules.ItemsSource.OfType<SelectedShortsDirectories>().Where(x => x.IsActive))
                         {
-                            acnt += 1;
-                        }
-                        if (acnt == 0)
-                        {
-                            var item = msuSchedules.ItemsSource.OfType<SelectedShortsDirectories>().FirstOrDefault();
-                            if (item is not null)
+                            break;
+                            //rp.NumberOfShorts = cnt;
+                            if (cnt == 0) rp.IsActive = false;
+                            string DirPath = rp.DirectoryName;
+                            string newpath = Path.Combine(BaseDir, DirPath);
+                            if (Path.Exists(newpath))
                             {
-                                item.IsActive = true;
-                                string newpath = Path.Combine(BaseDir, item.DirectoryName);
-                                if (Path.Exists(newpath))
+                                shortsleft = Directory.EnumerateFiles(newpath, "*.mp4", SearchOption.AllDirectories).ToList().Count();
+                                rp.NumberOfShorts = shortsleft;
+                                string sql = "UPDATE MULTISHORTSINFO SET NUMBEROFSHORTS = @NUMBEROFSHORTS WHERE LINKEDSHORTSDIRECTORYID = @LINKEDSHORTSDIRECTORYID";
+                                connectionStr.ExecuteNonQuery(sql,
+                                    [("@NUMBEROFSHORTS", shortsleft),
+                                ("@LINKEDSHORTSDIRECTORYID", rp.LinkedShortsDirectoryId)]);
+                            }
+                        }
+
+
+
+                        bool remove = !msuSchedules.ItemsSource.OfType<SelectedShortsDirectories>().Any(x => x.NumberOfShorts == 0);
+                        
+
+                        if (remove)
+                        {
+
+                            dbInit?.Invoke(this, new CustomParams_RemoveMulitShortsInfoById(-1));
+                        }
+
+                        if (cnt == 0)
+                        {
+                            int acnt = 0;
+                            foreach (var rp in msuSchedules.ItemsSource.OfType<SelectedShortsDirectories>().Where(x => x.IsActive))
+                            {
+                                acnt += 1;
+                            }
+                            if (acnt == 0)
+                            {
+                                var item = msuSchedules.ItemsSource.OfType<SelectedShortsDirectories>().FirstOrDefault();
+                                if (item is not null)
                                 {
-                                    shortsleft = Directory.EnumerateFiles(newpath, "*.mp4", SearchOption.AllDirectories).ToList().Count();
-                                    item.NumberOfShorts = shortsleft;
-                                    key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
-                                    key.SetValue("UploadPath", newpath);
-                                    key?.Close();
-                                    var Idx = dbInit?.Invoke(this, new CustomParams_GetDirectory(item.DirectoryName));
-                                    if (Idx is int _id)
+                                    item.IsActive = true;
+                                    string newpath = Path.Combine(BaseDir, item.DirectoryName);
+                                    if (Path.Exists(newpath))
                                     {
-                                        if (item.Id != _id)
+                                        shortsleft = Directory.EnumerateFiles(newpath, "*.mp4", SearchOption.AllDirectories).ToList().Count();
+                                        item.NumberOfShorts = shortsleft;
+                                        key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                                        key.SetValue("UploadPath", newpath);
+                                        key?.Close();
+                                        var Idx = dbInit?.Invoke(this, new CustomParams_GetDirectory(item.DirectoryName));
+                                        if (Idx is int _id)
                                         {
-                                            item.Id = _id;
+                                            if (item.Id != _id)
+                                            {
+                                                item.Id = _id;
+                                            }
                                         }
                                     }
                                 }
                             }
+                            else
+                            {
+                                var item = msuSchedules.ItemsSource.OfType<SelectedShortsDirectories>().Where(x => x.IsActive).FirstOrDefault();
+                                if (item is not null)
+                                {
+                                    string newpath = Path.Combine(BaseDir, item.DirectoryName);
+                                    if (Path.Exists(newpath))
+                                    {
+                                        shortsleft = Directory.EnumerateFiles(newpath, "*.mp4", SearchOption.AllDirectories).ToList().Count();
+                                        item.NumberOfShorts = shortsleft;
+                                        key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                                        key.SetValue("UploadPath", newpath);
+                                        key?.Close();
+                                        var Idx = dbInit?.Invoke(this, new CustomParams_GetDirectory(item.DirectoryName));
+                                        if (Idx is int _id)
+                                        {
+                                            if (item.Id != _id)
+                                            {
+                                                item.Id = _id;
+                                            }
+                                        }
+
+                                    }
+                                }
+                            }
+                        }
+                        if (!Exc && shortsleft > 0 && Uploaded < txtTotalUploads.Text.ToInt())
+                        {
+                            int Maxuploads = (txtTotalUploads.Text != "") ? txtTotalUploads.Text.ToInt(100) : 100;
+                            int UploadsPerSlot = (txtMaxUpload.Text != "") ? txtMaxUpload.Text.ToInt(5) : 5;
+                            var sscraperModule = new ScraperModule(dbInit, doOnFinish, gUrl, Maxuploads, UploadsPerSlot, 0, false);
+                            sscraperModule.ShowActivated = true;
+                            sscraperModule.ScheduledOk.AddRange(filesdone);
+                            Hide();
+                            Process[] webView2Processes = Process.GetProcessesByName("MicrosoftEdgeWebview2");
+                            foreach (Process process in webView2Processes)
+                            {
+                                process.Kill();
+                            }
+                            sscraperModule.Show();
+                            return;
                         }
                         else
                         {
-                            var item = msuSchedules.ItemsSource.OfType<SelectedShortsDirectories>().Where(x => x.IsActive).FirstOrDefault();
-                            if (item is not null)
+                            Show();
+                            bool Processed = false;
+                            int ucnt = Uploaded;
+                            if (Uploaded > 0)
                             {
-                                string newpath = Path.Combine(BaseDir, item.DirectoryName);
-                                if (Path.Exists(newpath))
+                                foreach (var rp in msuSchedules.ItemsSource.OfType<SelectedShortsDirectories>().Where(x => x.IsActive))
                                 {
-                                    shortsleft = Directory.EnumerateFiles(newpath, "*.mp4", SearchOption.AllDirectories).ToList().Count();
-                                    item.NumberOfShorts = shortsleft;
-                                    key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
-                                    key.SetValue("UploadPath", newpath);
-                                    key?.Close();
-                                    var Idx = dbInit?.Invoke(this, new CustomParams_GetDirectory(item.DirectoryName));
-                                    if (Idx is int _id)
+                                    rp.NumberOfShorts = shortsleft;
+                                    int linkedId = rp.LinkedShortsDirectoryId;
+                                    CancellationTokenSource ctscc = new CancellationTokenSource();
+                                    string SQLB = "SELECT * FROM UploadsRecord ORDER BY RDB$RECORD_VERSION DESC ROWS 100;";
+                                    connectionStr.ExecuteReader(SQLB, ctscc, (FbDataReader r) =>
                                     {
-                                        if (item.Id != _id)
+
+                                        string UploadFile = (r["UPLOADFILE"] is string f) ? f : "";
+                                        int idx = UploadFile.Split('_').LastOrDefault().ToInt(-1);
+                                        if (dbInit?.Invoke(this, new CustomParams_RematchedLookup(idx)) is int trs)
                                         {
-                                            item.Id = _id;
+                                            idx = trs;
                                         }
-                                    }
 
-                                }
-                            }
-                        }
-                    }
-                    if (!Exc && shortsleft > 0 && Uploaded < txtTotalUploads.Text.ToInt())
-                    {
-                        int Maxuploads = (txtTotalUploads.Text != "") ? txtTotalUploads.Text.ToInt(100) : 100;
-                        int UploadsPerSlot = (txtMaxUpload.Text != "") ? txtMaxUpload.Text.ToInt(5) : 5;
-
-
-                        if (scraperModule is not null && !scraperModule.IsClosed)
-                        {
-                            if (scraperModule.IsClosing) scraperModule.Close();
-                            while (!scraperModule.IsClosing)
-                            {
-                                Thread.Sleep(100);
-                            }
-                            scraperModule.Close();
-                            scraperModule = null;
-                        }
-
-                        scraperModule = null;
-                        scraperModule = new ScraperModule(dbInit, doOnFinish, gUrl, Maxuploads, UploadsPerSlot, 0, false);
-                        scraperModule.ShowActivated = true;
-                        scraperModule.ScheduledOk.AddRange(filesdone);
-                        Hide();
-                        Process[] webView2Processes = Process.GetProcessesByName("MicrosoftEdgeWebview2");
-                        foreach (Process process in webView2Processes)
-                        {
-                            process.Kill();
-                        }
-                        scraperModule.Show();
-                        return;
-                    }
-                    else
-                    {
-                        Show();
-                        bool Processed = false;
-                        int ucnt = Uploaded;
-                        foreach (var rp in msuSchedules.ItemsSource.OfType<SelectedShortsDirectories>().Where(x => x.IsActive))
-                        {
-                            rp.NumberOfShorts = shortsleft;
-                            int linkedId = rp.LinkedShortsDirectoryId;
-                            string SQLB = "SELECT * FROM UploadsRecord ORDER BY RDB$RECORD_VERSION DESC ROWS 100;";
-                            connectionStr.ExecuteReader(SQLB, (FbDataReader r) =>
-                            {
-                                if (Processed) return;
-                                string UploadFile = (r["UPLOADFILE"] is string f) ? f : "";
-                                int idx = UploadFile.Split('_').LastOrDefault().ToInt(-1);
-                                if (dbInit?.Invoke(this, new CustomParams_RematchedLookup(idx)) is int trs)
-                                {
-                                    idx = trs;
+                                        if (idx == linkedId)
+                                        {
+                                            DateTime dtr = (r["UPLOAD_DATE"] is DateTime dt) ? dt : DateTime.Now.AddYears(-200);
+                                            TimeSpan ttr = (r["UPLOAD_TIME"] is TimeSpan ts) ? ts : TimeSpan.Zero;
+                                            if (dtr.Year > 2000)
+                                            {
+                                                rp.LastUploadedDateFile = dtr.AtTime(TimeOnly.FromTimeSpan(ttr));
+                                            }
+                                        }
+                                        ctscc.Cancel();
+                                    });
                                 }
 
-                                if (idx == linkedId)
-                                {
-                                    DateTime dtr = (r["UPLOAD_DATE"] is DateTime dt) ? dt : DateTime.Now.AddYears(-200);
-                                    TimeSpan ttr = (r["UPLOAD_TIME"] is TimeSpan ts) ? ts : TimeSpan.Zero;
-                                    if (dtr.Year > 2000)
-                                    {
-                                        rp.LastUploadedDateFile = dtr.AtTime(TimeOnly.FromTimeSpan(ttr));
-                                    }
-                                }
-                            });
-                        }
-                        Task.Run(() =>
-                        {
-                            var cts = new CancellationTokenSource();
 
 
-                            if (ucnt > 0)
-                            {
-                                
-                                Dispatcher.Invoke(() =>
+
+                                if (ucnt > 0)
                                 {
                                     Nullable<DateTime> startdate = DateTime.Now, enddate = DateTime.Now.AddHours(10);
                                     List<ListScheduleItems> listSchedules2 = new();
                                     int _eventid = 0;
                                     SchMaxUploads = 100;
                                     ShowScraper(startdate, enddate, listSchedules2, SchMaxUploads, _eventid);
-                                });
+                                }
                             }
-                        });
+
+                        }
+
                     }
 
                 }
-                Show();
             }
             catch (Exception ex)
             {
@@ -870,7 +917,7 @@ namespace VideoGui
                 ex.LogWrite($"ShowScraper {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-        private void FinishScraper(int id)
+        private void FinishScraper(object sender, int id)
         {
             try
             {
@@ -878,25 +925,27 @@ namespace VideoGui
 
                 Task.Run(() =>
                 {
-                    bool IsTimeOut = (scraperModule is ScraperModule sls) ? sls.TimedOutClose : false;
-                    while (true)
+                    if (sender is ScraperModule scraperModulej)
                     {
-                        if (!scraperModule.IsClosed && scraperModule.IsClosing)
+                        bool IsTimeOut = scraperModulej.TimedOutClose;
+                        while (true)
                         {
-                            Thread.Sleep(250);
+                            if (!scraperModulej.IsClosed && scraperModulej.IsClosing)
+                            {
+                                Thread.Sleep(250);
+                            }
+                            if (scraperModulej.IsClosed) break;
                         }
-                        if (scraperModule.IsClosed) break;
-                    }
-                    scraperModule = null;
-                    if (IsTimeOut)
-                    {
-                        Dispatcher.Invoke(() =>
+                        if (IsTimeOut)
                         {
-                            scraperModule = new ScraperModule(dbInit, FinishScraper, OldgUrl, OldTarget, 0);
-                            Hide();
-                            scraperModule.ShowActivated = true;
-                            scraperModule.Show();
-                        });
+                            Dispatcher.Invoke(() =>
+                            {
+                                var gscraperModule = new ScraperModule(dbInit, FinishScraper, OldgUrl, OldTarget, 0);
+                                Hide();
+                                gscraperModule.ShowActivated = true;
+                                gscraperModule.Show();
+                            });
+                        }
                     }
                 });
             }

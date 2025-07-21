@@ -36,20 +36,21 @@ namespace VideoGui
     /// </summary>
     public partial class AudioJoiner : Window
     {
-        AudioJoinerOnClose DoOnClose;
         int MaxFile = 0;
         private object thisLockduration = new object();
         private object thisLockduration2 = new object();
         private object thisLock = new object();
         List<Joiner> AudioJoiners = new List<Joiner>();
         TimeSpan Duration = TimeSpan.Zero;
+        public bool IsClosing = false, IsClosed = false;
         ObservableCollection<AudioJoinerInfo> MediaInfoTimes = new ObservableCollection<AudioJoinerInfo>();
         public CancellationTokenSource cancel = new CancellationTokenSource();
 
-        public AudioJoiner(AudioJoinerOnClose _OnClose)
+        public AudioJoiner(OnFinishIdObj _OnClose)
         {
             InitializeComponent();
-            DoOnClose = _OnClose;
+            Closing += (s, e) => { IsClosing = true; };
+            Closed += (s, e) => { IsClosed = true; _OnClose?.Invoke(this,-1); };
         }
 
 
@@ -172,18 +173,7 @@ namespace VideoGui
             }
         }
 
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
-        {
-
-            try
-            {
-                DoOnClose?.Invoke();
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
-            }
-        }
+       
 
         public int numberoffiles = 0;
 
