@@ -21,6 +21,7 @@ using System.Windows.Shapes;
 using System.Windows.Threading;
 using VideoGui.Models;
 using VideoGui.Models.delegates;
+using Windows.Devices.Geolocation;
 using Windows.Graphics.DirectX.Direct3D11;
 using Path = System.IO.Path;
 
@@ -692,7 +693,7 @@ namespace VideoGui
                 if (sender is ScraperModule sa)
                 {
 
-                    
+
                     WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
                     string gUrl = webAddressBuilder.Dashboard().Address;
                     RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
@@ -700,7 +701,7 @@ namespace VideoGui
                     string BaseDir = key.GetValueStr("shortsdirectory", @"D:\shorts");
                     key?.Close();
                     int cnt = Directory.EnumerateFiles(rootfolder, "*.mp4", SearchOption.AllDirectories).ToList().Count();
-                    if (!sa.KilledUploads&& sa.TotalScheduled > 0)
+                    if (!sa.KilledUploads && sa.TotalScheduled > 0)
                     {
                         List<string> filesdone = new List<string>();
                         bool Exc = sa.Exceeded;
@@ -710,7 +711,7 @@ namespace VideoGui
                         foreach (var rp in msuSchedules.ItemsSource.OfType<SelectedShortsDirectories>().Where(x => x.IsActive))
                         {
                             break;
-                            //rp.NumberOfShorts = cnt;
+                            rp.NumberOfShorts = cnt;
                             if (cnt == 0) rp.IsActive = false;
                             string DirPath = rp.DirectoryName;
                             string newpath = Path.Combine(BaseDir, DirPath);
@@ -728,7 +729,7 @@ namespace VideoGui
 
 
                         bool remove = !msuSchedules.ItemsSource.OfType<SelectedShortsDirectories>().Any(x => x.NumberOfShorts == 0);
-                        
+
 
                         if (remove)
                         {
@@ -739,9 +740,28 @@ namespace VideoGui
                         if (cnt == 0)
                         {
                             int acnt = 0;
-                            foreach (var rp in msuSchedules.ItemsSource.OfType<SelectedShortsDirectories>().Where(x => x.IsActive))
+                            foreach (var rp in msuSchedules.ItemsSource.OfType<SelectedShortsDirectories>().Where(x => x.IsActive && x.NumberOfShorts > 0))
                             {
-                                acnt += 1;
+                                string newpaths = Path.Combine(BaseDir, rp.DirectoryName);
+                                shortsleft = Directory.EnumerateFiles(newpaths, "*.mp4", SearchOption.AllDirectories).ToList().Count();
+                                if (shortsleft != rp.NumberOfShorts)
+                                {
+                                    rp.NumberOfShorts = shortsleft;
+                                    if (shortsleft == 0)
+                                    {
+                                        rp.IsActive = false;
+                                        string sql = "UPDATE MULTISHORTSINFO SET " +
+                                            "NUMBEROFSHORTS = @NUMBEROFSHORTS, ACTIVE = @ACTIVE " +
+                                            "WHERE LINKEDSHORTSDIRECTORYID = @LINKEDSHORTSDIRECTORYID";
+                                        connectionStr.ExecuteNonQuery(sql,
+                                            [("@NUMBEROFSHORTS", shortsleft),
+                                        ("@ACTIVE", false),
+                                        ("@LINKEDSHORTSDIRECTORYID", rp.LinkedShortsDirectoryId)]);
+                                        dbInit?.Invoke(this, new 
+                                            CustomParams_RemoveMulitShortsInfoById(rp.LinkedShortsDirectoryId));
+                                    }
+                                }
+                                else if (rp.NumberOfShorts > 0) acnt ++;
                             }
                             if (acnt == 0)
                             {
@@ -770,13 +790,17 @@ namespace VideoGui
                             }
                             else
                             {
-                                var item = msuSchedules.ItemsSource.OfType<SelectedShortsDirectories>().Where(x => x.IsActive).FirstOrDefault();
-                                if (item is not null)
+                                foreach (var item in msuSchedules.ItemsSource.OfType<SelectedShortsDirectories>().Where(x => x.IsActive && x.NumberOfShorts > 0))
                                 {
                                     string newpath = Path.Combine(BaseDir, item.DirectoryName);
                                     if (Path.Exists(newpath))
                                     {
                                         shortsleft = Directory.EnumerateFiles(newpath, "*.mp4", SearchOption.AllDirectories).ToList().Count();
+                                        if (shortsleft == 0)
+                                        {
+                                            item.IsActive = false;
+                                            continue;
+                                        }
                                         item.NumberOfShorts = shortsleft;
                                         key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                                         key.SetValue("UploadPath", newpath);

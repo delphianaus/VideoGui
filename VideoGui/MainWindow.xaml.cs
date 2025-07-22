@@ -3820,7 +3820,7 @@ namespace VideoGui
                         res = true;
                     }
                 }*/
-                return true ;
+                return true;
             }
             catch (Exception ex)
             {
@@ -5636,7 +5636,11 @@ namespace VideoGui
                 string LastFile = "";
                 while (true)
                 {
-
+                    if (!this.IsVisible && !this.InTray)
+                    {
+                        trayicon.Visibility = Visibility.Visible;
+                        this.InTray = true;
+                    }
                     int xcnt1080p = 0, xcnt4K = 0, xcnt = 0;
                     if (ProcessingJobs.Count > 0)
                     {
@@ -5670,6 +5674,12 @@ namespace VideoGui
                         {
                             trayicon.ToolTipText = "Idle";
                         });
+                    }
+
+                    if (xcnt == 0 && xcnt1080p == 0 && xcnt4K == 0 && ProcessingJobs.Count == 0)
+                    {
+                        Thread.Sleep(500);
+                        continue;
                     }
                     LineNum = 3;
                     NewProcessingList.Clear();
@@ -8873,13 +8883,13 @@ namespace VideoGui
         {
             try
             {
-               /* 
-                * do in init.
-                * var CollectionView = new CollectionViewSource();
-                CollectionView.Source = ComplexProcessingJobHistory;
-                CollectionView.Filter += new FilterEventHandler(CollectionFilter);
-                complexfrm.lstSchedules.ItemsSource = (System.Collections.IEnumerable)CollectionView;
-           */
+                /* 
+                 * do in init.
+                 * var CollectionView = new CollectionViewSource();
+                 CollectionView.Source = ComplexProcessingJobHistory;
+                 CollectionView.Filter += new FilterEventHandler(CollectionFilter);
+                 complexfrm.lstSchedules.ItemsSource = (System.Collections.IEnumerable)CollectionView;
+            */
             }
             catch (Exception ex)
             {

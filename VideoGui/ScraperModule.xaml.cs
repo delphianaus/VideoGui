@@ -1164,6 +1164,12 @@ namespace VideoGui
                         if (!flowControl)
                         {
                             finished = true;
+                            var html = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
+                            if (html.ToLower().Contains("uploads complete"))
+                            {
+                                Close();
+                                break;
+                            }
                             break;
                         }
                         if (ExitDialog) return;
@@ -3342,6 +3348,7 @@ namespace VideoGui
                     {
                         NodeUpdate(Span_Name, ScheduledGet);
                         InsertIntoUploadFiles(VideoFiles, connectStr);
+                        Close();
                         break;
                     }
                     else NodeUpdate(Span_Name, ScheduledGet);
