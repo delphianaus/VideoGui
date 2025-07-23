@@ -340,17 +340,17 @@ namespace VideoGui
             }
         }
 
-        private void OnSelectFormClose()
+        private void OnSelectFormClose(object sender, int e)
         {
             try
             {
                 Show();
-                if (DoDescSelectFrm is not null)
+                if (sender is DescSelectFrm frm)
                 {
                     bool Updated = false;
                     int descid = -1;
-                    string Desc = DoDescSelectFrm.txtDesc.Text;
-                    string Dir = DoDescSelectFrm.txtDescName.Text;
+                    string Desc = frm.txtDesc.Text;
+                    string Dir = frm.txtDescName.Text;
                     var r = dbInit?.Invoke(this, new CustomParams_DescUpdate(Dir, Desc));
                     if (r is IdhasUpdated idhasUpdated)
                     {
@@ -360,7 +360,7 @@ namespace VideoGui
                     if (Updated)
                     {
                         string linkeddescid = "";
-                        string sql = GetShortsDirectorySql(DoDescSelectFrm.Id);
+                        string sql = GetShortsDirectorySql(frm.Id);
                         CancellationTokenSource cts = new CancellationTokenSource(10000);
                         connectionStr.ExecuteReader(sql, cts, (FbDataReader r) =>
                         {
@@ -372,14 +372,7 @@ namespace VideoGui
                             sch.LinkedDescId = linkeddescid;
                         }
                     }
-                    //btnEditDesc.IsChecked = (descid != -1 && linkeddescid != "");
-
-                    if (DoDescSelectFrm.IsClosed)
-                    {
-                        DoDescSelectFrm = null;
-                    }
                 }
-                Show();
             }
             catch (Exception ex)
             {
@@ -766,7 +759,7 @@ namespace VideoGui
                         {
                             int Maxuploads = (txtTotalUploads.Text != "") ? txtTotalUploads.Text.ToInt(100) : 100;
                             int UploadsPerSlot = (txtMaxUpload.Text != "") ? txtMaxUpload.Text.ToInt(5) : 5;
-                            var sscraperModule = new ScraperModule(dbInit, var doOnFinish, gUrl, Maxuploads, UploadsPerSlot, 0, false);
+                            var sscraperModule = new ScraperModule(dbInit, doOnFinish, gUrl, Maxuploads, UploadsPerSlot, 0, false);
                             sscraperModule.ShowActivated = true;
                             sscraperModule.ScheduledOk.AddRange(filesdone);
                             Hide();

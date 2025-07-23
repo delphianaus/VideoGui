@@ -30,14 +30,13 @@ namespace VideoGui
         int dispatchcnt = 0;
         int TotalTime = 30;
         string DestName;
-        OnFinish DoOnFinished = null;
-        public AutoCancel(OnFinish _OnFinished, string destName, int _totaltime = 30, string captiontitle = "")
+        public AutoCancel(OnFinishIdObj _OnFinished, string destName, 
+            int _totaltime = 30, string captiontitle = "")
         {
             InitializeComponent();
             Closing += (s, e) => { IsClosing = true; };
-            Closed += (s, e) => { IsClosed = true; DoOnFinished?.Invoke(); };
+            Closed += (s, e) => { IsClosed = true; _OnFinished?.Invoke(this,0); };
             TotalTime = _totaltime;
-            DoOnFinished = _OnFinished;
             dispatchcnt = _totaltime;
             lblTime.Content = TotalTime.ToString();
             DestName = destName;

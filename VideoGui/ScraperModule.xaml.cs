@@ -137,7 +137,7 @@ namespace VideoGui
         bool IsTest = false, AutoClose = false, AutoClosed = false, IsLocation = false,
             IsMoving = false, HasMoved = false;
         public bool TimedOutClose = false;
-        AutoCancel DoAutoCancel = null;
+        
         List<DirectoriesProbe> Directories = new(); //Directories
         //string Title = "", Desc = "";
         Dictionary<int, WebView2> wv2Dictionary = new Dictionary<int, WebView2>();
@@ -1757,20 +1757,9 @@ namespace VideoGui
 
                                         if (lstCnt == 0 && lstMain.Items.Count == MaxNodes)
                                         {
-                                            if (DoAutoCancel is not null)
-                                            {
-                                                if (DoAutoCancel.IsClosing) DoAutoCancel.Close();
-                                                while (!DoAutoCancel.IsClosed && !canceltoken.IsCancellationRequested)
-                                                {
-                                                    Thread.Sleep(100);
-                                                    System.Windows.Forms.Application.DoEvents();
-                                                }
-                                                DoAutoCancel.Close();
-                                                DoAutoCancel = null;
-                                            }
-                                            DoAutoCancel = new AutoCancel(DoAutoCancelCloseScraper, $"Scraped {files} Files", 5, "Scraper Finished");
-                                            DoAutoCancel.ShowActivated = true;
-                                            DoAutoCancel.Show();
+                                            var _DoAutoCancel = new AutoCancel(DoAutoCancelCloseScraper, $"Scraped {files} Files", 5, "Scraper Finished");
+                                            _DoAutoCancel.ShowActivated = true;
+                                            _DoAutoCancel.Show();
                                         }
                                         else if (lstMain.Items.Count == MaxNodes)
                                         {
@@ -1874,20 +1863,9 @@ namespace VideoGui
 
                                 if (lstCnt2 == 0 && lstMain.Items.Count == MaxNodes)
                                 {
-                                    if (DoAutoCancel is not null)
-                                    {
-                                        if (DoAutoCancel.IsClosing) DoAutoCancel.Close();
-                                        while (!DoAutoCancel.IsClosed && !canceltoken.IsCancellationRequested)
-                                        {
-                                            Thread.Sleep(100);
-                                            System.Windows.Forms.Application.DoEvents();
-                                        }
-                                        DoAutoCancel.Close();
-                                        DoAutoCancel = null;
-                                    }
-                                    DoAutoCancel = new AutoCancel(DoAutoCancelCloseScraper, $"Scraped {files} Files", 5, "Scraper Finished");
-                                    DoAutoCancel.ShowActivated = true;
-                                    DoAutoCancel.Show();
+                                    var _DoAutoCancel = new AutoCancel(DoAutoCancelCloseScraper, $"Scraped {files} Files", 5, "Scraper Finished");
+                                    _DoAutoCancel.ShowActivated = true;
+                                    _DoAutoCancel.Show();
                                 }
                                 else if (lstMain.Items.Count == MaxNodes)
                                 {
@@ -1913,19 +1891,22 @@ namespace VideoGui
             }
         }
 
-        private void DoAutoCancelCloseScraper()
+        private void DoAutoCancelCloseScraper(object sender, int i)
         {
             try
             {
-                if ((DoAutoCancel is not null && DoAutoCancel.IsCloseAction))
+                if (sender is AutoCancel frm)
                 {
-                    canceltoken.Cancel();
-                    cancelds();
-                    DoAutoCancel.Close();
-                    Close();
-                    return;
+                    if (frm.IsCloseAction)
+                    {
+                        canceltoken.Cancel();
+                        cancelds();
+                        Close();
+                        return;
+                    }
+
+                    frm = null;
                 }
-                DoAutoCancel = null;
                 Show();
             }
             catch (Exception ex)
@@ -3022,20 +3003,10 @@ namespace VideoGui
             {
                 cancelds();
                 canceltoken.Cancel();
-                if (DoAutoCancel is not null)
-                {
-                    if (DoAutoCancel.IsClosing) DoAutoCancel.Close();
-                    while (!DoAutoCancel.IsClosed && !canceltoken.IsCancellationRequested)
-                    {
-                        Thread.Sleep(100);
-                        System.Windows.Forms.Application.DoEvents();
-                    }
-                    DoAutoCancel.Close();
-                    DoAutoCancel = null;
-                }
-                DoAutoCancel = new AutoCancel(DoAutoCancelClose, "", 5, "Scheduling Finished");
-                DoAutoCancel.ShowActivated = true;
-                DoAutoCancel.Show();
+                
+                var _DoAutoCancel = new AutoCancel(DoAutoCancelClose, "", 5, "Scheduling Finished");
+                _DoAutoCancel.ShowActivated = true;
+                _DoAutoCancel.Show();
             }
             catch (Exception ex)
             {
@@ -3077,20 +3048,10 @@ namespace VideoGui
                     {
                         cancelds();
                         canceltoken.Cancel();
-                        if (DoAutoCancel is not null)
-                        {
-                            if (DoAutoCancel.IsClosing) DoAutoCancel.Close();
-                            while (!DoAutoCancel.IsClosed && !canceltoken.IsCancellationRequested)
-                            {
-                                Thread.Sleep(100);
-                                System.Windows.Forms.Application.DoEvents();
-                            }
-                            DoAutoCancel.Close();
-                            DoAutoCancel = null;
-                        }
-                        DoAutoCancel = new AutoCancel(DoAutoCancelClose, "", 5, "Scheduling Finished");
-                        DoAutoCancel.ShowActivated = true;
-                        DoAutoCancel.Show();
+                       
+                        var _DoAutoCancel = new AutoCancel(DoAutoCancelClose, "", 5, "Scheduling Finished");
+                        _DoAutoCancel.ShowActivated = true;
+                        _DoAutoCancel.Show();
                     }
                     return res;
                 }
@@ -3103,19 +3064,22 @@ namespace VideoGui
             }
         }
 
-        private void DoAutoCancelClose()
+        private void DoAutoCancelClose(object sender, int i)
         {
             try
             {
-                if ((DoAutoCancel is not null && DoAutoCancel.IsCloseAction))
+                if (sender is AutoCancel frm)
                 {
-                    canceltoken.Cancel();
-                    cancelds();
-                    DoAutoCancel.Close();
-                    Close();
-                    return;
+                    if (frm.IsCloseAction)
+                    {
+                        canceltoken.Cancel();
+                        cancelds();
+                        frm.Close();
+                        Close();
+                        return;
+                    }
+                    frm = null;
                 }
-                DoAutoCancel = null;
                 Show();
             }
             catch (Exception ex)
@@ -3705,21 +3669,9 @@ namespace VideoGui
 
                             if (files == lstCnt && lstMain.Items.Count == MaxCnts)
                             {
-
-                                if (DoAutoCancel is not null)
-                                {
-                                    if (DoAutoCancel.IsClosing) DoAutoCancel.Close();
-                                    while (!DoAutoCancel.IsClosed && !canceltoken.IsCancellationRequested)
-                                    {
-                                        Thread.Sleep(100);
-                                        System.Windows.Forms.Application.DoEvents();
-                                    }
-                                    DoAutoCancel.Close();
-                                    DoAutoCancel = null;
-                                }
-                                DoAutoCancel = new AutoCancel(DoAutoCancelCloseScraper, $"Scraped {files} Files", 5, "Scraper Finished");
-                                DoAutoCancel.ShowActivated = true;
-                                DoAutoCancel.Show();
+                                var _DoAutoCancel = new AutoCancel(DoAutoCancelCloseScraper, $"Scraped {files} Files", 5, "Scraper Finished");
+                                _DoAutoCancel.ShowActivated = true;
+                                _DoAutoCancel.Show();
                             }
                         }
                     }
@@ -3741,20 +3693,9 @@ namespace VideoGui
                 if (IntId == LastIdNode && inserted >= MaxCnts)
                 {
                     Hide();
-                    if (DoAutoCancel is not null)
-                    {
-                        if (DoAutoCancel.IsClosing) DoAutoCancel.Close();
-                        while (!DoAutoCancel.IsClosed && !canceltoken.IsCancellationRequested)
-                        {
-                            Thread.Sleep(100);
-                            System.Windows.Forms.Application.DoEvents();
-                        }
-                        DoAutoCancel.Close();
-                        DoAutoCancel = null;
-                    }
-                    DoAutoCancel = new AutoCancel(DoAutoCancelClose, "", 5, "Scaping Finished");
-                    DoAutoCancel.ShowActivated = true;
-                    DoAutoCancel.Show();
+                    var _DoAutoCancel = new AutoCancel(DoAutoCancelClose, "", 5, "Scaping Finished");
+                    _DoAutoCancel.ShowActivated = true;
+                    _DoAutoCancel.Show();
                     return;
                 }
 

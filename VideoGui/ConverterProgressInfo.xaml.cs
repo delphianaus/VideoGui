@@ -47,15 +47,14 @@ namespace VideoGui
             return System.IO.Path.GetFileNameWithoutExtension(DestName);
         }
 
-        public void DoAutoCancelClose()
+        public void DoAutoCancelClose(object sender, int e)
         {
             try
             {
-                if ((DoAutoCancel != null) && (DoAutoCancel.IsCloseAction))
+                if (sender is AutoCancel frm)
                 {
-                    Close();
+                    frm = null;
                 }
-                DoAutoCancel = null;
             }
             catch(Exception ex)
             {

@@ -7,7 +7,7 @@
         xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
         SizeChanged="Window_SizeChanged" 
         mc:Ignorable="d" DataContext="{Binding RelativeSource={RelativeSource Self}}" 
-        Title="Complex Schedule Editor" Height="474" Width="915" Closing="Window_Closing" Loaded="Window_Loaded"
+        Title="Complex Schedule Editor" Height="474" Width="915" Loaded="Window_Loaded"
         ResizeMode="CanResizeWithGrip" WindowStartupLocation="CenterScreen"  WindowStyle="ToolWindow" >
     <Window.Resources>
         <BitmapImage x:Key="HISTORIC" UriSource="icons/historic.png"/>
@@ -155,8 +155,8 @@
                                 <ListBox.ContextMenu>
                                     <ContextMenu>
                                         <MenuItem Header="Paste Group Times" Name="mnuGroupPaste1" Click="mnuGroupPaste_Click"  />
-                                        <MenuItem Header="Change Destination Header" Name="mnuChangeDestHeaderHistoric" Click="mnuChangeDestHeader_Click"/>
-                                        <MenuItem Header="Change Filename Header" Name="mnuChangeFilenameHeaderHistoric" Click="mnuChangeFilenameHeader_Click"/>
+                                        <MenuItem Header="Change Destination Header" Name="mnuChangeDestHeaderHistoric" Click="mnuChangeDestHeaderHistoric_Click"/>
+                                        <MenuItem Header="Change Filename Header" Name="mnuChangeFilenameHeaderHistoric" Click="mnuChangeFilenameHeaderHistoric_Click"/>
                                     </ContextMenu>
                                 </ListBox.ContextMenu>
                             </ListBox>

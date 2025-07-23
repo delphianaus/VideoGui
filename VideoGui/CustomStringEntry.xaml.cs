@@ -40,17 +40,17 @@ namespace VideoGui
                 return "";
             }
         }
-        public CustomStringEntry(string value, string Filter,OnKeyPressEvent _KeyPress, OnFinish _OnFinish)
+        public CustomStringEntry(string value, string Filter,
+            OnKeyPressEvent _KeyPress, OnFinishIdObj _OnFinish)
         {
             try
             {
                 InitializeComponent();
                 Closing += (s, e) => { IsClosing = true; };
-                Closed += (s, e) => { IsClosed = true; _OnFinish?.Invoke(); };
+                Closed += (s, e) => { IsClosed = true; _OnFinish?.Invoke(this,0); };
                 Title = value;
                 txtData.Text = Filter;
                 DoOnKeyPressEvent = _KeyPress;
-                DoOnFinish = _OnFinish;
             }
             catch (Exception ex)
             {

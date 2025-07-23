@@ -73,11 +73,11 @@ namespace VideoGui
                 DoSetFilterAge = _SetFilterAge;
                 DoSetFilterString = _SetFilterString;
                 DoGetFilerString = _GetFilterString;
-                Closed += (s, e) => 
+                Closed += (s, e) =>
                 {
                     IsClosing = false;
                     IsClosed = true;
-                    _ComplexFinished?.Invoke(this, -1); 
+                    _ComplexFinished?.Invoke(this, -1);
                 };
                 Closing += (s, e) => { IsClosing = true; };
                 SetupHandlers();
@@ -205,54 +205,9 @@ namespace VideoGui
             }
         }
 
-        private void mnuChangeFilenameHeader_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                //IsFileNameCompacted = !IsFileNameCompacted;
 
-                //if (IsFileNameCompacted)
-                //{
-                //    destcolwidth += 150;
-                //    filenamecolwidth -= 150;
-                // }
-                // else
-                //{
-                //   destcolwidth -= 150;
-                //   filenamecolwidth += 150;
-                // }
-                //lstItems.Template = null;
-                //lstItems.Template = (ControlTemplate)FindName("ControlMainGrid");
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
-            }
-        }
 
-        private void mnuChangeDestHeader_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                //IsDestCompacted = !IsDestCompacted;
-                // if (IsDestCompacted)
-                //{
-                //   destcolwidth -= 150;
-                //  filenamecolwidth += 150;
-                // }
-                //else
-                //{
-                //   destcolwidth += 150;
-                //   filenamecolwidth -= 150;
-                //}
-                //lstItems.Template = null;
-                //lstItems.Template = (ControlTemplate)FindName("ControlMainGrid");
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
-            }
-        }
+
         private void mnuGroupPaste_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -814,13 +769,13 @@ namespace VideoGui
             }
         }
 
-        public void DialogAgesOnFinish()
+        public void DialogAgesOnFinish(object sender, int i)
         {
             try
             {
-                if (!DialogAgesEntry.IsActive)
+                if (sender is DialogAges d)
                 {
-                    DialogAgesEntry = null;
+                    d = null;
                 }
             }
             catch (Exception ex)
@@ -837,7 +792,9 @@ namespace VideoGui
                 {
                     int min = -1, max = -1;
                     (min, max) = (DoGetFilterAges != null) ? DoGetFilterAges.Invoke() : (min, max);
-                    DialogAgesEntry = new DialogAges("Select Age Ranges", min, max, DoSetFilterAge, DialogAgesOnFinish);
+                    DialogAgesEntry = new DialogAges("Select Age Ranges", min, max,
+                        DoSetFilterAge, DialogAgesOnFinish);
+                    DialogAgesEntry.ShowActivated = true;
                     DialogAgesEntry.Show();
                 }
                 else
@@ -851,22 +808,25 @@ namespace VideoGui
             }
         }
 
-        public void DestinationDirectoryEntry_OnFinish()
+        public void DestinationDirectoryEntry_OnFinish(object sender, int i)
         {
             try
             {
-                DestinationDirectoryEntry = null;
+                if (sender is CustomStringEntry frm) frm = null;
             }
             catch (Exception ex)
             {
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
             }
         }
-        public void SourceDirectoryEntry_OnFinish()
+        public void SourceDirectoryEntry_OnFinish(object sender, int i)
         {
             try
             {
-                SourceDirectoryEntry = null;
+                if (sender is CustomStringEntry frm)
+                {
+                    frm = null;
+                }
             }
             catch (Exception ex)
             {
@@ -874,11 +834,11 @@ namespace VideoGui
             }
         }
 
-        public void DestinatinFileEntry_OnFinish()
+        public void DestinatinFileEntry_OnFinish(object sender, int i)
         {
             try
             {
-                DestinationFileEntry = null;
+                if (sender is CustomStringEntry frm) frm = null;
             }
             catch (Exception ex)
             {
@@ -939,13 +899,16 @@ namespace VideoGui
         {
             try
             {
-                if (SourceDirectoryEntry == null)
+                if (SourceDirectoryEntry is null)
                 {
                     FilterClass FilterType = (tglflip.IsChecked.Value) ? FilterClass.Current : FilterClass.Historic;
                     string Filter = DoGetFilerString(FilterTypes.SourceDirectory, FilterType);
                     SourceDirectoryEntry = new CustomStringEntry("Filter Source Directory", Filter, OnKeyPress_Source, SourceDirectoryEntry_OnFinish);
+                    SourceDirectoryEntry.ShowActivated = true;
                     SourceDirectoryEntry.Show();
                 }
+                else SourceDirectoryEntry.Focus();
+
             }
             catch (Exception ex)
             {
@@ -953,33 +916,22 @@ namespace VideoGui
             }
         }
 
-        private void Window_Closing(object sender, CancelEventArgs e)
-        {
-            try
-            {
-                DialogAgesEntry?.Close();
-                SourceDirectoryEntry?.Close();
-                DestinationDirectoryEntry?.Close();
-                DestinationFileEntry?.Close();
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
-            }
 
-        }
 
         private void mnuSetDestinationDirectoryFilter_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                if (DestinationDirectoryEntry == null)
+                if (DestinationDirectoryEntry is null)
                 {
                     FilterClass FilterType = (tglflip.IsChecked.Value) ? FilterClass.Current : FilterClass.Historic;
                     string Filter = DoGetFilerString(FilterTypes.DestinationDirectory, FilterType);
-                    DestinationDirectoryEntry = new CustomStringEntry("Filter Destination Directory", Filter, OnKeyPress_DestinationDirection, DestinationDirectoryEntry_OnFinish);
+                    DestinationDirectoryEntry = new CustomStringEntry("Filter Destination Directory", Filter,
+                        OnKeyPress_DestinationDirection, DestinationDirectoryEntry_OnFinish);
+                    DestinationDirectoryEntry.ShowActivated = true;
                     DestinationDirectoryEntry.Show();
                 }
+                else DestinationDirectoryEntry.Focus();
             }
             catch (Exception ex)
             {
@@ -992,14 +944,16 @@ namespace VideoGui
         {
             try
             {
-                if (DestinationFileEntry == null)
+                if (DestinationFileEntry is null)
                 {
                     FilterClass FilterType = (tglflip.IsChecked.Value) ? FilterClass.Current : FilterClass.Historic;
                     string Filter = DoGetFilerString(FilterTypes.DestinationFileName, FilterType);
-                    DestinationFileEntry = new CustomStringEntry("Filter Destination File", Filter, OnKeyPress_DestinationFile, DestinatinFileEntry_OnFinish);
+                    DestinationFileEntry = new CustomStringEntry("Filter Destination File", Filter,
+                        OnKeyPress_DestinationFile, DestinatinFileEntry_OnFinish);
+                    DestinationFileEntry.ShowActivated = true;
                     DestinationFileEntry.Show();
                 }
-
+                else DestinationFileEntry.Focus();
             }
             catch (Exception ex)
             {
@@ -1009,21 +963,15 @@ namespace VideoGui
 
         private void mnuDeleteCurrentSelection_Click(object sender, RoutedEventArgs e)
         {
-            if (lstSchedules.SelectedItem is ComplexJobList item)
+            if (e.OriginalSource is MenuItem mnu && mnu.DataContext is ComplexJobList item)
             {
-                if (item is not null)
-                {
-                    int id = item.Id.ToInt();
-                    DoRemoveRecord?.Invoke(id);
-                }
+                int id = item.Id.ToInt();
+                DoRemoveRecord?.Invoke(id);
             }
-            if (lstSchedules.SelectedItem is ComplexJobHistory itemx)
+            if (e.OriginalSource is MenuItem mnu1 && mnu1.DataContext is ComplexJobHistory itemx)
             {
-                if (itemx is not null)
-                {
-                    int id = itemx.Id.ToInt();
-                    DoRemoveRecord?.Invoke(id);
-                }
+                int id = itemx.Id.ToInt();
+                DoRemoveRecord?.Invoke(id);
             }
         }
 
@@ -1040,6 +988,16 @@ namespace VideoGui
             {
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
             }
+        }
+
+        private void mnuChangeDestHeaderHistoric_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void mnuChangeFilenameHeaderHistoric_Click(object sender, RoutedEventArgs e)
+        {
+
         }
 
         private void btnAddMux_Click(object sender, RoutedEventArgs e)

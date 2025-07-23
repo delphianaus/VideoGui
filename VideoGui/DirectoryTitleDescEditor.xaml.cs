@@ -114,22 +114,14 @@ namespace VideoGui
             }
         }
 
-        private void OnSelectFormClose()
+        private void OnSelectFormClose(object sender, int e)
         {
             try
             {
-                
-                ModuleCallBack?.Invoke(this, new CustomParams_Update(DoDescSelectFrm.TitleTagId, UpdateType.Description));
-                if (DoDescSelectFrm is not null)
+                if (sender is DescSelectFrm frm)
                 {
-                    if (DoDescSelectFrm.IsDescChanged)
-                    {
-                        ModuleCallBack?.Invoke(this, new CustomParams_Update(DoDescSelectFrm.TitleTagId, UpdateType.Description));
-                    }
-                    if (DoDescSelectFrm.IsClosed)
-                    {
-                        DoDescSelectFrm = null;
-                    }
+                    ModuleCallBack?.Invoke(this, 
+                        new CustomParams_Update(frm.TitleTagId, UpdateType.Description));
                 }
                 Show();
             }

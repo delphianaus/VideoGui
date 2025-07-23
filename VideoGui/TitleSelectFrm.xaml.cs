@@ -25,6 +25,7 @@ namespace VideoGui
         string Title = "";
         string TagTitle = "";
         public string BaseTitle = "";
+        CustomStringEntry CPS = null;
 
         bool IsUploadsBuilder = false;
         public TitleSelectFrm(OnFinishIdObj OnFinished, databasehook<Object> dbhook,
@@ -34,12 +35,12 @@ namespace VideoGui
             {
                 dbhookup = dbhook;
                 Closing += (s, e) => { IsClosing = true; };
-                Closed += (s, e) => { IsClosed = true; IsTitleChanged = false; OnFinished?.Invoke(this,-1); };
+                Closed += (s, e) => { IsClosed = true; IsTitleChanged = false; OnFinished?.Invoke(this, -1); };
                 IsUploadsBuilder = _IsUploadsBuilder;
                 InitializeComponent();
                 TitleId = _TitleId;
                 dbhookup?.Invoke(this, new CustomParams_SetFilterId(_TitleId));
-                
+
                 /*txtTitle.Text = _Title; Handle this in onload?.Invoke.
                 BaseTitle = _Title;
                 txtBaseTitle.Content = $"({_Title})";*/
@@ -260,23 +261,23 @@ namespace VideoGui
                 ex.LogWrite($"ImgSelect_MouseLeftButtonDown {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
             }
         }
-       
-        CustomStringEntry CPS = null;
+
+
         private void lblTitleName_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             try
             {
                 if (CPS is not null)
                 {
-                    if (CPS.IsClosed)
-                    {
-                        CPS = new("Select Base Title", BaseTitle, null, OnFinishBaseTitle);
-                        CPS.Show();
-                    }
+                    CPS.Close();
+                    CPS = new("Select Base Title", BaseTitle, null, OnFinishBaseTitle);
+                    CPS.ShowActivated = true;
+                    CPS.Show();
                 }
-                if (CPS is null)
+                else 
                 {
                     CPS = new("Select Base Title", BaseTitle, null, OnFinishBaseTitle);
+                    CPS.ShowActivated = true;
                     CPS.Show();
                 }
             }
@@ -286,24 +287,22 @@ namespace VideoGui
             }
         }
 
-        private void OnFinishBaseTitle()
+        private void OnFinishBaseTitle(object sender, int i)
         {
             try
             {
-                if (CPS is not null)
+                if (sender is CustomStringEntry frm)
                 {
-                    if (CPS.txtData.Text != BaseTitle)
+                    if (frm.txtData.Text != BaseTitle)
                     {
                         IsTitleChanged = true;
-                        txtBaseTitle.Content = CPS.txtData.Text;
-                        BaseTitle = CPS.txtData.Text;
+                        txtBaseTitle.Content = frm.txtData.Text;
+                        BaseTitle = frm.txtData.Text;
+                        dbhookup?.Invoke(this, new CustomParams_EditName(TitleId, frm.txtData.Text));
+                    }
 
-                        dbhookup?.Invoke(this, new CustomParams_EditName(TitleId, CPS.txtData.Text));
-                    }
-                    if (CPS.IsClosed)
-                    {
-                        CPS = null;
-                    }
+                    frm = null;
+                    // check cps != frm
                 }
             }
             catch (Exception ex)
@@ -403,7 +402,7 @@ namespace VideoGui
                     TagsGrp.Items.Refresh();
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 ex.LogWrite($"TagsGrp_MouseDoubleClick {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
 
@@ -414,20 +413,9 @@ namespace VideoGui
         {
             try
             {
-                if (CPS is not null)
-                {
-                    if (CPS.IsClosed)
-                    {
-                        CPS = new("Select Base Title", BaseTitle, null, OnFinishBaseTitle);
-                        CPS.Show();
-                    }
 
-                }
-                if (CPS is null)
-                {
-                    CPS = new("Select Base Title", BaseTitle, null, OnFinishBaseTitle);
-                    CPS.Show();
-                }
+                CPS = new("Select Base Title", BaseTitle, null, OnFinishBaseTitle);
+                CPS.Show();
             }
             catch (Exception ex)
             {

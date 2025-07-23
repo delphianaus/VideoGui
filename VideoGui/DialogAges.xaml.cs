@@ -24,7 +24,9 @@ namespace VideoGui
         public SetFilterAge DoSetFilterAge;
         string OldMinAge = "", OldMaxAge = "";
         OnFinish DoOnFinish = null;
-        public DialogAges(string TitleToShow,int a,int b,SetFilterAge _SetFilterAges, OnFinish _OnFinish)
+        public bool IsClosed = false;
+        public DialogAges(string TitleToShow,int a,int b,SetFilterAge _SetFilterAges, 
+            OnFinishIdObj _OnFinish)
         {
             InitializeComponent();
             txtMaxAge.Text = "";
@@ -33,7 +35,7 @@ namespace VideoGui
             if (b != -1) txtMaxAge.Text = b.ToString();
             Title = TitleToShow;
             DoSetFilterAge = _SetFilterAges;
-            DoOnFinish = _OnFinish;
+            Closed += (s, e) => { IsClosed = true; _OnFinish?.Invoke(this, -1); };
         }
 
       
@@ -119,17 +121,7 @@ namespace VideoGui
             }
         }
 
-        private void frmDialogAges_Closing(object sender, System.ComponentModel.CancelEventArgs e)
-        {
-            try
-            {
-                DoOnFinish?.Invoke();
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
-            }
-        }
+       
 
         private void txtMinAge_LostFocus(object sender, RoutedEventArgs e)
         {
