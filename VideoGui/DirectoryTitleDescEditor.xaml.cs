@@ -83,25 +83,10 @@ namespace VideoGui
         {
             try
             {
-      
-
-                if (DoTitleSelectFrm is not null)
-                {
-                    if (!DoTitleSelectFrm.IsClosing && !DoTitleSelectFrm.IsClosed)
-                    {
-                        DoTitleSelectFrm.Close();
-                        DoTitleSelectFrm = new TitleSelectFrm(DoOnFinishTitleSelect, 
-                            ModuleCallBack, true, TitleId);
-                        Hide();
-                        DoTitleSelectFrm.Show();
-                    }
-                }
-                else
-                {
-                    DoTitleSelectFrm = new TitleSelectFrm(DoOnFinishTitleSelect, ModuleCallBack, true, TitleId);
-                    Hide();
-                    DoTitleSelectFrm.Show();
-                }
+                var _DoTitleSelectFrm = new TitleSelectFrm(DoOnFinishTitleSelect, ModuleCallBack, true, TitleId);
+                Hide();
+                _DoTitleSelectFrm.ShowActivated = true;
+                _DoTitleSelectFrm.Show();
             }
             catch (Exception ex)
             {
@@ -154,21 +139,13 @@ namespace VideoGui
             }
         }
 
-        private void DoOnFinishTitleSelect()
+        private void DoOnFinishTitleSelect(object sender, int id)
         {
             try
             {
-                ModuleCallBack?.Invoke(this, new CustomParams_Update(DoTitleSelectFrm.TitleId, UpdateType.Title));
-                if (DoTitleSelectFrm is not null)
+                if (sender is TitleSelectFrm frm)
                 {
-                    if (DoTitleSelectFrm.IsTitleChanged)
-                    {
-                        ModuleCallBack?.Invoke(this, new CustomParams_Update(DoTitleSelectFrm.TitleId, UpdateType.Title));
-                    }
-                    if (DoTitleSelectFrm.IsClosed)
-                    {
-                        DoTitleSelectFrm = null;
-                    }
+                    ModuleCallBack?.Invoke(this, new CustomParams_Update(frm.TitleId, UpdateType.Title));
                 }
                 Show();
             }

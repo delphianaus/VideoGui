@@ -265,54 +265,8 @@ namespace VideoGui
 
 
 
-        public async Task<bool> ConnectT()
-        {
-            try
-            {
-                bool res = false;
-                if (ObservableCollectionFilter is not null)
-                {
-                    /* move to init
-                     * {
-                        if (DirectoryTitleDescEditorFrm is not null)
-                        {
-                            DirectoryTitleDescEditorFrm.DoTitleSelectFrm.SetTitleTag(TitleId);
-                        }
-                    }*/
-                }
-                return res;
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
-                return false;
-            }
-        }
-        public async Task<bool> ConnectI()
-        {
-            try
-            {
-                bool res = false;
-                if (ObservableCollectionFilter is not null)
-                {
-                    FileRenamer.Clear();
-                    ObservableCollectionFilter.ImportCollectionViewSource.Source = FileRenamer;
-                    ObservableCollectionFilter.ImportCollectionViewSource.View.Refresh();
-                    if (GoProMediaImporter is not null && GoProMediaImporter.IsLoaded)
-                    {
-                        GoProMediaImporter.lstSchedules.ItemsSource = ObservableCollectionFilter.ImportCollectionViewSource.View;
-
-                        res = true;
-                    }
-                }
-                return res;
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
-                return false;
-            }
-        }
+       
+       
 
         public void ShowScraper(Nullable<DateTime> startdate = null, Nullable<DateTime> enddate = null,
             List<ListScheduleItems> _listSchedules = null, int SchMaxUploads = 100, int _eventid = 0)
@@ -549,6 +503,43 @@ namespace VideoGui
                     //frmMultiShortsUploader.msuSchedules.ItemsSource = SelectedShortsDirectoriesList;
                     return null;
                 }
+                if (tld is CustomParams_SetActive tsa)
+                {
+                    foreach(var item in SelectedShortsDirectoriesList)
+                    {
+                        item.IsActive = (item.LinkedShortsDirectoryId == tsa.index) ? true : false;
+                        string sql = "UPDATE MULTISHORTSINFO SET ISSHORTSACTIVE = @ISSHORTSACTIVE " 
+                            + "WHERE LINKEDSHORTSDIRECTORYID = @LINKEDSHORTSDIRECTORYID;";
+                        connectionString.ExecuteScalar(sql, [("@ISSHORTSACTIVE", item.IsActive),
+                            ("@LINKEDSHORTSDIRECTORYID", item.LinkedShortsDirectoryId)]);
+                        if (item.IsActive)
+                        {
+                            string sqla = "SELECT * FROM UploadsRecord ORDER BY RDB$RECORD_VERSION DESC ROWS 10;";
+                            CancellationTokenSource cts = new();
+                            DateTime Opt = new DateTime(1900, 1, 1);
+                            connectionString?.ExecuteReader(sqla.ToUpper(), cts, (FbDataReader r) =>
+                            {
+                                var dt = (r["UPLOAD_DATE"] is DateTime d) ? d : Opt;// new DateTime(1900, 1, 1);
+                                var tt = (r["UPLOAD_TIME"] is TimeSpan t) ? t : TimeSpan.Zero;// new DateTime(0, 0, 0);
+                                var DateA = dt.AtTime(TimeOnly.FromTimeSpan(tt));
+                                string UploadFile = (r["UPLOADFILE"] is string f) ? f : "";
+                                if (UploadFile.Contains("_") && dt.Year > 1900)
+                                {
+                                    int Idx = UploadFile.Split('_').LastOrDefault().ToInt(-1);
+                                    if (Idx != -1 && item.LinkedShortsDirectoryId == Idx)
+                                    {
+                                        item.LastUploadedDateFile = DateA;
+                                        cts.Cancel();
+                                    }
+                                }
+                            });
+                        }
+                        else
+                        {
+                            item.LastUploadedDateFile = new DateTime(1900, 1, 1);
+                        }
+                    }
+                } 
                 if (tld is CustomParams_SetIndex cpsii)
                 {
                     ShortsDirectoryIndex = cpsii.index;
@@ -862,20 +853,31 @@ namespace VideoGui
                 }
                 else if (tld is CustomParams_Initialize cpInit)
                 {
-                    if (cpInit.Id == 0)
+                    if (ObservableCollectionFilter is not null)
                     {
-                        ConnectC().ConfigureAwait(false);
+                        FileRenamer.Clear();
+                        ObservableCollectionFilter.ImportCollectionViewSource.Source = FileRenamer;
+                        ObservableCollectionFilter.ImportCollectionViewSource.View.Refresh();
+                        if (GoProMediaImporter is not null && GoProMediaImporter.IsLoaded)
+                        {
+                            GoProMediaImporter.lstSchedules.ItemsSource = ObservableCollectionFilter.ImportCollectionViewSource.View;
+                            return true;
+                        }
                     }
-                    else if (cpInit.Id == 1) ConnectH().ConfigureAwait(false);
-                    else if (cpInit.Id == 2) ConnectI().ConfigureAwait(false);
-                    else if (cpInit.Id == 3) ConnectT().ConfigureAwait(false);
                 }
                 else if (tld is CustomParams_DataSelect cds)
                 {
-                    if (cds.Id == 0) ConnectC().ConfigureAwait(false);
-                    else if (cds.Id == 1) ConnectH().ConfigureAwait(false);
-                    else if (cds.Id == 2) ConnectI().ConfigureAwait(false);
-                    else if (cds.Id == 3) ConnectT().ConfigureAwait(false);
+                    if (ObservableCollectionFilter is not null)
+                    {
+                        FileRenamer.Clear();
+                        ObservableCollectionFilter.ImportCollectionViewSource.Source = FileRenamer;
+                        ObservableCollectionFilter.ImportCollectionViewSource.View.Refresh();
+                        if (GoProMediaImporter is not null && GoProMediaImporter.IsLoaded)
+                        {
+                            GoProMediaImporter.lstSchedules.ItemsSource = ObservableCollectionFilter.ImportCollectionViewSource.View;
+                            return true;
+                        }
+                    }
                 }
                 return null;
             }
@@ -890,16 +892,20 @@ namespace VideoGui
         {
             try
             {
-                /*  case 0:ConnectC().ConfigureAwait(false);
-                    case 1:ConnectH().ConfigureAwait(false);
-                    case 2:ConnectI().ConfigureAwait(false);
-                    case 3:ConnectT().ConfigureAwait(false);*/
-                if (tld is CustomParams_DataSelect cds)
+                if (tld is CustomParams_DataSelect cds && complexSchedular.IsLoaded)
                 {
-                    if (cds.Id == 0) ConnectC().ConfigureAwait(false);
-                    else if (cds.Id == 1) ConnectH().ConfigureAwait(false);
-                    else if (cds.Id == 2) ConnectI().ConfigureAwait(false);
-                    else if (cds.Id == 3) ConnectT().ConfigureAwait(false);
+                    if (cds.Id == 0)
+                    {
+                        ObservableCollectionFilter.CurrentCollectionViewSource.Source = ComplexProcessingJobList;
+                        complexSchedular.lstSchedules.ItemsSource = ObservableCollectionFilter.CurrentCollectionViewSource.View;
+                        return true;
+                    }
+                    else if (cds.Id == 1)
+                    {
+                        ObservableCollectionFilter.HistoricCollectionViewSource.Source = ComplexProcessingJobHistory;
+                        complexSchedular.lstSchedules.ItemsSource = ObservableCollectionFilter.HistoricCollectionViewSource.View;
+                        return true;
+                    }
                 }
                 else if (tld is CustomParams_GetConnectionString CGCS)
                 {
@@ -910,11 +916,15 @@ namespace VideoGui
                 {
                     if (cpInit.Id == 0)
                     {
-                        ConnectC().ConfigureAwait(false);
+                        ObservableCollectionFilter.CurrentCollectionViewSource.Source = ComplexProcessingJobList;
+                        complexSchedular.lstSchedules.ItemsSource = ObservableCollectionFilter.CurrentCollectionViewSource.View;
+                        return true;
                     }
                     else if (cpInit.Id == 1)
                     {
-                        ConnectH().ConfigureAwait(false);
+                        ObservableCollectionFilter.HistoricCollectionViewSource.Source = ComplexProcessingJobHistory;
+                        complexSchedular.lstSchedules.ItemsSource = ObservableCollectionFilter.HistoricCollectionViewSource.View;
+                        return true;
                     }
                 }
                 return null;
@@ -4221,19 +4231,6 @@ namespace VideoGui
                 connectionString.CreateTableIfNotExists(sqlstring);
                 connectionString.AddFieldToTable("AutoInsert", "ISMUXED", "SMALLINT", 0);
                 connectionString.AddFieldToTable("AutoInsert", "MUXDATA", "VARCHAR(256)", "");
-
-
-
-                /*
-          selectedTagsList , availableTagsList , TitleTagsList, DescriptionsList
-          TitlesList,TitlesList2 - Tables, Loaders todo.
-          // linking in ConnectT(). 
-          // Todo SelectShortsUpload Loaded - ids for Tag & Dir Name off last id.
-             And Set index too in here.
-        */
-
-
-
                 sqlstring = $"create table AutoInsertHistory({Id},srcdir varchar(500), destfname varchar(500),StartPos BIGINT,Duration BIGINT,b720p SMALLINT," +
                     "bShorts SMALLINT,bEncodeTrim SMALLINT,bCutTrim SMALLINT,bMonitoredSource SMALLINT,bPersistentJob SMALLINT, RUNID INTEGER," +
                     "ISMUXED SMALLINT, MUXDATA VARCHAR(256)); ";
@@ -5079,23 +5076,7 @@ namespace VideoGui
                 return "";
             }
         }
-        public void DoComplexEditor()
-        {
-            try
-            {
-                var _complexfrm = new ComplexSchedular(ModuleCallback, AddRecord, DeleteRecord, CloseDialogComplexEditor,
-                     LocalSetFilterAge, LocalSetFilterString, GetFilterAges, GetFilterString);
-                Hide();
-                _complexfrm.ShowDialog();
-                Show();
-                _complexfrm = null;
 
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
-            }
-        }
         public bool IsClosed = false, IsClosing = false;
         public MainWindow(OnFinish DoOnFinish)
         {
@@ -10721,7 +10702,12 @@ namespace VideoGui
         {
             try
             {
-                DoComplexEditor();
+                var _complexfrm = new ComplexSchedular(ModuleCallback, AddRecord, DeleteRecord, CloseDialogComplexEditor,
+                     LocalSetFilterAge, LocalSetFilterString, GetFilterAges, GetFilterString);
+                Hide();
+                _complexfrm.ShowDialog();
+                Show();
+                _complexfrm = null;
             }
             catch (Exception ex)
             {

@@ -183,7 +183,7 @@ namespace VideoGui
         {
             try
             {
-                ModuleCallBack?.Invoke(this, new CustomParams_DataSelect(2));
+                ModuleCallBack?.Invoke(this, new CustomParams_DataSelect());
 
                 RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                 string Root = key.GetValueStr("MediaImporterSource", "c:\\");
@@ -256,8 +256,7 @@ namespace VideoGui
             {
                 if (IsLoaded)
                 {
-                    //Set_Lists?.Invoke(2);
-                    ModuleCallBack?.Invoke(this, new CustomParams_Initialize(2));
+                    ModuleCallBack?.Invoke(this, new CustomParams_Initialize());
                 }
             }
             catch (Exception ex)
@@ -282,6 +281,7 @@ namespace VideoGui
         {
             try
             {
+
                 if (lstSchedules.SelectedItems.Count > 0)
                 {
                     var p = lstSchedules.SelectedItems[lstSchedules.SelectedItems.Count - 1];
@@ -304,6 +304,7 @@ namespace VideoGui
         {
             try
             {
+                //e.OriginalSource is MenuItem mnu && mnu.DataContext is FileInfoGoPro fpgx;
                 DoEndSelect();
             }
             catch (Exception ex)

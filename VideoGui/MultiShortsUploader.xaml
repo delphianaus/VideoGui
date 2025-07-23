@@ -79,7 +79,7 @@
                    ComponentType="TextBlock"/>
                         <MSU:MultiListboxColumnDefinition HeaderText="Shorts Directory" 
                  ContentVerticalAlignment="Center" ContentMargin="0,0,0,0"
-                 DataField="DirectoryName,AutoFontWeight,AutoFontColor" Width="325" 
+                 DataField="DirectoryName,AutoFontWeight,AutoFontColor" Width="375" 
                  BoundTo="Text,FontWeight,Foreground" ComponentType="TextBlock"/>
                         <MSU:MultiListboxColumnDefinition HeaderText="Number of Shorts" 
                  ContentHorizontalAlignment="Center" 
@@ -102,6 +102,7 @@
                     <MSU:MultiListbox.ItemsContextMenu>
                         <ContextMenu>
                             <MenuItem Header="Remove Selected Directories" Click="mnuRemoveSelected_Click"/>
+                            <MenuItem Header="Make Active" Click="mnuMakeActive_Click"/>
                         </ContextMenu>
                     </MSU:MultiListbox.ItemsContextMenu>
                 </MSU:MultiListbox>

@@ -43,6 +43,14 @@ namespace VideoGui.Models
         }
     }
 
+    public class CustomParams_SetActive
+    {
+        public int index = 0;
+        public CustomParams_SetActive(int index)
+        {
+            this.index = index;
+        }
+    }
     public class CustomParams_RemoveMulitShortsInfoById
     {
         public int id = -1;
@@ -227,6 +235,9 @@ namespace VideoGui.Models
         public CustomParams_DataSelect(int _id)
         {
             Id = _id;
+        }
+        public CustomParams_DataSelect()
+        {
         }
     }
     public class CustomParams_SaveSchedule

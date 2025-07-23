@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:VideoGui"  WindowStyle="ToolWindow" 
         ResizeMode="NoResize" WindowStartupLocation="CenterScreen"  
-        mc:Ignorable="d" Loaded="Window_Loaded" Closing="Window_Closing"
+        mc:Ignorable="d" Loaded="Window_Loaded" 
         Title="Description Selection Editor" Height="440" Width="833" IsManipulationEnabled="True">
     <Grid ScrollViewer.VerticalScrollBarVisibility="Disabled" Width="821" Margin="2,2,2,2" Focusable="True" IsManipulationEnabled="True">
         <Border x:Name="brdDesc" BorderThickness="2" BorderBrush="Black" Margin="7,33,7,0" 

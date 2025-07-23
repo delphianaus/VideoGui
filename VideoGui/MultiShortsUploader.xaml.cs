@@ -35,8 +35,9 @@ namespace VideoGui
         databasehook<object> dbInit = null;
         public TitleSelectFrm DoTitleSelectFrm = null;
         public DescSelectFrm DoDescSelectFrm = null;
-        string connectionStr = "";
+        string connectionStr = "", OldTarget, OldgUrl;
         ScraperModule scraperModule = null;
+        public int ShortsIndex = -1;
         public bool IsClosing = false, IsClosed = false, Ready = false, IsFirstResize = false;
         private bool _isFirstResize = true;
         DispatcherTimer LocationChangedTimer = new DispatcherTimer();
@@ -304,28 +305,6 @@ namespace VideoGui
             }
 
         }
-
-        /*private T FindVisualChild<T>(DependencyObject obj, string name) where T : FrameworkElement
-        {
-            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(obj); i++)
-            {
-                var child = VisualTreeHelper.GetChild(obj, i);
-                if (child != null && child is T && ((T)child).Name == name)
-                {
-                    return (T)child;
-                }
-                else
-                {
-                    T childOfChild = FindVisualChild<T>(child, name);
-                    if (childOfChild != null)
-                    {
-                        return childOfChild;
-                    }
-                }
-            }
-            return null;
-        }*/
-
         private void DoDescSelectCreate(int DescId = -1)
         {
             try
@@ -468,33 +447,20 @@ namespace VideoGui
         {
             try
             {
-
                 SelectedTitleId = TitleId;
-                if (DoTitleSelectFrm is not null)
-                {
-                    if (!DoTitleSelectFrm.IsClosing && !DoTitleSelectFrm.IsClosed)
-                    {
-                        DoTitleSelectFrm.Close();
-                        DoTitleSelectFrm = new TitleSelectFrm(DoOnFinishTitleSelect, dbInit, true, TitleId);
-                        Hide();
-                        DoTitleSelectFrm.Show();
-                    }
-                }
-                else
-                {
-                    DoTitleSelectFrm = new TitleSelectFrm(DoOnFinishTitleSelect, dbInit, true, TitleId);
-                    Hide();
-                    DoTitleSelectFrm.Show();
-                }
+                var _DoTitleSelectFrm = new TitleSelectFrm(DoOnFinishTitleSelect, dbInit, true, TitleId);
+                Hide();
+                _DoTitleSelectFrm.Show();
+
             }
             catch (Exception ex)
             {
                 ex.LogWrite($"{this} DoTitleSelectCreate {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
             }
         }
-        int ShortsIndex = -1;
+        
 
-        private void DoOnFinishTitleSelect()
+        private void DoOnFinishTitleSelect(object sender, int e)
         {
             try
             {
@@ -549,13 +515,13 @@ namespace VideoGui
                 RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                 string rootfolder = FindUploadPath();
                 string shortsdir = key.GetValueStr("shortsdirectory", "");
+                CancellationTokenSource cts = new();
                 string SQLB = "SELECT * FROM UploadsRecord ORDER BY RDB$RECORD_VERSION DESC ROWS 100;";
-                connectionStr.ExecuteReader(SQLB, (FbDataReader r) =>
+                connectionStr.ExecuteReader(SQLB,cts, (FbDataReader r) =>
                 {
-                    if (Processed) return;
                     UploadFile = (r["UPLOADFILE"] is string f) ? f : "";
                     LinkedId = (UploadFile.Contains("_")) ? UploadFile.Split('_').LastOrDefault().ToInt(-1) : 93;
-                    if (LinkedId != -1) Processed = true;
+                    if (LinkedId != -1) cts.Cancel();
                 });
                 while (IsProcessing)
                 {
@@ -650,34 +616,14 @@ namespace VideoGui
 
                 if (Valid)
                 {
-                    if (scraperModule is not null && !scraperModule.IsClosed)
-                    {
-                        if (scraperModule.IsClosing) scraperModule.Close();
-                        while (!scraperModule.IsClosing)
-                        {
-                            Thread.Sleep(100);
-                        }
-                        scraperModule.Close();
-                        scraperModule = null;
-                    }
-                    if (scraperModule is not null && scraperModule.IsClosed)
-                    {
-                        scraperModule = null;
-                    }
-
-                    if (scraperModule is null)
-                    {
-                        WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
-                        string gUrl = webAddressBuilder.Dashboard().Address;
-                        int Maxuploads = (txtTotalUploads.Text != "") ? txtTotalUploads.Text.ToInt(100) : 100;
-                        int UploadsPerSlot = (txtMaxUpload.Text != "") ? txtMaxUpload.Text.ToInt(5) : 5;
-
-                        scraperModule = new ScraperModule(dbInit, doOnFinish, gUrl, Maxuploads, UploadsPerSlot, 0, true);
-
-                        scraperModule.ShowActivated = true;
-                        Hide();
-                        scraperModule.Show();
-                    }
+                    WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
+                    string gUrl = webAddressBuilder.Dashboard().Address;
+                    int Maxuploads = (txtTotalUploads.Text != "") ? txtTotalUploads.Text.ToInt(100) : 100;
+                    int UploadsPerSlot = (txtMaxUpload.Text != "") ? txtMaxUpload.Text.ToInt(5) : 5;
+                    var _scraperModule = new ScraperModule(dbInit, doOnFinish, gUrl, Maxuploads, UploadsPerSlot, 0, true);
+                    _scraperModule.ShowActivated = true;
+                    Hide();
+                    _scraperModule.Show();
                 }
             }
             catch (Exception ex)
@@ -692,8 +638,6 @@ namespace VideoGui
             {
                 if (sender is ScraperModule sa)
                 {
-
-
                     WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
                     string gUrl = webAddressBuilder.Dashboard().Address;
                     RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
@@ -822,7 +766,7 @@ namespace VideoGui
                         {
                             int Maxuploads = (txtTotalUploads.Text != "") ? txtTotalUploads.Text.ToInt(100) : 100;
                             int UploadsPerSlot = (txtMaxUpload.Text != "") ? txtMaxUpload.Text.ToInt(5) : 5;
-                            var sscraperModule = new ScraperModule(dbInit, doOnFinish, gUrl, Maxuploads, UploadsPerSlot, 0, false);
+                            var sscraperModule = new ScraperModule(dbInit, var doOnFinish, gUrl, Maxuploads, UploadsPerSlot, 0, false);
                             sscraperModule.ShowActivated = true;
                             sscraperModule.ScheduledOk.AddRange(filesdone);
                             Hide();
@@ -979,7 +923,7 @@ namespace VideoGui
             }
         }
 
-        string OldTarget, OldgUrl;
+        
         private void txtMaxUpload_KeyDown(object sender, KeyEventArgs e)
         {
             try
@@ -996,6 +940,24 @@ namespace VideoGui
                 ex.LogWrite($"txtMaxUpload_KeyDown {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
         }
+
+        private void mnuMakeActive_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (e.OriginalSource is MenuItem m && 
+                    m.DataContext is SelectedShortsDirectories rp && !rp.IsActive)
+                {
+                    dbInit?.Invoke(this, new CustomParams_SetActive(rp.LinkedShortsDirectoryId));
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"mnuMakeActive_Click {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
+            }
+        }
+
+       
 
         private void txtTotalUploads_KeyDown(object sender, KeyEventArgs e)
         {

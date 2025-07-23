@@ -27,17 +27,14 @@ namespace VideoGui
         public string BaseTitle = "";
 
         bool IsUploadsBuilder = false;
-        public TitleSelectFrm(OnFinish __ShowEditor, databasehook<Object> dbhook,
+        public TitleSelectFrm(OnFinishIdObj OnFinished, databasehook<Object> dbhook,
             bool _IsUploadsBuilder = false, int _TitleId = -1)
         {
             try
             {
-                //TagTitle = _Title;
-                //IsShorts = IsShortTitle;
-                OnFinished = __ShowEditor;
                 dbhookup = dbhook;
                 Closing += (s, e) => { IsClosing = true; };
-                Closed += (s, e) => { IsClosed = true; IsTitleChanged = false; __ShowEditor?.Invoke(); };
+                Closed += (s, e) => { IsClosed = true; IsTitleChanged = false; OnFinished?.Invoke(this,-1); };
                 IsUploadsBuilder = _IsUploadsBuilder;
                 InitializeComponent();
                 TitleId = _TitleId;

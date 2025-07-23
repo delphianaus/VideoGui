@@ -13,24 +13,22 @@ namespace VideoGui
     /// </summary>
     public partial class DescSelectFrm : Window
     {
-        OnFinish DoOnFinish;
         bool IsUploadsBuilder = false;
         databasehook<object> DoDbHook;
         public string Desc = "";
         public bool IsShortVideo = false, IsDescChanged = false, IsClosed = false, 
             IsClosing = false;
         public int Id = -1, LinkedId = -1, TitleTagId = -1;
-        public DescSelectFrm(OnFinish _DoOnFinish, databasehook<Object> _DoDbHook,
+        public DescSelectFrm(OnFinishIdObj _DoOnFinish, databasehook<Object> _DoDbHook,
             bool _IsUploadsBuilder = false, int _id = -1)
         {
             try
             {
-                DoOnFinish = _DoOnFinish;
                 DoDbHook = _DoDbHook;
                 Id = _id;
                 IsUploadsBuilder = _IsUploadsBuilder;
                 Closing += (s, e) => { IsClosing = true; };
-                Closed += (s, e) => { IsClosed = true; IsDescChanged = false; _DoOnFinish?.Invoke(); };
+                Closed += (s, e) => { IsClosed = true; IsDescChanged = false; _DoOnFinish?.Invoke(this, -1); };
                 InitializeComponent();
             }
             catch (Exception ex)
@@ -96,18 +94,7 @@ namespace VideoGui
             }
         }
 
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
-        {
-            try
-            {
-               
-                DoOnFinish?.Invoke();
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite($"Window_Closing {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
-            }
-        }
+       
 
 
 
