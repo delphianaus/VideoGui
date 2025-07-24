@@ -72,6 +72,7 @@ using System.Xml.Linq;
 using VideoGui.ffmpeg;
 using VideoGui.ffmpeg.Events;
 using VideoGui.ffmpeg.Streams.Audio;
+using VideoGui.ffmpeg.Streams.Text;
 using VideoGui.ffmpeg.Streams.Video;
 using VideoGui.Models;
 using VideoGui.Models.delegates;
@@ -265,8 +266,8 @@ namespace VideoGui
 
 
 
-       
-       
+
+
 
         public void ShowScraper(Nullable<DateTime> startdate = null, Nullable<DateTime> enddate = null,
             List<ListScheduleItems> _listSchedules = null, int SchMaxUploads = 100, int _eventid = 0)
@@ -505,10 +506,10 @@ namespace VideoGui
                 }
                 if (tld is CustomParams_SetActive tsa)
                 {
-                    foreach(var item in SelectedShortsDirectoriesList)
+                    foreach (var item in SelectedShortsDirectoriesList)
                     {
                         item.IsActive = (item.LinkedShortsDirectoryId == tsa.index) ? true : false;
-                        string sql = "UPDATE MULTISHORTSINFO SET ISSHORTSACTIVE = @ISSHORTSACTIVE " 
+                        string sql = "UPDATE MULTISHORTSINFO SET ISSHORTSACTIVE = @ISSHORTSACTIVE "
                             + "WHERE LINKEDSHORTSDIRECTORYID = @LINKEDSHORTSDIRECTORYID;";
                         connectionString.ExecuteScalar(sql, [("@ISSHORTSACTIVE", item.IsActive),
                             ("@LINKEDSHORTSDIRECTORYID", item.LinkedShortsDirectoryId)]);
@@ -539,7 +540,7 @@ namespace VideoGui
                             item.LastUploadedDateFile = new DateTime(1900, 1, 1);
                         }
                     }
-                } 
+                }
                 if (tld is CustomParams_SetIndex cpsii)
                 {
                     ShortsDirectoryIndex = cpsii.index;
@@ -7477,6 +7478,7 @@ namespace VideoGui
                 double TotalSecs = 0;
                 IAudioStream audioStream = null;
                 IVideoStream videoStream = null;
+                List<TextStream> textStreams = new List<TextStream>();
                 LineNum = 31;
                 if (job.Title is null)
                 {
@@ -7596,7 +7598,7 @@ namespace VideoGui
                     LineNum = 48;
                     TotalSecs = bridge.GetDuration().TotalSeconds;
                     TimeSpan Dur = TimeSpan.Zero;
-                    (videoStream, audioStream, Dur) = bridge.ReadMediaFile(Files[0]);
+                    (videoStream, audioStream, textStreams, Dur) = bridge.ReadMediaFile(Files[0]);
                     bridge = null;
                     LineNum = 49;
                 }
@@ -7615,10 +7617,10 @@ namespace VideoGui
 
                     ffmpegbridge bridge = new ffmpegbridge();
                     TimeSpan Dur = TimeSpan.Zero;
-                    (videoStream, audioStream, Dur) = bridge.ReadMediaFile(SourceFile);
+                    (videoStream, audioStream, textStreams, Dur) = bridge.ReadMediaFile(SourceFile);
                     if (audioStream.Channels == 0)
                     {
-                        (videoStream, audioStream, Dur) = bridge.ReadMediaFile(SourceFile);
+                        (videoStream, audioStream, textStreams, Dur) = bridge.ReadMediaFile(SourceFile);
                     }
                     bridge = null;
                     LineNum = 51;
@@ -7626,7 +7628,25 @@ namespace VideoGui
                     LineNum = 52;
                 }
                 LineNum = 53;
-
+                bool HasText = textStreams.Count > 0;
+                int TextStreamId = -1;
+                if (HasText)
+                {
+                    int firststream = -1;
+                    for (int i = 0; i < textStreams.Count; i++)
+                    {
+                        TextStream ts = textStreams[i];
+                        if (i == 0 && ts.Id.HasValue)
+                        {
+                            firststream = ts.Id.Value;
+                        }
+                        if (firststream != -1 && ts.Language == "en" && ts.Id.HasValue &&
+                            ts.Forced== 1 && ts.Default == 1)
+                        {
+                            TextStreamId = ts.Id.Value - firststream;
+                        }
+                    }
+                }
 
                 ffmpeg.VideoCodec DecoderCodec = ffmpeg.VideoCodec.h264;
                 double aspectratio = -1;
@@ -7917,6 +7937,7 @@ namespace VideoGui
 
                     LockedDeviceID = 0;
                     conversion.AddStream(videoStream).AddStream(audioStream)
+                                                     .UseTextStream(TextStreamId, HasText)
                                                      .SetOutput(DestFile, job.IsTwitchActive)
                                                      .SetSourceIndex(job.SourceFileIndex)
                                                      .SetTotalTime(totalseconds)
@@ -11377,7 +11398,7 @@ namespace VideoGui
 
                     ffmpegbridge bridge = new ffmpegbridge();
                     TimeSpan Dur = TimeSpan.Zero;
-                    (IVideoStream videoStream, IAudioStream audioStream, Dur) = bridge.ReadMediaFile(SourceFile);
+                    (IVideoStream videoStream, IAudioStream audioStream,List<TextStream> textStream, TimeSpan Durx) = bridge.ReadMediaFile(SourceFile);
                     bridge = null;
 
 

@@ -19,6 +19,7 @@ using System.Windows.Media.Imaging;
 using System.Reflection;
 using System.Net;
 using System.Runtime.CompilerServices;
+using VideoGui.ffmpeg.Streams.Text;
 
 namespace VideoGui.ffmpeg.Streams.MediaInfo
 {
@@ -40,6 +41,7 @@ namespace VideoGui.ffmpeg.Streams.MediaInfo
 
         public List<IAudioStream> AudioStreams { get; set; }
 
+        public List<ITextStream> TextStreams { get; set; }
         public string Path { get; }
 
         public string ExePath { get; }
@@ -219,6 +221,8 @@ namespace VideoGui.ffmpeg.Streams.MediaInfo
                                     mediaInfo.VideoStreams = new();
                                 if (mediaInfo.AudioStreams == null)
                                     mediaInfo.AudioStreams = new();
+                                if (mediaInfo.TextStreams == null)
+                                    mediaInfo.TextStreams = new();
                                 FormatModel.Format format = root.format;
                                 if (format.size != null)
                                 {
@@ -248,6 +252,17 @@ namespace VideoGui.ffmpeg.Streams.MediaInfo
                                     video.Framerate = GetVideoFramerate(model);
                                     video.Ratio = GetVideoAspectRatio(model.width, model.height);
                                     mediaInfo.VideoStreams.Add(video);
+                                }
+                                foreach (var model in streams.Where(x => x.codec_type == "text"))
+                                {
+                                    TextStream text = new();
+                                    text.Codec = model.codec_name;
+                                    text.Index = model.index;
+                                    text.Duration = GetAudioDuration(model);
+                                    text.Language = model.tags?.language;
+                                    text.Default = model.disposition?._default;
+                                    text.Forced = model.disposition?.forced;
+                                    mediaInfo.TextStreams.Add(text);
                                 }
                                 foreach (var model in streams.Where(x => x.codec_type == "audio"))
                                 {

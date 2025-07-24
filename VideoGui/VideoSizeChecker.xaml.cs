@@ -18,6 +18,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using VideoGui.ffmpeg;
+using VideoGui.ffmpeg.Streams.Text;
 using VideoGui.ffmpeg.Streams.Video;
 
 namespace VideoGui
@@ -91,7 +92,11 @@ namespace VideoGui
                 string finished_dir = LoadedKey ? (string)key.GetValue("CompDirectory", defaultdrive) : string.Empty;
                 key.Close();
                 var FileConverter = new ffmpegbridge();
-                (ffmpeg.Streams.Video.IVideoStream videoStream, ffmpeg.Streams.Audio.IAudioStream AudioStream,TimeSpan Dur) = FileConverter.ReadMediaFile(filename);
+                (ffmpeg.Streams.Video.IVideoStream videoStream, 
+                    ffmpeg.Streams.Audio.IAudioStream AudioStream,
+                    List<TextStream> TextStreams,
+
+                    TimeSpan Dur) = FileConverter.ReadMediaFile(filename);
                 FileConverter = null;
                 if (videoStream != null)
                 {

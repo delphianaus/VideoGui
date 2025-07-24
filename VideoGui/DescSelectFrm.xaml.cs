@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Input;
 using VideoGui.Models.delegates;
 using VideoGui.Models;
+using System.Windows.Controls;
 
 
 namespace VideoGui
@@ -102,8 +103,8 @@ namespace VideoGui
         {
             try
             {
-
-                if (lstAllDescriptions.SelectedItem is Descriptions DS)
+                
+                if (e.OriginalSource is MenuItem mnu && mnu.DataContext is Descriptions DS)
                 {
                     DoDbHook?.Invoke(this, new CustomParams_Remove(DS.Id));
                 }
@@ -118,7 +119,7 @@ namespace VideoGui
         {
             try
             {
-                if (lstAllDescriptions.SelectedItem is Descriptions DS)
+                if (e.OriginalSource is MenuItem mnu && mnu.DataContext is Descriptions DS)
                 {
                     txtDesc.Text = DS.Description;
                     txtDescName.Text = DS.TitleTag;

@@ -12,6 +12,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using VideoGui.ffmpeg.Streams.Audio;
+using VideoGui.ffmpeg.Streams.Text;
 using VideoGui.ffmpeg.Streams.Video;
 using static System.Net.WebRequestMethods;
 
@@ -48,12 +49,14 @@ namespace VideoGui
             }
         }
 
-        public (IVideoStream, IAudioStream, TimeSpan) ReadMediaFile(string filePath)
+        public (IVideoStream, IAudioStream, List<TextStream>, TimeSpan) ReadMediaFile(string filePath)
         {
             try
             {
                 ffmpeg.Streams.Video.IVideoStream videostream = new ffmpeg.Streams.Video.VideoStream();
                 ffmpeg.Streams.Audio.IAudioStream audiostream = new ffmpeg.Streams.Audio.AudioStream();
+                List<ffmpeg.Streams.Text.TextStream> textstream = new List<ffmpeg.Streams.Text.TextStream>();
+                
                 var mw1 = new MediaInfo.MediaInfo();
                 mw1.Open(filePath);
                 double durgen = mw1.Get(StreamKind.General, 0, "Duration").ToDouble();
@@ -62,6 +65,43 @@ namespace VideoGui
                 int vstrcnt = mw1.CountGet(MediaInfo.StreamKind.Video);
                 int astrcnt = mw1.CountGet(MediaInfo.StreamKind.Audio);
                 int cstrcnt = mw1.CountGet(MediaInfo.StreamKind.Other);
+                int tstrcnt = mw1.CountGet(MediaInfo.StreamKind.Text);
+                if (tstrcnt > 0)
+                {
+                    /*        ID                          : 3
+                       Format                      : ASS
+                       Codec ID                    : S_TEXT/ASS
+                       Codec ID/Info               : Advanced Sub Station Alpha
+                       Duration                    : 39 min 38 s
+                       Compression mode            : Lossless
+                       Title                       : English (forced)
+                       Language                    : English
+                       Default                     : Yes
+                       Forced                      : Yes
+                     */
+                    int ID = mw1.Get(StreamKind.Text, 0, "ID").ToInt();
+                    string Codec = mw1.Get(StreamKind.Text, 0, "Format");
+                    string CodecID = mw1.Get(StreamKind.Text, 0, "Codec ID");
+                    string CodecIDInfo = mw1.Get(StreamKind.Text, 0, "Codec ID/Info");
+                    double dur = mw1.Get(StreamKind.Video, 0, "Duration").ToDouble();
+                    TimeSpan Duration = TimeSpan.FromMilliseconds(dur);
+                    string Title = mw1.Get(StreamKind.Text, 0, "Title");
+                    string Language = mw1.Get(StreamKind.Text, 0, "Language");
+                    int CompressionMode = mw1.Get(StreamKind.Text, 0, "Compression mode").ToInt();
+                    int Default = mw1.Get(StreamKind.Text, 0, "Default").ToIntYesNo();
+                    int Forced = mw1.Get(StreamKind.Text, 0, "Forced").ToIntYesNo();
+                    textstream.Add(new TextStream(Codec,  Duration,CodecID, CodecIDInfo,
+                       Title, Language, CompressionMode, Default, Forced,ID));
+                    /*
+                     public ITextStream Initialize(string _Codec, 
+                    TimeSpan _Duration,
+                    string _CodecInfo, 
+                    string _Title, 
+                    string _CodecId, 
+                    string _Language,
+                    int _Default, int _Forced, int _id)*/
+
+                }
                 if (vstrcnt > 0)
                 {
                     string Codec = mw1.Get(MediaInfo.StreamKind.Video, 0, "Format").Replace("-", "").ToLower();
@@ -93,7 +133,7 @@ namespace VideoGui
                         {
                             string Language = mw1.Get(StreamKind.Audio, i, "Language");
                             if (Language == "en") Language += "g";
-                            if (Language == "eng" || (Language == "" && astrcnt==1)|| astrcnt == 1)
+                            if (Language == "eng" || (Language == "" && astrcnt == 1) || astrcnt == 1)
                             {
                                 string Codec = mw1.Get(MediaInfo.StreamKind.Audio, i, "Format").Replace("-", "").ToLower();
                                 TimeSpan Duration = TimeSpan.FromMilliseconds(mw1.Get(StreamKind.Audio, i, "Duration").ToDouble());
@@ -112,12 +152,12 @@ namespace VideoGui
                     }
                 }
                 mw1.Close();
-                return (videostream, audiostream, DurationGen);
+                return (videostream, audiostream, textstream,DurationGen);
             }
             catch (Exception ex)
             {
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
-                return (null, null, TimeSpan.Zero);
+                return (null, null, null,TimeSpan.Zero);
             }
         }
         public ffmpegbridge()

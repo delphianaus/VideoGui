@@ -12,6 +12,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Transactions;
 using System.Windows;
+using System.Windows.Forms;
 using CliWrap;
 using CliWrap.EventStream;
 using Microsoft.Extensions.Logging;
@@ -581,6 +582,12 @@ namespace VideoGui.ffmpeg
                                 .Add($"{_dest}"))
                                 .WithValidation(CommandResultValidation.None).
                                WithWorkingDirectory(defaultpath);
+                            if (cmd is not null)
+                            {
+
+                            }
+
+
                         }
                         else
                         {
@@ -1302,6 +1309,7 @@ namespace VideoGui.ffmpeg
                 }
                 foreach (IStream stream in _streams)
                 {
+                   
                     if (stream is VideoStream vs)
                     {
                         List<string> inputfilter = new List<string>();
@@ -1537,6 +1545,23 @@ namespace VideoGui.ffmpeg
             }
         }
 
+        public IConverter UseTextStream(int textStream = 0, bool UseTextStream=false)
+        {
+            try
+            {
+                if (UseTextStream)
+                {
+                    _parameters.Add(($"-map 0:s:{textStream}", false));
+                    _parameters.Add(($"-c:s copy", false));
+                }
+                return this;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+                return this;
+            }
+        }
         public IConverter UseMultiThread(bool multiThread)
         {
             try

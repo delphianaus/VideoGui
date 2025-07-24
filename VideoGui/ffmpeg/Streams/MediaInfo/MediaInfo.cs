@@ -19,6 +19,7 @@ using System.Windows.Media.Imaging;
 using System.Reflection;
 using System.Net;
 using System.Runtime.CompilerServices;
+using VideoGui.ffmpeg.Streams.Text;
 
 namespace VideoGui.ffmpeg.Streams.MediaInfo
 {
@@ -29,7 +30,7 @@ namespace VideoGui.ffmpeg.Streams.MediaInfo
             Path = path;
             ExePath = exePath;
         }
-        public IEnumerable<IStream> Streams => VideoStreams.Concat<IStream>(AudioStreams);
+        public IEnumerable<IStream> Streams => VideoStreams.Concat<IStream>(AudioStreams).Concat<IStream>(TextStreams);
         public TimeSpan Duration { get; internal set; }
         /// <inheritdoc />
         public long Size { get; internal set; }
@@ -38,11 +39,14 @@ namespace VideoGui.ffmpeg.Streams.MediaInfo
 
         public List<IVideoStream> VideoStreams { get; set; }
 
-        public List<IAudioStream> AudioStreams { get; set; }
+        public List<IAudioStream> AudioStreams { get; set; }  
+        public List<ITextStream> TextStreams { get; set; }
 
         public string Path { get; }
 
         public string ExePath { get; }
+
+     
 
         /// <summary>
         ///     Get MediaInfo from file
@@ -226,6 +230,17 @@ namespace VideoGui.ffmpeg.Streams.MediaInfo
                                 }
                                 string TimeCode = "";
                                 int count = streams.Where(x => x.codec_type == "video").Count();
+                                foreach (var model in streams.Where(x => x.codec_type == "text"))
+                                {
+                                    TextStream text = new();
+                                    text.Codec = model.codec_name;
+                                    text.Index = model.index;
+                                    text.Path = filePath;
+                                    text.Duration = GetVideoDuration(model, format);
+                                    text.Default = model.disposition?._default;
+                                    text.Forced = model.disposition?.forced;
+                                    mediaInfo.TextStreams.Add(text);
+                                }
                                 foreach (var model in streams.Where(x => x.codec_type == "video"))
                                 {
                                     VideoStream video = new();

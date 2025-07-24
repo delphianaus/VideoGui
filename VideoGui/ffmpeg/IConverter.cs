@@ -32,7 +32,7 @@ namespace VideoGui.ffmpeg
 
         IConverter AddStream<T>(params T[] streams) where T : IStream;
         IConverter SetSeek(TimeSpan? seek);
-
+        IConverter UseTextStream(int textStream = 0, bool UseTextStream = false);
         IConverter SetSourceIndex(int index);
         IConverter SetPreset(ConversionPreset preset);
         IConverter SetTotalTime(double _totalseconds);

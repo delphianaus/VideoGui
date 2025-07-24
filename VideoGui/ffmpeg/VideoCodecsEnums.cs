@@ -989,7 +989,9 @@ namespace VideoGui.ffmpeg
         /// <summary>
         ///     Subtitle stream
         /// </summary>
-        Subtitle = 2
+        Subtitle = 2,
+
+        Text = 3
     }
     public enum Format
     {
