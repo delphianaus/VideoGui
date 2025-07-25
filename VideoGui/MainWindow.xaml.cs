@@ -7644,6 +7644,12 @@ namespace VideoGui
                             ts.Forced== 1 && ts.Default == 1)
                         {
                             TextStreamId = ts.Id.Value - firststream;
+                            break;
+                        }
+                        if (firststream != -1 && ts.Id.HasValue && ts.Default == 1)
+                        {
+                            TextStreamId = ts.Id.Value - firststream;
+                            break;
                         }
                     }
                 }
