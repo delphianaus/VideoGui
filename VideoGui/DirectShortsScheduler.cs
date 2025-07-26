@@ -16,6 +16,7 @@ using Google.Apis.YouTube.v3;
 using Microsoft.Web.WebView2.Wpf;
 using FirebirdSql.Data.FirebirdClient;
 using Windows.ApplicationModel.Activation;
+using System.Security.Policy;
 
 namespace VideoGui
 {
@@ -37,17 +38,21 @@ namespace VideoGui
         public DateTime StartDate = DateTime.Now, EndDate = DateTime.Now, LastValidDate = DateTime.Now;
         List<DateTime> AvailableSchedules = new List<DateTime>();
         ReportVideoScheduled DoReportScheduled = null;
+        ScheduleTaskCancelled TaskCanceledScheduled = null;
         public int MaxNumberSchedules = 100, ScheduleNumber = 0;
         bool setup = false, BeginMode = false, FinishMode = false, FirstTime = false;
         public bool CanSchedule = true;
         public DirectshortsScheduler(OnFinish doOnFinish, OnFinishBool doOnFinishSchedulesComplete,
             List<ListScheduleItems> listSchedules,
-            DateTime startDate, DateTime endDate, ReportVideoScheduled doReportSchedule, int maxNumberSchedules,
+            DateTime startDate, DateTime endDate,
+            ReportVideoScheduled doReportSchedule,
+            ScheduleTaskCancelled ScheduleTaskCanceled,
+            int maxNumberSchedules,
             bool isTest)
         {
             try
             {
-
+                TaskCanceledScheduled = ScheduleTaskCanceled;
                 DoOnFinishSchedulesComplete = doOnFinishSchedulesComplete;
                 MaxNumberSchedules = maxNumberSchedules;
                 DoReportScheduled = doReportSchedule;
@@ -242,7 +247,21 @@ namespace VideoGui
                     CanSchedule = false;
                     DoReportScheduled?.Invoke(DateTime.Now, "", ls);
                 }
-                else DoReportScheduled?.Invoke(DateTime.Now, videoId, message);
+                else
+                {
+                    string[] msx = new string[] { "task", "cancelled" };
+                    if (message.ToLower().ContainsAll(msx))
+                    {
+                        TaskCanceledScheduled?.Invoke();
+                        return FinishType.TaskCancelled;
+                    }
+                    else
+                    {
+                        DoReportScheduled?.Invoke(DateTime.Now, videoId, message);
+                        return FinishType.Error;
+                    }
+                }
+
                 ex.LogWrite($"ApplyVideoSchedule {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
                 AvailableSchedules.Add(ScheduleAt);
                 return FinishType.Error;
@@ -276,6 +295,8 @@ namespace VideoGui
             }
         }
 
+        public DateTime LastScheduledTime = DateTime.UtcNow.AddYears(-500);
+        public int LastGap = -1;
 
         public FinishType DoSchedule(string videoId, string TitleStr, string DescStr)
         {
@@ -326,6 +347,8 @@ namespace VideoGui
                             {
                                 DoReportScheduled(ScheduleDate, videoId, TitleStr);
                                 CurrentTime = CurrentTime.Add(GapTime);
+                                LastScheduledTime = ScheduleDate; 
+                                LastGap = GapTime.Minutes;
                             }
                             return r;
                         }

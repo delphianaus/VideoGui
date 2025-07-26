@@ -10,7 +10,7 @@ using FirebirdSql.Data.FirebirdClient;
 
 namespace VideoGui.Models.delegates
 {
-    public enum FinishType { Finished, Scheduled, Error, InTest, GapTimeZero, LookUpError };
+    public enum FinishType { Finished, Scheduled, Error, InTest, GapTimeZero, LookUpError,TaskCancelled };
     public enum ButtonReturnType { NotPresent, Disabled, Enabled };
     public enum FilterTypes { DestinationDirectory, DestinationFileName, SourceDirectory };
     public enum FilterClass { Current, Historic };
@@ -44,6 +44,7 @@ namespace VideoGui.Models.delegates
 
     public delegate string OnGetTagIds(int id);
     public delegate void GetNextNode();
+    public delegate void ScheduleTaskCancelled();
     public delegate void ReportVideoScheduled(DateTime dateTime, string id, string title);
     public delegate void AudioJoinerOnClose();
     public delegate void AddressUpdate(string address);

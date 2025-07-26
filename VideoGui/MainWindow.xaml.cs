@@ -10603,6 +10603,44 @@ namespace VideoGui
                 Show();
                 Task.Run(() =>
                 {
+                    if (sender is ScraperModule ss && ss.TaskHasCancelled)
+                    {
+                        string sqla = "SELECT ID FROM SETTINGS WHERE SETTINGNAME = @P0";
+                        int iScheduleID = connectionString.ExecuteScalar(sqla, [("@P0", "CURRENTSCHEDULINGID")]).ToInt(-1);
+                        List<ListScheduleItems> _listItems = SchedulingItemsList.Where(s => s.ScheduleId == iScheduleID)
+                                 .Select(s => new ListScheduleItems(s.Start, s.End, s.Gap)).ToList();
+                        WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
+                        string gUrl = webAddressBuilder.AddFilterByDraftShorts().GetHTML();
+                        int Max = 100;
+                        var s = LoadString("maxr");
+                        if (s.ToInt(-1) != -1)
+                        {
+                            Max = s.ToInt(-1);
+                        }
+                        Nullable<DateTime> startdate = LoadDate("ScheduleDate");
+                        Nullable<DateTime> enddate = DateTime.Now.AddHours(10);
+                        Nullable<TimeSpan> ts = LoadTime("ScheduleTime");
+                        Nullable<TimeSpan> te = LoadTime("ScheduleTimeEnd");
+                        if (startdate.HasValue)
+                        {
+                            enddate = startdate.Value;
+                            if (ts.HasValue)
+                            {
+                                startdate.Value.AtTime(TimeOnly.FromTimeSpan(ts.Value));
+                            }
+                            if (te.HasValue)
+                            {
+                                enddate.Value.AtTime(TimeOnly.FromTimeSpan(te.Value));
+                            }
+                            var _scheduleScraperModule = new ScraperModule(ModuleCallback, mnl_scraper_OnFinish, gUrl,
+                                startdate, enddate, Max, _listItems, 0, false);
+                            _scheduleScraperModule.ShowActivated = true;
+                            Hide();
+                            _scheduleScraperModule.Show();
+                        }
+
+
+                    }
                     /*if (sender is ScraperModule ss && !ss.IsClosed)
                     {
                         if (ss.IsClosing) ss.Close();

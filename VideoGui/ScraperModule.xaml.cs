@@ -109,6 +109,7 @@ namespace VideoGui
         bool Valid = false, IsVideoLookupShort = false, IsValid = false, IsUnlisted = false, IsDashboardMode = false, CanSpool = false, FirstRun = true, done = false, HasExited = false;
         bool DoNextNode = true, finished = false, TimedOut = false, Uploading = false, NextRecord = false, Processing = false, clickupload = true;
         public bool IsClosing = false, IsClosed = false, Exceeded = false, KilledUploads = false, SwapEnabled = false, IsTitleEditor = false;
+        public bool TaskHasCancelled = false;
         string SendKeysString = "", UploadPath = "", LastNode = "", DefaultUrl = "", LastValidFileName = "", TableDestination = "";
         List<ScraperUploads> Scraper_uploaded = new();
         List<string> IdNodes = new(), titles = new List<string>(), nextaddress = new(), Ids = new(), Idx = new(), ufiles = new(), Files = new();// DoneFiles = new();
@@ -1695,6 +1696,9 @@ namespace VideoGui
                                     if (HandlerOk == FinishType.Error)
                                     {
                                         lstMain.Items.Insert(0, $"Error on Scheduling Detected.");
+                                        // Get Last Scheduled Time.
+
+
                                         canceltoken.Cancel();
                                         break;
                                     }
@@ -2853,8 +2857,12 @@ namespace VideoGui
                         if (ScraperType == EventTypes.ShortsSchedule && directshortsScheduler is null && ReleaseDate.HasValue && ReleaseEndDate.HasValue)
                         {
                             string connectionStr = dbInitializer?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
-                            directshortsScheduler = new DirectshortsScheduler(() => { Show(); }, DoOnScheduleComplete, listSchedules,
-                                ReleaseDate.Value, ReleaseEndDate.Value, DoReportSchedule, ScheduleMax, IsTest);
+                            directshortsScheduler = new DirectshortsScheduler(() => { Show(); }, 
+                                DoOnScheduleComplete, listSchedules,
+                                ReleaseDate.Value, ReleaseEndDate.Value, 
+                                DoReportSchedule,
+                                DoScheduleTaskCancel,
+                                ScheduleMax, IsTest);
                             directshortsScheduler.connectionString = connectionStr;
                         }
                         IsVideoLookup = true;
@@ -2918,6 +2926,19 @@ namespace VideoGui
             {
                 ex.LogWrite($"YouTubeLoaded {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
                 return false;
+            }
+        }
+        
+        private void DoScheduleTaskCancel()
+        {
+            try
+            {
+                TaskHasCancelled = true;
+                Close();
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"DoScheduleTaskCancel {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
 
@@ -3048,7 +3069,30 @@ namespace VideoGui
                     {
                         cancelds();
                         canceltoken.Cancel();
-                       
+                        Nullable<TimeSpan> st = LoadTime("ScheduleTimeStart");
+                        Nullable<TimeSpan> et = LoadTime("ScheduleTimeEnd");
+                        if (st.HasValue && et.HasValue)
+                        {
+                            st = LoadTime("ScheduleTimeStart_Default");
+                            if (st is null)
+                            {
+                                st = new TimeSpan(11, 0, 0);
+                                SaveTime(st.Value, "ScheduleTimeStart_Default");
+                            }
+                            SaveTime(st.Value, "ScheduleTimeStart");
+                            st = LoadTime("ScheduleTimeEnd_Default");
+                            if (st is null)
+                            {
+                                st = new TimeSpan(20, 0, 0);
+                                SaveTime(st.Value, "ScheduleTimeEnd_Default");
+                            }
+                            SaveTime(st.Value, "ScheduleTimeEnd");
+                            Nullable<DateTime> dt = LoadDate("ScheduleDate");
+                            if (dt.HasValue)
+                            {
+                                SaveDates(dt.Value.AddDays(1), "ScheduleDate");
+                            }
+                        }
                         var _DoAutoCancel = new AutoCancel(DoAutoCancelClose, "", 5, "Scheduling Finished");
                         _DoAutoCancel.ShowActivated = true;
                         _DoAutoCancel.Show();
@@ -3061,6 +3105,51 @@ namespace VideoGui
             {
                 ex.LogWrite($"DoOnScheduleComplete {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
                 return false;
+            }
+        }
+        public void SaveDates(DateTime startdate, string name, bool IsDateTime = false)
+        {
+            try
+            {
+                var connectionString = dbInitializer?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
+                string sql = "SELECT * FROM SETTINGS WHERE SETTINGNAME = @P0";
+                int id = connectionString.ExecuteScalar(sql, [("@P0", name)]).ToInt(-1);
+                if (id != -1)
+                {
+                    sql = "UPDATE SETTINGS SET SETTINGDATE = @P1 WHERE ID = @P2";
+                    connectionString.ExecuteScalar(sql, [("@P1", startdate.Date), ("@P2", id)]);
+                }
+                else
+                {
+                    sql = "INSERT INTO SETTINGS (SETTINGDATE,SETTINGNAME) VALUES (@P0,@P1)";
+                    connectionString.ExecuteScalar(sql, [("@P0", startdate.Date), ("@P1", name)]);
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"SavedDates {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+        }
+        public Nullable<DateTime> LoadDate(string name)
+        {
+            try
+            {
+                var connectionString = dbInitializer?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
+                string sql = "SELECT ID FROM SETTINGS WHERE SETTINGNAME = @P0";
+                int idx = connectionString.ExecuteScalar(sql, [("@P0", name)]).ToInt(-1);
+                if (idx == -1) return null;
+                sql = "SELECT SETTINGDATE FROM SETTINGS WHERE SETTINGNAME = @P0";
+                var obj = connectionString.ExecuteScalar(sql, [("@P0", name)]);
+                if (obj is DateTime dt)
+                {
+                    return dt;
+                }
+                else return null;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"LoadDate {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+                return null;
             }
         }
 
@@ -3100,6 +3189,15 @@ namespace VideoGui
                     lblLastNode.Content = $"{r} Scheduled";
                     SetMargin(StatusBar);
                     System.Windows.Forms.Application.DoEvents();
+                    var nextSchedule = directshortsScheduler.LastScheduledTime.
+                    AddMinutes(directshortsScheduler.LastGap);
+                    Nullable<TimeSpan> st = LoadTime("ScheduleTimeStart");
+                    Nullable<TimeSpan> et = LoadTime("ScheduleTimeEnd");
+                    if (nextSchedule.TimeOfDay > st.Value && nextSchedule.TimeOfDay < et.Value)
+                    {
+                        SaveTime(nextSchedule.TimeOfDay, "ScheduleTimeStart");
+                    }
+
                 });
             }
             catch (Exception ex)
@@ -3107,7 +3205,52 @@ namespace VideoGui
                 ex.LogWrite($"DoReportSchedule {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
+        public Nullable<TimeSpan> LoadTime(string name)
+        {
+            try
+            {
+                var connectionString = dbInitializer?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
+                string sql = "SELECT ID FROM SETTINGS WHERE SETTINGNAME = @P0";
+                int idx = connectionString.ExecuteScalar(sql, [("@P0", name)]).ToInt(-1);
+                if (idx == -1) return null;
+                sql = "SELECT SETTINGTIME FROM SETTINGS WHERE SETTINGNAME = @P0";
+                var obj = connectionString.ExecuteScalar(sql, [("@P0", name)]);
+                if (obj is TimeSpan ts)
+                {
+                    return ts;
+                }
+                else return null;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"LoadTime {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+                return null;
+            }
+        }
 
+        public void SaveTime(TimeSpan startdate, string name, bool IsDateTime = false)
+        {
+            try
+            {
+                var connectionString = dbInitializer?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
+                string sql = "SELECT * FROM SETTINGS WHERE SETTINGNAME = @P0";
+                int id = connectionString.ExecuteScalar(sql, [("@P0", name)]).ToInt(-1);
+                if (id != -1)
+                {
+                    sql = "UPDATE SETTINGS SET SETTINGTIME = @P1 WHERE ID = @P2";
+                    connectionString.ExecuteScalar(sql, [("@P1", startdate), ("@P2", id)]);
+                }
+                else
+                {
+                    sql = "INSERT INTO SETTINGS (SETTINGTIME,SETTINGNAME) VALUES (@P0,@P1)";
+                    connectionString.ExecuteScalar(sql, [("@P0", startdate), ("@P1", name)]);
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"SaveTime {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+        }
         private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             try
