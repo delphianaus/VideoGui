@@ -1549,7 +1549,7 @@ namespace VideoGui.ffmpeg
         {
             try
             {
-                if (UseTextStream)
+                if (UseTextStream && textStream != -1)
                 {
                     _parameters.Add(($"-map 0:s:{textStream}", false));
                     _parameters.Add(($"-c:s copy", false));
