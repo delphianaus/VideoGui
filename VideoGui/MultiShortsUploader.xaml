@@ -103,6 +103,7 @@
                         <ContextMenu>
                             <MenuItem Header="Remove Selected Directories" Click="mnuRemoveSelected_Click"/>
                             <MenuItem Header="Make Active" Click="mnuMakeActive_Click"/>
+                            <MenuItem Header="Remove Schedule" Click="mnuRemoveSchedule"/>
                         </ContextMenu>
                     </MSU:MultiListbox.ItemsContextMenu>
                 </MSU:MultiListbox>

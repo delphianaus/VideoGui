@@ -42,7 +42,15 @@ namespace VideoGui.Models
             this.index = index;
         }
     }
-
+    public class CustomParams_RemoveSchedule
+    {
+        public int id = -1;
+        public CustomParams_RemoveSchedule(int id)
+        {
+            this.id = id;
+        }
+    }
+    
     public class CustomParams_SetActive
     {
         public int index = 0;

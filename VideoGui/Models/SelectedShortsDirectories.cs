@@ -52,7 +52,7 @@ namespace VideoGui.Models
         public string LastUploadedFile { get => LastUploadedDateFile.ToDisplayString(); set { OnPropertyChanged(); } }
         public DateTime LastUploadedDateFile { get => _LastUploadedDate; set { _LastUploadedDate = value; OnPropertyChanged(); } }
         public bool IsTitleAvailable { get => LinkedTitleId.Length > 0; set {; OnPropertyChanged(); } }
-        public bool IsDescAvailable { get => LinkedDescId.Length > 0; set {; OnPropertyChanged(); } }
+        public bool IsDescAvailable { get => DescId !=-1; set {; OnPropertyChanged(); } }
         public bool IsShortActive { get => IsActive; set { IsActive = value; } }
         public event PropertyChangedEventHandler PropertyChanged;
         protected void OnPropertyChanged([CallerMemberName] string name = null)
@@ -76,7 +76,9 @@ namespace VideoGui.Models
             return data;
         }
         public SelectedShortsDirectories(int _Id, string _DirectoryName, bool _IsActive,
-            int _LinkedShortsDirectoryId, int _NumberOfShorts, DateTime _LastUploadedDate)
+            int _LinkedShortsDirectoryId, int _NumberOfShorts, 
+            DateTime _LastUploadedDate, int DescId = -1, int TitleId = -1,
+            string _LinkedTitleIds = "")
         {
             Id = _Id;
             DirectoryName = _DirectoryName;
@@ -84,6 +86,7 @@ namespace VideoGui.Models
             LinkedShortsDirectoryId = _LinkedShortsDirectoryId;
             NumberOfShorts = _NumberOfShorts;
             LastUploadedDateFile = _LastUploadedDate;
+            LinkedTitleId = _LinkedTitleIds;
             SetActive(_IsActive);
         }
         public SelectedShortsDirectories()

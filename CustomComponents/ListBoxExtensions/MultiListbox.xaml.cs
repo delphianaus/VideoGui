@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
@@ -318,13 +319,109 @@ namespace CustomComponents.ListBoxExtensions
             set => SetValue(ItemsSourceProperty, value);
         }
 
+        private INotifyCollectionChanged _currentCollection;
+
         private static void OnItemsSourceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            var control = d as MultiListbox;
-            if (control != null)
+            try
             {
-                control.lstBoxUploadItems.ItemsSource = e.NewValue as IEnumerable;
-                control.RebuildItemTemplate();
+                var control = d as MultiListbox;
+                if (control != null)
+                {
+                    // Unsubscribe from old collection's events
+                    if (control._currentCollection != null)
+                    {
+                        control._currentCollection.CollectionChanged -= control.OnCollectionChanged;
+                    }
+
+                    // Set new ItemsSource
+                    control.lstBoxUploadItems.ItemsSource = e.NewValue as IEnumerable;
+
+                    // Subscribe to new collection's events if it supports INotifyCollectionChanged
+                    control._currentCollection = e.NewValue as INotifyCollectionChanged;
+                    if (control._currentCollection != null)
+                    {
+                        control._currentCollection.CollectionChanged += control.OnCollectionChanged;
+                    }
+
+                    control.RebuildItemTemplate();
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex);
+            }
+        }
+
+        private EventHandler _containerStatusChanged;
+
+        private void OnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            try
+            {
+                Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    switch (e.Action)
+                    {
+                        case NotifyCollectionChangedAction.Add:
+                            if (_containerStatusChanged != null)
+                            {
+                                lstBoxUploadItems.ItemContainerGenerator.StatusChanged -= _containerStatusChanged;
+                            }
+
+                            _containerStatusChanged = (s, args) =>
+                            {
+
+                                if (lstBoxUploadItems.ItemContainerGenerator.Status == GeneratorStatus.ContainersGenerated)
+                                {
+                                    lstBoxUploadItems.ItemContainerGenerator.StatusChanged -= _containerStatusChanged;
+                                    _containerStatusChanged = null;
+                                    var container = lstBoxUploadItems.ItemContainerGenerator.ContainerFromIndex(e.NewStartingIndex) as ListBoxItem;
+                                    var contentPresenter = FindVisualChild<ContentPresenter>(container);
+                                    if (contentPresenter != null)
+                                    {
+                                        var grid = FindVisualChild<Grid>(contentPresenter);
+                                        if (grid != null)
+                                        {
+                                            InitializeGrid(grid);
+                                        }
+                                    }
+                                }
+                            };
+                            lstBoxUploadItems.ItemContainerGenerator.StatusChanged += _containerStatusChanged;
+                            break;
+
+                        case NotifyCollectionChangedAction.Remove:
+                            if (true)
+                            {   // Handle removal logic if needed
+                            }
+                            break;
+
+                        case NotifyCollectionChangedAction.Replace:
+                            if (true)
+                            {
+
+                            }
+                            break;
+
+                        case NotifyCollectionChangedAction.Move:
+                            if (true)
+                            {
+
+                            }
+                            break;
+
+                        case NotifyCollectionChangedAction.Reset:
+                            // Full refresh needed only for Reset
+                            RebuildItemTemplate();
+                            UpdateVisualTree();
+                            break;
+                    }
+                }));
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error in OnCollectionChanged: {ex}");
             }
         }
 
@@ -336,8 +433,9 @@ namespace CustomComponents.ListBoxExtensions
 
         private void RebuildItemTemplate()
         {
+
             if (!IsLoaded) return;
-            
+
             try
             {
                 InitializeScrollViewers();
@@ -377,22 +475,50 @@ namespace CustomComponents.ListBoxExtensions
             }
         }
 
+        private T FindVisualChild<T>(DependencyObject parent) where T : DependencyObject
+        {
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
+            {
+                var child = VisualTreeHelper.GetChild(parent, i);
+
+                if (child is T found)
+                    return found;
+
+                var result = FindVisualChild<T>(child);
+                if (result != null)
+                    return result;
+            }
+            return null;
+        }
+
         private void UpdateVisualTree()
         {
-            Dispatcher.BeginInvoke(new Action(() =>
+            try
             {
-                foreach (var item in lstBoxUploadItems.Items)
+                Dispatcher.BeginInvoke(new Action(() =>
                 {
-                    var container = lstBoxUploadItems.ItemContainerGenerator.ContainerFromItem(item) as ListBoxItem;
-                    if (container != null)
+                    var itemTemplate = lstBoxUploadItems.ItemTemplate as DataTemplate;
+                    if (itemTemplate == null)
                     {
-                        var border = VisualTreeHelper.GetChild(container, 0) as Border;
-                        if (border != null)
+                        Debug.WriteLine("No item template found");
+                        return;
+                    }
+
+                    foreach (var item in lstBoxUploadItems.Items)
+                    {
+                        var container = lstBoxUploadItems.ItemContainerGenerator.ContainerFromItem(item) as ListBoxItem;
+                        if (container != null)
                         {
-                            var contentPresenter = VisualTreeHelper.GetChild(border, 0) as ContentPresenter;
+                            container.ApplyTemplate();
+                            container.UpdateLayout();
+
+                            var contentPresenter = FindVisualChild<ContentPresenter>(container);
                             if (contentPresenter != null)
                             {
-                                var grid = VisualTreeHelper.GetChild(contentPresenter, 0) as Grid;
+                                contentPresenter.ApplyTemplate();
+                                contentPresenter.UpdateLayout();
+
+                                var grid = FindVisualChild<Grid>(contentPresenter);
                                 if (grid != null)
                                 {
                                     foreach (var child in grid.Children)
@@ -406,75 +532,98 @@ namespace CustomComponents.ListBoxExtensions
                             }
                         }
                     }
-                }
-            }));
+                }), DispatcherPriority.Loaded);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error updating visual tree: {ex}");
+            }
         }
+
 
         private void BuildAndApplyTemplate()
         {
-            // Create a new item template with a Grid
-            var gridFactory = new FrameworkElementFactory(typeof(Grid));
-            gridFactory.SetValue(FrameworkElement.MarginProperty, new Thickness(0, 0, 0, 0));
-            gridFactory.SetValue(FrameworkElement.HeightProperty, 35.0);
-            gridFactory.SetValue(Panel.BackgroundProperty, Brushes.White);
-
-            // Store reference to the grid factory for later use
-            _itemGrid = new Grid(); // Temporary grid just for column definitions
-
-            // Add each column definition and control
-            int columnIndex = 0;
-            foreach (var colDef in ColumnDefinitions)
+            try
             {
-                // Add column definition and controls
-                AddColumnToTemplate(gridFactory, colDef, columnIndex);
-                columnIndex++;
-            }
+                // Create a new item template with a Grid
+                var gridFactory = new FrameworkElementFactory(typeof(Grid));
+                gridFactory.SetValue(FrameworkElement.MarginProperty, new Thickness(0, 0, 0, 0));
+                gridFactory.SetValue(FrameworkElement.HeightProperty, 35.0);
+                gridFactory.SetValue(Panel.BackgroundProperty, Brushes.White);
 
-            // Create and set the item template
-            var itemTemplate = new DataTemplate { VisualTree = gridFactory };
-            lstBoxUploadItems.ItemTemplate = itemTemplate;
+                // Store reference to the grid factory for later use
+                _itemGrid = new Grid(); // Temporary grid just for column definitions
+
+                // Add each column definition and control
+                int columnIndex = 0;
+                foreach (var colDef in ColumnDefinitions)
+                {
+                    // Add column definition and controls
+                    AddColumnToTemplate(gridFactory, colDef, columnIndex);
+                    columnIndex++;
+                }
+
+                // Create and set the item template
+                var itemTemplate = new DataTemplate { VisualTree = gridFactory };
+                lstBoxUploadItems.ItemTemplate = itemTemplate;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error building and applying template: {ex}");
+            }
         }
 
         private void AddColumnToTemplate(FrameworkElementFactory gridFactory, MultiListboxColumnDefinition colDef, int columnIndex)
         {
-            // Add column definition
-            var colDefFactory = new FrameworkElementFactory(typeof(ColumnDefinition));
-            if (!string.IsNullOrEmpty(colDef.WidthBinding))
+            try
             {
-                var binding = new Binding(colDef.WidthBinding)
+
+                // Add column definition to the grid factory
+                var colDefFactory = new FrameworkElementFactory(typeof(ColumnDefinition));
+                if (!string.IsNullOrEmpty(colDef.WidthBinding))
                 {
-                    RelativeSource = new RelativeSource(RelativeSourceMode.FindAncestor, typeof(MultiListbox), 1)
-                };
-                colDefFactory.SetBinding(ColumnDefinition.WidthProperty, binding);
+                    var binding = new Binding(colDef.WidthBinding)
+                    {
+                        RelativeSource = new RelativeSource(RelativeSourceMode.FindAncestor, typeof(MultiListbox), 1)
+                    };
+                    colDefFactory.SetBinding(ColumnDefinition.WidthProperty, binding);
 
-                // Add matching column definition to header grid
-                var headerColDef = new ColumnDefinition();
-                headerColDef.SetBinding(ColumnDefinition.WidthProperty, binding);
-                _headerGrid.ColumnDefinitions.Add(headerColDef);
+                    // Add matching column definition to header grid
+                    var headerColDef = new ColumnDefinition();
+                    headerColDef.SetBinding(ColumnDefinition.WidthProperty, binding);
+                    _headerGrid.ColumnDefinitions.Add(headerColDef);
+                }
+                else
+                {
+                    colDefFactory.SetValue(ColumnDefinition.WidthProperty, new GridLength(colDef.Width));
+                    _headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(colDef.Width) });
+                }
+                gridFactory.AppendChild(colDefFactory);
+
+                // Add header text to the header grid
+                if (_headerGrid != null)
+                {
+                    var headerTextBlock = new TextBlock
+                    {
+                        Text = colDef.HeaderText,
+                        Margin = colDef.HeaderMargin,
+                        Padding = colDef.HeaderPadding,
+                        VerticalAlignment = colDef.HeaderVerticalAlignment,
+                        HorizontalAlignment = colDef.HeaderHorizontalAlignment
+                    };
+                    Grid.SetColumn(headerTextBlock, columnIndex);
+                    _headerGrid.Children.Add(headerTextBlock);
+                }
+
+                // Add control for this column if it has a data field
+                if (!string.IsNullOrEmpty(colDef.DataField))
+                {
+                    AddControlToTemplate(gridFactory, colDef, columnIndex);
+                }
             }
-            else
+            catch (Exception ex)
             {
-                colDefFactory.SetValue(ColumnDefinition.WidthProperty, new GridLength(colDef.Width));
-                _headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(colDef.Width) });
-            }
-            gridFactory.AppendChild(colDefFactory);
-
-            // Add header text
-            var headerTextBlock = new TextBlock
-            {
-                Text = colDef.HeaderText,
-                Margin = colDef.HeaderMargin,
-                Padding = colDef.HeaderPadding,
-                VerticalAlignment = colDef.HeaderVerticalAlignment,
-                HorizontalAlignment = colDef.HeaderHorizontalAlignment
-            };
-            Grid.SetColumn(headerTextBlock, columnIndex);
-            _headerGrid?.Children.Add(headerTextBlock);
-
-            // Add control for this column if it has a data field
-            if (!string.IsNullOrEmpty(colDef.DataField))
-            {
-                AddControlToTemplate(gridFactory, colDef, columnIndex);
+                Debug.WriteLine($"Error adding column to template: {ex}");
             }
         }
 
@@ -493,50 +642,77 @@ namespace CustomComponents.ListBoxExtensions
 
         private void AddControlToTemplate(FrameworkElementFactory gridFactory, MultiListboxColumnDefinition colDef, int columnIndex)
         {
-            var controlType = GetControlType(colDef.ControlType);
-            var controlFactory = new FrameworkElementFactory(controlType.Name);
-            
-            // Set the column for the control
-            controlFactory.SetValue(Grid.ColumnProperty, columnIndex);
-            
-            // Apply common properties
-            controlFactory.SetValue(FrameworkElement.MarginProperty, colDef.ItemMargin);
-            if (typeof(Control).IsAssignableFrom(controlType))
+            try
             {
-                controlFactory.SetValue(Control.PaddingProperty, colDef.ItemPadding);
+                var controlType = GetControlType(colDef.ControlType);
+                var controlFactory = new FrameworkElementFactory(controlType);
+
+                // Set the column for the control
+                controlFactory.SetValue(Grid.ColumnProperty, columnIndex);
+                controlFactory.SetValue(FrameworkElement.HorizontalAlignmentProperty, HorizontalAlignment.Stretch);
+                controlFactory.SetValue(FrameworkElement.VerticalAlignmentProperty, VerticalAlignment.Stretch);
+                controlFactory.SetValue(UIElement.VisibilityProperty, Visibility.Visible);
+                controlFactory.SetValue(UIElement.IsHitTestVisibleProperty, true);
+                controlFactory.SetValue(UIElement.OpacityProperty, 1.0);
+                controlFactory.SetValue(Control.IsEnabledProperty, true);
+                controlFactory.SetValue(Control.BackgroundProperty, Brushes.White);
+                controlFactory.SetValue(Control.BorderBrushProperty, Brushes.Black);
+                controlFactory.SetValue(Control.BorderThicknessProperty, new Thickness(1));
+
+                // Apply common properties
+                controlFactory.SetValue(FrameworkElement.MarginProperty, colDef.ItemMargin);
+                controlFactory.SetValue(Control.ForegroundProperty, Brushes.Black);
+                if (typeof(Control).IsAssignableFrom(controlType))
+                {
+                    controlFactory.SetValue(Control.PaddingProperty, colDef.ItemPadding);
+                    controlFactory.SetValue(FrameworkElement.MinHeightProperty, colDef.MinHeight);
+                    controlFactory.SetValue(FrameworkElement.HeightProperty, colDef.Height);
+                    controlFactory.SetValue(FrameworkElement.MinWidthProperty, colDef.MinWidth);
+                    controlFactory.SetValue(FrameworkElement.WidthProperty, colDef.Width);
+                }
+                controlFactory.SetValue(FrameworkElement.VerticalAlignmentProperty, colDef.ItemVerticalAlignment);
+                controlFactory.SetValue(FrameworkElement.HorizontalAlignmentProperty, colDef.ItemHorizontalAlignment);
+
+                // Set up the binding
+                var bindingProperty = GetMainBindingProperty(controlType);
+                if (bindingProperty != null)
+                {
+                    var binding = new Binding(colDef.DataField);
+                    controlFactory.SetBinding(bindingProperty, binding);
+                }
+
+                // Set z-index to ensure control is visible
+                controlFactory.SetValue(Panel.ZIndexProperty, columnIndex);
+
+                // Add the control to the grid
+                gridFactory.AppendChild(controlFactory);
             }
-            controlFactory.SetValue(FrameworkElement.VerticalAlignmentProperty, colDef.ItemVerticalAlignment);
-            controlFactory.SetValue(FrameworkElement.HorizontalAlignmentProperty, colDef.ItemHorizontalAlignment);
-            
-            // Set up the binding
-            var bindingProperty = GetMainBindingProperty(controlType.Name);
-            if (bindingProperty != null)
+            catch (Exception ex)
             {
-                var binding = new Binding(colDef.DataField);
-                controlFactory.SetBinding(bindingProperty, binding);
+                Debug.WriteLine($"Error adding control to template: {ex}");
             }
-            
-            // Add the control to the grid
-            gridFactory.AppendChild(controlFactory);
         }
 
-        private DependencyProperty GetMainBindingProperty(string controlTypeName)
+        private DependencyProperty GetMainBindingProperty(Type controlType)
         {
-            switch (controlTypeName)
-            {
-                case "TextBox":
-                    return TextBox.TextProperty;
-                case "TextBlock":
-                    return TextBlock.TextProperty;
-                case "CheckBox":
-                    return CheckBox.IsCheckedProperty;
-                case "ComboBox":
-                    return ComboBox.SelectedItemProperty;
-                case "DatePicker":
-                    return DatePicker.SelectedDateProperty;
-                default:
-                    return TextBlock.TextProperty; // Default to TextBlock.Text
-            }
+            if (controlType == typeof(TextBox))
+                return TextBox.TextProperty;
+            if (controlType == typeof(TextBlock))
+                return TextBlock.TextProperty;
+            if (controlType == typeof(CheckBox))
+                return CheckBox.IsCheckedProperty;
+            if (controlType == typeof(ComboBox))
+                return ComboBox.SelectedItemProperty;
+            if (controlType == typeof(DatePicker))
+                return DatePicker.SelectedDateProperty;
+
+            // If it's a derived type, check base types
+            if (typeof(TextBox).IsAssignableFrom(controlType))
+                return TextBox.TextProperty;
+            if (typeof(ComboBox).IsAssignableFrom(controlType))
+                return ComboBox.SelectedItemProperty;
+
+            return TextBlock.TextProperty; // Default to TextBlock.Text
         }
 
         private void MultiListbox_Loaded(object sender, RoutedEventArgs e)
@@ -708,169 +884,7 @@ namespace CustomComponents.ListBoxExtensions
                                     var grid = VisualTreeHelper.GetChild(contentPresenter, 0) as Grid;
                                     if (grid != null)
                                     {
-                                        foreach (var child in grid.Children)
-                                        {
-                                            if (child is ToggleButton toggleButton)
-                                            {
-                                                var column = Grid.GetColumn(toggleButton);
-                                                var colDef = ColumnDefinitions[column];
-                                                if (colDef != null)
-                                                {
-                                                    // Set dimensions and style
-                                                    toggleButton.Width = colDef.ToggleButtonWidth;
-                                                    toggleButton.Height = colDef.ToggleButtonHeight;
-                                                    toggleButton.MinWidth = colDef.ToggleButtonMinWidth;
-                                                    toggleButton.MinHeight = colDef.ToggleButtonMinHeight;
-                                                    toggleButton.MaxWidth = colDef.ToggleButtonMaxWidth;
-                                                    toggleButton.MaxHeight = colDef.ToggleButtonMaxHeight;
-                                                    toggleButton.HorizontalAlignment = HorizontalAlignment.Center;
-                                                    toggleButton.VerticalAlignment = VerticalAlignment.Center;
-                                                    toggleButton.Visibility = Visibility.Visible;
-                                                    toggleButton.Style = (colDef?.Style is not null && colDef.Style.TargetType == typeof(ToggleButton)) ? colDef.Style : null;
-
-                                                    HandleClickEvents<ToggleButton>(toggleButton, colDef);
-
-                                                    // Set up binding
-                                                    var binding = new Binding(colDef.DataField)
-                                                    {
-                                                        UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
-                                                        Mode = BindingMode.TwoWay
-                                                    };
-                                                    BindingOperations.SetBinding(toggleButton, ToggleButton.IsCheckedProperty, binding);
-                                                }
-                                            }
-                                            else if (child is TextBox textBox)
-                                            {
-                                                var column = Grid.GetColumn(textBox);
-                                                var colDef = ColumnDefinitions[column];
-                                                
-                                                HandleInitialized<TextBox>(textBox, colDef);
-                                                HandleFocusEvents<TextBox>(textBox, colDef);
-                                                SetCustomBindings<TextBox>(textBox, colDef);
-                                            }
-                                            else if (child is ComboBox comboBox)
-                                            {
-                                                var column = Grid.GetColumn(comboBox);
-                                                var colDef = ColumnDefinitions[column];
-
-                                                HandleInitialized<ComboBox>(comboBox, colDef);
-                                                HandleSelectionChangedEvent<ComboBox>(comboBox, colDef);
-                                                HandleFocusEvents<ComboBox>(comboBox, colDef);
-                                                SetCustomBindings<ComboBox>(comboBox, colDef);
-                                            }
-                                            else if (child is CheckBox checkBox)
-                                            {
-                                                var column = Grid.GetColumn(checkBox);
-                                                var colDef = ColumnDefinitions[column];
-                                                HandleClickEvents<CheckBox>(checkBox, colDef);  
-                                                SetCustomBindings<CheckBox>(checkBox, colDef);
-                                            }
-                                            else if (child is TextBlock textBlock)
-                                            {
-                                                var column = Grid.GetColumn(textBlock);
-                                                var colDef = ColumnDefinitions[column];
-                                                //textBlock.Height = 25;
-                                                textBlock.Padding = new Thickness(0, 6, 0, 0);
-                                                HandleFocusEvents<TextBlock>(textBlock, colDef);
-                                                SetCustomBindings<TextBlock>(textBlock, colDef);
-                                            }
-                                            else if (child is Label label)
-                                            {
-                                                var column = Grid.GetColumn(label);
-                                                var colDef = ColumnDefinitions[column];
-
-                                                SetCustomBindings<Label>(label, colDef);
-                                            }
-                                            else if (child is Button button)
-                                            {
-                                                var column = Grid.GetColumn(button);
-                                                var colDef = ColumnDefinitions[column];
-                                                button.HorizontalAlignment = colDef.ContentHorizontalAlignment;
-                                                button.VerticalAlignment = colDef.ContentVerticalAlignment;
-                                                HandleClickEvents<Button>(button, colDef);
-                                                SetCustomBindings<Button>(button, colDef);
-                                            }
-                                            else if (child is System.Windows.Controls.Image image)
-                                            {
-                                                var column = Grid.GetColumn(image);
-                                                var colDef = ColumnDefinitions[column];
-
-                                                if (colDef != null)
-                                                {
-                                                    image.HorizontalAlignment = colDef.ContentHorizontalAlignment;
-                                                    image.VerticalAlignment = colDef.ContentVerticalAlignment;
-                                                    HandleInitialized<Image>(image, colDef);
-                                                    SetCustomBindings<Image>(image, colDef);
-                                                }
-                                            }
-                                            else if (child is ProgressBar progressBar)
-                                            {
-                                                var column = Grid.GetColumn(progressBar);
-                                                var colDef = ColumnDefinitions[column];
-
-                                                if (colDef != null)
-                                                {
-                                                    progressBar.HorizontalAlignment = colDef.ContentHorizontalAlignment;
-                                                    progressBar.VerticalAlignment = colDef.ContentVerticalAlignment;
-                                                    SetCustomBindings<ProgressBar>(progressBar, colDef);
-                                                }
-                                            }
-                                            else if (child is Slider slider)
-                                            {
-                                                var column = Grid.GetColumn(slider);
-                                                var colDef = ColumnDefinitions[column];
-
-                                                if (colDef != null)
-                                                {
-                                                    slider.HorizontalAlignment = colDef.ContentHorizontalAlignment;
-                                                    slider.VerticalAlignment = colDef.ContentVerticalAlignment;
-                                                    SetCustomBindings<Slider>(slider, colDef);
-                                                }
-                                            }
-                                            else if (child is PasswordBox passwordBox)
-                                            {
-                                                var column = Grid.GetColumn(passwordBox);
-                                                var colDef = ColumnDefinitions[column];
-                                                HandleFocusEvents<PasswordBox>(passwordBox, colDef);
-                                                if (colDef != null)
-                                                {
-                                                    passwordBox.HorizontalAlignment = colDef.ContentHorizontalAlignment;
-                                                    passwordBox.VerticalAlignment = colDef.ContentVerticalAlignment;
-                                                    SetCustomBindings<PasswordBox>(passwordBox, colDef);
-                                                }
-                                            }
-                                            else if (child is TimePicker timePicker)
-                                            {
-                                                var column = Grid.GetColumn(timePicker);
-                                                var colDef = ColumnDefinitions[column];
-
-                                                if (colDef != null)
-                                                {
-                                                    timePicker.HorizontalAlignment = colDef.ContentHorizontalAlignment;
-                                                    timePicker.VerticalAlignment = colDef.ContentVerticalAlignment;
-                                                    SetCustomBindings<TimePicker>(timePicker, colDef);
-                                                }
-                                            }
-                                            else if (child is DatePicker datePicker)
-                                            {
-                                                var column = Grid.GetColumn(datePicker);
-                                                var colDef = ColumnDefinitions[column];
-
-                                                if (colDef != null)
-                                                {
-                                                    datePicker.HorizontalAlignment = colDef.ContentHorizontalAlignment;
-                                                    datePicker.VerticalAlignment = colDef.ContentVerticalAlignment;
-                                                    SetCustomBindings<DatePicker>(datePicker, colDef);
-                                                }
-                                            }
-                                            else if (child is DateTimePicker dateTimePicker)
-                                            {
-                                                var column = Grid.GetColumn(dateTimePicker);
-                                                var colDef = ColumnDefinitions[column];
-                                                HandleFocusEvents<DateTimePicker>(dateTimePicker, colDef);
-                                                SetCustomBindings<DateTimePicker>(dateTimePicker, colDef);
-                                            }
-                                        }
+                                       InitializeGrid(grid);
                                     }
                                 }
                             }
@@ -885,21 +899,200 @@ namespace CustomComponents.ListBoxExtensions
 
 
         }
+        private void InitializeGrid(Grid grid)
+        {
+            try
+            {
+                foreach (var child in grid.Children)
+                {
+                    if (child is ToggleButton toggleButton)
+                    {
+                        var column = Grid.GetColumn(toggleButton);
+                        var colDef = ColumnDefinitions[column];
+                        if (colDef != null)
+                        {
+                            // Set dimensions and style
+                            toggleButton.Width = colDef.ToggleButtonWidth; 
+                            toggleButton.Height = colDef.ToggleButtonHeight;
+                            toggleButton.MinWidth = colDef.ToggleButtonMinWidth;
+                            toggleButton.MinHeight = colDef.ToggleButtonMinHeight;
+                            toggleButton.MaxWidth = colDef.ToggleButtonMaxWidth;
+                            toggleButton.MaxHeight = colDef.ToggleButtonMaxHeight;
+                            toggleButton.HorizontalAlignment = HorizontalAlignment.Center;
+                            toggleButton.VerticalAlignment = VerticalAlignment.Center;
+                            toggleButton.Visibility = Visibility.Visible;
+                            toggleButton.Style = (colDef?.Style is not null && colDef.Style.TargetType == typeof(ToggleButton)) ? colDef.Style : null;
 
+                            HandleClickEvents<ToggleButton>(toggleButton, colDef);
+
+                            // Set up binding
+                            var binding = new Binding(colDef.DataField)
+                            {
+                                UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
+                                Mode = BindingMode.TwoWay
+                            };
+                            BindingOperations.SetBinding(toggleButton, ToggleButton.IsCheckedProperty, binding);
+                        }
+                    }
+                    else if (child is TextBox textBox)
+                    {
+                        var column = Grid.GetColumn(textBox);
+                        var colDef = ColumnDefinitions[column];
+
+                        HandleInitialized<TextBox>(textBox, colDef);
+                        HandleFocusEvents<TextBox>(textBox, colDef);
+                        SetCustomBindings<TextBox>(textBox, colDef);
+                    }
+                    else if (child is ComboBox comboBox)
+                    {
+                        var column = Grid.GetColumn(comboBox);
+                        var colDef = ColumnDefinitions[column];
+
+                        HandleInitialized<ComboBox>(comboBox, colDef);
+                        HandleSelectionChangedEvent<ComboBox>(comboBox, colDef);
+                        HandleFocusEvents<ComboBox>(comboBox, colDef);
+                        SetCustomBindings<ComboBox>(comboBox, colDef);
+                    }
+                    else if (child is CheckBox checkBox)
+                    {
+                        var column = Grid.GetColumn(checkBox);
+                        var colDef = ColumnDefinitions[column];
+                        HandleClickEvents<CheckBox>(checkBox, colDef);
+                        SetCustomBindings<CheckBox>(checkBox, colDef);
+                    }
+                    else if (child is TextBlock textBlock)
+                    {
+                        var column = Grid.GetColumn(textBlock);
+                        var colDef = ColumnDefinitions[column];
+                        //textBlock.Height = 25;
+                        textBlock.Padding = new Thickness(0, 6, 0, 0);
+                        HandleFocusEvents<TextBlock>(textBlock, colDef);
+                        SetCustomBindings<TextBlock>(textBlock, colDef);
+                    }
+                    else if (child is Label label)
+                    {
+                        var column = Grid.GetColumn(label);
+                        var colDef = ColumnDefinitions[column];
+
+                        SetCustomBindings<Label>(label, colDef);
+                    }
+                    else if (child is Button button)
+                    {
+                        var column = Grid.GetColumn(button);
+                        var colDef = ColumnDefinitions[column];
+                        button.HorizontalAlignment = colDef.ContentHorizontalAlignment;
+                        button.VerticalAlignment = colDef.ContentVerticalAlignment;
+                        HandleClickEvents<Button>(button, colDef);
+                        SetCustomBindings<Button>(button, colDef);
+                    }
+                    else if (child is System.Windows.Controls.Image image)
+                    {
+                        var column = Grid.GetColumn(image);
+                        var colDef = ColumnDefinitions[column];
+
+                        if (colDef != null)
+                        {
+                            image.HorizontalAlignment = colDef.ContentHorizontalAlignment;
+                            image.VerticalAlignment = colDef.ContentVerticalAlignment;
+                            HandleInitialized<Image>(image, colDef);
+                            SetCustomBindings<Image>(image, colDef);
+                        }
+                    }
+                    else if (child is ProgressBar progressBar)
+                    {
+                        var column = Grid.GetColumn(progressBar);
+                        var colDef = ColumnDefinitions[column];
+
+                        if (colDef != null)
+                        {
+                            progressBar.HorizontalAlignment = colDef.ContentHorizontalAlignment;
+                            progressBar.VerticalAlignment = colDef.ContentVerticalAlignment;
+                            SetCustomBindings<ProgressBar>(progressBar, colDef);
+                        }
+                    }
+                    else if (child is Slider slider)
+                    {
+                        var column = Grid.GetColumn(slider);
+                        var colDef = ColumnDefinitions[column];
+
+                        if (colDef != null)
+                        {
+                            slider.HorizontalAlignment = colDef.ContentHorizontalAlignment;
+                            slider.VerticalAlignment = colDef.ContentVerticalAlignment;
+                            SetCustomBindings<Slider>(slider, colDef);
+                        }
+                    }
+                    else if (child is PasswordBox passwordBox)
+                    {
+                        var column = Grid.GetColumn(passwordBox);
+                        var colDef = ColumnDefinitions[column];
+                        HandleFocusEvents<PasswordBox>(passwordBox, colDef);
+                        if (colDef != null)
+                        {
+                            passwordBox.HorizontalAlignment = colDef.ContentHorizontalAlignment;
+                            passwordBox.VerticalAlignment = colDef.ContentVerticalAlignment;
+                            SetCustomBindings<PasswordBox>(passwordBox, colDef);
+                        }
+                    }
+                    else if (child is TimePicker timePicker)
+                    {
+                        var column = Grid.GetColumn(timePicker);
+                        var colDef = ColumnDefinitions[column];
+
+                        if (colDef != null)
+                        {
+                            timePicker.HorizontalAlignment = colDef.ContentHorizontalAlignment;
+                            timePicker.VerticalAlignment = colDef.ContentVerticalAlignment;
+                            SetCustomBindings<TimePicker>(timePicker, colDef);
+                        }
+                    }
+                    else if (child is DatePicker datePicker)
+                    {
+                        var column = Grid.GetColumn(datePicker);
+                        var colDef = ColumnDefinitions[column];
+
+                        if (colDef != null)
+                        {
+                            datePicker.HorizontalAlignment = colDef.ContentHorizontalAlignment;
+                            datePicker.VerticalAlignment = colDef.ContentVerticalAlignment;
+                            SetCustomBindings<DatePicker>(datePicker, colDef);
+                        }
+                    }
+                    else if (child is DateTimePicker dateTimePicker)
+                    {
+                        var column = Grid.GetColumn(dateTimePicker);
+                        var colDef = ColumnDefinitions[column];
+                        HandleFocusEvents<DateTimePicker>(dateTimePicker, colDef);
+                        SetCustomBindings<DateTimePicker>(dateTimePicker, colDef);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error in HandleChildEvents: {ex}");
+            }
+        }
         private void HandleSelectionChangedEvent<T>(T control, MultiListboxColumnDefinition colDef) where T : FrameworkElement
         {
-            if (control is ComboBox b)
+            try
             {
-                // Remove any existing handlers
-                b.SelectionChanged -= (s, e) => SelectionChanged?.Invoke(s, e);
-                b.SelectionChanged -= (s, e) => colDef.RaiseSelectionChanged(s, e);
-
-                // Add new handler
-                b.SelectionChanged += (s, e) =>
+                if (control is ComboBox b)
                 {
-                    colDef.RaiseSelectionChanged(s, e);
-                    SelectionChanged?.Invoke(s, e);
-                };
+                    // Remove any existing handlers
+                    b.SelectionChanged -= (s, e) => SelectionChanged?.Invoke(s, e);
+                    b.SelectionChanged -= (s, e) => colDef.RaiseSelectionChanged(s, e);
+
+                    // Add new handler
+                    b.SelectionChanged += (s, e) =>
+                    {
+                        colDef.RaiseSelectionChanged(s, e);
+                        SelectionChanged?.Invoke(s, e);
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error in HandleSelectionChangedEvent: {ex}");
             }
         }
         private void HandleClickEvents<T>(T control, MultiListboxColumnDefinition colDef) where T : FrameworkElement
@@ -943,7 +1136,8 @@ namespace CustomComponents.ListBoxExtensions
             control.Initialized -= (s, e) => colDef.RaiseInitializedEvent(s, e);
 
             // Add new handler
-            control.Initialized += (s, e) => {
+            control.Initialized += (s, e) =>
+            {
                 colDef.RaiseInitializedEvent(s, e);
                 Initialized?.Invoke(s, e);
             };
@@ -1537,7 +1731,7 @@ namespace CustomComponents.ListBoxExtensions
             }
         }
 
-       
+
 
         private void ApplyColumnDefinitions()
         {

@@ -389,7 +389,7 @@ namespace VideoGui
                 int NewId = -1;
                 DateTime dtr = LastTimeUploaded.Date;
                 TimeSpan dtt = LastTimeUploaded.TimeOfDay;
-                sqlA = "SELECT * FROM MULTISHORTSINFO WHERE ISACTIVE = 1;";
+                sqlA = "SELECT * FROM MULTISHORTSINFO WHERE ISSHORTSACTIVE = 1;";
                 int activecnt = connectionString.ExecuteScalar(sqlA).ToInt(-1);
                 bool IsActive = activecnt == -1;
                 if (dtr.Year > 2000)
@@ -487,6 +487,21 @@ namespace VideoGui
         {
             try
             {
+                if (tld is CustomParams_RemoveSchedule cpRS)
+                {
+                    for (int i = SelectedShortsDirectoriesList.Count - 1; i >= 0; i--)
+                    {
+                        if (SelectedShortsDirectoriesList[i].Id == cpRS.id)
+                        {
+                            string sql = "DELETE FROM MULTISHORTSINFO WHERE ID = @ID;";
+                            connectionString.ExecuteScalar(sql, [("@ID", cpRS.id)]);
+                            SelectedShortsDirectoriesList.RemoveAt(i);
+                            break;
+                        }
+                    }
+                    return null;
+                }
+
                 if (tld is CustomParams_RemoveMulitShortsInfoById cpRMSI)
                 {
                     //frmMultiShortsUploader.msuSchedules.ItemsSource = null;
@@ -494,11 +509,12 @@ namespace VideoGui
                     {
                         if (SelectedShortsDirectoriesList[i].NumberOfShorts == 0)
                         {
-                            SelectedShortsDirectoriesList.RemoveAt(i);
+                            
                             string sql = "DELETE FROM MULTISHORTSINFO WHERE" +
                                 " LINKEDSHORTSDIRECTORYID = @LINKEDID;";
                             connectionString.ExecuteScalar(sql, [("@LINKEDID",
                                 SelectedShortsDirectoriesList[i].LinkedShortsDirectoryId)]);
+                            SelectedShortsDirectoriesList.RemoveAt(i);
                         }
                     }
                     //frmMultiShortsUploader.msuSchedules.ItemsSource = SelectedShortsDirectoriesList;
@@ -667,8 +683,6 @@ namespace VideoGui
                     if (!found && uploaddir != "")
                     {
                         InsertUpdateMultiShorts(LinkedId, uploaddir);
-                        frmMultiShortsUploader.msuSchedules.ItemsSource = null;
-                        frmMultiShortsUploader.msuSchedules.ItemsSource = SelectedShortsDirectoriesList;
                     }
                 }
                 else if (tld is CustomParams_MoveDirectory CPMD)
@@ -3140,7 +3154,10 @@ namespace VideoGui
                 key?.Close();
                 string SearchDir1 = Path.Combine(shorts_dir1, DirectoryName);
                 int NumberofShorts = Directory.EnumerateFiles(SearchDir1, "*.mp4", SearchOption.AllDirectories).Count();
-                string sql = "SELECT ID FROM MULTISHORTSINFO WHERE LINKEDSHORTSDIRECTORYID = @LINKEDID;";
+                string sql = "SELECT * FROM MULTISHORTSINFO WHERE ISSHORTSACTIVE = 1;";
+                bool IsShortsActive = connectionString.ExecuteScalar(sql).ToInt(-1) != -1;
+                
+                sql = "SELECT ID FROM MULTISHORTSINFO WHERE LINKEDSHORTSDIRECTORYID = @LINKEDID;";
                 int id = connectionString.ExecuteScalar(sql, [("@LINKEDID", LinkedId)]).ToInt(-1);
                 if (id == -1)
                 {
@@ -3150,14 +3167,17 @@ namespace VideoGui
                 {
                     UpdateMultiShortsInfo(NumberofShorts, LinkedId, LastTimeUploaded, DirectoryName);
                 }
-                sql = "UPDATE MULTISHORTSINFO SET LASTUPLOADEDDATE=@DT,LASTUPLOADEDTIME=@DTT,ISACTIVE=0 WHERE ID != @ID;";
-                connectionString.ExecuteScalar(sql, [("@ID", LinkedId), ("@DT", null), ("@DTT", null)]);
-                sql = "UPDATE MULTISHORTSINFO SET ISACTIVE=1 WHERE ID = @ID;";
-                connectionString.ExecuteScalar(sql, [("@ID", LinkedId)]);
-                foreach (var item in SelectedShortsDirectoriesList)
+                if (!IsShortsActive)
                 {
-                    item.IsShortActive = (item.Id == LinkedId);
-                    item.LastUploadedDateFile = (item.Id == LinkedId) ? item.LastUploadedDateFile : DateTime.Now.Date.AddYears(-100);
+                    sql = "UPDATE MULTISHORTSINFO SET LASTUPLOADEDDATE=@DT,LASTUPLOADEDTIME=@DTT,ISACTIVE=0 WHERE ID != @ID;";
+                    connectionString.ExecuteScalar(sql, [("@ID", LinkedId), ("@DT", null), ("@DTT", null)]);
+                    sql = "UPDATE MULTISHORTSINFO SET ISACTIVE=1 WHERE ID = @ID;";
+                    connectionString.ExecuteScalar(sql, [("@ID", LinkedId)]);
+                    foreach (var item in SelectedShortsDirectoriesList)
+                    {
+                        item.IsShortActive = (item.Id == LinkedId);
+                        item.LastUploadedDateFile = (item.Id == LinkedId) ? item.LastUploadedDateFile : DateTime.Now.Date.AddYears(-100);
+                    }
                 }
             }
             catch (Exception ex)
@@ -3574,7 +3594,6 @@ namespace VideoGui
                     {
                         foreach (var file in CPUUR.DirectoryName)
                         {
-
                             string fname = Path.GetFileNameWithoutExtension(file.ToUpper());
                             string sql = "SELECT ID FROM UPLOADSRECORD WHERE UPLOADFILE = @P0 AND UPLOADTYPE = 0";
                             int id = connectionString.ExecuteScalar(sql.ToUpper(), [("@P0", fname)]).ToInt(-1);
@@ -7641,7 +7660,7 @@ namespace VideoGui
                             firststream = ts.Id.Value;
                         }
                         if (firststream != -1 && ts.Language == "en" && ts.Id.HasValue &&
-                            ts.Forced== 1 && ts.Default == 1)
+                            ts.Forced == 1 && ts.Default == 1)
                         {
                             TextStreamId = ts.Id.Value - firststream;
                             break;
@@ -11442,7 +11461,7 @@ namespace VideoGui
 
                     ffmpegbridge bridge = new ffmpegbridge();
                     TimeSpan Dur = TimeSpan.Zero;
-                    (IVideoStream videoStream, IAudioStream audioStream,List<TextStream> textStream, TimeSpan Durx) = bridge.ReadMediaFile(SourceFile);
+                    (IVideoStream videoStream, IAudioStream audioStream, List<TextStream> textStream, TimeSpan Durx) = bridge.ReadMediaFile(SourceFile);
                     bridge = null;
 
 

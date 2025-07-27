@@ -1168,6 +1168,7 @@ namespace VideoGui
                             var html = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
                             if (html.ToLower().Contains("uploads complete"))
                             {
+                                InsertIntoUploadFiles(VideoFiles, connectStr);
                                 Close();
                                 break;
                             }
@@ -1240,7 +1241,6 @@ namespace VideoGui
         {
             try
             {
-
                 dbInitializer?.Invoke(this, new CustomParams_UpdateUploadsRecords(videofiles, DirectoryPath));
             }
             catch (Exception ex)
@@ -1261,6 +1261,7 @@ namespace VideoGui
                         File.Delete(file);
                         NodeUpdate(Span_Name, ScheduledGet);
                         lstMain.Items.Insert(0, $"{file} Deleted");
+                        InsertIntoUploadFiles(new List<string> { file }, connectStr);
                         // Below to be moved to HandlerObject using dbInit
                         dbInitializer?.Invoke(this, new CustomParams_UpdateStats(file));
                         if (ScheduledOk.IndexOf(filename1) == -1)
@@ -3504,7 +3505,6 @@ namespace VideoGui
                             {
                                 CompleteCnt++;
                                 UploadedHandler(Span_Name, connectStr, filename1);
-                                InsertIntoUploadFiles(new List<string> { filename1 }, connectStr);
                             }
                             if (Regex.IsMatch(Nodes[i].InnerText, @"Waiting"))
                             {
@@ -3543,6 +3543,7 @@ namespace VideoGui
                                         if (ExitDialog || Exceeded)
                                         {
                                             ExitCode = 0;
+                                            InsertIntoUploadFiles(VideoFiles, connectStr);
                                             cts.Cancel();
                                             return false;
                                         }
@@ -3551,6 +3552,7 @@ namespace VideoGui
                                         if (Regex.IsMatch(htmlcheck, @"Uploads complete"))
                                         {
                                             cts.Cancel();
+                                            InsertIntoUploadFiles(VideoFiles, connectStr);
                                             continue;
                                         }
                                         if (htmlcheck is not null && htmlcheck.Contains("https://youtu.be/"))
@@ -3566,6 +3568,7 @@ namespace VideoGui
                                             if (Regex.IsMatch(htmlcheck, @"Uploads complete|Daily limit|Processing will begin shortly"))
                                             {
                                                 finished = true;
+                                                InsertIntoUploadFiles(VideoFiles, connectStr);
                                                 ExitCode = htmlcheck.ToLower() switch
                                                 {
                                                     var x when x.Contains("uploads complete") => 2,
@@ -3601,6 +3604,7 @@ namespace VideoGui
                                     if (Regex.IsMatch(html.ToLower(), @"processing will begin shortly|your video template has been saved as draft|saving|save and close|title-row style-scope ytcp-uploads-dialog|daily limit"))
                                     {
                                         Thread.Sleep(300);
+                                        InsertIntoUploadFiles(VideoFiles, connectStr);
                                         await ActiveWebView[1].ExecuteScriptAsync(Script_Close);
                                     }
                                     found = true;

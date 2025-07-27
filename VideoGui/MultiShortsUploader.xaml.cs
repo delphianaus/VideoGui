@@ -451,7 +451,7 @@ namespace VideoGui
                 ex.LogWrite($"{this} DoTitleSelectCreate {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
             }
         }
-        
+
 
         private void DoOnFinishTitleSelect(object sender, int e)
         {
@@ -510,7 +510,7 @@ namespace VideoGui
                 string shortsdir = key.GetValueStr("shortsdirectory", "");
                 CancellationTokenSource cts = new();
                 string SQLB = "SELECT * FROM UploadsRecord ORDER BY RDB$RECORD_VERSION DESC ROWS 100;";
-                connectionStr.ExecuteReader(SQLB,cts, (FbDataReader r) =>
+                connectionStr.ExecuteReader(SQLB, cts, (FbDataReader r) =>
                 {
                     UploadFile = (r["UPLOADFILE"] is string f) ? f : "";
                     LinkedId = (UploadFile.Contains("_")) ? UploadFile.Split('_').LastOrDefault().ToInt(-1) : 93;
@@ -694,11 +694,11 @@ namespace VideoGui
                                             [("@NUMBEROFSHORTS", shortsleft),
                                         ("@ACTIVE", false),
                                         ("@LINKEDSHORTSDIRECTORYID", rp.LinkedShortsDirectoryId)]);
-                                        dbInit?.Invoke(this, new 
+                                        dbInit?.Invoke(this, new
                                             CustomParams_RemoveMulitShortsInfoById(rp.LinkedShortsDirectoryId));
                                     }
                                 }
-                                else if (rp.NumberOfShorts > 0) acnt ++;
+                                else if (rp.NumberOfShorts > 0) acnt++;
                             }
                             if (acnt == 0)
                             {
@@ -714,6 +714,26 @@ namespace VideoGui
                                         key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                                         key.SetValue("UploadPath", newpath);
                                         key?.Close();
+                                        string LinkedShortsDirectoryId =
+                                            item.LinkedShortsDirectoryId.ToString();
+                                        if (LinkedShortsDirectoryId is not null && LinkedShortsDirectoryId != "")
+                                        {
+                                            LinkedShortsDirectoryId = "_" + LinkedShortsDirectoryId;
+                                        }
+                                        List<string> files = Directory.EnumerateFiles(newpath, "*.mp4",
+                                            SearchOption.AllDirectories).ToList();
+                                        foreach (var filex in files)
+                                        {
+                                            if (!filex.Contains(LinkedShortsDirectoryId))
+                                            {
+                                                string newPath = filex.Contains("_")
+                                                    ? filex.Substring(0, filex.IndexOf("_")) + LinkedShortsDirectoryId + Path.GetExtension(filex)
+                                                    : filex + LinkedShortsDirectoryId;
+                                                File.Move(filex, newPath);
+                                            }
+                                        }
+
+
                                         var Idx = dbInit?.Invoke(this, new CustomParams_GetDirectory(item.DirectoryName));
                                         if (Idx is int _id)
                                         {
@@ -916,7 +936,7 @@ namespace VideoGui
             }
         }
 
-        
+
         private void txtMaxUpload_KeyDown(object sender, KeyEventArgs e)
         {
             try
@@ -934,12 +954,27 @@ namespace VideoGui
             }
         }
 
+        private void mnuRemoveSchedule(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (e.OriginalSource is MenuItem m && m.DataContext is SelectedShortsDirectories rp)
+                {
+                    dbInit?.Invoke(this, new CustomParams_RemoveSchedule(rp.Id));
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"mnuRemoveSchedule {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
+            }
+        }
+
         private void mnuMakeActive_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                if (e.OriginalSource is MenuItem m && 
-                    m.DataContext is SelectedShortsDirectories rp && !rp.IsActive)
+                if (e.OriginalSource is MenuItem m &&
+                    m.DataContext is SelectedShortsDirectories rp)// && !rp.IsActive)
                 {
                     dbInit?.Invoke(this, new CustomParams_SetActive(rp.LinkedShortsDirectoryId));
                 }
@@ -950,7 +985,7 @@ namespace VideoGui
             }
         }
 
-       
+
 
         private void txtTotalUploads_KeyDown(object sender, KeyEventArgs e)
         {
