@@ -24,9 +24,8 @@ namespace VideoGui
     {
         OnFinish DoOnFinish = null;
         OnFinishBool DoOnFinishSchedulesComplete = null;
-        public int ListScheduleIndex = 0;
         int DateIndex = 0;
-        DateTime LastValidVideoScheduledAt = DateTime.MinValue;
+        public DateTime LastValidVideoScheduledAt = DateTime.MinValue, LastScheduledTime = DateTime.UtcNow.AddYears(-500);
         TimeOnly CurrentTime = new TimeOnly();
         DateOnly CurrentDate = DateOnly.FromDateTime(DateTime.Now);
         TimeOnly LastValidTime = TimeOnly.FromTimeSpan(TimeSpan.Zero);
@@ -39,7 +38,7 @@ namespace VideoGui
         List<DateTime> AvailableSchedules = new List<DateTime>();
         ReportVideoScheduled DoReportScheduled = null;
         ScheduleTaskCancelled TaskCanceledScheduled = null;
-        public int MaxNumberSchedules = 100, ScheduleNumber = 0;
+        public int MaxNumberSchedules = 100, ScheduleNumber = 0, ListScheduleIndex = 0, LastGap = -1;
         bool setup = false, BeginMode = false, FinishMode = false, FirstTime = false;
         public bool CanSchedule = true;
         public DirectshortsScheduler(OnFinish doOnFinish, OnFinishBool doOnFinishSchedulesComplete,
@@ -87,7 +86,6 @@ namespace VideoGui
                 ex.LogWrite($"DirectshortsScheduler {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
             }
         }
-
         public void ScheduleNewDay(DateTime startDate, DateTime endDate)
         {
             try
@@ -122,9 +120,7 @@ namespace VideoGui
         {
             try
             {
-                string res = "";
-                res = (Debugger.IsAttached) ? @"c:\VideoGUI" : Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
-                return res;
+                return (Debugger.IsAttached) ? @"c:\VideoGUI" : Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
             }
             catch (Exception ex)
             {
@@ -261,14 +257,11 @@ namespace VideoGui
                         return FinishType.Error;
                     }
                 }
-
                 ex.LogWrite($"ApplyVideoSchedule {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
                 AvailableSchedules.Add(ScheduleAt);
                 return FinishType.Error;
             }
         }
-
-
         public FinishType ScheduleVideo(string videoId, string TitleStr, string DescStr, bool UseNewStart)
         {
             try
@@ -295,8 +288,6 @@ namespace VideoGui
             }
         }
 
-        public DateTime LastScheduledTime = DateTime.UtcNow.AddYears(-500);
-        public int LastGap = -1;
 
         public FinishType DoSchedule(string videoId, string TitleStr, string DescStr)
         {
@@ -375,6 +366,5 @@ namespace VideoGui
                 return FinishType.Error;
             }
         }
-
     }
 }

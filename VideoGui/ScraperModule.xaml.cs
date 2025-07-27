@@ -103,13 +103,16 @@ namespace VideoGui
         object lockobj = new object();
         CancellationTokenSource canceltoken = new CancellationTokenSource();
         public int EventId, TotalScheduled = 0;
+        int WheelBody = 0, LastId = -1, Tid = -1, Did = -1, WheelMoveNode = 0;
+        List<string> lookups = new List<string>();
+        string LTitleStr = "", LDescStr = "", DirectoryPath = "";
         int swap = 1, ct = 0, MaxNodes = -1, MaxUploads = 0, recs = 0, gmaxrecs = 0, files = 0, dbfiles = 0, max = 0, SlotsPerUpload = 0,
-            ScheduleMax = 0, ts = 0, LastKey = -1, Days = 1, CurrentDay = 1;
+            ScheduleMax = 0, ts = 0, LastKey = -1, Days = 1, CurrentDay = 1,inserted = 0, WheelMove = 0;
         bool EditDone = false, btndone = false, ExitDialog = false, Waiting = false, IsVideoLookup = false, WaitingFileName = false;
         bool Valid = false, IsVideoLookupShort = false, IsValid = false, IsUnlisted = false, IsDashboardMode = false, CanSpool = false, FirstRun = true, done = false, HasExited = false;
         bool DoNextNode = true, finished = false, TimedOut = false, Uploading = false, NextRecord = false, Processing = false, clickupload = true;
         public bool IsClosing = false, IsClosed = false, Exceeded = false, KilledUploads = false, SwapEnabled = false, IsTitleEditor = false;
-        public bool TaskHasCancelled = false;
+        public bool TaskHasCancelled = false, NewSession = false;
         string SendKeysString = "", UploadPath = "", LastNode = "", DefaultUrl = "", LastValidFileName = "", TableDestination = "";
         List<ScraperUploads> Scraper_uploaded = new();
         List<string> IdNodes = new(), titles = new List<string>(), nextaddress = new(), Ids = new(), Idx = new(), ufiles = new(), Files = new();// DoneFiles = new();
@@ -124,12 +127,11 @@ namespace VideoGui
         DispatcherTimer timer = new DispatcherTimer();
         DispatcherTimer LocationTimer = new DispatcherTimer();
         public AddressUpdate DoVideoLookUp = null;
-        string TitleStr = "", DescStr = "";
+        string TitleStr = "", DescStr = "", TargetUrl = "";
         StatusTypes VStatusType = StatusTypes.PRIVATE;
         WebAddressBuilder webAddressBuilder = null;
         databasehook<object> dbInitializer = null;
         List<Rematched> RematchedList = new(); // <shortname>
-                                               // List<ShortsDirectory> ShortsDirectories = new();
         OnFinishIdObj DoOnFinish = null;
         System.Threading.Timer UploadsTimer = null;
         TimeOnly CurrentTime = new TimeOnly();
@@ -138,9 +140,7 @@ namespace VideoGui
         bool IsTest = false, AutoClose = false, AutoClosed = false, IsLocation = false,
             IsMoving = false, HasMoved = false;
         public bool TimedOutClose = false;
-        
         List<DirectoriesProbe> Directories = new(); //Directories
-        //string Title = "", Desc = "";
         Dictionary<int, WebView2> wv2Dictionary = new Dictionary<int, WebView2>();
         Dictionary<int, WebView2> ActiveWebView = new Dictionary<int, WebView2>();
         DispatcherTimer InternalTimer = new DispatcherTimer();
@@ -150,10 +150,6 @@ namespace VideoGui
         public EventTypes ScraperType = EventTypes.VideoUpload;
         private const int WM_MOUSEWHEEL = 0x020A;
         private const int WHEEL_DELTA = 120; // Standard wheel delta value
-
-
-
-
         [DllImport("user32.dll", SetLastError = true)]
         private static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
         [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
@@ -170,7 +166,6 @@ namespace VideoGui
         [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         private static extern int GetClassName(IntPtr hWnd, System.Text.StringBuilder lpClassName, int nMaxCount);
         private delegate bool EnumWindowProc(IntPtr hWnd, IntPtr parameter);
-
         public void DoLocationTimer()
         {
             try
@@ -191,7 +186,6 @@ namespace VideoGui
                 ex.LogWrite($"LocationTimer {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-
         public ScraperModule(databasehook<object> _dbInit, OnFinishIdObj _OnFinish, List<string> directories, bool IsShort)
         {
             try
@@ -225,12 +219,6 @@ namespace VideoGui
                     IsClosed = true;
                     DoOnFinish?.Invoke(this, EventId);
                 };
-
-
-
-
-
-
                 webAddressBuilder = new WebAddressBuilder(null, null, "UCdMH7lMpKJRGbbszk5AUc7w");
                 wv2Dictionary.Add(1, wv2A1);//20
                 wv2Dictionary.Add(2, wv2A2);//30
@@ -249,8 +237,6 @@ namespace VideoGui
                 ex.LogWrite($"Constructor Scraper.VideoLookup {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-
-
         private void WebViewFileName_CoreWebView2InitializationCompleted(object? sender, CoreWebView2InitializationCompletedEventArgs e)
         {
             try
@@ -265,17 +251,12 @@ namespace VideoGui
                 ex.LogWrite($"WebViewFileName_CoreWebView2InitializationCompleted {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
             }
         }
-        string TargetUrl = "";
         public ScraperModule(databasehook<object> _dbInit, OnFinishIdObj _OnFinish, string _Default_url, string _TargetUrl, int _EventId)
         {
             try
             {
                 ScraperType = EventTypes.ScapeSchedule;
                 DoOnFinish = _OnFinish;
-
-
-
-
                 TargetUrl = _TargetUrl;
                 AutoClose = true;
                 DefaultUrl = _Default_url;
@@ -311,16 +292,12 @@ namespace VideoGui
                 wv2Dictionary.Add(9, wv2A9);//100
                 wv2Dictionary.Add(10, wv2A10);
                 ActiveWebView.Add(1, wv2);
-
-
-
             }
             catch (Exception ex)
             {
                 ex.LogWrite($"Constructor Scraper.Schedule {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-
         private void ReportNewAddress(string address, string id)
         {
             try
@@ -330,7 +307,6 @@ namespace VideoGui
                     Dispatcher?.Invoke(() => ReportNewAddress(address, id));
                     return;
                 }
-                //System.Windows.Forms.Application.DoEvents();
                 bool found = false;
                 var cts = new CancellationTokenSource();
                 cts.CancelAfter(TimeSpan.FromMilliseconds(150));
@@ -339,15 +315,11 @@ namespace VideoGui
                     System.Windows.Forms.Application.DoEvents();
                     Thread.Sleep(15);
                 }
-
-                foreach (var item in wv2Dictionary.Values)
+                foreach (var item in wv2Dictionary.Values.Where(item => item.AllowDrop && item.Tag.ToInt(-1) == 1))
                 {
-                    if (item.AllowDrop && item.Tag.ToInt(-1) == 1)
-                    {
-                        item.ExecuteScriptAsync("window.gc()");
-                        item.SetURL(address); //wv2A1.Source = new Uri(address);
-                        break;
-                    }
+                    item.ExecuteScriptAsync("window.gc()");
+                    item.SetURL(address);//wv2A1.Source = new Uri(address);
+                    break;
                 }
             }
             catch (Exception ex)
@@ -355,7 +327,6 @@ namespace VideoGui
                 ex.LogWrite($"ReportNewAddress {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
             }
         }
-
         public ScraperModule(databasehook<object> _dbInit, OnFinishIdObj _OnFinish, string _Default_url,
             Nullable<DateTime> Start, Nullable<DateTime> End, int MaxUoploads,
             List<ListScheduleItems> _listSchedules, int _eventid, bool _IsTest)
@@ -370,7 +341,6 @@ namespace VideoGui
                 DoOnFinish = _OnFinish;
                 DefaultUrl = _Default_url;
                 ScheduleMax = MaxUoploads;
-
                 IsDashboardMode = true;
                 IsTest = _IsTest;
                 dbInitializer = _dbInit;
@@ -392,8 +362,6 @@ namespace VideoGui
                     IsClosed = true;
                     DoOnFinish?.Invoke(this, EventId);
                 };
-
-
                 webAddressBuilder = new WebAddressBuilder(null, null, "UCdMH7lMpKJRGbbszk5AUc7w");
                 wv2Dictionary.Add(1, wv2A1);//20
                 wv2Dictionary.Add(2, wv2A2);//30
@@ -412,8 +380,6 @@ namespace VideoGui
                 ex.LogWrite($"Constructor Shorts.Schedule {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-
-        public bool NewSession = false;
         public ScraperModule(databasehook<object> _dbInit, OnFinishIdObj _OnFinish, string _Default_url,
             int maxuploads = 100, int slotsperupload = 5, int _EventId = -1, bool _NewSession = false)
         {
@@ -448,7 +414,6 @@ namespace VideoGui
                     IsClosed = true;
                     DoOnFinish?.Invoke(this, EventId);
                 };
-
                 webAddressBuilder = new WebAddressBuilder(null, null, "UCdMH7lMpKJRGbbszk5AUc7w");
                 wv2Dictionary.Add(1, wv2A1);//20
                 wv2Dictionary.Add(2, wv2A2);//30
@@ -467,7 +432,6 @@ namespace VideoGui
                 ex.LogWrite($"Constructor VideoUploader {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-
         private void Uploads_TimerEvent_Handler(object? state)
         {
             try
@@ -520,8 +484,6 @@ namespace VideoGui
                     IsClosed = true;
                     DoOnFinish?.Invoke(this, EventId);
                 };
-
-
                 webAddressBuilder = new WebAddressBuilder(null, null, "UCdMH7lMpKJRGbbszk5AUc7w");
                 wv2Dictionary.Add(1, wv2A1);//20
                 wv2Dictionary.Add(2, wv2A2);//30
@@ -540,7 +502,6 @@ namespace VideoGui
                 ex.LogWrite($"Constructor VideoUploader {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-
         private void lblLastNode_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             double sumWidths = 0;
@@ -551,27 +512,22 @@ namespace VideoGui
             }
             btnClose.Margin = new Thickness(StatusBar.Width - sumWidths - 40, 0, 0, 0);
         }
-
         private void lblInsert_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             lblLastNode_SizeChanged(sender, e);
         }
-
         private void lblUp_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             lblLastNode_SizeChanged(sender, e);
         }
-
         private void lblInsertId4_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             lblLastNode_SizeChanged(sender, e);
         }
-
         private void lblInsertId5_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             lblLastNode_SizeChanged(sender, e);
         }
-
         private void DoNewVideoUpdate(string address)
         {
             try
@@ -595,7 +551,6 @@ namespace VideoGui
                     {
                         nextaddress.Add(address);
                     }
-
                 }
             }
             catch (Exception ex)
@@ -607,7 +562,6 @@ namespace VideoGui
         {
             try
             {
-
                 if (e.IsSuccess && sender is not null)
                 {
                     int Id = (sender as WebView2).Name.Replace("wv2A", "").ToInt(-1);
@@ -627,7 +581,6 @@ namespace VideoGui
                 ex.LogWrite($"Wv2s_NavigationCompleted {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-
         public async Task<bool> DailyLimitReached()
         {
             try
@@ -641,24 +594,23 @@ namespace VideoGui
                 return false;
             }
         }
-
-        int WheelMove = 0;
         async void InitAsync()
         {
             try
             {
                 LocationChanged += (s, e) =>
                 {
+                    if (canceltoken.Token.IsCancellationRequested) return;
                     if (IsLoaded)
                     {
                         DoLocationTimer();
                     }
                 };
-
                 TimerSimulate.Interval = TimeSpan.FromSeconds(1);
                 TimerSimulate.Tick += (s, e) =>
                 {
                     TimerSimulate.Stop();
+                    if (canceltoken.Token.IsCancellationRequested) return;
                     Dispatcher.BeginInvoke(new Action(() =>
                     {
                         SimulateWheelUpDown(wv2);
@@ -670,7 +622,6 @@ namespace VideoGui
                     }
                 };
                 var env = await CoreWebView2Environment.CreateAsync(null, @"c:\stuff\scraper");
-
                 bool done = false;
                 wv2.CoreWebView2InitializationCompleted += (s, e) =>
                 {
@@ -720,7 +671,6 @@ namespace VideoGui
                 {
                     (s as WebView2).Tag = 1;
                 };
-
                 await wv2.EnsureCoreWebView2Async(env);
                 await wv2A1.EnsureCoreWebView2Async(env);
                 await wv2A2.EnsureCoreWebView2Async(env);
@@ -732,13 +682,11 @@ namespace VideoGui
                 await wv2A8.EnsureCoreWebView2Async(env);
                 await wv2A9.EnsureCoreWebView2Async(env);
                 await wv2A10.EnsureCoreWebView2Async(env);
-
                 var connectionString = dbInitializer?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
                 connectionString.ExecuteReader(GetUploadReleaseBuilderSql(), (FbDataReader r) =>
                 {
                     ShortsDirectoriesList.Add(new ShortsDirectory(r));
                 });
-
                 await SetupSubstDrive();
                 StatusBar.Items.OfType<FrameworkElement>().Where(child => !(child is Button)).ToList().ForEach(frameworkElement =>
                 {
@@ -754,7 +702,6 @@ namespace VideoGui
         {
             try
             {
-                // SHORTSDIRECTORY
                 return "SELECT S.ID, S.DIRECTORYNAME, S.TITLEID, S.DESCID, " +
                        "(SELECT LIST(TAGID, ',') FROM TITLETAGS " +
                        " WHERE GROUPID = S.TITLEID) AS LINKEDTITLEIDS, " +
@@ -785,7 +732,6 @@ namespace VideoGui
                 ex.LogWrite($"mainwindow_KeyDown {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-
         public void ExecuteAsAdmin(string arguments)
         {
             try
@@ -810,7 +756,6 @@ namespace VideoGui
                 process.StartInfo = startInfo;
                 process.Start();
                 process.WaitForExit();
-
                 var x = GetEncryptedString(new int[] { 217, 60, 15, 69, 228, 197, 221, 71, 188, 120, 21, 164, 148, 166, 21, 56 }.Select(i => (byte)i).ToArray());
                 ProcessStartInfo startInfo2 = new ProcessStartInfo()
                 {
@@ -831,7 +776,6 @@ namespace VideoGui
                 ex.LogWrite($"ExecuteAsAdmin {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-
         public string GetEncryptedString(byte[] encriptedString)
         {
             try
@@ -880,7 +824,6 @@ namespace VideoGui
                     CreateNoWindow = true,
                     Arguments = cdir + "\\map.bat"
                 };
-
                 Process process = new Process();
                 process.StartInfo = startInfo;
                 process.Start();
@@ -891,8 +834,6 @@ namespace VideoGui
                 ex.LogWrite($"ExecuteAsAdmin {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-
-
         public bool CycleThroughChildWindows()
         {
             try
@@ -913,8 +854,6 @@ namespace VideoGui
                 return false;
             }
         }
-
-
         private bool EnumChildWindowCallback(IntPtr hWnd, IntPtr lParam)
         {
             try
@@ -959,7 +898,6 @@ namespace VideoGui
                 return false;
             }
         }
-
         public async Task SetupSubstDrive()
         {
             try
@@ -1030,17 +968,14 @@ namespace VideoGui
                 return new List<HtmlNode>();
             }
         }
-
         private void lblTotal_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             // SetMargin(StatusBar,92);
         }
-
         private void lblUploaded_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             lblTotal_SizeChanged(sender, e);
         }
-
         public async Task UploadV2Files(bool rentry = false)
         {
             try
@@ -1087,20 +1022,14 @@ namespace VideoGui
                             Files.RemoveAt(i);
                         }
                     }
-
-
                     int max = 0;
                     string connectStr = dbInitializer?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
-
                     SendKeysString = "";
                     int res = -1;// GetUploadsRecCnt(connectStr, false);
                     if (dbInitializer?.Invoke(this, new CustomParams_GetUploadsRecCnt(false)) is int cnt) res = cnt;
                     TotalScheduled = res;
                     lblTotal.Content = TotalScheduled.ToString();
                     SetMargin(StatusBar);
-
-
-
                     max = TotalScheduled;
                     ts = max;
                     if (ts < MaxUploads)
@@ -1137,7 +1066,6 @@ namespace VideoGui
                             VideoFiles.Add(newfile);
                             r = r + newfile + " ";
                         }
-
                         lstMain.Items.Insert(0, $"Inserting {max} Files {r}");
                         await ActiveWebView[1].CoreWebView2.ExecuteScriptAsync("document.getElementById('upload-icon').click();");
                         await ActiveWebView[1].CoreWebView2.ExecuteScriptAsync("document.getElementById('stroke').click();");
@@ -1233,7 +1161,6 @@ namespace VideoGui
             }
             finally
             {
-                //var htmlx = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
                 HasExited = true;
             }
         }
@@ -1262,7 +1189,6 @@ namespace VideoGui
                         NodeUpdate(Span_Name, ScheduledGet);
                         lstMain.Items.Insert(0, $"{file} Deleted");
                         InsertIntoUploadFiles(new List<string> { file }, connectStr);
-                        // Below to be moved to HandlerObject using dbInit
                         dbInitializer?.Invoke(this, new CustomParams_UpdateStats(file));
                         if (ScheduledOk.IndexOf(filename1) == -1)
                         {
@@ -1281,12 +1207,10 @@ namespace VideoGui
                 ex.LogWrite($"UploadedHandler {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-
         private int ScheduledGet()
         {
             return TotalScheduled;
         }
-
         private async Task<bool> NodeUpdate(string Span_Name, GetTotalScheduled ScheduledGet)
         {
             try
@@ -1332,8 +1256,6 @@ namespace VideoGui
                 return false;
             }
         }
-
-
         private void SendKeys_Tick(object? sender, EventArgs e)
         {
             try
@@ -1354,7 +1276,6 @@ namespace VideoGui
                 ex.LogWrite($"SendKeys_Tick {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-        string DirectoryPath = "";
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             try
@@ -1383,7 +1304,6 @@ namespace VideoGui
                     lblInsertId4.Content = "Current Page:";
                     SetMargin(StatusBar);
                 }
-                //btnClickUpload.Margin = thick; 
                 key?.Close();
                 if (Parent is MainWindow mainWindow)
                 {
@@ -1394,20 +1314,16 @@ namespace VideoGui
                 {
                     ActiveWebView[1].Source = new Uri(webAddressBuilder.GetChannelURL().Address);
                 };
-
                 string connectionString = dbInitializer?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
                 int TitleId = -1, DescId = -1, idr = -1;
                 connectionString.ExecuteReader("SELECT * FROM REMATCHED", (FbDataReader r) =>
                 {
                     RematchedList.Add(new Rematched(r));
                 });
-
-
                 connectionString.ExecuteReader("SELECT * FROM SHORTSDIRECTORY", (FbDataReader r) =>
                 {
                     ShortsDirectoriesList.Add(new ShortsDirectory(r));
                 });
-
                 List<(int, int)> ErrorList = new List<(int, int)>() { (47, 62), (48, 64), (49, 63) };
                 foreach (var (found, title, oldid, newid) in from item in ErrorList
                                                              let found = false
@@ -1434,7 +1350,6 @@ namespace VideoGui
                         }
                     }
                 }
-
                 Dispatcher.Invoke(() =>
                 {
                     InitAsync();
@@ -1447,8 +1362,6 @@ namespace VideoGui
                 ex.LogWrite($"Window_Loaded {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-
-
         private async void ProcessWV2Completed_ShortsScheduler(string html, object sender)
         {
             try
@@ -1492,8 +1405,6 @@ namespace VideoGui
                 ex.LogWrite($"ProcessWV2Completed_ShortsScheduler {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-
-
         private bool DoNodeScrapeUpdate(string Id, string Title, string Desc, string FileName, string status, DateTime? dateTime)
         {
             try
@@ -1518,8 +1429,7 @@ namespace VideoGui
             }
         }
 
-        int WheelMoveNode = 0;
-        List<string> lookups = new List<string>();
+        
         private void ProcessNode(HtmlDocument doc, HtmlNode targetSpan, object sender = null)
         {
             try
@@ -2157,7 +2067,6 @@ namespace VideoGui
             SendKeys.SendWait("{TAB}");
             await ActiveWebView[1].ExecuteScriptAsync($"document.querySelector('li.menu-item.remove-default-style.style-scope.ytcp-navigation').click()");
         }
-
         private async void ProcessWebViewComplete(object sender)
         {
             try
@@ -2205,7 +2114,6 @@ namespace VideoGui
                 ex.LogWrite($"ProcessWebView {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
         }
-
         private async void ProcessWebView_Filename(object sender)
         {
             try
@@ -2228,10 +2136,6 @@ namespace VideoGui
                 ex.LogWrite($"ProcessWebView {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
         }
-
-        int LastId = -1;
-        int Tid = -1, Did = -1;
-        string LTitleStr = "", LDescStr = "";
         private void ProcessHTML_Filename(string html, int id, string IntId, object sender)
         {
             try
@@ -2262,8 +2166,6 @@ namespace VideoGui
                                             bool fnd = false;
                                             string newid = idp.Split('_').LastOrDefault().Trim();
                                             newid = newid.Split('.').First().Trim();
-
-
                                             foreach (var itx in RematchedList.Where(s => s.OldId == 47))
                                             {
                                                 fnd = true;
@@ -2324,7 +2226,6 @@ namespace VideoGui
                 ex.LogWrite($"ProcessHTML_Filename {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
         }
-
         private void GetTitlesAndDesc(int id)
         {
             try
@@ -2342,37 +2243,9 @@ namespace VideoGui
                         }
                         idr = tds.Id;
                     }
-
-                    /*
-                    
-                    bool fnd = false;
-                    foreach (var dir in ShortsDirectoriesList.Where(dir => dir.Id == id))
-                    {
-                        TitleId = dir.TitleId;
-                        DescId = dir.DescId;
-                        idr = dir.Id;
-                        fnd = true;
-                        break;
-                    }
-
-                    if (!fnd)
-                    {
-                        string sql = $"SELECT * FROM SHORTSDIRECTORY WHERE ID = @UID";
-                        connectionStr.ExecuteReader(sql, [("UID", id)], (FbDataReader r) =>
-                        {
-                            idr = (r["ID"] is Int32 i) ? i : -1;
-                            TitleId = (r["TITLEID"] is int tid) ? tid : -1;
-                            DescId = (r["DESCID"] is int did) ? did : -1;
-                        });
-                    }*/
                     LastId = idr;
                     if (idr != -1)
                     {
-                        /*if (DescId != -1)
-                        {
-                            DescStr = dbInitializer?.Invoke(this, new CustomParams_GetDesc(id, DescId)) is string s ? s : "";
-                        }*/
-
                         if (TitleStr.NotNullOrEmpty() && DescStr.NotNullOrEmpty())
                         {
                             //itleStr = dbInitializer?.Invoke(this, new CustomParams_GetTitle(id, TitleId)) is string s1 ? s1 : "";
@@ -2386,23 +2259,6 @@ namespace VideoGui
                                     DescStr = DescStr.Replace(item.Trim(), item.Trim().ToLower().ToPascalCase());
                                 }
                             }
-
-                            /*int idxstr = TitleStr.IndexOf("#");
-                            if (idxstr != -1)
-                            {
-                                string TitleStrT = TitleStr.Substring(0, idxstr);
-                                if (TitleStrT != "")
-                                {
-                                    if (!TitleStrT.EndsWith(" "))
-                                    {
-                                        string s1t = TitleStr.Substring(idxstr, TitleStr.Length - idxstr);
-                                        string s2t = s1t.Substring(idxstr);
-                                        string s3t = s1t + " " + s2t;
-                                        TitleStr= (s3t != TitleStr) ? s3t : TitleStr;
-                                    }
-                                }
-
-                            }*/
                             LTitleStr = TitleStr;
                             LDescStr = DescStr;
                         }
@@ -2419,7 +2275,6 @@ namespace VideoGui
                 ex.LogWrite($"GetTitlesData {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
         }
-
         private string CleanUpDesc(string DescStr)
         {
             try
@@ -2446,7 +2301,6 @@ namespace VideoGui
                 return DescStr;
             }
         }
-
         private async void wv2_NavigationCompleted_GetFileName(object sender, CoreWebView2NavigationCompletedEventArgs e)
         {
             try
@@ -2463,8 +2317,6 @@ namespace VideoGui
                 ex.LogWrite($"wv2_NavigationCompleted_GetFileName {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-
-
         private async void wv2_NavigationCompleted(object sender, CoreWebView2NavigationCompletedEventArgs e)
         {
             try
@@ -2522,15 +2374,12 @@ namespace VideoGui
                         closeButton.Margin = new Thickness(statusBar.Width - sumWidths - offset, 0, 0, 0);
                     }
                 }
-
             }
             catch (Exception ex)
             {
                 ex.LogWrite($"SetMargin {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-
-
         async void NextTask()
         {
             try
@@ -2567,8 +2416,6 @@ namespace VideoGui
                 ex.LogWrite($"NextTask {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-
-
         async void UploadsClick()
         {
             try
@@ -2627,7 +2474,6 @@ namespace VideoGui
                 ex.LogWrite($"NextTask {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-
         private async void btnClose_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -2662,8 +2508,6 @@ namespace VideoGui
                 ex.LogWrite($"btnClose_Click {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-
-
         public async Task BuildFiles()
         {
             try
@@ -2716,7 +2560,6 @@ namespace VideoGui
                 ex.LogWrite($"BuildFiles {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-
         private void wv2_MouseMove(object sender, MouseEventArgs e)
         {
             try
@@ -2729,8 +2572,6 @@ namespace VideoGui
                 ex.LogWrite($"");
             }
         }
-
-        //select-files-button
         public async void Select_Upload()
         {
             try
@@ -2760,7 +2601,6 @@ namespace VideoGui
                 ex.LogWrite($"Click_Upload {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-
         public async void Click_Finish()
         {
             try
@@ -2812,8 +2652,6 @@ namespace VideoGui
                 ex.LogWrite($"Click_Upload {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-
-
         public async void Close_Upload()
         {
             try
@@ -2825,8 +2663,6 @@ namespace VideoGui
                     buttons[1].click();
                 }
             ");
-
-
             }
             catch (Exception ex)
             {
@@ -2844,9 +2680,6 @@ namespace VideoGui
                 ex.LogWrite($"btnClickUpload_Click {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-
-
-
         public bool YouTubeLoaded()
         {
             try
@@ -2880,8 +2713,6 @@ namespace VideoGui
                             }
                             DefaultUrl = TargetUrl;
                         }
-
-                        //string URL = webAddressBuilder.AddFiltersByDRAFT_UNLISTED(false).Finalize().Address;
                         if (DefaultUrl is not null && DefaultUrl != "")
                         {
                             ActiveWebView[1].ZoomFactor = 0.6;
@@ -2929,7 +2760,6 @@ namespace VideoGui
                 return false;
             }
         }
-        
         private void DoScheduleTaskCancel()
         {
             try
@@ -2942,7 +2772,6 @@ namespace VideoGui
                 ex.LogWrite($"DoScheduleTaskCancel {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-
         private void wv2Lookup_NavigationCompleted(object? sender, CoreWebView2NavigationCompletedEventArgs e)
         {
             if (canceltoken.IsCancellationRequested) return;
@@ -2953,7 +2782,6 @@ namespace VideoGui
                 task.ContinueWith(x => { ProcessWV2Completed_VideoLookup(x.Result, sender); }, TaskScheduler.FromCurrentSynchronizationContext());
             }
         }
-
         private void ProcessWV2Completed_VideoLookup(string html, object sender)
         {
             try
@@ -2974,7 +2802,6 @@ namespace VideoGui
                         {
                             NoMatch = true;
                         }
-
                         for (int i = 0; i < Directories.Count; i++)
                         {
                             if (Directories[i].url == DefaultUrl)
@@ -2984,7 +2811,6 @@ namespace VideoGui
                                 break;
                             }
                         }
-
                         string url = "";
                         for (int i = 0; i < Directories.Count; i++)
                         {
@@ -3006,10 +2832,7 @@ namespace VideoGui
                         {
                             DoOnLookupComplete();
                         }
-
-
                     }
-
                 }
             }
             catch (Exception ex)
@@ -3017,15 +2840,12 @@ namespace VideoGui
                 ex.LogWrite($"ProcessWV2Completed_VideoLookup {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-
-
         private void DoOnLookupComplete()
         {
             try
             {
                 cancelds();
                 canceltoken.Cancel();
-                
                 var _DoAutoCancel = new AutoCancel(DoAutoCancelClose, "", 5, "Scheduling Finished");
                 _DoAutoCancel.ShowActivated = true;
                 _DoAutoCancel.Show();
@@ -3044,7 +2864,6 @@ namespace VideoGui
                     bool res = false;
                     int r = directshortsScheduler.ScheduleNumber;
                     if (r >= ScheduleMax - 1) r = ScheduleMax - 1;
-
                     lstMain.Items.Insert(0, $"{r + 1} Schedules Complete");
                     if (Days > 1)
                     {
@@ -3153,7 +2972,6 @@ namespace VideoGui
                 return null;
             }
         }
-
         private void DoAutoCancelClose(object sender, int i)
         {
             try
@@ -3177,7 +2995,6 @@ namespace VideoGui
                 ex.LogWrite($"DoAutoCancelClose {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-
         private void DoReportSchedule(DateTime dateTime, string id, string title)
         {
             try
@@ -3228,7 +3045,6 @@ namespace VideoGui
                 return null;
             }
         }
-
         public void SaveTime(TimeSpan startdate, string name, bool IsDateTime = false)
         {
             try
@@ -3264,7 +3080,6 @@ namespace VideoGui
                     ActiveWebView[1].Height = brdmain.Height - 13;
                     var p = new Thickness(0, 0, 0, 0);
                     p.Left = Width - 692;
-
                     lstMain.Width = Width - 25;
                     StatusBar.Width = Width - 5;
                     RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
@@ -3273,7 +3088,6 @@ namespace VideoGui
                     key.SetValue("Webleft", Left);
                     key.SetValue("Webtop", Top);
                     key?.Close();
-
                     SetMargin(StatusBar);
                 }
             }
@@ -3282,7 +3096,6 @@ namespace VideoGui
                 ex.LogWrite($"Window_SizeChanged {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-
         public void cancelds()
         {
             try
@@ -3297,8 +3110,6 @@ namespace VideoGui
                 ex.LogWrite($"cancelds {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-
-
         public async Task<ButtonReturnType> IsButtonEnabled(WebView2 webView2)
         {
             try
@@ -3326,8 +3137,6 @@ namespace VideoGui
         {
             return (IntPtr)((y << 16) | (x & 0xFFFF));
         }
-
-        // Helper function to create wParam for mouse wheel
         private static IntPtr MakeWParam(int keys, int delta)
         {
             return (IntPtr)((delta << 16) | keys);
@@ -3336,18 +3145,12 @@ namespace VideoGui
         {
             try
             {
-                if (webView == null) return;
+                if (webView == null || canceltoken.IsCancellationRequested) return;
                 var wih = new System.Windows.Interop.WindowInteropHelper(Window.GetWindow(webView));
                 var handle = wih.Handle;
-
-                // Get WebView position
                 Point position = webView.PointToScreen(new Point(webView.ActualWidth / 2, webView.ActualHeight / 2));
-
-                // Create parameters for the message
                 IntPtr lParam = MakeLParam((int)position.X, (int)position.Y);
                 IntPtr wParam = MakeWParam(0, isUp ? WHEEL_DELTA : -WHEEL_DELTA);
-
-                // Send the wheel message
                 SendMessage(handle, WM_MOUSEWHEEL, wParam, lParam);
             }
             catch (Exception ex)
@@ -3359,19 +3162,12 @@ namespace VideoGui
         {
             try
             {
-                // Ensure we're on the UI thread
+                if (canceltoken.IsCancellationRequested || webView is null) return;
                 webView.Dispatcher.Invoke(() =>
                 {
-                    // Focus the WebView
                     webView.Focus();
-
-                    // Wheel Up
                     SimulateMouseWheel(webView, true);
-
-                    // Small delay
                     System.Threading.Thread.Sleep(100);
-
-                    // Wheel Down
                     SimulateMouseWheel(webView, false);
                 });
             }
@@ -3387,8 +3183,6 @@ namespace VideoGui
             public int X;
             public int Y;
         }
-
-        int WheelBody = 0;
         private async Task<bool> ProcessUploadsBody(string Span_Name, string Script_Close, string connectStr)
         {
             int ExitCode = -1;
@@ -3415,7 +3209,6 @@ namespace VideoGui
                     }
                     timeractive = false;
                 };
-
                 while (true && !canceltoken.IsCancellationRequested)
                 {
                     if (ExitDialog) return false;
@@ -3515,7 +3308,6 @@ namespace VideoGui
                                     System.Windows.Forms.Application.DoEvents();
                                     Thread.Sleep(15);
                                 }
-
                                 if (!clicks.Any(clicks => clicks.FileName == filename1))
                                 {
                                     clicks.Add(new Uploads(filename1, "Waiting"));
@@ -3547,7 +3339,6 @@ namespace VideoGui
                                             cts.Cancel();
                                             return false;
                                         }
-
                                         var htmlcheck = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
                                         if (Regex.IsMatch(htmlcheck, @"Uploads complete"))
                                         {
@@ -3592,7 +3383,6 @@ namespace VideoGui
                                         {
                                             break;
                                         }
-                                        ///new thread evoke
                                         if (!timeractive && scrollcnt < 3)
                                         {
                                             timer.Start();
@@ -3631,15 +3421,7 @@ namespace VideoGui
                 ex.LogWrite($"ScheduledGet {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
                 return false;
             }
-            finally
-            {
-                if (ExitCode != -1)
-                {
-
-                }
-            }
         }
-        int inserted = 0;
         public void ProcessHTML(string html, int id, string IntId, object sender)
         {
             try
@@ -3663,7 +3445,6 @@ namespace VideoGui
                                     index = html.IndexOf("<");
                                     html = html[..(index - 1)];
                                     filename = html.Replace("\n", "").Replace("\r", "").Trim();
-
                                     if (filename.Contains("_") && IsVideoLookup && ScraperType == EventTypes.UploadTest)
                                     {
                                         string idp = filename.Split("_").ToArray<string>().ToList().LastOrDefault().Trim();
@@ -3674,42 +3455,15 @@ namespace VideoGui
                                                 TitleStr = tds.turlpe1;
                                                 DescStr = tds.turlpe2;
                                             }
-
-                                            /*int TitleId = -1;
-                                            int DescId = -1;
-                                            int Id = -1;
-                                            string connectionStr = dbInitializer?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
-                                            string sql = $"SELECT * FROM SHORTSDIRECTORY WHERE ID = {idp}";
-                                            connectionStr.ExecuteReader(sql, (FbDataReader r) =>
-                                            {
-                                                Id = (r["ID"] is Int32 i) ? i : -1;
-                                                TitleId = (r["TITLEID"] is Int16 tid) ? tid : -1;
-                                                DescId = (r["DESCID"] is Int16 did) ? did : -1;
-                                            });
-
-                                            if (id != -1)
-                                            {
-                                                if (TitleId != -1)
-                                                {
-                                                    TitleStr = dbInitializer?.Invoke(this, new CustomParams_GetTitle(TitleId, Id)) is string t ? t : "";
-                                                }
-                                                if (DescId != -1)
-                                                {
-                                                    DescStr = dbInitializer?.Invoke(this, new CustomParams_GetDesc(DescId, Id)) is string d ? d : "";
-                                                }
-                                            }
-                                            */
                                             if (TitleStr != "")
                                             {
                                                 if ((sender as WebView2).CoreWebView2 != null)
                                                 {
-                                                    // Define the JavaScript code to replace the text content
                                                     string script = "var divElements = document.querySelectorAll('[aria-label=\"Tell viewers about your video (type @ to mention a channel)\"]');" +
                                                        "divElements.forEach(function(divElement) {" +
                                                       $"   divElement.textContent = '{TitleStr}';" +
                                                        "});";
 
-                                                    // Execute the JavaScript code within the WebView2 control
                                                     (sender as WebView2).CoreWebView2.ExecuteScriptAsync(script);
                                                 }
                                             }
@@ -3719,8 +3473,6 @@ namespace VideoGui
                                                        "divElements.forEach(function(divElement) {" +
                                                       $"   divElement.textContent = '{DescStr}';" +
                                                        "});";
-
-                                                // Execute th       e JavaScript code within the WebView2 control
                                                 (sender as WebView2).CoreWebView2.ExecuteScriptAsync(script2);
                                             }
                                             if (TitleStr != "" || DescStr != "")
@@ -3736,12 +3488,10 @@ namespace VideoGui
                                                         }
                                                         Thread.Sleep(100);
                                                     }
-                                                    // Define the JavaScript code to click the "Save" button
                                                     string script1 = "var saveButton = document.querySelector('.ytcp-button-shape-impl__button-text-content');" +
                                                                    "if (saveButton) {" +
                                                                    "   saveButton.click();" +
                                                                    "}";
-                                                    // Execute the JavaScript code within the WebView2 control
                                                     (sender as WebView2).CoreWebView2.ExecuteScriptAsync(script1);
                                                     while (true)
                                                     {
@@ -3770,7 +3520,6 @@ namespace VideoGui
                                 }
                             }
                         }
-
                         if (filename == "")
                         {
                             Thread.Sleep(500);
@@ -3784,7 +3533,6 @@ namespace VideoGui
                         }
                     }
                 }
-
                 filename = System.IO.Path.GetFileNameWithoutExtension(filename.Replace("/n", "").Trim());
                 int index1 = Ids.IndexOf(IntId);
                 if (index1 == -1)
@@ -3813,7 +3561,6 @@ namespace VideoGui
                                     lstCnt--;
                                 }
                             }
-
                             if (files == lstCnt && lstMain.Items.Count == MaxCnts)
                             {
                                 var _DoAutoCancel = new AutoCancel(DoAutoCancelCloseScraper, $"Scraped {files} Files", 5, "Scraper Finished");
@@ -3835,7 +3582,6 @@ namespace VideoGui
                 {
                     dbInitializer?.Invoke(this, new CustomParams_InsertIntoTable(IntId, filename));
                     inserted++;
-
                 }
                 if (IntId == LastIdNode && inserted >= MaxCnts)
                 {
@@ -3845,7 +3591,6 @@ namespace VideoGui
                     _DoAutoCancel.Show();
                     return;
                 }
-
                 files++;
                 Dispatcher.Invoke(() =>
                 {
@@ -3855,8 +3600,6 @@ namespace VideoGui
                         SetMargin(StatusBar);
                     }
                 });
-
-
                 if (wv2Dictionary.ContainsKey(id))
                 {
                     var webView2Instance = wv2Dictionary[id];
@@ -3864,8 +3607,6 @@ namespace VideoGui
 
                 }
                 CanSpool = true;
-
-
                 if (nextaddress.Count > 0)
                 {
                     int Avaialble = 0;
@@ -3906,12 +3647,10 @@ namespace VideoGui
             }
         }
     }
-
     internal class InsertIntoTable
     {
         private string vid;
         private string filename;
-
         public InsertIntoTable(string vid, string filename)
         {
             this.vid = vid;

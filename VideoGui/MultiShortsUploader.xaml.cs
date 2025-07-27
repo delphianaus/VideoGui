@@ -430,10 +430,7 @@ namespace VideoGui
                     key?.Close();
                     string DirName = dir.Split(@"\").ToList().LastOrDefault();
                     var r = dbInit?.Invoke(this, new CustomParams_LookUpId(DirName));
-                    if (r is not null)
-                    {
-                        ShortsIndex = r.ToInt(-1);
-                    }
+                    ShortsIndex = (r is not null) ? r.ToInt(-1) : ShortsIndex;
                     string sql = "";
                     if ((SelectedTitleId != DoTitleSelectFrm.TitleId))
                     {
