@@ -38,6 +38,7 @@ namespace VideoGui
         string connectionStr = "", OldTarget, OldgUrl;
         ScraperModule scraperModule = null;
         public int ShortsIndex = -1;
+        int SchMaxUploads = 100, LinkedId =-1 , SelectedTitleId = -1;
         public bool IsClosing = false, IsClosed = false, Ready = false, IsFirstResize = false;
         private bool _isFirstResize = true;
         DispatcherTimer LocationChangedTimer = new DispatcherTimer();
@@ -51,8 +52,6 @@ namespace VideoGui
             get { return (GridLength)GetValue(Column_WidthProperty); }
             set { SetValue(Column_WidthProperty, value); }
         }
-
-
         public MultiShortsUploader(databasehook<object> _dbInit, OnFinishIdObj _DoOnFinished)
         {
             try
@@ -77,15 +76,12 @@ namespace VideoGui
                 string sqla = "SELECT ID FROM SHORTSDIRECTORY WHERE DIRECTORYNAME = @DIRECTORYNAME";
                 ShortsIndex = connectionStr.ExecuteScalar(sqla,
                     [("@DIRECTORYNAME", DirName)]).ToInt(-1);
-
             }
             catch (Exception ex)
             {
                 ex.LogWrite($"Constructor {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
         }
-
-
         public string FindUploadPath()
         {
             try
@@ -117,8 +113,6 @@ namespace VideoGui
                 return "";
             }
         }
-
-
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             try
@@ -135,7 +129,6 @@ namespace VideoGui
                 dbInit?.Invoke(this, new CustomParams_Initialize());
                 key?.Close();
                 Ready = false;
-
                 LocationChanger.Interval = TimeSpan.FromMilliseconds(10);
                 LocationChanger.Tick += LocationChanger_Tick;
                 LocationChanger.Start();
@@ -154,14 +147,12 @@ namespace VideoGui
                     };
                     LocationChangedTimer.Start();
                 };
-
             }
             catch (Exception ex)
             {
                 ex.LogWrite($"Window_Loaded {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-
         private void LocationChanger_Tick(object? sender, EventArgs e)
         {
             try
@@ -213,7 +204,6 @@ namespace VideoGui
                 ex.LogWrite($"LocationChanger_Tick {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-
         private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             try
@@ -266,7 +256,6 @@ namespace VideoGui
                 ex.LogWrite($"Window_SizeChanged {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-
         private void mnuMoveDirectory_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -281,7 +270,6 @@ namespace VideoGui
                 ex.LogWrite($"mnuMoveDirectory_Click {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-
         private void mnuAddToSelected_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -297,13 +285,11 @@ namespace VideoGui
                 {
                     ex.LogWrite($"mnuMoveDirectory_Click {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
                 }
-
             }
             catch (Exception ex)
             {
                 ex.LogWrite($"mnuAddToSelected_Click {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
-
         }
         private void DoDescSelectCreate(int DescId = -1)
         {
@@ -314,7 +300,6 @@ namespace VideoGui
                     DoDescSelectFrm.Close();
                     DoDescSelectFrm = null;
                 }
-
                 RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                 string dir = FindUploadPath();
                 key?.Close();
@@ -324,14 +309,10 @@ namespace VideoGui
                 {
                     ShortsIndex = r.ToInt(-1);
                     var rt = dbInit?.Invoke(this, new CustomParams_GetCurrentDescId(ShortsIndex));
-                    if (rt is not null)
-                    {
-                        DescId = rt.ToInt(-1);
-                    }
+                    DescId = (rt is not null) ? rt.ToInt(-1) : DescId;
                 }
                 DoDescSelectFrm = new DescSelectFrm(OnSelectFormClose, dbInit, true, DescId);
                 Hide();
-                //DoDescSelectFrm.Id = DescId;
                 DoDescSelectFrm.Show();
             }
             catch (Exception ex)
@@ -339,7 +320,6 @@ namespace VideoGui
                 ex.LogWrite($"DoDescSelectCreate {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-
         private void OnSelectFormClose(object sender, int e)
         {
             try
@@ -348,15 +328,10 @@ namespace VideoGui
                 if (sender is DescSelectFrm frm)
                 {
                     bool Updated = false;
-                    int descid = -1;
                     string Desc = frm.txtDesc.Text;
                     string Dir = frm.txtDescName.Text;
                     var r = dbInit?.Invoke(this, new CustomParams_DescUpdate(Dir, Desc));
-                    if (r is IdhasUpdated idhasUpdated)
-                    {
-                        Updated = idhasUpdated.hasUpdated;
-                        descid = idhasUpdated.id;
-                    }
+                    Updated = (r is IdhasUpdated idhasUpdated) ? idhasUpdated.hasUpdated : Updated;
                     if (Updated)
                     {
                         string linkeddescid = "";
@@ -379,7 +354,6 @@ namespace VideoGui
                 ex.LogWrite($"{this} OnSelectFormClose {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
             }
         }
-
         public string GetShortsDirectorySql(int index = -1)
         {
             try
@@ -398,8 +372,6 @@ namespace VideoGui
                 return "";
             }
         }
-
-
         private void Desc_ToggleButtonClick(object sender, RoutedEventArgs e)
         {
             try
@@ -416,15 +388,12 @@ namespace VideoGui
                 ex.LogWrite($"Desc_ToggleButtonClick {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-
-        int LinkedId = -1;
         private void Title_ToggleButtonClick(object sender, RoutedEventArgs e)
         {
             try
             {
                 if (sender is ToggleButton t && t.DataContext is SelectedShortsDirectories info)
                 {
-
                     LinkedId = info.LinkedShortsDirectoryId;
                     dbInit?.Invoke(this, new CustomParams_SetIndex(LinkedId));
                     DoTitleSelectCreate(info.TitleId);
@@ -435,7 +404,6 @@ namespace VideoGui
                 ex.LogWrite($"Title_ToggleButtonClick {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-        int SelectedTitleId = -1;
         public void DoTitleSelectCreate(int TitleId = -1)
         {
             try
@@ -444,15 +412,12 @@ namespace VideoGui
                 var _DoTitleSelectFrm = new TitleSelectFrm(DoOnFinishTitleSelect, dbInit, true, TitleId);
                 Hide();
                 _DoTitleSelectFrm.Show();
-
             }
             catch (Exception ex)
             {
                 ex.LogWrite($"{this} DoTitleSelectCreate {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
             }
         }
-
-
         private void DoOnFinishTitleSelect(object sender, int e)
         {
             try
@@ -496,8 +461,6 @@ namespace VideoGui
                 ex.LogWrite($"{this} DoOnFinishTitleSelect {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
             }
         }
-
-        int SchMaxUploads = 100;
         private void BtnRunUploaders_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -532,10 +495,7 @@ namespace VideoGui
                             {
                                 rootfolder = PathToCheck;
                                 key.SetValue("UploadPath", rootfolder);
-                                if (LinkedId == -1)
-                                {
-                                    LinkedId = sch.LinkedShortsDirectoryId;
-                                }
+                                LinkedId = (LinkedId == -1) ? sch.LinkedShortsDirectoryId : LinkedId;
                                 break;
                             }
                             else
@@ -545,13 +505,7 @@ namespace VideoGui
                                 LinkedId = -1;
                             }
                             var Idx = dbInit?.Invoke(this, new CustomParams_GetDirectory(sch.DirectoryName));
-                            if (Idx is int _id)
-                            {
-                                if (sch.Id != _id)
-                                {
-                                    sch.Id = _id;
-                                }
-                            }
+                            sch.Id = (Idx is int _id && _id != -1) ? _id : sch.Id;
                         }
                     }
                     if (PathToCheck == "")
@@ -606,7 +560,6 @@ namespace VideoGui
                         else Valid = true;
                     }
                 }
-
                 if (Valid)
                 {
                     WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
@@ -623,7 +576,6 @@ namespace VideoGui
             {
                 ex.LogWrite($"BtnRunUploaders_Click {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
-
         }
         private void doOnFinish(object sender, int id)
         {
@@ -662,18 +614,8 @@ namespace VideoGui
                                 ("@LINKEDSHORTSDIRECTORYID", rp.LinkedShortsDirectoryId)]);
                             }
                         }
-
-
-
                         bool remove = !msuSchedules.ItemsSource.OfType<SelectedShortsDirectories>().Any(x => x.NumberOfShorts == 0);
-
-
-                        if (remove)
-                        {
-
-                            dbInit?.Invoke(this, new CustomParams_RemoveMulitShortsInfoById(-1));
-                        }
-
+                        if (remove) dbInit?.Invoke(this, new CustomParams_RemoveMulitShortsInfoById(-1));
                         if (cnt == 0)
                         {
                             int acnt = 0;
@@ -714,34 +656,9 @@ namespace VideoGui
                                         key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                                         key.SetValue("UploadPath", newpath);
                                         key?.Close();
-                                        string LinkedShortsDirectoryId =
-                                            item.LinkedShortsDirectoryId.ToString();
-                                        if (LinkedShortsDirectoryId is not null && LinkedShortsDirectoryId != "")
-                                        {
-                                            LinkedShortsDirectoryId = "_" + LinkedShortsDirectoryId;
-                                        }
-                                        List<string> files = Directory.EnumerateFiles(newpath, "*.mp4",
-                                            SearchOption.AllDirectories).ToList();
-                                        foreach (var filex in files)
-                                        {
-                                            if (!filex.Contains(LinkedShortsDirectoryId))
-                                            {
-                                                string newPath = filex.Contains("_")
-                                                    ? filex.Substring(0, filex.IndexOf("_")) + LinkedShortsDirectoryId + Path.GetExtension(filex)
-                                                    : filex + LinkedShortsDirectoryId;
-                                                File.Move(filex, newPath);
-                                            }
-                                        }
-
-
+                                        CheckLinkedIds(item, newpath);
                                         var Idx = dbInit?.Invoke(this, new CustomParams_GetDirectory(item.DirectoryName));
-                                        if (Idx is int _id)
-                                        {
-                                            if (item.Id != _id)
-                                            {
-                                                item.Id = _id;
-                                            }
-                                        }
+                                        item.Id = (Idx is int _id && item.Id != _id) ? _id : item.Id;
                                     }
                                 }
                             }
@@ -763,14 +680,8 @@ namespace VideoGui
                                         key.SetValue("UploadPath", newpath);
                                         key?.Close();
                                         var Idx = dbInit?.Invoke(this, new CustomParams_GetDirectory(item.DirectoryName));
-                                        if (Idx is int _id)
-                                        {
-                                            if (item.Id != _id)
-                                            {
-                                                item.Id = _id;
-                                            }
-                                        }
-
+                                        item.Id = (Idx is int _id && item.Id != _id) ? _id : item.Id;
+                                        CheckLinkedIds(item, newpath);
                                     }
                                 }
                             }
@@ -793,9 +704,6 @@ namespace VideoGui
                         }
                         else
                         {
-                            Show();
-                            bool Processed = false;
-                            int ucnt = Uploaded;
                             if (Uploaded > 0)
                             {
                                 foreach (var rp in msuSchedules.ItemsSource.OfType<SelectedShortsDirectories>().Where(x => x.IsActive))
@@ -806,18 +714,13 @@ namespace VideoGui
                                     string SQLB = "SELECT * FROM UploadsRecord ORDER BY RDB$RECORD_VERSION DESC ROWS 100;";
                                     connectionStr.ExecuteReader(SQLB, ctscc, (FbDataReader r) =>
                                     {
-
                                         string UploadFile = (r["UPLOADFILE"] is string f) ? f : "";
                                         int idx = UploadFile.Split('_').LastOrDefault().ToInt(-1);
-                                        if (dbInit?.Invoke(this, new CustomParams_RematchedLookup(idx)) is int trs)
-                                        {
-                                            idx = trs;
-                                        }
-
+                                        idx = (dbInit?.Invoke(this, new CustomParams_RematchedLookup(idx)) is int trs) ? trs : idx;
                                         if (idx == linkedId)
                                         {
-                                            DateTime dtr = (r["UPLOAD_DATE"] is DateTime dt) ? dt : DateTime.Now.AddYears(-200);
-                                            TimeSpan ttr = (r["UPLOAD_TIME"] is TimeSpan ts) ? ts : TimeSpan.Zero;
+                                            DateTime dtr = r["UPLOAD_DATE"] as DateTime? ?? DateTime.Now.AddYears(-200);
+                                            TimeSpan ttr = r["UPLOAD_TIME"] as TimeSpan? ?? TimeSpan.Zero;
                                             if (dtr.Year > 2000)
                                             {
                                                 rp.LastUploadedDateFile = dtr.AtTime(TimeOnly.FromTimeSpan(ttr));
@@ -826,24 +729,15 @@ namespace VideoGui
                                         ctscc.Cancel();
                                     });
                                 }
-
-
-
-
-                                if (ucnt > 0)
-                                {
-                                    Nullable<DateTime> startdate = DateTime.Now, enddate = DateTime.Now.AddHours(10);
-                                    List<ListScheduleItems> listSchedules2 = new();
-                                    int _eventid = 0;
-                                    SchMaxUploads = 100;
-                                    ShowScraper(startdate, enddate, listSchedules2, SchMaxUploads, _eventid);
-                                }
+                                Nullable<DateTime> startdate = DateTime.Now, enddate = DateTime.Now.AddHours(10);
+                                List<ListScheduleItems> listSchedules2 = new();
+                                int _eventid = 0;
+                                SchMaxUploads = 100;
+                                ShowScraper(startdate, enddate, listSchedules2, SchMaxUploads, _eventid);
                             }
-
+                            else Show();
                         }
-
                     }
-
                 }
             }
             catch (Exception ex)
@@ -851,7 +745,32 @@ namespace VideoGui
                 ex.LogWrite($"doOnFinish {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
         }
+        private void CheckLinkedIds(SelectedShortsDirectories item, string newpath)
+        {
+            try
+            {
+                List<string> files = Directory.EnumerateFiles(newpath, "*.mp4",
+                                                           SearchOption.AllDirectories).ToList();
+                string LinkedShortsDirectoryId =
+                    item.LinkedShortsDirectoryId.ToString();
+                if (LinkedShortsDirectoryId is not null && LinkedShortsDirectoryId != "")
+                {
+                    LinkedShortsDirectoryId = "_" + LinkedShortsDirectoryId;
+                }
 
+                foreach (var filex in files.Where(filex => !filex.Contains(LinkedShortsDirectoryId)))
+                {
+                    string newPath = filex.Contains("_")
+                                            ? filex.Substring(0, filex.IndexOf("_")) + LinkedShortsDirectoryId + Path.GetExtension(filex)
+                                            : filex + LinkedShortsDirectoryId;
+                    File.Move(filex, newPath);
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"CheckLinkedIds {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+        }
         public void ShowScraper(Nullable<DateTime> startdate = null, Nullable<DateTime> enddate = null,
             List<ListScheduleItems> _listSchedules = null, int SchMaxUploads = 100, int _eventid = 0)
         {
@@ -875,20 +794,14 @@ namespace VideoGui
                 }
                 WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
                 string gUrl = webAddressBuilder.Dashboard().Address;
-
                 RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                 string uploadsnumber = key.GetValueStr("UploadNumber", "5");
                 string MaxUploads = key.GetValueStr("MaxUploads", "100");
                 key?.Close();
-                int MaxShorts = MaxUploads.ToInt(80);
-                int MaxPerSlot = uploadsnumber.ToInt(100);
-
                 string TargetUrl = webAddressBuilder.AddFilterByDraftShorts().GetHTML();
                 OldgUrl = gUrl;
                 OldTarget = TargetUrl;
                 scraperModule = new ScraperModule(dbInit, FinishScraper, gUrl, TargetUrl, 0);
-
-
                 Hide();
                 scraperModule.ShowActivated = true;
                 scraperModule.Show();
@@ -903,7 +816,6 @@ namespace VideoGui
             try
             {
                 Show();
-
                 Task.Run(() =>
                 {
                     if (sender is ScraperModule scraperModulej)
@@ -935,8 +847,6 @@ namespace VideoGui
                 ex.LogWrite($"FinishScraper {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-
-
         private void txtMaxUpload_KeyDown(object sender, KeyEventArgs e)
         {
             try
@@ -953,7 +863,6 @@ namespace VideoGui
                 ex.LogWrite($"txtMaxUpload_KeyDown {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
         }
-
         private void mnuRemoveSchedule(object sender, RoutedEventArgs e)
         {
             try
@@ -968,7 +877,6 @@ namespace VideoGui
                 ex.LogWrite($"mnuRemoveSchedule {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
         }
-
         private void mnuMakeActive_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -984,9 +892,6 @@ namespace VideoGui
                 ex.LogWrite($"mnuMakeActive_Click {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
         }
-
-
-
         private void txtTotalUploads_KeyDown(object sender, KeyEventArgs e)
         {
             try
@@ -1003,7 +908,6 @@ namespace VideoGui
                 ex.LogWrite($"txtMaxUpload_KeyDown {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
         }
-
         private void txtMaxUpload_LostFocus(object sender, RoutedEventArgs e)
         {
             try
@@ -1015,7 +919,6 @@ namespace VideoGui
                     key.SetValue("UploadNumber", txtMaxUpload.Text);
                 }
                 key?.Close();
-
             }
             catch (Exception ex)
             {
@@ -1036,7 +939,6 @@ namespace VideoGui
                 ex.LogWrite($"mnuRemoveSelected_Click {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-
         private void BtnClose_Click(object sender, RoutedEventArgs e)
         {
             try
