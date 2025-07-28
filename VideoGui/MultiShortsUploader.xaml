@@ -44,7 +44,7 @@
             </Grid.RowDefinitions>
 
             <!-- Loading Panel -->
-            <Canvas x:Name="LoadingPanel" Height="420" HorizontalAlignment="Left" Width="556" VerticalAlignment="Top">
+            <Canvas x:Name="LoadingPanel" Height="420" d:Height="0" HorizontalAlignment="Left" Width="556" VerticalAlignment="Top">
                 <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Canvas.Left="179" Canvas.Top="189">
                     <TextBlock Text="Loading..." FontSize="24" HorizontalAlignment="Center" Margin="0,0,0,10"/>
                     <ProgressBar IsIndeterminate="True" Width="200" Height="20"/>
@@ -107,15 +107,16 @@
                         </ContextMenu>
                     </MSU:MultiListbox.ItemsContextMenu>
                 </MSU:MultiListbox>
-                <Button Name="BtnClose" Content="Close" HorizontalAlignment="Center" VerticalAlignment="Top" Height="25" Width="94" Click="BtnClose_Click" Canvas.Left="438" Canvas.Top="388"/>
+                <Button Name="BtnClose" Content="Close" HorizontalAlignment="Left" VerticalAlignment="Center" Height="25" Width="94" Click="BtnClose_Click" Canvas.Left="451" Canvas.Top="389"/>
                 <Button x:Name="BtnRunUploaders" Content="Run Uploader" HorizontalAlignment="Center" VerticalAlignment="Top" Height="25" Width="94" Click="BtnRunUploaders_Click" Canvas.Left="8" Canvas.Top="388"/>
-                <Label x:Name="lblupload" Content="Uploads Per Slot" HorizontalAlignment="Center" VerticalAlignment="Top" Canvas.Left="108" Canvas.Top="388"/>
+                <Label x:Name="lblupload" Content="Uploads Per Slot" HorizontalAlignment="Center" VerticalAlignment="Bottom" Canvas.Left="108" Canvas.Top="388"/>
                 <TextBox x:Name="txtMaxUpload" Text="5" TextWrapping="Wrap" 
-            KeyDown="txtMaxUpload_KeyDown" LostFocus="txtMaxUpload_LostFocus" VerticalAlignment="Top" HorizontalAlignment="Center" Width="20" Height="20" Canvas.Left="208" Canvas.Top="390"/>
-                <Label x:Name="lblmax" Content="Max Uploads" VerticalAlignment="Top" HorizontalAlignment="Center" Canvas.Left="234" Canvas.Top="388"/>
+            KeyDown="txtMaxUpload_KeyDown" LostFocus="txtMaxUpload_LostFocus" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="20" Height="20" Canvas.Left="196" Canvas.Top="390"/>
+                <Label x:Name="lblmax" Content="Max Uploads" VerticalAlignment="Bottom" HorizontalAlignment="Left" Canvas.Left="219" Canvas.Top="388"/>
                 <TextBox x:Name="txtTotalUploads" Text="100" TextWrapping="Wrap" 
-            KeyDown="txtTotalUploads_KeyDown" VerticalAlignment="Top" 
-                             HorizontalAlignment="Center" Width="30" Height="20" Canvas.Left="320" Canvas.Top="390"/>
+            KeyDown="txtTotalUploads_KeyDown" VerticalAlignment="Bottom" 
+                             HorizontalAlignment="Left" Width="30" Height="20" Canvas.Left="291" Canvas.Top="390"/>
+                <Label x:Name="lblUploaded" Content="Last Upload:" Canvas.Left="323" Canvas.Top="384" HorizontalAlignment="Center" VerticalAlignment="Top" FontSize="14" Background="Transparent" Foreground="#FFFF1414" FontWeight="Bold"/>
             </Canvas>
         </Grid>
     </ScrollViewer>

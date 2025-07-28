@@ -3647,14 +3647,5 @@ namespace VideoGui
             }
         }
     }
-    internal class InsertIntoTable
-    {
-        private string vid;
-        private string filename;
-        public InsertIntoTable(string vid, string filename)
-        {
-            this.vid = vid;
-            this.filename = filename;
-        }
-    }
+    
 }

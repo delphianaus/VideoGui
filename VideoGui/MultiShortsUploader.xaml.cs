@@ -38,7 +38,7 @@ namespace VideoGui
         string connectionStr = "", OldTarget, OldgUrl;
         ScraperModule scraperModule = null;
         public int ShortsIndex = -1;
-        int SchMaxUploads = 100, LinkedId =-1 , SelectedTitleId = -1;
+        int SchMaxUploads = 100, LinkedId = -1, SelectedTitleId = -1;
         public bool IsClosing = false, IsClosed = false, Ready = false, IsFirstResize = false;
         private bool _isFirstResize = true;
         DispatcherTimer LocationChangedTimer = new DispatcherTimer();
@@ -189,6 +189,8 @@ namespace VideoGui
                 Canvas.SetTop(txtMaxUpload, Height - 66);
                 Canvas.SetTop(lblupload, Height - 68);
                 Canvas.SetTop(lblmax, Height - 68);
+                Canvas.SetTop(lblupload, Height - 68);
+                Canvas.SetTop(lblUploaded, Height - 68);
                 LoadingPanel.Visibility = Visibility.Collapsed;
                 MainContent.Visibility = Visibility.Visible;
                 if (IsFirstResize)
@@ -231,6 +233,8 @@ namespace VideoGui
                         Canvas.SetTop(txtMaxUpload, e.NewSize.Height - 66);
                         Canvas.SetTop(lblupload, e.NewSize.Height - 68);
                         Canvas.SetTop(lblmax, e.NewSize.Height - 68);
+                        Canvas.SetTop(lblUploaded, e.NewSize.Height - 68);
+
                     }
                     if (e.WidthChanged)
                     {
@@ -241,6 +245,7 @@ namespace VideoGui
                         msuSchedules.Width = msuShorts.Width;
                         Canvas.SetLeft(BtnClose, e.NewSize.Width - BtnClose.Width - 25);
                         Column_Width = new GridLength(e.NewSize.Width - 135, GridUnitType.Pixel);
+             
                     }
                     if (e.HeightChanged || e.WidthChanged)
                     {
@@ -470,16 +475,10 @@ namespace VideoGui
                 string shortsdir = key.GetValueStr("shortsdirectory", "");
                 CancellationTokenSource cts = new();
                 string SQLB = "SELECT * FROM UploadsRecord ORDER BY RDB$RECORD_VERSION DESC ROWS 100;";
-                connectionStr.ExecuteReader(SQLB, cts, (FbDataReader r) =>
-                {
-                    UploadFile = (r["UPLOADFILE"] is string f) ? f : "";
-                    LinkedId = (UploadFile.Contains("_")) ? UploadFile.Split('_').LastOrDefault().ToInt(-1) : 93;
-                    if (LinkedId != -1) cts.Cancel();
-                });
+               
                 while (IsProcessing)
                 {
-                    foreach (var sch in msuSchedules.Items.OfType<SelectedShortsDirectories>().Where(x => x.IsActive &&
-                    (x.LinkedShortsDirectoryId == LinkedId || LinkedId == -1)))
+                    foreach (var sch in msuSchedules.Items.OfType<SelectedShortsDirectories>().Where(x => x.IsActive && x.NumberOfShorts > 0))
                     {
                         IsProcessing = false;
                         newdir = sch.DirectoryName;
@@ -492,7 +491,7 @@ namespace VideoGui
                             {
                                 rootfolder = PathToCheck;
                                 key.SetValue("UploadPath", rootfolder);
-                                LinkedId = (LinkedId == -1) ? sch.LinkedShortsDirectoryId : LinkedId;
+                                LinkedId = sch.LinkedShortsDirectoryId;
                                 break;
                             }
                             else
@@ -501,18 +500,15 @@ namespace VideoGui
                                 sch.NumberOfShorts = 0;
                                 LinkedId = -1;
                             }
-                            var Idx = dbInit?.Invoke(this, new CustomParams_GetDirectory(sch.DirectoryName));
-                            sch.Id = (Idx is int _id && _id != -1) ? _id : sch.Id;
+                            //var Idx = dbInit?.Invoke(this, new CustomParams_GetDirectory(sch.DirectoryName));
+                            //sch.Id = (Idx is int _id && _id != -1) ? _id : sch.Id;
                         }
                     }
                     if (PathToCheck == "")
                     {
                         LinkedId = -1;
                         var item = msuSchedules.Items.OfType<SelectedShortsDirectories>().FirstOrDefault();
-                        if (item is not null)
-                        {
-                            item.IsActive = true;
-                        }
+                        item.IsActive = (item is not null) ? true : item.IsActive;
                     }
                 }
                 key?.Close();

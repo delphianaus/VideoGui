@@ -509,7 +509,7 @@ namespace VideoGui
                     {
                         if (SelectedShortsDirectoriesList[i].NumberOfShorts == 0)
                         {
-                            
+
                             string sql = "DELETE FROM MULTISHORTSINFO WHERE" +
                                 " LINKEDSHORTSDIRECTORYID = @LINKEDID;";
                             connectionString.ExecuteScalar(sql, [("@LINKEDID",
@@ -723,7 +723,19 @@ namespace VideoGui
                     string shortsdir = key.GetValueStr("shortsdirectory", @"D:\shorts\");
                     string uploaddir = FindUploadPath();
                     key?.Close();
-
+                    CancellationTokenSource cts = new();
+                    string filen = "", shortdirectoryId = "";
+                    DateTime LastUploaded = DateTime.Now.Date.AddYears(-100);
+                    string SQLB = "SELECT * FROM UploadsRecord ORDER BY RDB$RECORD_VERSION DESC ROWS 1;";
+                    connectionString.ExecuteReader(SQLB, cts, (FbDataReader r) =>
+                    {
+                        filen = (r["UPLOADFILE"] is string f) ? f : "";
+                        var dt = (r["UPLOAD_DATE"] is DateTime d) ? d : DateTime.Now.Date.AddYears(-100);
+                        TimeSpan dtr = (r["UPLOAD_TIME"] is TimeSpan t1) ? t1 : new TimeSpan();
+                        LastUploaded = dt.AtTime(TimeOnly.FromTimeSpan(dtr));
+                        cts.Cancel();
+                    });
+                    frmMultiShortsUploader.lblUploaded.Content = $"Last uploaded : {filen.Replace("_","-")} @ {LastUploaded}";
                     if (Path.Exists(shortsdir))
                     {
                         ShortsDirectoryList.Clear();
@@ -792,11 +804,12 @@ namespace VideoGui
 
                         }
                     }
-                    CancellationTokenSource cts = new();
-                    string filen = "", shortdirectoryId = "";
-                    DateTime LastUploaded = DateTime.Now.Date.AddYears(-100);
-                    string SQLB = "SELECT * FROM UploadsRecord ORDER BY RDB$RECORD_VERSION DESC ROWS 1;";
-                    connectionString.ExecuteReader(SQLB, cts, (FbDataReader r) =>
+                    CancellationTokenSource ctsx = new();
+                    filen = "";
+                    shortdirectoryId = "";
+                    LastUploaded = DateTime.Now.Date.AddYears(-100);
+                    SQLB = "SELECT * FROM UploadsRecord ORDER BY RDB$RECORD_VERSION DESC ROWS 1;";
+                    connectionString.ExecuteReader(SQLB, ctsx, (FbDataReader r) =>
                     {
                         filen = (r["UPLOADFILE"] is string f) ? f : "";
                         var dt = (r["UPLOAD_DATE"] is DateTime d) ? d : DateTime.Now.Date.AddYears(-100);
@@ -805,7 +818,7 @@ namespace VideoGui
                         {
                             shortdirectoryId = filen.Split('_').LastOrDefault();
                             LastUploaded = dt.AtTime(TimeOnly.FromTimeSpan(dtr));
-                            cts.Cancel();
+                            ctsx.Cancel();
                         }
                     });
 
@@ -3156,7 +3169,7 @@ namespace VideoGui
                 int NumberofShorts = Directory.EnumerateFiles(SearchDir1, "*.mp4", SearchOption.AllDirectories).Count();
                 string sql = "SELECT * FROM MULTISHORTSINFO WHERE ISSHORTSACTIVE = 1;";
                 bool IsShortsActive = connectionString.ExecuteScalar(sql).ToInt(-1) != -1;
-                
+
                 sql = "SELECT ID FROM MULTISHORTSINFO WHERE LINKEDSHORTSDIRECTORYID = @LINKEDID;";
                 int id = connectionString.ExecuteScalar(sql, [("@LINKEDID", LinkedId)]).ToInt(-1);
                 if (id == -1)
