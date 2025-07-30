@@ -888,7 +888,7 @@ namespace VideoGui
                         ObservableCollectionFilter.ImportCollectionViewSource.View.Refresh();
                         if (GoProMediaImporter is not null && GoProMediaImporter.IsLoaded)
                         {
-                            GoProMediaImporter.lstSchedules.ItemsSource = ObservableCollectionFilter.ImportCollectionViewSource.View;
+                            GoProMediaImporter.msuSchedules.ItemsSource = ObservableCollectionFilter.ImportCollectionViewSource.View;
                             return true;
                         }
                     }
@@ -902,7 +902,7 @@ namespace VideoGui
                         ObservableCollectionFilter.ImportCollectionViewSource.View.Refresh();
                         if (GoProMediaImporter is not null && GoProMediaImporter.IsLoaded)
                         {
-                            GoProMediaImporter.lstSchedules.ItemsSource = ObservableCollectionFilter.ImportCollectionViewSource.View;
+                            GoProMediaImporter.msuSchedules.ItemsSource = ObservableCollectionFilter.ImportCollectionViewSource.View;
                             return true;
                         }
                     }

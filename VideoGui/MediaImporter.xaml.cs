@@ -1,33 +1,34 @@
 ﻿using AsyncAwaitBestPractices;
+using FolderBrowserEx;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Configuration;
+using System.Drawing.Drawing2D;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Automation.Peers;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
+using System.Windows.Markup.Localizer;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
-using FolderBrowserEx;
-using System.Windows.Automation.Peers;
-using System.Configuration;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
-using System.Windows.Markup.Localizer;
+using System.Windows.Threading;
 using VideoGui.Models;
 using VideoGui.Models.delegates;
-using Microsoft.Win32;
-using Path = System.IO.Path;
-using System.Drawing.Drawing2D;
 using FolderBrowserDialog = FolderBrowserEx.FolderBrowserDialog;
+using Path = System.IO.Path;
 
 
 namespace VideoGui
@@ -54,7 +55,9 @@ namespace VideoGui
         FileRenamerClear DoFileRenamerClear;
         int MaxFile = 0;
         databasehook<object> ModuleCallBack;
-
+        bool IsFirstResize = true, Ready = false;
+        DispatcherTimer LocationChangedTimer = new DispatcherTimer();
+        DispatcherTimer LocationChanger = new DispatcherTimer();
         double DockPanelWidth = 348;
         public MediaImporter(databasehook<object> _ModuleCallback, FileImporterClear _FileImporterClear,
             ImportRecordAdd _ImportRec, CheckImports _CheckImports,
@@ -71,9 +74,119 @@ namespace VideoGui
             DoClearTimes = doClearTimes;
             DoSetFromTime = doSetFromTime;
             DoSetToTime = doSetToTime;
+            LocationChanger.Interval = TimeSpan.FromMilliseconds(10);
+            LocationChanger.Tick += LocationChanger_Tick;
+            LocationChanger.Start();
+            LocationChanged += (s, e) =>
+            {
+                LocationChangedTimer.Stop();
+                LocationChangedTimer.Interval = TimeSpan.FromSeconds(3);
+                LocationChangedTimer.Tick += (s1, e1) =>
+                {
+                    LocationChangedTimer.Stop();
+                    RegistryKey key2 = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                    key2?.SetValue("MIleft", Left);
+                    key2?.SetValue("MItop", Top);
+                    key2?.Close();
+                };
+                LocationChangedTimer.Start();
+            };
+
 
         }
+        private void LocationChanger_Tick(object? sender, EventArgs e)
+        {
+            try
+            {
+                LocationChanger.Stop();
+                RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                var _width = key.GetValue("MIWidth", ActualWidth).ToDouble();
+                var _height = key.GetValue("MIHeight", ActualHeight).ToDouble();
+                var _left = key.GetValue("MIleft", Left).ToDouble();
+                var _top = key.GetValue("MItop", Top).ToDouble();
+                key?.Close();
+                Left = (Left != _left && _left != 0) ? _left : Left;
+                Top = (Top != _top && _top != 0) ? _top : Top;
+                Width = (ActualWidth != _width && _width != 0) ? _width : Width;
+                Height = (ActualHeight != _height && _height != 0) ? _height : Height;
+                SetControls(Width);
+                SetControls(Height, false);
 
+
+                LoadingPanel.Visibility = Visibility.Collapsed;
+                MainContent.Visibility = Visibility.Visible;
+
+
+                if (IsFirstResize)
+                {
+                    IsFirstResize = false;
+                    LoadingPanel.Height = 0;
+                    MainScroller.ScrollToVerticalOffset(439); // Scroll to the main content
+                }
+                Ready = true;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"LocationChanger_Tick {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+        }
+        private void SetControls(double _v, bool IsWidth = true)
+        {
+            try
+            {
+                if (IsWidth)
+                {
+                    MainGrid.Width = _v;
+                    LoadingPanel.Width = _v;
+                    MainContent.Width = _v;
+                    MainScroller.Width = _v;
+                    brdFileInfo.Width = _v - 25;
+                    brdControls.Width = brdFileInfo.Width;
+                    msuSchedules.Width = _v - 113;
+                    Canvas.SetLeft(brdt2, _v - 109);
+                    Canvas.SetLeft(btnSelectSourceDir, _v - 55);
+                    Canvas.SetLeft(btnClose, _v - 124);
+                    txtsrcdir.Width = _v - 180;
+                }
+                else
+                {
+                    MainGrid.Height = _v;
+                    LoadingPanel.Height = _v;
+                    MainScroller.Height = _v;
+                    MainContent.Height = _v;
+                    msuSchedules.Height = _v - 152;
+                    Canvas.SetTop(brdControls, _v - 93);
+                    brdTControls.Height = _v - 161;
+                    cnvControls.Height = brdTControls.Height;
+                    Canvas.SetTop(btnMove, _v - 196);
+                    Canvas.SetTop(btnSelectAll, _v - 227);
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"SetControls {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+
+        }
+       
+        private void frmImport_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            try
+            {
+                if (e.WidthChanged)
+                { 
+                    SetControls(e.NewSize.Width);
+                }
+                if (e.HeightChanged)
+                {
+                    SetControls(e.NewSize.Height, false);
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+            }
+        }
         public async Task ReadFile(string filePath)
         {
             try
@@ -184,12 +297,9 @@ namespace VideoGui
             try
             {
                 ModuleCallBack?.Invoke(this, new CustomParams_DataSelect());
-
                 RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                 string Root = key.GetValueStr("MediaImporterSource", "c:\\");
                 key?.Close();
-
-
                 FolderBrowserDialog folderBrowserDialog = new FolderBrowserDialog();
                 folderBrowserDialog.Title = "Select a folder";
                 folderBrowserDialog.InitialFolder = Root;
@@ -215,8 +325,6 @@ namespace VideoGui
                     txtsrcdir.Text = folder;
                     GetFiles(folder).ConfigureAwait(false);
                 }
-
-
             }
             catch (Exception ex)
             {
@@ -282,9 +390,9 @@ namespace VideoGui
             try
             {
 
-                if (lstSchedules.SelectedItems.Count > 0)
+                if (msuSchedules.SelectedItems.Count > 0)
                 {
-                    var p = lstSchedules.SelectedItems[lstSchedules.SelectedItems.Count - 1];
+                    var p = msuSchedules.SelectedItems[msuSchedules.SelectedItems.Count - 1];
                     if (p is FileInfoGoPro fpgx)
                     {
                         DoSetToTime?.Invoke(fpgx.TimeData);
@@ -317,9 +425,9 @@ namespace VideoGui
         {
             try
             {
-                if (lstSchedules.SelectedItems.Count > 0)
+                if (msuSchedules.SelectedItems.Count > 0)
                 {
-                    var p = lstSchedules.SelectedItems[0];
+                    var p = msuSchedules.SelectedItems[0];
                     if (p is FileInfoGoPro fpgx)
                     {
                         DoSetFromTime?.Invoke(fpgx.TimeData);
@@ -350,7 +458,7 @@ namespace VideoGui
         {
             try
             {
-                lstSchedules.SelectAll();
+                msuSchedules.SelectAll();
             }
             catch (Exception ex)
             {
@@ -395,7 +503,7 @@ namespace VideoGui
                     folder = folderBrowserDialog.SelectedFolder;
                     if (folder != null && folder != "")
                     {
-                        foreach (var Selected in lstSchedules.SelectedItems)
+                        foreach (var Selected in msuSchedules.SelectedItems)
                         {
                             if (Selected is FileInfoGoPro FGX)
                             {
@@ -419,48 +527,13 @@ namespace VideoGui
 
 
 
-        private void frmImport_SizeChanged(object sender, SizeChangedEventArgs e)
-        {
-            try
-            {
-                StackHeader0.Width = frmImport.Width - 8;
-                StackHeader1.Width = frmImport.Width - 8;
-                StackHeader2.Width = frmImport.Width - 104;// Stack Panel for right controls
-                StackHeader4.Width = frmImport.Width - 6;
-                StackHeader5.Width = stackheader4.Width;
-                Stackheader6.Height = StackHeader0.Height - 30;
-                brdControls.Width = frmImport.Width - 8;
-                cnvcontrols.Width = brdControls.Width - 2;
-                lstItems.Width = StackHeader5.Width;
 
-                lstSchedules.Width = StackHeader2.Width - 2;
-                lstSchedules.Height = frmImport.Height - 190;
-
-
-                Canvas.SetLeft(btnClose, frmImport.Width - 124);
-                stkmain.Height = frmImport.Height - 16;
-                brd1.Height = StackHeader0.Height - 4;
-
-                txtsrcdir.Width = frmImport.Width - 200;
-                Canvas.SetLeft(btnSelectSourceDir, frmImport.Width - 63);
-                stkFilterControls.Height = frmImport.Height - 158;
-                brdControls1.Height = stkFilterControls.Height;
-                Canvas.SetTop(btnMove, frmImport.Height - 196);
-                Canvas.SetTop(btnSelectAll, frmImport.Height - 227);
-                lstItems.Width = StackHeader2.Width - 2;// stackpanel width + 200
-
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
-            }
-        }
 
         private void btnSelectAll_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                lstSchedules.SelectAll();
+                msuSchedules.SelectAll();
             }
             catch (Exception ex)
             {

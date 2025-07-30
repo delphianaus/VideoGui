@@ -6,117 +6,91 @@
         xmlns:local="clr-namespace:VideoGui" Loaded="Window_Loaded" 
        xmlns:MSU="clr-namespace:CustomComponents.ListBoxExtensions;assembly=CustomComponents"
         mc:Ignorable="d" WindowStartupLocation="CenterScreen" WindowStyle="ToolWindow" MaxWidth="8150"
-        Title="MediaImporter" Height="370" Width="724" SizeChanged="frmImport_SizeChanged">
-    <Grid Margin="0,0,0,0">
-        <Border x:Name="brdFileInfo" BorderThickness="2" BorderBrush="Black" Height="52" 
-                VerticalAlignment="Top" Margin="4,2,4,0">
-            <Canvas x:Name="CnvMedialElements">
-                <Label Content="Source Directory" HorizontalAlignment="Center" VerticalAlignment="Top" Height="26" Canvas.Left="9" Canvas.Top="9"/>
-                <TextBox x:Name="txtsrcdir" HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Center" Width="556" Canvas.Left="120" Canvas.Top="13"/>
-                <Button x:Name="btnSelectSourceDir" HorizontalAlignment="Center" VerticalAlignment="Top" Width="20" Height="20" Canvas.Left="686" Canvas.Top="12" Click="btnSelectSourceDir_Click" RenderTransformOrigin="-13.634,1.02" />
+        Title="Media Importer" Height="370" Width="724" SizeChanged="frmImport_SizeChanged">
+    <ScrollViewer x:Name="MainScroller" VerticalScrollBarVisibility="Hidden" 
+               HorizontalScrollBarVisibility="Disabled" HorizontalAlignment="Left" VerticalAlignment="Top">
+        <Grid Margin="0,0,0,0" x:Name="MainGrid" HorizontalAlignment="Left" VerticalAlignment="Top" Width="723" Height="349">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <!-- Loading Panel -->
+                <RowDefinition Height="Auto"/>
+                <!-- Main Content -->
+            </Grid.RowDefinitions>
+            <Canvas x:Name="LoadingPanel" Height="349" d:Height="0" 
+                HorizontalAlignment="Center" Width="723" 
+                VerticalAlignment="Top">
+                <TextBlock Text="Loading..." FontSize="24" Canvas.Left="311.5" Canvas.Top="141"/>
+                <ProgressBar IsIndeterminate="True" Width="200" Height="20" HorizontalAlignment="Left" Canvas.Top="178" VerticalAlignment="Center" Canvas.Left="261.5"/>
             </Canvas>
-        </Border>
-        <MSU:MultiListbox x:Name="msuSchedules" 
-           Header="Active Schedules" Width="629" Canvas.Top="49"
+            <Canvas x:Name="MainContent" Grid.Row="1" Height="349" 
+        HorizontalAlignment="Center" Width="723" VerticalAlignment="Top">
+                <Border x:Name="brdFileInfo" BorderThickness="2" BorderBrush="Black" Height="52" 
+                VerticalAlignment="Top" Margin="4,2,4,0" Width="715" 
+                    HorizontalAlignment="Left" Canvas.Top="0" Canvas.Left="0">
+                    <Canvas x:Name="CnvMedialElements">
+                        <Label Content="Source Directory" HorizontalAlignment="Center" VerticalAlignment="Top" Height="26" Canvas.Left="9" Canvas.Top="9"/>
+                        <TextBox x:Name="txtsrcdir" HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Center" Width="556" Canvas.Left="120" Canvas.Top="13"/>
+                        <Button x:Name="btnSelectSourceDir" HorizontalAlignment="Center" VerticalAlignment="Top" Width="20" Height="20" Canvas.Left="686" Canvas.Top="12" Click="btnSelectSourceDir_Click" RenderTransformOrigin="-13.634,1.02" />
+                    </Canvas>
+                </Border>
+                <MSU:MultiListbox x:Name="msuSchedules" 
+           Header="Media" Width="625" Canvas.Top="5"
            VerticalAlignment="Top" VerticalContentAlignment="Bottom" 
-           BorderBrush="Black" BorderThickness="2" Height="241" 
-           HorizontalAlignment="Left" Canvas.Left="2" Margin="0,49,0,0">
-            <MSU:MultiListbox.ColumnDefinitions>
-                <MSU:MultiListboxColumnDefinition DataField="FileName" Width="140" 
-                  HeaderText="Filename" ComponentType="TextBlock"/>
-                <MSU:MultiListboxColumnDefinition HeaderText="First FrameTime" 
+           BorderBrush="Black" BorderThickness="2" Height="236" 
+           HorizontalAlignment="Left" Canvas.Left="0" Margin="2,49,0,0">
+                    <MSU:MultiListbox.ColumnDefinitions>
+                        <MSU:MultiListboxColumnDefinition DataField="FileName" Width="140" 
+                  HeaderText="FileName" ComponentType="TextBlock"/>
+                        <MSU:MultiListboxColumnDefinition HeaderText="First FrameTime" 
                   ContentVerticalAlignment="Center" ContentMargin="0,0,0,0"
-                  DataField="TimeData" Width="65" ComponentType="TextBlock"/>
-                <MSU:MultiListboxColumnDefinition HeaderText="Suggested Filename" 
+                  DataField="TimeData" Width="85" ComponentType="TextBlock"/>
+                        <MSU:MultiListboxColumnDefinition HeaderText="Suggested Filename" 
                   ContentHorizontalAlignment="Center"  DataField="NewFile" 
-                  Width="140" ComponentType="TextBlock"/>
-            </MSU:MultiListbox.ColumnDefinitions>
-            <MSU:MultiListbox.ItemsContextMenu>
-                <ContextMenu>
-                    <MenuItem Header="Remove Selected Directories" Click="mnuRemoveSelected_Click"/>
-                    <MenuItem Header="Make Active" Click="mnuMakeActive_Click"/>
-                    <MenuItem Header="Remove Schedule" Click="mnuRemoveSchedule"/>
-                </ContextMenu>
-            </MSU:MultiListbox.ItemsContextMenu>
-        </MSU:MultiListbox>
-
-        <!--<Border x:Name="brd1" Margin="2,2,2,2" BorderThickness="2" BorderBrush="Black">
-                <Canvas x:Name="d">
-                    <Canvas x:Name="cnvTitles">
-                        <ListBox x:Name="lstItems" Height="204" Canvas.Top="2" 
-                                    IsSynchronizedWithCurrentItem="True"  IsManipulationEnabled="True" 
-                                     BorderThickness="2,2,2,2" Width="632">
-                        </ListBox>
-                    </Canvas>
-                    <Canvas x:Name="cnvSchedules">
-                        <ListBox Name="lstSchedules" ScrollViewer.HorizontalScrollBarVisibility="Disabled" 
-                                                     SelectionMode="Multiple" ScrollViewer.CanContentScroll="True" 
-                                                     ScrollViewer.VerticalScrollBarVisibility="Visible" 
-                                                     Padding="0,0,0,2" Height="177" Width="602">
-                            <ListBox.Resources>
-                                -->
-        <!--Defines a context menu-->
-        <!--
-                                <ContextMenu x:Key="MyElementMenu">
-                                    <MenuItem IsCheckable="True" IsChecked="False"  Name="mnuFilterFrom" Header="Selecy/Deslect Time To Filter From " Click="mnuFilterFrom_Click"/>
-                                    <MenuItem IsCheckable="True" IsChecked="False" Name="mnuFilterTo" Header="Selecy/Deslect Time To Filter" Click="mnuFilterTo_Click" />
-                                    <MenuItem Name="mnuClearFilters" Header="Clear Filters" Click="mnuClearFilters_Click"/>
-                                    <Separator/>
-                                    <MenuItem Name="mnuSelectDateFrom" Header="Select From Date" Click="mnuSelectDateFrom_Click"/>
-                                    <MenuItem Name="mnuSelectDateTo" Header="Select To Date" Click="mnuSelectDateTo_Click"/>
-                                    <Separator/>
-                                    <MenuItem Name="mnuMoveSelected" Header="Move Selected Files" Click="mnuMoveSelected_Click"/>
-                                    <Separator/>
-                                    <MenuItem Name="mnuSelectAll" Header="Select All" Click="mnuSelectAll_Click"/>
-                                </ContextMenu>
-                                -->
-        <!--Sets a context menu for each ListBoxItem in the current ListBox-->
-        <!--
-                                <Style TargetType="{x:Type ListBoxItem}">
-                                    <Setter Property="ContextMenu" Value="{StaticResource MyElementMenu}"/>
-                                </Style>
-                            </ListBox.Resources>
-                            <ListBox.ItemTemplate>
-                                <DataTemplate x:Name="GridControlsB" >
-                                    <Grid Margin="0,2" x:Name="gridwidths">
-                                       
-                                        <TextBlock Name="Filename" Text="{Binding FileName}"/>
-                                        <TextBlock Name="FirstFrameTime"  Text="{Binding TimeData}"/>
-                                        <TextBlock Name="SuggestedName"  Text="{Binding NewFile}"/>
-                                    </Grid>
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
-                    </Canvas>
-                </Canvas>
-            </Border>-->
-        <Canvas x:Name="Canvas3" Width="724" Margin="10,2,-10,1">
-            <Border x:Name="brdControls1" BorderThickness="2" BorderBrush="Black" Width="87" Height="229" HorizontalAlignment="Center" Canvas.Left="622" Canvas.Top="57" VerticalAlignment="Top" Margin="0,0,0,1">
-                <Canvas x:Name="cnvControls">
-                    <Button x:Name="btnClear" Content="Clear Filter" Width="70" Height="21" Click="btnClear_Click" HorizontalAlignment="Left" Canvas.Top="8" VerticalAlignment="Top" Canvas.Left="6"/>
-                    <ContentControl x:Name="labelstartevents" MouseDoubleClick="labelstartevents_MouseDoubleClick" Canvas.Left="6" Canvas.Top="36" HorizontalAlignment="Center" VerticalAlignment="Top">
-                        <Label x:Name="lblStart" Content="Start :" Canvas.Left="6" Canvas.Top="74" 
+                  Width="120" ComponentType="TextBlock"/>
+                    </MSU:MultiListbox.ColumnDefinitions>
+                    <MSU:MultiListbox.ItemsContextMenu>
+                        <ContextMenu>
+                            <MenuItem IsCheckable="True" IsChecked="False" Header="Selecy/Deslect Time To Filter From " Click="mnuFilterFrom_Click"/>
+                            <MenuItem IsCheckable="True" IsChecked="False" Header="Selecy/Deslect Time To Filter" Click="mnuFilterTo_Click" />
+                            <MenuItem Header="Clear Filters" Click="mnuClearFilters_Click"/>
+                            <Separator/>
+                            <MenuItem Header="Select From Date" Click="mnuSelectDateFrom_Click"/>
+                            <MenuItem Header="Select To Date" Click="mnuSelectDateTo_Click"/>
+                            <Separator/>
+                            <MenuItem Header="Move Selected Files" Click="mnuMoveSelected_Click"/>
+                            <Separator/>
+                            <MenuItem Header="Select All" Click="mnuSelectAll_Click"/>
+                        </ContextMenu>
+                    </MSU:MultiListbox.ItemsContextMenu>
+                </MSU:MultiListbox>
+                <Canvas x:Name="brdt2" Canvas.Left="631" Canvas.Top="60">
+                    <Border x:Name="brdTControls" BorderThickness="2" BorderBrush="Black" Width="87" Height="229" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,0,0,1" Canvas.Left="0" Canvas.Top="0">
+                        <Canvas x:Name="cnvControls" Height="235" Width="84" HorizontalAlignment="Left" VerticalAlignment="Top">
+                            <Button x:Name="btnClear" Content="Clear Filter" Width="70" Height="21" Click="btnClear_Click" HorizontalAlignment="Left" Canvas.Top="8" VerticalAlignment="Top" Canvas.Left="6"/>
+                            <ContentControl x:Name="labelstartevents" MouseDoubleClick="labelstartevents_MouseDoubleClick" Canvas.Left="6" Canvas.Top="36" HorizontalAlignment="Center" VerticalAlignment="Top">
+                                <Label x:Name="lblStart" Content="Start :" Canvas.Left="6" Canvas.Top="74" 
                                            HorizontalAlignment="Left" VerticalAlignment="Center" Width="67" Height="25"/>
-                    </ContentControl>
-                    <TextBox x:Name="txtStart" Canvas.Left="6" TextWrapping="Wrap" Canvas.Top="65" Width="51" KeyUp="txtStart_KeyUp" Text="00:00:00" />
-                    <ContentControl x:Name="labelendevents" MouseDoubleClick="labelendevents_MouseDoubleClick" Canvas.Left="7" Canvas.Top="90" HorizontalAlignment="Left" VerticalAlignment="Center">
-                        <Label Content="End :" Canvas.Left="6" Canvas.Top="64" Width="67" Height="25" 
+                            </ContentControl>
+                            <TextBox x:Name="txtStart" Canvas.Left="6" TextWrapping="Wrap" Canvas.Top="65" Width="51" KeyUp="txtStart_KeyUp" Text="00:00:00" />
+                            <ContentControl x:Name="labelendevents" MouseDoubleClick="labelendevents_MouseDoubleClick" Canvas.Left="7" Canvas.Top="90" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                <Label Content="End :" Canvas.Left="6" Canvas.Top="64" Width="67" Height="25" 
                                            HorizontalAlignment="Center" VerticalAlignment="Top"/>
-                    </ContentControl>
-                    <TextBox x:Name="txtEnd" Canvas.Left="6" TextWrapping="Wrap" Canvas.Top="119" Width="51" HorizontalAlignment="Center" VerticalAlignment="Top" KeyUp="txtEnd_KeyUp"/>
-                    <Button x:Name="btnSelectAll" Content="Select All" Width="70" Height="21" Click="btnSelectAll_Click" Canvas.Top="146" Canvas.Left="6" HorizontalAlignment="Center" VerticalAlignment="Top"/>
-                    <Button x:Name="btnMove" Content="Move" Width="70" Height="21" Click="btnMove_Click" Canvas.Top="176" Canvas.Left="6" HorizontalAlignment="Center" VerticalAlignment="Top"/>
-                    <Button x:Name="btntartSelector" Content="" Canvas.Left="60" Canvas.Top="64" HorizontalAlignment="Left" VerticalAlignment="Center" Width="19" Height="18" Click="btntartSelector_Click"/>
-                    <Button x:Name="btnEndSelector" Content="" Canvas.Left="60" Canvas.Top="119" HorizontalAlignment="Left" VerticalAlignment="Center" Width="19" Height="18" Click="btnEndSelector_Click"/>
-
+                            </ContentControl>
+                            <TextBox x:Name="txtEnd" Canvas.Left="6" TextWrapping="Wrap" Canvas.Top="119" Width="51" HorizontalAlignment="Center" VerticalAlignment="Top" KeyUp="txtEnd_KeyUp"/>
+                            <Button x:Name="btnSelectAll" Content="Select All" Width="70" Height="21" Click="btnSelectAll_Click" Canvas.Top="146" Canvas.Left="6" HorizontalAlignment="Center" VerticalAlignment="Top"/>
+                            <Button x:Name="btnMove" Content="Move" Width="70" Height="21" Click="btnMove_Click" Canvas.Top="176" Canvas.Left="6" HorizontalAlignment="Center" VerticalAlignment="Top"/>
+                            <Button x:Name="btntartSelector" Content="" Canvas.Left="60" Canvas.Top="64" HorizontalAlignment="Left" VerticalAlignment="Center" Width="19" Height="18" Click="btntartSelector_Click"/>
+                            <Button x:Name="btnEndSelector" Content="" Canvas.Left="60" Canvas.Top="119" HorizontalAlignment="Left" VerticalAlignment="Center" Width="19" Height="18" Click="btnEndSelector_Click"/>
+                        </Canvas>
+                    </Border>
                 </Canvas>
-            </Border>
-        </Canvas>
-        <Border x:Name="brdControls" BorderBrush="Black" BorderThickness="2" Height="62" RenderTransformOrigin="0.5,0.5" VerticalAlignment="Bottom" Margin="4,0,4,3">
-            <Canvas x:Name="cnvcontrols" Margin="0,0,-2,0" VerticalAlignment="Top">
-                <Button x:Name="btnRename" IsEnabled="False" HorizontalAlignment="Center" Content="Rename ALL" Width="90" Height="30" Click="btnRename_Click" Canvas.Left="14" Canvas.Top="10" VerticalAlignment="Top"/>
-                <Button x:Name="btnClose" Content="Close" Width="90" Height="30" Click="btnClose_Click" HorizontalAlignment="Center" Canvas.Left="603" Canvas.Top="12" VerticalAlignment="Top"/>
+                <Border x:Name="brdControls" BorderBrush="Black" BorderThickness="2" Height="54" RenderTransformOrigin="0.5,0.5" VerticalAlignment="Bottom" Margin="4,0,4,3" Canvas.Top="295" Width="717">
+                    <Canvas x:Name="cnvcontrols" Margin="0,0,-2,0" VerticalAlignment="Top">
+                        <Button x:Name="btnRename" IsEnabled="False" HorizontalAlignment="Center" Content="Rename ALL" Width="90" Height="30" Click="btnRename_Click" Canvas.Left="14" Canvas.Top="10" VerticalAlignment="Top"/>
+                        <Button x:Name="btnClose" Content="Close" Width="90" Height="30" Click="btnClose_Click" HorizontalAlignment="Center" Canvas.Left="609" Canvas.Top="10" VerticalAlignment="Top"/>
+                    </Canvas>
+                </Border>
             </Canvas>
-        </Border>
-    </Grid>
+        </Grid>
+    </ScrollViewer>
 </Window>

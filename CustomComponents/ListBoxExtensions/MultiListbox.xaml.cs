@@ -163,6 +163,10 @@ namespace CustomComponents.ListBoxExtensions
             UpdateItemsListBoxHeight();
         }
 
+        public void SelectAll()
+        {
+            lstBoxUploadItems.SelectAll();
+        }
         private void UpdateItemsListBoxHeight()
         {
             if (lstBoxUploadItems != null)
