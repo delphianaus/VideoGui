@@ -7655,6 +7655,13 @@ namespace VideoGui
                         (videoStream, audioStream, textStreams, Dur) = bridge.ReadMediaFile(SourceFile);
                     }
                     bridge = null;
+
+                    if (videoStream.Codec is null)
+                    {
+                        job.IsSkipped = true;
+                        job.Fileinfo = "Invalid File Format";
+                        return;
+                    }
                     LineNum = 51;
                     TotalSecs = Dur.TotalSeconds;
                     LineNum = 52;

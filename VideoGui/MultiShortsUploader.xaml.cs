@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 using System.Threading;
@@ -180,17 +181,7 @@ namespace VideoGui
                 msuSchedules.Width = msuShorts.Width;
                 msuShorts.Height = 191;
                 msuSchedules.Height = Height - (msuShorts.Height) - 77;
-                var msuShortsBottom = Canvas.GetBottom(msuShorts);
-                Canvas.SetTop(msuSchedules, msuShorts.Height);
-                Canvas.SetTop(BtnClose, Height - 68);
-                Canvas.SetTop(BtnRunUploaders, Height - 68);
-                Canvas.SetLeft(BtnClose, Width - BtnClose.Width - 25);
-                Canvas.SetTop(txtTotalUploads, Height - 66);
-                Canvas.SetTop(txtMaxUpload, Height - 66);
-                Canvas.SetTop(lblupload, Height - 68);
-                Canvas.SetTop(lblmax, Height - 68);
-                Canvas.SetTop(lblupload, Height - 68);
-                Canvas.SetTop(lblUploaded, Height - 68);
+                SetCanvasChildren(Height, Width);
                 LoadingPanel.Visibility = Visibility.Collapsed;
                 MainContent.Visibility = Visibility.Visible;
                 if (IsFirstResize)
@@ -204,6 +195,31 @@ namespace VideoGui
             catch (Exception ex)
             {
                 ex.LogWrite($"LocationChanger_Tick {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+        }
+        private void SetCanvasChildren(double _h, double _w, bool SetWidth= true, bool SetHeight = true)
+        {
+            try
+            {
+                if (SetHeight)
+                {
+                    Canvas.SetTop(msuSchedules, msuShorts.Height);
+                    Canvas.SetTop(BtnClose, _h - 68);
+                    Canvas.SetTop(BtnRunUploaders, _h - 68);
+                    Canvas.SetTop(txtTotalUploads, _h - 64.5);
+                    Canvas.SetTop(txtMaxUpload, _h - 64.5);
+                    Canvas.SetTop(lblupload, _h - 67.5);
+                    Canvas.SetTop(lblmax, _h - 67.5);
+                    Canvas.SetTop(lblUploaded, _h - 70.5);// Height - 386 = 420- 386 = 34
+                }
+                if (SetWidth)
+                {
+                    Canvas.SetLeft(BtnClose, _w - BtnClose.Width - 25);
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"SetCanvasChildren {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
         private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
@@ -226,15 +242,7 @@ namespace VideoGui
                         MainContent.Height = e.NewSize.Height;
                         msuSchedules.Height = Height - (msuShorts.Height) - 77;
                         var msuShortsBottom = Canvas.GetBottom(msuShorts);
-                        Canvas.SetTop(msuSchedules, msuShorts.Height);
-                        Canvas.SetTop(BtnClose, e.NewSize.Height - 68);
-                        Canvas.SetTop(BtnRunUploaders, e.NewSize.Height - 68);
-                        Canvas.SetTop(txtTotalUploads, e.NewSize.Height - 66);
-                        Canvas.SetTop(txtMaxUpload, e.NewSize.Height - 66);
-                        Canvas.SetTop(lblupload, e.NewSize.Height - 68);
-                        Canvas.SetTop(lblmax, e.NewSize.Height - 68);
-                        Canvas.SetTop(lblUploaded, e.NewSize.Height - 68);
-
+                        SetCanvasChildren(e.NewSize.Height, e.NewSize.Width, true, false);
                     }
                     if (e.WidthChanged)
                     {
@@ -243,9 +251,8 @@ namespace VideoGui
                         MainContent.Width = e.NewSize.Width;
                         msuShorts.Width = e.NewSize.Width - 15;
                         msuSchedules.Width = msuShorts.Width;
-                        Canvas.SetLeft(BtnClose, e.NewSize.Width - BtnClose.Width - 25);
+                        SetCanvasChildren(e.NewSize.Height, e.NewSize.Width, false, true);
                         Column_Width = new GridLength(e.NewSize.Width - 135, GridUnitType.Pixel);
-             
                     }
                     if (e.HeightChanged || e.WidthChanged)
                     {
