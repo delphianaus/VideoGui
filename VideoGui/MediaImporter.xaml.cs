@@ -121,6 +121,7 @@ namespace VideoGui
                 {
                     IsFirstResize = false;
                     LoadingPanel.Height = 0;
+                    Ready = true;
                     MainScroller.ScrollToVerticalOffset(439); // Scroll to the main content
                 }
                 Ready = true;
@@ -168,18 +169,29 @@ namespace VideoGui
             }
 
         }
-       
+
         private void frmImport_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             try
             {
+
                 if (e.WidthChanged)
-                { 
+                {
                     SetControls(e.NewSize.Width);
                 }
                 if (e.HeightChanged)
                 {
                     SetControls(e.NewSize.Height, false);
+                }
+                if (Ready)
+                {
+                    if (e.HeightChanged || e.WidthChanged)
+                    {
+                        RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                        key?.SetValue("MIWidth", ActualWidth);
+                        key?.SetValue("MIHeight", ActualHeight);
+                        key?.Close();
+                    }
                 }
             }
             catch (Exception ex)
