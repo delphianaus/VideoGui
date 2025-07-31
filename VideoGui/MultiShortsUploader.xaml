@@ -78,7 +78,7 @@
                         <MSU:MultiListboxColumnDefinition DataField="Id" Width="0" 
                    ComponentType="TextBlock"/>
                         <MSU:MultiListboxColumnDefinition HeaderText="Shorts Directory" 
-                 ContentVerticalAlignment="Center" ContentMargin="0,0,0,0"
+                 ContentVerticalAlignment="Center" 
                  DataField="DirectoryName,AutoFontWeight,AutoFontColor" Width="375" 
                  BoundTo="Text,FontWeight,Foreground" ComponentType="TextBlock"/>
                         <MSU:MultiListboxColumnDefinition HeaderText="Number of Shorts" 
@@ -87,15 +87,12 @@
                  BoundTo="Text,FontWeight,Foreground" Width="105" ComponentType="TextBlock"/>
                         <MSU:MultiListboxColumnDefinition HeaderText="Title" Width="50" 
                    Style="{StaticResource ToggleSetEditStyle}" HeaderPadding="3,0,0,0"
-                   Click="Title_ToggleButtonClick"
-                                           DataField="IsTitleAvailable" ComponentType="ToggleButton"/>
+                   Click="Title_ToggleButtonClick" DataField="IsTitleAvailable" ComponentType="ToggleButton"/>
                         <MSU:MultiListboxColumnDefinition HeaderText="Desc" 
-                  Width="50" Click="Desc_ToggleButtonClick"
-                  Style="{StaticResource ToggleSetEditStyle}"
+                  Width="50" Click="Desc_ToggleButtonClick" Style="{StaticResource ToggleSetEditStyle}"
                   DataField="IsDescAvailable" ComponentType="ToggleButton"/>
                         <MSU:MultiListboxColumnDefinition HeaderText="   Last Uploaded" 
-                   ContentVerticalAlignment="Center"
-                   ContentHorizontalAlignment="Center" ContentMargin="0,0,0,0"
+                   ContentVerticalAlignment="Center" ContentHorizontalAlignment="Center" 
                    DataField="LastUploadedFile,AutoFontWeight,AutoFontColor"
                    BoundTo="Text,FontWeight,Foreground" Width="180" ComponentType="TextBlock"/>
                     </MSU:MultiListbox.ColumnDefinitions>
