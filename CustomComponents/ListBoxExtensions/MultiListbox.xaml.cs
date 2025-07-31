@@ -227,16 +227,8 @@ namespace CustomComponents.ListBoxExtensions
             set { SetValue(ItemMinHeightProperty, value); }
         }
 
-        public double TextPadding
-        {
-            get { return (double)GetValue(TextPaddingProperty); }
-            set { SetValue(TextPaddingProperty, value); }
-        }
 
-        public static readonly DependencyProperty TextPaddingProperty =
-            DependencyProperty.Register(nameof(TextPadding), typeof(double), typeof(MultiListbox),
-                new PropertyMetadata(6.0));
-
+     
         public static readonly DependencyProperty ItemHeightProperty =
             DependencyProperty.Register(nameof(ItemHeight), typeof(double),
                 typeof(MultiListbox),
