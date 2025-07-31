@@ -168,10 +168,10 @@ namespace CustomComponents.ListBoxExtensions
         private void UpdateItemsListBoxHeight()
         {
             if (lstBoxUploadItems != null)
-            {extraPadding
+            {
                 double headerHeight = 30; // Increased from 20 to 30
                 double scrollbarHeight = SystemParameters.HorizontalScrollBarHeight;
-                double  = 10; // Additional padding for better spacing
+                double extraPadding = 10; // Additional padding for better spacing
                 double availableHeight = ActualHeight - headerHeight - scrollbarHeight - extraPadding;
                 if (BorderMargin != null)
                 {
