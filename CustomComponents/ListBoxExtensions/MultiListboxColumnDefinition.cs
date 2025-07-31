@@ -46,10 +46,18 @@ namespace CustomComponents.ListBoxExtensions
             DependencyProperty.Register(nameof(Width), typeof(double), typeof(MultiListboxColumnDefinition), new PropertyMetadata(100.0));
 
         public static readonly DependencyProperty HeightProperty =
-            DependencyProperty.Register(nameof(Height), typeof(double), typeof(MultiListboxColumnDefinition), new PropertyMetadata(30.0));
+            DependencyProperty.Register(nameof(Height), typeof(double), typeof(MultiListboxColumnDefinition), 
+                new PropertyMetadata(30.0, OnHeightChanged));
+
+        public double Height
+        {
+            get => (double)GetValue(HeightProperty);
+            set => SetValue(HeightProperty, value);
+        }
 
         public static readonly DependencyProperty ControlTypeProperty =
-            DependencyProperty.Register(nameof(ControlType), typeof(Type), typeof(MultiListboxColumnDefinition), new PropertyMetadata(typeof(TextBlock)));
+            DependencyProperty.Register(nameof(ControlType), typeof(Type), 
+                typeof(MultiListboxColumnDefinition), new PropertyMetadata(typeof(TextBlock)));
 
         public Type ControlType
         {
@@ -97,7 +105,40 @@ namespace CustomComponents.ListBoxExtensions
             DependencyProperty.Register(nameof(MinWidth), typeof(double), typeof(MultiListboxColumnDefinition), new PropertyMetadata(100.0));
 
         public static readonly DependencyProperty MinHeightProperty =
-            DependencyProperty.Register(nameof(MinHeight), typeof(double), typeof(MultiListboxColumnDefinition), new PropertyMetadata(30.0));
+            DependencyProperty.Register(nameof(MinHeight), typeof(double), typeof(MultiListboxColumnDefinition), 
+                new PropertyMetadata(25.0, OnMinHeightChanged));
+
+
+        private static void OnHeightChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is MultiListboxColumnDefinition colDef)
+            {
+                var parent = VisualTreeHelper.GetParent(colDef) as MultiListbox;
+                if (parent != null)
+                {
+                    var itemHeight = parent.Height < parent.MinHeight ? parent.MinHeight : parent.Height;
+                    if (itemHeight > 0)
+                    {
+                        colDef.Height = itemHeight;
+                    }
+                }
+            }
+        }
+        private static void OnMinHeightChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is MultiListboxColumnDefinition colDef)
+            {
+                var parent = VisualTreeHelper.GetParent(colDef) as MultiListbox;
+                if (parent != null)
+                {
+                    var itemMinHeight = parent.ItemMinHeight;
+                    if (itemMinHeight > 0)
+                    {
+                        colDef.MinHeight = itemMinHeight;
+                    }
+                }
+            }
+        }
 
         public static readonly DependencyProperty MaxWidthProperty =
             DependencyProperty.Register(nameof(MaxWidth), typeof(double), typeof(MultiListboxColumnDefinition), new PropertyMetadata(double.PositiveInfinity));
@@ -489,12 +530,6 @@ namespace CustomComponents.ListBoxExtensions
         {
             get => (double)GetValue(WidthProperty);
             set => SetValue(WidthProperty, value);
-        }
-
-        public double Height
-        {
-            get => (double)GetValue(HeightProperty);
-            set => SetValue(HeightProperty, value);
         }
 
         public double MinWidth

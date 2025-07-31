@@ -1,12 +1,11 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Linq;
-using System.Reflection;
+using System.Globalization;
+using System.IO;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
@@ -14,7 +13,6 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Shapes;
 using System.Windows.Threading;
 using Xceed.Wpf.Toolkit;
 
@@ -170,12 +168,14 @@ namespace CustomComponents.ListBoxExtensions
         private void UpdateItemsListBoxHeight()
         {
             if (lstBoxUploadItems != null)
-            {
-                double headerHeight = 20;//was 30
-                double availableHeight = ActualHeight - headerHeight;
+            {extraPadding
+                double headerHeight = 30; // Increased from 20 to 30
+                double scrollbarHeight = SystemParameters.HorizontalScrollBarHeight;
+                double  = 10; // Additional padding for better spacing
+                double availableHeight = ActualHeight - headerHeight - scrollbarHeight - extraPadding;
                 if (BorderMargin != null)
                 {
-                    availableHeight -= (BorderMargin.Top + BorderMargin.Bottom);
+                    availableHeight -= (BorderMargin.Top + BorderMargin.Bottom + 5); // Added 5 pixels of extra margin
                 }
                 lstBoxUploadItems.Height = Math.Max(0, availableHeight);
             }
@@ -189,8 +189,74 @@ namespace CustomComponents.ListBoxExtensions
             DependencyProperty.Register(nameof(HeaderContextMenu), typeof(ContextMenu), typeof(MultiListbox),
                 new PropertyMetadata(null));
 
+        public static readonly DependencyProperty ItemMinHeightProperty =
+            DependencyProperty.Register(nameof(ItemMinHeight), typeof(double), typeof(MultiListbox),
+                new PropertyMetadata(25.0, OnItemMinHeightChanged));
+
+        private static void OnItemMinHeightChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is MultiListbox listbox && listbox.ColumnDefinitions != null)
+            {
+                foreach (var colDef in listbox.ColumnDefinitions)
+                {
+                    colDef.MinHeight = (double)e.NewValue;
+                }
+            }
+        }
+
+        public static readonly DependencyProperty ItemMaxHeightProperty =
+            DependencyProperty.Register(nameof(ItemMaxHeight), typeof(double),
+                typeof(MultiListbox),
+                new PropertyMetadata(35.0));
+
+
+
+        public double ItemMinHeight
+        {
+            get { return (double)GetValue(ItemMinHeightProperty); }
+            set { SetValue(ItemMinHeightProperty, value); }
+        }
+
+        public double TextPadding
+        {
+            get { return (double)GetValue(TextPaddingProperty); }
+            set { SetValue(TextPaddingProperty, value); }
+        }
+
+        public static readonly DependencyProperty TextPaddingProperty =
+            DependencyProperty.Register(nameof(TextPadding), typeof(double), typeof(MultiListbox),
+                new PropertyMetadata(6.0));
+
+        public static readonly DependencyProperty ItemHeightProperty =
+            DependencyProperty.Register(nameof(ItemHeight), typeof(double),
+                typeof(MultiListbox),
+                new PropertyMetadata(30.0, OnHeightChanged));
+
+        private static void OnHeightChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is MultiListbox listbox && listbox.ColumnDefinitions != null)
+            {
+                foreach (var colDef in listbox.ColumnDefinitions)
+                {
+                    colDef.Height = (double)e.NewValue;
+                }
+            }
+        }
+
+        public double ItemHeight
+        {
+            get { return (double)GetValue(ItemHeightProperty); }
+            set { SetValue(ItemHeightProperty, value); }
+        }
+        public double ItemMaxHeight
+        {
+            get { return (double)GetValue(ItemMaxHeightProperty); }
+            set { SetValue(ItemMaxHeightProperty, value); }
+        }
+
         public static readonly DependencyProperty ItemsContextMenuProperty =
-            DependencyProperty.Register(nameof(ItemsContextMenu), typeof(ContextMenu), typeof(MultiListbox),
+            DependencyProperty.Register(nameof(ItemsContextMenu),
+                typeof(ContextMenu), typeof(MultiListbox),
                 new PropertyMetadata(null));
 
         public ContextMenu HeaderContextMenu
@@ -244,6 +310,7 @@ namespace CustomComponents.ListBoxExtensions
         private DataTemplate _cachedItemTemplate;
         private Dictionary<string, FrameworkElementFactory> _columnFactories;
         private ObservableCollection<MultiListboxColumnDefinition> _pendingColumnDefinitions;
+        private Dictionary<int, EventHandler> _statusHandlers = new();
 
         public GridLength ColumnWidth
         {
@@ -332,22 +399,16 @@ namespace CustomComponents.ListBoxExtensions
                 var control = d as MultiListbox;
                 if (control != null)
                 {
-                    // Unsubscribe from old collection's events
                     if (control._currentCollection != null)
                     {
                         control._currentCollection.CollectionChanged -= control.OnCollectionChanged;
                     }
-
-                    // Set new ItemsSource
                     control.lstBoxUploadItems.ItemsSource = e.NewValue as IEnumerable;
-
-                    // Subscribe to new collection's events if it supports INotifyCollectionChanged
                     control._currentCollection = e.NewValue as INotifyCollectionChanged;
                     if (control._currentCollection != null)
                     {
                         control._currentCollection.CollectionChanged += control.OnCollectionChanged;
                     }
-
                     control.RebuildItemTemplate();
                 }
             }
@@ -356,8 +417,6 @@ namespace CustomComponents.ListBoxExtensions
                 Debug.WriteLine(ex);
             }
         }
-
-        private EventHandler _containerStatusChanged;
 
         private void OnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
@@ -368,57 +427,90 @@ namespace CustomComponents.ListBoxExtensions
                     switch (e.Action)
                     {
                         case NotifyCollectionChangedAction.Add:
-                            if (_containerStatusChanged != null)
+                            if (e.NewItems != null)
                             {
-                                lstBoxUploadItems.ItemContainerGenerator.StatusChanged -= _containerStatusChanged;
-                            }
-
-                            _containerStatusChanged = (s, args) =>
-                            {
-
-                                if (lstBoxUploadItems.ItemContainerGenerator.Status == GeneratorStatus.ContainersGenerated)
+                                for (int i = 0; i < e.NewItems.Count; i++)
                                 {
-                                    lstBoxUploadItems.ItemContainerGenerator.StatusChanged -= _containerStatusChanged;
-                                    _containerStatusChanged = null;
-                                    var container = lstBoxUploadItems.ItemContainerGenerator.ContainerFromIndex(e.NewStartingIndex) as ListBoxItem;
-                                    var contentPresenter = FindVisualChild<ContentPresenter>(container);
-                                    if (contentPresenter != null)
+                                    var currentIndex = e.NewStartingIndex + i;
+                                    var currentItem = e.NewItems[i];
+                                    EventHandler statusHandler = new EventHandler((s, args) =>
                                     {
-                                        var grid = FindVisualChild<Grid>(contentPresenter);
-                                        if (grid != null)
+                                        if (lstBoxUploadItems.ItemContainerGenerator.Status != GeneratorStatus.ContainersGenerated)
                                         {
-                                            InitializeGrid(grid);
+                                            return;
                                         }
+                                        if (_statusHandlers.ContainsKey(currentIndex))
+                                        {
+                                            lstBoxUploadItems.ItemContainerGenerator.StatusChanged -= _statusHandlers[currentIndex];
+                                            _statusHandlers.Remove(currentIndex);
+                                        }
+                                        Dispatcher.BeginInvoke(new Action(() =>
+                                        {
+                                            var container = lstBoxUploadItems.ItemContainerGenerator.ContainerFromIndex(currentIndex) as ListBoxItem;
+                                            if (container == null)
+                                            {
+                                                lstBoxUploadItems.UpdateLayout();
+                                                lstBoxUploadItems.ScrollIntoView(lstBoxUploadItems.Items[currentIndex]);
+                                                container = lstBoxUploadItems.ItemContainerGenerator.ContainerFromIndex(currentIndex) as ListBoxItem;
+                                            }
+                                            if (container != null)
+                                            {
+                                                container.ApplyTemplate();
+                                                var contentPresenter = FindVisualChild<ContentPresenter>(container);
+                                                if (contentPresenter != null)
+                                                {
+                                                    contentPresenter.ApplyTemplate();
+                                                    var grid = FindVisualChild<Grid>(contentPresenter);
+                                                    if (grid != null)
+                                                    {
+                                                        InitializeGrid(grid);
+                                                        if (currentIndex == e.NewStartingIndex + e.NewItems.Count - 1)
+                                                        {
+                                                            Dispatcher.BeginInvoke(new Action(() =>
+                                                            {
+                                                                lstBoxUploadItems.UpdateLayout();
+                                                                if (lstBoxUploadItems.Items.Count > 0)
+                                                                {
+                                                                    lstBoxUploadItems.ScrollIntoView(lstBoxUploadItems.Items[0]);
+                                                                }
+                                                            }), DispatcherPriority.Loaded);
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }), DispatcherPriority.Loaded);
+                                    });
+                                    if (_statusHandlers.ContainsKey(currentIndex))
+                                    {
+                                        lstBoxUploadItems.ItemContainerGenerator.StatusChanged -= _statusHandlers[currentIndex];
+                                        _statusHandlers.Remove(currentIndex);
                                     }
+                                    _statusHandlers[currentIndex] = statusHandler;
+                                    lstBoxUploadItems.ItemContainerGenerator.StatusChanged += statusHandler;
                                 }
-                            };
-                            lstBoxUploadItems.ItemContainerGenerator.StatusChanged += _containerStatusChanged;
+                            }
                             break;
 
                         case NotifyCollectionChangedAction.Remove:
-                            if (true)
-                            {   // Handle removal logic if needed
-                            }
+                            // Handle removal logic if needed
                             break;
 
                         case NotifyCollectionChangedAction.Replace:
-                            if (true)
-                            {
-
-                            }
+                            // Handle replace logic if needed
                             break;
 
                         case NotifyCollectionChangedAction.Move:
-                            if (true)
-                            {
-
-                            }
+                            // Handle move logic if needed
                             break;
 
                         case NotifyCollectionChangedAction.Reset:
                             // Full refresh needed only for Reset
                             RebuildItemTemplate();
                             UpdateVisualTree();
+                            if (File.Exists(@"C:\videogui\Action.txt"))
+                            {
+                                File.Delete(@"C:\videogui\Action.txt");
+                            }
                             break;
                     }
                 }));
@@ -481,18 +573,28 @@ namespace CustomComponents.ListBoxExtensions
 
         private T FindVisualChild<T>(DependencyObject parent) where T : DependencyObject
         {
-            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
+            try
             {
-                var child = VisualTreeHelper.GetChild(parent, i);
+                if (parent is null) return null;
 
-                if (child is T found)
-                    return found;
+                for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
+                {
+                    var child = VisualTreeHelper.GetChild(parent, i);
 
-                var result = FindVisualChild<T>(child);
-                if (result != null)
-                    return result;
+                    if (child is T found)
+                        return found;
+
+                    var result = FindVisualChild<T>(child);
+                    if (result != null)
+                        return result;
+                }
+                return null;
             }
-            return null;
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error finding visual child: {ex}");
+                return null;
+            }
         }
 
         private void UpdateVisualTree()
@@ -552,7 +654,16 @@ namespace CustomComponents.ListBoxExtensions
                 // Create a new item template with a Grid
                 var gridFactory = new FrameworkElementFactory(typeof(Grid));
                 gridFactory.SetValue(FrameworkElement.MarginProperty, new Thickness(0, 0, 0, 0));
-                gridFactory.SetValue(FrameworkElement.HeightProperty, 35.0);
+                // do height thingey here
+                var itemHeight = ColumnDefinitions.Any(cd => cd.Height > 0)
+                ? ColumnDefinitions.Max(cd => cd.Height)
+                : 30;
+                if (ItemHeightProperty is not null)
+                {
+                    itemHeight = (double)GetValue(ItemHeightProperty);
+                }
+                gridFactory.SetValue(FrameworkElement.HeightProperty, itemHeight);
+
                 gridFactory.SetValue(Panel.BackgroundProperty, Brushes.White);
 
                 // Store reference to the grid factory for later use
@@ -566,6 +677,7 @@ namespace CustomComponents.ListBoxExtensions
                     AddColumnToTemplate(gridFactory, colDef, columnIndex);
                     columnIndex++;
                 }
+
 
                 // Create and set the item template
                 var itemTemplate = new DataTemplate { VisualTree = gridFactory };
@@ -662,7 +774,15 @@ namespace CustomComponents.ListBoxExtensions
                 controlFactory.SetValue(Control.BackgroundProperty, Brushes.White);
                 controlFactory.SetValue(Control.BorderBrushProperty, Brushes.Black);
                 controlFactory.SetValue(Control.BorderThicknessProperty, new Thickness(1));
-
+                if (ItemHeightProperty is not null && controlType == typeof(TextBlock))
+                {
+                    var itemHeight = (double)GetValue(ItemHeightProperty);
+                    controlFactory.SetValue(FrameworkElement.HeightProperty, ItemHeight);
+                }
+                else
+                {
+                    controlFactory.SetValue(FrameworkElement.HeightProperty, colDef.Height);
+                }
                 // Apply common properties
                 controlFactory.SetValue(FrameworkElement.MarginProperty, colDef.ItemMargin);
                 controlFactory.SetValue(Control.ForegroundProperty, Brushes.Black);
@@ -670,7 +790,6 @@ namespace CustomComponents.ListBoxExtensions
                 {
                     controlFactory.SetValue(Control.PaddingProperty, colDef.ItemPadding);
                     controlFactory.SetValue(FrameworkElement.MinHeightProperty, colDef.MinHeight);
-                    controlFactory.SetValue(FrameworkElement.HeightProperty, colDef.Height);
                     controlFactory.SetValue(FrameworkElement.MinWidthProperty, colDef.MinWidth);
                     controlFactory.SetValue(FrameworkElement.WidthProperty, colDef.Width);
                 }
@@ -738,7 +857,7 @@ namespace CustomComponents.ListBoxExtensions
                 // Create a new item template with a Grid
                 var gridFactory = new FrameworkElementFactory(typeof(Grid));
                 gridFactory.SetValue(FrameworkElement.MarginProperty, new Thickness(0, 0, 0, 0));
-                gridFactory.SetValue(FrameworkElement.HeightProperty, 35.0);
+                gridFactory.SetValue(FrameworkElement.HeightProperty, 25.0);
                 gridFactory.SetValue(Panel.BackgroundProperty, Brushes.White);
 
                 // Store reference to the grid factory for later use
@@ -793,6 +912,7 @@ namespace CustomComponents.ListBoxExtensions
                         controlFactory.SetValue(FrameworkElement.MarginProperty, colDef.ContentMargin);
                         controlFactory.SetValue(FrameworkElement.VerticalAlignmentProperty, colDef.ContentVerticalAlignment);
                         controlFactory.SetValue(FrameworkElement.HorizontalAlignmentProperty, colDef.ContentHorizontalAlignment);
+                        controlFactory.SetValue(FrameworkElement.HeightProperty, colDef.Height);
 
                         // Handle specific control types
                         switch (colDef.ComponentType.ToString().ToLower())
@@ -888,7 +1008,7 @@ namespace CustomComponents.ListBoxExtensions
                                     var grid = VisualTreeHelper.GetChild(contentPresenter, 0) as Grid;
                                     if (grid != null)
                                     {
-                                       InitializeGrid(grid);
+                                        InitializeGrid(grid);
                                     }
                                 }
                             }
@@ -916,7 +1036,7 @@ namespace CustomComponents.ListBoxExtensions
                         if (colDef != null)
                         {
                             // Set dimensions and style
-                            toggleButton.Width = colDef.ToggleButtonWidth; 
+                            toggleButton.Width = colDef.ToggleButtonWidth;
                             toggleButton.Height = colDef.ToggleButtonHeight;
                             toggleButton.MinWidth = colDef.ToggleButtonMinWidth;
                             toggleButton.MinHeight = colDef.ToggleButtonMinHeight;
@@ -968,8 +1088,6 @@ namespace CustomComponents.ListBoxExtensions
                     {
                         var column = Grid.GetColumn(textBlock);
                         var colDef = ColumnDefinitions[column];
-                        //textBlock.Height = 25;
-                        textBlock.Padding = new Thickness(0, 6, 0, 0);
                         HandleFocusEvents<TextBlock>(textBlock, colDef);
                         SetCustomBindings<TextBlock>(textBlock, colDef);
                     }
@@ -977,7 +1095,6 @@ namespace CustomComponents.ListBoxExtensions
                     {
                         var column = Grid.GetColumn(label);
                         var colDef = ColumnDefinitions[column];
-
                         SetCustomBindings<Label>(label, colDef);
                     }
                     else if (child is Button button)
@@ -993,7 +1110,6 @@ namespace CustomComponents.ListBoxExtensions
                     {
                         var column = Grid.GetColumn(image);
                         var colDef = ColumnDefinitions[column];
-
                         if (colDef != null)
                         {
                             image.HorizontalAlignment = colDef.ContentHorizontalAlignment;
@@ -1006,7 +1122,6 @@ namespace CustomComponents.ListBoxExtensions
                     {
                         var column = Grid.GetColumn(progressBar);
                         var colDef = ColumnDefinitions[column];
-
                         if (colDef != null)
                         {
                             progressBar.HorizontalAlignment = colDef.ContentHorizontalAlignment;
@@ -1018,7 +1133,6 @@ namespace CustomComponents.ListBoxExtensions
                     {
                         var column = Grid.GetColumn(slider);
                         var colDef = ColumnDefinitions[column];
-
                         if (colDef != null)
                         {
                             slider.HorizontalAlignment = colDef.ContentHorizontalAlignment;
@@ -1042,7 +1156,6 @@ namespace CustomComponents.ListBoxExtensions
                     {
                         var column = Grid.GetColumn(timePicker);
                         var colDef = ColumnDefinitions[column];
-
                         if (colDef != null)
                         {
                             timePicker.HorizontalAlignment = colDef.ContentHorizontalAlignment;
@@ -1054,7 +1167,6 @@ namespace CustomComponents.ListBoxExtensions
                     {
                         var column = Grid.GetColumn(datePicker);
                         var colDef = ColumnDefinitions[column];
-
                         if (colDef != null)
                         {
                             datePicker.HorizontalAlignment = colDef.ContentHorizontalAlignment;
@@ -1082,11 +1194,8 @@ namespace CustomComponents.ListBoxExtensions
             {
                 if (control is ComboBox b)
                 {
-                    // Remove any existing handlers
                     b.SelectionChanged -= (s, e) => SelectionChanged?.Invoke(s, e);
                     b.SelectionChanged -= (s, e) => colDef.RaiseSelectionChanged(s, e);
-
-                    // Add new handler
                     b.SelectionChanged += (s, e) =>
                     {
                         colDef.RaiseSelectionChanged(s, e);
@@ -1138,8 +1247,6 @@ namespace CustomComponents.ListBoxExtensions
             // Remove any existing handlers
             control.Initialized -= (s, e) => Initialized?.Invoke(s, e);
             control.Initialized -= (s, e) => colDef.RaiseInitializedEvent(s, e);
-
-            // Add new handler
             control.Initialized += (s, e) =>
             {
                 colDef.RaiseInitializedEvent(s, e);
@@ -1154,8 +1261,6 @@ namespace CustomComponents.ListBoxExtensions
             control.LostFocus -= (s, e) => colDef.RaiseLostFocusEvent(s, e);
             control.GotFocus -= (s, e) => GotFocus?.Invoke(s, e);
             control.GotFocus -= (s, e) => colDef.RaiseGotFocusEvent(s, e);
-
-            // Add new handlers
             control.LostFocus += (s, e) =>
             {
                 colDef.RaiseLostFocusEvent(s, e);
@@ -1173,16 +1278,11 @@ namespace CustomComponents.ListBoxExtensions
             try
             {
                 if (colDef == null) return;
-
-                // Apply layout properties
                 if (control is ToggleButton toggleButton1)
                 {
-                    // For ToggleButton, only set its specific dimensions
                     control.Width = colDef.ToggleButtonWidth;
                     control.Height = colDef.ToggleButtonHeight;
                     control.HorizontalAlignment = HorizontalAlignment.Left;
-
-                    // Only apply style if it's meant for ToggleButton
                     if (colDef.Style != null && colDef.Style.TargetType == typeof(ToggleButton))
                     {
                         control.Style = colDef.Style;
@@ -1190,79 +1290,90 @@ namespace CustomComponents.ListBoxExtensions
                 }
                 else
                 {
-                    // For other controls, use the standard dimensions
                     control.Width = colDef.Width;
-                    control.Height = colDef.Height;
+                    if (ItemHeightProperty is not null && control.GetType() == typeof(TextBlock))
+                    {
+                        var itemHeight = (double)GetValue(ItemHeightProperty);
+                        control.Height = itemHeight;
+                    }
+                    else control.Height = colDef.Height;
                     control.MinWidth = colDef.MinWidth;
                     control.MaxWidth = colDef.MaxWidth;
                     control.MinHeight = colDef.MinHeight;
                     control.MaxHeight = colDef.MaxHeight;
 
-                    // Apply style if it matches the control type
+
+                    if (control is TextBlock textBlock1)
+                    {
+                        FormattedText ft = new FormattedText("WOOW",
+                            CultureInfo.CurrentCulture, CultureInfo.CurrentCulture.TextInfo.IsRightToLeft ? FlowDirection.RightToLeft : FlowDirection.LeftToRight,
+                            new Typeface(textBlock1.FontFamily, textBlock1.FontStyle, textBlock1.FontWeight, textBlock1.FontStretch),
+                            textBlock1.FontSize > 0 ? textBlock1.FontSize : 9,
+                            textBlock1.Foreground ?? new SolidColorBrush(Colors.Black),
+                            VisualTreeHelper.GetDpi(this).PixelsPerDip);
+                        var maxheightoff = (control.Height - ft.Height) / 2;
+                        textBlock1.Padding = new Thickness(0, maxheightoff, 0, 0);
+                    }
                     if (colDef.Style != null && colDef.Style.TargetType == control.GetType())
                     {
                         control.Style = colDef.Style;
                     }
-                }
 
-                // Apply alignment and margin
-                control.HorizontalAlignment = colDef.ContentHorizontalAlignment;
-                control.VerticalAlignment = colDef.ContentVerticalAlignment;
-                control.Margin = colDef.ContentMargin;
 
-                // For ToggleButton, ensure binding is set up correctly
-                if (control is ToggleButton toggleButton)
-                {
-                    var binding = new Binding(colDef.DataField)
+                    // Apply alignment and margin
+                    control.HorizontalAlignment = colDef.ContentHorizontalAlignment;
+                    control.VerticalAlignment = colDef.ContentVerticalAlignment;
+                    control.Margin = colDef.ContentMargin;
+                    
+                    // For ToggleButton, ensure binding is set up correctly
+                    if (control is ToggleButton toggleButton)
                     {
-                        UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
-                        Mode = BindingMode.TwoWay
-                    };
-                    BindingOperations.SetBinding(toggleButton, ToggleButton.IsCheckedProperty, binding);
-                }
-
-                control.HorizontalAlignment = colDef.ContentHorizontalAlignment;
-                control.VerticalAlignment = colDef.ContentVerticalAlignment;
-                if (colDef.DataField.Contains(",") || colDef.DataField.Contains("|"))
-                {
-                    if (true)
-                    {
-                    }
-                }
-                if (!string.IsNullOrEmpty(colDef.DataField))
-                {
-                    if (colDef.DataField.Contains(",") || colDef.DataField.Contains("|"))
-                    {
-                        // Process DataFields - remove empty entries
-                        var DataFields = colDef.GetFields(colDef.DataField).ToList();
-                        var BoundTos = colDef.GetFields(colDef.BoundTo).ToList();
-                        int MaxCount = DataFields.Count == BoundTos.Count ? DataFields.Count : 1;
-                        for (int i = 0; i < MaxCount; i++)
+                        var binding = new Binding(colDef.DataField)
                         {
-                            if (!string.IsNullOrEmpty(DataFields[i]))
-                            {
-                                var binding = new Binding(DataFields[i].Trim())
-                                {
-                                    UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
-                                    Mode = BindingMode.TwoWay
-                                };
+                            UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
+                            Mode = BindingMode.TwoWay
+                        };
+                        BindingOperations.SetBinding(toggleButton, ToggleButton.IsCheckedProperty, binding);
+                    }
 
-                                if (!string.IsNullOrEmpty(BoundTos[i]))
+                    control.HorizontalAlignment = colDef.ContentHorizontalAlignment;
+                    control.VerticalAlignment = colDef.ContentVerticalAlignment;
+                    
+                    if (!string.IsNullOrEmpty(colDef.DataField))
+                    {
+                        if (colDef.DataField.Contains(",") || colDef.DataField.Contains("|"))
+                        {
+                            // Process DataFields - remove empty entries
+                            var DataFields = colDef.GetFields(colDef.DataField).ToList();
+                            var BoundTos = colDef.GetFields(colDef.BoundTo).ToList();
+                            int MaxCount = DataFields.Count == BoundTos.Count ? DataFields.Count : 1;
+                            for (int i = 0; i < MaxCount; i++)
+                            {
+                                if (!string.IsNullOrEmpty(DataFields[i]))
                                 {
-                                    // Get the property to bind to based on the BoundTo field
-                                    var boundProperty = GetMainBindingProperty(colDef.ComponentType.ToString(), BoundTos[i].Trim());
-                                    if (boundProperty != null)
+                                    var binding = new Binding(DataFields[i].Trim())
                                     {
-                                        BindingOperations.SetBinding(control, boundProperty, binding);
+                                        UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
+                                        Mode = BindingMode.TwoWay
+                                    };
+
+                                    if (!string.IsNullOrEmpty(BoundTos[i]))
+                                    {
+                                        // Get the property to bind to based on the BoundTo field
+                                        var boundProperty = GetMainBindingProperty(colDef.ComponentType.ToString(), BoundTos[i].Trim());
+                                        if (boundProperty != null)
+                                        {
+                                            BindingOperations.SetBinding(control, boundProperty, binding);
+                                        }
                                     }
-                                }
-                                else
-                                {
-                                    // If no specific BoundTo is provided, use the default main property for the component type
-                                    var mainProperty = GetMainBindingProperty(colDef.ComponentType.ToString(), string.Empty);
-                                    if (mainProperty != null)
+                                    else
                                     {
-                                        BindingOperations.SetBinding(control, mainProperty, binding);
+                                        // If no specific BoundTo is provided, use the default main property for the component type
+                                        var mainProperty = GetMainBindingProperty(colDef.ComponentType.ToString(), string.Empty);
+                                        if (mainProperty != null)
+                                        {
+                                            BindingOperations.SetBinding(control, mainProperty, binding);
+                                        }
                                     }
                                 }
                             }
@@ -1429,262 +1540,6 @@ namespace CustomComponents.ListBoxExtensions
                     return GetDependencyPropertyByName(boundTo);
             }
         }
-
-        private void SaveDebugXaml()
-        {
-            if (!DebugOutput) return;
-
-            try
-            {
-                var debugPath = System.IO.Path.Combine(
-                    Debugger.IsAttached ? @"C:\YouTubeHelper" : AppDomain.CurrentDomain.BaseDirectory,
-                    $"MultiListbox_Debug_{DateTime.Now:yyyyMMdd_HHmmss}.txt"
-                );
-
-                using (var writer = System.IO.File.CreateText(debugPath))
-                {
-                    writer.WriteLine("<Grid xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation'");
-                    writer.WriteLine("      xmlns:x='http://schemas.microsoft.com/winfx/2006/xaml'");
-                    writer.WriteLine("      xmlns:local='clr-namespace:YouTubeHelper.components'>");
-
-                    // Header Grid
-                    writer.WriteLine("  <!-- Header Grid -->");
-                    writer.WriteLine("  <Grid x:Name='HeaderGrid'>");
-                    writer.WriteLine("    <Grid.ColumnDefinitions>");
-                    foreach (var col in _headerGrid.ColumnDefinitions)
-                    {
-                        var binding = BindingOperations.GetBinding(col, ColumnDefinition.WidthProperty);
-                        if (binding != null)
-                        {
-                            var source = (binding.RelativeSource?.AncestorType?.Name ?? "none");
-                            writer.WriteLine($"      <ColumnDefinition Width='{{Binding {binding.Path.Path}, RelativeSource={{RelativeSource AncestorType={source}}}}}' />");
-                        }
-                        else
-                        {
-                            writer.WriteLine($"      <ColumnDefinition Width='{col.Width.Value}' />");
-                        }
-                    }
-                    writer.WriteLine("    </Grid.ColumnDefinitions>");
-                    foreach (FrameworkElement child in _headerGrid.Children)
-                    {
-                        writer.WriteLine($"    <TextBlock Text='{(child as TextBlock)?.Text}' Grid.Column='{Grid.GetColumn(child)}' />");
-                    }
-                    writer.WriteLine("  </Grid>");
-
-                    // Item Grid Template
-                    writer.WriteLine("\n  <!-- Item Grid Template -->");
-                    writer.WriteLine("  <Grid x:Name='ItemGrid'>");
-                    writer.WriteLine("    <Grid.ColumnDefinitions>");
-                    foreach (var col in _itemGrid.ColumnDefinitions)
-                    {
-                        var binding = BindingOperations.GetBinding(col, ColumnDefinition.WidthProperty);
-                        if (binding != null)
-                        {
-                            var source = (binding.RelativeSource?.AncestorType?.Name ?? "none");
-                            writer.WriteLine($"      <ColumnDefinition Width='{{Binding {binding.Path.Path}, RelativeSource={{RelativeSource AncestorType={source}}}}}' />");
-                        }
-                        else
-                        {
-                            writer.WriteLine($"      <ColumnDefinition Width='{col.Width.Value}' />");
-                        }
-                    }
-                    writer.WriteLine("    </Grid.ColumnDefinitions>");
-
-                    writer.WriteLine("\n    <!-- Item Template Controls -->");
-                    var itemTemplate = lstBoxUploadItems.ItemTemplate;
-                    var gridFactory = itemTemplate?.VisualTree as FrameworkElementFactory;
-                    if (gridFactory != null)
-                    {
-                        for (int i = 0; i < ColumnDefinitions.Count; i++)
-                        {
-                            var colDef = ColumnDefinitions[i];
-                            if (!string.IsNullOrEmpty(colDef.DataField))
-                            {
-                                var controlType = GetControlType(colDef.ComponentType.ToString());
-                                writer.WriteLine($"    <!-- Column {i} Control -->");
-                                writer.WriteLine($"    <{controlType.Name} Grid.Column='{i}' Text='{{Binding {colDef.DataField}}}' />");
-                            }
-                        }
-                    }
-                    writer.WriteLine("  </Grid>");
-                    writer.WriteLine("</Grid>");
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Debug XAML save failed: {ex.Message}");
-            }
-        }
-
-        private void BuildColumnFactories()
-        {
-            _columnFactories = new Dictionary<string, FrameworkElementFactory>();
-            if (ColumnDefinitions == null) return;
-
-            foreach (var colDef in ColumnDefinitions)
-            {
-                var factory = CreateColumnFactory(colDef);
-                if (factory != null)
-                {
-                    _columnFactories[colDef.DataField] = factory;
-                }
-            }
-        }
-
-        private FrameworkElementFactory CreateColumnFactory(MultiListboxColumnDefinition colDef)
-        {
-            var controlType = GetControlType(colDef.ComponentType.ToString());
-            var factory = new FrameworkElementFactory(controlType);
-            factory.SetValue(FrameworkElement.MarginProperty, new Thickness(5));
-            factory.SetValue(FrameworkElement.VerticalAlignmentProperty, VerticalAlignment.Center);
-
-            // Apply ToggleButton properties if this is a ToggleButton
-            if (controlType == typeof(ToggleButton))
-            {
-                if (colDef.Style != null)
-                {
-                    factory.SetValue(ToggleButton.StyleProperty, colDef.Style);
-                }
-                if (!double.IsNaN(colDef.ToggleButtonWidth))
-                {
-                    factory.SetValue(FrameworkElement.WidthProperty, colDef.ToggleButtonWidth);
-                }
-                if (!double.IsNaN(colDef.ToggleButtonHeight))
-                {
-                    factory.SetValue(FrameworkElement.HeightProperty, colDef.ToggleButtonHeight);
-                }
-                factory.AddHandler(ToggleButton.ClickEvent, new RoutedEventHandler((s, e) => Click?.Invoke(s, e)));
-            }
-            else if (controlType == typeof(Button))
-            {
-                factory.AddHandler(Button.ClickEvent, new RoutedEventHandler((s, e) => Click?.Invoke(s, e)));
-                factory.AddHandler(Button.LostFocusEvent, new RoutedEventHandler((s, e) => LostFocus?.Invoke(s, e)));
-                factory.AddHandler(Button.GotFocusEvent, new RoutedEventHandler((s, e) => GotFocus?.Invoke(s, e)));
-            }
-            else if (controlType == typeof(CheckBox))
-            {
-                factory.AddHandler(CheckBox.ClickEvent, new RoutedEventHandler((s, e) => Click?.Invoke(s, e)));
-                factory.AddHandler(CheckBox.LostFocusEvent, new RoutedEventHandler((s, e) => LostFocus?.Invoke(s, e)));
-                factory.AddHandler(CheckBox.GotFocusEvent, new RoutedEventHandler((s, e) => GotFocus?.Invoke(s, e)));
-            }
-            else if (controlType == typeof(ComboBox))
-            {
-                factory.AddHandler(ComboBox.SelectionChangedEvent, new SelectionChangedEventHandler((s, e) => SelectionChanged?.Invoke(s, e)));
-                factory.AddHandler(ComboBox.LostFocusEvent, new RoutedEventHandler((s, e) => LostFocus?.Invoke(s, e)));
-                factory.AddHandler(ComboBox.GotFocusEvent, new RoutedEventHandler((s, e) => GotFocus?.Invoke(s, e)));
-            }
-            else if (controlType == typeof(TextBox))
-            {
-                factory.AddHandler(TextBox.LostFocusEvent, new RoutedEventHandler((s, e) => LostFocus?.Invoke(s, e)));
-                factory.AddHandler(TextBox.GotFocusEvent, new RoutedEventHandler((s, e) => GotFocus?.Invoke(s, e)));
-            }
-
-            // Set up the main binding
-            var binding = new Binding(colDef.DataField)
-            {
-                UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
-                Mode = BindingMode.TwoWay
-            };
-            var mainProperty = GetMainBindingProperty(colDef.ComponentType.ToString(), colDef.BoundTo);
-            if (mainProperty != null)
-            {
-                factory.SetBinding(mainProperty, binding);
-            }
-
-            // Set up additional binding
-            if (!string.IsNullOrEmpty(colDef.BoundTo))
-            {
-                var additionalBinding = new Binding(colDef.DataField)
-                {
-                    UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
-                    Mode = BindingMode.TwoWay
-                };
-                var property = GetDependencyPropertyByName(colDef.BoundTo);
-                if (property != null)
-                {
-                    factory.SetBinding(property, additionalBinding);
-                }
-            }
-
-            return factory;
-        }
-
-        private void BuildItemTemplate()
-        {
-            if (ColumnDefinitions == null) return;
-
-            var gridFactory = new FrameworkElementFactory(typeof(Grid));
-            gridFactory.Name = "griddpl";
-            gridFactory.SetValue(Grid.BackgroundProperty, Brushes.White);
-
-            // Add column definitions
-            int columnIndex = 0;
-            foreach (var colDef in ColumnDefinitions)
-            {
-                // Add column definition
-                var colDefFactory = new FrameworkElementFactory(typeof(ColumnDefinition));
-                colDefFactory.SetValue(ColumnDefinition.WidthProperty, new GridLength(colDef.Width));
-                gridFactory.AppendChild(colDefFactory);
-
-                // Create control for this column
-                var controlType = GetControlType(colDef.ComponentType.ToString());
-                var factory = new FrameworkElementFactory(controlType);
-                factory.SetValue(FrameworkElement.MarginProperty, new Thickness(5));
-                factory.SetValue(FrameworkElement.VerticalAlignmentProperty, VerticalAlignment.Center);
-                factory.SetValue(Grid.ColumnProperty, columnIndex);
-
-                // Apply ToggleButton properties if this is a ToggleButton
-                if (controlType == typeof(ToggleButton))
-                {
-                    if (colDef.Style != null)
-                    {
-                        factory.SetValue(ToggleButton.StyleProperty, colDef.Style);
-                    }
-                    if (!double.IsNaN(colDef.ToggleButtonWidth))
-                    {
-                        factory.SetValue(FrameworkElement.WidthProperty, colDef.ToggleButtonWidth);
-                    }
-                    if (!double.IsNaN(colDef.ToggleButtonHeight))
-                    {
-                        factory.SetValue(FrameworkElement.HeightProperty, colDef.ToggleButtonHeight);
-                    }
-                    factory.AddHandler(ToggleButton.ClickEvent, new RoutedEventHandler((s, e) => Click?.Invoke(s, e)));
-                }
-
-                // Set up the main binding
-                var binding = new Binding(colDef.DataField)
-                {
-                    UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
-                    Mode = BindingMode.TwoWay
-                };
-                var mainProperty = GetMainBindingProperty(colDef.ComponentType.ToString(), colDef.BoundTo);
-                if (mainProperty != null)
-                {
-                    factory.SetBinding(mainProperty, binding);
-                }
-
-                // Set up additional binding
-                if (!string.IsNullOrEmpty(colDef.BoundTo))
-                {
-                    var additionalBinding = new Binding(colDef.DataField)
-                    {
-                        UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
-                        Mode = BindingMode.TwoWay
-                    };
-                    var property = GetDependencyPropertyByName(colDef.BoundTo);
-                    if (property != null)
-                    {
-                        factory.SetBinding(property, additionalBinding);
-                    }
-                }
-
-                gridFactory.AppendChild(factory);
-                columnIndex++;
-            }
-
-            _cachedItemTemplate = new DataTemplate { VisualTree = gridFactory };
-        }
-
         private void ApplyVisualProperties()
         {
             if (_headerGrid == null) return;
@@ -1707,35 +1562,7 @@ namespace CustomComponents.ListBoxExtensions
                 }
             }
 
-            // Apply visual properties to all controls in the item template
-            foreach (var colDef in ColumnDefinitions)
-            {
-                var controlType = GetControlType(colDef.ComponentType.ToString());
-
-                if (controlType == typeof(ToggleButton))
-                {
-                    // ToggleButton properties are handled in the LoadedEvent handler
-                }
-                else if (controlType == typeof(CheckBox))
-                {
-                    // CheckBox properties are handled in the LoadedEvent handler
-                }
-                else if (controlType == typeof(Button))
-                {
-                    // Button properties are handled in the LoadedEvent handler
-                }
-                else if (controlType == typeof(ComboBox))
-                {
-                    // ComboBox properties are handled in the LoadedEvent handler
-                }
-                else if (controlType == typeof(DateTimePicker))
-                {
-                    // DateTimePicker properties are handled in the LoadedEvent handler
-                }
-            }
         }
-
-
 
         private void ApplyColumnDefinitions()
         {
@@ -1770,13 +1597,10 @@ namespace CustomComponents.ListBoxExtensions
                         var headerTextBlock = new TextBlock { Text = colDef.HeaderText };
                         Grid.SetColumn(headerTextBlock, _headerGrid.ColumnDefinitions.Count - 1);
                         _headerGrid.Children.Add(headerTextBlock);
-
-                        // Visual properties will be set in ApplyVisualProperties
                     }
 
                     // Add column to item template grid
                     var itemColumn = new System.Windows.Controls.ColumnDefinition();
-                    // Width bindings will be set in MultiListbox_Loaded
                     if (!string.IsNullOrEmpty(colDef.WidthBinding))
                     {
                         // Width binding will be set in MultiListbox_Loaded
@@ -1803,7 +1627,6 @@ namespace CustomComponents.ListBoxExtensions
                         factory.SetValue(Grid.ColumnProperty, _itemGrid.ColumnDefinitions.Count - 1);
                         if (controlType == typeof(ToggleButton))
                         {
-                            var toggleButton = new ToggleButton();
                             factory = new FrameworkElementFactory(typeof(ToggleButton));
                             factory.SetValue(FrameworkElement.NameProperty, "PART_ToggleButton");
                             factory.SetValue(Grid.ColumnProperty, _itemGrid.ColumnDefinitions.Count - 1);
@@ -1814,7 +1637,7 @@ namespace CustomComponents.ListBoxExtensions
                                 var toggleButton = s as ToggleButton;
                                 if (toggleButton != null)
                                 {
-                                    // Apply all visual properties and style after template is applied (step 2)
+                                    // Apply all visual properties and style after template is applied
                                     Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() =>
                                     {
                                         toggleButton.Width = colDef.ToggleButtonWidth;
@@ -1826,10 +1649,8 @@ namespace CustomComponents.ListBoxExtensions
                                         toggleButton.HorizontalAlignment = HorizontalAlignment.Center;
                                         toggleButton.VerticalAlignment = VerticalAlignment.Center;
                                         toggleButton.Visibility = Visibility.Visible;
-                                        toggleButton.IsChecked = false;
-                                        toggleButton.Style = (colDef?.Style is null) ? null : colDef.Style;
+                                        toggleButton.Style = (colDef?.Style is not null && colDef.Style.TargetType == typeof(ToggleButton)) ? colDef.Style : null;
 
-                                        // Handle template-specific setup
                                         if (toggleButton.Template != null)
                                         {
                                             toggleButton.ApplyTemplate();
@@ -1851,41 +1672,6 @@ namespace CustomComponents.ListBoxExtensions
                                 }
                             }));
 
-                            // Add size changed handler to check dimensions and visual tree
-                            factory.AddHandler(FrameworkElement.SizeChangedEvent, new SizeChangedEventHandler((s, e) =>
-                            {
-                                var toggle = s as ToggleButton;
-                                if (toggle != null)
-                                {
-                                    toggle.Width = e.NewSize.Width;
-                                    toggle.Height = e.NewSize.Height;
-                                }
-                            }));
-
-                            // Add loaded handler to check initial state and template
-                            factory.AddHandler(FrameworkElement.LoadedEvent, new RoutedEventHandler((s, e) =>
-                            {
-                                var toggle = s as ToggleButton;
-                                if (toggle != null)
-                                {
-                                    var current = toggle as DependencyObject;
-                                    if (toggle.Template != null)
-                                    {
-                                        toggle.ApplyTemplate();
-                                        var image = toggle.Template.FindName("PART_Image", toggle) as Image;
-                                        toggle.Checked += (s2, e2) =>
-                                        {
-                                            var img = toggle.Template.FindName("PART_Image", toggle) as Image;
-                                        };
-                                        toggle.Unchecked += (s2, e2) =>
-                                        {
-                                            var img = toggle.Template.FindName("PART_Image", toggle) as Image;
-                                        };
-                                    }
-                                }
-                            }));
-
-                            // Add click handler that routes to the column definition's event
                             factory.AddHandler(ToggleButton.ClickEvent, new RoutedEventHandler((s, e) =>
                             {
                                 var toggle = s as ToggleButton;
@@ -1893,7 +1679,7 @@ namespace CustomComponents.ListBoxExtensions
                                 Click?.Invoke(s, e);
                             }));
                         }
-                        if (controlType == typeof(CheckBox))
+                        else if (controlType == typeof(CheckBox))
                         {
                             factory.AddHandler(FrameworkElement.LoadedEvent, new RoutedEventHandler((s, e) =>
                             {
@@ -1911,7 +1697,6 @@ namespace CustomComponents.ListBoxExtensions
                                 var button = s as Button;
                                 if (button != null)
                                 {
-                                    // Visual properties will be set in MultiListbox_Loaded
                                     if (colDef.ButtonImageSource != null)
                                     {
                                         var image = new Image { Source = colDef.ButtonImageSource };
@@ -1927,7 +1712,6 @@ namespace CustomComponents.ListBoxExtensions
                                 var comboBox = s as ComboBox;
                                 if (comboBox != null)
                                 {
-                                    // Visual properties will be set in MultiListbox_Loaded
                                     ComboBoxInitialized?.Invoke(s, e);
                                 }
                             }));
@@ -1957,7 +1741,6 @@ namespace CustomComponents.ListBoxExtensions
                                 var datePicker = s as DateTimePicker;
                                 if (datePicker != null)
                                 {
-                                    // Visual properties will be set in MultiListbox_Loaded
                                     if (!string.IsNullOrEmpty(colDef.DateTimeFormat))
                                     {
                                         if (Enum.TryParse<Xceed.Wpf.Toolkit.DateTimeFormat>(colDef.DateTimeFormat, true, out var format))
@@ -1991,8 +1774,6 @@ namespace CustomComponents.ListBoxExtensions
                             factory.AddHandler(DateTimePicker.GotFocusEvent, new RoutedEventHandler((s, e) => DateTimePickerGotFocus?.Invoke(s, e)));
                             factory.AddHandler(DateTimePicker.KeyUpEvent, new KeyEventHandler((s, e) => DateTimePickerKeyUp?.Invoke(s, e)));
                         }
-
-                        // Bindings will be set in MultiListbox_Loaded
                     }
                 }
             }
@@ -2004,8 +1785,6 @@ namespace CustomComponents.ListBoxExtensions
             // Apply visual properties after column definitions are set up
             ApplyVisualProperties();
         }
-
-
 
         #region Event Handlers
         private void lstBoxUploadItems_MouseDoubleClick(object sender, MouseButtonEventArgs e)
@@ -2028,46 +1807,6 @@ namespace CustomComponents.ListBoxExtensions
             ItemGotFocus?.Invoke(sender, e);
         }
 
-        private void DumpVisualTree(DependencyObject element, int level)
-        {
-            if (element == null) return;
-
-            var indent = new string(' ', level * 4);
-            var fe = element as FrameworkElement;
-            if (fe != null)
-            {
-                System.Diagnostics.Debug.WriteLine($"{indent}Type: {element.GetType().Name}");
-                System.Diagnostics.Debug.WriteLine($"{indent}Name: {fe.Name}");
-                System.Diagnostics.Debug.WriteLine($"{indent}Width: {fe.Width}, ActualWidth: {fe.ActualWidth}");
-                System.Diagnostics.Debug.WriteLine($"{indent}Height: {fe.Height}, ActualHeight: {fe.ActualHeight}");
-                System.Diagnostics.Debug.WriteLine($"{indent}HorizontalAlignment: {fe.HorizontalAlignment}");
-                System.Diagnostics.Debug.WriteLine($"{indent}VerticalAlignment: {fe.VerticalAlignment}");
-                System.Diagnostics.Debug.WriteLine($"{indent}Margin: {fe.Margin}");
-                if (fe is Grid grid)
-                {
-                    System.Diagnostics.Debug.WriteLine($"{indent}Grid Columns: {grid.ColumnDefinitions.Count}");
-                    foreach (var col in grid.ColumnDefinitions)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"{indent}  Column Width: {col.Width}, MinWidth: {col.MinWidth}, ActualWidth: {col.ActualWidth}");
-                    }
-                }
-                System.Diagnostics.Debug.WriteLine("");
-            }
-
-            // Get visual children
-            int childCount = VisualTreeHelper.GetChildrenCount(element);
-            for (int i = 0; i < childCount; i++)
-            {
-                var child = VisualTreeHelper.GetChild(element, i);
-                DumpVisualTree(child, level + 1);
-            }
-
-            // Get logical children
-            if (element is ContentControl cc && cc.Content is DependencyObject content)
-            {
-                DumpVisualTree(content, level + 1);
-            }
-        }
         #endregion
     }
 }

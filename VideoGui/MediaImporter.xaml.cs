@@ -54,6 +54,7 @@ namespace VideoGui
         //SetLists Set_Lists;
         FileRenamerClear DoFileRenamerClear;
         int MaxFile = 0;
+        private bool _isFirstResize = true;
         databasehook<object> ModuleCallBack;
         bool IsFirstResize = true, Ready = false;
         DispatcherTimer LocationChangedTimer = new DispatcherTimer();
@@ -173,14 +174,33 @@ namespace VideoGui
         {
             try
             {
-                if (e.WidthChanged)
-                { 
-                    SetControls(e.NewSize.Width);
-                }
-                if (e.HeightChanged)
+                if (IsLoaded && Ready)
                 {
-                    SetControls(e.NewSize.Height, false);
+                    if (_isFirstResize)
+                    {
+                        _isFirstResize = false;
+                        LoadingPanel.Visibility = Visibility.Collapsed;
+                        MainContent.Visibility = Visibility.Visible;
+                    }
+
+                    if (e.WidthChanged)
+                    {
+                        SetControls(e.NewSize.Width);
+                    }
+                    if (e.HeightChanged)
+                    {
+                        SetControls(e.NewSize.Height, false);
+                    }
+                    if (e.HeightChanged || e.WidthChanged)
+                    {
+                        RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                        key?.SetValue("MIWidth", ActualWidth);
+                        key?.SetValue("MIHeight", ActualHeight);
+                        key?.Close();
+                    }
                 }
+
+
             }
             catch (Exception ex)
             {
@@ -309,6 +329,8 @@ namespace VideoGui
                 if (selectresult == System.Windows.Forms.DialogResult.OK)
                 {
                     folder = folderBrowserDialog.SelectedFolder;
+                    txtsrcdir.Text = folder;
+                    
                     var Flist = folder.Split("\\").ToList();
                     int cnt = Flist.Count - 1;
                     if (cnt > 0)
@@ -322,7 +344,7 @@ namespace VideoGui
                             keyx?.Close();
                         }
                     }
-                    txtsrcdir.Text = folder;
+                    
                     GetFiles(folder).ConfigureAwait(false);
                 }
             }
@@ -366,6 +388,24 @@ namespace VideoGui
                 {
                     ModuleCallBack?.Invoke(this, new CustomParams_Initialize());
                 }
+
+                LocationChanger.Interval = TimeSpan.FromMilliseconds(10);
+                LocationChanger.Tick += LocationChanger_Tick;
+                LocationChanger.Start();
+                LocationChanged += (s, e) =>
+                {
+                    LocationChangedTimer.Stop();
+                    LocationChangedTimer.Interval = TimeSpan.FromSeconds(3);
+                    LocationChangedTimer.Tick += (s1, e1) =>
+                    {
+                        LocationChangedTimer.Stop();
+                        RegistryKey key2 = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                        key2?.SetValue("MIleft", Left);
+                        key2?.SetValue("MItop", Top);
+                        key2?.Close();
+                    };
+                    LocationChangedTimer.Start();
+                };
             }
             catch (Exception ex)
             {

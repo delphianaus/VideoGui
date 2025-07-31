@@ -211,7 +211,7 @@ namespace VideoGui
         public ObservableCollection<PlanningQue> PlanningQueList = new ObservableCollection<PlanningQue>();
         public ObservableCollection<PlanningCuts> PlanningCutsList = new ObservableCollection<PlanningCuts>();
         public ObservableCollection<EditableScheduleEvent> EditableScheduleEventsList = new ObservableCollection<EditableScheduleEvent>();
-        public List<ShortsProcessor> ShortsProcessors = new List<ShortsProcessor>();
+        public ObservableCollection<ShortsProcessor> ShortsProcessors = new ObservableCollection<ShortsProcessor>();
         VideoCutsEditor frmVCE = null;
         public List<string> ComparitorList = new();
         string DestDirectory720p = string.Empty, DestDirectoryAdobe4K = string.Empty, DestDirectory4K = string.Empty, DestDirectory1080p = string.Empty, backupun = "", DestDirectoryTwitch = "";
@@ -735,7 +735,7 @@ namespace VideoGui
                         LastUploaded = dt.AtTime(TimeOnly.FromTimeSpan(dtr));
                         cts.Cancel();
                     });
-                    frmMultiShortsUploader.lblUploaded.Content = $"Last uploaded : {filen.Replace("_","-")} @ {LastUploaded}";
+                    frmMultiShortsUploader.lblUploaded.Content = $"Last uploaded : {filen.Replace("_", "-")} @ {LastUploaded}";
                     if (Path.Exists(shortsdir))
                     {
                         ShortsDirectoryList.Clear();
@@ -886,11 +886,11 @@ namespace VideoGui
                         FileRenamer.Clear();
                         ObservableCollectionFilter.ImportCollectionViewSource.Source = FileRenamer;
                         ObservableCollectionFilter.ImportCollectionViewSource.View.Refresh();
-                        if (GoProMediaImporter is not null && GoProMediaImporter.IsLoaded)
-                        {
-                            GoProMediaImporter.msuSchedules.ItemsSource = ObservableCollectionFilter.ImportCollectionViewSource.View;
-                            return true;
-                        }
+
+                        GoProMediaImporter.msuSchedules.ItemsSource = FileRenamer;
+                        // ObservableCollectionFilter.ImportCollectionViewSource.View;
+                        return true;
+
                     }
                 }
                 else if (tld is CustomParams_DataSelect cds)

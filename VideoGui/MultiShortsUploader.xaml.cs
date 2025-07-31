@@ -44,15 +44,6 @@ namespace VideoGui
         private bool _isFirstResize = true;
         DispatcherTimer LocationChangedTimer = new DispatcherTimer();
         DispatcherTimer LocationChanger = new DispatcherTimer();
-        public static readonly DependencyProperty Column_WidthProperty =
-            DependencyProperty.Register("Column_Width",
-            typeof(GridLength), typeof(MultiShortsUploader),
-            new PropertyMetadata(new GridLength(363, GridUnitType.Pixel)));
-        public GridLength Column_Width
-        {
-            get { return (GridLength)GetValue(Column_WidthProperty); }
-            set { SetValue(Column_WidthProperty, value); }
-        }
         public MultiShortsUploader(databasehook<object> _dbInit, OnFinishIdObj _DoOnFinished)
         {
             try
@@ -133,7 +124,6 @@ namespace VideoGui
                 LocationChanger.Interval = TimeSpan.FromMilliseconds(10);
                 LocationChanger.Tick += LocationChanger_Tick;
                 LocationChanger.Start();
-                Column_Width = new GridLength(393, GridUnitType.Pixel);
                 LocationChanged += (s, e) =>
                 {
                     LocationChangedTimer.Stop();
@@ -169,19 +159,8 @@ namespace VideoGui
                 Top = (Top != _top && _top != 0) ? _top : Top;
                 Width = (ActualWidth != _width && _width != 0) ? _width : Width;
                 Height = (ActualHeight != _height && _height != 0) ? _height : Height;
-                MainGrid.Width = Width;
-                MainGrid.Height = Height;
-                LoadingPanel.Height = Height;
-                LoadingPanel.Width = Width;
-                MainScroller.Width = Width;
-                MainScroller.Height = Height;
-                MainContent.Width = Width;
-                MainContent.Height = Height;
-                msuShorts.Width = Width - 15;
-                msuSchedules.Width = msuShorts.Width;
-                msuShorts.Height = 191;
-                msuSchedules.Height = Height - (msuShorts.Height) - 77;
-                SetCanvasChildren(Height, Width);
+                
+                SetCanvasChildren(Height, Width, true, true);
                 LoadingPanel.Visibility = Visibility.Collapsed;
                 MainContent.Visibility = Visibility.Visible;
                 if (IsFirstResize)
@@ -203,6 +182,12 @@ namespace VideoGui
             {
                 if (SetHeight)
                 {
+                    MainGrid.Height = _h;
+                    LoadingPanel.Height = _h;
+                    MainScroller.Height = _h;
+                    MainContent.Height = _h;
+                    msuSchedules.Height = Height - (msuShorts.Height) - 77;
+                    var msuShortsBottom = Canvas.GetBottom(msuShorts);
                     Canvas.SetTop(msuSchedules, msuShorts.Height);
                     Canvas.SetTop(BtnClose, _h - 68);
                     Canvas.SetTop(BtnRunUploaders, _h - 68);
@@ -214,6 +199,11 @@ namespace VideoGui
                 }
                 if (SetWidth)
                 {
+                    MainScroller.Width = _w;
+                    MainGrid.Width = _w;
+                    MainContent.Width = _w;
+                    msuShorts.Width = _w - 15;
+                    msuSchedules.Width = msuShorts.Width;
                     Canvas.SetLeft(BtnClose, _w - BtnClose.Width - 25);
                 }
             }
@@ -234,26 +224,9 @@ namespace VideoGui
                         LoadingPanel.Visibility = Visibility.Collapsed;
                         MainContent.Visibility = Visibility.Visible;
                     }
-                    if (e.HeightChanged)
-                    {
-                        MainGrid.Height = e.NewSize.Height;
-                        LoadingPanel.Height = e.NewSize.Height;
-                        MainScroller.Height = e.NewSize.Height;
-                        MainContent.Height = e.NewSize.Height;
-                        msuSchedules.Height = Height - (msuShorts.Height) - 77;
-                        var msuShortsBottom = Canvas.GetBottom(msuShorts);
-                        SetCanvasChildren(e.NewSize.Height, e.NewSize.Width, true, false);
-                    }
-                    if (e.WidthChanged)
-                    {
-                        MainScroller.Width = e.NewSize.Width;
-                        MainGrid.Width = e.NewSize.Width;
-                        MainContent.Width = e.NewSize.Width;
-                        msuShorts.Width = e.NewSize.Width - 15;
-                        msuSchedules.Width = msuShorts.Width;
-                        SetCanvasChildren(e.NewSize.Height, e.NewSize.Width, false, true);
-                        Column_Width = new GridLength(e.NewSize.Width - 135, GridUnitType.Pixel);
-                    }
+                    SetCanvasChildren(e.NewSize.Height, e.NewSize.Width, e.WidthChanged, e.HeightChanged);
+
+                    
                     if (e.HeightChanged || e.WidthChanged)
                     {
                         RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);

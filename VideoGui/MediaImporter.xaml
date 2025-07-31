@@ -20,7 +20,8 @@
                 HorizontalAlignment="Center" Width="723" 
                 VerticalAlignment="Top">
                 <TextBlock Text="Loading..." FontSize="24" Canvas.Left="311.5" Canvas.Top="141"/>
-                <ProgressBar IsIndeterminate="True" Width="200" Height="20" HorizontalAlignment="Left" Canvas.Top="178" VerticalAlignment="Center" Canvas.Left="261.5"/>
+                <ProgressBar IsIndeterminate="True" Width="200" Height="20" HorizontalAlignment="Left" Canvas.Top="178" 
+                             VerticalAlignment="Center" Canvas.Left="261.5"/>
             </Canvas>
             <Canvas x:Name="MainContent" Grid.Row="1" Height="349" 
         HorizontalAlignment="Center" Width="723" VerticalAlignment="Top">
@@ -33,20 +34,20 @@
                         <Button x:Name="btnSelectSourceDir" HorizontalAlignment="Center" VerticalAlignment="Top" Width="20" Height="20" Canvas.Left="686" Canvas.Top="12" Click="btnSelectSourceDir_Click" RenderTransformOrigin="-13.634,1.02" />
                     </Canvas>
                 </Border>
-                <MSU:MultiListbox x:Name="msuSchedules" 
-           Header="Media" Width="625" Canvas.Top="5"
+                <MSU:MultiListbox x:Name="msuSchedules" ItemHeight="15"
+           Header="Media" Width="625" Canvas.Top="5" 
            VerticalAlignment="Top" VerticalContentAlignment="Bottom" 
            BorderBrush="Black" BorderThickness="2" Height="236" 
            HorizontalAlignment="Left" Canvas.Left="0" Margin="2,49,0,0">
                     <MSU:MultiListbox.ColumnDefinitions>
                         <MSU:MultiListboxColumnDefinition DataField="FileName" Width="140" 
-                  HeaderText="FileName" ComponentType="TextBlock"/>
+                         ContentVerticalAlignment="Top" HeaderText="FileName" ComponentType="TextBlock"/>
                         <MSU:MultiListboxColumnDefinition HeaderText="First FrameTime" 
-                  ContentVerticalAlignment="Center" ContentMargin="0,0,0,0"
-                  DataField="TimeData" Width="85" ComponentType="TextBlock"/>
+                  ContentVerticalAlignment="Top" 
+                  DataField="TimeData" Width="105" ComponentType="TextBlock"/>
                         <MSU:MultiListboxColumnDefinition HeaderText="Suggested Filename" 
-                  ContentHorizontalAlignment="Center"  DataField="NewFile" 
-                  Width="120" ComponentType="TextBlock"/>
+                  ContentHorizontalAlignment="Center"  DataField="NewFile" ContentVerticalAlignment="Top"
+                  Width="140" ComponentType="TextBlock"/>
                     </MSU:MultiListbox.ColumnDefinitions>
                     <MSU:MultiListbox.ItemsContextMenu>
                         <ContextMenu>
@@ -87,7 +88,7 @@
                 <Border x:Name="brdControls" BorderBrush="Black" BorderThickness="2" Height="54" RenderTransformOrigin="0.5,0.5" VerticalAlignment="Bottom" Margin="4,0,4,3" Canvas.Top="295" Width="717">
                     <Canvas x:Name="cnvcontrols" Margin="0,0,-2,0" VerticalAlignment="Top">
                         <Button x:Name="btnRename" IsEnabled="False" HorizontalAlignment="Center" Content="Rename ALL" Width="90" Height="30" Click="btnRename_Click" Canvas.Left="14" Canvas.Top="10" VerticalAlignment="Top"/>
-                        <Button x:Name="btnClose" Content="Close" Width="90" Height="30" Click="btnClose_Click" HorizontalAlignment="Center" Canvas.Left="609" Canvas.Top="10" VerticalAlignment="Top"/>
+                        <Button x:Name="btnClose" Content="Close" Width="90" Height="30" Click="btnClose_Click" HorizontalAlignment="Center" Canvas.Left="609" Canvas.Top="10" VerticalAlignment="Top" RenderTransformOrigin="0.556,0.446"/>
                     </Canvas>
                 </Border>
             </Canvas>

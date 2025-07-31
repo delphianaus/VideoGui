@@ -58,6 +58,7 @@
                          IsManipulationEnabled="True" 
                          HorizontalAlignment="Stretch"
                          VerticalAlignment="Stretch"
+                         SelectionMode="Multiple"
                          ItemsSource="{Binding ItemsSource, RelativeSource={RelativeSource AncestorType={x:Type local:MultiListbox}}}"
                          SelectionChanged="lstBoxUploadItems_SelectionChanged"
                          MouseDoubleClick="lstBoxUploadItems_MouseDoubleClick"
@@ -66,8 +67,8 @@
                     <ListBox.ItemContainerStyle>
                         <Style TargetType="{x:Type ListBoxItem}">
                             <Setter Property="ContextMenu" Value="{Binding RelativeSource={RelativeSource AncestorType={x:Type local:MultiListbox}}, Path=ItemsContextMenu}"/>
-                            <Setter Property="MinHeight" Value="25"/>
-                            <Setter Property="MaxHeight" Value="35"/>
+                            <Setter Property="MinHeight" Value="{Binding ItemMinHeight, RelativeSource={RelativeSource AncestorType={x:Type local:MultiListbox}}}"/>
+                            <Setter Property="MaxHeight" Value="{Binding ItemMaxHeight, RelativeSource={RelativeSource AncestorType={x:Type local:MultiListbox}}}"/>
                             <Setter Property="Background" Value="White"/>
                             <Setter Property="VerticalContentAlignment" Value="Center"/>
                         </Style>

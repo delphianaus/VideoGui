@@ -8,17 +8,14 @@ using System.Threading.Tasks;
 
 namespace VideoGui.Models
 {
-    public class FileInfoGoPro
+    public class FileInfoGoPro : INotifyPropertyChanged
     {
-        string _FileName = "";
-        string _NewFile = "";
-
-        TimeSpan _TimeData = TimeSpan.Zero;
-
+        private string _FileName = "";
+        private string _NewFile = "";
+        private TimeSpan _TimeData = TimeSpan.Zero;
         public string FileName { get => _FileName; set { _FileName = value; OnPropertyChanged(); } }
         public string NewFile { get => _NewFile; set { _NewFile = value; OnPropertyChanged(); } }
         public TimeSpan TimeData { get => _TimeData; set { _TimeData = value; OnPropertyChanged(); } }
-
         public FileInfoGoPro(string _FName, string _NewName, TimeSpan Data)
         {
             FileName = _FName;
