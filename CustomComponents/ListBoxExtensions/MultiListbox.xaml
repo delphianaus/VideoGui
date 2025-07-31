@@ -58,7 +58,7 @@
                          IsManipulationEnabled="True" 
                          HorizontalAlignment="Stretch"
                          VerticalAlignment="Stretch"
-                         SelectionMode="Multiple"
+                         SelectionMode="{Binding SelectionMode, RelativeSource={RelativeSource AncestorType={x:Type local:MultiListbox}}}"
                          ItemsSource="{Binding ItemsSource, RelativeSource={RelativeSource AncestorType={x:Type local:MultiListbox}}}"
                          SelectionChanged="lstBoxUploadItems_SelectionChanged"
                          MouseDoubleClick="lstBoxUploadItems_MouseDoubleClick"

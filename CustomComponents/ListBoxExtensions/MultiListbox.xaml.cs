@@ -92,6 +92,16 @@ namespace CustomComponents.ListBoxExtensions
             set { SetValue(BorderMarginProperty, value); }
         }
 
+        public static readonly DependencyProperty SelectionModeProperty =
+            DependencyProperty.Register(nameof(SelectionMode), typeof(SelectionMode), typeof(MultiListbox),
+                new PropertyMetadata(SelectionMode.Single));
+
+        public SelectionMode SelectionMode
+        {
+            get { return (SelectionMode)GetValue(SelectionModeProperty); }
+            set { SetValue(SelectionModeProperty, value); }
+        }
+
         public static readonly DependencyProperty AdjustedWidthProperty =
             DependencyProperty.Register("AdjustedWidth", typeof(double), typeof(MultiListbox),
                 new PropertyMetadata(0.0));

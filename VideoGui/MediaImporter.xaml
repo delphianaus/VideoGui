@@ -35,7 +35,7 @@
                     </Canvas>
                 </Border>
                 <MSU:MultiListbox x:Name="msuSchedules" ItemHeight="15"
-           Header="Media" Width="625" Canvas.Top="5" 
+           Header="Media" Width="625" Canvas.Top="5" SelectionMode="Multiple"
            VerticalAlignment="Top" VerticalContentAlignment="Bottom" 
            BorderBrush="Black" BorderThickness="2" Height="236" 
            HorizontalAlignment="Left" Canvas.Left="0" Margin="2,49,0,0">
