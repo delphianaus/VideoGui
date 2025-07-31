@@ -49,6 +49,7 @@ namespace VideoGui
         public AudioJoiner(OnFinishIdObj _OnClose)
         {
             InitializeComponent();
+            // marked for mcu listbox upgrade
             Closing += (s, e) => { IsClosing = true; };
             Closed += (s, e) => { IsClosed = true; _OnClose?.Invoke(this,-1); };
         }

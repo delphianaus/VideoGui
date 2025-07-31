@@ -886,11 +886,8 @@ namespace VideoGui
                         FileRenamer.Clear();
                         ObservableCollectionFilter.ImportCollectionViewSource.Source = FileRenamer;
                         ObservableCollectionFilter.ImportCollectionViewSource.View.Refresh();
-
-                        GoProMediaImporter.msuSchedules.ItemsSource = FileRenamer;
-                        // ObservableCollectionFilter.ImportCollectionViewSource.View;
+                        GoProMediaImporter.msuSchedules.ItemsSource = ObservableCollectionFilter.ImportCollectionViewSource.View;
                         return true;
-
                     }
                 }
                 else if (tld is CustomParams_DataSelect cds)

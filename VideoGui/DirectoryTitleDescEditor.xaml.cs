@@ -54,6 +54,7 @@ namespace VideoGui
         {
             try
             {
+                // This for is marked for mcu listbox upgrade
                 Close();
             }
             catch (Exception ex)
