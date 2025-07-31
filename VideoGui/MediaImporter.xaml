@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:VideoGui" Loaded="Window_Loaded" 
        xmlns:MSU="clr-namespace:CustomComponents.ListBoxExtensions;assembly=CustomComponents"
-        mc:Ignorable="d" WindowStartupLocation="CenterScreen" WindowStyle="ToolWindow" MaxWidth="8150"
+        mc:Ignorable="d" WindowStartupLocation="Manual" WindowStyle="ToolWindow" 
         Title="Media Importer" Height="370" Width="724" SizeChanged="frmImport_SizeChanged">
     <ScrollViewer x:Name="MainScroller" VerticalScrollBarVisibility="Hidden" 
                HorizontalScrollBarVisibility="Disabled" HorizontalAlignment="Left" VerticalAlignment="Top">
