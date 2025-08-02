@@ -29,55 +29,6 @@
                       DataField="Status" Width="140" ComponentType="TextBlock"/>
                 </MSU:MultiListbox.ColumnDefinitions>
             </MSU:MultiListbox>
-            <!--<Border x:Name="brd1" BorderThickness="2" BorderBrush="Black" Width="719" Height="207" Canvas.Left="2" Canvas.Top="55">
-                <Canvas Margin="0,0,0,0">
-                    <ListBox x:Name="lstItems" Height="30" Canvas.Top="2" 
-                      IsSynchronizedWithCurrentItem="True"  IsManipulationEnabled="True" 
-                       BorderThickness="2,2,2,2" Width="719">
-                        <ListBox.Template>
-                            <ControlTemplate x:Name="GridControlss">
-                                <DockPanel x:Name="DockPanel1" Width= "{Binding ElementName=MediaImporter,Path=DockPanelWidth}" 
-                                             LastChildFill="True" Margin="0,0,0,0" 
-                                             HorizontalAlignment="Left" >
-                                    <Grid x:Name="griddpl" DockPanel.Dock="Top" Height="30" HorizontalAlignment="Left" Width="1000"  Margin="4,0,0,0" >
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition x:Name="title1" Width="340"/>
-                                            <ColumnDefinition x:Name="title2" Width="100"/>
-                                            <ColumnDefinition x:Name="title3" Width="140"/>
-                                        </Grid.ColumnDefinitions>
-                                        <Label Grid.Column="0" Margin="4,0,0,0" Content="Source Filename" HorizontalAlignment="Left" VerticalAlignment="Top" />
-                                        <Label Grid.Column="1" Margin="4,0,0,0" Content="Duration" HorizontalAlignment="Left" VerticalAlignment="Top" />
-                                        <Label Grid.Column="2" Content="Status" HorizontalAlignment="Left" VerticalAlignment="Top"  />
-                                    </Grid>
-                                    <ItemsPresenter></ItemsPresenter>
-                                </DockPanel>
-                            </ControlTemplate>
-                        </ListBox.Template>
-                    </ListBox>
-                    <ScrollViewer Canvas.Left="0" Canvas.Top="30">
-                        <ListBox Name="lstSchedules"
-                                       ScrollViewer.HorizontalScrollBarVisibility="Disabled" 
-                                       SelectionMode="Multiple" ScrollViewer.CanContentScroll="True" 
-                                       ScrollViewer.VerticalScrollBarVisibility="Visible" 
-                                       Padding="0,0,0,2" Height="172" Width="690" HorizontalAlignment="Left" VerticalAlignment="Top">
-                            <ListBox.ItemTemplate>
-                                <DataTemplate x:Name="GridControlsB" >
-                                    <Grid Margin="0,2" x:Name="gridwidths">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition x:Name="col1" Width="340"/>
-                                            <ColumnDefinition x:Name="col2" Width="100" />
-                                            <ColumnDefinition x:Name="col3" Width="140"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Name="Filename" Grid.Column="0" Margin="4,0,0,0"  Text="{Binding FileName}"/>
-                                        <TextBlock Name="FirstFrameTime" Grid.Column="1" Margin="4,0,0,0" Text="{Binding w}"/>
-                                        <TextBlock Name="SuggestedName"  Grid.Column="2" Text="{Binding Status}"/>
-                                    </Grid>
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
-                    </ScrollViewer>
-                </Canvas>
-            </Border>-->
         </Canvas>
 
         <Border x:Name="brdControls" BorderBrush="Black" BorderThickness="2" Height="68" RenderTransformOrigin="0.5,0.5" Width="716" Margin="6,0,3,6" HorizontalAlignment="Left" VerticalAlignment="Bottom">
