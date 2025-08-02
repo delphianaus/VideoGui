@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:VideoGui" Loaded="Window_Loaded" 
-       xmlns:MSU="clr-namespace:CustomComponents.ListBoxExtensions;assembly=CustomComponents"
+        xmlns:MSU="clr-namespace:CustomComponents.ListBoxExtensions;assembly=CustomComponents"
         mc:Ignorable="d" WindowStartupLocation="Manual" WindowStyle="ToolWindow" 
         Title="Media Importer" Height="370" Width="724" SizeChanged="frmImport_SizeChanged">
     <ScrollViewer x:Name="MainScroller" VerticalScrollBarVisibility="Hidden" 
@@ -35,10 +35,10 @@
                     </Canvas>
                 </Border>
                 <MSU:MultiListbox x:Name="msuSchedules" ItemHeight="15"
-           Header="Media" Width="625" Canvas.Top="5" 
+           Header="Media" Width="625" Canvas.Top="0" 
            VerticalAlignment="Top" VerticalContentAlignment="Bottom" 
            BorderBrush="Black" BorderThickness="2" Height="236" 
-           HorizontalAlignment="Left" Canvas.Left="0" Margin="2,49,0,0">
+           HorizontalAlignment="Left" Canvas.Left="0" Margin="0,49,0,0">
                     <MSU:MultiListbox.ColumnDefinitions>
                         <MSU:MultiListboxColumnDefinition DataField="FileName" Width="140" 
                          ContentVerticalAlignment="Top" HeaderText="FileName" ComponentType="TextBlock"/>

@@ -77,15 +77,17 @@ namespace VideoGui.Models
         }
         public SelectedShortsDirectories(int _Id, string _DirectoryName, bool _IsActive,
             int _LinkedShortsDirectoryId, int _NumberOfShorts, 
-            DateTime _LastUploadedDate, int DescId = -1, int TitleId = -1,
+            DateTime _LastUploadedDate, int _DescId = -1, int _TitleId = -1,
             string _LinkedTitleIds = "")
         {
             Id = _Id;
             DirectoryName = _DirectoryName;
             IsShortActive = _IsActive;
+            DescId = _DescId;
+            TitleId = _TitleId;
             LinkedShortsDirectoryId = _LinkedShortsDirectoryId;
             NumberOfShorts = _NumberOfShorts;
-            LastUploadedDateFile = _LastUploadedDate;
+            LastUploadedDateFile = (!IsActive) ? DateTime.Now.Date.AddYears(-100) : _LastUploadedDate;
             LinkedTitleId = _LinkedTitleIds;
             SetActive(_IsActive);
         }

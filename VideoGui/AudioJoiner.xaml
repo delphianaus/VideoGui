@@ -4,18 +4,32 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:VideoGui" Loaded="Window_Loaded" 
+        xmlns:MSU="clr-namespace:CustomComponents.ListBoxExtensions;assembly=CustomComponents"
         mc:Ignorable="d" WindowStartupLocation="CenterScreen" WindowStyle="ToolWindow" 
         Title="Audio Joiner" Height="362" Width="729" SizeChanged="Window_SizeChanged" >
     <Grid>
         <Canvas VerticalAlignment="Top">
-            <Border x:Name="brdFileInfo" BorderThickness="2" BorderBrush="Black" Height="49" Margin="2,3,5,0" Width="717">
+            <Border x:Name="brdFileInfo" BorderThickness="2" BorderBrush="Black" Height="49" Margin="6,3,5,0" Width="717" VerticalAlignment="Top">
                 <Canvas x:Name="CnvMedialElements">
                     <Label Content="Source Directory" HorizontalAlignment="Center" VerticalAlignment="Top" Height="26" Canvas.Left="9" Canvas.Top="9"/>
                     <TextBox x:Name="txtsrcdir" HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Center" Width="556" Canvas.Left="120" Canvas.Top="13"/>
                     <Button x:Name="btnSelectSourceDir" HorizontalAlignment="Center" VerticalAlignment="Top" Width="20" Height="20" Canvas.Left="683" Canvas.Top="12" Click="btnSelectSourceDir_Click" RenderTransformOrigin="-13.634,1.02" />
                 </Canvas>
             </Border>
-            <Border x:Name="brd1" BorderThickness="2" BorderBrush="Black" Width="719" Height="207" Canvas.Left="2" Canvas.Top="55">
+            <MSU:MultiListbox x:Name="msuAudioJoiner" ItemHeight="15"
+        Header="Source Files" Width="722" 
+        VerticalAlignment="Top" VerticalContentAlignment="Bottom" 
+        Height="207" HorizontalAlignment="Left" Margin="4,50,0,0">
+                <MSU:MultiListbox.ColumnDefinitions>
+                    <MSU:MultiListboxColumnDefinition HeaderText="Source Filename" 
+                       DataField="FileName" Width="340" ComponentType="TextBlock"/>
+                    <MSU:MultiListboxColumnDefinition HeaderText="Duration" 
+                      DataField="TimeData" Width="100" ComponentType="TextBlock"/>
+                    <MSU:MultiListboxColumnDefinition HeaderText="Status" 
+                      DataField="Status" Width="140" ComponentType="TextBlock"/>
+                </MSU:MultiListbox.ColumnDefinitions>
+            </MSU:MultiListbox>
+            <!--<Border x:Name="brd1" BorderThickness="2" BorderBrush="Black" Width="719" Height="207" Canvas.Left="2" Canvas.Top="55">
                 <Canvas Margin="0,0,0,0">
                     <ListBox x:Name="lstItems" Height="30" Canvas.Top="2" 
                       IsSynchronizedWithCurrentItem="True"  IsManipulationEnabled="True" 
@@ -55,7 +69,7 @@
                                             <ColumnDefinition x:Name="col3" Width="140"/>
                                         </Grid.ColumnDefinitions>
                                         <TextBlock Name="Filename" Grid.Column="0" Margin="4,0,0,0"  Text="{Binding FileName}"/>
-                                        <TextBlock Name="FirstFrameTime" Grid.Column="1" Margin="4,0,0,0" Text="{Binding TimeData}"/>
+                                        <TextBlock Name="FirstFrameTime" Grid.Column="1" Margin="4,0,0,0" Text="{Binding w}"/>
                                         <TextBlock Name="SuggestedName"  Grid.Column="2" Text="{Binding Status}"/>
                                     </Grid>
                                 </DataTemplate>
@@ -63,11 +77,11 @@
                         </ListBox>
                     </ScrollViewer>
                 </Canvas>
-            </Border>
+            </Border>-->
         </Canvas>
 
-        <Border x:Name="brdControls" BorderBrush="Black" BorderThickness="2" Height="68" RenderTransformOrigin="0.5,0.5" Width="719" Margin="2,255,3,7">
-            <Canvas x:Name="cnvcontrols" Margin="0,1,-2,-1">
+        <Border x:Name="brdControls" BorderBrush="Black" BorderThickness="2" Height="68" RenderTransformOrigin="0.5,0.5" Width="716" Margin="6,0,3,6" HorizontalAlignment="Left" VerticalAlignment="Bottom">
+            <Canvas x:Name="cnvcontrols" Margin="0,1,0,-1">
                 <Button x:Name="btnRename" IsEnabled="False" HorizontalAlignment="Center" Content="Process ALL" Width="90" Height="30" Click="btnRename_Click" Canvas.Left="14" Canvas.Top="18" VerticalAlignment="Top"/>
                 <Button x:Name="btnClose" Content="Close" Width="90" Height="30" Click="btnClose_Click" HorizontalAlignment="Center" Canvas.Left="603" Canvas.Top="18" VerticalAlignment="Center"/>
                 <Label Name="lblSetDest" Content="Destination Directory :" Canvas.Left="111" HorizontalAlignment="Center" Canvas.Top="20" VerticalAlignment="Center"/>

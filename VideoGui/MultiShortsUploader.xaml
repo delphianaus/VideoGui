@@ -55,7 +55,9 @@
             <Canvas x:Name="MainContent" Grid.Row="1" Height="420" 
                     HorizontalAlignment="Left" Width="558" VerticalAlignment="Top">
                 <MSU:MultiListbox x:Name="msuShorts" Header="Active Shorts Directory" 
-                   BorderBrush="Black" BorderThickness="2" VerticalAlignment="Center" Width="560" HorizontalAlignment="Left" Height="154">
+                   BorderBrush="Black" BorderThickness="2" 
+                                  VerticalAlignment="Center" Width="560" 
+                                  HorizontalAlignment="Left" Height="154">
                     <MSU:MultiListbox.ColumnDefinitions>
                         <MSU:MultiListboxColumnDefinition HeaderText="Shorts Directory" 
                     ContentMargin="0,0,0,0"
@@ -104,6 +106,7 @@
                             <MenuItem Header="Remove Selected Directories" Click="mnuRemoveSelected_Click"/>
                             <MenuItem Header="Make Active" Click="mnuMakeActive_Click"/>
                             <MenuItem Header="Remove Schedule" Click="mnuRemoveSchedule"/>
+                            <MenuItem Header="Change Schedules(Test)" Click="mnuChangeSchedule"/>
                         </ContextMenu>
                     </MSU:MultiListbox.ItemsContextMenu>
                 </MSU:MultiListbox>

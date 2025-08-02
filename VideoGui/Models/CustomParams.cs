@@ -677,6 +677,12 @@ namespace VideoGui.Models
         }
     }
 
+    public class CustomParams_ChangeSchedule
+    {
+        public CustomParams_ChangeSchedule()
+        {
+        }   
+    }
     public class CustomParams_InsertIntoTable
     {
         public string id = "";

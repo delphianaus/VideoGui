@@ -161,6 +161,7 @@ namespace VideoGui
         ObservableCollection<Rematched> RematchedList = new ObservableCollection<Rematched>();
         ObservableCollection<MultiShortsInfo> ShortsDirectoryList = new ObservableCollection<MultiShortsInfo>();
         ObservableCollection<SelectedShortsDirectories> SelectedShortsDirectoriesList = new ObservableCollection<SelectedShortsDirectories>();
+        ObservableCollection<SelectedShortsDirectories> SelectedShortsDirectoriesListTest = new ObservableCollection<SelectedShortsDirectories>();
         List<ShortsDirectory> EditableshortsDirectoryList = new List<ShortsDirectory>();
         CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
         CancellationTokenSource ProcessingCancellationTokenSource = new CancellationTokenSource();
@@ -487,6 +488,7 @@ namespace VideoGui
         {
             try
             {
+                
                 if (tld is CustomParams_RemoveSchedule cpRS)
                 {
                     for (int i = SelectedShortsDirectoriesList.Count - 1; i >= 0; i--)
@@ -509,7 +511,6 @@ namespace VideoGui
                     {
                         if (SelectedShortsDirectoriesList[i].NumberOfShorts == 0)
                         {
-
                             string sql = "DELETE FROM MULTISHORTSINFO WHERE" +
                                 " LINKEDSHORTSDIRECTORYID = @LINKEDID;";
                             connectionString.ExecuteScalar(sql, [("@LINKEDID",
@@ -925,13 +926,13 @@ namespace VideoGui
                     if (cds.Id == 0)
                     {
                         ObservableCollectionFilter.CurrentCollectionViewSource.Source = ComplexProcessingJobList;
-                        complexSchedular.lstSchedules.ItemsSource = ObservableCollectionFilter.CurrentCollectionViewSource.View;
+                        complexSchedular.msuComplexSchedules.ItemsSource = ObservableCollectionFilter.CurrentCollectionViewSource.View;
                         return true;
                     }
                     else if (cds.Id == 1)
                     {
                         ObservableCollectionFilter.HistoricCollectionViewSource.Source = ComplexProcessingJobHistory;
-                        complexSchedular.lstSchedules.ItemsSource = ObservableCollectionFilter.HistoricCollectionViewSource.View;
+                        complexSchedular.msuComplexSchedules.ItemsSource = ObservableCollectionFilter.HistoricCollectionViewSource.View;
                         return true;
                     }
                 }
@@ -945,13 +946,13 @@ namespace VideoGui
                     if (cpInit.Id == 0)
                     {
                         ObservableCollectionFilter.CurrentCollectionViewSource.Source = ComplexProcessingJobList;
-                        complexSchedular.lstSchedules.ItemsSource = ObservableCollectionFilter.CurrentCollectionViewSource.View;
+                        complexSchedular.msuComplexSchedules.ItemsSource = ObservableCollectionFilter.CurrentCollectionViewSource.View;
                         return true;
                     }
                     else if (cpInit.Id == 1)
                     {
                         ObservableCollectionFilter.HistoricCollectionViewSource.Source = ComplexProcessingJobHistory;
-                        complexSchedular.lstSchedules.ItemsSource = ObservableCollectionFilter.HistoricCollectionViewSource.View;
+                        complexSchedular.msuComplexSchedules.ItemsSource = ObservableCollectionFilter.HistoricCollectionViewSource.View;
                         return true;
                     }
                 }

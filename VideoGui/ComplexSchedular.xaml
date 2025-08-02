@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:VideoGui" 
         xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+        xmlns:MSU="clr-namespace:CustomComponents.ListBoxExtensions;assembly=CustomComponents"
         SizeChanged="Window_SizeChanged" 
         mc:Ignorable="d" DataContext="{Binding RelativeSource={RelativeSource Self}}" 
         Title="Complex Schedule Editor" Height="474" Width="915" Loaded="Window_Loaded"
@@ -31,60 +32,50 @@
                 </Setter.Value>
             </Setter>
         </Style>
-
     </Window.Resources>
-    <Grid Margin="0,0,0,9">
-        <StackPanel x:Name="stkmain" Orientation="Vertical">
-            <StackPanel Orientation="Horizontal">
-                <StackPanel x:Name="StackPanelFlags" Width="534" Height="39" Margin="2,0,0,0">
-                    <Border x:Name="BrdFLags" Height="39"  BorderBrush="Black" BorderThickness="2" VerticalAlignment="Top">
-                        <Canvas x:Name="CnvFags" HorizontalAlignment="Left" VerticalAlignment="Top">
-                            <CheckBox x:Name="Chk720P" Content="720p Video" HorizontalAlignment="Center" VerticalAlignment="Top" Canvas.Left="5" Canvas.Top="11"/>
-                            <CheckBox x:Name="ChkShorts" Content="Shorts Generation" VerticalAlignment="Center" Canvas.Left="87" Canvas.Top="11" HorizontalAlignment="Left"/>
-                            <CheckBox x:Name="ChkCut" Content="Video Cut Trim" HorizontalAlignment="Left" VerticalAlignment="Center" Canvas.Left="200" Canvas.Top="11"/>
-                            <CheckBox x:Name="ChkEnableTrim" Content="Video Encode Trim" HorizontalAlignment="Left" VerticalAlignment="Center" Canvas.Left="299" Canvas.Top="11"/>
-                            <CheckBox x:Name="ChkTwitch" Content="Twitch" Canvas.Left="419" Canvas.Top="11" HorizontalAlignment="Left" VerticalAlignment="Center" LostFocus="ChkTwitch_LostFocus"/>
-                            <CheckBox x:Name="ChkMuxer" Content="Mux" Canvas.Left="478" Canvas.Top="11" HorizontalAlignment="Left" VerticalAlignment="Center" LostFocus="ChkTwitch_LostFocus"/>
-
-                        </Canvas>
-                    </Border>
-                </StackPanel>
-                <StackPanel Height="39">
-                    <Border BorderBrush="Black" BorderThickness="2" Width="373" Height="39">
-                        <Canvas x:Name="CnvTimes" Height="39" Margin="0,0,0,-4" HorizontalAlignment="Left" Width="345">
-                            <Label Content="Start" HorizontalAlignment="Left" VerticalAlignment="Center" Height="26" Canvas.Top="3" Canvas.Left="3"/>
-                            <TextBox x:Name="txtStart" HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Center" Width="94" Canvas.Left="34" Canvas.Top="7"/>
-                            <Label Content="Duration" HorizontalAlignment="Left" VerticalAlignment="Center" Height="26" Canvas.Left="131" Canvas.Top="3"/>
-                            <TextBox x:Name="txtDuration" HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Center" Width="94" Canvas.Left="188" Canvas.Top="7" />
-                            <CheckBox x:Name="ChkElapsed" IsChecked="True" Content="Elapsed" Canvas.Left="287" Canvas.Top="8" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                        </Canvas>
-                    </Border>
-                </StackPanel>
-            </StackPanel>
-            <StackPanel>
-                <Border x:Name="brdFileInfo" BorderThickness="2" BorderBrush="Black" Height="136" Margin="2,0,2,0">
-                    <Canvas x:Name="CnvMedialElements" Margin="1,6,-2,-6" Focusable="True">
-                        <Label Content="Source Directory" HorizontalAlignment="Center" VerticalAlignment="Center" Height="26" Canvas.Left="9" Canvas.Top="5"/>
-                        <TextBox x:Name="txtsrcdir" HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Center" Width="710" Canvas.Left="145" Canvas.Top="9"/>
-                        <Label Content="Destination Directory" HorizontalAlignment="Center" VerticalAlignment="Center" Height="26" Canvas.Left="9" Canvas.Top="29"/>
-                        <Button x:Name="btnSelectDestDir" HorizontalAlignment="Right" VerticalAlignment="Center" Width="19" Height="20" Canvas.Left="865" Canvas.Top="32" Click="btnSelectDestDir_Click"/>
-                        <TextBox x:Name="txtFilename" HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Center" Width="645" Canvas.Left="145" Canvas.Top="59" />
-                        <Label Content="Destination Filename" HorizontalAlignment="Center" VerticalAlignment="Center" Height="26" Canvas.Left="9" Canvas.Top="55"/>
-                        <TextBox x:Name="txtdestdir" HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Center" Width="710" Canvas.Left="145" Canvas.Top="33" />
-                        <Button x:Name="btnSelectSourceDir" HorizontalAlignment="Right" VerticalAlignment="Center" Width="20" Height="20" Canvas.Left="865" Canvas.Top="8" Click="btnSelectSourceDir_Click" />
-                        <CheckBox x:Name="chkDeleteMonitored" Content="Delete Monitored Source" HorizontalAlignment="Center" VerticalAlignment="Top" Canvas.Left="13" Canvas.Top="94"/>
-                        <ComboBox x:Name="ComboShortType" HorizontalAlignment="Left" VerticalAlignment="Center" 
+    <Grid>
+        <Border x:Name="BrdFLags" Height="39"  BorderBrush="Black" BorderThickness="2" VerticalAlignment="Top" Width="533" HorizontalAlignment="Left">
+            <Canvas x:Name="CnvFags" HorizontalAlignment="Left" VerticalAlignment="Top">
+                <CheckBox x:Name="Chk720P" Content="720p Video" HorizontalAlignment="Center" VerticalAlignment="Top" Canvas.Left="5" Canvas.Top="11"/>
+                <CheckBox x:Name="ChkShorts" Content="Shorts Generation" VerticalAlignment="Center" Canvas.Left="87" Canvas.Top="11" HorizontalAlignment="Left"/>
+                <CheckBox x:Name="ChkCut" Content="Video Cut Trim" HorizontalAlignment="Left" VerticalAlignment="Center" Canvas.Left="200" Canvas.Top="11"/>
+                <CheckBox x:Name="ChkEnableTrim" Content="Video Encode Trim" HorizontalAlignment="Left" VerticalAlignment="Center" Canvas.Left="299" Canvas.Top="11"/>
+                <CheckBox x:Name="ChkTwitch" Content="Twitch" Canvas.Left="419" Canvas.Top="11" HorizontalAlignment="Left" VerticalAlignment="Center" LostFocus="ChkTwitch_LostFocus"/>
+                <CheckBox x:Name="ChkMuxer" Content="Mux" Canvas.Left="478" Canvas.Top="11" HorizontalAlignment="Left" VerticalAlignment="Center" LostFocus="ChkTwitch_LostFocus"/>
+            </Canvas>
+        </Border>
+        <Border x:Name="brdtimes" BorderBrush="Black" BorderThickness="2" Width="375" Height="39" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="535,0,0,0">
+            <Canvas x:Name="CnvTimes" Height="39" Margin="0,0,0,-4" HorizontalAlignment="Left" Width="373">
+                <Label Content="Start" HorizontalAlignment="Left" VerticalAlignment="Center" Height="26" Canvas.Top="3" Canvas.Left="3"/>
+                <TextBox x:Name="txtStart" HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Center" Width="94" Canvas.Left="34" Canvas.Top="7"/>
+                <Label Content="Duration" HorizontalAlignment="Left" VerticalAlignment="Center" Height="26" Canvas.Left="131" Canvas.Top="3"/>
+                <TextBox x:Name="txtDuration" HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Center" Width="94" Canvas.Left="188" Canvas.Top="7" />
+                <CheckBox x:Name="ChkElapsed" IsChecked="True" Content="Elapsed" Canvas.Left="287" Canvas.Top="8" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+            </Canvas>
+        </Border>
+        <Border x:Name="brdFileInfo" BorderThickness="2" BorderBrush="Black" Height="136" Margin="0,43,4,0" Width="909" HorizontalAlignment="Left" VerticalAlignment="Top">
+            <Canvas x:Name="CnvMedialElements" Margin="0,6,0,0" Focusable="True">
+                <Label Content="Source Directory" HorizontalAlignment="Center" VerticalAlignment="Center" Height="26" Canvas.Left="9" Canvas.Top="5"/>
+                <TextBox x:Name="txtsrcdir" HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Center" Width="710" Canvas.Left="145" Canvas.Top="9"/>
+                <Label Content="Destination Directory" HorizontalAlignment="Center" VerticalAlignment="Center" Height="26" Canvas.Left="9" Canvas.Top="29"/>
+                <Button x:Name="btnSelectDestDir" HorizontalAlignment="Right" VerticalAlignment="Center" Width="19" Height="20" Canvas.Left="865" Canvas.Top="32" Click="btnSelectDestDir_Click"/>
+                <TextBox x:Name="txtFilename" HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Center" Width="645" Canvas.Left="145" Canvas.Top="59" />
+                <Label Content="Destination Filename" HorizontalAlignment="Center" VerticalAlignment="Center" Height="26" Canvas.Left="9" Canvas.Top="55"/>
+                <TextBox x:Name="txtdestdir" HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Center" Width="710" Canvas.Left="145" Canvas.Top="33" />
+                <Button x:Name="btnSelectSourceDir" HorizontalAlignment="Right" VerticalAlignment="Center" Width="20" Height="20" Canvas.Left="865" Canvas.Top="8" Click="btnSelectSourceDir_Click" />
+                <CheckBox x:Name="chkDeleteMonitored" Content="Delete Monitored Source" HorizontalAlignment="Center" VerticalAlignment="Top" Canvas.Left="13" Canvas.Top="94"/>
+                <ComboBox x:Name="ComboShortType" HorizontalAlignment="Left" VerticalAlignment="Center" 
                                   Canvas.Left="288" Canvas.Top="92" Width="166" Height="20" 
                                   AllowDrop="True" SelectedIndex="0" Panel.ZIndex="3" MinWidth="1" 
                                   Visibility="Hidden">
-                            <ComboBoxItem Content="Master Only"/>
-                            <ComboBoxItem Content="Use Short Format"/>
-                            <ComboBoxItem Content="Use Long Format"/>
-                        </ComboBox>
-                        <CheckBox x:Name="chkPersistantSource" Content="Persistant Job" HorizontalAlignment="Center" VerticalAlignment="Top" Canvas.Left="181" Canvas.Top="94"/>
-                        <Button x:Name="btnInject" Width="56" Height="41" HorizontalAlignment="Left" VerticalAlignment="Center" Content="Inject" Canvas.Top="80" Canvas.Left="746" Click="btnInject_Click"/>
-                        <Button x:Name="btnNew" Width="68" HorizontalAlignment="Center" VerticalAlignment="Center" Content="New" Canvas.Top="80" Canvas.Left="665" Height="41" Click="btnNew_Click"/>
-                        <ToggleButton x:Name="tglflip" 
+                    <ComboBoxItem Content="Master Only"/>
+                    <ComboBoxItem Content="Use Short Format"/>
+                    <ComboBoxItem Content="Use Long Format"/>
+                </ComboBox>
+                <CheckBox x:Name="chkPersistantSource" Content="Persistant Job" HorizontalAlignment="Center" VerticalAlignment="Top" Canvas.Left="181" Canvas.Top="94"/>
+                <Button x:Name="btnInject" Width="56" Height="41" HorizontalAlignment="Left" VerticalAlignment="Center" Content="Inject" Canvas.Top="80" Canvas.Left="746" Click="btnInject_Click"/>
+                <Button x:Name="btnNew" Width="68" HorizontalAlignment="Center" VerticalAlignment="Center" Content="New" Canvas.Top="80" Canvas.Left="665" Height="41" Click="btnNew_Click"/>
+                <ToggleButton x:Name="tglflip" 
                                       Style="{DynamicResource ToggleSetEditStyle}" 
                                       Width="73" Height="40" 
                                       HorizontalAlignment="Center" 
@@ -94,127 +85,50 @@
                                       Checked="tglflip_Checked" 
                                       Canvas.Left="812" 
                                       Canvas.Top="63"/>
-                        <xctk:DateTimePicker Name="ReleaseDate" Format="Custom" Visibility="Hidden"
+                <xctk:DateTimePicker Name="ReleaseDate" Format="Custom" Visibility="Hidden"
                                                    FormatString="MM-dd-yy hh:mm:ss tt" TimeFormat="Custom" TimeFormatString="hh:mm:ss tt"  
                                                    MinWidth="195" Value="{Binding ReleaseDate}" HorizontalAlignment="Left" 
                                                    VerticalAlignment="Center" Focusable="True" Canvas.Left="466" Canvas.Top="80" 
                                              Height="42" AutoCloseCalendar="True" Width="122"   />
-                        <TextBox x:Name="txtMuxExt" Canvas.Left="461" TextWrapping="Wrap" 
+                <TextBox x:Name="txtMuxExt" Canvas.Left="461" TextWrapping="Wrap" 
                                  Text="b,p,o" Canvas.Top="105" Width="188" Visibility="Hidden" 
                                  HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                        <Label Content="Destination Filename" Height="26" Canvas.Left="9" Canvas.Top="55" HorizontalAlignment="Center" VerticalAlignment="Center" RenderTransformOrigin="3.445,1.531"/>
-                        <Label Name="lblmux" Content="Mux Extensions" Height="26" Canvas.Left="459" 
+                <Label Content="Destination Filename" Height="26" Canvas.Left="9" Canvas.Top="55" HorizontalAlignment="Center" VerticalAlignment="Center" RenderTransformOrigin="3.445,1.531"/>
+                <Label Name="lblmux" Content="Mux Extensions" Height="26" Canvas.Left="459" 
                                Canvas.Top="80" HorizontalAlignment="Left" Visibility="Hidden"
                                VerticalAlignment="Center"/>
-                        <Button x:Name="btnAddMux" Click="btnAddMux_Click" Content="Add Muxes" 
+                <Button x:Name="btnAddMux" Click="btnAddMux_Click" Content="Add Muxes" 
                                 Width="82" Height="21" HorizontalAlignment="Left" Canvas.Left="567" VerticalAlignment="Center" 
                                 Canvas.Top="82" FontSize="10" Visibility="Hidden"/>
-                    </Canvas>
-                </Border>
-            </StackPanel>
-            <StackPanel>
-                <Border x:Name="brd1" Margin="2,2,2,2" BorderThickness="2" BorderBrush="Black">
-                    <StackPanel Orientation="Vertical">
-                        <StackPanel Height="30">
-                            <ListBox x:Name="lstItems" 
-                           Width="906" Height="172" HorizontalAlignment="Left" Canvas.Top="2" 
-                             IsSynchronizedWithCurrentItem="True"  IsManipulationEnabled="True">
-                                <ListBox.Template>
-                                    <ControlTemplate x:Name="GridControlss">
-                                        <DockPanel LastChildFill="True" Margin="0,0,0,0" >
-                                            <Grid DockPanel.Dock="Top" Height="30" >
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition x:Name="title0" Width="0"/>
-                                                    <ColumnDefinition x:Name="title1" Width="200"/>
-                                                    <ColumnDefinition x:Name="title2" Width="240"/>
-                                                    <ColumnDefinition x:Name="title3" Width="107"/>
-                                                    <ColumnDefinition x:Name="title4" Width="30"/>
-                                                    <ColumnDefinition x:Name="title5" Width="100"/>
-                                                    <ColumnDefinition x:Name="title6" Width="110"/>
-                                                </Grid.ColumnDefinitions>
-                                                <Label Grid.Column="1" Content="Source Directory"/>
-                                                <Label Grid.Column="2" Content="Destination File"/>
-                                                <Label Grid.Column="3" Content="Times" Margin="7,0,0,0"/>
-                                                <Label Grid.Column="4" Content="Age"/>
-                                                <Label Grid.Column="5" Content="Processing Type"/>
-                                                <Label Grid.Column="6" Content="Processing Actions"/>
-                                            </Grid>
-                                            <ItemsPresenter></ItemsPresenter>
-                                        </DockPanel>
-                                    </ControlTemplate>
-                                </ListBox.Template>
-                                <ListBox.Resources>
-                                    <!--Defines a context menu-->
-                                    <ContextMenu x:Key="MyElementMenu" Name="mnuDeleter" Visibility="{Binding ElementName=ComplexSchedular,Path=deletemenuvisible}" >
-                                        <MenuItem x:Name="mnuDeleteEntryX" Header="Delete Selected Entry" Click="mnuDeleteEntry_Click"  />
-                                    </ContextMenu>
-                                    <Style TargetType="{x:Type ListBoxItem}">
-                                        <Setter Property="ContextMenu" Value="{StaticResource MyElementMenu}"/>
-                                    </Style>
-                                </ListBox.Resources>
-                                <ListBox.ContextMenu>
-                                    <ContextMenu>
-                                        <MenuItem Header="Paste Group Times" Name="mnuGroupPaste1" Click="mnuGroupPaste_Click"  />
-                                        <MenuItem Header="Change Destination Header" Name="mnuChangeDestHeaderHistoric" Click="mnuChangeDestHeaderHistoric_Click"/>
-                                        <MenuItem Header="Change Filename Header" Name="mnuChangeFilenameHeaderHistoric" Click="mnuChangeFilenameHeaderHistoric_Click"/>
-                                    </ContextMenu>
-                                </ListBox.ContextMenu>
-                            </ListBox>
-                        </StackPanel>
-                        <StackPanel ScrollViewer.VerticalScrollBarVisibility="Disabled" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-                            <ScrollViewer >
-                                <StackPanel ScrollViewer.VerticalScrollBarVisibility="Disabled" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-                                    <ListBox Name="lstSchedules"  MouseDoubleClick="lstSchedules_MouseDoubleClick" 
-                                             ScrollViewer.CanContentScroll="True"
-                                      ScrollViewer.VerticalScrollBarVisibility="Visible" 
-                                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                                         Padding="0,0,0,2" VerticalContentAlignment="Stretch" Height="177">
-                                        <ListBox.Resources>
-                                            <!--Defines a context menu-->
-                                            <ContextMenu x:Key="MyElementMenu">
-                                                <MenuItem x:Name="mnuDeleteCurrentSelection" Header="Delete Selection" Click="mnuDeleteCurrentSelection_Click"/>
-                                                <Separator></Separator>
-                                                <MenuItem x:Name="mnuSetAgeFilter" Click="mnuSetAgeFilter_Click" Header="Set Age Filter" Visibility="{Binding ElementName=ComplexSchedular,Path=AgeFilter}"/>
-                                                <MenuItem x:Name="mnuSetSourceFilter" Header="Set Source Directory Filter" Click="mnuSetSourceFilter_Click"/>
-                                                <MenuItem x:Name="mnuSetDestinationDirectoryFilter" Header="Set Destination Directory Filter" Click="mnuSetDestinationDirectoryFilter_Click"/>
-                                                <MenuItem x:Name="mnuSetDestinationFileFilter" Header="Set Destination FileName Filter" Click="mnuSetDestinationFileFilter_Click"/>
-                                            </ContextMenu>
-                                            <Style TargetType="{x:Type ListBoxItem}">
-                                                <Setter Property="ContextMenu" Value="{StaticResource MyElementMenu}"/>
-                                            </Style>
-                                        </ListBox.Resources>
-                                        <ListBox.ItemTemplate>
-                                            <DataTemplate x:Name="GridControlsB">
-                                                <Grid Margin="0,2" x:Name="gridwidths" >
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition x:Name="col0" Width="0"/>
-                                                        <ColumnDefinition x:Name="col1" Width ="200"  />
-                                                        <ColumnDefinition x:Name="col2" Width="240" />
-                                                        <ColumnDefinition x:Name="col3" Width="107"/>
-                                                        <ColumnDefinition x:Name="col4" Width="30"/>
-                                                        <ColumnDefinition x:Name="col5" Width="100"/>
-                                                        <ColumnDefinition x:Name="col6" Width="110"/>
-                                                    </Grid.ColumnDefinitions>
-                                                    <TextBlock Name="Idx" Tag ="1" Grid.Column="0" Text="{Binding Id}" Width="0"/>
-                                                    <TextBlock Name="SRC" Tag ="1" Grid.Column="1" Text="{Binding SRC}"/>
-                                                    <TextBlock Name="DEST" Tag ="2" Grid.Column="2" Text="{Binding DEST}" HorizontalAlignment="Left" VerticalAlignment="Top" />
-                                                    <TextBlock Name="Times" Tag ="3" Grid.Column="3" Text="{Binding Times}" Width="107" Margin="7,0,0,0"/>
-                                                    <TextBlock Name="RecordAge" Tag ="4" Grid.Column="4" Text="{Binding RecordAge}" Width="30"/>
-                                                    <TextBlock Name="ProcessingType" Tag ="5" Grid.Column="5" Text="{Binding ProceessingType}" Width="110"/>
-                                                    <TextBlock Name="ProcessingActions" Tag ="6" Grid.Column="6" Text="{Binding ProcessingActions}" Width="100"/>
-                                                </Grid>
-                                            </DataTemplate>
-                                        </ListBox.ItemTemplate>
-                                    </ListBox>
-                                </StackPanel>
-                            </ScrollViewer>
-                        </StackPanel>
-                    </StackPanel>
-                </Border>
-            </StackPanel>
-            <StackPanel Height="55">
-                <Button x:Name="btnCloe" HorizontalAlignment="Right" Content="Close" Width="90" Margin="0,8,9,0" Height="30" Click="btnCloe_Click"/>
-            </StackPanel>
-        </StackPanel>
+            </Canvas>
+        </Border>
+        <MSU:MultiListbox x:Name="msuComplexSchedules" Header="Complex Schedules"
+                          Width="913" ItemHeight="15" Canvas.Top="2" 
+                          Margin="0,177,0,0" Height="199" VerticalAlignment="Top" HorizontalAlignment="Left" >
+            <MSU:MultiListbox.ColumnDefinitions>
+                <MSU:MultiListboxColumnDefinition DataField="Id" Width="0" ComponentType="TextBlock"/>
+                <MSU:MultiListboxColumnDefinition DataField="SRC" HeaderText="Source Directory" 
+                     Width="200" ComponentType="TextBlock"/>
+                <MSU:MultiListboxColumnDefinition DataField="DEST" HeaderText="Destination File"/>
+                <MSU:MultiListboxColumnDefinition DataField="Times" HeaderText="Times"
+                     Width="107" ComponentType="TextBlock"/>
+                <MSU:MultiListboxColumnDefinition DataField="RecordAge" HeaderText="Age"
+                     Width="30" ComponentType="TextBlock"/>
+                <MSU:MultiListboxColumnDefinition DataField="ProceessingType" HeaderText="Processing Type"
+                     Width="100" ComponentType="TextBlock"/>
+                <MSU:MultiListboxColumnDefinition DataField="ProcessingActions" HeaderText="Processing Actions"
+                     Width="110" ComponentType="TextBlock"/>
+            </MSU:MultiListbox.ColumnDefinitions>
+            <MSU:MultiListbox.ItemsContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="Delete Selected Entry" Click="mnuDeleteEntry_Click"  />
+                    <MenuItem Header="Paste Group Times" Click="mnuGroupPaste_Click"  />
+                    <MenuItem Header="Change Destination Header" Click="mnuChangeDestHeaderHistoric_Click"/>
+                    <MenuItem Header="Change Filename Header" Click="mnuChangeFilenameHeaderHistoric_Click"/>
+                </ContextMenu>
+            </MSU:MultiListbox.ItemsContextMenu>
+        </MSU:MultiListbox>
+        <Button x:Name="btnCloe" Content="Close" Width="90"
+                Height="30" Click="btnCloe_Click" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,13,13"/>
     </Grid>
 </Window>

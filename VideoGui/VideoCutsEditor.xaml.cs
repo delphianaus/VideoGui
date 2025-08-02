@@ -1,32 +1,34 @@
-﻿using System;
+﻿using CliWrap;
+using FirebirdSql.Data.FirebirdClient;
+using FolderBrowserEx;
+using Microsoft.Win32;
+using Nancy.Routing.Trie.Nodes;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Collections.ObjectModel;
+using System.Configuration;
 using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
+using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
-using System.Reflection;
-using Microsoft.Win32;
-using FolderBrowserEx;
-using static System.Net.WebRequestMethods;
-using System.Threading;
-using Nancy.Routing.Trie.Nodes;
-using VideoGui.Models.delegates;
-using Path = System.IO.Path;
-using System.Configuration;
+using System.Windows.Threading;
 using VideoGui.Models;
-using System.Runtime.InteropServices;
-using CliWrap;
-using System.Windows.Forms;
+using VideoGui.Models.delegates;
+using static System.Net.WebRequestMethods;
 using FolderBrowserDialog = FolderBrowserEx.FolderBrowserDialog;
-using FirebirdSql.Data.FirebirdClient;
+using Path = System.IO.Path;
 
 namespace VideoGui
 {
@@ -40,18 +42,22 @@ namespace VideoGui
         int _TotalSecs = 0;
         string ConnectionString = "";
         public AddRecordDelegate DoAddRecord;
-        List<VideoCutInfo> ListOfCuts = new List<VideoCutInfo>();
+        ObservableCollection<VideoCutInfo> ListOfCuts = new();
         public VideoCutsEditor(AddRecordDelegate _DoAddRecord, OnFinish _DoOnFinish, string connectionString)
         {
             InitializeComponent();
             ConnectionString = connectionString;
             DoAddRecord = _DoAddRecord;
             DoOnFinish = _DoOnFinish;
+
+
         }
 
         TimeSpan LastTarget = TimeSpan.Zero; // 22 mins
         int LastSegment = -1; // 5 seconds
         int LastThresh = -1; // 70 seconds
+        bool Ready = false;
+        DispatcherTimer LocationChanger = new(), LocationChangedTimer = new();
 
         private void btnSelectSourceDir_Click(object sender, RoutedEventArgs e)
         {
@@ -237,8 +243,7 @@ namespace VideoGui
                             ListOfCuts.Add(new VideoCutInfo($"{filename.Trim()} ", span.Item1, span.Item2, xp++));
                         }
                     }
-                    lstSchedules.ItemsSource = ListOfCuts;
-                    lstSchedules.Items.Refresh();
+                    msuVideoCuts.ItemsSource = ListOfCuts;
                     txtsize.Text = Cut.ToCustomTimeString();
                     txtMin.Text = prr.ToCustomTimeString();
                     txtFiles.Text = ListOfCuts.Count.ToString();
@@ -275,8 +280,86 @@ namespace VideoGui
             string Root = key.GetValueStr("AdobeDestinationDir", "c:\\");
             key?.Close();
             txxtEditDirectory.Text = Root;
+            LocationChanger.Interval = TimeSpan.FromMilliseconds(10);
+            LocationChanger.Tick += LocationChanger_Tick;
+            LocationChanger.Start();
+            LocationChanged += (s, e) =>
+            {
+                LocationChangedTimer.Stop();
+                LocationChangedTimer.Interval = TimeSpan.FromSeconds(3);
+                LocationChangedTimer.Tick += (s1, e1) =>
+                {
+                    LocationChangedTimer.Stop();
+                    RegistryKey key2 = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                    key2?.SetValue("VCEleft", Left);
+                    key2?.SetValue("VCEtop", Top);
+                    key2?.Close();
+                };
+                LocationChangedTimer.Start();
+            };
+
         }
 
+        private void LocationChanger_Tick(object? sender, EventArgs e)
+        {
+            try
+            {
+                LocationChanger.Stop();
+                RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                var _width = key.GetValue("VCEWidth", ActualWidth).ToDouble();
+                var _height = key.GetValue("VCEHeight", ActualHeight).ToDouble();
+                var _left = key.GetValue("VCEleft", Left).ToDouble();
+                var _top = key.GetValue("VCEtop", Top).ToDouble();
+                key?.Close();
+                Left = (Left != _left && _left != 0) ? _left : Left;
+                Top = (Top != _top && _top != 0) ? _top : Top;
+                Width = (ActualWidth != _width && _width != 0) ? _width : Width;
+                Height = (ActualHeight != _height && _height != 0) ? _height : Height;
+                Ready = true;
+                ResizeWindows(Width, Height, true, true);
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"LocationChanger_Tick {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+        }
+        public void ResizeWindows(double _w, double _h, bool WidthChanged = false,
+            bool HeightChanged = false)
+        {
+            try
+            {
+                if (WidthChanged && Ready)
+                {
+                    msuVideoCuts.Width = _w - 245;
+                    brdControls.Width = _w - 20;
+                    stsBar1.Width = _w - 19;
+                    lblStatus.Width = _w - 19;
+                    Canvas.SetLeft(btnClose, _w - 133);
+                    Canvas.SetLeft(btnSelectSourceDir, _w - 63);
+                    txtsrcdir.Width = _w - 186;
+                    Canvas.SetLeft(lblTotalTime, _w - 95);
+                    Canvas.SetLeft(lblDuration, _w - 150);
+                    Canvas.SetLeft(btnEditFileSelect, _w - 180);
+                    txxtEditDirectory.Width = _w - 305;
+                }
+                if (HeightChanged && Ready)
+                {
+                    msuVideoCuts.Height = _h - (609 - 409) - 24;
+                    brdControls1.Height = _h - (609 - 409) - 35;
+                }
+                if (HeightChanged || WidthChanged && Ready)
+                {
+                    RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                    key?.SetValue("VCEWidth", ActualWidth);
+                    key?.SetValue("VCEHeight", ActualHeight);
+                    key?.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"ReiszeWindows {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
+            }
+        }
         private void frmVideoCutsEditor_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             DoOnFinish?.Invoke();
@@ -286,29 +369,10 @@ namespace VideoGui
         {
             try
             {
-                if (IsLoaded)
+                if (IsLoaded && Ready)
                 {
-                    StackHeader0.Width = frmVideoCutsEditor.Width;
-                    StackHeader1.Width = frmVideoCutsEditor.Width;
-                    StackHeader2.Width = frmVideoCutsEditor.Width - 245;//0ack Panel for right controls
-                    StackHeader4.Width = frmVideoCutsEditor.Width - 18;
-                    StackHeader5.Width = stackheader4.Width;
-                    Stackheader6.Height = StackHeader0.Height - 30;
-                    brdControls.Width = frmVideoCutsEditor.Width - 26;
-                    cnvcontrols.Width = brdControls.Width - 8;
-                    lstItems.Width = StackHeader5.Width;
-                    lstSchedules.Width = StackHeader2.Width;
-                    lstSchedules.Height = frmVideoCutsEditor.Height - 261; // was 40
-                    lstItems.Width = lstSchedules.Width;
-                    Canvas.SetLeft(btnClose, frmVideoCutsEditor.Width - 134);
-                    stkmain.Height = frmVideoCutsEditor.Height;//40
-                    brd1.Height = StackHeader0.Height - 4;
-                    txtsrcdir.Width = frmVideoCutsEditor.Width - 200;
-                    Canvas.SetLeft(btnSelectSourceDir, frmVideoCutsEditor.Width - 73);
-                    stkFilterControls.Height = frmVideoCutsEditor.Height - 224;//158
-                    brdControls1.Height = stkFilterControls.Height - 3;
-                    stsBar1.Width = frmVideoCutsEditor.Width - 9;
-                    lblStatus.Width = stsBar1.Width - 2;
+                    ResizeWindows(e.NewSize.Width, e.NewSize.Height,
+                        e.WidthChanged, e.HeightChanged);
                 }
 
             }
@@ -452,7 +516,7 @@ namespace VideoGui
         {
             try
             {
-                foreach (VideoCutInfo ctv in lstSchedules.SelectedItems)
+                foreach (VideoCutInfo ctv in msuVideoCuts.SelectedItems)
                 {
                     AddItem(ctv);
                 }
@@ -481,7 +545,7 @@ namespace VideoGui
         {
             try
             {
-                foreach (VideoCutInfo ctv in lstSchedules.SelectedItems)
+                foreach (VideoCutInfo ctv in msuVideoCuts.SelectedItems)
                 {
                     AddItem(ctv);
                 }

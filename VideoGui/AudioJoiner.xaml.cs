@@ -24,6 +24,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 using VideoGui.Models;
 using VideoGui.Models.delegates;
 using static System.Runtime.InteropServices.JavaScript.JSType;
@@ -45,6 +46,8 @@ namespace VideoGui
         public bool IsClosing = false, IsClosed = false;
         ObservableCollection<AudioJoinerInfo> MediaInfoTimes = new ObservableCollection<AudioJoinerInfo>();
         public CancellationTokenSource cancel = new CancellationTokenSource();
+        bool Ready = false;
+        DispatcherTimer LocationChanger = new(), LocationChangedTimer = new();
 
         public AudioJoiner(OnFinishIdObj _OnClose)
         {
@@ -134,22 +137,10 @@ namespace VideoGui
         {
             try
             {
-
-                brdControls.Width = frmAudioJoiner.Width - 8;
-                brd1.Width = brdControls.Width;
-                brdFileInfo.Width = brdControls.Width;
-                cnvcontrols.Width = brdControls.Width - 2;
-
-                lstItems.Width = brd1.Width;
-                lstSchedules.Width = lstItems.Width;
-
-                lstSchedules.Height = frmAudioJoiner.Height - (367 - 177);
-                Canvas.SetLeft(btnClose, frmAudioJoiner.Width - 124);
-                brd1.Height = frmAudioJoiner.Height - 150;
-                txtsrcdir.Width = frmAudioJoiner.Width - (724 - 542);
-                Canvas.SetLeft(btnSelectSourceDir, frmAudioJoiner.Width - 53);
-
-
+                if (IsLoaded && Ready)
+                {
+                    ResizeWindows(e.NewSize.Width, e.NewSize.Height, e.WidthChanged, e.HeightChanged);
+                }
             }
             catch (Exception ex)
             {
@@ -161,11 +152,29 @@ namespace VideoGui
         {
             try
             {
-                lstSchedules.ItemsSource = MediaInfoTimes;
+                msuAudioJoiner.ItemsSource = MediaInfoTimes;
                 RegistryKey key1 = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                 string InitFolder = key1.GetValueStr("AudioJoinerDestDir", "c:\\");
                 key1?.Close();
                 txtDestDir.Text = InitFolder;
+
+                LocationChanger.Interval = TimeSpan.FromMilliseconds(10);
+                LocationChanger.Tick += LocationChanger_Tick;
+                LocationChanger.Start();
+                LocationChanged += (s, e) =>
+                {
+                    LocationChangedTimer.Stop();
+                    LocationChangedTimer.Interval = TimeSpan.FromSeconds(3);
+                    LocationChangedTimer.Tick += (s1, e1) =>
+                    {
+                        LocationChangedTimer.Stop();
+                        RegistryKey key2 = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                        key2?.SetValue("AJleft", Left);
+                        key2?.SetValue("AJtop", Top);
+                        key2?.Close();
+                    };
+                    LocationChangedTimer.Start();
+                };
             }
             catch (Exception ex)
             {
@@ -173,7 +182,64 @@ namespace VideoGui
             }
         }
 
-       
+        private void LocationChanger_Tick(object? sender, EventArgs e)
+        {
+            try
+            {
+                LocationChanger.Stop();
+                RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                var _width = key.GetValue("AJWidth", ActualWidth).ToDouble();
+                var _height = key.GetValue("AJHeight", ActualHeight).ToDouble();
+                var _left = key.GetValue("AJleft", Left).ToDouble();
+                var _top = key.GetValue("AJtop", Top).ToDouble();
+                key?.Close();
+                Left = (Left != _left && _left != 0) ? _left : Left;
+                Top = (Top != _top && _top != 0) ? _top : Top;
+                Width = (ActualWidth != _width && _width != 0) ? _width : Width;
+                Height = (ActualHeight != _height && _height != 0) ? _height : Height;
+                Ready = true;
+                ResizeWindows(Width, Height, true, true);
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"LocationChanger_Tick {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+        }
+
+        public void ResizeWindows(double _w, double _h, bool WidthChanged = false,
+             bool HeightChanged = false)
+        {
+            try
+            {
+                if (WidthChanged && Ready)
+                {
+                    msuAudioJoiner.Width = _w - 23;
+                    brdControls.Width = _w - 26;
+                    brdFileInfo.Width = _w - 26;
+                    Canvas.SetLeft(btnSelectSourceDir, _w - 63);
+                    Canvas.SetLeft(btnSetDetDir, _w - 171);
+                    Canvas.SetLeft(btnClose, _w - 133);
+                    txtDestDir.Width = _w - 413;
+                    txtsrcdir.Width = _w - 186;
+                }
+                if (HeightChanged && Ready)
+                {
+                    msuAudioJoiner.Height = _h - (347 - 207) - 26;
+                }
+
+                if (HeightChanged || WidthChanged && Ready)
+                {
+                    RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                    key?.SetValue("AJWidth", ActualWidth);
+                    key?.SetValue("AJHeight", ActualHeight);
+                    key?.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"ReiszeWindows {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
+            }
+        }
 
         public int numberoffiles = 0;
 
@@ -380,10 +446,7 @@ namespace VideoGui
                     if (MediaInfoTimes[i].FileName == SourceFileName)
                     {
                         MediaInfoTimes[i].Status = $"Script Starting";
-                        this.Dispatcher.Invoke(() =>
-                        {
-                            lstSchedules.Items.Refresh();
-                        });
+                        
                         break;
                     }
                 }
@@ -399,10 +462,7 @@ namespace VideoGui
                     if (MediaInfoTimes[i].FileName == SourceFileName)
                     {
                         MediaInfoTimes[i].Status = $"Processed";
-                        this.Dispatcher.Invoke(() =>
-                        {
-                            lstSchedules.Items.Refresh();
-                        });
+                       
                         break;
                     }
                 }
@@ -426,10 +486,7 @@ namespace VideoGui
                         }
 
                         MediaInfoTimes[i].Status = s;
-                        this.Dispatcher.Invoke(() =>
-                        {
-                            lstSchedules.Items.Refresh();
-                        });
+                        
 
                         break;
                     }
@@ -449,10 +506,6 @@ namespace VideoGui
                         if (MediaInfoTimes[i].FileName == SourceFileName)
                         {
                             MediaInfoTimes[i].Status = "Starting";
-                            this.Dispatcher.Invoke(() =>
-                            {
-                                lstSchedules.Items.Refresh();
-                            });
                             break;
                         }
                     }

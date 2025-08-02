@@ -159,7 +159,7 @@ namespace VideoGui
                 Top = (Top != _top && _top != 0) ? _top : Top;
                 Width = (ActualWidth != _width && _width != 0) ? _width : Width;
                 Height = (ActualHeight != _height && _height != 0) ? _height : Height;
-                
+
                 SetCanvasChildren(Height, Width, true, true);
                 LoadingPanel.Visibility = Visibility.Collapsed;
                 MainContent.Visibility = Visibility.Visible;
@@ -176,7 +176,7 @@ namespace VideoGui
                 ex.LogWrite($"LocationChanger_Tick {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-        private void SetCanvasChildren(double _h, double _w, bool SetWidth= true, bool SetHeight = true)
+        private void SetCanvasChildren(double _h, double _w, bool SetWidth = true, bool SetHeight = true)
         {
             try
             {
@@ -226,7 +226,7 @@ namespace VideoGui
                     }
                     SetCanvasChildren(e.NewSize.Height, e.NewSize.Width, e.WidthChanged, e.HeightChanged);
 
-                    
+
                     if (e.HeightChanged || e.WidthChanged)
                     {
                         RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
@@ -239,6 +239,21 @@ namespace VideoGui
             catch (Exception ex)
             {
                 ex.LogWrite($"Window_SizeChanged {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+        }
+
+        private void mnuChangeSchedule(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (e.OriginalSource is MenuItem m && m.DataContext is SelectedShortsDirectories rp)
+                {
+                    dbInit?.Invoke(this, new CustomParams_ChangeSchedule());
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"mnuChangeSchedule {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
         private void mnuMoveDirectory_Click(object sender, RoutedEventArgs e)
@@ -455,7 +470,7 @@ namespace VideoGui
                 string shortsdir = key.GetValueStr("shortsdirectory", "");
                 CancellationTokenSource cts = new();
                 string SQLB = "SELECT * FROM UploadsRecord ORDER BY RDB$RECORD_VERSION DESC ROWS 100;";
-               
+
                 while (IsProcessing)
                 {
                     foreach (var sch in msuSchedules.Items.OfType<SelectedShortsDirectories>().Where(x => x.IsActive && x.NumberOfShorts > 0))

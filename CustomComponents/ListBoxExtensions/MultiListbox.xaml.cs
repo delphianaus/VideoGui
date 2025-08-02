@@ -399,17 +399,45 @@ namespace CustomComponents.ListBoxExtensions
                 var control = d as MultiListbox;
                 if (control != null)
                 {
+                    bool Refresh = false;
                     if (control._currentCollection != null)
                     {
                         control._currentCollection.CollectionChanged -= control.OnCollectionChanged;
                     }
                     control.lstBoxUploadItems.ItemsSource = e.NewValue as IEnumerable;
+                    if (e.NewValue != control._currentCollection)
+                    {
+                        Refresh = true;
+                    }
                     control._currentCollection = e.NewValue as INotifyCollectionChanged;
                     if (control._currentCollection != null)
                     {
                         control._currentCollection.CollectionChanged += control.OnCollectionChanged;
                     }
-                    control.RebuildItemTemplate();
+
+
+
+                    control.Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        foreach (var item in control.lstBoxUploadItems.Items)
+                        {
+                            var container = control.lstBoxUploadItems.ItemContainerGenerator.ContainerFromItem(item) as ListBoxItem;
+                            if (container != null)
+                            {
+                                container.ApplyTemplate();
+                                var contentPresenter = control.FindVisualChild<ContentPresenter>(container);
+                                if (contentPresenter != null)
+                                {
+                                    contentPresenter.ApplyTemplate();
+                                    var grid = control.FindVisualChild<Grid>(contentPresenter);
+                                    if (grid != null)
+                                    {
+                                        control.InitializeGrid(grid);
+                                    }
+                                }
+                            }
+                        }
+                    }), DispatcherPriority.Loaded);
                 }
             }
             catch (Exception ex)
@@ -450,6 +478,7 @@ namespace CustomComponents.ListBoxExtensions
                                             if (container == null)
                                             {
                                                 lstBoxUploadItems.UpdateLayout();
+                                                lstBoxUploadItems.Visibility = Visibility.Collapsed;
                                                 lstBoxUploadItems.ScrollIntoView(lstBoxUploadItems.Items[currentIndex]);
                                                 container = lstBoxUploadItems.ItemContainerGenerator.ContainerFromIndex(currentIndex) as ListBoxItem;
                                             }
@@ -471,6 +500,7 @@ namespace CustomComponents.ListBoxExtensions
                                                                 lstBoxUploadItems.UpdateLayout();
                                                                 if (lstBoxUploadItems.Items.Count > 0)
                                                                 {
+                                                                    lstBoxUploadItems.Visibility = Visibility.Visible;
                                                                     lstBoxUploadItems.ScrollIntoView(lstBoxUploadItems.Items[0]);
                                                                 }
                                                             }), DispatcherPriority.Loaded);
@@ -507,10 +537,6 @@ namespace CustomComponents.ListBoxExtensions
                             // Full refresh needed only for Reset
                             RebuildItemTemplate();
                             UpdateVisualTree();
-                            if (File.Exists(@"C:\videogui\Action.txt"))
-                            {
-                                File.Delete(@"C:\videogui\Action.txt");
-                            }
                             break;
                     }
                 }));
@@ -1324,7 +1350,7 @@ namespace CustomComponents.ListBoxExtensions
                     control.HorizontalAlignment = colDef.ContentHorizontalAlignment;
                     control.VerticalAlignment = colDef.ContentVerticalAlignment;
                     control.Margin = colDef.ContentMargin;
-                    
+
                     // For ToggleButton, ensure binding is set up correctly
                     if (control is ToggleButton toggleButton)
                     {
@@ -1338,7 +1364,7 @@ namespace CustomComponents.ListBoxExtensions
 
                     control.HorizontalAlignment = colDef.ContentHorizontalAlignment;
                     control.VerticalAlignment = colDef.ContentVerticalAlignment;
-                    
+
                     if (!string.IsNullOrEmpty(colDef.DataField))
                     {
                         if (colDef.DataField.Contains(",") || colDef.DataField.Contains("|"))

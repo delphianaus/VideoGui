@@ -20,9 +20,8 @@
                   Header="{Binding Header, RelativeSource={RelativeSource AncestorType={x:Type local:MultiListbox}}}">
             <DockPanel LastChildFill="True">
                 <ListBox x:Name="lstTitles" Height="30" DockPanel.Dock="Top"
-                         HorizontalAlignment="Stretch"
+                         HorizontalAlignment="Stretch" 
                          Margin="{Binding BorderMargin, RelativeSource={RelativeSource AncestorType={x:Type local:MultiListbox}}}"
-                         
                          ScrollViewer.HorizontalScrollBarVisibility="Auto"
                          ScrollViewer.CanContentScroll="True"
                          ScrollViewer.VerticalScrollBarVisibility="Hidden"

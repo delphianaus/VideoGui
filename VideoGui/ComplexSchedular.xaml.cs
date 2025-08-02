@@ -55,6 +55,10 @@ namespace VideoGui
         public CustomStringEntry DestinationDirectoryEntry = null;
         public CustomStringEntry DestinationFileEntry = null;
         public bool IsClosing = false, IsClosed = false;
+        bool Ready = false;
+        DispatcherTimer LocationChanger = new(), LocationChangedTimer= new();
+
+
         public ComplexSchedular(databasehook<object> _ModuleCallBack, AddRecordDelegate _AdddRecord,
             RemoveRecordDelegate _RemoveRecord,
             OnFinishIdObj _ComplexFinished, SetFilterAge _SetFilterAge,
@@ -111,9 +115,6 @@ namespace VideoGui
                 txtMuxExt.KeyUp += keyupEventHandler;
                 DataObject.AddPastingHandler(txtStart, OntextPaste);
                 DataObject.AddPastingHandler(txtDuration, OntextPaste);
-
-
-
             }
             catch (Exception ex)
             {
@@ -220,18 +221,14 @@ namespace VideoGui
                     if (TextPasted.Trim() != "" && TextPasted.Contains("-"))
                     {
                         List<string> times = TextPasted.Split(Environment.NewLine).ToList();
-                        foreach (string time in times)
+                        foreach (string time in times.Where(ti => ti.Trim() != ""))
                         {
-                            if (time != "")
-                            {
-                                List<string> timespans = time.Split("-").ToList();
-                                TimeSpan Start = timespans.FirstOrDefault().FromStrToTimeSpan();
-                                TimeSpan End = timespans.LastOrDefault().FromStrToTimeSpan() - Start;
-                                DoAddRecord?.Invoke(true, false, false, 0, true, false, false, false,
-                                     true, Start.ToFFmpeg(), End.ToFFmpeg(), txtsrcdir.Text,
-                                     txtdestdir.Text + "\\" + txtFilename.Text + $" {RecNum++}");
-
-                            }
+                            List<string> timespans = time.Split("-").ToList();
+                            TimeSpan Start = timespans.FirstOrDefault().FromStrToTimeSpan();
+                            TimeSpan End = timespans.LastOrDefault().FromStrToTimeSpan() - Start;
+                            DoAddRecord?.Invoke(true, false, false, 0, true, false, false, false,
+                                 true, Start.ToFFmpeg(), End.ToFFmpeg(), txtsrcdir.Text,
+                                 txtdestdir.Text + "\\" + txtFilename.Text + $" {RecNum++}");
                         }
                     }
                 }
@@ -250,13 +247,10 @@ namespace VideoGui
         {
             try
             {
-                if (lstSchedules.SelectedItem is ComplexJobList item)
+                if (e.Source is MenuItem mnu && mnu.DataContext is ComplexJobList item)
                 {
-                    if (item is not null)
-                    {
-                        int id = item.Id.ToInt();
-                        DoRemoveRecord?.Invoke(id, false, true);
-                    }
+                    int id = item.Id.ToInt();
+                    DoRemoveRecord?.Invoke(id, false, true);
                 }
             }
             catch (Exception ex)
@@ -276,20 +270,16 @@ namespace VideoGui
                 if (!tglflip.IsChecked.Value)
                 {
                     btnInject.Visibility = Visibility.Hidden;
-                    mnuGroupPaste1.Visibility = Visibility.Hidden;
                     deletemenuvisible = Visibility.Hidden;
                     AgeFilter = Visibility.Collapsed;
                     ModuleCallBack?.Invoke(this, new CustomParams_DataSelect(1));
-                    //DoSetLists?.Invoke(1);
                 }
                 else
                 {
                     btnInject.Visibility = Visibility.Visible;
-                    mnuGroupPaste1.Visibility = Visibility.Visible;
                     deletemenuvisible = Visibility.Visible;
                     AgeFilter = Visibility.Visible;
                     ModuleCallBack?.Invoke(this, new CustomParams_DataSelect(0));
-                    //DoSetLists?.Invoke(0);
                 }
             }
             catch (Exception ex)
@@ -298,44 +288,39 @@ namespace VideoGui
             }
         }
 
-        private void ResizeAuto(object? sender, EventArgs e)
+        
+
+        public void ResizeWindows(double _w, double _h, bool WidthChanged = false, 
+            bool HeightChanged = false)
         {
             try
             {
-                TrayIcon.Stop();
-
-                ResizeAutos(sender, e);
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
-            }
-        }
-
-        private void ResizeAutos(object? sender, EventArgs e)
-        {
-            try
-            {
-                if (IsLoaded)
+                if (WidthChanged && Ready)
                 {
-                    var rh = ActualHeight;
-                    double rp = ActualWidth - 787;
-                    if (rh > 0)
-                    {
-                        brd1.Height = rh - 240;
-                        lstSchedules.Height = brd1.Height - 41;
-                        lstSchedules.Width = brd1.Width;
-                        LastWidth = ActualWidth;
-                        CnvMedialElements.Width = brdFileInfo.Width - 5;
-                    }
+                    msuComplexSchedules.Width = _w - 20;
+                    brdtimes.Width = _w - (925-369);
+                    brdFileInfo.Width = _w - 22;
+                    CnvTimes.Width = brdtimes.Width - 2;
+                }
+                if (HeightChanged && Ready)
+                {
+                    msuComplexSchedules.Height = _h - (474-222)-15;
+                }
+
+                if (HeightChanged || WidthChanged && Ready)
+                {
+                    RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                    key?.SetValue("CSWidth", ActualWidth);
+                    key?.SetValue("CSHeight", ActualHeight);
+                    key?.Close();
                 }
             }
             catch (Exception ex)
             {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+                ex.LogWrite($"ReiszeWindows {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
         }
-
+        
 
         private void btnSelectDestDir_Click(object sender, RoutedEventArgs e)
         {
@@ -434,9 +419,10 @@ namespace VideoGui
         {
             try
             {
-                if (IsLoaded)
+                if (IsLoaded && Ready)
                 {
-                    ResizeAutos(sender, e);
+                    ResizeWindows(e.NewSize.Width, e.NewSize.Height, 
+                        e.WidthChanged, e.HeightChanged);
                 }
             }
             catch (Exception ex)
@@ -595,7 +581,7 @@ namespace VideoGui
         {
             try
             {
-                if (lstSchedules.SelectedItem is ComplexJobHistory item2)
+                if (e.Source is MenuItem mnu && mnu.DataContext is ComplexJobList item2)
                 {
                     Chk720P.IsChecked = item2.Is720p;
                     ChkEnableTrim.IsChecked = item2.IsEncodeTrim;
@@ -644,10 +630,9 @@ namespace VideoGui
                     }
                     tglflip.IsChecked = !tglflip.IsChecked.Value;
                     btnInject.Visibility = Visibility.Visible;
-                    mnuGroupPaste1.Visibility = Visibility.Visible;
                     // run list change
                 }
-                if (lstSchedules.SelectedItem is ComplexJobList item)
+                if (e.Source is Button mnu2 && mnu2.DataContext is ComplexJobList item)
                 {
                     Chk720P.IsChecked = item.Is720p;
                     ChkEnableTrim.IsChecked = item.IsEncodeTrim;
@@ -708,22 +693,57 @@ namespace VideoGui
             try
             {
                 SetupHandlers();
-                TrayIcon = new DispatcherTimer();
-                TrayIcon.Tick += new EventHandler(ResizeAuto);
-                TrayIcon.Interval = new TimeSpan(0, 0, 0, 150);
-                TrayIcon.Start();
                 tglflip.IsChecked = true;
                 RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                 string rootfolder = key.GetValueStr("DestinationDir", "c:\\");
                 key?.Close();
                 txtdestdir.Text = rootfolder;
                 ModuleCallBack?.Invoke(this, new CustomParams_Initialize(0));
-
-                //DoSetLists?.Invoke(0);
+                LocationChanger.Interval = TimeSpan.FromMilliseconds(10);
+                LocationChanger.Tick += LocationChanger_Tick;
+                LocationChanger.Start();
+                LocationChanged += (s, e) =>
+                {
+                    LocationChangedTimer.Stop();
+                    LocationChangedTimer.Interval = TimeSpan.FromSeconds(3);
+                    LocationChangedTimer.Tick += (s1, e1) =>
+                    {
+                        LocationChangedTimer.Stop();
+                        RegistryKey key2 = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                        key2?.SetValue("CSleft", Left);
+                        key2?.SetValue("CStop", Top);
+                        key2?.Close();
+                    };
+                    LocationChangedTimer.Start();
+                };
             }
             catch (Exception ex)
             {
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+            }
+        }
+
+        private void LocationChanger_Tick(object? sender, EventArgs e)
+        {
+            try
+            {
+                LocationChanger.Stop();
+                RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                var _width = key.GetValue("CSWidth", ActualWidth).ToDouble();
+                var _height = key.GetValue("CSHeight", ActualHeight).ToDouble();
+                var _left = key.GetValue("CSleft", Left).ToDouble();
+                var _top = key.GetValue("CStop", Top).ToDouble();
+                key?.Close();
+                Left = (Left != _left && _left != 0) ? _left : Left;
+                Top = (Top != _top && _top != 0) ? _top : Top;
+                Width = (ActualWidth != _width && _width != 0) ? _width : Width;
+                Height = (ActualHeight != _height && _height != 0) ? _height : Height;
+                Ready = true;
+                ResizeWindows(Width, Height, true, true);
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"LocationChanger_Tick {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
 
