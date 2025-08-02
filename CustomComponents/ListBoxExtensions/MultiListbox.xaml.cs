@@ -92,6 +92,16 @@ namespace CustomComponents.ListBoxExtensions
             set { SetValue(BorderMarginProperty, value); }
         }
 
+        public static readonly DependencyProperty SelectionModeProperty =
+            DependencyProperty.Register(nameof(SelectionMode), typeof(SelectionMode), typeof(MultiListbox),
+                new PropertyMetadata(SelectionMode.Single));
+
+        public SelectionMode SelectionMode
+        {
+            get { return (SelectionMode)GetValue(SelectionModeProperty); }
+            set { SetValue(SelectionModeProperty, value); }
+        }
+
         public static readonly DependencyProperty AdjustedWidthProperty =
             DependencyProperty.Register("AdjustedWidth", typeof(double), typeof(MultiListbox),
                 new PropertyMetadata(0.0));
@@ -217,16 +227,8 @@ namespace CustomComponents.ListBoxExtensions
             set { SetValue(ItemMinHeightProperty, value); }
         }
 
-        public double TextPadding
-        {
-            get { return (double)GetValue(TextPaddingProperty); }
-            set { SetValue(TextPaddingProperty, value); }
-        }
 
-        public static readonly DependencyProperty TextPaddingProperty =
-            DependencyProperty.Register(nameof(TextPadding), typeof(double), typeof(MultiListbox),
-                new PropertyMetadata(6.0));
-
+     
         public static readonly DependencyProperty ItemHeightProperty =
             DependencyProperty.Register(nameof(ItemHeight), typeof(double),
                 typeof(MultiListbox),

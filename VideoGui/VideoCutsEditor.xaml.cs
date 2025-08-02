@@ -46,6 +46,7 @@ namespace VideoGui
         public VideoCutsEditor(AddRecordDelegate _DoAddRecord, OnFinish _DoOnFinish, string connectionString)
         {
             InitializeComponent();
+            // this form is marked for mcu listbox upgrade
             ConnectionString = connectionString;
             DoAddRecord = _DoAddRecord;
             DoOnFinish = _DoOnFinish;
