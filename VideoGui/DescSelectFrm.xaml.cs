@@ -21,12 +21,13 @@ namespace VideoGui
             IsClosing = false;
         public int Id = -1, LinkedId = -1, TitleTagId = -1;
         public DescSelectFrm(OnFinishIdObj _DoOnFinish, databasehook<Object> _DoDbHook,
-            bool _IsUploadsBuilder = false, int _id = -1)
+            bool _IsUploadsBuilder = false, int _id = -1,int _Linkedid = -1)
         {
             try
             {
                 DoDbHook = _DoDbHook;
                 Id = _id;
+                LinkedId = _Linkedid;
                 IsUploadsBuilder = _IsUploadsBuilder;
                 Closing += (s, e) => { IsClosing = true; };
                 Closed += (s, e) => { IsClosed = true; IsDescChanged = false; _DoOnFinish?.Invoke(this, -1); };

@@ -33,11 +33,12 @@ namespace VideoGui
     {
         databasehook<object> dbInit = null;
         public bool IsClosing = false, IsClosed = false;
-      
+
         public int uploadedcnt = 0;
         public WebViewDebug webviewDebug = null;
         string connectionStr = "";
-        public SelectShortUpload(databasehook<object> _dbInit, OnFinishIdObj _DoOnFinished)
+        public SelectShortUpload(databasehook<object> _dbInit,
+            OnFinishIdObj _DoOnFinished)
         {
             InitializeComponent();
             dbInit = _dbInit;
@@ -46,13 +47,13 @@ namespace VideoGui
             Closed += (s, e) => { IsClosed = true; _DoOnFinished?.Invoke(this, -1); };
         }
 
-        int ShortsIndex = -1;
+        int ShortsIndex = -1, LinkedId = -1;
         ScraperModule scraperModule = null;
         private void btnSelectSourceDir_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                int LinkedId = -1;
+
                 RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                 string rootfolder = key.GetValueStr("UploadPath", @"D:\shorts\");
                 string MaxUploads = key.GetValueStr("MaxUploads", "100");
@@ -253,7 +254,7 @@ namespace VideoGui
         {
             try
             {
-                btnEditDesc.IsChecked = Id != -1 && linkedDescids != "";
+                btnEditDesc.IsChecked = Id != -1;//&& linkedDescids != "";
             }
             catch (Exception ex)
             {
@@ -271,13 +272,14 @@ namespace VideoGui
                 ex.LogWrite($"btnSelectSourceDir_Click {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
         }
-        int SelectedTitleId = -1;
+        int SelectedTitleId = -1, SelectedDescId = -1;
         public void DoTitleSelectCreate(int TitleId = -1)
         {
             try
             {
                 SelectedTitleId = TitleId;
-                var _DoTitleSelectFrm = new TitleSelectFrm(DoOnFinishTitleSelect, dbInit, true, TitleId);
+                var _DoTitleSelectFrm = new TitleSelectFrm(DoOnFinishTitleSelect, dbInit,
+                    true, TitleId, LinkedId);
                 Hide();
                 _DoTitleSelectFrm.ShowActivated = true;
                 _DoTitleSelectFrm.Show();
@@ -289,7 +291,7 @@ namespace VideoGui
             }
         }
 
-        private void DoOnFinishTitleSelect(object sender,int e)
+        private void DoOnFinishTitleSelect(object sender, int e)
         {
             try
             {
@@ -297,13 +299,9 @@ namespace VideoGui
                 if (sender is TitleSelectFrm frm)
                 {
                     bool found = false;
-                    string dir = txtsrcdir.Text;
-                    string DirName = dir.Split(@"\").ToList().LastOrDefault();
-                    var r = dbInit?.Invoke(this, new CustomParams_LookUpId(DirName));
-                    if (r is not null)
-                    {
-                        ShortsIndex = r.ToInt(-1);
-                    }
+
+                    ShortsIndex = LinkedId;
+
                     string sql = "";
                     if ((SelectedTitleId != frm.TitleId))
                     {
@@ -334,7 +332,7 @@ namespace VideoGui
             {
                 return "SELECT S.ID, S.DIRECTORYNAME, S.TITLEID, S.DESCID, " +
                        "(SELECT LIST(TAGID, ',') FROM TITLETAGS " +
-                       " WHERE GROUPID = S.ID) AS LINKEDTITLEIDS, " +
+                       " WHERE GROUPID = S.TITLEID) AS LINKEDTITLEIDS, " +
                        " (SELECT LIST(ID,',') FROM DESCRIPTIONS " +
                        "WHERE ID = S.DESCID) AS LINKEDDESCIDS " +
                        "FROM SHORTSDIRECTORY S" +
@@ -587,21 +585,14 @@ namespace VideoGui
         {
             try
             {
-                if (sender is DescSelectFrm frm)
-                {
-                    int id = -1;
-                    string DirName = txtsrcdir.Text.Split(@"\").ToList().LastOrDefault();
-                    var t = dbInit?.Invoke(this, new CustomParams_GetDescIdByDirectory(DirName));
-                    if (t is int idp)
-                    {
-                        id = idp;
-                    }
-                    OldState = btnEditDesc.IsChecked.Value;
-                    var _DoDescSelectFrm = new DescSelectFrm(OnSelectFormClose, dbInit, true, id);
-                    Hide();
-                    _DoDescSelectFrm.ShowActivated = true;
-                    _DoDescSelectFrm.Show();
-                }
+                string sql = "SELECT DESCID FROM SHORTSDIRECTORY WHERE ID = @ID";
+                SelectedDescId = connectionStr.ExecuteScalar(sql,
+                    [("@ID", LinkedId)]).ToInt(-1);
+                var _DoDescSelectFrm = new DescSelectFrm(OnSelectFormClose, dbInit, true, SelectedDescId);
+                Hide();
+                _DoDescSelectFrm.ShowActivated = true;
+                _DoDescSelectFrm.Show();
+
             }
             catch (Exception ex)
             {
@@ -617,24 +608,14 @@ namespace VideoGui
                 Show();
                 if (sender is DescSelectFrm frm)
                 {
-                    bool Update = false;
-                    string linkeddescid = "", Dir = txtsrcdir.Text.ToUpper().Split(@"\").ToList().LastOrDefault();
-                    var r = dbInit?.Invoke(this, new CustomParams_DescUpdate(Dir, frm.txtDesc.Text));
-                    if (r is IdhasUpdated idp)
-                    {
-                        ShortsIndex = idp.id;
-                        Update = idp.hasUpdated;
-                    }
-
                     int descid = frm.Id;
-                    CancellationTokenSource cts = new CancellationTokenSource();
-                    connectionStr.ExecuteReader(GetShortsDirectorySql(ShortsIndex), cts, (FbDataReader r) =>
+                    if ((SelectedDescId != frm.Id))
                     {
-                        linkeddescid = (r["LINKEDDESCIDS"] is string did ? did : "");
-                        cts.Cancel();
-                    });
-                    btnEditDesc.IsChecked = (descid != -1 && linkeddescid != "");
-
+                        string sql = "UPDATE SHORTSDIRECTORY SET DESCID = @DESCID WHERE ID = @ID";
+                        connectionStr.ExecuteNonQuery(sql,
+                            [("@ID", LinkedId), ("@TITLEID", frm.Id)]);
+                    }
+                    btnEditDesc.IsChecked = (descid != -1);//&& linkeddescid != "");
                 }
             }
             catch (Exception ex)

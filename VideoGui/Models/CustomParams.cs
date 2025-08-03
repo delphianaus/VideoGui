@@ -210,11 +210,13 @@ namespace VideoGui.Models
     public class CustomParams_Save
     {
         public int id { get; set; } = -1;
+        public int LinkedId { get; set; } = -1;
         public string Name { get; set; } = "";
-        public CustomParams_Save(string name, int _id = -1)
+        public CustomParams_Save(string name, int _id = -1, int _LinkedId = -1)
         {
             id = _id;
             Name = name;
+            LinkedId = _LinkedId;
         }
     }
     public class CustomParams_DescSelect

@@ -1752,7 +1752,7 @@ namespace VideoGui
                 }
                 else if (tld is CustomParams_Initialize cpi)
                 {
-                    directoryTitleDescEditor.lstSchedules.ItemsSource = EditableshortsDirectoryList;
+                    directoryTitleDescEditor.msuDirectoryList.ItemsSource = EditableshortsDirectoryList;
                 }
                 else if (tld is CustomParams_Update cpu)
                 {
@@ -1804,7 +1804,7 @@ namespace VideoGui
                 else if (tld is CustomParams_DescSelect cds)
                 {
                     DescId = cds.UploadsReleaseInfo.Id;
-                    directoryTitleDescEditor.DoDescSelectCreate(DescId);
+                    directoryTitleDescEditor.DoDescSelectCreate(DescId, cds.UploadsReleaseInfo.Id);
                     string sql = "SELECT DESCID FROM SHORTSDIRECTORY WHERE ID = @ID;";
                     int id = connectionString.ExecuteScalar(sql, [("@ID", cds.UploadsReleaseInfo.Id)]).ToInt(-1);
                     if (id != -1) cds.UploadsReleaseInfo.DescId = DescId;

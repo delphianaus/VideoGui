@@ -291,29 +291,17 @@ namespace VideoGui
                 ex.LogWrite($"mnuAddToSelected_Click {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-        private void DoDescSelectCreate(int DescId = -1)
+        private void DoDescSelectCreate(int DescId = -1, int LinkedId=-1)
         {
             try
             {
-                if (DoDescSelectFrm is not null && DoDescSelectFrm.IsActive)
-                {
-                    DoDescSelectFrm.Close();
-                    DoDescSelectFrm = null;
-                }
-                RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
-                string dir = FindUploadPath();
-                key?.Close();
-                string DirName = dir.Split(@"\").ToList().LastOrDefault();
-                var r = dbInit?.Invoke(this, new CustomParams_GetDirectory(DirName));
-                if (r is not null)
-                {
-                    ShortsIndex = r.ToInt(-1);
-                    var rt = dbInit?.Invoke(this, new CustomParams_GetCurrentDescId(ShortsIndex));
-                    DescId = (rt is not null) ? rt.ToInt(-1) : DescId;
-                }
-                DoDescSelectFrm = new DescSelectFrm(OnSelectFormClose, dbInit, true, DescId);
+                
+                
+                var _DoDescSelectFrm = new DescSelectFrm(OnSelectFormClose, dbInit, 
+                    true, DescId, LinkedId);
                 Hide();
-                DoDescSelectFrm.Show();
+                _DoDescSelectFrm.ShowActivated = true;
+                _DoDescSelectFrm.Show();
             }
             catch (Exception ex)
             {
@@ -327,25 +315,10 @@ namespace VideoGui
                 Show();
                 if (sender is DescSelectFrm frm)
                 {
-                    bool Updated = false;
-                    string Desc = frm.txtDesc.Text;
-                    string Dir = frm.txtDescName.Text;
-                    var r = dbInit?.Invoke(this, new CustomParams_DescUpdate(Dir, Desc));
-                    Updated = (r is IdhasUpdated idhasUpdated) ? idhasUpdated.hasUpdated : Updated;
-                    if (Updated)
+                    int LinkedId = frm.LinkedId;
+                    foreach (var sch in msuSchedules.Items.OfType<SelectedShortsDirectories>().Where(x => x.LinkedShortsDirectoryId == ShortsIndex))
                     {
-                        string linkeddescid = "";
-                        string sql = GetShortsDirectorySql(frm.Id);
-                        CancellationTokenSource cts = new CancellationTokenSource(10000);
-                        connectionStr.ExecuteReader(sql, cts, (FbDataReader r) =>
-                        {
-                            linkeddescid = (r["LINKEDDESCIDS"] is string did ? did : "");
-                            cts.Cancel();
-                        });
-                        foreach (var sch in msuSchedules.Items.OfType<SelectedShortsDirectories>().Where(x => x.LinkedShortsDirectoryId == ShortsIndex))
-                        {
-                            sch.LinkedDescId = linkeddescid;
-                        }
+                        sch.DescId = frm.Id;
                     }
                 }
             }

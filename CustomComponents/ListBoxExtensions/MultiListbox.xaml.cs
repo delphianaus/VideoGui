@@ -701,11 +701,50 @@ namespace CustomComponents.ListBoxExtensions
                 int columnIndex = 0;
                 foreach (var colDef in ColumnDefinitions)
                 {
-                    // Add column definition and controls
-                    AddColumnToTemplate(gridFactory, colDef, columnIndex);
+                    // Add column definition to the grid factory
+                    var colDefFactory = new FrameworkElementFactory(typeof(ColumnDefinition));
+                    if (!string.IsNullOrEmpty(colDef.WidthBinding))
+                    {
+                        var binding = new Binding(colDef.WidthBinding)
+                        {
+                            RelativeSource = new RelativeSource(RelativeSourceMode.FindAncestor, typeof(Window), 1)
+                        };
+                        colDefFactory.SetBinding(ColumnDefinition.WidthProperty, binding);
+
+                        // Add matching column definition to header grid
+                        var headerColDef = new ColumnDefinition();
+                        headerColDef.SetBinding(ColumnDefinition.WidthProperty, binding);
+                        _headerGrid.ColumnDefinitions.Add(headerColDef);
+                    }
+                    else
+                    {
+                        colDefFactory.SetValue(ColumnDefinition.WidthProperty, new GridLength(colDef.Width));
+                        _headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(colDef.Width) });
+                    }
+                    gridFactory.AppendChild(colDefFactory);
+
+                    // Add header text to the header grid
+                    if (_headerGrid != null)
+                    {
+                        var headerTextBlock = new TextBlock
+                        {
+                            Text = colDef.HeaderText,
+                            Margin = colDef.HeaderMargin,
+                            Padding = colDef.HeaderPadding,
+                            VerticalAlignment = colDef.HeaderVerticalAlignment,
+                            HorizontalAlignment = colDef.HeaderHorizontalAlignment
+                        };
+                        Grid.SetColumn(headerTextBlock, columnIndex);
+                        _headerGrid.Children.Add(headerTextBlock);
+                    }
+
+                    // Add control for this column if it has a data field
+                    if (!string.IsNullOrEmpty(colDef.DataField))
+                    {
+                        AddControlToTemplate(gridFactory, colDef, columnIndex);
+                    }
                     columnIndex++;
                 }
-
 
                 // Create and set the item template
                 var itemTemplate = new DataTemplate { VisualTree = gridFactory };
@@ -714,60 +753,6 @@ namespace CustomComponents.ListBoxExtensions
             catch (Exception ex)
             {
                 Debug.WriteLine($"Error building and applying template: {ex}");
-            }
-        }
-
-        private void AddColumnToTemplate(FrameworkElementFactory gridFactory, MultiListboxColumnDefinition colDef, int columnIndex)
-        {
-            try
-            {
-
-                // Add column definition to the grid factory
-                var colDefFactory = new FrameworkElementFactory(typeof(ColumnDefinition));
-                if (!string.IsNullOrEmpty(colDef.WidthBinding))
-                {
-                    var binding = new Binding(colDef.WidthBinding)
-                    {
-                        RelativeSource = new RelativeSource(RelativeSourceMode.FindAncestor, typeof(MultiListbox), 1)
-                    };
-                    colDefFactory.SetBinding(ColumnDefinition.WidthProperty, binding);
-
-                    // Add matching column definition to header grid
-                    var headerColDef = new ColumnDefinition();
-                    headerColDef.SetBinding(ColumnDefinition.WidthProperty, binding);
-                    _headerGrid.ColumnDefinitions.Add(headerColDef);
-                }
-                else
-                {
-                    colDefFactory.SetValue(ColumnDefinition.WidthProperty, new GridLength(colDef.Width));
-                    _headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(colDef.Width) });
-                }
-                gridFactory.AppendChild(colDefFactory);
-
-                // Add header text to the header grid
-                if (_headerGrid != null)
-                {
-                    var headerTextBlock = new TextBlock
-                    {
-                        Text = colDef.HeaderText,
-                        Margin = colDef.HeaderMargin,
-                        Padding = colDef.HeaderPadding,
-                        VerticalAlignment = colDef.HeaderVerticalAlignment,
-                        HorizontalAlignment = colDef.HeaderHorizontalAlignment
-                    };
-                    Grid.SetColumn(headerTextBlock, columnIndex);
-                    _headerGrid.Children.Add(headerTextBlock);
-                }
-
-                // Add control for this column if it has a data field
-                if (!string.IsNullOrEmpty(colDef.DataField))
-                {
-                    AddControlToTemplate(gridFactory, colDef, columnIndex);
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Error adding column to template: {ex}");
             }
         }
 
@@ -901,7 +886,7 @@ namespace CustomComponents.ListBoxExtensions
                     {
                         var binding = new Binding(colDef.WidthBinding)
                         {
-                            RelativeSource = new RelativeSource(RelativeSourceMode.FindAncestor, typeof(MultiListbox), 1)
+                            RelativeSource = new RelativeSource(RelativeSourceMode.FindAncestor, typeof(Window), 1)
                         };
                         colDefFactory.SetBinding(ColumnDefinition.WidthProperty, binding);
 
@@ -977,6 +962,16 @@ namespace CustomComponents.ListBoxExtensions
                                     // For TextBlocks, set TextAlignment based on ContentHorizontalAlignment
                                     if (controlType == typeof(TextBlock))
                                     {
+                                        // Handle width binding if specified
+                                        if (!string.IsNullOrEmpty(colDef.WidthBinding))
+                                        {
+                                            var widthBinding = new Binding(colDef.WidthBinding)
+                                            {
+                                                RelativeSource = new RelativeSource(RelativeSourceMode.FindAncestor, typeof(Window), 1)
+                                            };
+                                            controlFactory.SetBinding(FrameworkElement.WidthProperty, widthBinding);
+                                        }
+
                                         // Set horizontal text alignment
                                         var textAlignment = colDef.ContentHorizontalAlignment switch
                                         {
@@ -1318,11 +1313,26 @@ namespace CustomComponents.ListBoxExtensions
                 }
                 else
                 {
-                    control.Width = colDef.Width;
+                    if (control is TextBlock textBlock)
+                    {
+                        if (!string.IsNullOrEmpty(colDef.WidthBinding))
+                        {
+                            var binding = new Binding(colDef.WidthBinding)
+                            {
+                                RelativeSource = new RelativeSource(RelativeSourceMode.FindAncestor, typeof(Window), 1),
+                                UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
+                                Mode = BindingMode.TwoWay
+                            };
+                            BindingOperations.SetBinding(textBlock, FrameworkElement.WidthProperty, binding);
+                            
+                        
+                        }
+                    }
+                    else control.Width = colDef.Width;
                     if (ItemHeightProperty is not null && control.GetType() == typeof(TextBlock))
                     {
                         var itemHeight = (double)GetValue(ItemHeightProperty);
-                        control.Height = itemHeight;
+                        control.Height = itemHeight; 
                     }
                     else control.Height = colDef.Height;
                     control.MinWidth = colDef.MinWidth;
@@ -1612,7 +1622,7 @@ namespace CustomComponents.ListBoxExtensions
                         {
                             var binding = new Binding(colDef.WidthBinding)
                             {
-                                RelativeSource = new RelativeSource(RelativeSourceMode.FindAncestor, typeof(MultiListbox), 1)
+                                RelativeSource = new RelativeSource(RelativeSourceMode.FindAncestor, typeof(Window), 1)
                             };
                             BindingOperations.SetBinding(headerColumn, System.Windows.Controls.ColumnDefinition.WidthProperty, binding);
                         }
@@ -1631,7 +1641,11 @@ namespace CustomComponents.ListBoxExtensions
                     var itemColumn = new System.Windows.Controls.ColumnDefinition();
                     if (!string.IsNullOrEmpty(colDef.WidthBinding))
                     {
-                        // Width binding will be set in MultiListbox_Loaded
+                        var binding = new Binding(colDef.WidthBinding)
+                        {
+                            RelativeSource = new RelativeSource(RelativeSourceMode.FindAncestor, typeof(Window), 1)
+                        };
+                        BindingOperations.SetBinding(itemColumn, System.Windows.Controls.ColumnDefinition.WidthProperty, binding);
                     }
                     else
                     {
