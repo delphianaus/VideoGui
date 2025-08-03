@@ -383,9 +383,12 @@ namespace VideoGui.Models
     public class CustomParams_SetFilterId
     {
         public int FilterId { get; set; } = 0;
-        public CustomParams_SetFilterId(int _FilterId)
+
+        public int LinkedId { get; set; } = 0;
+        public CustomParams_SetFilterId(int _FilterId, int _LinkedId=-1)
         {
             FilterId = _FilterId;
+            LinkedId = _LinkedId;
         }
     }
 

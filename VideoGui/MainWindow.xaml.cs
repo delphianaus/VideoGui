@@ -1812,7 +1812,8 @@ namespace VideoGui
                 else if (tld is CustomParams_TitleSelect cts)
                 {
                     TitleId = cts.UploadsReleaseInfo.TitleId;
-                    directoryTitleDescEditor.DoTitleSelectCreate(TitleId);
+                    directoryTitleDescEditor.DoTitleSelectCreate(TitleId, 
+                        cts.UploadsReleaseInfo.Id);
                     string sql = "SELECT TITLEID FROM SHORTSDIRECTORY WHERE ID = @ID;";
                     int id = connectionString.ExecuteScalar(sql, [("@ID", cts.UploadsReleaseInfo.Id)]).ToInt(-1);
                     if (id != -1) cts.UploadsReleaseInfo.TitleId = TitleId;
@@ -2472,6 +2473,7 @@ namespace VideoGui
                     case CustomParams_SetFilterId:
                         {
                             TitleTagsSrc = (tld as CustomParams_SetFilterId).FilterId;
+                            ShortsDirectoryIndex = TitleTagsSrc;
                             break;
                         }
                     case CustomParams_InsertTags:
@@ -2621,38 +2623,13 @@ namespace VideoGui
                                     key?.Close();
                                     BaseStrX = rootfolder.Split(@"\").ToList().LastOrDefault();
                                 }
-                                ShortsDirectoryIndex = EditableshortsDirectoryList.Where
-                                    (item => item.Directory == BaseStrX).FirstOrDefault(new ShortsDirectory(-1, "")).Id;
-                                TitleId = InsertUpdateTitle(BaseStrX, ShortsDirectoryIndex);
-                                DescId = InsertUpdateDescription(BaseStrX, ShortsDirectoryIndex);
                                 if (ShortsDirectoryIndex == -1)
                                 {
-                                    int IDX = InsertUpdateShorts(BaseStrX, TitleId, DescId);
-                                    ShortsDirectoryIndex = IDX;
-                                    string linkedtitleids = "", linkeddescids = "";
-                                    CancellationTokenSource cts = new CancellationTokenSource();
-                                    connectionString.ExecuteReader(GetUploadReleaseBuilderSql(ShortsDirectoryIndex), (FbDataReader r) =>
-                                    {
-                                        linkedtitleids = (r["LINKEDTITLEIDS"] is string ldid1 ? ldid1 : "");
-                                        linkeddescids = (r["LINKEDDESCIDS"] is string lditt ? lditt : "");
-                                        cts.Cancel();
-                                    });
-                                    if (linkedtitleids != "") selectShortUpload.UpdateTitleId(ShortsDirectoryIndex, linkedtitleids);
-                                    if (linkeddescids != "") selectShortUpload.UpdateDescId(ShortsDirectoryIndex, linkeddescids);
+                                    ShortsDirectoryIndex = EditableshortsDirectoryList.Where
+                                        (item => item.Directory == BaseStrX).FirstOrDefault(new ShortsDirectory(-1, "")).Id;
                                 }
-                                else
-                                {
-                                    string linkedtitleids2 = "", linkeddescids2 = "";
-                                    CancellationTokenSource cts = new CancellationTokenSource();
-                                    connectionString.ExecuteReader(GetUploadReleaseBuilderSql(ShortsDirectoryIndex), (FbDataReader r) =>
-                                    {
-                                        linkedtitleids2 = (r["LINKEDTITLEIDS"] is string ldid ? ldid : "");
-                                        linkeddescids2 = (r["LINKEDDESCIDS"] is string ldit ? ldit : "");
-                                        cts.Cancel();
-                                    });
-                                    selectShortUpload.UpdateTitleId(ShortsDirectoryIndex, linkedtitleids2);
-                                    selectShortUpload.UpdateDescId(ShortsDirectoryIndex, linkeddescids2);
-                                }
+                                TitleId = InsertUpdateTitle(BaseStrX, ShortsDirectoryIndex);
+                                DescId = InsertUpdateDescription(BaseStrX, ShortsDirectoryIndex);
 
                                 BaseTitle = BaseStrX;
                                 frmTitleSelect.BaseTitle = $"{BaseTitle}".ToPascalCase();
@@ -2666,7 +2643,7 @@ namespace VideoGui
 
                             frmTitleSelect.TitleId = TitleId;
                             string BaseStr = frmTitleSelect.BaseTitle + " ";
-                            TitleTagsSrc = ShortsDirectoryIndex;
+                            ///TitleTagsSrc = ShortsDirectoryIndex;
                             int Tid = EditableshortsDirectoryList.Where(s => s.Id == ShortsDirectoryIndex).FirstOrDefault().TitleId;
                             foreach (var item in TitleTagsList.Where(s => s.GroupId == Tid))
                             {
@@ -2692,10 +2669,10 @@ namespace VideoGui
                             frmTitleSelect.txtTitle.Text = BaseStr.Trim();
                             frmTitleSelect.lblTitleLength.Content = BaseStr.Trim().Length;
 
-                            if (TitlesList.Where(s => s.Id == Tid).Count() > 0)
+                            if (TitlesList.Where(s => s.Id == TitleId).Count() > 0)
                             {
 
-                                TitleTagsSrc = TitlesList.Where(s => s.Id == Tid).FirstOrDefault().Id;
+                                TitleTagsSrc = TitlesList.Where(s => s.Id == TitleId).FirstOrDefault().Id;
                                 titletagsViewSource.SortDescriptions.Add(new SortDescription("Description", ListSortDirection.Ascending));
                                 titletagsViewSource.Source = TitleTagsList;
                                 titletagsViewSource.Filter += (object sender, FilterEventArgs e) =>
@@ -3014,10 +2991,40 @@ namespace VideoGui
                             cts.Cancel();
                         });
                     }
+                    else
+                    {
+                        sql = "SELECT ID FROM TITLES WHERE DESCRIPTION = @P0 AND ISTAG = @P1 AND GROUPID = @P2";
+                        id = connectionString.ExecuteScalar(sql, [("@P0", Description),
+                                ("@P1", false), ("@P2", -1)]).ToInt(-1);
+
+                        if (id != -1)
+                        {
+                            sql = "UPDATE TITLES SET GROUPID = @P0 WHERE ID = @P1";
+                            connectionString.ExecuteScalar(sql, [("@P0", GroupId), ("@P1", id)]);
+                            foreach (var p in TitlesList.Where(p => p.Id == id))
+                            {
+                                p.GroupId = GroupId;
+                                break;
+                            }
+                        }
+                    }
                 }
-                else TitleId = id;
+                else
+                {
+                    TitleId = id;
 
-
+                    int groupid = TitlesList.Where(t => t.Description.ToLower() == Description.ToLower()).FirstOrDefault(new Titles(-1)).GroupId;
+                    if (groupid == -1)
+                    {
+                        sql = "UPDATE TITLES SET GROUPID = @P0 WHERE ID = @P1";
+                        connectionString.ExecuteScalar(sql, [("@P0", GroupId), ("@P1", id)]);
+                        foreach (var p in TitlesList.Where(p => p.Id == id))
+                        {
+                            p.GroupId = GroupId;
+                            break;
+                        }
+                    }
+                }
 
                 return id;
             }

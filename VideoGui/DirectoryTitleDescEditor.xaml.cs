@@ -80,11 +80,12 @@ namespace VideoGui
             }
         }
 
-        public void DoTitleSelectCreate(int TitleId = -1)
+        public void DoTitleSelectCreate(int TitleId = -1, int LinkedId = -1)
         {
             try
             {
-                var _DoTitleSelectFrm = new TitleSelectFrm(DoOnFinishTitleSelect, ModuleCallBack, true, TitleId);
+                var _DoTitleSelectFrm = new TitleSelectFrm(DoOnFinishTitleSelect, 
+                    ModuleCallBack, true, TitleId, LinkedId);
                 Hide();
                 _DoTitleSelectFrm.ShowActivated = true;
                 _DoTitleSelectFrm.Show();

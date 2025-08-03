@@ -21,7 +21,7 @@ namespace VideoGui
         public ShowEditor _ShowEditor;
         OnFinish OnFinished;
         databasehook<object> dbhookup;
-        public int TitleId = -1;
+        public int TitleId = -1, LinkedId = -1;
         string Title = "";
         string TagTitle = "";
         public string BaseTitle = "";
@@ -29,7 +29,7 @@ namespace VideoGui
 
         bool IsUploadsBuilder = false;
         public TitleSelectFrm(OnFinishIdObj OnFinished, databasehook<Object> dbhook,
-            bool _IsUploadsBuilder = false, int _TitleId = -1)
+            bool _IsUploadsBuilder = false, int _TitleId = -1, int _LinkedId = -1)
         {
             try
             {
@@ -39,8 +39,9 @@ namespace VideoGui
                 IsUploadsBuilder = _IsUploadsBuilder;
                 InitializeComponent();
                 TitleId = _TitleId;
-                dbhookup?.Invoke(this, new CustomParams_SetFilterId(_TitleId));
-
+                LinkedId = _LinkedId;
+                dbhookup?.Invoke(this, new CustomParams_SetFilterId(_LinkedId, _TitleId));
+                dbhookup?.Invoke(this, new CustomParams_Initialize(IsUploadsBuilder));  
                 /*txtTitle.Text = _Title; Handle this in onload?.Invoke.
                 BaseTitle = _Title;
                 txtBaseTitle.Content = $"({_Title})";*/

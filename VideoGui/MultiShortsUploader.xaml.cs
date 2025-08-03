@@ -360,7 +360,7 @@ namespace VideoGui
             {
                 return "SELECT S.ID, S.DIRECTORYNAME, S.TITLEID, S.DESCID, " +
                        "(SELECT LIST(TAGID, ',') FROM TITLETAGS " +
-                       " WHERE GROUPID = S.ID) AS LINKEDTITLEIDS, " +
+                       " WHERE GROUPID = S.TITLEID) AS LINKEDTITLEIDS, " +
                        " (SELECT LIST(ID,',') FROM DESCRIPTIONS " +
                        "WHERE ID = S.DESCID) AS LINKEDDESCIDS " +
                        "FROM SHORTSDIRECTORY S" +
@@ -378,6 +378,7 @@ namespace VideoGui
             {
                 if (sender is ToggleButton t && t.DataContext is SelectedShortsDirectories info)
                 {
+                    e.Handled = true;
                     LinkedId = info.LinkedShortsDirectoryId;
                     t.IsChecked = info.IsDescAvailable;
                     DoDescSelectCreate(info.DescId);
@@ -394,9 +395,9 @@ namespace VideoGui
             {
                 if (sender is ToggleButton t && t.DataContext is SelectedShortsDirectories info)
                 {
-                    LinkedId = info.LinkedShortsDirectoryId;
-                    dbInit?.Invoke(this, new CustomParams_SetIndex(LinkedId));
-                    DoTitleSelectCreate(info.TitleId);
+                    e.Handled = true;
+                    dbInit?.Invoke(this, new CustomParams_SetIndex(info.LinkedShortsDirectoryId));
+                    DoTitleSelectCreate(info.TitleId, info.LinkedShortsDirectoryId);
                 }
             }
             catch (Exception ex)
@@ -404,12 +405,14 @@ namespace VideoGui
                 ex.LogWrite($"Title_ToggleButtonClick {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-        public void DoTitleSelectCreate(int TitleId = -1)
+        public void DoTitleSelectCreate(int TitleId = -1, int LinkedId = -1)
         {
             try
             {
                 SelectedTitleId = TitleId;
-                var _DoTitleSelectFrm = new TitleSelectFrm(DoOnFinishTitleSelect, dbInit, true, TitleId);
+                
+                var _DoTitleSelectFrm = new TitleSelectFrm(DoOnFinishTitleSelect, 
+                    dbInit, true, TitleId, LinkedId);
                 Hide();
                 _DoTitleSelectFrm.Show();
             }
@@ -422,17 +425,12 @@ namespace VideoGui
         {
             try
             {
-                if (DoTitleSelectFrm is not null && DoTitleSelectFrm.IsClosed)
+                if (sender is TitleSelectFrm _DoTitleSelectFrm && _DoTitleSelectFrm.IsClosed)
                 {
                     bool found = false;
-                    RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
-                    string dir = FindUploadPath();
-                    key?.Close();
-                    string DirName = dir.Split(@"\").ToList().LastOrDefault();
-                    var r = dbInit?.Invoke(this, new CustomParams_LookUpId(DirName));
-                    ShortsIndex = (r is not null) ? r.ToInt(-1) : ShortsIndex;
+                    ShortsIndex = _DoTitleSelectFrm.LinkedId;
                     string sql = "";
-                    if ((SelectedTitleId != DoTitleSelectFrm.TitleId))
+                    if ((SelectedTitleId != _DoTitleSelectFrm.TitleId))
                     {
                         sql = "UPDATE SHORTSDIRECTORY SET TITLEID = @TITLEID WHERE ID = @ID";
                         connectionStr.ExecuteNonQuery(sql, [("@ID", ShortsIndex), ("@TITLEID", DoTitleSelectFrm.TitleId)]);
@@ -449,7 +447,7 @@ namespace VideoGui
                     {
                         sch.LinkedTitleId = linkedtitleid;
                     }
-                    DoTitleSelectFrm = null;
+                    _DoTitleSelectFrm = null;
                 }
                 Show();
             }
