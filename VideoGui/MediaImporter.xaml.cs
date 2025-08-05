@@ -42,39 +42,45 @@ namespace VideoGui
     {
         List<(string, TimeSpan, string, string)> MediaInfoTimes = new List<(string, TimeSpan, string, string)>();
         List<(TimeSpan, string, string)> MediaInfoTimesSort = new List<(TimeSpan, string, string)>();
-        //ObservableCollection<FileInfoGoPro> FileRenamer = new ObservableCollection<FileInfoGoPro>();
         List<string> files = new List<string>();
-        FileImporterClear File_Importer_Clear;
-        ImportRecordAdd Import_Record_Add;
-        ReOrderFiles DoReOrderFiles;
-        CheckImports Check_Imports;
-        ClearTimes DoClearTimes;
-        SetFromTime DoSetFromTime;
-        SetToTime DoSetToTime;
-        //SetLists Set_Lists;
-        FileRenamerClear DoFileRenamerClear;
+        //FileImporterClear File_Importer_Clear;
         int MaxFile = 0;
         private bool _isFirstResize = true;
         databasehook<object> ModuleCallBack;
-        bool IsFirstResize = true, Ready = false;
+        bool IsFirstResize = true, Ready = false, IsClosed = false, IsClosing = false;
         DispatcherTimer LocationChangedTimer = new DispatcherTimer();
         DispatcherTimer LocationChanger = new DispatcherTimer();
         double DockPanelWidth = 348;
-        public MediaImporter(databasehook<object> _ModuleCallback, FileImporterClear _FileImporterClear,
-            ImportRecordAdd _ImportRec, CheckImports _CheckImports,
-            ReOrderFiles _ReOrderFiles, ClearTimes doClearTimes,
-            SetFromTime doSetFromTime, SetToTime doSetToTime)
+
+        public static readonly DependencyProperty FileNameWidthProperty =
+            DependencyProperty.Register(nameof(FileNameWidth), typeof(double),
+                typeof(MediaImporter), new FrameworkPropertyMetadata(140.0));
+        
+        public double FileNameWidth
+        {
+            get => (double)GetValue(FileNameWidthProperty);
+            set => SetValue(FileNameWidthProperty, value);
+        }
+        public static readonly DependencyProperty SuggestedWidthProperty =
+             DependencyProperty.Register(nameof(SuggestedWidth), typeof(double), 
+        typeof(MediaImporter), new PropertyMetadata(140.0));
+        public double SuggestedWidth
+        {
+            get => (double)GetValue(SuggestedWidthProperty);
+            set => SetValue(SuggestedWidthProperty, value);
+        }
+        public MediaImporter(databasehook<object> _ModuleCallback, OnFinishIdObj _DoOnFinish)
         {
             InitializeComponent();
-            File_Importer_Clear = _FileImporterClear;
-            Import_Record_Add = _ImportRec;
-            Check_Imports = _CheckImports;
             ModuleCallBack = _ModuleCallback;
-            //Set_Lists = _SetLists;
-            DoReOrderFiles = _ReOrderFiles;
-            DoClearTimes = doClearTimes;
-            DoSetFromTime = doSetFromTime;
-            DoSetToTime = doSetToTime;
+            Closing += (s, e) => { IsClosing = true; };
+            Closed += (s, e) =>
+            {
+                IsClosed = true;
+                IsClosing = false;
+                _DoOnFinish?.Invoke(this, -1);
+            };
+
             LocationChanger.Interval = TimeSpan.FromMilliseconds(10);
             LocationChanger.Tick += LocationChanger_Tick;
             LocationChanger.Start();
@@ -110,8 +116,7 @@ namespace VideoGui
                 Top = (Top != _top && _top != 0) ? _top : Top;
                 Width = (ActualWidth != _width && _width != 0) ? _width : Width;
                 Height = (ActualHeight != _height && _height != 0) ? _height : Height;
-                SetControls(Width);
-                SetControls(Height, false);
+                HandleResize(Width, Height , true, true);
 
 
                 LoadingPanel.Visibility = Visibility.Collapsed;
@@ -131,36 +136,44 @@ namespace VideoGui
                 ex.LogWrite($"LocationChanger_Tick {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-        private void SetControls(double _v, bool IsWidth = true)
+        private void HandleResize(double _width, double _height, bool IsWidth = true, bool IsHeight = true)
         {
             try
             {
-                if (IsWidth)
+                if (IsLoaded && Ready)
                 {
-                    MainGrid.Width = _v;
-                    LoadingPanel.Width = _v;
-                    MainContent.Width = _v;
-                    MainScroller.Width = _v;
-                    brdFileInfo.Width = _v - 25;
-                    brdControls.Width = brdFileInfo.Width;
-                    msuSchedules.Width = _v - 113;
-                    Canvas.SetLeft(brdt2, _v - 109);
-                    Canvas.SetLeft(btnSelectSourceDir, _v - 55);
-                    Canvas.SetLeft(btnClose, _v - 124);
-                    txtsrcdir.Width = _v - 180;
-                }
-                else
-                {
-                    MainGrid.Height = _v;
-                    LoadingPanel.Height = _v;
-                    MainScroller.Height = _v;
-                    MainContent.Height = _v;
-                    msuSchedules.Height = _v - 152;
-                    Canvas.SetTop(brdControls, _v - 93);
-                    brdTControls.Height = _v - 161;
-                    cnvControls.Height = brdTControls.Height;
-                    Canvas.SetTop(btnMove, _v - 196);
-                    Canvas.SetTop(btnSelectAll, _v - 227);
+                    if (IsWidth)
+                    {
+                        MainGrid.Width = _width;
+                        LoadingPanel.Width = _width;
+                        MainContent.Width = _width;
+                        MainScroller.Width = _width;
+                        brdFileInfo.Width = _width - 25;
+                        brdControls.Width = brdFileInfo.Width;
+                        msuSchedules.Width = _width - 113;
+                        Canvas.SetLeft(brdt2, _width - 109);
+                        Canvas.SetLeft(btnSelectSourceDir, _width - 55);
+                        Canvas.SetLeft(btnClose, _width - 124);
+                        txtsrcdir.Width = _width - 180;
+                        double myWidth = (_width - 200 -120) / 2;
+                        if (myWidth < 140) myWidth = 140;
+                        GridLength gl = new GridLength(myWidth, GridUnitType.Pixel);
+                        SuggestedWidth = myWidth;
+                        FileNameWidth = myWidth;
+                    }
+                    if (IsHeight)
+                    {
+                        MainGrid.Height = _height;
+                        LoadingPanel.Height = _height;
+                        MainScroller.Height = _height;
+                        MainContent.Height = _height;
+                        msuSchedules.Height = _height - 152;
+                        Canvas.SetTop(brdControls, _height - 93);
+                        brdTControls.Height = _height - 161;
+                        cnvControls.Height = brdTControls.Height;
+                        Canvas.SetTop(btnMove, _height - 196);
+                        Canvas.SetTop(btnSelectAll, _height - 227);
+                    }
                 }
             }
             catch (Exception ex)
@@ -182,15 +195,7 @@ namespace VideoGui
                         LoadingPanel.Visibility = Visibility.Collapsed;
                         MainContent.Visibility = Visibility.Visible;
                     }
-
-                    if (e.WidthChanged)
-                    {
-                        SetControls(e.NewSize.Width);
-                    }
-                    if (e.HeightChanged)
-                    {
-                        SetControls(e.NewSize.Height, false);
-                    }
+                    HandleResize(e.NewSize.Width, e.NewSize.Height, e.WidthChanged, e.HeightChanged);
                     if (e.HeightChanged || e.WidthChanged)
                     {
                         RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
@@ -198,9 +203,8 @@ namespace VideoGui
                         key?.SetValue("MIHeight", ActualHeight);
                         key?.Close();
                     }
+                    e.Handled = true;
                 }
-
-
             }
             catch (Exception ex)
             {
@@ -247,8 +251,7 @@ namespace VideoGui
             {
                 MediaInfoTimes.Clear();
                 MediaInfoTimesSort.Clear();
-                File_Importer_Clear?.Invoke();
-                DoClearTimes?.Invoke();
+                ModuleCallBack?.Invoke(this, new CustomParams_ClearCheck(ClearModes.ClearTimes));
                 files = Directory.EnumerateFiles(SourceDir, "*.mp4", SearchOption.AllDirectories).ToList();
                 foreach (string file in files)
                 {
@@ -296,15 +299,11 @@ namespace VideoGui
                 }
                 foreach (var f in MediaInfoTimes)
                 {
-                    Import_Record_Add?.Invoke(f.Item3, f.Item4, f.Item2);
+                    ModuleCallBack?.Invoke(this, new CustomParams_ImportRecord(f.Item3, f.Item4, f.Item2));
                     Thread.Sleep(15);
                 }
-                bool EnableButton = false;
-                if (Check_Imports is not null)
-                {
-                    EnableButton = !Check_Imports.Invoke();
-                }
-                btnRename.IsEnabled = EnableButton;
+                btnRename.IsEnabled = ModuleCallBack.Invoke(this,
+                   new CustomParams_ClearCheck(ClearModes.CheckImports)) is bool b ? b : false;
             }
             catch (Exception ex)
             {
@@ -370,7 +369,7 @@ namespace VideoGui
         {
             try
             {
-                DoReOrderFiles?.Invoke(txtsrcdir.Text);
+                ModuleCallBack?.Invoke(this, new CustomParams_ReOrderFiles(txtsrcdir.Text));
                 System.Windows.MessageBox.Show("Done");
                 GetFiles(txtsrcdir.Text).ConfigureAwait(false);
             }
@@ -435,8 +434,8 @@ namespace VideoGui
                     var p = msuSchedules.SelectedItems[msuSchedules.SelectedItems.Count - 1];
                     if (p is FileInfoGoPro fpgx)
                     {
-                        DoSetToTime?.Invoke(fpgx.TimeData);
-                        txtEnd.Text = fpgx.TimeData.ToFFmpeg().Replace(".000", "");
+                        TimeSpan result = ModuleCallBack?.Invoke(this, new CustomParams_SetTimeSpan(fpgx.TimeData, TimeSpanMode.ToTime)) is TimeSpan s ? s : TimeSpan.Zero;
+                        txtEnd.Text = result.ToFFmpeg().Replace(".000", "");
                         Thread.Sleep(100);
                     }
                 }
@@ -470,8 +469,8 @@ namespace VideoGui
                     var p = msuSchedules.SelectedItems[0];
                     if (p is FileInfoGoPro fpgx)
                     {
-                        DoSetFromTime?.Invoke(fpgx.TimeData);
-                        txtStart.Text = fpgx.TimeData.ToFFmpeg().Replace(".000", "");
+                        TimeSpan result = ModuleCallBack?.Invoke(this, new CustomParams_SetTimeSpan(fpgx.TimeData, TimeSpanMode.FromTime)) is TimeSpan s ? s : TimeSpan.Zero;
+                        txtStart.Text = result.ToFFmpeg().Replace(".000", "");
                         Thread.Sleep(100);
                     }
                 }
@@ -486,7 +485,7 @@ namespace VideoGui
         {
             try
             {
-                DoClearTimes?.Invoke();
+                ModuleCallBack?.Invoke(this, new CustomParams_ClearCheck(ClearModes.ClearTimes));
             }
             catch (Exception ex)
             {
@@ -565,10 +564,6 @@ namespace VideoGui
             }
         }
 
-
-
-
-
         private void btnSelectAll_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -621,7 +616,7 @@ namespace VideoGui
         {
             try
             {
-                DoClearTimes?.Invoke();
+                ModuleCallBack?.Invoke(this, new CustomParams_ClearCheck(ClearModes.ClearTimes));
                 txtStart.Text = string.Empty;
                 txtEnd.Text = string.Empty;
             }
@@ -638,7 +633,8 @@ namespace VideoGui
                 if (e.Key == Key.Enter)
                 {
                     var data = txtStart.Text.FromStrToTimeSpan();
-                    DoSetFromTime?.Invoke(data);
+                    ModuleCallBack?.Invoke(this, 
+                        new CustomParams_SetTimeSpan(data, TimeSpanMode.FromTime));
                 }
             }
             catch (Exception ex)
@@ -653,8 +649,8 @@ namespace VideoGui
             {
                 if (e.Key == Key.Enter)
                 {
-                    var data = txtEnd.Text.FromStrToTimeSpan();
-                    DoSetToTime?.Invoke(data);
+                    ModuleCallBack?.Invoke(this, 
+                        new CustomParams_SetTimeSpan(txtEnd.Text.FromStrToTimeSpan(), TimeSpanMode.ToTime));
                 }
             }
             catch (Exception ex)
@@ -702,7 +698,8 @@ namespace VideoGui
                 {
                     var t = DoCalcs(txtStart.Text);
                     txtStart.Text = t.ToFFmpeg().Replace(".000", "");
-                    DoSetFromTime?.Invoke(t);
+                    ModuleCallBack?.Invoke(this,
+                         new CustomParams_SetTimeSpan(t, TimeSpanMode.FromTime));
                 }
             }
             catch (Exception ex)
@@ -719,7 +716,7 @@ namespace VideoGui
                 {
                     var t = DoCalcs(txtEnd.Text);
                     txtEnd.Text = t.ToFFmpeg().Replace(".000", "");
-                    DoSetToTime?.Invoke(t);
+                    ModuleCallBack?.Invoke(this, new CustomParams_SetTimeSpan(t, TimeSpanMode.ToTime));
                 }
             }
             catch (Exception ex)
@@ -734,8 +731,9 @@ namespace VideoGui
             {
                 if (e.OriginalSource is MenuItem mnu && mnu.DataContext is FileInfoGoPro fpgx)
                 {
-                    DoSetFromTime?.Invoke(fpgx.TimeData);
-                    txtStart.Text = fpgx.TimeData.ToFFmpeg().Replace(".000", "");
+                    TimeSpan result = ModuleCallBack?.Invoke(this, 
+                        new CustomParams_SetTimeSpan(fpgx.TimeData, TimeSpanMode.FromTime)) is TimeSpan s ? s : TimeSpan.Zero;
+                    txtStart.Text = result.ToFFmpeg().Replace(".000", "");
                     Thread.Sleep(100);
                 }
             }
@@ -751,8 +749,9 @@ namespace VideoGui
             {
                 if (e.OriginalSource is MenuItem mnu && mnu.DataContext is FileInfoGoPro fpgx)
                 {
-                    DoSetToTime?.Invoke(fpgx.TimeData);
-                    txtEnd.Text = fpgx.TimeData.ToFFmpeg().Replace(".000", "");
+                    TimeSpan Result = ModuleCallBack?.Invoke(this,
+                        new CustomParams_SetTimeSpan(fpgx.TimeData, TimeSpanMode.ToTime)) is TimeSpan s ? s : TimeSpan.Zero;
+                    txtEnd.Text = Result.ToFFmpeg().Replace(".000", "");
                     Thread.Sleep(100);
                 }
             }

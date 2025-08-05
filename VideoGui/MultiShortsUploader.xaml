@@ -60,7 +60,7 @@
                                   HorizontalAlignment="Left" Height="154">
                     <MSU:MultiListbox.ColumnDefinitions>
                         <MSU:MultiListboxColumnDefinition HeaderText="Shorts Directory" 
-                      DataField="DirectoryName" Width="400" ComponentType="TextBlock"/>
+                      DataField="DirectoryName" WidthBinding="DirectoryNameWidth" ComponentType="TextBlock"/>
                         <MSU:MultiListboxColumnDefinition HeaderText="Number Of Shorts" Width="105" 
                    ContentHorizontalAlignment="Center" DataField="NumberOfShorts" ComponentType="TextBlock"/>
                     </MSU:MultiListbox.ColumnDefinitions>
@@ -79,10 +79,10 @@
                    ComponentType="TextBlock"/>
                         <MSU:MultiListboxColumnDefinition HeaderText="Shorts Directory" 
                  ContentVerticalAlignment="Center" 
-                 DataField="DirectoryName,AutoFontWeight,AutoFontColor" Width="375" 
+                 DataField="DirectoryName,AutoFontWeight,AutoFontColor" WidthBinding="DirectoryNameWidth"
                  BoundTo="Text,FontWeight,Foreground" ComponentType="TextBlock"/>
                         <MSU:MultiListboxColumnDefinition HeaderText="Number of Shorts" 
-                 ContentHorizontalAlignment="Center" 
+                 ContentHorizontalAlignment="Center"
                  DataField="NumberOfShorts,AutoFontWeight,AutoFontColor" 
                  BoundTo="Text,FontWeight,Foreground" Width="105" ComponentType="TextBlock"/>
                         <MSU:MultiListboxColumnDefinition HeaderText="Title" Width="50" 

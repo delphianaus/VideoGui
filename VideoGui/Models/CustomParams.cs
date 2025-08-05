@@ -50,7 +50,50 @@ namespace VideoGui.Models
             this.id = id;
         }
     }
-    
+
+    public class CustomParams_ImportRecord
+    {
+        public string f1 = "", f2 = "";
+        public TimeSpan t1 = new();
+        public CustomParams_ImportRecord(string f1, string f2, TimeSpan t1)
+        {
+            this.f1 = f1;
+            this.f2 = f2;
+            this.t1 = t1;
+        }
+    }
+
+    public class CustomParams_ReOrderFiles
+    {
+        public string filename = "";
+        public CustomParams_ReOrderFiles(string filename)
+        {
+            this.filename = filename;
+        }
+
+    }
+    public enum ClearModes { ClearImports, ClearTimes, CheckImports };
+
+    public class CustomParams_ClearCheck
+    {
+        public ClearModes mode = ClearModes.ClearImports;
+        public CustomParams_ClearCheck(ClearModes mode)
+        {
+            this.mode = mode;
+        }
+    }
+    public enum TimeSpanMode { ToTime, FromTime };
+    public class CustomParams_SetTimeSpan
+    {
+        public TimeSpan thistime = new();
+        public TimeSpanMode mode = TimeSpanMode.ToTime;
+        public CustomParams_SetTimeSpan(TimeSpan thistime, TimeSpanMode _mode)
+        {
+            this.thistime = thistime;
+            this.mode = _mode;
+        }
+
+    }
     public class CustomParams_SetActive
     {
         public int index = 0;

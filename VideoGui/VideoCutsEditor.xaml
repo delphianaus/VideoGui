@@ -5,10 +5,10 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:VideoGui" Loaded="frmVideoCutsEditor_Loaded"
         xmlns:MSU="clr-namespace:CustomComponents.ListBoxExtensions;assembly=CustomComponents"
-        mc:Ignorable="d" Closing="frmVideoCutsEditor_Closing" ResizeMode="CanResizeWithGrip" 
+        mc:Ignorable="d" ResizeMode="CanResizeWithGrip" 
         WindowStartupLocation="CenterScreen" WindowStyle="ToolWindow" 
         Title="Video Cuts Editor" Height="609" Width="721" SizeChanged="frmVideoCutsEditor_SizeChanged">
-    <Grid Margin="0,-2,0,0" >
+    <Grid Margin="0,0,0,0" >
         <Border x:Name="brdFileInfo" BorderThickness="2" BorderBrush="Black" 
                 Height="84" Margin="4,3,4,2" VerticalAlignment="Top">
             <Canvas x:Name="CnvMedialElements" Margin="0,3,0,0">
@@ -27,17 +27,18 @@
            VerticalAlignment="Top" VerticalContentAlignment="Bottom" 
            Height="409" HorizontalAlignment="Left" Margin="0,90,0,0">
             <MSU:MultiListbox.ColumnDefinitions>
-                <MSU:MultiListboxColumnDefinition HeaderText="File Name" 
-                  ContentVerticalAlignment="Top" DataField="FileName" 
-                  Width="255" ComponentType="TextBlock"/>
+                <MSU:MultiListboxColumnDefinition DataField="FileName" 
+                   WidthBinding="SrcFileNameWidth" HeaderText="File Name" 
+                  ContentVerticalAlignment="Top" 
+                   ComponentType="TextBlock"/>
                 <MSU:MultiListboxColumnDefinition HeaderText="Cut From" 
-                  ContentVerticalAlignment="Top" DataField="CutFrom" 
+                  ContentVerticalAlignment="Top" DataField="TimeFrom" 
                   Width="63" ComponentType="TextBlock"/>
                 <MSU:MultiListboxColumnDefinition HeaderText="Cut To" 
-                  ContentVerticalAlignment="Top" DataField="CutTo" 
+                  ContentVerticalAlignment="Top" DataField="TimeTo" 
                   Width="63" ComponentType="TextBlock"/>
                 <MSU:MultiListboxColumnDefinition HeaderText="Cut No" 
-                  ContentVerticalAlignment="Top" DataField="CutNo" 
+                  ContentVerticalAlignment="Top" DataField="CutTo" 
                   Width="50" ComponentType="TextBlock"/>
             </MSU:MultiListbox.ColumnDefinitions>
             <MSU:MultiListbox.ItemsContextMenu>

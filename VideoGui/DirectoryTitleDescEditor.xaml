@@ -34,8 +34,7 @@
                     <MSU:MultiListbox.ColumnDefinitions>
                         <MSU:MultiListboxColumnDefinition DataField="Id" Width="0" ComponentType="TextBlock"/>
                         <MSU:MultiListboxColumnDefinition DataField="Directory" 
-                         WidthBinding="SourceDirectory"
-                         HeaderText="Source Directory" ComponentType="TextBlock"/>
+                         WidthBinding="SourceDirectory" HeaderText="Source Directory" ComponentType="TextBlock"/>
                         <MSU:MultiListboxColumnDefinition HeaderText="Title Id" Width="50" 
                 Style="{StaticResource ToggleSetEditStyleID}" HeaderPadding="3,0,0,0"
                  Click="TitleToggle_Click" DataField="IsTitleAvailable" ComponentType="ToggleButton"/>

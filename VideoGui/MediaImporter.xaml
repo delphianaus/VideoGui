@@ -37,17 +37,16 @@
                 <MSU:MultiListbox x:Name="msuSchedules" ItemHeight="15"
            Header="Media" Width="625" Canvas.Top="0" 
            VerticalAlignment="Top" VerticalContentAlignment="Bottom" 
-           BorderBrush="Black" BorderThickness="2" Height="236" 
+           BorderBrush="Black" BorderThickness="2" Height="241" 
            HorizontalAlignment="Left" Canvas.Left="0" Margin="0,49,0,0">
                     <MSU:MultiListbox.ColumnDefinitions>
-                        <MSU:MultiListboxColumnDefinition DataField="FileName" Width="140" 
+                        <MSU:MultiListboxColumnDefinition DataField="FileName" WidthBinding="FileNameWidth"
                          ContentVerticalAlignment="Top" HeaderText="FileName" ComponentType="TextBlock"/>
-                        <MSU:MultiListboxColumnDefinition HeaderText="First FrameTime" 
-                  ContentVerticalAlignment="Top" 
-                  DataField="TimeData" Width="105" ComponentType="TextBlock"/>
-                        <MSU:MultiListboxColumnDefinition HeaderText="Suggested Filename" 
-                  ContentHorizontalAlignment="Center"  DataField="NewFile" ContentVerticalAlignment="Top"
-                  Width="140" ComponentType="TextBlock"/>
+                     <MSU:MultiListboxColumnDefinition HeaderText="First FrameTime" ContentVerticalAlignment="Top" 
+                         DataField="TimeData" Width="105" ComponentType="TextBlock"/>
+                     <MSU:MultiListboxColumnDefinition HeaderText="Suggested Filename"  
+                       WidthBinding="SuggestedWidth" ContentHorizontalAlignment="Center"
+                       DataField="NewFile" ContentVerticalAlignment="Top" ComponentType="TextBlock"/>
                     </MSU:MultiListbox.ColumnDefinitions>
                     <MSU:MultiListbox.ItemsContextMenu>
                         <ContextMenu>

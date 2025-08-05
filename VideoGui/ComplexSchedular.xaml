@@ -108,8 +108,9 @@
             <MSU:MultiListbox.ColumnDefinitions>
                 <MSU:MultiListboxColumnDefinition DataField="Id" Width="0" ComponentType="TextBlock"/>
                 <MSU:MultiListboxColumnDefinition DataField="SRC" HeaderText="Source Directory" 
-                     Width="200" ComponentType="TextBlock"/>
-                <MSU:MultiListboxColumnDefinition DataField="DEST" HeaderText="Destination File"/>
+                     WidthBinding="SrcFileNameWidth" ComponentType="TextBlock"/>
+                <MSU:MultiListboxColumnDefinition DataField="DEST" WidthBinding="DestFileNameWidth"
+                     HeaderText="Destination File"/>
                 <MSU:MultiListboxColumnDefinition DataField="Times" HeaderText="Times"
                      Width="107" ComponentType="TextBlock"/>
                 <MSU:MultiListboxColumnDefinition DataField="RecordAge" HeaderText="Age"

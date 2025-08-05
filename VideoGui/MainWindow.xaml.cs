@@ -68,6 +68,7 @@ using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Windows.Threading;
+using System.Xaml;
 using System.Xml.Linq;
 using VideoGui.ffmpeg;
 using VideoGui.ffmpeg.Events;
@@ -85,6 +86,7 @@ using static System.Net.Mime.MediaTypeNames;
 using static System.Net.WebRequestMethods;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using static System.Windows.Forms.AxHost;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.TextBox;
 using static VideoGui.ffmpeg.Probe.ProbeModel;
 using Application = System.Windows.Application;
@@ -93,6 +95,7 @@ using FolderBrowserDialog = FolderBrowserEx.FolderBrowserDialog;
 using Object = System.Object;
 using Path = System.IO.Path;
 using Stream = System.IO.Stream;
+using Window = System.Windows.Window;
 
 
 
@@ -204,7 +207,6 @@ namespace VideoGui
         public CollectionViewSource HistoricCollectionViewSource = new CollectionViewSource();
         public CollectionViewSource CurrentCollectionViewSource = new CollectionViewSource();
         public CollectionViewSource ImportCollectionViewSource = new CollectionViewSource();
-        public MediaImporter GoProMediaImporter = null;
 
         public ObservableCollection<ComplexJobList> ComplexProcessingJobList = new ObservableCollection<ComplexJobList>();
         public ObservableCollection<ComplexJobHistory> ComplexProcessingJobHistory = new ObservableCollection<ComplexJobHistory>();
@@ -367,7 +369,7 @@ namespace VideoGui
                         }
                     case MediaImporter goProMediaImporter:
                         {
-                            return formObjectHandler_GoProMediaImporter(tld, GoProMediaImporter);
+                            return formObjectHandler_GoProMediaImporter(tld, goProMediaImporter);
                         }
 
                 }
@@ -488,7 +490,7 @@ namespace VideoGui
         {
             try
             {
-                
+
                 if (tld is CustomParams_RemoveSchedule cpRS)
                 {
                     for (int i = SelectedShortsDirectoriesList.Count - 1; i >= 0; i--)
@@ -875,6 +877,60 @@ namespace VideoGui
         {
             try
             {
+                if (tld is CustomParams_ImportRecord cpIR)
+                {
+                    FileRenamer.Add(new FileInfoGoPro(cpIR.f1, cpIR.f2, cpIR.t1));
+                }
+                if (tld is CustomParams_ReOrderFiles cpref)
+                {
+                    foreach (var r in FileRenamer)
+                    {
+                        string Newfile = r.NewFile;
+                        string OldFile = r.FileName;
+                        if (Newfile != OldFile)
+                        {
+                            string newFile = System.IO.Path.Combine(cpref.filename, Newfile);
+                            string filename = System.IO.Path.Combine(cpref.filename, OldFile);
+                            System.IO.File.Move(filename, newFile);
+                        }
+                    }
+                }
+                if (tld is CustomParams_ClearCheck cpcc)
+                {
+                    if (cpcc.mode == ClearModes.ClearImports)
+                    {
+                        ObservableCollectionFilter?.ClearImportTimes();
+                    }
+                    else if (cpcc.mode == ClearModes.ClearTimes)
+                    {
+                        FileRenamer.Clear();
+                        ObservableCollectionFilter?.ClearImportTimes();
+                    }
+                    else if (cpcc.mode == ClearModes.CheckImports)
+                    {
+                        bool res = false;
+                        foreach (var f in FileRenamer)
+                        {
+                            if (f.FileName == f.NewFile)
+                            {
+                                res = true;
+                                break;
+                            }
+                        }
+                        return res;
+                    }
+                }
+                if (tld is CustomParams_SetTimeSpan cts)
+                {
+                    if (cts.mode == TimeSpanMode.ToTime)
+                    {
+                        ObservableCollectionFilter?.SetToTimeSpan(cts.thistime);
+                    }
+                    else if (cts.mode == TimeSpanMode.FromTime)
+                    {
+                        ObservableCollectionFilter?.SetFromTimeSpan(cts.thistime);
+                    }
+                }
                 if (tld is CustomParams_GetConnectionString CGCS)
                 {
                     CGCS.ConnectionString = connectionString;
@@ -887,7 +943,7 @@ namespace VideoGui
                         FileRenamer.Clear();
                         ObservableCollectionFilter.ImportCollectionViewSource.Source = FileRenamer;
                         ObservableCollectionFilter.ImportCollectionViewSource.View.Refresh();
-                        GoProMediaImporter.msuSchedules.ItemsSource = ObservableCollectionFilter.ImportCollectionViewSource.View;
+                        goProMediaImporter.msuSchedules.ItemsSource = ObservableCollectionFilter.ImportCollectionViewSource.View;
                         return true;
                     }
                 }
@@ -898,11 +954,9 @@ namespace VideoGui
                         FileRenamer.Clear();
                         ObservableCollectionFilter.ImportCollectionViewSource.Source = FileRenamer;
                         ObservableCollectionFilter.ImportCollectionViewSource.View.Refresh();
-                        if (GoProMediaImporter is not null && GoProMediaImporter.IsLoaded)
-                        {
-                            GoProMediaImporter.msuSchedules.ItemsSource = ObservableCollectionFilter.ImportCollectionViewSource.View;
-                            return true;
-                        }
+                        goProMediaImporter.msuSchedules.ItemsSource = ObservableCollectionFilter.ImportCollectionViewSource.View;
+                        return true;
+
                     }
                 }
                 return null;
@@ -1812,7 +1866,7 @@ namespace VideoGui
                 else if (tld is CustomParams_TitleSelect cts)
                 {
                     TitleId = cts.UploadsReleaseInfo.TitleId;
-                    directoryTitleDescEditor.DoTitleSelectCreate(TitleId, 
+                    directoryTitleDescEditor.DoTitleSelectCreate(TitleId,
                         cts.UploadsReleaseInfo.Id);
                     string sql = "SELECT TITLEID FROM SHORTSDIRECTORY WHERE ID = @ID;";
                     int id = connectionString.ExecuteScalar(sql, [("@ID", cts.UploadsReleaseInfo.Id)]).ToInt(-1);
@@ -10231,17 +10285,6 @@ namespace VideoGui
             }
         }
 
-        public void AddImportRecord(string f1, string f2, TimeSpan t1)
-        {
-            try
-            {
-                FileRenamer.Add(new FileInfoGoPro(f1, f2, t1));
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name + $" {ex.Message}");
-            }
-        }
 
 
         public bool CheckImportRecords()
@@ -10274,8 +10317,6 @@ namespace VideoGui
             {
                 FileRenamer.Clear();
                 ObservableCollectionFilter?.ClearImportTimes();
-
-
             }
             catch (Exception ex)
             {
@@ -10283,27 +10324,6 @@ namespace VideoGui
             }
         }
 
-        public void ReOrderFilesInc(string txtsrcdir)
-        {
-            try
-            {
-                foreach (var r in FileRenamer)
-                {
-                    string Newfile = r.NewFile;
-                    string OldFile = r.FileName;
-                    if (Newfile != OldFile)
-                    {
-                        string newFile = System.IO.Path.Combine(txtsrcdir, Newfile);
-                        string filename = System.IO.Path.Combine(txtsrcdir, OldFile);
-                        System.IO.File.Move(filename, newFile);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
-            }
-        }
 
         public void SetImportFromTime(TimeSpan span)
         {
@@ -10363,6 +10383,7 @@ namespace VideoGui
             try
             {
                 ObservableCollectionFilter?.SetToTimeSpan(span);
+
             }
             catch (Exception ex)
             {
@@ -10726,31 +10747,35 @@ namespace VideoGui
             }
         }
 
-        public void ClearImportTimes()
-        {
-            try
-            {
-                ObservableCollectionFilter?.ClearImportTimes();
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
-            }
-        }
+
         public void DoImporter()
         {
             try
             {
                 Hide();
-                GoProMediaImporter = new MediaImporter(ModuleCallback, FileImportClear,
-                    AddImportRecord, CheckImportRecords, ReOrderFilesInc, ClearImportTimes,
-                    SetImportFromTime, SetImportToTime);
-                GoProMediaImporter.ShowDialog();
-                Show();
+                var _GoProMediaImporter = new MediaImporter(ModuleCallback, MediaImportOnFinish);
+                _GoProMediaImporter.ShowActivated = true;
+                _GoProMediaImporter.Show();
             }
             catch (Exception ex)
             {
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name + $" {ex.Message}");
+            }
+        }
+
+        private void MediaImportOnFinish(object ThisForm, int id)
+        {
+            try
+            {
+                if (ThisForm is MediaImporter mi)
+                {
+                    Show();
+                    mi = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"MediaImportOnFinish {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
         }
 
@@ -10952,22 +10977,15 @@ namespace VideoGui
             }
         }
 
-        private void DoVideoEditForm_Close()
+        private void DoVideoEditForm_Close(object sender, int i)
         {
             try
             {
-                var cancellationTokenSourcex = new CancellationTokenSource();
-                cancellationTokenSourcex.CancelAfter(2500);
-                while (frmVCE.IsActive)
-                {
-                    Thread.Sleep(100);
-                    if (cancellationTokenSourcex.IsCancellationRequested)
-                    {
-                        break;
-                    }
-                }
-                frmVCE = null;
                 Show();
+                if (sender is VideoCutsEditor frmVCE)
+                {
+                    frmVCE = null;
+                }
             }
             catch (Exception ex)
             {
@@ -11143,12 +11161,11 @@ namespace VideoGui
         {
             try
             {
-                if (frmVCE == null)
-                {
-                    frmVCE = new VideoCutsEditor(AddRecord, DoVideoEditForm_Close, connectionString);
-                    Hide();
-                    frmVCE.ShowDialog();
-                }
+                var _frmVCE = new VideoCutsEditor(AddRecord, DoVideoEditForm_Close, connectionString);
+                Hide();
+                _frmVCE.ShowActivated = true;
+                _frmVCE.Show();
+
             }
             catch (Exception ex)
             {

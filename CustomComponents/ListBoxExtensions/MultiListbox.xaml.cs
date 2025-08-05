@@ -140,35 +140,56 @@ namespace CustomComponents.ListBoxExtensions
 
         private void UpdateAdjustedWidth()
         {
-            // Subtract border thickness and a small buffer
-            if (brdmain != null)
+            try
             {
-                double borderWidth = brdmain.BorderThickness.Left + brdmain.BorderThickness.Right;
-                double marginWidth = BorderMargin.Left + BorderMargin.Right;
-                double buffer = 4; // Small buffer to prevent overflow
-
-                AdjustedWidth = Math.Max(0, brdmain.ActualWidth - borderWidth - marginWidth - buffer);
-                if (DebugOutput)
+                // Subtract border thickness and a small buffer
+                if (brdmain != null)
                 {
-                    Debug.WriteLine($"[MultiListbox] Border: {brdmain.ActualWidth}, BorderWidth: {borderWidth}, MarginWidth: {marginWidth}, Buffer: {buffer}, Adjusted: {AdjustedWidth}");
+                    double borderWidth = brdmain.BorderThickness.Left + brdmain.BorderThickness.Right;
+                    double marginWidth = BorderMargin.Left + BorderMargin.Right;
+                    double buffer = 4; // Small buffer to prevent overflow
+
+                    AdjustedWidth = Math.Max(0, brdmain.ActualWidth - borderWidth - marginWidth - buffer);
+                    if (DebugOutput)
+                    {
+                        Debug.WriteLine($"[MultiListbox] Border: {brdmain.ActualWidth}, BorderWidth: {borderWidth}, MarginWidth: {marginWidth}, Buffer: {buffer}, Adjusted: {AdjustedWidth}");
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error in UpdateAdjustedWidth: {ex}");
             }
         }
 
         private void UpdateAdjustedGroupBoxWidth()
         {
-            if (ActualWidth > 0)
+            try
             {
-                var margin = BorderMargin;
-                AdjustedGroupBoxWidth = Math.Max(0, ActualWidth - margin.Left - margin.Right - 5);
+                if (ActualWidth > 0)
+                {
+                    var margin = BorderMargin;
+                    AdjustedGroupBoxWidth = Math.Max(0, ActualWidth - margin.Left - margin.Right - 5);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error in UpdateAdjustedGroupBoxWidth: {ex}");
             }
         }
 
         protected override void OnRenderSizeChanged(SizeChangedInfo sizeInfo)
         {
-            base.OnRenderSizeChanged(sizeInfo);
-            UpdateAdjustedGroupBoxWidth();
-            UpdateItemsListBoxHeight();
+            try
+            {
+                base.OnRenderSizeChanged(sizeInfo);
+                UpdateAdjustedGroupBoxWidth();
+                UpdateItemsListBoxHeight();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error in OnRenderSizeChanged: {ex}");
+            }
         }
 
         public void SelectAll()
@@ -177,17 +198,24 @@ namespace CustomComponents.ListBoxExtensions
         }
         private void UpdateItemsListBoxHeight()
         {
-            if (lstBoxUploadItems != null)
+            try
             {
-                double headerHeight = 30; // Increased from 20 to 30
-                double scrollbarHeight = SystemParameters.HorizontalScrollBarHeight;
-                double extraPadding = 10; // Additional padding for better spacing
-                double availableHeight = ActualHeight - headerHeight - scrollbarHeight - extraPadding;
-                if (BorderMargin != null)
+                if (lstBoxUploadItems != null)
                 {
-                    availableHeight -= (BorderMargin.Top + BorderMargin.Bottom + 5); // Added 5 pixels of extra margin
+                    double headerHeight = 30; // Increased from 20 to 30
+                    double scrollbarHeight = SystemParameters.HorizontalScrollBarHeight;
+                    double extraPadding = 10; // Additional padding for better spacing
+                    double availableHeight = ActualHeight - headerHeight - scrollbarHeight - extraPadding;
+                    if (BorderMargin != null)
+                    {
+                        availableHeight -= (BorderMargin.Top + BorderMargin.Bottom + 5); // Added 5 pixels of extra margin
+                    }
+                    lstBoxUploadItems.Height = Math.Max(0, availableHeight);
                 }
-                lstBoxUploadItems.Height = Math.Max(0, availableHeight);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error in UpdateItemsListBoxHeight: {ex}");
             }
         }
 
@@ -205,12 +233,19 @@ namespace CustomComponents.ListBoxExtensions
 
         private static void OnItemMinHeightChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is MultiListbox listbox && listbox.ColumnDefinitions != null)
+            try
             {
-                foreach (var colDef in listbox.ColumnDefinitions)
+                if (d is MultiListbox listbox && listbox.ColumnDefinitions != null)
                 {
-                    colDef.MinHeight = (double)e.NewValue;
+                    foreach (var colDef in listbox.ColumnDefinitions)
+                    {
+                        colDef.MinHeight = (double)e.NewValue;
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error in OnItemMinHeightChanged: {ex}");
             }
         }
 
@@ -228,7 +263,7 @@ namespace CustomComponents.ListBoxExtensions
         }
 
 
-     
+
         public static readonly DependencyProperty ItemHeightProperty =
             DependencyProperty.Register(nameof(ItemHeight), typeof(double),
                 typeof(MultiListbox),
@@ -236,12 +271,19 @@ namespace CustomComponents.ListBoxExtensions
 
         private static void OnHeightChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is MultiListbox listbox && listbox.ColumnDefinitions != null)
+            try
             {
-                foreach (var colDef in listbox.ColumnDefinitions)
+                if (d is MultiListbox listbox && listbox.ColumnDefinitions != null)
                 {
-                    colDef.Height = (double)e.NewValue;
+                    foreach (var colDef in listbox.ColumnDefinitions)
+                    {
+                        colDef.Height = (double)e.NewValue;
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error in OnHeightChanged: {ex}");
             }
         }
 
@@ -326,63 +368,100 @@ namespace CustomComponents.ListBoxExtensions
 
         public MultiListbox()
         {
-            InitializeComponent();
-            ColumnDefinitions = new ObservableCollection<MultiListboxColumnDefinition>();
-            Loaded += MultiListbox_Loaded;
-            SizeChanged += MultiListbox_SizeChanged;
-            this.DataContext = this;
+            try
+            {
+                InitializeComponent();
+                ColumnDefinitions = new ObservableCollection<MultiListboxColumnDefinition>();
+                Loaded += MultiListbox_Loaded;
+                SizeChanged += MultiListbox_SizeChanged;
+                this.DataContext = this;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error in MultiListbox: {ex}");
+            }
         }
 
         private void InitializeScrollViewers()
         {
-            if (_headerScroller == null)
+            try
             {
-                _headerScroller = GetScrollViewer(lstTitles);
-                if (_headerScroller != null)
+                if (_headerScroller == null)
                 {
-                    _headerScroller.ScrollChanged += ScrollViewer_ScrollChanged;
+                    _headerScroller = GetScrollViewer(lstTitles);
+                    if (_headerScroller != null)
+                    {
+                        _headerScroller.ScrollChanged += ScrollViewer_ScrollChanged;
+                    }
+                }
+
+
+                if (_itemsScroller == null)
+                {
+                    _itemsScroller = GetScrollViewer(lstBoxUploadItems);
+                    if (_itemsScroller != null)
+                    {
+                        _itemsScroller.ScrollChanged += ScrollViewer_ScrollChanged;
+                    }
                 }
             }
-
-            if (_itemsScroller == null)
+            catch (Exception ex)
             {
-                _itemsScroller = GetScrollViewer(lstBoxUploadItems);
-                if (_itemsScroller != null)
-                {
-                    _itemsScroller.ScrollChanged += ScrollViewer_ScrollChanged;
-                }
+                Debug.WriteLine($"Error in InitializeScrollViewers: {ex}");
             }
         }
 
         private ScrollViewer GetScrollViewer(DependencyObject element)
         {
-            if (element == null) return null;
-            var child = VisualTreeHelper.GetChild(element, 0);
-            if (child == null) return null;
-            return child as ScrollViewer ?? GetScrollViewer(child);
+            try
+            {
+                if (element == null) return null;
+                var child = VisualTreeHelper.GetChild(element, 0);
+                if (child == null) return null;
+                return child as ScrollViewer ?? GetScrollViewer(child);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error in GetScrollViewer: {ex}");
+                return null;
+            }
         }
 
         private void ScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
         {
-            if (!_isScrolling && e.HorizontalChange != 0)
+            try
             {
-                _isScrolling = true;
-                var sourceScroller = sender as ScrollViewer;
-                var targetScroller = sourceScroller == _headerScroller ? _itemsScroller : _headerScroller;
-
-                if (targetScroller != null)
+                if (!_isScrolling && e.HorizontalChange != 0)
                 {
-                    targetScroller.ScrollToHorizontalOffset(e.HorizontalOffset);
+                    _isScrolling = true;
+                    var sourceScroller = sender as ScrollViewer;
+                    var targetScroller = sourceScroller == _headerScroller ? _itemsScroller : _headerScroller;
+
+                    if (targetScroller != null)
+                    {
+                        targetScroller.ScrollToHorizontalOffset(e.HorizontalOffset);
+                    }
+                    _isScrolling = false;
                 }
-                _isScrolling = false;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error in ScrollViewer_ScrollChanged: {ex}");
             }
         }
 
         private void MultiListbox_SizeChanged(object sender, SizeChangedEventArgs e)
         {
-            if (e.WidthChanged)
+            try
             {
-                UpdateAdjustedWidth();
+                if (e.WidthChanged)
+                {
+                    UpdateAdjustedWidth();
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error in MultiListbox_SizeChanged: {ex}");
             }
         }
 
@@ -444,7 +523,7 @@ namespace CustomComponents.ListBoxExtensions
             }
             catch (Exception ex)
             {
-                Debug.WriteLine(ex);
+                Debug.WriteLine($"Error in OnItemsSourceChanged: {ex}");
             }
         }
 
@@ -758,15 +837,23 @@ namespace CustomComponents.ListBoxExtensions
 
         private Type GetControlType(Type requestedType)
         {
-            // If no specific type is requested, default to TextBlock
-            if (requestedType == null)
-                return typeof(TextBlock);
+            try
+            {
+                // If no specific type is requested, default to TextBlock
+                if (requestedType == null)
+                    return typeof(TextBlock);
 
-            // Ensure the type is a FrameworkElement
-            if (!typeof(FrameworkElement).IsAssignableFrom(requestedType))
-                return typeof(TextBlock);
+                // Ensure the type is a FrameworkElement
+                if (!typeof(FrameworkElement).IsAssignableFrom(requestedType))
+                    return typeof(TextBlock);
 
-            return requestedType;
+                return requestedType;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error getting control type: {ex}");
+                return typeof(TextBlock);
+            }
         }
 
         private void AddControlToTemplate(FrameworkElementFactory gridFactory, MultiListboxColumnDefinition colDef, int columnIndex)
@@ -831,24 +918,32 @@ namespace CustomComponents.ListBoxExtensions
 
         private DependencyProperty GetMainBindingProperty(Type controlType)
         {
-            if (controlType == typeof(TextBox))
-                return TextBox.TextProperty;
-            if (controlType == typeof(TextBlock))
+            try
+            {
+                if (controlType == typeof(TextBox))
+                    return TextBox.TextProperty;
+                if (controlType == typeof(TextBlock))
+                    return TextBlock.TextProperty;
+                if (controlType == typeof(CheckBox))
+                    return CheckBox.IsCheckedProperty;
+                if (controlType == typeof(ComboBox))
+                    return ComboBox.SelectedItemProperty;
+                if (controlType == typeof(DatePicker))
+                    return DatePicker.SelectedDateProperty;
+
+                // If it's a derived type, check base types
+                if (typeof(TextBox).IsAssignableFrom(controlType))
+                    return TextBox.TextProperty;
+                if (typeof(ComboBox).IsAssignableFrom(controlType))
+                    return ComboBox.SelectedItemProperty;
+
+                return TextBlock.TextProperty; // Default to TextBlock.Text
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error getting main binding property: {ex}");
                 return TextBlock.TextProperty;
-            if (controlType == typeof(CheckBox))
-                return CheckBox.IsCheckedProperty;
-            if (controlType == typeof(ComboBox))
-                return ComboBox.SelectedItemProperty;
-            if (controlType == typeof(DatePicker))
-                return DatePicker.SelectedDateProperty;
-
-            // If it's a derived type, check base types
-            if (typeof(TextBox).IsAssignableFrom(controlType))
-                return TextBox.TextProperty;
-            if (typeof(ComboBox).IsAssignableFrom(controlType))
-                return ComboBox.SelectedItemProperty;
-
-            return TextBlock.TextProperty; // Default to TextBlock.Text
+            }
         }
 
         private void MultiListbox_Loaded(object sender, RoutedEventArgs e)
@@ -923,9 +1018,12 @@ namespace CustomComponents.ListBoxExtensions
                         var controlFactory = new FrameworkElementFactory(controlType);
                         controlFactory.SetValue(Grid.ColumnProperty, columnIndex);
                         controlFactory.SetValue(FrameworkElement.MarginProperty, colDef.ContentMargin);
-                        controlFactory.SetValue(FrameworkElement.VerticalAlignmentProperty, colDef.ContentVerticalAlignment);
-                        controlFactory.SetValue(FrameworkElement.HorizontalAlignmentProperty, colDef.ContentHorizontalAlignment);
-                        controlFactory.SetValue(FrameworkElement.HeightProperty, colDef.Height);
+                        if (controlType != typeof(TextBlock))
+                        {
+                            controlFactory.SetValue(FrameworkElement.VerticalAlignmentProperty, colDef.ContentVerticalAlignment);
+                            controlFactory.SetValue(FrameworkElement.HorizontalAlignmentProperty, colDef.ContentHorizontalAlignment);
+                        }
+
 
                         // Handle specific control types
                         switch (colDef.ComponentType.ToString().ToLower())
@@ -937,7 +1035,6 @@ namespace CustomComponents.ListBoxExtensions
                                     Mode = BindingMode.TwoWay
                                 };
                                 controlFactory.SetBinding(ToggleButton.IsCheckedProperty, toggleBinding);
-                                controlFactory.SetValue(FrameworkElement.HorizontalAlignmentProperty, HorizontalAlignment.Left);
                                 controlFactory.SetValue(FrameworkElement.WidthProperty, colDef.ToggleButtonWidth);
                                 controlFactory.SetValue(FrameworkElement.HeightProperty, colDef.ToggleButtonHeight);
                                 if (colDef.Style != null && colDef.Style.TargetType == typeof(ToggleButton))
@@ -971,7 +1068,12 @@ namespace CustomComponents.ListBoxExtensions
                                             };
                                             controlFactory.SetBinding(FrameworkElement.WidthProperty, widthBinding);
                                         }
-
+                                        if (ItemHeightProperty is not null)
+                                        {
+                                            var itemHeight = (double)GetValue(ItemHeightProperty);
+                                            controlFactory.SetValue(FrameworkElement.HeightProperty, itemHeight);
+                                        }
+                                        else controlFactory.SetValue(FrameworkElement.HeightProperty, colDef.Height);
                                         // Set horizontal text alignment
                                         var textAlignment = colDef.ContentHorizontalAlignment switch
                                         {
@@ -1233,67 +1335,88 @@ namespace CustomComponents.ListBoxExtensions
         }
         private void HandleClickEvents<T>(T control, MultiListboxColumnDefinition colDef) where T : FrameworkElement
         {
-            if (control is Button b)
+            try
             {
-                b.Click += (s, e) => colDef.RaiseClick(s, e);
-                b.Click -= (s, e) => Click?.Invoke(s, e);
-                b.Click += (s, e) =>
+                if (control is Button b)
                 {
-                    colDef.RaiseClick(s, e);
-                    Click?.Invoke(s, e);
-                };
+                    b.Click += (s, e) => colDef.RaiseClick(s, e);
+                    b.Click -= (s, e) => Click?.Invoke(s, e);
+                    b.Click += (s, e) =>
+                    {
+                        colDef.RaiseClick(s, e);
+                        Click?.Invoke(s, e);
+                    };
+                }
+                else if (control is CheckBox c)
+                {
+                    c.Click += (s, e) => colDef.RaiseClick(s, e);
+                    c.Click -= (s, e) => Click?.Invoke(s, e);
+                    c.Click += (s, e) =>
+                    {
+                        colDef.RaiseClick(s, e);
+                        Click?.Invoke(s, e);
+                    };
+                }
+                else if (control is ToggleButton r)
+                {
+                    r.Click += (s, e) => colDef.RaiseClick(s, e);
+                    r.Click -= (s, e) => Click?.Invoke(s, e);
+                    r.Click += (s, e) =>
+                    {
+                        colDef.RaiseClick(s, e);
+                        Click?.Invoke(s, e);
+                    };
+                }
             }
-            else if (control is CheckBox c)
+            catch (Exception ex)
             {
-                c.Click += (s, e) => colDef.RaiseClick(s, e);
-                c.Click -= (s, e) => Click?.Invoke(s, e);
-                c.Click += (s, e) =>
-                {
-                    colDef.RaiseClick(s, e);
-                    Click?.Invoke(s, e);
-                };
-            }
-            else if (control is ToggleButton r)
-            {
-                r.Click += (s, e) => colDef.RaiseClick(s, e);
-                r.Click -= (s, e) => Click?.Invoke(s, e);
-                r.Click += (s, e) =>
-                {
-                    colDef.RaiseClick(s, e);
-                    Click?.Invoke(s, e);
-                };
+                Debug.WriteLine($"Error in HandleClickEvents: {ex}");
             }
         }
 
         private void HandleInitialized<T>(T control, MultiListboxColumnDefinition colDef) where T : FrameworkElement
         {
-            // Remove any existing handlers
-            control.Initialized -= (s, e) => Initialized?.Invoke(s, e);
-            control.Initialized -= (s, e) => colDef.RaiseInitializedEvent(s, e);
-            control.Initialized += (s, e) =>
+            try
             {
-                colDef.RaiseInitializedEvent(s, e);
-                Initialized?.Invoke(s, e);
-            };
+                // Remove any existing handlers
+                control.Initialized -= (s, e) => Initialized?.Invoke(s, e);
+                control.Initialized -= (s, e) => colDef.RaiseInitializedEvent(s, e);
+                control.Initialized += (s, e) =>
+                {
+                    colDef.RaiseInitializedEvent(s, e);
+                    Initialized?.Invoke(s, e);
+                };
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error in HandleInitialized: {ex}");
+            }
         }
 
         private void HandleFocusEvents<T>(T control, MultiListboxColumnDefinition colDef) where T : FrameworkElement
         {
-            // Remove any existing handlers
-            control.LostFocus -= (s, e) => LostFocus?.Invoke(s, e);
-            control.LostFocus -= (s, e) => colDef.RaiseLostFocusEvent(s, e);
-            control.GotFocus -= (s, e) => GotFocus?.Invoke(s, e);
-            control.GotFocus -= (s, e) => colDef.RaiseGotFocusEvent(s, e);
-            control.LostFocus += (s, e) =>
+            try
             {
-                colDef.RaiseLostFocusEvent(s, e);
-                LostFocus?.Invoke(s, e);
-            };
-            control.GotFocus += (s, e) =>
+                // Remove any existing handlers
+                control.LostFocus -= (s, e) => LostFocus?.Invoke(s, e);
+                control.LostFocus -= (s, e) => colDef.RaiseLostFocusEvent(s, e);
+                control.GotFocus -= (s, e) => GotFocus?.Invoke(s, e);
+                control.GotFocus -= (s, e) => colDef.RaiseGotFocusEvent(s, e);
+                control.LostFocus += (s, e) =>
+                {
+                    colDef.RaiseLostFocusEvent(s, e);
+                    LostFocus?.Invoke(s, e);
+                };
+                control.GotFocus += (s, e) =>
+                {
+                    colDef.RaiseGotFocusEvent(s, e);
+                    GotFocus?.Invoke(s, e);
+                };
+            }
+            catch (Exception ex)
             {
-                colDef.RaiseGotFocusEvent(s, e);
-                GotFocus?.Invoke(s, e);
-            };
+                Debug.WriteLine($"Error in HandleFocusEvents: {ex}");
+            }
         }
 
         private void SetCustomBindings<T>(T control, MultiListboxColumnDefinition? colDef) where T : FrameworkElement
@@ -1324,59 +1447,48 @@ namespace CustomComponents.ListBoxExtensions
                                 Mode = BindingMode.TwoWay
                             };
                             BindingOperations.SetBinding(textBlock, FrameworkElement.WidthProperty, binding);
-                            
-                        
                         }
-                    }
-                    else control.Width = colDef.Width;
-                    if (ItemHeightProperty is not null && control.GetType() == typeof(TextBlock))
-                    {
-                        var itemHeight = (double)GetValue(ItemHeightProperty);
-                        control.Height = itemHeight; 
-                    }
-                    else control.Height = colDef.Height;
-                    control.MinWidth = colDef.MinWidth;
-                    control.MaxWidth = colDef.MaxWidth;
-                    control.MinHeight = colDef.MinHeight;
-                    control.MaxHeight = colDef.MaxHeight;
-
-
-                    if (control is TextBlock textBlock1)
-                    {
                         FormattedText ft = new FormattedText("WOOW",
                             CultureInfo.CurrentCulture, CultureInfo.CurrentCulture.TextInfo.IsRightToLeft ? FlowDirection.RightToLeft : FlowDirection.LeftToRight,
-                            new Typeface(textBlock1.FontFamily, textBlock1.FontStyle, textBlock1.FontWeight, textBlock1.FontStretch),
-                            textBlock1.FontSize > 0 ? textBlock1.FontSize : 9,
-                            textBlock1.Foreground ?? new SolidColorBrush(Colors.Black),
+                            new Typeface(textBlock.FontFamily, textBlock.FontStyle, textBlock.FontWeight, 
+                            textBlock.FontStretch),
+                            textBlock.FontSize > 0 ? textBlock.FontSize : 9,
+                            textBlock.Foreground ?? new SolidColorBrush(Colors.Black),
                             VisualTreeHelper.GetDpi(this).PixelsPerDip);
                         var maxheightoff = (control.Height - ft.Height) / 2;
-                        textBlock1.Padding = new Thickness(0, maxheightoff, 0, 0);
+                        textBlock.Padding = new Thickness(0, maxheightoff, 0, 0);
+                        if (ItemHeightProperty is not null)
+                        {
+                            var itemHeight = (double)GetValue(ItemHeightProperty);
+                            control.Height = itemHeight;
+                        }
+                        else control.Height = colDef.Height;
+                        control.Width = colDef.Width;
+                        control.MinWidth = colDef.MinWidth;
+                        control.MinWidth = colDef.MinWidth;
+                        control.MaxWidth = colDef.MaxWidth;
+                        control.MinHeight = colDef.MinHeight;
+                        control.MaxHeight = colDef.MaxHeight;
                     }
-                    if (colDef.Style != null && colDef.Style.TargetType == control.GetType())
+                    else
                     {
-                        control.Style = colDef.Style;
+                        control.Width = colDef.Width;
+                        control.Height = colDef.Height;
+                        control.MinWidth = colDef.MinWidth;
+                        control.MinWidth = colDef.MinWidth;
+                        control.MaxWidth = colDef.MaxWidth;
+                        control.MinHeight = colDef.MinHeight;
+                        control.MaxHeight = colDef.MaxHeight;
                     }
-
-
                     // Apply alignment and margin
                     control.HorizontalAlignment = colDef.ContentHorizontalAlignment;
                     control.VerticalAlignment = colDef.ContentVerticalAlignment;
                     control.Margin = colDef.ContentMargin;
 
-                    // For ToggleButton, ensure binding is set up correctly
-                    if (control is ToggleButton toggleButton)
+                    if (colDef.Style != null && colDef.Style.TargetType == control.GetType())
                     {
-                        var binding = new Binding(colDef.DataField)
-                        {
-                            UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
-                            Mode = BindingMode.TwoWay
-                        };
-                        BindingOperations.SetBinding(toggleButton, ToggleButton.IsCheckedProperty, binding);
+                        control.Style = colDef.Style;
                     }
-
-                    control.HorizontalAlignment = colDef.ContentHorizontalAlignment;
-                    control.VerticalAlignment = colDef.ContentVerticalAlignment;
-
                     if (!string.IsNullOrEmpty(colDef.DataField))
                     {
                         if (colDef.DataField.Contains(",") || colDef.DataField.Contains("|"))
@@ -1417,6 +1529,16 @@ namespace CustomComponents.ListBoxExtensions
                             }
                         }
                     }
+                    // For ToggleButton, ensure binding is set up correctly
+                    if (control is ToggleButton toggleButton)
+                    {
+                        var binding = new Binding(colDef.DataField)
+                        {
+                            UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
+                            Mode = BindingMode.TwoWay
+                        };
+                        BindingOperations.SetBinding(toggleButton, ToggleButton.IsCheckedProperty, binding);
+                    }
                 }
             }
             catch (Exception ex)
@@ -1427,58 +1549,75 @@ namespace CustomComponents.ListBoxExtensions
 
         private static void OnColumnDefinitionsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is MultiListbox multiListbox)
+            try
             {
-                multiListbox._columnFactories = null; // Force rebuild of factories
-                multiListbox._cachedItemTemplate = null; // Force rebuild of template
-                multiListbox.ApplyColumnDefinitions();
+                if (d is MultiListbox multiListbox)
+                {
+                    multiListbox._columnFactories = null; // Force rebuild of factories
+                    multiListbox._cachedItemTemplate = null; // Force rebuild of template
+                    multiListbox.ApplyColumnDefinitions();
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error in OnColumnDefinitionsChanged: {ex}");
             }
         }
 
         private Type GetControlType(string componentType)
         {
-            switch (componentType?.ToLower())
+            try
             {
-                case "textbox":
-                    return typeof(TextBox);
-                case "combobox":
-                    return typeof(ComboBox);
-                case "checkbox":
-                    return typeof(CheckBox);
-                case "textblock":
-                    return typeof(TextBlock);
-                case "label":
-                    return typeof(Label);
-                case "button":
-                    return typeof(Button);
-                case "image":
-                    return typeof(System.Windows.Controls.Image);
-                case "progressbar":
-                    return typeof(ProgressBar);
-                case "passwordbox":
-                    return typeof(PasswordBox);
-                case "timepicker":
-                    return typeof(TimePicker);
-                case "datepicker":
-                    return typeof(DatePicker);
-                case "datetimepicker":
-                    return typeof(DateTimePicker);
-                case "togglebutton":
-                    return typeof(ToggleButton);
-                case "slider":
-                    return typeof(Slider);
-                default:
-                    return typeof(TextBlock);
+                switch (componentType?.ToLower())
+                {
+                    case "textbox":
+                        return typeof(TextBox);
+                    case "combobox":
+                        return typeof(ComboBox);
+                    case "checkbox":
+                        return typeof(CheckBox);
+                    case "textblock":
+                        return typeof(TextBlock);
+                    case "label":
+                        return typeof(Label);
+                    case "button":
+                        return typeof(Button);
+                    case "image":
+                        return typeof(System.Windows.Controls.Image);
+                    case "progressbar":
+                        return typeof(ProgressBar);
+                    case "passwordbox":
+                        return typeof(PasswordBox);
+                    case "timepicker":
+                        return typeof(TimePicker);
+                    case "datepicker":
+                        return typeof(DatePicker);
+                    case "datetimepicker":
+                        return typeof(DateTimePicker);
+                    case "togglebutton":
+                        return typeof(ToggleButton);
+                    case "slider":
+                        return typeof(Slider);
+                    default:
+                        return typeof(TextBlock);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error in GetControlType: {ex}");
+                return typeof(TextBlock);
             }
         }
 
         private DependencyProperty GetDependencyPropertyByName(string propertyName)
         {
-            if (string.IsNullOrEmpty(propertyName)) return null;
-
-            // Map of control types to check for the property
-            Type[] typesToCheck = new Type[]
+            try
             {
+                if (string.IsNullOrEmpty(propertyName)) return null;
+
+                // Map of control types to check for the property
+                Type[] typesToCheck = new Type[]
+                {
                 typeof(TextBox),
                 typeof(TextBlock),
                 typeof(ComboBox),
@@ -1494,112 +1633,132 @@ namespace CustomComponents.ListBoxExtensions
                 typeof(ToggleButton),
                 typeof(Slider),
                 typeof(FrameworkElement) // Common base properties
-            };
+                };
 
-            foreach (var type in typesToCheck)
-            {
-                var fieldName = $"{propertyName}Property";
-                var field = type.GetField(fieldName, System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.FlattenHierarchy);
-                if (field != null)
+                foreach (var type in typesToCheck)
                 {
-                    return field.GetValue(null) as DependencyProperty;
+                    var fieldName = $"{propertyName}Property";
+                    var field = type.GetField(fieldName, System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.FlattenHierarchy);
+                    if (field != null)
+                    {
+                        return field.GetValue(null) as DependencyProperty;
+                    }
                 }
-            }
 
-            return null;
+                return null;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error in GetDependencyPropertyByName: {ex}");
+                return null;
+            }
         }
 
         private DependencyProperty GetMainBindingProperty(string componentType, string boundTo = null)
         {
-            if (!string.IsNullOrEmpty(boundTo))
+            try
             {
-                // Get the control type
-                Type type = componentType?.ToLower() switch
+                if (!string.IsNullOrEmpty(boundTo))
                 {
-                    "textbox" => typeof(TextBox),
-                    "combobox" => typeof(ComboBox),
-                    "checkbox" => typeof(CheckBox),
-                    "label" => typeof(Label),
-                    "textblock" => typeof(TextBlock),
-                    "button" => typeof(Button),
-                    "progressbar" => typeof(ProgressBar),
-                    "passwordbox" => typeof(PasswordBox),
-                    "image" => typeof(System.Windows.Controls.Image),
-                    "timepicker" => typeof(TimePicker),
-                    "datepicker" => typeof(DatePicker),
-                    "datetimepicker" => typeof(DateTimePicker),
-                    "togglebutton" => typeof(ToggleButton),
-                    "slider" => typeof(Slider),
-                    _ => null
-                };
+                    // Get the control type
+                    Type type = componentType?.ToLower() switch
+                    {
+                        "textbox" => typeof(TextBox),
+                        "combobox" => typeof(ComboBox),
+                        "checkbox" => typeof(CheckBox),
+                        "label" => typeof(Label),
+                        "textblock" => typeof(TextBlock),
+                        "button" => typeof(Button),
+                        "progressbar" => typeof(ProgressBar),
+                        "passwordbox" => typeof(PasswordBox),
+                        "image" => typeof(System.Windows.Controls.Image),
+                        "timepicker" => typeof(TimePicker),
+                        "datepicker" => typeof(DatePicker),
+                        "datetimepicker" => typeof(DateTimePicker),
+                        "togglebutton" => typeof(ToggleButton),
+                        "slider" => typeof(Slider),
+                        _ => null
+                    };
 
-                if (type != null || !string.IsNullOrEmpty(boundTo))
+                    if (type != null || !string.IsNullOrEmpty(boundTo))
+                    {
+                        // Get the DependencyProperty field by name
+                        var fieldName = $"{boundTo}Property";
+                        var field = type.GetField(fieldName, System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+                        var ret = field?.GetValue(null) as DependencyProperty;
+                        return field?.GetValue(null) as DependencyProperty;
+                    }
+                }
+
+                // Fall back to defaults if BoundTo is not specified or invalid
+                switch (componentType?.ToLower())
                 {
-                    // Get the DependencyProperty field by name
-                    var fieldName = $"{boundTo}Property";
-                    var field = type.GetField(fieldName, System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
-                    var ret = field?.GetValue(null) as DependencyProperty;
-                    return field?.GetValue(null) as DependencyProperty;
+                    case "textbox":
+                        return TextBox.TextProperty;
+                    case "combobox":
+                        return ComboBox.SelectedItemProperty;
+                    case "checkbox":
+                        return CheckBox.IsCheckedProperty;
+                    case "label":
+                        return Label.ContentProperty;
+                    case "button":
+                        return Button.ContentProperty;
+                    case "progressbar":
+                        return ProgressBar.ValueProperty;
+                    case "image":
+                        return System.Windows.Controls.Image.SourceProperty;
+                    case "textblock":
+                        return TextBlock.TextProperty;
+                    case "passwordbox":
+                        return PasswordBox.PasswordCharProperty;
+                    case "timepicker":
+                        return TimePicker.ValueProperty;
+                    case "datepicker":
+                        return DatePicker.SelectedDateProperty;
+                    case "datetimepicker":
+                        return DateTimePicker.ValueProperty;
+                    case "togglebutton":
+                        return ToggleButton.IsCheckedProperty;
+                    case "slider":
+                        return Slider.ValueProperty;
+                    default:
+                        return GetDependencyPropertyByName(boundTo);
                 }
             }
-
-            // Fall back to defaults if BoundTo is not specified or invalid
-            switch (componentType?.ToLower())
+            catch (Exception ex)
             {
-                case "textbox":
-                    return TextBox.TextProperty;
-                case "combobox":
-                    return ComboBox.SelectedItemProperty;
-                case "checkbox":
-                    return CheckBox.IsCheckedProperty;
-                case "label":
-                    return Label.ContentProperty;
-                case "button":
-                    return Button.ContentProperty;
-                case "progressbar":
-                    return ProgressBar.ValueProperty;
-                case "image":
-                    return System.Windows.Controls.Image.SourceProperty;
-                case "textblock":
-                    return TextBlock.TextProperty;
-                case "passwordbox":
-                    return PasswordBox.PasswordCharProperty;
-                case "timepicker":
-                    return TimePicker.ValueProperty;
-                case "datepicker":
-                    return DatePicker.SelectedDateProperty;
-                case "datetimepicker":
-                    return DateTimePicker.ValueProperty;
-                case "togglebutton":
-                    return ToggleButton.IsCheckedProperty;
-                case "slider":
-                    return Slider.ValueProperty;
-                default:
-                    return GetDependencyPropertyByName(boundTo);
+                Debug.WriteLine($"Error in GetMainBindingProperty: {ex}");
+                return null;
             }
         }
         private void ApplyVisualProperties()
         {
-            if (_headerGrid == null) return;
-
-            // Apply visual properties to header text blocks
-            foreach (var child in _headerGrid.Children.OfType<TextBlock>())
+            try
             {
-                var columnIndex = Grid.GetColumn(child);
-                if (columnIndex >= 0 && columnIndex < ColumnDefinitions.Count)
+                if (_headerGrid == null) return;
+
+                // Apply visual properties to header text blocks
+                foreach (var child in _headerGrid.Children.OfType<TextBlock>())
                 {
-                    var colDef = ColumnDefinitions[columnIndex];
-                    Dispatcher.BeginInvoke(new Action(() =>
+                    var columnIndex = Grid.GetColumn(child);
+                    if (columnIndex >= 0 && columnIndex < ColumnDefinitions.Count)
                     {
-                        child.Margin = colDef.HeaderMargin;
-                        child.Padding = colDef.HeaderPadding;
-                        child.HorizontalAlignment = colDef.HeaderHorizontalAlignment;
-                        child.VerticalAlignment = colDef.HeaderVerticalAlignment;
-                        child.Style = (colDef?.Style is not null && colDef.Style.TargetType == typeof(TextBlock)) ? colDef.Style : null;
-                    }));
+                        var colDef = ColumnDefinitions[columnIndex];
+                        Dispatcher.BeginInvoke(new Action(() =>
+                        {
+                            child.Margin = colDef.HeaderMargin;
+                            child.Padding = colDef.HeaderPadding;
+                            child.HorizontalAlignment = colDef.HeaderHorizontalAlignment;
+                            child.VerticalAlignment = colDef.HeaderVerticalAlignment;
+                            child.Style = (colDef?.Style is not null && colDef.Style.TargetType == typeof(TextBlock)) ? colDef.Style : null;
+                        }));
+                    }
                 }
             }
-
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error in ApplyVisualProperties: {ex}");
+            }
         }
 
         private void ApplyColumnDefinitions()

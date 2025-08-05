@@ -37,21 +37,30 @@ namespace VideoGui
     /// </summary>
     public partial class VideoCutsEditor : Window
     {
-        OnFinish DoOnFinish;
+        
         string Filename = "";
         int _TotalSecs = 0;
         string ConnectionString = "";
         public AddRecordDelegate DoAddRecord;
-        ObservableCollection<VideoCutInfo> ListOfCuts = new();
-        public VideoCutsEditor(AddRecordDelegate _DoAddRecord, OnFinish _DoOnFinish, string connectionString)
+        public ObservableCollection<VideoCutInfo> ListOfCuts = new();
+
+        public static readonly DependencyProperty SrcFileNameWidthProperty =
+            DependencyProperty.Register(nameof(SrcFileNameWidth), typeof(double),
+                typeof(VideoCutsEditor), 
+                new FrameworkPropertyMetadata(255.0));
+
+        public double SrcFileNameWidth
+        {
+            get => (double)GetValue(SrcFileNameWidthProperty);
+            set => SetValue(SrcFileNameWidthProperty, value);
+        }
+        public VideoCutsEditor(AddRecordDelegate _DoAddRecord, OnFinishIdObj _DoOnFinish, string connectionString)
         {
             InitializeComponent();
             // this form is marked for mcu listbox upgrade
             ConnectionString = connectionString;
             DoAddRecord = _DoAddRecord;
-            DoOnFinish = _DoOnFinish;
-
-
+            Closed += (s, e) => { _DoOnFinish?.Invoke(this, -1); };
         }
 
         TimeSpan LastTarget = TimeSpan.Zero; // 22 mins
@@ -324,12 +333,11 @@ namespace VideoGui
                 ex.LogWrite($"LocationChanger_Tick {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-        public void ResizeWindows(double _w, double _h, bool WidthChanged = false,
-            bool HeightChanged = false)
+        public void ResizeWindows(double _w, double _h, bool WidthChanged = false,bool HeightChanged = false)
         {
             try
             {
-                if (WidthChanged && Ready)
+                if (WidthChanged && Ready && IsLoaded)
                 {
                     msuVideoCuts.Width = _w - 245;
                     brdControls.Width = _w - 20;
@@ -342,13 +350,16 @@ namespace VideoGui
                     Canvas.SetLeft(lblDuration, _w - 150);
                     Canvas.SetLeft(btnEditFileSelect, _w - 180);
                     txxtEditDirectory.Width = _w - 305;
+                    var _ww = _w - 465;
+                    if (_ww < 255) _ww = 255;
+                    SrcFileNameWidth = _ww;
                 }
-                if (HeightChanged && Ready)
+                if (HeightChanged && Ready && IsLoaded)
                 {
                     msuVideoCuts.Height = _h - (609 - 409) - 24;
                     brdControls1.Height = _h - (609 - 409) - 35;
                 }
-                if (HeightChanged || WidthChanged && Ready)
+                if (HeightChanged || WidthChanged && Ready && IsLoaded)
                 {
                     RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                     key?.SetValue("VCEWidth", ActualWidth);
@@ -361,10 +372,7 @@ namespace VideoGui
                 ex.LogWrite($"ReiszeWindows {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
         }
-        private void frmVideoCutsEditor_Closing(object sender, System.ComponentModel.CancelEventArgs e)
-        {
-            DoOnFinish?.Invoke();
-        }
+      
 
         private void frmVideoCutsEditor_SizeChanged(object sender, SizeChangedEventArgs e)
         {

@@ -22,7 +22,7 @@
         Height="207" HorizontalAlignment="Left" Margin="4,50,0,0">
                 <MSU:MultiListbox.ColumnDefinitions>
                     <MSU:MultiListboxColumnDefinition HeaderText="Source Filename" 
-                       DataField="FileName" Width="340" ComponentType="TextBlock"/>
+                       DataField="FileName" WidthBinding="SrcFileNameWidth" ComponentType="TextBlock"/>
                     <MSU:MultiListboxColumnDefinition HeaderText="Duration" 
                       DataField="TimeData" Width="100" ComponentType="TextBlock"/>
                     <MSU:MultiListboxColumnDefinition HeaderText="Status" 

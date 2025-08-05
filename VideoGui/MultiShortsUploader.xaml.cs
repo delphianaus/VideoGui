@@ -42,8 +42,20 @@ namespace VideoGui
         int SchMaxUploads = 100, LinkedId = -1, SelectedTitleId = -1;
         public bool IsClosing = false, IsClosed = false, Ready = false, IsFirstResize = false;
         private bool _isFirstResize = true;
-        DispatcherTimer LocationChangedTimer = new DispatcherTimer();
-        DispatcherTimer LocationChanger = new DispatcherTimer();
+        DispatcherTimer LocationChangedTimer = new DispatcherTimer(), LocationChanger = new DispatcherTimer();
+
+        public static readonly DependencyProperty DirectoryNameWidthProperty =
+            DependencyProperty.Register(nameof(DirectoryNameWidth), typeof(double),
+                typeof(MultiShortsUploader),
+                new FrameworkPropertyMetadata(375.0));
+
+        public double DirectoryNameWidth
+        {
+            get => (double)GetValue(DirectoryNameWidthProperty);
+            set => SetValue(DirectoryNameWidthProperty, value);
+        }
+
+        
         public MultiShortsUploader(databasehook<object> _dbInit, OnFinishIdObj _DoOnFinished)
         {
             try
@@ -150,17 +162,17 @@ namespace VideoGui
             {
                 LocationChanger.Stop();
                 RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
-                var _width = key.GetValue("MSUWidth", ActualWidth).ToDouble();
-                var _height = key.GetValue("MSUHeight", ActualHeight).ToDouble();
+                var _widthidth = key.GetValue("MSUWidth", ActualWidth).ToDouble();
+                var _heighteight = key.GetValue("MSUHeight", ActualHeight).ToDouble();
                 var _left = key.GetValue("MSUleft", Left).ToDouble();
                 var _top = key.GetValue("MSUtop", Top).ToDouble();
                 key?.Close();
                 Left = (Left != _left && _left != 0) ? _left : Left;
                 Top = (Top != _top && _top != 0) ? _top : Top;
-                Width = (ActualWidth != _width && _width != 0) ? _width : Width;
-                Height = (ActualHeight != _height && _height != 0) ? _height : Height;
+                Width = (ActualWidth != _widthidth && _widthidth != 0) ? _widthidth : Width;
+                Height = (ActualHeight != _heighteight && _heighteight != 0) ? _heighteight : Height;
 
-                SetCanvasChildren(Height, Width, true, true);
+                SetControls(Width,Height, true, true);
                 LoadingPanel.Visibility = Visibility.Collapsed;
                 MainContent.Visibility = Visibility.Visible;
                 if (IsFirstResize)
@@ -176,35 +188,39 @@ namespace VideoGui
                 ex.LogWrite($"LocationChanger_Tick {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-        private void SetCanvasChildren(double _h, double _w, bool SetWidth = true, bool SetHeight = true)
+        private void SetControls(double _width, double _height, bool SetWidth = true, bool SetHeight = true)
         {
             try
             {
                 if (SetHeight)
                 {
-                    MainGrid.Height = _h;
-                    LoadingPanel.Height = _h;
-                    MainScroller.Height = _h;
-                    MainContent.Height = _h;
+                    MainGrid.Height = _height;
+                    LoadingPanel.Height = _height;
+                    MainScroller.Height = _height;
+                    MainContent.Height = _height;
                     msuSchedules.Height = Height - (msuShorts.Height) - 77;
                     var msuShortsBottom = Canvas.GetBottom(msuShorts);
                     Canvas.SetTop(msuSchedules, msuShorts.Height);
-                    Canvas.SetTop(BtnClose, _h - 68);
-                    Canvas.SetTop(BtnRunUploaders, _h - 68);
-                    Canvas.SetTop(txtTotalUploads, _h - 64.5);
-                    Canvas.SetTop(txtMaxUpload, _h - 64.5);
-                    Canvas.SetTop(lblupload, _h - 67.5);
-                    Canvas.SetTop(lblmax, _h - 67.5);
-                    Canvas.SetTop(lblUploaded, _h - 70.5);// Height - 386 = 420- 386 = 34
+                    Canvas.SetTop(BtnClose, _height - 68);
+                    Canvas.SetTop(BtnRunUploaders, _height - 68);
+                    Canvas.SetTop(txtTotalUploads, _height - 64.5);
+                    Canvas.SetTop(txtMaxUpload, _height - 64.5);
+                    Canvas.SetTop(lblupload, _height - 67.5);
+                    Canvas.SetTop(lblmax, _height - 67.5);
+                    Canvas.SetTop(lblUploaded, _height - 70.5);// Height - 386 = 420- 386 = 34
                 }
                 if (SetWidth)
                 {
-                    MainScroller.Width = _w;
-                    MainGrid.Width = _w;
-                    MainContent.Width = _w;
-                    msuShorts.Width = _w - 15;
+                    MainScroller.Width = _width;
+                    MainGrid.Width = _width;
+                    MainContent.Width = _width;
+                    msuShorts.Width = _width - 15;
                     msuSchedules.Width = msuShorts.Width;
-                    Canvas.SetLeft(BtnClose, _w - BtnClose.Width - 25);
+                    Canvas.SetLeft(BtnClose, _width - BtnClose.Width - 25);
+                   
+                    
+                    var r = _width - 430;
+                    DirectoryNameWidth = r > 0 ? r : 100;
                 }
             }
             catch (Exception ex)
@@ -224,9 +240,7 @@ namespace VideoGui
                         LoadingPanel.Visibility = Visibility.Collapsed;
                         MainContent.Visibility = Visibility.Visible;
                     }
-                    SetCanvasChildren(e.NewSize.Height, e.NewSize.Width, e.WidthChanged, e.HeightChanged);
-
-
+                    SetControls(e.NewSize.Width,e.NewSize.Height, e.WidthChanged, e.HeightChanged);
                     if (e.HeightChanged || e.WidthChanged)
                     {
                         RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);

@@ -1,5 +1,6 @@
 ﻿using FirebirdSql.Data.FirebirdClient;
 using Microsoft.Extensions.Logging;
+using Microsoft.VisualBasic;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
@@ -30,7 +31,15 @@ namespace VideoGui
         databasehook<object> dbInit = null;
         public bool IsClosing = false, IsClosed = false;
         databasehook<object> ModuleCallBack = null;
+        public static readonly DependencyProperty SourceDirectoryProperty =
+            DependencyProperty.Register(nameof(SourceDirectory), typeof(double),
+                typeof(DirectoryTitleDescEditor), new FrameworkPropertyMetadata(100.0));
 
+        public double SourceDirectory
+        {
+            get => (double)GetValue(SourceDirectoryProperty);
+            set => SetValue(SourceDirectoryProperty, value);
+        }
         int ShortsIndex = 0;
         bool IsFirstResize = true, Ready = false;
         DispatcherTimer LocationChangedTimer = new DispatcherTimer();
@@ -42,24 +51,24 @@ namespace VideoGui
                 if (IsLoaded)
                 {
                     ModuleCallBack?.Invoke(this, new CustomParams_Initialize());
-                }
-                LocationChanger.Interval = TimeSpan.FromMilliseconds(10);
-                LocationChanger.Tick += LocationChanger_Tick;
-                LocationChanger.Start();
-                LocationChanged += (s, e) =>
-                {
-                    LocationChangedTimer.Stop();
-                    LocationChangedTimer.Interval = TimeSpan.FromSeconds(3);
-                    LocationChangedTimer.Tick += (s1, e1) =>
+                    LocationChanger.Interval = TimeSpan.FromMilliseconds(10);
+                    LocationChanger.Tick += LocationChanger_Tick;
+                    LocationChanger.Start();
+                    LocationChanged += (s, e) =>
                     {
                         LocationChangedTimer.Stop();
-                        RegistryKey key2 = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
-                        key2?.SetValue("DEleft", Left);
-                        key2?.SetValue("DEtop", Top);
-                        key2?.Close();
+                        LocationChangedTimer.Interval = TimeSpan.FromSeconds(3);
+                        LocationChangedTimer.Tick += (s1, e1) =>
+                        {
+                            LocationChangedTimer.Stop();
+                            RegistryKey key2 = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                            key2?.SetValue("DEleft", Left);
+                            key2?.SetValue("DEtop", Top);
+                            key2?.Close();
+                        };
+                        LocationChangedTimer.Start();
                     };
-                    LocationChangedTimer.Start();
-                };
+                }
             }
             catch (Exception ex)
             {
@@ -268,17 +277,6 @@ namespace VideoGui
                 ex.LogWrite($"LocationChanger_Tick {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-        public static readonly DependencyProperty SourceDirectoryProperty =
-            DependencyProperty.Register(nameof(SourceDirectory), typeof(double),
-                typeof(DirectoryTitleDescEditor),
-                new FrameworkPropertyMetadata(0.0,
-                    FrameworkPropertyMetadataOptions.BindsTwoWayByDefault));
-
-        public double SourceDirectory
-        {
-            get => (double)GetValue(SourceDirectoryProperty);
-            set => SetValue(SourceDirectoryProperty, value);
-        }
         private void ResizeControls(double width, double height, bool v1, bool v2)
         {
             try
@@ -286,14 +284,12 @@ namespace VideoGui
                 if (v1)
                 {
                     msuDirectoryList.Width = width - 40;
-                    
                     MainGrid.Width = width;
                     LoadingPanel.Width = width;
                     MainContent.Width = width;
                     MainScroller.Width = width;
                     Canvas.SetLeft(btnClose, width - 118);
-                    
-                    SourceDirectory = width - 184;
+                    SourceDirectory = (width - 184);
                 }
                 if (v2)
                 {

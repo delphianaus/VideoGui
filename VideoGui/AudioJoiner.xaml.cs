@@ -48,7 +48,16 @@ namespace VideoGui
         public CancellationTokenSource cancel = new CancellationTokenSource();
         bool Ready = false;
         DispatcherTimer LocationChanger = new(), LocationChangedTimer = new();
+        public static readonly DependencyProperty SrcFileNameWidthProperty =
+            DependencyProperty.Register(nameof(SrcFileNameWidth), typeof(double),
+                typeof(AudioJoiner),
+                new FrameworkPropertyMetadata(340.0));
 
+        public double SrcFileNameWidth
+        {
+            get => (double)GetValue(SrcFileNameWidthProperty);
+            set => SetValue(SrcFileNameWidthProperty, value);
+        }
         public AudioJoiner(OnFinishIdObj _OnClose)
         {
             InitializeComponent();
@@ -222,6 +231,8 @@ namespace VideoGui
                     Canvas.SetLeft(btnClose, _w - 133);
                     txtDestDir.Width = _w - 413;
                     txtsrcdir.Width = _w - 186;
+                    var srw = _w - 300;
+                    SrcFileNameWidth = srw < 145 ? 145 : srw;
                 }
                 if (HeightChanged && Ready)
                 {

@@ -58,7 +58,27 @@ namespace VideoGui
         bool Ready = false;
         DispatcherTimer LocationChanger = new(), LocationChangedTimer= new();
 
+        public static readonly DependencyProperty SrcFileNameWidthProperty =
+            DependencyProperty.Register(nameof(SrcFileNameWidth), typeof(double),
+                typeof(ComplexSchedular),
+                new FrameworkPropertyMetadata(250.0));
 
+        public double SrcFileNameWidth
+        {
+            get => (double)GetValue(SrcFileNameWidthProperty);
+            set => SetValue(SrcFileNameWidthProperty, value);
+        }
+
+        public static readonly DependencyProperty DestFileNameWidthProperty =
+            DependencyProperty.Register(nameof(DestFileNameWidth), typeof(double),
+                typeof(ComplexSchedular),
+                new FrameworkPropertyMetadata(250.0));
+
+        public double DestFileNameWidth
+        {
+            get => (double)GetValue(DestFileNameWidthProperty);
+            set => SetValue(DestFileNameWidthProperty, value);
+        }
         public ComplexSchedular(databasehook<object> _ModuleCallBack, AddRecordDelegate _AdddRecord,
             RemoveRecordDelegate _RemoveRecord,
             OnFinishIdObj _ComplexFinished, SetFilterAge _SetFilterAge,
@@ -295,14 +315,25 @@ namespace VideoGui
         {
             try
             {
-                if (WidthChanged && Ready)
+                if (IsLoaded && WidthChanged && Ready)
                 {
                     msuComplexSchedules.Width = _w - 20;
-                    brdtimes.Width = _w - (925-369);
+                    brdtimes.Width = _w - (925 - 369);
                     brdFileInfo.Width = _w - 22;
                     CnvTimes.Width = brdtimes.Width - 2;
-                }
-                if (HeightChanged && Ready)
+                    var srw = _w - 850;
+                    var dsw = _w - 850;
+                    SrcFileNameWidth = srw < 250 ? 250 : srw;
+                    DestFileNameWidth = dsw < 250 ? 250 : dsw;
+                    Canvas.SetLeft(btnSelectSourceDir, _w - 63);
+                    Canvas.SetLeft(btnSelectDestDir, _w - 63);
+                    txtdestdir.Width = _w - 220;
+                    txtsrcdir.Width = _w - 220;
+                    Canvas.SetLeft(tglflip, _w - 112);
+                    Canvas.SetLeft(btnInject, _w - 182);
+                    Canvas.SetLeft(btnNew, _w - 262);
+                }             
+                if (IsLoaded && HeightChanged && Ready)
                 {
                     msuComplexSchedules.Height = _h - (474-222)-15;
                 }
