@@ -46,8 +46,8 @@ namespace VideoGui.Models
                 Directory = (reader["DIRECTORYNAME"] is string DIR) ? DIR.ToUpper() : "";
                 TitleId = (reader["TITLEID"] is int TID) ? TID : -1;
                 DescId = (reader["DESCID"] is int DID) ? DID : -1;
-                LinkedTitleIds = (reader["LINKEDTITLEIDS"] is string LTID) ? LTID : "";
-                LinkedDescIds = (reader["LINKEDDESCIDS"] is string LDID) ? LDID : "";
+                //LinkedTitleIds = (reader["LINKEDTITLEIDS"] is string LTID) ? LTID : "";
+                //LinkedDescIds = (reader["LINKEDDESCIDS"] is string LDID) ? LDID : "";
 
             }
             catch (Exception ex)

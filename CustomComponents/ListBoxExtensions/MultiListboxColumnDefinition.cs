@@ -4,14 +4,17 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
+using System.Windows.Controls.Primitives;
+using System.Windows.Media.Animation;
 
 namespace CustomComponents.ListBoxExtensions
 {
     public class MultiListboxColumnDefinition : DependencyObject
     {
+
+
         public MultiListboxColumnDefinition()
         {
-            BoundToProperties = new ObservableCollection<BoundToProperty>();
         }
 
         public static readonly DependencyProperty HeaderTextProperty =
@@ -32,15 +35,7 @@ namespace CustomComponents.ListBoxExtensions
             set => SetValue(DataFieldProperty, value);
         }
 
-        public IEnumerable<string> GetFields(string Fields)
-        {
-            var dataField = Fields;
-            if (string.IsNullOrWhiteSpace(dataField))
-                return Enumerable.Empty<string>();
 
-            return dataField.Split(new[] { ',', '|' }, StringSplitOptions.RemoveEmptyEntries)
-                           .Select(f => f.Trim());
-        }
 
         public static readonly DependencyProperty WidthProperty =
             DependencyProperty.Register(nameof(Width), typeof(double), typeof(MultiListboxColumnDefinition), new PropertyMetadata(100.0));
@@ -85,6 +80,27 @@ namespace CustomComponents.ListBoxExtensions
 
         public static readonly DependencyProperty ItemVerticalAlignmentProperty =
             DependencyProperty.Register(nameof(ItemVerticalAlignment), typeof(VerticalAlignment), typeof(MultiListboxColumnDefinition), new PropertyMetadata(VerticalAlignment.Center));
+
+        public static readonly DependencyProperty FontWeightProperty =
+            DependencyProperty.Register(nameof(FontWeight), typeof(string),
+                typeof(MultiListboxColumnDefinition),
+                new PropertyMetadata(""));
+
+        public string FontWeight
+        {
+            get => (string)GetValue(FontWeightProperty);
+            set => SetValue(FontWeightProperty, value);
+        }
+
+        public static readonly DependencyProperty ForegroundProperty =
+            DependencyProperty.Register(nameof(Foreground), typeof(string), typeof(MultiListboxColumnDefinition),
+                new PropertyMetadata(""));
+
+        public string Foreground
+        {
+            get => (string)GetValue(ForegroundProperty);
+            set => SetValue(ForegroundProperty, value);
+        }
 
         public VerticalAlignment ItemVerticalAlignment
         {
@@ -151,21 +167,6 @@ namespace CustomComponents.ListBoxExtensions
 
         public static readonly DependencyProperty ComponentTypeProperty =
             DependencyProperty.Register(nameof(ComponentType), typeof(string), typeof(MultiListboxColumnDefinition), new PropertyMetadata("TextBlock"));
-
-        public static readonly DependencyProperty BoundToProperty =
-            DependencyProperty.Register(nameof(BoundTo),
-                typeof(string), typeof(MultiListboxColumnDefinition),
-                new PropertyMetadata("Text"));
-
-        public static readonly DependencyProperty BoundToPropertiesProperty =
-            DependencyProperty.Register(nameof(BoundToProperties), typeof(ObservableCollection<BoundToProperty>), typeof(MultiListboxColumnDefinition),
-                new PropertyMetadata(new ObservableCollection<BoundToProperty>()));
-
-        public ObservableCollection<BoundToProperty> BoundToProperties
-        {
-            get => (ObservableCollection<BoundToProperty>)GetValue(BoundToPropertiesProperty);
-            set => SetValue(BoundToPropertiesProperty, value);
-        }
 
         public static readonly DependencyProperty StyleProperty =
             DependencyProperty.Register(nameof(Style), typeof(Style), typeof(MultiListboxColumnDefinition),
@@ -566,6 +567,10 @@ namespace CustomComponents.ListBoxExtensions
             get => (string)GetValue(ComponentTypeProperty);
             set => SetValue(ComponentTypeProperty, value);
         }
+
+        public static readonly DependencyProperty BoundToProperty =
+            DependencyProperty.Register(nameof(BoundTo), typeof(string), typeof(MultiListboxColumnDefinition),
+                new PropertyMetadata(string.Empty));
 
         public string BoundTo
         {

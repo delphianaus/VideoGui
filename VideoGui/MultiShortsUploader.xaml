@@ -55,12 +55,12 @@
             <Canvas x:Name="MainContent" Grid.Row="1" Height="420" 
                     HorizontalAlignment="Left" Width="558" VerticalAlignment="Top">
                 <MSU:MultiListbox x:Name="msuShorts" Header="Active Shorts Directory" 
-                   BorderBrush="Black" BorderThickness="2" 
-                                  VerticalAlignment="Center" Width="560" 
+                                  VerticalAlignment="Center" Width="560" ItemHeight="15"
                                   HorizontalAlignment="Left" Height="154">
                     <MSU:MultiListbox.ColumnDefinitions>
                         <MSU:MultiListboxColumnDefinition HeaderText="Shorts Directory" 
-                      DataField="DirectoryName" WidthBinding="DirectoryNameWidth" ComponentType="TextBlock"/>
+                      DataField="DirectoryName" WidthBinding="ShortsDirectoryNameWidth"  
+                         ComponentType="TextBlock"/>
                         <MSU:MultiListboxColumnDefinition HeaderText="Number Of Shorts" Width="105" 
                    ContentHorizontalAlignment="Center" DataField="NumberOfShorts" ComponentType="TextBlock"/>
                     </MSU:MultiListbox.ColumnDefinitions>
@@ -71,30 +71,28 @@
                         </ContextMenu>
                     </MSU:MultiListbox.ItemsContextMenu>
                 </MSU:MultiListbox>
-                <MSU:MultiListbox x:Name="msuSchedules" Header="Active Schedules" Width="560" Canvas.Top="164"
-             VerticalAlignment="Top"  VerticalContentAlignment="Bottom" 
-           BorderBrush="Black" BorderThickness="2" Height="211" HorizontalAlignment="Center">
+                <MSU:MultiListbox x:Name="msuSchedules" Header="Active Schedules" 
+                  Width="560" Canvas.Top="164" VerticalAlignment="Top"  VerticalContentAlignment="Bottom" 
+                   Height="211" HorizontalAlignment="Center" ItemHeight="15">
                     <MSU:MultiListbox.ColumnDefinitions>
-                        <MSU:MultiListboxColumnDefinition DataField="Id" Width="0" 
-                   ComponentType="TextBlock"/>
+                        <MSU:MultiListboxColumnDefinition DataField="Id" Width="0" ComponentType="TextBlock"/>
                         <MSU:MultiListboxColumnDefinition HeaderText="Shorts Directory" 
-                 ContentVerticalAlignment="Center" 
-                 DataField="DirectoryName,AutoFontWeight,AutoFontColor" WidthBinding="DirectoryNameWidth"
-                 BoundTo="Text,FontWeight,Foreground" ComponentType="TextBlock"/>
+                           WidthBinding="MultiShortsDirectoryNameWidth"
+                           ContentVerticalAlignment="Center" DataField="DirectoryName"
+                            FontWeight="AutoFontWeight" Foreground="AutoFontColor"
+                            ComponentType="TextBlock"/>
                         <MSU:MultiListboxColumnDefinition HeaderText="Number of Shorts" 
-                 ContentHorizontalAlignment="Center"
-                 DataField="NumberOfShorts,AutoFontWeight,AutoFontColor" 
-                 BoundTo="Text,FontWeight,Foreground" Width="105" ComponentType="TextBlock"/>
-                        <MSU:MultiListboxColumnDefinition HeaderText="Title" Width="50" 
-                   Style="{StaticResource ToggleSetEditStyle}" HeaderPadding="3,0,0,0"
+                 ContentHorizontalAlignment="Center" FontWeight="AutoFontWeight" Foreground="AutoFontColor"
+                 DataField="NumberOfShorts" Width="105" ComponentType="TextBlock"/>
+                        <MSU:MultiListboxColumnDefinition HeaderText="    Title" Width="50" 
+                   Style="{StaticResource ToggleSetEditStyle}" 
                    Click="Title_ToggleButtonClick" DataField="IsTitleAvailable" ComponentType="ToggleButton"/>
-                        <MSU:MultiListboxColumnDefinition HeaderText="Desc" 
-                  Width="50" Click="Desc_ToggleButtonClick" Style="{StaticResource ToggleSetEditStyle}"
+                        <MSU:MultiListboxColumnDefinition HeaderText="    Desc" Width="50"
+                  Click="Desc_ToggleButtonClick" Style="{StaticResource ToggleSetEditStyle}"
                   DataField="IsDescAvailable" ComponentType="ToggleButton"/>
-                        <MSU:MultiListboxColumnDefinition HeaderText="   Last Uploaded" 
+                        <MSU:MultiListboxColumnDefinition HeaderText="        Last Uploaded" FontWeight="AutoFontWeight"  Foreground="AutoFontColor"
                    ContentVerticalAlignment="Center" ContentHorizontalAlignment="Center" 
-                   DataField="LastUploadedFile,AutoFontWeight,AutoFontColor"
-                   BoundTo="Text,FontWeight,Foreground" Width="180" ComponentType="TextBlock"/>
+                   DataField="LastUploadedFile" Width="180" ComponentType="TextBlock"/>
                     </MSU:MultiListbox.ColumnDefinitions>
                     <MSU:MultiListbox.ItemsContextMenu>
                         <ContextMenu>

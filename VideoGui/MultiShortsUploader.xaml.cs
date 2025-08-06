@@ -44,18 +44,31 @@ namespace VideoGui
         private bool _isFirstResize = true;
         DispatcherTimer LocationChangedTimer = new DispatcherTimer(), LocationChanger = new DispatcherTimer();
 
-        public static readonly DependencyProperty DirectoryNameWidthProperty =
-            DependencyProperty.Register(nameof(DirectoryNameWidth), typeof(double),
+        public static readonly DependencyProperty ShortsDirectoryNameWidthProperty =
+            DependencyProperty.Register(nameof(ShortsDirectoryNameWidth), typeof(double),
                 typeof(MultiShortsUploader),
                 new FrameworkPropertyMetadata(375.0));
 
-        public double DirectoryNameWidth
+        public double ShortsDirectoryNameWidth
         {
-            get => (double)GetValue(DirectoryNameWidthProperty);
-            set => SetValue(DirectoryNameWidthProperty, value);
+            get => (double)GetValue(ShortsDirectoryNameWidthProperty);
+            set => SetValue(ShortsDirectoryNameWidthProperty, value);
         }
 
-        
+        public static readonly DependencyProperty MultiShortsDirectoryNameWidthProperty =
+            DependencyProperty.Register(nameof(MultiShortsDirectoryNameWidth), typeof(double),
+                typeof(MultiShortsUploader),
+                new FrameworkPropertyMetadata(375.0));
+
+
+        //ShortsDirectoryNameWidth & MultiShortsDirectoryNameWidth
+        public double MultiShortsDirectoryNameWidth
+        {
+            get => (double)GetValue(MultiShortsDirectoryNameWidthProperty);
+            set => SetValue(MultiShortsDirectoryNameWidthProperty, value);
+        }
+
+
         public MultiShortsUploader(databasehook<object> _dbInit, OnFinishIdObj _DoOnFinished)
         {
             try
@@ -78,6 +91,7 @@ namespace VideoGui
                 key?.Close();
                 string DirName = dir.Split(@"\").ToList().LastOrDefault();
                 string sqla = "SELECT ID FROM SHORTSDIRECTORY WHERE DIRECTORYNAME = @DIRECTORYNAME";
+                connectionStr = dbInit.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
                 ShortsIndex = connectionStr.ExecuteScalar(sqla,
                     [("@DIRECTORYNAME", DirName)]).ToInt(-1);
             }
@@ -133,7 +147,7 @@ namespace VideoGui
                 dbInit?.Invoke(this, new CustomParams_Initialize());
                 key?.Close();
                 Ready = false;
-                LocationChanger.Interval = TimeSpan.FromMilliseconds(10);
+                LocationChanger.Interval = TimeSpan.FromMilliseconds(20);
                 LocationChanger.Tick += LocationChanger_Tick;
                 LocationChanger.Start();
                 LocationChanged += (s, e) =>
@@ -217,10 +231,9 @@ namespace VideoGui
                     msuShorts.Width = _width - 15;
                     msuSchedules.Width = msuShorts.Width;
                     Canvas.SetLeft(BtnClose, _width - BtnClose.Width - 25);
-                   
-                    
-                    var r = _width - 430;
-                    DirectoryNameWidth = r > 0 ? r : 100;
+                    var r = _width - 530;
+                    ShortsDirectoryNameWidth = r > 0 ? r : 100;
+                    MultiShortsDirectoryNameWidth = r > 0 ? r : 100;
                 }
             }
             catch (Exception ex)

@@ -365,7 +365,7 @@ namespace VideoGui
             }
             IsCET = false;// CET MOD
             string myext = Path.GetExtension(_Title).ToLower();
-            if (myext.ContainsAny(new List<string> { ".src", ".cst", ".edt" }))
+            if (myext.ContainsAny(new List<string> { ".srcpo", ".cst", ".edt" }))
             {
                 MultiFile = _Title;
                 _IsCST = myext.EndsWith(".cst");

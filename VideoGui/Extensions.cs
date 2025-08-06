@@ -682,7 +682,7 @@ namespace VideoGui
             }
             catch (Exception ex)
             {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+                ex.LogWrite($"CreateTableIfNotExists {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
             }
         }
 
@@ -825,6 +825,11 @@ namespace VideoGui
             }
             catch (Exception ex)
             {
+                //nsuccessful metadata update\r\nCREATE TABLE YTACTIONS failed\r\nTable YTACTIONS already exists"}
+                if (ex.Message.ContainsAll(new[] { "already exists", "failed", "metadata update", "CREATE TABLE" }))
+                {
+                    return null;
+                }
                 ex.LogWrite($"ExecuteScalar {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
                 return null;
             }

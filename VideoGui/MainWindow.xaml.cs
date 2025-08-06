@@ -3241,9 +3241,9 @@ namespace VideoGui
                 }
                 if (!IsShortsActive)
                 {
-                    sql = "UPDATE MULTISHORTSINFO SET LASTUPLOADEDDATE=@DT,LASTUPLOADEDTIME=@DTT,ISACTIVE=0 WHERE ID != @ID;";
+                    sql = "UPDATE MULTISHORTSINFO SET LASTUPLOADEDDATE=@DT,LASTUPLOADEDTIME=@DTT,ISSHORTSACTIVE=0 WHERE ID != @ID;";
                     connectionString.ExecuteScalar(sql, [("@ID", LinkedId), ("@DT", null), ("@DTT", null)]);
-                    sql = "UPDATE MULTISHORTSINFO SET ISACTIVE=1 WHERE ID = @ID;";
+                    sql = "UPDATE MULTISHORTSINFO SET ISSHORTSACTIVE=1 WHERE ID = @ID;";
                     connectionString.ExecuteScalar(sql, [("@ID", LinkedId)]);
                     foreach (var item in SelectedShortsDirectoriesList)
                     {
@@ -4379,8 +4379,8 @@ namespace VideoGui
                 sqlstring = $"create table AutoEdits({Id},Source varchar(500),Destination varchar(500),Threshhold varchar(255)," +
                     "Segment varchar(255),Target varchar(255));".ToUpper();
                 connectionString.CreateTableIfNotExists(sqlstring);
-                sqlstring = $"delete from ProcessingLog where InProcess = 1;";
-                connectionString.ExecuteNonQuery(sqlstring);
+                sqlstring = $"delete from ProcessingLog where InProcess = @PUD;";
+                connectionString.ExecuteNonQuery(sqlstring, [("@PUD", 1)]);
                 sqlstring = $"CREATE TABLE AVAILABLETAGS({Id},TAG VARCHAR(500));";
                 connectionString.CreateTableIfNotExists(sqlstring);
                 sqlstring = $"CREATE TABLE SELECTEDTAGS({Id},SELECTEDTAG INTEGER, GROUPTAGID INTEGER);";
@@ -4568,7 +4568,7 @@ namespace VideoGui
                     tts = TimeOnly.FromTimeSpan(dtr);
                     newDate = dt.Date.AtTime(TimeOnly.FromTimeSpan(dtr));
                 });
-                if (uploadId.Contains("_"))
+                /*if (uploadId.Contains("_"))
                 {
                     Id = uploadId.Split('_')[1].ToInt(-1);
                     if (Id != -1)
@@ -4578,15 +4578,13 @@ namespace VideoGui
                             Id = item.NewId;
                             break;
                         }
-
-
                         SQL = "UPDATE MULTISHORTSINFO SET ISSHORTSACTIVE=1,LASTUPLOADEDDATE=@LID,LASTUPLOADEDTIME=@LIT" +
                             " WHERE LINKEDSHORTSDIRECTORYID=@LINKEDID";
                         connectionString.ExecuteScalar(SQL, [("@LID", dts), ("@LIT", tts), ("@ID", Id), ("@LINKEDID", Id)]);
-                        SQL = "UPDATE MULTISHORTSINFO SET ISSHORTSACTIVE=0 LINKEDSHORTSDIRECTORYID!=@LINKEDID";
-                        connectionString.ExecuteScalar(SQL, [("@LINKEDID", Id)]);
+                        SQL = "UPDATE MULTISHORTSINFO SET ISSHORTSACTIVE=@ISS WHERE LINKEDSHORTSDIRECTORYID!=@LINKEDID";
+                        connectionString.ExecuteScalar(SQL, [("@LINKEDID", Id), ("@ISS", 0)]);
                     }
-                }
+                }*/
                 connectionString.ExecuteReader("SELECT * FROM AUTOINSERTHISTORY Order By DELETIONDATE desc", (FbDataReader r) =>
                 {
                     ComplexProcessingJobHistory.Add(new ComplexJobHistory(r));
@@ -4599,27 +4597,9 @@ namespace VideoGui
                 {
                     PlanningCutsList.Add(new PlanningCuts(r));
                 });
-                connectionString.ExecuteReader("SELECT * FROM SCHEDULES WHERE ISSCHEDULER = 0", (FbDataReader r) =>
-                {
-                    VideoSchedulesList.Add(new VideoSchedules(r));
-                });
-                connectionString.ExecuteReader("SELECT * FROM VIDEOSCHEDULE", (FbDataReader r) =>
-                {
-                    VideoScheduleList.Add(new VideoSchedule(r));
-                });
-                connectionString.ExecuteReader("SELECT * FROM SCHEDULES WHERE ISSCHEDULER = 1", (FbDataReader r) =>
-                {
-                    AppliedSchedulesList.Add(new AppliedSchedules(r));
-                });
-                connectionString.ExecuteReader("SELECT * FROM APPLIEDSCHEDULE", (FbDataReader r) =>
-                {
-                    AppliedScheduleList.Add(new AppliedSchedule(r));
-                });
 
-                connectionString.ExecuteReader("SELECT * FROM EVENTSDEFINITIONS", (FbDataReader r) =>
-                {
-                    EventDefinitionsList.Add(new EventDefinition(r));
-                });
+
+
 
 
                 connectionString.ExecuteReader("SELECT * FROM DRAFTSHORTS", (FbDataReader r) =>
@@ -4630,7 +4610,7 @@ namespace VideoGui
 
 
                 //EVENTSDEFINITIONS
-                connectionString.ExecuteNonQuery("DELETE FROM UPLOADSRECORD WHERE UPLOAD_DATE <> CAST(GETDATE() AS DATE);");
+                // connectionString.ExecuteNonQuery("DELETE FROM UPLOADSRECORD WHERE UPLOAD_DATE <> CAST(GETDATE() AS DATE);");
                 connectionString.ExecuteReader("SELECT * FROM AVAILABLETAGS", (FbDataReader r) =>
                 {
                     availableTagsList.Add(new AvailableTags(r));
@@ -5230,8 +5210,8 @@ namespace VideoGui
                     219, 75, 205, 126, 1, 168, 154, 153, 87, 125 }.Select(i => (byte)i).ToArray());
 
                 this.httpClientFactory = httpClientFactory;
-                Task.Run(() => { KillOrphanProcess(); });
-                Task.Run(() => { KillOrphanProcess(x); });
+                KillOrphanProcess().SafeFireAndForget();
+                KillOrphanProcess(x).SafeFireAndForget();
                 var ffm = GetEncryptedString(new int[] { 170, 57, 73, 91, 225, 194, 201, 29, 247, 101, 8 }.Select(i => (byte)i).ToArray());
                 var ffp = GetEncryptedString(new int[] { 170, 57, 73, 70, 227, 200,
                     204, 86, 188, 120, 21, 164 }.Select(i => (byte)i).ToArray());
@@ -5652,7 +5632,7 @@ namespace VideoGui
         }
         public string[] GetDefaultVideoExts()
         {
-            return new string[] { ".avi", ".mkv", ".mp4", ".m2ts", ".src", ".cst", ".edt" };
+            return new string[] { ".avi", ".mkv", ".mp4", ".m2ts"};
         }
         public async Task SetupThreadProcessorAsync()
         {
@@ -5711,8 +5691,11 @@ namespace VideoGui
                 {
                     if (!this.IsVisible && !this.InTray)
                     {
-                        trayicon.Visibility = Visibility.Visible;
-                        this.InTray = true;
+                        Dispatcher.Invoke(() =>
+                        {
+                            trayicon.Visibility = Visibility.Visible;
+                            this.InTray = true;
+                        });
                     }
                     int xcnt1080p = 0, xcnt4K = 0, xcnt = 0;
                     if (ProcessingJobs.Count > 0)
@@ -7026,16 +7009,16 @@ namespace VideoGui
                                     string SQL = "INSERT INTO CONVERTERSETTINGS (" +
                                         "ISDEFAULT,MINBITRATE,MAXBITRATE,BITRATEBUFFER," +
                                         "VIDEOWIDTH,VIDEOHEIGHT,ARMODULAS,RESIZEENABLE," +
-                                        "ARROUNDENABLE,ARSCALINGENABLE,VSYNCEABLE)" +
+                                        "ARROUNDENABLE,ARSCALINGENABLED,VSYNCEABLE) " +
                                         "VALUES(@ISDEFAULT,@MINBITRATE,@MAXBITRATE,@BITRATEBUFFER," +
                                         "@VIDEOWIDTH,@VIDEOHEIGHT,@ARMODULAS,@RESIZEENABLE," +
-                                        "@ARROUNDENABLE,@ARSCALINGENABLE,@VSYNCEABLE)";
+                                        "@ARROUNDENABLE,@ARSCALINGENABLED,@VSYNCEABLE)";
                                     connectionString.ExecuteScalar(SQL, [("@ISDEFAULT", true),
                                         ("@MINBITRATE", MinBitRate), ("@MAXBITRATE", MaxBitRate),
                                         ("@BITRATEBUFFER", BitRateBuffer), ("@VIDEOWIDTH", VideoWidth),
                                         ("@VIDEOHEIGHT", VideoHeight), ("@ARMODULAS", ArModulas),
                                         ("@RESIZEENABLE", ResizeEnable), ("@ARROUNDENABLE", ArRoundEnable),
-                                        ("@ARSCALINGENABLE", ArScalingEnabled), ("@VSYNCEABLE", VSyncEnable)]);
+                                        ("@ARSCALINGENABLED", ArScalingEnabled), ("@VSYNCEABLE", VSyncEnable)]);
                                 }
                             }
                         }
@@ -7122,6 +7105,7 @@ namespace VideoGui
                 bool result = false;
                 CancellationTokenSource cts = new();
                 string sql = "SELECT * FROM CONVERTERSETTINGS WHERE ISDEFAULT = @ISDEFAULT";
+                connectionString = GetConectionString();
                 connectionString.ExecuteReader(sql, [("@ISDEFAULT", true)], cts,
                     (FbDataReader r) =>
                     {
@@ -7134,7 +7118,7 @@ namespace VideoGui
                         ArModulas = r["ARMODULAS"] is string ar ? ar : "16";
                         ResizeEnable = r["RESIZEENABLE"] is Int16 RS ? RS == 1 : false; ;
                         ArRoundEnable = r["ARROUNDENABLE"] is Int16 AE ? AE == 1 : false;
-                        ArScalingEnabled = r["ARSCALINGENABLE"] is Int16 SE ? SE == 1 : false;
+                        ArScalingEnabled = r["ARSCALINGENABLED"] is Int16 SE ? SE == 1 : false;
                         VSyncEnable = r["VSYNCEABLE"] is Int16 VE ? VE == 1 : false;
                         cts.Cancel();
                     });
@@ -7240,14 +7224,7 @@ namespace VideoGui
                             string SourceDirectoryID = "";
                             string myfilename = Path.GetFileNameWithoutExtension(filename);
                             bool IsScript = false;
-                            if (filename.ContainsAny(new List<string> { ".src", ".cst", ".edt" }))
-                            {
-                                IsScript = true;
-                                string fn = File.ReadAllText(filename);  // FIleQue Tick
-                                List<string> Commands = fn.Split('|').ToList();
-                                if (Commands.Count > 3) Commands.RemoveAt(0);
-                                myfilename = Path.GetFileNameWithoutExtension(Commands.FirstOrDefault());
-                            }
+                            
                             if (ProcessingJobs.Count(job => job.Title == myfilename) == 0)
                             {
                                 bool Is1080p = SourceDir.Contains("1080p");
@@ -7309,25 +7286,6 @@ namespace VideoGui
                                 }
                                 else AddFileOK = true;
                                 if (AddFileOK) AddIfVaid(filename, SourceDir);
-                            }
-                            else if (!IsScript)
-                            {
-                                string sourcename = "";
-                                bool IsFinished = false; ;
-                                foreach (var cjob in ProcessingJobs.Where(cjob => (cjob.Complete) && (cjob.Title == myfilename) && (cjob.IsMulti)))
-                                {
-                                    sourcename = cjob.DestMFile;
-                                    IsFinished = cjob.Complete;
-                                }
-                                if ((IsFinished) && (sourcename != ""))
-                                {
-                                    List<Process> Processes = Win32Processes.GetProcessesLockingFile(sourcename);
-                                    var r = GetEncryptedString(new int[] { 144, 57, 66, 70, 244, 192 }.Select(i => (byte)i).ToArray());
-                                    foreach (var _ in Processes.Where(process => process.ProcessName.Contains(r)).Select(process => new { }))
-                                    {
-                                        if (AddIfVaid(filename, SourceDir)) break;
-                                    }
-                                }
                             }
                         }
                         SourceList.Clear();
@@ -11242,20 +11200,23 @@ namespace VideoGui
             }
             return parentPid;
         }
-        private async Task<bool> KillOrphanProcess(string ExeName = "")
+        private async Task<bool> KillOrphanProcess(string ExeName = "ffmpeg.exe")
         {
+            
             try
             {
                 string myStrQuote = "\"";
-                if (ExeName == "")
-                {
-                    ExeName = GetEncryptedString(new int[] { 170, 57, 73, 91, 225, 194, 201, 29, 247, 101, 8 }.Select(i => (byte)i).ToArray());
-                }
                 ManagementObjectSearcher searcher = new($"SELECT * FROM Win32_Process where name = {myStrQuote}{ExeName}{myStrQuote}");
                 foreach (ManagementObject o in searcher.Get())
                 {
+                    if (o.Properties["Handle"] is null || o.Properties["ProcessID"] is null)
+                    {
+                        continue;
+                    }
                     string HandleID = o.Properties["Handle"].Value.ToString();
-                    string ParentProcessId = o.Properties["ParentProcessID"].Value.ToString();
+                    string ParentProcessId = "";
+                    ParentProcessId = (o.Properties["ParentProcessID"] is not null) ? 
+                        o.Properties["ParentProcessID"].Value.ToString() : "";
                     string ID = o.Properties["ProcessID"].Value.ToString();
                     if (o["CommandLine"] != null)
                     {
@@ -11284,7 +11245,7 @@ namespace VideoGui
             }
             catch (Exception ex)
             {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+                ex.LogWrite($"KillOrphanProcess {ExeName} {MethodBase.GetCurrentMethod().Name}");
                 return false;
             }
         }
@@ -11638,16 +11599,10 @@ namespace VideoGui
             bool JobsAdded = false, IsX265 = false;
             string ext = Path.GetExtension(newfile);
             if ((ext == ".mts") || (ext == ".avi") || (ext == ".mkv") || (ext == ".mp4") ||
-                (ext == ".m2ts") || (ext == ".src") || (ext == ".cst") || (ext == ".edt"))
+                (ext == ".m2ts"))
             {
                 string SourceFile = Path.GetFileNameWithoutExtension(newfile);
-                if (SourceFile.ContainsAny(new List<string> { ".src", ".cst", ".edt" }))
-                {
-                    string fn = File.ReadAllText(SourceFile);// Add Files
-                    List<string> Commands = fn.Split('|').ToList();
-                    if (Commands.Count > 3) Commands.RemoveAt(0);
-                    SourceFile = Path.GetFileNameWithoutExtension(Commands.FirstOrDefault());
-                }
+                
                 string SourceDir = Path.GetDirectoryName(newfile);
                 if (!ProcessingJobs.Any(job => job.Title == SourceFile))
                 {

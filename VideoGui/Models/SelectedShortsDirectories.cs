@@ -13,7 +13,7 @@ using System.Windows;
 using System.Windows.Media;
 using Windows.Devices.PointOfService.Provider;
 using Windows.Security.Isolation;
-using Color = System.Windows.Media.Color;
+
 
 
 namespace VideoGui.Models
@@ -38,8 +38,32 @@ namespace VideoGui.Models
             }
         }
 
-        public FontWeight AutoFontWeight { get => _FontWeight; set { _FontWeight = value; OnPropertyChanged(); } }
-        public SolidColorBrush AutoFontColor { get => _Color; set { _Color = value; OnPropertyChanged(); } }
+        public FontWeight AutoFontWeight
+        {
+            get => _FontWeight;
+            set
+            {
+                _FontWeight = (IsActive) ? FontWeights.Bold : FontWeights.Normal;
+                OnPropertyChanged();
+            }
+        }
+        public System.Windows.Media.Brush AutoFontColor
+        {
+            get => _Color;
+            set
+            {
+                if (value is SolidColorBrush solidBrush)
+                {
+                    _Color = solidBrush;
+                }
+                else if (value != null)
+                {
+                    _Color = (IsActive) ? new SolidColorBrush((value as SolidColorBrush)?.Color ?? Colors.Red): 
+                        new SolidColorBrush((value as SolidColorBrush)?.Color ?? Colors.Black);
+                }
+                OnPropertyChanged();
+            }
+        }
         public string LinkedDescId { get => _LinkedDescId; set { _LinkedDescId = value; GetLinkedDescId(); OnPropertyChanged(); } }
         public string LinkedTitleId { get => _LinkedTitleId; set { _LinkedTitleId = value; GetLinkedTitle(); OnPropertyChanged(); } }
         public int Id { get => _Id; set { _Id = value; OnPropertyChanged(); } }
@@ -107,7 +131,8 @@ namespace VideoGui.Models
         public void SetActive(bool value)
         {
             AutoFontWeight = value ? FontWeights.Bold : FontWeights.Normal;  // Reversed this line
-            AutoFontColor = value ? new SolidColorBrush(Colors.Red) : new SolidColorBrush(Colors.Black);            // This line was correct
+            AutoFontColor = value ? new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.Red) :
+                new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.Black);
         }
 
         public void GetLinkedDescId()
@@ -133,7 +158,8 @@ namespace VideoGui.Models
                 TitleId = (reader["TITLEID"] is int titleid) ? titleid : -1;
                 LinkedDescId = (reader["LINKEDDESCIDS"] is string linkedDescId) ? linkedDescId : "";
                 LinkedTitleId = (reader["LINKEDTITLEIDS"] is string linkedTitleId) ? linkedTitleId : "";
-                SetActive(IsShortActive);   
+                SetActive(IsShortActive);
+                DirectoryName = DirectoryName;
             }
             catch (Exception ex)
             {
