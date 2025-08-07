@@ -5234,7 +5234,7 @@ namespace VideoGui
                 Task.Run(async () => SetupThreadProcessorAsync());
                 Thread.Sleep(100);
                 SetupTicker();
-
+                Task.Run(async () => { await ClearLogs(); });
 
                 FormResizerEvent = new System.Windows.Forms.Timer();
                 FormResizerEvent.Tick += new EventHandler(FormResizerEvent_Tick);
@@ -5245,6 +5245,37 @@ namespace VideoGui
             catch (Exception ex)
             {
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+            }
+        }
+
+        public async Task ClearLogs()
+        {
+            try
+            {
+                // 01_02_2022
+                string exePath = GetExePath();
+                var files = Directory.EnumerateFiles(exePath, "*.log").ToList();//ForEach(f =>
+                foreach (string fr in files)
+                {
+                    string f= Path.GetFileNameWithoutExtension(fr);
+                    if (f.Contains("_") && f.Length > 10)
+                    {
+                        //dd_mm_yyyy
+                        int day = f.Substring(0,2).ToInt(-1); 
+                        int month = f.Substring(3, 2).ToInt(-1);
+                        int year = f.Substring(6, 4).ToInt(-1);
+                        if (day == -1 || month == -1 || year == -1) continue;
+                        DateTime dt = new DateTime(year, month, day);
+                        if (DateTime.Now.Date.Subtract(dt).Days > 0)
+                        {
+                            File.Delete(fr);
+                        }
+                    }
+                };
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"ClearLogs {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
             }
         }
         public byte[] CryptData(byte[] _password)

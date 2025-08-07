@@ -107,7 +107,7 @@ namespace VideoGui
         List<string> lookups = new List<string>();
         string LTitleStr = "", LDescStr = "", DirectoryPath = "";
         int swap = 1, ct = 0, MaxNodes = -1, MaxUploads = 0, recs = 0, gmaxrecs = 0, files = 0, dbfiles = 0, max = 0, SlotsPerUpload = 0,
-            ScheduleMax = 0, ts = 0, LastKey = -1, Days = 1, CurrentDay = 1,inserted = 0, WheelMove = 0;
+            ScheduleMax = 0, ts = 0, LastKey = -1, Days = 1, CurrentDay = 1, inserted = 0, WheelMove = 0;
         bool EditDone = false, btndone = false, ExitDialog = false, Waiting = false, IsVideoLookup = false, WaitingFileName = false;
         bool Valid = false, IsVideoLookupShort = false, IsValid = false, IsUnlisted = false, IsDashboardMode = false, CanSpool = false, FirstRun = true, done = false, HasExited = false;
         bool DoNextNode = true, finished = false, TimedOut = false, Uploading = false, NextRecord = false, Processing = false, clickupload = true;
@@ -186,7 +186,7 @@ namespace VideoGui
                 ex.LogWrite($"LocationTimer {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-        public ScraperModule(databasehook<object> _dbInit, OnFinishIdObj _OnFinish, 
+        public ScraperModule(databasehook<object> _dbInit, OnFinishIdObj _OnFinish,
             List<string> directories, bool IsShort)
         {
             try
@@ -328,7 +328,7 @@ namespace VideoGui
                 ex.LogWrite($"ReportNewAddress {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
             }
         }
-        public ScraperModule(databasehook<object> _dbInit, OnFinishIdObj _OnFinish, 
+        public ScraperModule(databasehook<object> _dbInit, OnFinishIdObj _OnFinish,
             string _Default_url,
             Nullable<DateTime> Start, Nullable<DateTime> End, int MaxUoploads,
             List<ListScheduleItems> _listSchedules, int _eventid, bool _IsTest)
@@ -382,8 +382,8 @@ namespace VideoGui
                 ex.LogWrite($"Constructor Shorts.Schedule {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-        public ScraperModule(databasehook<object> _dbInit, OnFinishIdObj _OnFinish, 
-            string _Default_url,int maxuploads = 100, int slotsperupload = 5, 
+        public ScraperModule(databasehook<object> _dbInit, OnFinishIdObj _OnFinish,
+            string _Default_url, int maxuploads = 100, int slotsperupload = 5,
             int _EventId = -1, bool _NewSession = false)
         {
             try
@@ -1433,7 +1433,7 @@ namespace VideoGui
             }
         }
 
-        
+
         private void ProcessNode(HtmlDocument doc, HtmlNode targetSpan, object sender = null)
         {
             try
@@ -1610,20 +1610,16 @@ namespace VideoGui
                                     DoNextNode = HandlerOk == FinishType.Scheduled;
                                     if (HandlerOk == FinishType.Error)
                                     {
-                                        bool TaskCanceledrr = false;
-                                        for (int ix = 0; ix < lstMain.Items.Count; ix++)
+                                        bool IsTaskCanceled = false;
+                                        for (int ix = 0; ix < Math.Min(11, lstMain.Items.Count); ix++)
                                         {
-                                            if (ix > 10) break;
-                                            if (lstMain.Items[ix] is string rx)
+                                            if (lstMain.Items[ix] is string rx && (rx.ToLower().ContainsAny(new List<string> { "task", "canceled", "ssl", "connection" })))
                                             {
-                                                if (rx.ToLower().ContainsAny(new List<string> { "task", "canceled" }))
-                                                {
-                                                    TaskCanceledrr = true;
-                                                    break;
-                                                }
+                                                IsTaskCanceled = true;
+                                                break;
                                             }
                                         }
-                                        if (!TaskCanceledrr)
+                                        if (!IsTaskCanceled)
                                         {
                                             lstMain.Items.Insert(0, $"Error on Scheduling Detected.");
                                             canceltoken.Cancel();
@@ -2712,9 +2708,9 @@ namespace VideoGui
                         if (ScraperType == EventTypes.ShortsSchedule && directshortsScheduler is null && ReleaseDate.HasValue && ReleaseEndDate.HasValue)
                         {
                             string connectionStr = dbInitializer?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
-                            directshortsScheduler = new DirectshortsScheduler(() => { Show(); }, 
+                            directshortsScheduler = new DirectshortsScheduler(() => { Show(); },
                                 DoOnScheduleComplete, listSchedules,
-                                ReleaseDate.Value, ReleaseEndDate.Value, 
+                                ReleaseDate.Value, ReleaseEndDate.Value,
                                 DoReportSchedule,
                                 DoScheduleTaskCancel,
                                 ScheduleMax, IsTest);
@@ -3668,5 +3664,5 @@ namespace VideoGui
             }
         }
     }
-    
+
 }
