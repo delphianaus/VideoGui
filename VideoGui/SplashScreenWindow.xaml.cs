@@ -499,7 +499,7 @@ namespace VideoGui
                 lineno = 1;
                 done = false;
                 var data = await DownloadFileAsync(URL, 4 * 1048576, 16, UpdateDownloadProgress);
-                UpdateDownloadProgress(100, true);
+                
                 done = true;
                 List<Stream> ZipStreams = new List<Stream>();
                 List<string> ZipFileNames = new List<string>();
@@ -590,6 +590,7 @@ namespace VideoGui
                             }));
                     }
                     await Task.WhenAll(downloadTasks);
+                    progressCallback?.Invoke(100, true);
                     using (var combinedStream = new MemoryStream())
                     {
                         foreach (var chunk in chunks)
