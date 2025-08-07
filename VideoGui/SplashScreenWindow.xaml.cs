@@ -333,7 +333,7 @@ namespace VideoGui
             }
         }
 
-        public void UpdateDownloadProgress(double _percent, bool _done)
+        public void UpdateDownloadProgress(double _percent, bool _done=false)
         {
             try
             {
@@ -498,7 +498,8 @@ namespace VideoGui
                 statusupdate = 0;
                 lineno = 1;
                 done = false;
-                var data = await DownloadFileAsync(URL, 4 * 1048576, 16, ReportProgress);
+                var data = await DownloadFileAsync(URL, 4 * 1048576, 16, UpdateDownloadProgress);
+                UpdateDownloadProgress(100, true);
                 done = true;
                 List<Stream> ZipStreams = new List<Stream>();
                 List<string> ZipFileNames = new List<string>();
@@ -555,33 +556,15 @@ namespace VideoGui
                 key?.Close();
                 statusupdate = 4;
                 ffmpegready = true;
-
             }
-
-
-
             catch (Exception ex)
             {
                 statusupdate = 5;
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name.ToString() + $"  " + ex.Message);
             }
-
-
         }
 
-        private void ReportProgress(double obj)
-        {
-            try
-            {
-                UpdateDownloadProgress(obj, done);
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name.ToString() + $" @  " + ex.Message);
-            }
-        }
-
-        public async Task<byte[]> DownloadFileAsync(string url, long chunkSize, int numThreads, Action<double> progressCallback = null)
+        public async Task<byte[]> DownloadFileAsync(string url, long chunkSize, int numThreads, Action<double,bool> progressCallback = null)
         {
             try
             {
@@ -589,30 +572,24 @@ namespace VideoGui
                 {
                     var response = await client.SendAsync(new HttpRequestMessage(HttpMethod.Head, url));
                     var totalSize = response.Content.Headers.ContentLength ?? throw new Exception("Content length not available");
-
                     chunkSize = totalSize / numThreads + (totalSize % numThreads == 0 ? 0 : 1);
-
                     var chunks = new MemoryStream[numThreads];
                     var downloadTasks = new List<Task>();
                     var totalBytesRead = 0L;
-
                     for (int i = 0; i < numThreads; i++)
                     {
                         var startPos = i * chunkSize;
                         var endPos = Math.Min(startPos + chunkSize - 1, totalSize - 1);
                         chunks[i] = new MemoryStream();
-
                         var threadIndex = i;
                         downloadTasks.Add(DownloadChunkAsync(url,startPos, endPos, chunks[threadIndex],
                             (bytesRead) =>
                             {
                                 Interlocked.Add(ref totalBytesRead, bytesRead);
-                                progressCallback?.Invoke((double)totalBytesRead / totalSize * 100);
+                                progressCallback?.Invoke((double)totalBytesRead / totalSize * 100, false);
                             }));
                     }
-
                     await Task.WhenAll(downloadTasks);
-
                     using (var combinedStream = new MemoryStream())
                     {
                         foreach (var chunk in chunks)
@@ -641,7 +618,6 @@ namespace VideoGui
                 {
                     var request = new HttpRequestMessage(HttpMethod.Get, url);
                     request.Headers.Range = new System.Net.Http.Headers.RangeHeaderValue(startPos, endPos);
-
                     using (var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead))
                     {
                         using (var stream = await response.Content.ReadAsStreamAsync())
@@ -847,7 +823,6 @@ namespace VideoGui
         {
             try
             {
-
                 string URL = GetEncryptedString(new int[] { 158, 43, 91, 70, 226,
                     157, 129, 28, 246, 111, 4, 183, 209, 210, 72, 119, 54, 249, 144,
                     243, 254, 196, 198, 97, 87, 109, 211, 171, 42, 249, 110, 168, 33,
