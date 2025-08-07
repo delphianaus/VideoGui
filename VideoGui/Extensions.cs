@@ -1105,7 +1105,7 @@ namespace VideoGui
         }
 
 
-        public static async Task CopyToAsync(this Stream source, Stream destination, OnPercentUpdate _DoOnPercent, OnFinish _DoOnFisish, long Max, CancellationToken cancellationToken = default(CancellationToken), int bufferSize = 0x4000)
+        public static async Task CopyToAsync(this Stream source, Stream destination, OnPercentUpdate _DoOnPercent, OnFinish _DoOnFisish, long Max, CancellationToken cancellationToken = default(CancellationToken), int bufferSize = 0x1000)
         {
             try
             {

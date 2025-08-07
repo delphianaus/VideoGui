@@ -53,6 +53,7 @@ using System.Security.Permissions;
 using System.Security.Policy;
 using System.Security.Principal;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -96,6 +97,7 @@ using Object = System.Object;
 using Path = System.IO.Path;
 using Stream = System.IO.Stream;
 using Window = System.Windows.Window;
+using HtmlDocument = HtmlAgilityPack.HtmlDocument;
 
 
 
@@ -5248,6 +5250,8 @@ namespace VideoGui
             }
         }
 
+
+        
         public async Task ClearLogs()
         {
             try
