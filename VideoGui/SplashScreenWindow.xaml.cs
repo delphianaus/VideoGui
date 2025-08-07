@@ -700,64 +700,37 @@ namespace VideoGui
             {
                 using var client = new HttpClient();
                 client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0");
-                string html = await client.GetStringAsync("https://www.gyan.dev/ffmpeg/builds/");
-                HtmlDocument doc = new HtmlDocument();
+                var response = await client.GetAsync("https://www.gyan.dev/ffmpeg/builds/");
+                response.EnsureSuccessStatusCode();
+                var html = await response.Content.ReadAsStringAsync();
+                var doc = new HtmlDocument();
                 doc.LoadHtml(html);
-                string NodeId = "";
                 var versionSpan = doc.DocumentNode.SelectSingleNode("//span[@id='git-version']");
-                if (versionSpan != null)
+                if (versionSpan == null)
                 {
-                    NodeId = versionSpan.InnerText; // Returns "2025-08-04-git-9a32b86307"
+                    ffmpegready = true;
+                    return false;
                 }
-                if (NodeId != "")
+                var nodeId = versionSpan.InnerText;
+                var key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                var currentVersion = key.GetValueStr("ffmpegversion", "");
+                var dateStr = key.GetValueStr("ffmpegDate", "");
+                key?.Close();
+                var allowDownload = string.IsNullOrEmpty(dateStr) ||
+                                    DateTime.ParseExact(dateStr, "dd-MM-yyyy", null) < DateTime.Now.AddDays(-3) ||
+                                    nodeId != currentVersion;
+                if (allowDownload && CheckInternet())
                 {
-                    RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
-                    string currentVersion = key.GetValueStr("ffmpegversion", "");
-                    string DateStr = key.GetValueStr("ffmpegDate", "");
-                    key?.Close();
-                    bool AllowDownload = false;
-                    if (DateStr == "")
-                    {
-                        AllowDownload = true;
-                    }
-
-                    if (DateStr != "")
-                    {
-                        DateTime lastUpdate = DateTime.ParseExact(DateStr, "dd-MM-yyyy", null);
-                        if (lastUpdate < DateTime.Now.AddDays(-3))
-                        {
-                            AllowDownload = true;
-                        }
-                        else
-                        {
-                            AllowDownload = false;
-                            ffmpegready = true;
-                            return true;
-                        }
-                    }
-
-                    if (CheckInternet())
-                    {
-                        if (NodeId != currentVersion || AllowDownload)
-                        {
-                            string downloadlink = "https://www.gyan.dev/ffmpeg/builds/ffmpeg-git-full.7z";
-                            RunFFMPEGDownload(downloadlink, NodeId);
-                        }
-                        return true;
-                    }
-                    else
-                    {
-                        ffmpegready = true;
-                        return true;
-                    }
+                    var downloadLink = "https://www.gyan.dev/ffmpeg/builds/ffmpeg-git-full.7z";
+                    await RunFFMPEGDownload(downloadLink, nodeId);
                 }
-
-
-                return false;
+                ffmpegready = true;
+                return true;
             }
             catch (Exception ex)
             {
                 ex.LogWrite($"Update_ffmpeg {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+                ffmpegready = true;
                 return false;
             }
         }
@@ -781,7 +754,6 @@ namespace VideoGui
         }
         public async Task RunDownload7Zip(string URL)
         {
-
             try
             {
                 var progress = new ProgressMessageHandler();
