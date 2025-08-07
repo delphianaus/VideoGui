@@ -280,20 +280,16 @@ namespace VideoGui
 
                 WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
                 string gUrl = webAddressBuilder.Dashboard().Address;
-
                 RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                 string uploadsnumber = key.GetValueStr("UploadNumber", "5");
                 string MaxUploads = key.GetValueStr("MaxUploads", "100");
                 key?.Close();
                 int MaxShorts = MaxUploads.ToInt(80);
                 int MaxPerSlot = uploadsnumber.ToInt(100);
-
                 string TargetUrl = webAddressBuilder.AddFilterByDraftShorts().GetHTML();
                 OldgUrl = gUrl;
                 OldTarget = TargetUrl;
                 var __scraperModule = new ScraperModule(ModuleCallback, FinishScraper, gUrl, TargetUrl, 0);
-
-
                 Hide();
                 __scraperModule.ShowActivated = true;
                 __scraperModule.Show();
@@ -3872,34 +3868,22 @@ namespace VideoGui
         {
             try
             {
-                Show();
-
-                Task.Run(() =>
+                if (thisform is ScraperModule scraperModulex)
                 {
-                    if (thisform is ScraperModule scraperModulex)
+                    bool IsTimeOut = (scraperModulex is ScraperModule sls) ? sls.TimedOutClose : false;
+                    scraperModulex = null;
+                    if (IsTimeOut)
                     {
-                        bool IsTimeOut = (scraperModulex is ScraperModule sls) ? sls.TimedOutClose : false;
-                        while (true)
-                        {
-                            if (!scraperModulex.IsClosed && scraperModulex.IsClosing)
-                            {
-                                Thread.Sleep(250);
-                            }
-                            if (scraperModulex.IsClosed) break;
-                        }
-                        scraperModulex = null;
-                        if (IsTimeOut)
-                        {
-                            Dispatcher.Invoke(() =>
-                            {
-                                var scraperModules = new ScraperModule(ModuleCallback, FinishScraper, OldgUrl, OldTarget, 0);
-                                Hide();
-                                scraperModules.ShowActivated = true;
-                                scraperModules.Show();
-                            });
-                        }
+                        var scraperModules = new ScraperModule(ModuleCallback, FinishScraper, OldgUrl, OldTarget, 0);
+                        Hide();
+                        scraperModules.ShowActivated = true;
+                        scraperModules.Show();
                     }
-                });
+                }
+                else
+                {
+                    Show();
+                }
             }
             catch (Exception ex)
             {
@@ -5923,18 +5907,7 @@ namespace VideoGui
                                 }
                                 LineNum = 12;
                             }
-                            if (!Job.IsMulti && !Job.IsCST && zprocessingfile != "")
-                            {
 
-                                List<Process> Processes = Win32Processes.GetProcessesLockingFile(zprocessingfile);
-                                if (Processes.Count > 0)
-                                {
-                                    LoadSelectForm();
-                                    Thread.Sleep(250);
-                                    Job.ProbeDate = DateTime.Now.AddYears(-500);
-                                    continue;
-                                }
-                            }
                             LineNum = 13;
                             string DestFile = "", SourceDirectory = Job.SourcePath, sep = Job.X264Override ? "\\x264\\" : "\\";
                             DestFile = (Job.IsTwitchStream && !Job.twitchschedule.HasValue) ? DestDirectoryTwitch : (Job.Is4KAdobe) ? DestDirectoryAdobe4K : (Job.Is4K) ? DestDirectory4K : (Job.Is1080p) ? DestDirectory1080p : DestDirectory720p;
@@ -6281,11 +6254,7 @@ namespace VideoGui
                     {
                         LineNum = 24;
 
-                        if (Job.IsCST)
-                        {
-                            IsOkay = true;
-                        }
-                        else if (System.IO.File.Exists(processingfile) || Job.Handle != "")
+                        if (System.IO.File.Exists(processingfile) || Job.Handle != "")
                         {
                             LineNum = 25;
                             string LastFile = processingfile;
@@ -6431,7 +6400,7 @@ namespace VideoGui
                             string JobHandle = "", srfilex = (Job.IsMuxed) ? Job.MultiSourceDir : Job.SourcePath + "\\" + Job.FileNoExt + Job.FileExt;
                             if (Job.IsMulti && !Job.IsMuxed) srfilex = Job.DestMFile;
                             LineNum = 45;
-                            if (!Job.IsMulti && !Job.IsCST)
+                            if (!Job.IsMulti)
                             {
                                 List<Process> Procx = Win32Processes.GetProcessesLockingFile(srfilex);
                                 if (Procx.Count == 0)
@@ -6652,38 +6621,15 @@ namespace VideoGui
                                     //if (job)
                                     double TotalSecs = 0;
                                     List<string> Files = new List<string>();
-                                    if (source.EndsWith(".src") || source.EndsWith(".edt") || source.EndsWith(".cst"))
+                                    ffmpegbridge FileIndexer = new ffmpegbridge();
+                                    FileIndexer.ReadDuration(source);
+                                    while (!FileIndexer.Finished)
                                     {
-                                        string srcf = File.ReadAllText(source);// Thin Processing List
-                                        List<string> Commands = srcf.Split('|').ToList();
-                                        if (Commands.Count > 3)
-                                        {
-                                            Commands.RemoveAt(0);
-                                        }
-                                        Commands.RemoveAt(0);
-                                        Files.Clear();
-                                        string sourceDir = Commands.FirstOrDefault(), ext = Commands.LastOrDefault();
-                                        Files = Directory.EnumerateFiles(sourceDir, "*" + ext, SearchOption.AllDirectories).ToList();
-                                        ffmpegbridge FileIndexer = new ffmpegbridge();
-                                        FileIndexer.ReadDuration(Files);
-                                        while (!FileIndexer.Finished)
-                                        {
-                                            Thread.Sleep(100);
-                                        }
-                                        TotalSecs = FileIndexer.GetDuration().TotalSeconds;
-                                        FileIndexer = null;
+                                        Thread.Sleep(100);
                                     }
-                                    else
-                                    {
-                                        ffmpegbridge FileIndexer = new ffmpegbridge();
-                                        FileIndexer.ReadDuration(source);
-                                        while (!FileIndexer.Finished)
-                                        {
-                                            Thread.Sleep(100);
-                                        }
-                                        TotalSecs = FileIndexer.GetDuration().TotalSeconds;
-                                        FileIndexer = null;
-                                    }
+                                    TotalSecs = FileIndexer.GetDuration().TotalSeconds;
+                                    FileIndexer = null;
+
 
                                     ffmpegbridge FileIndexer1 = new ffmpegbridge();
                                     FileIndexer1.ReadDuration(Destination);
@@ -6695,28 +6641,7 @@ namespace VideoGui
                                     FileIndexer1 = null;
                                     if (TotalSecs == DTotalSecs)
                                     {
-                                        if (source.EndsWith(".src") || source.EndsWith(".edt") || source.EndsWith(".cst"))
-                                        {
-                                            string srcf = File.ReadAllText(source); // Thin Processing List
-                                            List<string> Commands = srcf.Split('|').ToList();
-                                            string ks = Commands.FirstOrDefault();
-                                            if (Commands.Count > 3)
-                                            {
-                                                Commands.RemoveAt(0);
-                                            }
-                                            Commands.RemoveAt(0);
-                                            Files.Clear();
-                                            string sourceDir = Commands.FirstOrDefault(), ext = Commands.LastOrDefault();
-                                            Files = Directory.EnumerateFiles(sourceDir, "*" + ext, SearchOption.AllDirectories).ToList();
-                                            ffmpegbridge FileIndexer2 = new ffmpegbridge();
-                                            FileIndexer2.ReadDuration(Files);
-                                            while (!FileIndexer2.Finished)
-                                            {
-                                                Thread.Sleep(100);
-                                            }
-                                            TotalSecs = FileIndexer2.GetDuration().TotalSeconds;
-                                            FileIndexer2 = null;
-                                        }
+
                                     }
                                 }
                             }
@@ -7538,7 +7463,7 @@ namespace VideoGui
                 {
                     LineNum = 32;
                     // **** DO THINING HERE
-                    if ((job.IsCST || job.IsCET) && (job.PosMode is string mode) && (mode.ToLower() == "time")) // CET MOD   
+                    if ((job.PosMode is string mode) && (mode.ToLower() == "time")) // CET MOD   
                     {
                         LineNum = 33;
                         SeekFrom = job.StartPos.FromStrToTimeSpan();
@@ -7557,16 +7482,7 @@ namespace VideoGui
                         }
                         LineNum = 37;
                     }
-                    if (job.IsCST || job.IsCET) // CET MOD
-                    {
-                        LineNum = 38;
-                        job.TotalSeconds = SeekTo.TotalSeconds - SeekFrom.TotalSeconds;
-                        if (job.TotalSeconds > 0)
-                        {
-                            LineNum = 39;
-                            totalseconds = job.TotalSeconds;
-                        }
-                    }
+
                     LineNum = 40;
                     TimeSpan NewSeekFrom = TimeSpan.Zero, NewSeekTo = TimeSpan.Zero;
                     if ((job.IsMulti) && (SeekTo != TimeSpan.Zero))
@@ -7794,25 +7710,8 @@ namespace VideoGui
                     var ConverterProgressDelegate = ConverterProgressEventHandler.AddNewProgressEventHandler(dfile);
                     var conversion = FFmpegCli.Converters.New(ConverterProgressDelegate);
                     bool Isinter = false, IsResize1080shorts = this.IsChecked("ChkResize1080shorts");
-                    if (job.IsEdt)
-                    {
-                        LineNum = 64;
-                        if (videowidth > 1080)
-                        {
-                            videoStream = videoStream.SetSize(720, -8, aspectratio, ArModulas.ToInt(), Scaling.lanczos, 0, 0, 0, 0);
-                        }
-                        if (videoStream.Framerate > 25)
-                        {
-                            videoStream = videoStream.SetFPS(25.0f);
-                        }
-                    }
-                    else if (job.IsCST)
-                    {
-                        videoStream.CopyStream();
-                        audioStream.CopyStream();
-                        _isCopy = true;
-                    }
-                    else if (job.IsTwitchOut)
+
+                    if (job.IsTwitchOut)
                     {
                         audioStream.CopyStream();
                         Encoder = ffmpeg.VideoCodec.h264_amf;
@@ -7886,12 +7785,8 @@ namespace VideoGui
                                 }
                                 LineNum = 71;
                             }
-                            else if (job.IsCST)
-                            {
-                                videoStream.CopyStream();
-                                _isCopy = true;
-                            }
-                            else if (job.Is5K && !job.IsEdt)
+
+                            else if (job.Is5K)
                             {
                                 videoStream = videoStream.SetSize(3840, 2160, aspectratio, ArModulas.ToInt(), Scaling.lanczos, 0, 0, 0, 0);
                             }
@@ -7984,7 +7879,6 @@ namespace VideoGui
                         }
                     }
                     LineNum = 84;
-                    if (job.IsEdt) samplesize = 0.8M;
                     if (job.IsTwitchOut)
                     {
                         samplesize = 5.2M;
@@ -8506,44 +8400,32 @@ namespace VideoGui
                         LinePos = 4;
                         if (jo.IsMulti)
                         {
-                            if (!IsNVM)
-                            {
-                                string newfileext = (jo.IsEdt) ? ".dedt" : ".dsr";
-                                string fnx = Path.GetFileNameWithoutExtension(jo.MultiFile);
-                                string fnxs = fnx + newfileext;
-                                string dmo = Path.GetDirectoryName(jo.MultiFile);
-                                string xt = Path.GetExtension(jo.MultiFile);
-                                string dsrfile = Path.Combine(dmo, fnx + newfileext);
-                                MoveIfExists(jo.MultiFile, dsrfile);
-                            }
-                            else
-                            {
-                                string sql = "insert into AutoInsertHistory(srcdir, destfname ,StartPos, Duration , b720p, " +
-                                    "bShorts , bCreateShorts, bEncodeTrim ,bCutTrim, bMonitoredSource ,bPersistentJob , " +
-                                    "BTWITCHSTREAM, TWITCHDATE, TWITCHTIME,RUNID, ISMUXED,MUXDATA)" +
-                                    " select srcdir,destfname ,StartPos, Duration , b720p, bShorts , bCreateShorts, bEncodeTrim ,bCutTrim," +
-                                    $" bMonitoredSource ,bPersistentJob , BTWITCHSTREAM, TWITCHDATE, TWITCHTIME,RUNID,ISMUXED,MUXDATA from AutoInsert where id " +
-                                    $"= {jo.DeletionFileHandle} RETURNING ID;";
 
-                                int idxx = connectionString.ExecuteScalar(sql).ToInt(-1);
-                                // Update DeletionDate
-                                if (idxx != -1)
-                                {
-                                    DateOnly DTS = new DateOnly(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day);
-                                    ModifyHistory(idxx, DTS);
-                                }
-                                DeleteRecord(jo.DeletionFileHandle, true);
-                                DeleteFromAutoInsertTable(jo.DeletionFileHandle);
-                                InsertIntoDeletionTable(Path.GetFileName(jo.DestMFile));
-                                if (IsMSJ)
-                                {
-                                    DeleteIfExists(jo.SourceFile);
-                                }
-                                if (IsCreateShorts > 0)
-                                {
-                                    ShortsProcessors.Add(new ShortsProcessor(mdir.Replace("(shorts)", "(shorts_logo)"), DoOnNewShort,
-                                        DoOnShortsDone, 1));
-                                }
+                            string sql = "insert into AutoInsertHistory(srcdir, destfname ,StartPos, Duration , b720p, " +
+                                "bShorts , bCreateShorts, bEncodeTrim ,bCutTrim, bMonitoredSource ,bPersistentJob , " +
+                                "BTWITCHSTREAM, TWITCHDATE, TWITCHTIME,RUNID, ISMUXED,MUXDATA)" +
+                                " select srcdir,destfname ,StartPos, Duration , b720p, bShorts , bCreateShorts, bEncodeTrim ,bCutTrim," +
+                                $" bMonitoredSource ,bPersistentJob , BTWITCHSTREAM, TWITCHDATE, TWITCHTIME,RUNID,ISMUXED,MUXDATA from AutoInsert where id " +
+                                $"= {jo.DeletionFileHandle} RETURNING ID;";
+
+                            int idxx = connectionString.ExecuteScalar(sql).ToInt(-1);
+                            // Update DeletionDate
+                            if (idxx != -1)
+                            {
+                                DateOnly DTS = new DateOnly(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day);
+                                ModifyHistory(idxx, DTS);
+                            }
+                            DeleteRecord(jo.DeletionFileHandle, true);
+                            DeleteFromAutoInsertTable(jo.DeletionFileHandle);
+                            InsertIntoDeletionTable(Path.GetFileName(jo.DestMFile));
+                            if (IsMSJ)
+                            {
+                                DeleteIfExists(jo.SourceFile);
+                            }
+                            if (IsCreateShorts > 0)
+                            {
+                                ShortsProcessors.Add(new ShortsProcessor(mdir.Replace("(shorts)", "(shorts_logo)"), DoOnNewShort,
+                                    DoOnShortsDone, 1));
                             }
                         }
                         else
@@ -8600,21 +8482,12 @@ namespace VideoGui
                         }
                         string newdest = (jo.IsMulti) ? jo.DestMFile : filename;
                         Double Totals = jo.TotalSeconds;
-                        if (jo.IsCST || jo.IsCET) // CET MOD
-                        {
-                            TimeSpan EndTime = TimeSpan.Parse(jo.EndPos);
-                            TimeSpan StartTime = TimeSpan.Parse(jo.StartPos);
-                            if (EndTime != TimeSpan.Zero)
-                            {
-                                Totals = EndTime.TotalSeconds - StartTime.TotalSeconds;
-                            }
 
-                        }
 
 
                         if (!jo.IsShorts || jo.IsMuxed)
                         {
-                            DoAsyncFinish(jo.FileNoExt, newdest, Totals, fs, fs2, fps, filename, jo.IsComplex || jo.IsCST, jo.IsTwitchStream, jo.IsMuxed).ConfigureAwait(false);
+                            DoAsyncFinish(jo.FileNoExt, newdest, Totals, fs, fs2, fps, filename, jo.IsComplex, jo.IsTwitchStream, jo.IsMuxed).ConfigureAwait(false);
                         }
                     }
                     if (!found)
@@ -9565,13 +9438,7 @@ namespace VideoGui
                     foreach (string filename in SourceList)
                     {
                         string myfilename = Path.GetFileNameWithoutExtension(filename);
-                        if (myfilename.ContainsAny(new List<string> { ".src", ".cst", ".edt" }))
-                        {
-                            string fn = File.ReadAllText(filename); // Select Files
-                            List<string> Commands = fn.Split('|').ToList();
-                            if (Commands.Count > 3) Commands.RemoveAt(0);
-                            myfilename = Path.GetFileNameWithoutExtension(Commands.FirstOrDefault());
-                        }
+
                         if (ProcessingJobs.Count(job => job.Title == myfilename) == 0)
                         {
                             AddIfVaid(filename, SourceDir);
@@ -10317,17 +10184,10 @@ namespace VideoGui
             try
             {
                 Show();
-                Task.Run(() =>
+                if (sender is SchedulingSelectEditor se)
                 {
-                    if (sender is SchedulingSelectEditor se && !se.IsClosed)
-                    {
-                        while (se.IsClosing)
-                        {
-                            Thread.Sleep(100);
-                        }
-                        se = null;
-                    }
-                });
+                    se = null;
+                }
             }
             catch (Exception ex)
             {
@@ -10677,17 +10537,10 @@ namespace VideoGui
             try
             {
                 Show();
-                Task.Run(() =>
+                if (sender is ActionScheduleSelector asx)
                 {
-                    if (sender is ActionScheduleSelector asx && !asx.IsClosed)
-                    {
-                        while (asx.IsClosing)
-                        {
-                            Thread.Sleep(100);
-                        }
-                        asx = null;
-                    }
-                });
+                    asx = null;
+                }
             }
             catch (Exception ex)
             {
@@ -10749,18 +10602,10 @@ namespace VideoGui
             try
             {
                 Show();
-                Task.Run(() =>
+                if (sender is DirectoryTitleDescEditor dt)
                 {
-                    if (sender is DirectoryTitleDescEditor dt && !dt.IsClosed)
-                    {
-                        while (!dt.IsClosing)
-                        {
-                            Thread.Sleep(100);
-                        }
-                        dt = null;
-                    }
-                });
-
+                    dt = null;
+                }
             }
             catch (Exception ex)
             {
@@ -10887,18 +10732,10 @@ namespace VideoGui
             try
             {
                 Show();
-                Task.Run(() =>
+                if (sender is ShortsCreator r)
                 {
-                    if (sender is ShortsCreator r)
-                    {
-
-                        while (r.IsClosing)
-                        {
-                            Thread.Sleep(100);
-                        }
-                        r = null;
-                    }
-                });
+                    r = null;
+                }
             }
             catch (Exception ex)
             {
@@ -10994,10 +10831,7 @@ namespace VideoGui
                 Show();
                 if (sender is MultiShortsUploader msu)
                 {
-                    Task.Run(() =>
-                    {
-                        msu = null;
-                    });
+                    msu = null;
                 }
             }
             catch (Exception ex)
@@ -11010,33 +10844,19 @@ namespace VideoGui
         {
             try
             {
-                Show();
-
-                if (sender is SelectShortUpload su && su.IsClosed)
+                if (sender is SelectShortUpload su)
                 {
-                    su.Hide();
-                    int ucnt = su.uploadedcnt;
-                    Task.Run(() =>
+                    cnt = su.uploadedcnt;
+                    su = null;
+                    if (cnt > 0)
                     {
-                        var cts = new CancellationTokenSource();
-                        cts.CancelAfter(1500);
-                        while (su.IsClosing && !cts.Token.IsCancellationRequested)
-                        {
-                            Thread.Sleep(100);
-                        }
-                        su = null;
-                        if (ucnt > 0)
-                        {
-                            Dispatcher.Invoke(() =>
-                            {
-                                Nullable<DateTime> startdate = DateTime.Now, enddate = DateTime.Now.AddHours(10);
-                                List<ListScheduleItems> listSchedules2 = new();
-                                int _eventid = 0;
-                                SchMaxUploads = 100;
-                                ShowScraper(startdate, enddate, listSchedules2, SchMaxUploads, _eventid);
-                            });
-                        }
-                    });
+                        Nullable<DateTime> startdate = DateTime.Now, enddate = DateTime.Now.AddHours(10);
+                        List<ListScheduleItems> listSchedules2 = new();
+                        int _eventid = 0;
+                        SchMaxUploads = 100;
+                        ShowScraper(startdate, enddate, listSchedules2, SchMaxUploads, _eventid);
+                    }
+                    else Show();
                 }
             }
             catch (Exception ex)

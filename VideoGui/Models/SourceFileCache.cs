@@ -47,12 +47,16 @@ namespace VideoGui.Models
         public string SourceDirectory { get => _SourceDirectory; set { _SourceDirectory = value; OnPropertyChanged(); } }
         public DateTime LastModified { get => _LastModified; set { _LastModified = value; OnPropertyChanged(); } }
 
-        public List<SourceFileInfo> SourceFiles { get => _SourceFiles; set { _SourceFiles = value; OnPropertyChanged();
-    }
-}
-public string[] GetDefaultVideoExts()
+        public List<SourceFileInfo> SourceFiles
         {
-            return new string[] { ".avi", ".mkv", ".mp4", ".m2ts", ".src", ".cst", ".edt" };
+            get => _SourceFiles; set
+            {
+                _SourceFiles = value; OnPropertyChanged();
+            }
+        }
+        public string[] GetDefaultVideoExts()
+        {
+            return new string[] { ".avi", ".mkv", ".mp4", ".m2ts" };
         }
         public string GetExePath()
         {
@@ -79,7 +83,7 @@ public string[] GetDefaultVideoExts()
                     Where(s => s.ToLower().EndsWithAny(GetDefaultVideoExts())).ToList<string>();
                 BuildList(Files);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
             }
@@ -100,12 +104,12 @@ public string[] GetDefaultVideoExts()
                 FileInfos.AddRange(FileConverter.FileInfoList);
 
                 TimeSpan StartPos = TimeSpan.Zero;
-                foreach(var file in FileInfos)
+                foreach (var file in FileInfos)
                 {
                     TimeSpan tspan = TimeSpan.FromMilliseconds(file.Item2);
                     SourceFileInfo TFI = new SourceFileInfo(file.Item1, StartPos, tspan);
                     StartPos += tspan;
-                     _SourceFiles.Add(TFI);
+                    _SourceFiles.Add(TFI);
                 }
                 FileConverter = null;
             }
@@ -114,7 +118,7 @@ public string[] GetDefaultVideoExts()
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
             }
         }
-        public SourceFileCache(string _SourceDirectory, bool buildlist=true)
+        public SourceFileCache(string _SourceDirectory, bool buildlist = true)
         {
             try
             {

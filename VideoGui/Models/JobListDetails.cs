@@ -18,16 +18,18 @@ namespace VideoGui
 {
     public class JobListDetails : INotifyPropertyChanged
     {
-        private string _RTMP, _ScriptFile, _title, _MultiFile, _fileinfo, _sourcePath, _handle, _VideoInfo, _MultiSourceDir,
+        private string _RTMP, _ScriptFile, _title, _MultiFile, _fileinfo, _sourcePath, _handle, 
+            _VideoInfo, _MultiSourceDir,
             _SourceFile, _FileNoExt, _FileExt, _DestMFile, _StartPos, _EndPos, _PosMode, _MuxData;
         private int _progress, _OwnedByID, _SourceFileIndex, _DeletionFileHandle;
         private double _TotalSeconds;
         //CET MOD
-        private bool _IsTwitchStream, _Is5K, _Is4kAdobe, _IsCET, _IsMSJ, _IsNVM, _Complete, _ConversionStarted, _ProbePassed, _IsCST, _KeepSource, _IsMulti,
+        private bool _IsTwitchStream, _Is5K, _Is4kAdobe, _IsMSJ, _IsNVM, _Complete, 
+            _ConversionStarted, _ProbePassed, _KeepSource, _IsMulti,
             _fisheye, _processed, _X264Override, _ComplexMode, _Is720p,
-            _Is48K, _IsComplex, _ProbeLock, _IsAc3_2Channel, _IsAc3_6Channel, _InProcess, _IsSkipped,
-            _IsShorts,
-            _Mpeg4ASP, _Mpeg4AVC, _Is1080p, _Is4K, _IsEdt, _IsInterlaced, _ProbeStarted, _IsMuxed;
+            _Is48K, _IsComplex, _ProbeLock, _IsAc3_2Channel, _IsAc3_6Channel,
+            _InProcess, _IsSkipped, _IsShorts,_Mpeg4ASP, _Mpeg4AVC, _Is1080p, 
+            _Is4K, _IsInterlaced, _ProbeStarted,    _IsMuxed;
         private FontStyle _ItemFontStyle;
         private Color _ForegroundColor;
         private int _IsCreateShorts = -1;
@@ -82,7 +84,6 @@ namespace VideoGui
         public bool KeepSource { get => _KeepSource; set { _KeepSource = value; OnPropertyChanged(); } }
         public bool Is4K { get => _Is4K; set { _Is4K = value; OnPropertyChanged(); } }
         // CET MOD
-        public bool IsCET { get => _IsCET; set { _IsCET = value; OnPropertyChanged(); } }
         public bool IsNVM { get => _IsNVM; set { _IsNVM = value; OnPropertyChanged(); } }
 
         public bool IsMSJ { get => _IsMSJ; set { _IsMSJ = value; OnPropertyChanged(); } }
@@ -101,7 +102,6 @@ namespace VideoGui
 
         public bool Is4KAdobe { get => _Is4kAdobe; set { _Is4kAdobe = value; OnPropertyChanged(); } }
 
-        public bool IsEdt { get => _IsEdt; set { _IsEdt = value; OnPropertyChanged(); } }
         public bool ProbePassed { get => _ProbePassed; set { _ProbePassed = value; OnPropertyChanged(); } }
         public bool Is720P { get => _Is720p; set { _Is720p = value; OnPropertyChanged(); } }
         public bool ComplexMode { get => _ComplexMode; set { _ComplexMode = value; OnPropertyChanged(); } }
@@ -133,7 +133,6 @@ namespace VideoGui
         public bool X264Override { get => _X264Override; set { _X264Override = value; OnPropertyChanged(); } }
         public bool ProbeLock { get => _ProbeLock; set { _ProbeLock = value; OnPropertyChanged(); } }
         public bool Is1080p { get => _Is1080p; set { _Is1080p = value; OnPropertyChanged(); } }
-        public bool IsCST { get => _IsCST; set { _IsCST = value; OnPropertyChanged(); } }
         public bool IsInterlaced { get => _IsInterlaced; set { _IsInterlaced = value; OnPropertyChanged(); } }
 
         public bool Complete { get => _Complete; set { _Complete = value; OnPropertyChanged(); } }
@@ -213,9 +212,7 @@ namespace VideoGui
                 (ProbePassed, Complete, ProbeLock, _ProbeStarted, _ConversionStarted, Processed, JobDate, MultiFile, _IsNVM) =
                     (true, false, false, false, false, false, DateTime.Now, Title, true);
                 DeletionFileHandle = reader["ID"].ToInt();
-                _IsCST = ScriptType == 1;// IsCutTrim
-                _IsEdt = ScriptType == 2;// Is720p
-                _IsCET = ScriptType == 3;// IsCutTrim
+                
 
                 IsTwitchStream = ScriptType == 5;
                 Is4K = (Is4KAdobe) ? true : Is4K;
@@ -237,7 +234,7 @@ namespace VideoGui
                 Commands.RemoveAt(0);
                 string ext = Commands.FirstOrDefault();
                 Commands.RemoveAt(0);
-                if ((Commands.Count >= 2) && (IsCST || IsCET || IsTwitchStream || IsComplexYT))
+                if ((Commands.Count >= 2) && (IsTwitchStream || IsComplexYT))
                 {
                     StartPos = Commands.FirstOrDefault();
                     EndPos = Commands[1].ToString();
@@ -274,12 +271,10 @@ namespace VideoGui
             Is4KAdobe = __Is4KAdobe;
             _IsMSJ = _ISMJS;
             DeletionFileHandle = _Autoinssertid;
-            _IsCST = _ScriptType == 1;// IsCutTrim
-            _IsCET = _ScriptType == 3;// IsEncodeTrim
-            _IsEdt = _ScriptType == 2;// Is720p
+            
             IsShorts = __IsShorts | _ScriptType == 0 || _ScriptType == 4;
             IsCreateShorts = _IsCreateShorts;
-            Is4K = (Is4KAdobe || IsShorts || IsCET || IsCST || IsEdt) ? true : Is4KAdobe;
+            Is4K = (Is4KAdobe || IsShorts) ? true : Is4KAdobe;
             List<string> Commands = _ScriptFile.Split('|').ToList();
             string ks = Commands.FirstOrDefault();
             KeepSource = false;
@@ -298,7 +293,7 @@ namespace VideoGui
             Commands.RemoveAt(0);
             string ext = Commands.FirstOrDefault();
             Commands.RemoveAt(0);
-            if ((Commands.Count >= 2) && (IsCST || IsCET || IsTwitchOut))
+            if ((Commands.Count >= 2) && ( IsTwitchOut))
             {
                 StartPos = Commands.FirstOrDefault();
                 EndPos = Commands[1].ToString();
@@ -363,102 +358,44 @@ namespace VideoGui
             {
                 Is720P = true;
             }
-            IsCET = false;// CET MOD
+            
             string myext = Path.GetExtension(_Title).ToLower();
-            if (myext.ContainsAny(new List<string> { ".srcpo", ".cst", ".edt" }))
-            {
-                MultiFile = _Title;
-                _IsCST = myext.EndsWith(".cst");
-                _IsEdt = myext.EndsWith(".edt");
-                _IsShorts = myext.EndsWith(".src");
 
-                _IsCET = false;// CET MOD
-                string fn = File.ReadAllText(_Title);
-                ScriptFile = fn;
-                List<string> Commands = fn.Split('|').ToList();
-                string ks = Commands.FirstOrDefault();
-                KeepSource = false;
-                if (Commands.Count > 3)
-                {
-                    KeepSource = ks.ToLower() == "true";
-                    Commands.RemoveAt(0);
-                }
-                DestMFile = Commands.FirstOrDefault();
-                FileExt = Path.GetExtension(DestMFile);
-                Title = Path.GetFileNameWithoutExtension(DestMFile);
-                _IsMulti = true;
-                Commands.RemoveAt(0);
-                string sourceDir = Commands.FirstOrDefault();
-                MultiSourceDir = sourceDir;
-                Commands.RemoveAt(0);
-                string ext = Commands.FirstOrDefault();
-                Commands.RemoveAt(0);
-                if ((Commands.Count >= 2) && (IsCST))
-                {
-                    StartPos = Commands.FirstOrDefault();
-                    EndPos = Commands[1].ToString();
-                    PosMode = Commands[2].ToString();
-                }
-                List<string> Files = Directory.EnumerateFiles(sourceDir, "*" + ext, SearchOption.AllDirectories).ToList();
-                foreach (string file in Files)
-                {
-                    if (File.Exists(file))
-                    {
-                        ComplexCutList.Add($"file '{file}'");
-                    }
-                }
-                _handle = "";
-                X264Override = x265Override;
-                Mpeg4ASP = _IsMpeg4ASP;
-                Mpeg4AVC = _IsMpeg4AVC;
-                _IsInterlaced = false;
-                IsSkipped = false;// 0 means not locked
-                _Is48K = false;
-                _IsAc3_2Channel = false;
-                _IsAc3_6Channel = false;
-                _handle = "";
-                ItemFontStyle = (X264Override) ? System.Windows.FontStyles.Italic : System.Windows.FontStyles.Normal;
-                ForegroundColor = X264Override ? Color.FromScRgb(100, 6, 186, 28) : Color.FromArgb(100, 246, 8, 50);
-            }
-            else
+            var fnx = Path.GetFileNameWithoutExtension(_Title).ToLower();
+            IsComplex = (File.Exists(fnx + ".x264") || File.Exists(fnx + ".x265"));
+            if (IsComplex)
             {
-                var fnx = Path.GetFileNameWithoutExtension(_Title).ToLower();
-                IsComplex = (File.Exists(fnx + ".x264") || File.Exists(fnx + ".x265"));
-                if (IsComplex)
+                string fnp = File.Exists(fnx + ".x264") ? fnx + ".x264" : fnx + ".x265";
+                ComplexMode = fnp.Contains(".x265");
+                string cutlist = File.ReadAllText(fnp);
+                List<string> cuts = cutlist.Split(new char[] { '|' }).ToList();
+                if (cuts.Count > 0)
                 {
-                    string fnp = File.Exists(fnx + ".x264") ? fnx + ".x264" : fnx + ".x265";
-                    ComplexMode = fnp.Contains(".x265");
-                    string cutlist = File.ReadAllText(fnp);
-                    List<string> cuts = cutlist.Split(new char[] { '|' }).ToList();
-                    if (cuts.Count > 0)
-                    {
-                        ComplexCutList.AddRange(cuts);
-                    }
+                    ComplexCutList.AddRange(cuts);
                 }
-                _IsCST = false;
-                _IsEdt = false;
-                _IsCET = false;// CET MOD
-                ProbeDate = DateTime.Now.AddYears(-1500);
-                LastProgressEvent = DateTime.Now.AddYears(-1500);
-                SourceFile = System.IO.Path.GetFileName(_Title);
-                SourcePath = System.IO.Path.GetDirectoryName(_Title);
-                Title = System.IO.Path.GetFileNameWithoutExtension(_Title);
-                FileNoExt = System.IO.Path.GetFileNameWithoutExtension(_Title);
-                FileExt = System.IO.Path.GetExtension(_Title);
-                X264Override = x265Override;
-                Mpeg4ASP = _IsMpeg4ASP;
-                Mpeg4AVC = _IsMpeg4AVC;
-                _IsMulti = false;
-                _IsInterlaced = false;
-                IsSkipped = false;// 0 means not locked
-                _Is48K = false;
-                _IsAc3_2Channel = false;
-                _IsAc3_6Channel = false;
-
-                _handle = "";
-                ItemFontStyle = (X264Override) ? System.Windows.FontStyles.Italic : System.Windows.FontStyles.Normal;
-                ForegroundColor = X264Override ? Color.FromScRgb(100, 6, 186, 28) : Color.FromArgb(100, 246, 8, 50);
             }
+
+            ProbeDate = DateTime.Now.AddYears(-1500);
+            LastProgressEvent = DateTime.Now.AddYears(-1500);
+            SourceFile = System.IO.Path.GetFileName(_Title);
+            SourcePath = System.IO.Path.GetDirectoryName(_Title);
+            Title = System.IO.Path.GetFileNameWithoutExtension(_Title);
+            FileNoExt = System.IO.Path.GetFileNameWithoutExtension(_Title);
+            FileExt = System.IO.Path.GetExtension(_Title);
+            X264Override = x265Override;
+            Mpeg4ASP = _IsMpeg4ASP;
+            Mpeg4AVC = _IsMpeg4AVC;
+            _IsMulti = false;
+            _IsInterlaced = false;
+            IsSkipped = false;// 0 means not locked
+            _Is48K = false;
+            _IsAc3_2Channel = false;
+            _IsAc3_6Channel = false;
+
+            _handle = "";
+            ItemFontStyle = (X264Override) ? System.Windows.FontStyles.Italic : System.Windows.FontStyles.Normal;
+            ForegroundColor = X264Override ? Color.FromScRgb(100, 6, 186, 28) : Color.FromArgb(100, 246, 8, 50);
+
         }
 
         public string GetFileLocation()

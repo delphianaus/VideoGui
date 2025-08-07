@@ -835,38 +835,27 @@ namespace VideoGui
             }
         }
 
-        
+
 
         private void FinishScraper(object sender, int id)
         {
             try
             {
-                Show();
-                Task.Run(() =>
+                if (sender is ScraperModule scraperModulej)
                 {
-                    if (sender is ScraperModule scraperModulej)
+                    bool IsTimeOut = scraperModulej.TimedOutClose;
+                    scraperModulej = null;
+                    if (IsTimeOut)
                     {
-                        bool IsTimeOut = scraperModulej.TimedOutClose;
-                        while (true)
+                        Dispatcher.Invoke(() =>
                         {
-                            if (!scraperModulej.IsClosed && scraperModulej.IsClosing)
-                            {
-                                Thread.Sleep(250);
-                            }
-                            if (scraperModulej.IsClosed) break;
-                        }
-                        if (IsTimeOut)
-                        {
-                            Dispatcher.Invoke(() =>
-                            {
-                                var gscraperModule = new ScraperModule(dbInit, FinishScraper, OldgUrl, OldTarget, 0);
-                                Hide();
-                                gscraperModule.ShowActivated = true;
-                                gscraperModule.Show();
-                            });
-                        }
+                            var gscraperModule = new ScraperModule(dbInit, FinishScraper, OldgUrl, OldTarget, 0);
+                            gscraperModule.ShowActivated = true;
+                            gscraperModule.Show();
+                        });
                     }
-                });
+                    else Show();
+                }
             }
             catch (Exception ex)
             {

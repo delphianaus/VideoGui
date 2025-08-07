@@ -34,7 +34,7 @@ namespace VideoGui
                 InitializeComponent();
                 ModuleCallBack = _ModuleCallBack;
                 Closing += (s, e) => { IsClosing = true; };
-                Closed += (s, e) => { IsClosed = true; DoOnFinish?.Invoke(this,-1); };
+                Closed += (s, e) => { IsClosed = true; DoOnFinish?.Invoke(this, -1); };
             }
             catch (Exception ex)
             {
@@ -90,8 +90,8 @@ namespace VideoGui
         {
             try
             {
-                
-                var _frmScheduleActioner = new ScheduleActioner(scheduleActioner_onfinish,ModuleCallBack);
+
+                var _frmScheduleActioner = new ScheduleActioner(scheduleActioner_onfinish, ModuleCallBack);
                 Hide();
                 _frmScheduleActioner.ShowActivated = true;
                 _frmScheduleActioner.IsCopy = IsCopy;
@@ -109,13 +109,11 @@ namespace VideoGui
             try
             {
                 Show();
-                Task.Run(() =>
+
+                if (sender is ScheduleActioner frm)
                 {
-                    if (sender is ScheduleActioner frm)
-                    {
-                        frm = null;
-                    }
-                });
+                    frm = null;
+                }
             }
             catch (Exception ex)
             {
@@ -146,7 +144,7 @@ namespace VideoGui
         {
             try
             {
-                foreach(var item in lstItems.SelectedItems)
+                foreach (var item in lstItems.SelectedItems)
                 {
                     if (item is ScheduledActions sitem)
                     {
@@ -173,7 +171,7 @@ namespace VideoGui
             }
         }
 
-      
+
 
         private void lstItems_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
@@ -205,7 +203,7 @@ namespace VideoGui
                 ex.LogWrite($"mnuAddItemAsCopy_Click {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
             }
         }
-        
+
         private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             try

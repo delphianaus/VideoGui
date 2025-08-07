@@ -23,7 +23,7 @@ namespace VideoGui
     /// </summary>
     public partial class SelectReleaseSchedule : Window
     {
-        public bool IsApplied = false,  IsClosing = false, IsClosed = false;
+        public bool IsApplied = false, IsClosing = false, IsClosed = false;
         databasehook<object> dbInitialzer = null;
         public string SelectedItem = "";
         public int SelectedId = -1;
@@ -37,11 +37,11 @@ namespace VideoGui
                 IsApplied = Is_Applied;
                 dbInitialzer = _dbInitialzer;
                 Closing += (s, e) => { IsClosing = true; };
-                Closed += (s, e) => 
-                { 
-                    dbInitialzer?.Invoke(this, new CustomParams_Finish(txtScheduleName.Text)); 
-                    IsClosed = true; 
-                    _OnFinish?.Invoke(this,-1); 
+                Closed += (s, e) =>
+                {
+                    dbInitialzer?.Invoke(this, new CustomParams_Finish(txtScheduleName.Text));
+                    IsClosed = true;
+                    _OnFinish?.Invoke(this, -1);
                 };
             }
             catch (Exception ex)
@@ -62,9 +62,9 @@ namespace VideoGui
             }
         }
 
-        
 
-        
+
+
         private void mnuEdit_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -73,7 +73,7 @@ namespace VideoGui
                 {
                     if (SMN != null && SMN.Id != -1)
                     {
-                        
+
                         var _schedulingSelectEditor = new SchedulingSelectEditor(SchedulingEditorOnFinish, dbInitialzer);
                         _schedulingSelectEditor.ShowActivated = true;
                         _schedulingSelectEditor.TitleId = SMN.Id;
@@ -94,22 +94,14 @@ namespace VideoGui
             try
             {
                 Show();
-                Task.Run(() =>
+                if (sender is SchedulingSelectEditor se)
                 {
-                    if (sender is SchedulingSelectEditor se && !se.IsClosed)
-                    {
-                        while (se.IsClosing)
-                        {
-                            Thread.Sleep(100);
-                        }
-                        se = null;
-                    }
-                });
+                    se = null;
+                }
             }
             catch (Exception ex)
             {
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name + $" {ex.Message}");
-
             }
         }
 
@@ -128,7 +120,7 @@ namespace VideoGui
             }
         }
 
-       
+
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
