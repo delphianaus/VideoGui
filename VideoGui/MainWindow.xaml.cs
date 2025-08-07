@@ -2703,7 +2703,7 @@ namespace VideoGui
                                 }
                             }
                             groupTitleTagsList.Clear();
-                            string sql = "SELECT T.GROUPID, D.NAME, LIST(MT.TAG, '|#') AS TAGS, LIST(T.TAGID, ',') AS IDS FROM TETAGID " +
+                            string sql = "SELECT T.GROUPID, D.NAME, LIST(MT.TAG, '|#') AS TAGS, LIST(T.TAGID, ',') AS IDS FROM TITLETAGS " +
                                $"WHERE T.GROUPID != {index} AND D.ISTAG = 0 GROUP BY D.NAME,T.GROUPID;";
                             connectionString.ExecuteReader(sql, (FbDataReader r) =>
                             {
