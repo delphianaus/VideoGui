@@ -5632,7 +5632,7 @@ namespace VideoGui
         }
         public string[] GetDefaultVideoExts()
         {
-            return new string[] { ".avi", ".mkv", ".mp4", ".m2ts"};
+            return new string[] { ".avi", ".mkv", ".mp4", ".m2ts" };
         }
         public async Task SetupThreadProcessorAsync()
         {
@@ -7224,7 +7224,7 @@ namespace VideoGui
                             string SourceDirectoryID = "";
                             string myfilename = Path.GetFileNameWithoutExtension(filename);
                             bool IsScript = false;
-                            
+
                             if (ProcessingJobs.Count(job => job.Title == myfilename) == 0)
                             {
                                 bool Is1080p = SourceDir.Contains("1080p");
@@ -10623,58 +10623,48 @@ namespace VideoGui
             try
             {
                 // use of local variable to avoid closure issues
-                Show();
-                Task.Run(() =>
+
+                if (sender is ScraperModule ss && ss.TaskHasCancelled)
                 {
-                    if (sender is ScraperModule ss && ss.TaskHasCancelled)
+                    ss = null;
+                    string sqla = "SELECT ID FROM SETTINGS WHERE SETTINGNAME = @P0";
+                    int iScheduleID = connectionString.ExecuteScalar(sqla, [("@P0", "CURRENTSCHEDULINGID")]).ToInt(-1);
+                    List<ListScheduleItems> _listItems = SchedulingItemsList.Where(s => s.ScheduleId == iScheduleID)
+                             .Select(s => new ListScheduleItems(s.Start, s.End, s.Gap)).ToList();
+                    WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
+                    string gUrl = webAddressBuilder.AddFilterByDraftShorts().GetHTML();
+                    int Max = 100;
+                    var s = LoadString("maxr");
+                    if (s.ToInt(-1) != -1)
                     {
-                        string sqla = "SELECT ID FROM SETTINGS WHERE SETTINGNAME = @P0";
-                        int iScheduleID = connectionString.ExecuteScalar(sqla, [("@P0", "CURRENTSCHEDULINGID")]).ToInt(-1);
-                        List<ListScheduleItems> _listItems = SchedulingItemsList.Where(s => s.ScheduleId == iScheduleID)
-                                 .Select(s => new ListScheduleItems(s.Start, s.End, s.Gap)).ToList();
-                        WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
-                        string gUrl = webAddressBuilder.AddFilterByDraftShorts().GetHTML();
-                        int Max = 100;
-                        var s = LoadString("maxr");
-                        if (s.ToInt(-1) != -1)
-                        {
-                            Max = s.ToInt(-1);
-                        }
-                        Nullable<DateTime> startdate = LoadDate("ScheduleDate");
-                        Nullable<DateTime> enddate = DateTime.Now.AddHours(10);
-                        Nullable<TimeSpan> ts = LoadTime("ScheduleTime");
-                        Nullable<TimeSpan> te = LoadTime("ScheduleTimeEnd");
-                        if (startdate.HasValue)
-                        {
-                            enddate = startdate.Value;
-                            if (ts.HasValue)
-                            {
-                                startdate.Value.AtTime(TimeOnly.FromTimeSpan(ts.Value));
-                            }
-                            if (te.HasValue)
-                            {
-                                enddate.Value.AtTime(TimeOnly.FromTimeSpan(te.Value));
-                            }
-                            var _scheduleScraperModule = new ScraperModule(ModuleCallback, mnl_scraper_OnFinish, gUrl,
-                                startdate, enddate, Max, _listItems, 0, false);
-                            _scheduleScraperModule.ShowActivated = true;
-                            Hide();
-                            _scheduleScraperModule.Show();
-                        }
-
-
+                        Max = s.ToInt(-1);
                     }
-                    /*if (sender is ScraperModule ss && !ss.IsClosed)
+                    Nullable<DateTime> startdate = LoadDate("ScheduleDate");
+                    Nullable<DateTime> enddate = DateTime.Now.AddHours(10);
+                    Nullable<TimeSpan> ts = LoadTime("ScheduleTime");
+                    Nullable<TimeSpan> te = LoadTime("ScheduleTimeEnd");
+                    if (startdate.HasValue)
                     {
-                        if (ss.IsClosing) ss.Close();
-                        while (!ss.IsClosed)
+                        enddate = startdate.Value;
+                        if (ts.HasValue)
                         {
-                            Thread.Sleep(100);
+                            startdate.Value.AtTime(TimeOnly.FromTimeSpan(ts.Value));
                         }
-                        ss.Close();
-                        ss = null;
-                    }*/
-                });
+                        if (te.HasValue)
+                        {
+                            enddate.Value.AtTime(TimeOnly.FromTimeSpan(te.Value));
+                        }
+                        var _scheduleScraperModule = new ScraperModule(ModuleCallback, mnl_scraper_OnFinish, gUrl,
+                            startdate, enddate, Max, _listItems, 0, false);
+                        _scheduleScraperModule.ShowActivated = true;
+                        _scheduleScraperModule.Show();
+                    }
+                }
+                else
+                {
+                    if (sender is ScraperModule sm) sm = null;
+                    Show();
+                }
             }
             catch (Exception ex)
             {
@@ -11202,7 +11192,7 @@ namespace VideoGui
         }
         private async Task<bool> KillOrphanProcess(string ExeName = "ffmpeg.exe")
         {
-            
+
             try
             {
                 string myStrQuote = "\"";
@@ -11215,7 +11205,7 @@ namespace VideoGui
                     }
                     string HandleID = o.Properties["Handle"].Value.ToString();
                     string ParentProcessId = "";
-                    ParentProcessId = (o.Properties["ParentProcessID"] is not null) ? 
+                    ParentProcessId = (o.Properties["ParentProcessID"] is not null) ?
                         o.Properties["ParentProcessID"].Value.ToString() : "";
                     string ID = o.Properties["ProcessID"].Value.ToString();
                     if (o["CommandLine"] != null)
@@ -11602,7 +11592,7 @@ namespace VideoGui
                 (ext == ".m2ts"))
             {
                 string SourceFile = Path.GetFileNameWithoutExtension(newfile);
-                
+
                 string SourceDir = Path.GetDirectoryName(newfile);
                 if (!ProcessingJobs.Any(job => job.Title == SourceFile))
                 {

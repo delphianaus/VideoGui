@@ -18,9 +18,51 @@ using Xceed.Wpf.Toolkit;
 
 namespace CustomComponents.ListBoxExtensions
 {
+    public enum MultiListboxResizeDirection
+    {
+        None,
+        Top,
+        Bottom,
+        All
+    }
+
+
     public partial class MultiListbox : UserControl, INotifyPropertyChanged
     {
+
         public event PropertyChangedEventHandler PropertyChanged;
+
+        private double _originalHeight;
+        private double _startPoint;
+
+        private void TopThumb_DragDelta(object sender, DragDeltaEventArgs e)
+        {
+            if (ResizeDirection != MultiListboxResizeDirection.Top && ResizeDirection != MultiListboxResizeDirection.All)
+                return;
+
+            if (double.IsNaN(Height)) return;
+
+            var newHeight = Math.Max(MinHeight, Height - e.VerticalChange);
+            if (MaxHeight > 0)
+                newHeight = Math.Min(MaxHeight, newHeight);
+
+            Height = newHeight;
+            BorderMargin = new Thickness(BorderMargin.Left, BorderMargin.Top + e.VerticalChange, BorderMargin.Right, BorderMargin.Bottom);
+        }
+
+        private void BottomThumb_DragDelta(object sender, DragDeltaEventArgs e)
+        {
+            if (ResizeDirection != MultiListboxResizeDirection.Bottom && ResizeDirection != MultiListboxResizeDirection.All)
+                return;
+
+            if (double.IsNaN(Height)) return;
+
+            var newHeight = Math.Max(MinHeight, Height + e.VerticalChange);
+            if (MaxHeight > 0)
+                newHeight = Math.Min(MaxHeight, newHeight);
+
+            Height = newHeight;
+        }
 
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
@@ -75,6 +117,33 @@ namespace CustomComponents.ListBoxExtensions
         {
             get { return (bool)GetValue(DebugOutputProperty); }
             set { SetValue(DebugOutputProperty, value); }
+        }
+
+        public static readonly DependencyProperty ResizeDirectionProperty =
+            DependencyProperty.Register(nameof(ResizeDirection), typeof(MultiListboxResizeDirection),
+                typeof(MultiListbox), new PropertyMetadata(MultiListboxResizeDirection.None, OnResizeDirectionChanged));
+
+        public MultiListboxResizeDirection ResizeDirection
+        {
+            get { return (MultiListboxResizeDirection)GetValue(ResizeDirectionProperty); }
+            set { SetValue(ResizeDirectionProperty, value); }
+        }
+
+        private static void OnResizeDirectionChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var control = (MultiListbox)d;
+            control.UpdateResizeThumbsVisibility();
+        }
+
+        private void UpdateResizeThumbsVisibility()
+        {
+            if (topThumb != null)
+                topThumb.Visibility = (ResizeDirection == MultiListboxResizeDirection.Top || ResizeDirection == MultiListboxResizeDirection.All) 
+                    ? Visibility.Visible : Visibility.Collapsed;
+
+            if (bottomThumb != null)
+                bottomThumb.Visibility = (ResizeDirection == MultiListboxResizeDirection.Bottom || ResizeDirection == MultiListboxResizeDirection.All) 
+                    ? Visibility.Visible : Visibility.Collapsed;
         }
 
         public static readonly DependencyProperty BorderMarginProperty =
@@ -375,6 +444,7 @@ namespace CustomComponents.ListBoxExtensions
                 Loaded += MultiListbox_Loaded;
                 SizeChanged += MultiListbox_SizeChanged;
                 this.DataContext = this;
+                UpdateResizeThumbsVisibility();
             }
             catch (Exception ex)
             {

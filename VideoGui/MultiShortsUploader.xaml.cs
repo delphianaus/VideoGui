@@ -1,3 +1,4 @@
+using CustomComponents.ListBoxExtensions;
 using FirebirdSql.Data.FirebirdClient;
 using Microsoft.Win32;
 using System;
@@ -24,6 +25,7 @@ using VideoGui.Models;
 using VideoGui.Models.delegates;
 using Windows.Devices.Geolocation;
 using Windows.Graphics.DirectX.Direct3D11;
+using Windows.Media.Core;
 using Path = System.IO.Path;
 
 namespace VideoGui
@@ -180,13 +182,14 @@ namespace VideoGui
                 var _heighteight = key.GetValue("MSUHeight", ActualHeight).ToDouble();
                 var _left = key.GetValue("MSUleft", Left).ToDouble();
                 var _top = key.GetValue("MSUtop", Top).ToDouble();
+                var _msuShortsHeight = key.GetValue("MSUSHortsHeight", msuShorts.Height).ToDouble();
                 key?.Close();
                 Left = (Left != _left && _left != 0) ? _left : Left;
                 Top = (Top != _top && _top != 0) ? _top : Top;
                 Width = (ActualWidth != _widthidth && _widthidth != 0) ? _widthidth : Width;
                 Height = (ActualHeight != _heighteight && _heighteight != 0) ? _heighteight : Height;
-
-                SetControls(Width,Height, true, true);
+                msuShorts.Height = (msuShorts.Height != _msuShortsHeight && _msuShortsHeight != 0) ? _msuShortsHeight : msuShorts.Height;
+                SetControls(Width, Height, true, true);
                 LoadingPanel.Visibility = Visibility.Collapsed;
                 MainContent.Visibility = Visibility.Visible;
                 if (IsFirstResize)
@@ -212,9 +215,7 @@ namespace VideoGui
                     LoadingPanel.Height = _height;
                     MainScroller.Height = _height;
                     MainContent.Height = _height;
-                    msuSchedules.Height = Height - (msuShorts.Height) - 77;
-                    var msuShortsBottom = Canvas.GetBottom(msuShorts);
-                    Canvas.SetTop(msuSchedules, msuShorts.Height);
+                    ResizeMultilistBoxes(msuShorts.Height);
                     Canvas.SetTop(BtnClose, _height - 68);
                     Canvas.SetTop(BtnRunUploaders, _height - 68);
                     Canvas.SetTop(txtTotalUploads, _height - 64.5);
@@ -253,12 +254,13 @@ namespace VideoGui
                         LoadingPanel.Visibility = Visibility.Collapsed;
                         MainContent.Visibility = Visibility.Visible;
                     }
-                    SetControls(e.NewSize.Width,e.NewSize.Height, e.WidthChanged, e.HeightChanged);
+                    SetControls(e.NewSize.Width, e.NewSize.Height, e.WidthChanged, e.HeightChanged);
                     if (e.HeightChanged || e.WidthChanged)
                     {
                         RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                         key?.SetValue("MSUWidth", ActualWidth);
                         key?.SetValue("MSUHeight", ActualHeight);
+                        key?.SetValue("MSUSHortsHeight", msuShorts.Height);
                         key?.Close();
                     }
                 }
@@ -318,13 +320,13 @@ namespace VideoGui
                 ex.LogWrite($"mnuAddToSelected_Click {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-        private void DoDescSelectCreate(int DescId = -1, int LinkedId=-1)
+        private void DoDescSelectCreate(int DescId = -1, int LinkedId = -1)
         {
             try
             {
-                
-                
-                var _DoDescSelectFrm = new DescSelectFrm(OnSelectFormClose, dbInit, 
+
+
+                var _DoDescSelectFrm = new DescSelectFrm(OnSelectFormClose, dbInit,
                     true, DescId, LinkedId);
                 Hide();
                 _DoDescSelectFrm.ShowActivated = true;
@@ -410,8 +412,8 @@ namespace VideoGui
             try
             {
                 SelectedTitleId = TitleId;
-                
-                var _DoTitleSelectFrm = new TitleSelectFrm(DoOnFinishTitleSelect, 
+
+                var _DoTitleSelectFrm = new TitleSelectFrm(DoOnFinishTitleSelect,
                     dbInit, true, TitleId, LinkedId);
                 Hide();
                 _DoTitleSelectFrm.Show();
@@ -797,6 +799,44 @@ namespace VideoGui
                 ex.LogWrite($"ShowScraper {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
+
+        private void ResizeMultilistBoxes(double newHeight)
+        {
+            try
+            {
+                double totalHeight = MainContent.Height - 77;
+                double OtherHeight = totalHeight - newHeight;
+                if (OtherHeight > 0)
+                {
+                    Canvas.SetTop(msuSchedules, newHeight - 4);
+                    msuSchedules.Height = OtherHeight;
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"ResizeMultilistBoxes {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+        }
+        private void msuShorts_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            try
+            {
+                if (IsLoaded && Ready && e.HeightChanged && sender is MultiListbox rx && rx.Name == "msuShorts")
+                {
+                    ResizeMultilistBoxes(e.NewSize.Height);
+                    RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                    key?.SetValue("MSUSHortsHeight", msuShorts.Height);
+                    key?.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"msuShorts_SizeChanged {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+        }
+
+        
+
         private void FinishScraper(object sender, int id)
         {
             try

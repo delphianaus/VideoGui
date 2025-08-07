@@ -186,7 +186,8 @@ namespace VideoGui
                 ex.LogWrite($"LocationTimer {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-        public ScraperModule(databasehook<object> _dbInit, OnFinishIdObj _OnFinish, List<string> directories, bool IsShort)
+        public ScraperModule(databasehook<object> _dbInit, OnFinishIdObj _OnFinish, 
+            List<string> directories, bool IsShort)
         {
             try
             {
@@ -327,7 +328,8 @@ namespace VideoGui
                 ex.LogWrite($"ReportNewAddress {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
             }
         }
-        public ScraperModule(databasehook<object> _dbInit, OnFinishIdObj _OnFinish, string _Default_url,
+        public ScraperModule(databasehook<object> _dbInit, OnFinishIdObj _OnFinish, 
+            string _Default_url,
             Nullable<DateTime> Start, Nullable<DateTime> End, int MaxUoploads,
             List<ListScheduleItems> _listSchedules, int _eventid, bool _IsTest)
         {
@@ -380,8 +382,9 @@ namespace VideoGui
                 ex.LogWrite($"Constructor Shorts.Schedule {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-        public ScraperModule(databasehook<object> _dbInit, OnFinishIdObj _OnFinish, string _Default_url,
-            int maxuploads = 100, int slotsperupload = 5, int _EventId = -1, bool _NewSession = false)
+        public ScraperModule(databasehook<object> _dbInit, OnFinishIdObj _OnFinish, 
+            string _Default_url,int maxuploads = 100, int slotsperupload = 5, 
+            int _EventId = -1, bool _NewSession = false)
         {
             try
             {
@@ -453,7 +456,8 @@ namespace VideoGui
             }
         }
 
-        public ScraperModule(databasehook<object> _dbInit, OnFinishIdObj _OnFinish, string _Default_url, WebView2 wb2)
+        public ScraperModule(databasehook<object> _dbInit, OnFinishIdObj _OnFinish,
+            string _Default_url, WebView2 wb2)
         {
             try
             {
@@ -1606,12 +1610,29 @@ namespace VideoGui
                                     DoNextNode = HandlerOk == FinishType.Scheduled;
                                     if (HandlerOk == FinishType.Error)
                                     {
-                                        lstMain.Items.Insert(0, $"Error on Scheduling Detected.");
-                                        // Get Last Scheduled Time.
-
-
-                                        canceltoken.Cancel();
-                                        break;
+                                        bool TaskCanceledrr = false;
+                                        for (int ix = 0; ix < lstMain.Items.Count; ix++)
+                                        {
+                                            if (ix > 10) break;
+                                            if (lstMain.Items[ix] is string rx)
+                                            {
+                                                if (rx.ToLower().ContainsAny(new List<string> { "task", "canceled" }))
+                                                {
+                                                    TaskCanceledrr = true;
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                        if (!TaskCanceledrr)
+                                        {
+                                            lstMain.Items.Insert(0, $"Error on Scheduling Detected.");
+                                            canceltoken.Cancel();
+                                            break;
+                                        }
+                                        else
+                                        {
+                                            DoScheduleTaskCancel();
+                                        }
                                     }
                                     else if (HandlerOk == FinishType.LookUpError)
                                     {

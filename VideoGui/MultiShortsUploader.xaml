@@ -40,11 +40,13 @@
                 <RowDefinition Height="Auto"/>
                 <!-- Loading Panel -->
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="445*"/>
+                <RowDefinition Height="8*"/>
                 <!-- Main Content -->
             </Grid.RowDefinitions>
 
             <!-- Loading Panel -->
-            <Canvas x:Name="LoadingPanel" Height="420" d:Height="0" HorizontalAlignment="Left" Width="556" VerticalAlignment="Top">
+            <Canvas x:Name="LoadingPanel" Height="420" d:Height="0" HorizontalAlignment="Left" Width="556" VerticalAlignment="Top" Grid.RowSpan="2">
                 <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Canvas.Left="179" Canvas.Top="189">
                     <TextBlock Text="Loading..." FontSize="24" HorizontalAlignment="Center" Margin="0,0,0,10"/>
                     <ProgressBar IsIndeterminate="True" Width="200" Height="20"/>
@@ -53,10 +55,10 @@
 
             <!-- Main Content -->
             <Canvas x:Name="MainContent" Grid.Row="1" Height="420" 
-                    HorizontalAlignment="Left" Width="558" VerticalAlignment="Top">
-                <MSU:MultiListbox x:Name="msuShorts" Header="Active Shorts Directory" 
-                                  VerticalAlignment="Center" Width="560" ItemHeight="15"
-                                  HorizontalAlignment="Left" Height="154">
+                    HorizontalAlignment="Center" Width="558" VerticalAlignment="Center">
+                <MSU:MultiListbox x:Name="msuShorts" Header="Active Shorts Directory" ItemHeight="15"
+                   HorizontalAlignment="Left" VerticalAlignment="Center" Width="560" Height="162" 
+                     SizeChanged="msuShorts_SizeChanged" ResizeDirection="Bottom" Canvas.Top="0">
                     <MSU:MultiListbox.ColumnDefinitions>
                         <MSU:MultiListboxColumnDefinition HeaderText="Shorts Directory" 
                       DataField="DirectoryName" WidthBinding="ShortsDirectoryNameWidth"  
@@ -72,8 +74,8 @@
                     </MSU:MultiListbox.ItemsContextMenu>
                 </MSU:MultiListbox>
                 <MSU:MultiListbox x:Name="msuSchedules" Header="Active Schedules" 
-                  Width="560" Canvas.Top="164" VerticalAlignment="Top"  VerticalContentAlignment="Bottom" 
-                   Height="211" HorizontalAlignment="Center" ItemHeight="15">
+                  Width="560" Canvas.Top="165"  VerticalContentAlignment="Bottom" 
+                   Height="218" HorizontalAlignment="Center" ItemHeight="15" >
                     <MSU:MultiListbox.ColumnDefinitions>
                         <MSU:MultiListboxColumnDefinition DataField="Id" Width="0" ComponentType="TextBlock"/>
                         <MSU:MultiListboxColumnDefinition HeaderText="Shorts Directory" 
