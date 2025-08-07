@@ -496,11 +496,7 @@ namespace VideoGui
                     70, 41, 174, 195, 146, 67, 119, 56, 250, 149, 248, 183, 135,
                     239, 74, 53, 72, 245, 211, 18 }.Select(i => (byte)i).ToArray());
                 statusupdate = 0;
-                lineno = 1;
-                done = false;
                 var data = await DownloadFileAsync(URL, 4 * 1048576, 16, UpdateDownloadProgress);
-                
-                done = true;
                 List<Stream> ZipStreams = new List<Stream>();
                 List<string> ZipFileNames = new List<string>();
                 string AppName = GetExePath();// System.IO.Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
@@ -541,7 +537,6 @@ namespace VideoGui
                 }
                 int streamindex = 0;
                 List<Task> ListOfTasks = new List<Task>();
-                statusupdate = 2;
                 foreach (Stream mss in ZipStreams)
                 {
                     string filename = ZipFileNames[streamindex++];
@@ -568,6 +563,7 @@ namespace VideoGui
         {
             try
             {
+                done = false;
                 using (var client = new HttpClient())
                 {
                     var response = await client.SendAsync(new HttpRequestMessage(HttpMethod.Head, url));
@@ -591,6 +587,7 @@ namespace VideoGui
                     }
                     await Task.WhenAll(downloadTasks);
                     progressCallback?.Invoke(100, true);
+                    done = true;
                     using (var combinedStream = new MemoryStream())
                     {
                         foreach (var chunk in chunks)
