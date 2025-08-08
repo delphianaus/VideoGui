@@ -3881,6 +3881,7 @@ namespace VideoGui
                         scraperModules.ShowActivated = true;
                         scraperModules.Show();
                     }
+                    Show();
                 }
                 else
                 {
@@ -11265,10 +11266,13 @@ namespace VideoGui
         {
             try
             {
-                TrayIcon.IsEnabled = false;
-                trayicon.IconSource = new ImageSourceConverter().ConvertFromString("pack://application:,,,/icons/computer.ico") as ImageSource;
-                TrayIcon.Stop();
-                TrayIcon.IsEnabled = false;
+                if (TrayIcon != null)
+                {
+                    TrayIcon.IsEnabled = false;
+                    trayicon.IconSource = new ImageSourceConverter().ConvertFromString("pack://application:,,,/icons/computer.ico") as ImageSource;
+                    TrayIcon.Stop();
+                    TrayIcon.IsEnabled = false;
+                }
                 Show();
             }
             catch (Exception ex)

@@ -41,12 +41,13 @@ namespace VideoGui
         public int MaxNumberSchedules = 100, ScheduleNumber = 0, ListScheduleIndex = 0, LastGap = -1;
         bool setup = false, BeginMode = false, FinishMode = false, FirstTime = false;
         public bool CanSchedule = true;
+        CancellationTokenSource cts = null;
         public DirectshortsScheduler(OnFinish doOnFinish, OnFinishBool doOnFinishSchedulesComplete,
             List<ListScheduleItems> listSchedules,
             DateTime startDate, DateTime endDate,
             ReportVideoScheduled doReportSchedule,
             ScheduleTaskCancelled ScheduleTaskCanceled,
-            int maxNumberSchedules,
+            int maxNumberSchedules, CancellationTokenSource _cts,
             bool isTest)
         {
             try
@@ -59,6 +60,8 @@ namespace VideoGui
                 ScheduleList = listSchedules;
                 StartDate = startDate;
                 EndDate = endDate;
+                cts = _cts;
+
                 IsTest = isTest;
                 DateTime ScheduleStart = DateOnly.FromDateTime(startDate).ToDateTime(listSchedules.FirstOrDefault().Start);
                 DateTime ScheduleEnd = DateOnly.FromDateTime(EndDate).ToDateTime(listSchedules.LastOrDefault().End);
@@ -176,7 +179,7 @@ namespace VideoGui
                 {
                     credential = await GoogleWebAuthorizationBroker.AuthorizeAsync(
                         clientSecrets: GoogleClientSecrets.Load(stream).Secrets,
-                        scopes, "user", CancellationToken.None, new FileDataStore("YouTubeHelper.MainWindow")
+                        scopes, "user", cts.Token, new FileDataStore("YouTubeHelper.MainWindow")
                     );
 
                     var youtubeService = new YouTubeService(new BaseClientService.Initializer()
@@ -188,7 +191,7 @@ namespace VideoGui
                     // Get video details
                     var videoRequest = youtubeService.Videos.List("snippet,status");
                     videoRequest.Id = videoId;
-                    var videoResponse = videoRequest.Execute();
+                    var videoResponse = await videoRequest.ExecuteAsync(cts.Token);
                     var video = videoResponse.Items.FirstOrDefault();
                     if (video != null && video.Status is not null && video.Status.PrivacyStatus != "public")
                     {
@@ -218,7 +221,7 @@ namespace VideoGui
                             video.Snippet.Description = Desc_Str;
                             video.Snippet.Title = Title_str;
                             var updateRequest = youtubeService.Videos.Update(video, $"Id,snippet,status");
-                            updateRequest.Execute();
+                            var updateResponse = await updateRequest.ExecuteAsync(cts.Token);
                             ScheduleNumber++;
                             LastValidDate = ScheduleAt;
                             return FinishType.Scheduled;
@@ -246,7 +249,8 @@ namespace VideoGui
                 else
                 {
                     string[] msx = new string[] { "task", "cancelled" };
-                    if (message.ToLower().ContainsAll(msx))
+                    string[] msx2 = new string[] { "ssl", "connection" };
+                    if (message.ToLower().ContainsAll(msx)|| message.ToLower().ContainsAll(msx2))
                     {
                         TaskCanceledScheduled?.Invoke();
                         return FinishType.TaskCancelled;

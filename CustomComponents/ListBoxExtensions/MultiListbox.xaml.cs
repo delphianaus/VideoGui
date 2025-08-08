@@ -138,11 +138,11 @@ namespace CustomComponents.ListBoxExtensions
         private void UpdateResizeThumbsVisibility()
         {
             if (topThumb != null)
-                topThumb.Visibility = (ResizeDirection == MultiListboxResizeDirection.Top || ResizeDirection == MultiListboxResizeDirection.All) 
+                topThumb.Visibility = (ResizeDirection == MultiListboxResizeDirection.Top || ResizeDirection == MultiListboxResizeDirection.All)
                     ? Visibility.Visible : Visibility.Collapsed;
 
             if (bottomThumb != null)
-                bottomThumb.Visibility = (ResizeDirection == MultiListboxResizeDirection.Bottom || ResizeDirection == MultiListboxResizeDirection.All) 
+                bottomThumb.Visibility = (ResizeDirection == MultiListboxResizeDirection.Bottom || ResizeDirection == MultiListboxResizeDirection.All)
                     ? Visibility.Visible : Visibility.Collapsed;
         }
 
@@ -979,7 +979,7 @@ namespace CustomComponents.ListBoxExtensions
                     controlFactory.SetBinding(bindingProperty, binding);
                 }
 
-               
+
                 // Set z-index to ensure control is visible
                 controlFactory.SetValue(Panel.ZIndexProperty, columnIndex);
 
@@ -1024,30 +1024,43 @@ namespace CustomComponents.ListBoxExtensions
 
         private void ItemContainerGenerator_StatusChanged(object? sender, EventArgs e)
         {
-            if (lstBoxUploadItems.ItemContainerGenerator.Status == GeneratorStatus.ContainersGenerated)
+            try
             {
-                foreach (var item in lstBoxUploadItems.Items)
+                if (lstBoxUploadItems.ItemContainerGenerator.Status == GeneratorStatus.ContainersGenerated)
                 {
-                    var container = lstBoxUploadItems.ItemContainerGenerator.ContainerFromItem(item) as ListBoxItem;
-                    if (container != null)
+                    foreach (var item in lstBoxUploadItems.Items)
                     {
-                        var border = VisualTreeHelper.GetChild(container, 0) as Border;
-                        if (border != null)
+                        var container = lstBoxUploadItems.ItemContainerGenerator.ContainerFromItem(item) as ListBoxItem;
+                        if (container != null)
                         {
-                            var contentPresenter = VisualTreeHelper.GetChild(border, 0) as ContentPresenter;
-                            if (contentPresenter != null)
+
+                            if (VisualTreeHelper.GetChildrenCount(container) > 0)
                             {
-                                var grid = VisualTreeHelper.GetChild(contentPresenter, 0) as Grid;
-                                if (grid != null)
+                                var border = VisualTreeHelper.GetChild(container, 0) as Border;
+                                if (border != null && VisualTreeHelper.GetChildrenCount(border) > 0)
                                 {
-                                    InitializeGrid(grid);
+                                    var contentPresenter = VisualTreeHelper.GetChild(border, 0) as ContentPresenter;
+                                    if (contentPresenter != null && VisualTreeHelper.GetChildrenCount(contentPresenter) > 0)
+                                    {
+                                        var grid = VisualTreeHelper.GetChild(contentPresenter, 0) as Grid;
+                                        if (grid != null)
+                                        {
+                                            InitializeGrid(grid);
+                                        }
+                                    }
                                 }
                             }
                         }
+
                     }
                 }
             }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error accessing visual tree for item : {ex}");
+            }
         }
+
 
         private void MultiListbox_Loaded(object sender, RoutedEventArgs e)
         {
@@ -1906,7 +1919,7 @@ namespace CustomComponents.ListBoxExtensions
 
                     // Add column to item template grid
                     var itemColumn = new System.Windows.Controls.ColumnDefinition();
-                    
+
                     if (!string.IsNullOrEmpty(colDef.WidthBinding))
                     {
                         var binding = new Binding(colDef.WidthBinding)

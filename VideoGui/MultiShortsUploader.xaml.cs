@@ -723,8 +723,17 @@ namespace VideoGui
                                 SchMaxUploads = 100;
                                 ShowScraper(startdate, enddate, listSchedules2, SchMaxUploads, _eventid);
                             }
-                            else Show();
+                            else
+                            {
+                                sa = null;
+                                Show();
+                            }
                         }
+                    }
+                    else
+                    {
+                        sa = null;
+                        Show();
                     }
                 }
             }

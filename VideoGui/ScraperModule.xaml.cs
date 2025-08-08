@@ -2713,7 +2713,7 @@ namespace VideoGui
                                 ReleaseDate.Value, ReleaseEndDate.Value,
                                 DoReportSchedule,
                                 DoScheduleTaskCancel,
-                                ScheduleMax, IsTest);
+                                ScheduleMax, canceltoken, IsTest);
                             directshortsScheduler.connectionString = connectionStr;
                         }
                         IsVideoLookup = true;
