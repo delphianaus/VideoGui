@@ -39,7 +39,6 @@ namespace VideoGui
         public TitleSelectFrm DoTitleSelectFrm = null;
         public DescSelectFrm DoDescSelectFrm = null;
         string connectionStr = "", OldTarget, OldgUrl;
-        ScraperModule scraperModule = null;
         public int ShortsIndex = -1;
         int SchMaxUploads = 100, LinkedId = -1, SelectedTitleId = -1;
         public bool IsClosing = false, IsClosed = false, Ready = false, IsFirstResize = false;
@@ -217,6 +216,7 @@ namespace VideoGui
                     MainContent.Height = _height;
                     ResizeMultilistBoxes(msuShorts.Height);
                     Canvas.SetTop(BtnClose, _height - 68);
+                    Canvas.SetTop(btnSchdule, _height - 68);
                     Canvas.SetTop(BtnRunUploaders, _height - 68);
                     Canvas.SetTop(txtTotalUploads, _height - 64.5);
                     Canvas.SetTop(txtMaxUpload, _height - 64.5);
@@ -416,6 +416,7 @@ namespace VideoGui
                 var _DoTitleSelectFrm = new TitleSelectFrm(DoOnFinishTitleSelect,
                     dbInit, true, TitleId, LinkedId);
                 Hide();
+                _DoTitleSelectFrm.ShowActivated = true;
                 _DoTitleSelectFrm.Show();
             }
             catch (Exception ex)
@@ -773,22 +774,6 @@ namespace VideoGui
         {
             try
             {
-                if (scraperModule is not null)
-                {
-                    if (!scraperModule.IsClosed && !scraperModule.IsClosing)
-                    {
-                        scraperModule.Close();
-                    }
-                    while (true)
-                    {
-                        if (!scraperModule.IsClosed && scraperModule.IsClosing)
-                        {
-                            Thread.Sleep(250);
-                        }
-                        if (scraperModule.IsClosed) break;
-                    }
-                    scraperModule = null;
-                }
                 WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
                 string gUrl = webAddressBuilder.Dashboard().Address;
                 RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
@@ -798,10 +783,10 @@ namespace VideoGui
                 string TargetUrl = webAddressBuilder.AddFilterByDraftShorts().GetHTML();
                 OldgUrl = gUrl;
                 OldTarget = TargetUrl;
-                scraperModule = new ScraperModule(dbInit, FinishScraper, gUrl, TargetUrl, 0);
+                var _scraperModule = new ScraperModule(dbInit, FinishScraper, gUrl, TargetUrl, 0);
                 Hide();
-                scraperModule.ShowActivated = true;
-                scraperModule.Show();
+                _scraperModule.ShowActivated = true;
+                _scraperModule.Show();
             }
             catch (Exception ex)
             {
