@@ -94,6 +94,14 @@ namespace VideoGui.Models
         }
 
     }
+
+    public class CustomParams_ScheduleShorts
+    {
+        public CustomParams_ScheduleShorts()
+        {
+
+        }
+    }
     public class CustomParams_SetActive
     {
         public int index = 0;

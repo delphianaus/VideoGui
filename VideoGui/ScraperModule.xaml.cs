@@ -139,7 +139,8 @@ namespace VideoGui
         public DateTime StartDate = DateTime.Now, EndDate = DateTime.Now, LastValidDate = DateTime.Now;
         bool IsTest = false, AutoClose = false, AutoClosed = false, IsLocation = false,
             IsMoving = false, HasMoved = false;
-        public bool TimedOutClose = false;
+        public bool TimedOutClose = false, IsMultiForm = false;
+        public Action<object> ShowManualScheduler = null;
         List<DirectoriesProbe> Directories = new(); //Directories
         Dictionary<int, WebView2> wv2Dictionary = new Dictionary<int, WebView2>();
         Dictionary<int, WebView2> ActiveWebView = new Dictionary<int, WebView2>();

@@ -29,7 +29,9 @@ namespace VideoGui
         public Nullable<DateTime> SelectedDate = null;
         public Nullable<TimeOnly> StartTime = null, EndTime = null;
         public Nullable<int> Max = null;
-
+        public bool IsMultiForm = false;
+        public Action<object> ShowMultiForm = null;
+        public Action<object> HideMultiForm = null;
         private void lblDate_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             try

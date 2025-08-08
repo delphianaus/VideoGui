@@ -488,7 +488,23 @@ namespace VideoGui
         {
             try
             {
-
+                if (tld is CustomParams_ScheduleShorts cpsss)
+                {
+                    var _manualScheduler = new ManualScheduler(ModuleCallback,
+                        ManualSchedulerFinish);
+                    _manualScheduler.ShowActivated = true;
+                    _manualScheduler.IsMultiForm = true;
+                    _manualScheduler.ShowMultiForm += (sender) =>
+                    {
+                        frmMultiShortsUploader.Show();
+                    };
+                    _manualScheduler.HideMultiForm += (sender) =>
+                    {
+                        frmMultiShortsUploader.Hide();
+                    };
+                    frmMultiShortsUploader.Hide();
+                    _manualScheduler.Show();
+                }
                 if (tld is CustomParams_RemoveSchedule cpRS)
                 {
                     for (int i = SelectedShortsDirectoriesList.Count - 1; i >= 0; i--)
@@ -3918,30 +3934,7 @@ namespace VideoGui
             }
         }
 
-        public async Task<bool> ConnectC()
-        {
-            try
-            {
-                /*
-                 * move to init.
-                 * 
-                 * if (ObservableCollectionFilter is not null)
-                {
-                    ObservableCollectionFilter.CurrentCollectionViewSource.Source = ComplexProcessingJobList;
-                    if (complexfrm is not null && complexfrm.IsLoaded)
-                    {
-                        complexfrm.lstSchedules.ItemsSource = ObservableCollectionFilter.CurrentCollectionViewSource.View;
-                        return true;
-                    }
-                }*/
-                return false;
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
-                return false;
-            }
-        }
+
 
 
         public bool IsFileActive(string filename, int threadid)
@@ -5252,7 +5245,7 @@ namespace VideoGui
         }
 
 
-        
+
         public async Task ClearLogs()
         {
             try
@@ -5262,11 +5255,11 @@ namespace VideoGui
                 var files = Directory.EnumerateFiles(exePath, "*.log").ToList();//ForEach(f =>
                 foreach (string fr in files)
                 {
-                    string f= Path.GetFileNameWithoutExtension(fr);
+                    string f = Path.GetFileNameWithoutExtension(fr);
                     if (f.Contains("_") && f.Length > 10)
                     {
                         //dd_mm_yyyy
-                        int day = f.Substring(0,2).ToInt(-1); 
+                        int day = f.Substring(0, 2).ToInt(-1);
                         int month = f.Substring(3, 2).ToInt(-1);
                         int year = f.Substring(6, 4).ToInt(-1);
                         if (day == -1 || month == -1 || year == -1) continue;
@@ -5276,7 +5269,8 @@ namespace VideoGui
                             File.Delete(fr);
                         }
                     }
-                };
+                }
+                ;
             }
             catch (Exception ex)
             {
@@ -10470,7 +10464,7 @@ namespace VideoGui
         {
             try
             {
-                Show();
+
                 if (sender is ManualScheduler manualScheduler)
                 {
                     bool IsTest = false;
@@ -10502,10 +10496,19 @@ namespace VideoGui
                             var _scheduleScraperModule = new ScraperModule(ModuleCallback, mnl_scraper_OnFinish, gUrl,
                                 startdate, enddate, max, _listItems, 0, IsTest);
                             _scheduleScraperModule.ShowActivated = true;
-                            Hide();
+                            _scheduleScraperModule.IsMultiForm = true;
+                            _scheduleScraperModule.ShowManualScheduler += (sender1) =>
+                            {
+                                manualScheduler.Show();
+                            };
                             _scheduleScraperModule.Show();
                         }
                     }
+                    if (manualScheduler.IsMultiForm)
+                    {
+                        manualScheduler.ShowMultiForm?.Invoke(this);
+                    }
+                    else Show();
                 }
             }
             catch (Exception ex)
@@ -10514,12 +10517,11 @@ namespace VideoGui
             }
         }
 
+
         private void mnl_scraper_OnFinish(object sender, int id)
         {
             try
             {
-                // use of local variable to avoid closure issues
-
                 if (sender is ScraperModule ss && ss.TaskHasCancelled)
                 {
                     ss = null;
@@ -10558,8 +10560,18 @@ namespace VideoGui
                 }
                 else
                 {
-                    if (sender is ScraperModule sm) sm = null;
-                    Show();
+                    if (sender is ScraperModule sm)
+                    {
+                        if (sm.IsMultiForm)
+                        {
+                            sm.ShowManualScheduler?.Invoke(this);
+                        }
+                        else
+                        {
+                            Show();
+                        }
+                    }
+                    sm = null;
                 }
             }
             catch (Exception ex)

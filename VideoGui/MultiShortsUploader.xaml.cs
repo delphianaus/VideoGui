@@ -844,7 +844,17 @@ namespace VideoGui
             }
         }
 
-
+        private void btnSchdule_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                dbInit?.Invoke(this, new CustomParams_ScheduleShorts());
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"btnSchdule_Click {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+        }
 
         private void FinishScraper(object sender, int id)
         {
@@ -974,5 +984,30 @@ namespace VideoGui
                 ex.LogWrite($"BtnClose_Click {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
+
+        public void ShowFromOtherForm(object sender)
+        {
+            try
+            {
+                Show();
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"ShowFromOtherForm {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+        }
+
+        public void HideFromOtherForm(object sender)
+        {
+            try
+            {
+                Hide();
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"HideFromOtherForm {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+        }
+
     }
 }
