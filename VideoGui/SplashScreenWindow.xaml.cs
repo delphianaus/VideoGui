@@ -44,7 +44,9 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using static VideoGui.Extensions;
 using static VideoGui.MainWindow;
 using Exception = System.Exception;
+using File = System.IO.File;
 using HtmlDocument = HtmlAgilityPack.HtmlDocument;
+using Path = System.IO.Path;
 using TimeSpan = System.TimeSpan;
 
 namespace VideoGui
@@ -242,6 +244,14 @@ namespace VideoGui
             {
                 UpdateProgess.Stop();
                 ffmpegready = false;
+                string AppName = System.IO.Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
+                AppName += GetEncryptedString(new int[] { 170, 104, 85, 24, 245, 203, 194 }.Select(i => (byte)i).ToArray());
+                var r = GetEncryptedString(new int[] { 181, 101, 115, 102, 227, 200, 201, 65, 243,
+                        112, 77, 135, 221, 144, 74, 107, 5, 169, 209, 204, 185, 215, 245, 59, 2, 54, 212, 248, 35 }.Select(i => (byte)i).ToArray());
+                if (!((System.IO.File.Exists(r) || (System.IO.File.Exists(AppName)))))
+                {
+                    Task.Run(() => Download7zip());
+                }
                 Update_ffmpeg().ConfigureAwait(true);
             }
             catch (Exception ex)
@@ -717,6 +727,11 @@ namespace VideoGui
                 var allowDownload = string.IsNullOrEmpty(dateStr) ||
                                     DateTime.ParseExact(dateStr, "dd-MM-yyyy", null) < DateTime.Now.AddDays(-3) ||
                                     nodeId != currentVersion;
+
+                string exepath = GetExePath();
+                bool ffmpegExists = File.Exists(Path.Combine(exepath, "ffmpeg.exe")) &&
+                    File.Exists(Path.Combine(exepath, "ffprobe.exe"));
+                if (!ffmpegExists) allowDownload = true;
                 if (allowDownload && CheckInternet())
                 {
                     var downloadLink = "https://www.gyan.dev/ffmpeg/builds/ffmpeg-git-full.7z";
@@ -902,18 +917,7 @@ namespace VideoGui
                     lblStatus.Content = GetEncryptedString(new int[] { 165, 43, 78, 66, 228, 212, 142, 9, 178, 94, 5,
                         164, 215, 151, 70, 118, 62, 190, 186, 249, 162, 135, 158,
                         86, 49, 72, 144, 225, 63, 229, 127, 179, 54 }.Select(i => (byte)i).ToArray());
-                    string AppName = System.IO.Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
-                    AppName += GetEncryptedString(new int[] { 170, 104, 85, 24, 245, 203, 194 }.Select(i => (byte)i).ToArray());
-
-
-                    var r = GetEncryptedString(new int[] { 181, 101, 115, 102, 227, 200, 201, 65, 243,
-                        112, 77, 135, 221, 144, 74, 107, 5, 169, 209, 204, 185, 215, 245, 59, 2, 54, 212, 248, 35 }.Select(i => (byte)i).ToArray());
-
-                    if (!((System.IO.File.Exists(r) || (System.IO.File.Exists(AppName)))))
-                    {
-
-                        Task.Run(() => Download7zip());
-                    }
+                    
                     string sbpath = "";
                     string AppPath = System.IO.Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
                     if (AppPath != "")
