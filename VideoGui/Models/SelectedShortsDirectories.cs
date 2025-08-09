@@ -152,7 +152,7 @@ namespace VideoGui.Models
                 DirectoryName = (reader["DIRECTORYNAME"] is string Desc) ? Desc : "";
                 IsShortActive = (reader["ISSHORTSACTIVE"] is short IsActive) ? IsActive == 1 : false;
                 TimeSpan tp = (reader["LASTUPLOADEDDATE"] is TimeSpan tsk) ? tsk : new TimeSpan(0, 0, 0);
-                LastUploadedDateFile = (reader["LASTUPLOADEDTIME"] is DateTime date) ? date.AtTime(TimeOnly.FromTimeSpan(tp)) : DateTime.Now.Date.AddYears(-100);
+                LastUploadedDateFile = (reader["LASTUPLOADEDTIME"] is DateTime date) ? date.AtTime(tp) : DateTime.Now.Date.AddYears(-100);
                 
                 DescId = (reader["DESCID"] is int descid) ? descid : -1;
                 TitleId = (reader["TITLEID"] is int titleid) ? titleid : -1;

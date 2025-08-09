@@ -106,16 +106,16 @@
                     </MSU:MultiListbox.ItemsContextMenu>
                 </MSU:MultiListbox>
                 <Button Name="BtnClose" Content="Close" HorizontalAlignment="Left" VerticalAlignment="Center" Height="25" Width="58" Click="BtnClose_Click" Canvas.Left="487" Canvas.Top="388"/>
-                <Button x:Name="BtnRunUploaders" Content="Upload" HorizontalAlignment="Left" VerticalAlignment="Center" Height="25" Width="46" Click="BtnRunUploaders_Click" Canvas.Left="8" Canvas.Top="388"/>
-                <Label x:Name="lblupload" Content="Uploads Per Slot" HorizontalAlignment="Left" VerticalAlignment="Center" Canvas.Left="109" Canvas.Top="388"/>
+                <Button x:Name="BtnRunUploaders" Content="Upload" HorizontalAlignment="Left" VerticalAlignment="Center" Height="25" Width="61" Click="BtnRunUploaders_Click" Canvas.Left="8" Canvas.Top="388"/>
+                <Label x:Name="lblupload" Content="Uploads Per Slot" HorizontalAlignment="Left" VerticalAlignment="Center" Canvas.Left="144" Canvas.Top="388"/>
                 <TextBox x:Name="txtMaxUpload" Text="5" TextWrapping="Wrap" 
-            KeyDown="txtMaxUpload_KeyDown" LostFocus="txtMaxUpload_LostFocus" VerticalAlignment="Center" HorizontalAlignment="Left" Width="20" Height="20" Canvas.Left="197" Canvas.Top="390"/>
-                <Label x:Name="lblmax" Content="Max Uploads" VerticalAlignment="Center" HorizontalAlignment="Left" Canvas.Left="220" Canvas.Top="388"/>
+            KeyDown="txtMaxUpload_KeyDown" LostFocus="txtMaxUpload_LostFocus" VerticalAlignment="Center" HorizontalAlignment="Left" Width="20" Height="20" Canvas.Left="232" Canvas.Top="390"/>
+                <Label x:Name="lblmax" Content="Max Uploads" VerticalAlignment="Center" HorizontalAlignment="Left" Canvas.Left="255" Canvas.Top="388"/>
                 <TextBox x:Name="txtTotalUploads" Text="100" TextWrapping="Wrap" 
             KeyDown="txtTotalUploads_KeyDown" VerticalAlignment="Center" 
-                             HorizontalAlignment="Left" Width="27" Height="20" Canvas.Left="292" Canvas.Top="390"/>
-                <Label x:Name="lblUploaded" Content="Last Upload:" Canvas.Left="324" Canvas.Top="386" HorizontalAlignment="Left" VerticalAlignment="Center" FontSize="14" Background="Transparent" Foreground="#FFFF1414" FontWeight="Bold"/>
-                <Button x:Name="btnSchdule" Content="Schedule" Height="25" Width="52" Click="btnSchdule_Click" Canvas.Left="57" Canvas.Top="388" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                             HorizontalAlignment="Left" Width="27" Height="20" Canvas.Left="327" Canvas.Top="390"/>
+                <Label x:Name="lblUploaded" Content="Last Upload:" Canvas.Left="359" Canvas.Top="386" HorizontalAlignment="Left" VerticalAlignment="Center" FontSize="14" Background="Transparent" Foreground="#FFFF1414" FontWeight="Bold"/>
+                <Button x:Name="btnSchdule" Content="Schedule" Height="25" Width="65" Click="btnSchdule_Click" Canvas.Left="79" Canvas.Top="388" HorizontalAlignment="Left" VerticalAlignment="Center"/>
             </Canvas>
         </Grid>
     </ScrollViewer>

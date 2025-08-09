@@ -133,6 +133,7 @@ namespace VideoGui
         databasehook<object> dbInitializer = null;
         List<Rematched> RematchedList = new(); // <shortname>
         OnFinishIdObj DoOnFinish = null;
+        public bool ScheduledFinished = true;
         System.Threading.Timer UploadsTimer = null;
         TimeOnly CurrentTime = new TimeOnly();
         DateOnly CurrentDate = DateOnly.FromDateTime(DateTime.Now);
@@ -140,7 +141,7 @@ namespace VideoGui
         bool IsTest = false, AutoClose = false, AutoClosed = false, IsLocation = false,
             IsMoving = false, HasMoved = false;
         public bool TimedOutClose = false, IsMultiForm = false;
-        public Action<object> ShowManualScheduler = null;
+        public Action<object> ShowMultiForm = null;
         List<DirectoriesProbe> Directories = new(); //Directories
         Dictionary<int, WebView2> wv2Dictionary = new Dictionary<int, WebView2>();
         Dictionary<int, WebView2> ActiveWebView = new Dictionary<int, WebView2>();
@@ -2064,7 +2065,7 @@ namespace VideoGui
                 {
                     var dt = (r["UPLOAD_DATE"] is DateTime d) ? d : Opt;// new DateTime(1900, 1, 1);
                     var tt = (r["UPLOAD_TIME"] is TimeSpan t) ? t : TimeSpan.Zero;// new DateTime(0, 0, 0);
-                    var DateA = dt.AtTime(TimeOnly.FromTimeSpan(tt));
+                    var DateA = dt.AtTime(tt);
                     var DateB = DateTime.Now;
                     var timeSpan = (DateA > DateB) ? DateA - DateB : DateB - DateA;
                     if (timeSpan.Hours < 24 && timeSpan.Days == 0)
@@ -2782,6 +2783,7 @@ namespace VideoGui
         {
             try
             {
+                ScheduledFinished = false;
                 TaskHasCancelled = true;
                 Close();
             }
@@ -3032,6 +3034,10 @@ namespace VideoGui
                     if (nextSchedule.TimeOfDay > st.Value && nextSchedule.TimeOfDay < et.Value)
                     {
                         SaveTime(nextSchedule.TimeOfDay, "ScheduleTimeStart");
+                    }
+                    else
+                    {
+                        SaveTime(directshortsScheduler.LastScheduledTime.TimeOfDay, "LastScheduledTime");
                     }
 
                 });

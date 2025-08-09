@@ -170,7 +170,7 @@ namespace VideoGui
                 twitchschedule = null;
                 if (TwitchDateOnly is not null && TwitchTimeSpan is not null)
                 {
-                    twitchschedule = TwitchDateOnly.Value.AtTime(TimeOnly.FromTimeSpan(TwitchTimeSpan.Value));
+                    twitchschedule = TwitchDateOnly.Value.AtTime(TwitchTimeSpan.Value);
                     if (twitchschedule.Value.Year < 1800)
                     {
                         //IsTwitchStream = false;

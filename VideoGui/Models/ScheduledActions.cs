@@ -136,12 +136,12 @@ namespace VideoGui.Models
                 if (reader["ACTION_DATE"] is DateTime actiondDate && reader["ACTION_TIME"] is TimeSpan actionTime)
                 {
                     var z = new TimeSpan(actionTime.Hours, actionTime.Minutes, actionTime.Seconds);
-                    AppliedAction = actiondDate.AtTime(new TimeOnly(z.Hours, z.Minutes, z.Seconds));
+                    AppliedAction = actiondDate.AtTime(z);
                 }
                 if (reader["COMPLETED_DATE"] is DateTime completedDate && reader["COMPLETED_TIME"] is TimeSpan completedTime)
                 {
                     var z1 = new TimeSpan(completedTime.Hours, completedTime.Minutes, completedTime.Seconds);
-                    CompletedScheduledDate = completedDate.AtTime(new TimeOnly(z1.Hours, z1.Minutes, z1.Seconds));
+                    CompletedScheduledDate = completedDate.AtTime(z1);//new DateTime(completedDate.Year, completedDate.Month, completedDate.Day, z1.Hours, z1.Minutes, z1.Seconds));
                 }
                 IsActioned = (reader["ISACTIONED"] is int IsAct) ? IsAct == 1 : false;
             }

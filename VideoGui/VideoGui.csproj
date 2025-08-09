@@ -12,8 +12,8 @@
     <StartupObject>VideoGui.App</StartupObject>
     <ApplicationIcon>Properties\computer.ico</ApplicationIcon>
     <Platforms>x64</Platforms>
-    <AssemblyVersion>1.0.0.393</AssemblyVersion>
-    <FileVersion>1.0.0.393</FileVersion>
+    <AssemblyVersion>1.0.0.394</AssemblyVersion>
+    <FileVersion>1.0.0.394</FileVersion>
     <Nullable>annotations</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <UseWindowsForms>True</UseWindowsForms>

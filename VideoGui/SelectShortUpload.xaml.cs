@@ -220,7 +220,7 @@ namespace VideoGui
                         string Idx = filen.Split('_').LastOrDefault();
                         if (Idx != "" && Idx == LinkedId.ToString())
                         {
-                            LastTimeUploaded = dt.AtTime(TimeOnly.FromTimeSpan(dtr));
+                            LastTimeUploaded = dt.AtTime(dtr);
                             processed = true;
                         }
                     }

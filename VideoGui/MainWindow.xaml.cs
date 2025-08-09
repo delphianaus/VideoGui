@@ -469,7 +469,7 @@ namespace VideoGui
                         string Idx = filen.Split('_').LastOrDefault();
                         if (Idx != "" && Idx == LinkedId.ToString())
                         {
-                            LastTimeUploaded = dt.AtTime(TimeOnly.FromTimeSpan(dtr));
+                            LastTimeUploaded = dt.AtTime(dtr);
                             processed = true;
                             cts.Cancel();
                         }
@@ -498,10 +498,7 @@ namespace VideoGui
                     {
                         frmMultiShortsUploader.Show();
                     };
-                    _manualScheduler.HideMultiForm += (sender) =>
-                    {
-                        frmMultiShortsUploader.Hide();
-                    };
+
                     frmMultiShortsUploader.Hide();
                     _manualScheduler.Show();
                 }
@@ -555,7 +552,7 @@ namespace VideoGui
                             {
                                 var dt = (r["UPLOAD_DATE"] is DateTime d) ? d : Opt;// new DateTime(1900, 1, 1);
                                 var tt = (r["UPLOAD_TIME"] is TimeSpan t) ? t : TimeSpan.Zero;// new DateTime(0, 0, 0);
-                                var DateA = dt.AtTime(TimeOnly.FromTimeSpan(tt));
+                                var DateA = dt.AtTime(tt);
                                 string UploadFile = (r["UPLOADFILE"] is string f) ? f : "";
                                 if (UploadFile.Contains("_") && dt.Year > 1900)
                                 {
@@ -749,7 +746,7 @@ namespace VideoGui
                         filen = (r["UPLOADFILE"] is string f) ? f : "";
                         var dt = (r["UPLOAD_DATE"] is DateTime d) ? d : DateTime.Now.Date.AddYears(-100);
                         TimeSpan dtr = (r["UPLOAD_TIME"] is TimeSpan t1) ? t1 : new TimeSpan();
-                        LastUploaded = dt.AtTime(TimeOnly.FromTimeSpan(dtr));
+                        LastUploaded = dt.AtTime(dtr);
                         cts.Cancel();
                     });
                     frmMultiShortsUploader.lblUploaded.Content = $"Last uploaded : {filen.Replace("_", "-")} @ {LastUploaded}";
@@ -834,7 +831,7 @@ namespace VideoGui
                         if (filen.Contains("_"))
                         {
                             shortdirectoryId = filen.Split('_').LastOrDefault();
-                            LastUploaded = dt.AtTime(TimeOnly.FromTimeSpan(dtr));
+                            LastUploaded = dt.AtTime(dtr);
                             ctsx.Cancel();
                         }
                     });
@@ -1173,6 +1170,18 @@ namespace VideoGui
                     Nullable<TimeSpan> st = LoadTime("ScheduleTimeStart");
                     Nullable<TimeSpan> et = LoadTime("ScheduleTimeEnd");
                     var s = LoadString("maxr");
+
+                    if (et.HasValue && st.HasValue)
+                    {
+                        TimeSpan ts = new TimeSpan(0,0,0);
+                        if (st.Value == ts && et.Value == ts)
+                        {
+                            st = new TimeSpan(11, 0, 0);
+                            et = new TimeSpan(20, 0, 0);
+                            SaveTime(st.Value, "ScheduleTimeStart");
+                            SaveTime(et.Value, "ScheduleTimeEnd");
+                        }
+                    }
                     var test = LoadString("TestMode");
                     bool IsTest = (test == "True") ? true : false;
                     string pp = (s is string str) ? str : "";
@@ -1181,8 +1190,8 @@ namespace VideoGui
                     {
                         manualScheduler.txtMaxSchedules.Text = pp;
                         manualScheduler.ReleaseDate.Value = dt.Value.Date;
-                        manualScheduler.ReleaseTimeStart.Value = r.AtTime(TimeOnly.FromTimeSpan(st.Value));
-                        manualScheduler.ReleaseTimeEnd.Value = r.AtTime(TimeOnly.FromTimeSpan(et.Value));
+                        manualScheduler.ReleaseTimeStart.Value = r.AtTime(st);
+                        manualScheduler.ReleaseTimeEnd.Value = r.AtTime(et);
                         manualScheduler.chkSchedule.IsChecked = IsTest;
                     }
                 }
@@ -4546,7 +4555,7 @@ namespace VideoGui
                     TimeSpan dtr = (r["UPLOAD_TIME"] is TimeSpan t1) ? t1 : new TimeSpan();
                     dts = DateOnly.FromDateTime(dt);
                     tts = TimeOnly.FromTimeSpan(dtr);
-                    newDate = dt.Date.AtTime(TimeOnly.FromTimeSpan(dtr));
+                    newDate = dt.Date.AtTime(dtr);
                 });
                 /*if (uploadId.Contains("_"))
                 {
@@ -10370,7 +10379,7 @@ namespace VideoGui
                                     uf = (r["UPLOADFILE"] is string f) ? f : "";
                                     DateTime dtr = (r["UPLOAD_DATE"] is DateTime d) ? d : DateTime.Now.Date.AddYears(-100);
                                     TimeSpan ttr = (r["UPLOAD_TIME"] is TimeSpan t1) ? t1 : new TimeSpan();
-                                    DateTime dt = dtr.AtTime(TimeOnly.FromTimeSpan(ttr));
+                                    DateTime dt = dtr.AtTime(ttr);
                                     int idx = uf.Split('_').LastOrDefault().ToInt(-1);
                                     if (idx != -1)
                                     {
@@ -10436,7 +10445,7 @@ namespace VideoGui
                         if (found)
                         {
 
-                            DateTime LastUpload = dtr.AtTime(TimeOnly.FromTimeSpan(ttr));
+                            DateTime LastUpload = dtr.AtTime(ttr);
                             item.LastUploadedDateFile = LastUpload;
                             sqlaa = "UPDATE MULTISHORTSINFO SET LASTUPLOADEDDATE = @P0, LASTUPLOADEDTIME = @P1 WHERE ID = @P2;";
                             connectionString.ExecuteNonQuery(sqlaa, [("@P0", LastUpload.Date), ("@P1", LastUpload.TimeOfDay),
@@ -10470,7 +10479,7 @@ namespace VideoGui
                     bool IsTest = false;
                     int max = 0;
                     Nullable<DateTime> startdate = null, enddate = null;
-
+                    bool IsMulti = manualScheduler.IsMultiForm;
                     if (manualScheduler.RunSchedule)
                     {
                         if (manualScheduler.HasValues)
@@ -10484,7 +10493,7 @@ namespace VideoGui
                             enddate = enddate.Value.Date.Add(tsb.ToTimeSpan());
                             IsTest = manualScheduler.TestMode;
                         }
-                        manualScheduler = null;
+
                         string sqla = "SELECT ID FROM SETTINGS WHERE SETTINGNAME = @P0";
                         int iScheduleID = connectionString.ExecuteScalar(sqla, [("@P0", "CURRENTSCHEDULINGID")]).ToInt(-1);
                         if (iScheduleID != -1 && startdate.HasValue && enddate.HasValue && max > 0)
@@ -10493,18 +10502,18 @@ namespace VideoGui
                              .Select(s => new ListScheduleItems(s.Start, s.End, s.Gap)).ToList();
                             WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
                             string gUrl = webAddressBuilder.AddFilterByDraftShorts().GetHTML();
+
                             var _scheduleScraperModule = new ScraperModule(ModuleCallback, mnl_scraper_OnFinish, gUrl,
                                 startdate, enddate, max, _listItems, 0, IsTest);
                             _scheduleScraperModule.ShowActivated = true;
                             _scheduleScraperModule.IsMultiForm = true;
-                            _scheduleScraperModule.ShowManualScheduler += (sender1) =>
-                            {
-                                manualScheduler.Show();
-                            };
+                            _scheduleScraperModule.ShowMultiForm = manualScheduler.ShowMultiForm;
+                            manualScheduler = null;
                             _scheduleScraperModule.Show();
+                            return;
                         }
                     }
-                    if (manualScheduler.IsMultiForm)
+                    if (IsMulti)
                     {
                         manualScheduler.ShowMultiForm?.Invoke(this);
                     }
@@ -10522,56 +10531,62 @@ namespace VideoGui
         {
             try
             {
-                if (sender is ScraperModule ss && ss.TaskHasCancelled)
+                if (sender is ScraperModule ss && ss is not null)
                 {
-                    ss = null;
-                    string sqla = "SELECT ID FROM SETTINGS WHERE SETTINGNAME = @P0";
-                    int iScheduleID = connectionString.ExecuteScalar(sqla, [("@P0", "CURRENTSCHEDULINGID")]).ToInt(-1);
-                    List<ListScheduleItems> _listItems = SchedulingItemsList.Where(s => s.ScheduleId == iScheduleID)
-                             .Select(s => new ListScheduleItems(s.Start, s.End, s.Gap)).ToList();
-                    WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
-                    string gUrl = webAddressBuilder.AddFilterByDraftShorts().GetHTML();
-                    int Max = 100;
-                    var s = LoadString("maxr");
-                    if (s.ToInt(-1) != -1)
-                    {
-                        Max = s.ToInt(-1);
-                    }
-                    Nullable<DateTime> startdate = LoadDate("ScheduleDate");
-                    Nullable<DateTime> enddate = DateTime.Now.AddHours(10);
-                    Nullable<TimeSpan> ts = LoadTime("ScheduleTime");
+                    bool Unfinished = false;
                     Nullable<TimeSpan> te = LoadTime("ScheduleTimeEnd");
-                    if (startdate.HasValue)
+                    Nullable<TimeSpan> tl = LoadTime("LastScheduledTime");
+                    if (te.HasValue && tl.HasValue)
                     {
-                        enddate = startdate.Value;
-                        if (ts.HasValue)
+                        if (tl.Value < te.Value)
                         {
-                            startdate.Value.AtTime(TimeOnly.FromTimeSpan(ts.Value));
+                            Unfinished = true;
+                            SaveTime(tl.Value, "ScheduleTime");
                         }
-                        if (te.HasValue)
-                        {
-                            enddate.Value.AtTime(TimeOnly.FromTimeSpan(te.Value));
-                        }
-                        var _scheduleScraperModule = new ScraperModule(ModuleCallback, mnl_scraper_OnFinish, gUrl,
-                            startdate, enddate, Max, _listItems, 0, false);
-                        _scheduleScraperModule.ShowActivated = true;
-                        _scheduleScraperModule.Show();
                     }
-                }
-                else
-                {
-                    if (sender is ScraperModule sm)
+                    if (ss.TaskHasCancelled || Unfinished)
                     {
-                        if (sm.IsMultiForm)
+                        string sqla = "SELECT ID FROM SETTINGS WHERE SETTINGNAME = @P0";
+                        int iScheduleID = connectionString.ExecuteScalar(sqla, [("@P0", "CURRENTSCHEDULINGID")]).ToInt(-1);
+                        List<ListScheduleItems> _listItems = SchedulingItemsList.Where(s => s.ScheduleId == iScheduleID)
+                                 .Select(s => new ListScheduleItems(s.Start, s.End, s.Gap)).ToList();
+                        WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
+                        string gUrl = webAddressBuilder.AddFilterByDraftShorts().GetHTML();
+                        int Max = LoadString("maxr").ToInt(100);
+                        Nullable<DateTime> startdate = LoadDate("ScheduleDate");
+                        Nullable<DateTime> enddate = DateTime.Now.AddHours(10);
+                        Nullable<TimeSpan> ts = LoadTime("ScheduleTime");
+                       
+                        if (startdate.HasValue)
                         {
-                            sm.ShowManualScheduler?.Invoke(this);
+                            enddate = startdate.Value;
+                            startdate.Value.AtTime(ts);
+                            enddate.Value.AtTime(te);
+                            var _scheduleScraperModule = new ScraperModule(ModuleCallback, mnl_scraper_OnFinish, gUrl,
+                                startdate, enddate, Max, _listItems, 0, false);
+                            _scheduleScraperModule.ShowActivated = true;
+                            _scheduleScraperModule.IsMultiForm = ss.IsMultiForm;
+                            _scheduleScraperModule.ShowMultiForm = (ss.IsMultiForm) ? ss.ShowMultiForm : null;
+                            ss = null;
+                            _scheduleScraperModule.Show();
+                        }
+                    }
+                    else
+                    {
+                        if (ss.IsMultiForm)
+                        {
+                            ss.ShowMultiForm(this);
                         }
                         else
                         {
                             Show();
                         }
+                        ss = null;
                     }
-                    sm = null;
+                }
+                else
+                {
+                    "Wrong Object".WriteLog($"mnl_scraper_OnFinish {MethodBase.GetCurrentMethod().Name} {sender.GetType().ToString()}");
                 }
             }
             catch (Exception ex)

@@ -1030,11 +1030,13 @@ namespace VideoGui
                 }
             });
         }
-        public static DateTime AtTime(this DateTime thisdate, TimeOnly thistime)
+        public static DateTime AtTime(this DateTime thisdate, TimeSpan? AddTime = null)
         {
             try
             {
-                return new DateTime(thisdate.Year, thisdate.Month, thisdate.Day, thistime.Hour, thistime.Minute, thistime.Second);
+                if (!AddTime.HasValue) return thisdate;
+                return new DateTime(thisdate.Year, thisdate.Month, thisdate.Day, 
+                    AddTime.Value.Hours, AddTime.Value.Minutes, AddTime.Value.Seconds);
             }
             catch (Exception ex)
             {

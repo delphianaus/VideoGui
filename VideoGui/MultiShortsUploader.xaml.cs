@@ -712,7 +712,7 @@ namespace VideoGui
                                             TimeSpan ttr = r["UPLOAD_TIME"] as TimeSpan? ?? TimeSpan.Zero;
                                             if (dtr.Year > 2000)
                                             {
-                                                rp.LastUploadedDateFile = dtr.AtTime(TimeOnly.FromTimeSpan(ttr));
+                                                rp.LastUploadedDateFile = dtr.AtTime(ttr);
                                             }
                                         }
                                         ctscc.Cancel();

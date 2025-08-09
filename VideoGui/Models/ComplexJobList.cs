@@ -97,7 +97,7 @@ namespace VideoGui.Models
                 TwitchSchedule = null;
                 if (TwitchDateOnly is not null && TwitchTimeSpan is not null)
                 {
-                    TwitchSchedule = TwitchDateOnly.Value.AtTime(TimeOnly.FromTimeSpan(TwitchTimeSpan.Value));//.ToDateTime(TimeOnly.FromTimeSpan(TwitchTimeSpan.Value));
+                    TwitchSchedule = TwitchDateOnly.Value.AtTime(TwitchTimeSpan.Value);//.ToDateTime(TimeOnly.FromTimeSpan(TwitchTimeSpan.Value));
                     if (TwitchSchedule.Value.Year < 1800)
                     {
                         IsTwitchStream = false;
