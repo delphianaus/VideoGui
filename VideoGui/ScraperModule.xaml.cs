@@ -3034,12 +3034,23 @@ namespace VideoGui
                     if (nextSchedule.TimeOfDay > st.Value && nextSchedule.TimeOfDay < et.Value)
                     {
                         SaveTime(nextSchedule.TimeOfDay, "ScheduleTimeStart");
+                        TimeOnly nexttime = TimeOnly.FromTimeSpan(nextSchedule.TimeOfDay);
+                        int mins = directshortsScheduler.GetNextGap(nexttime);
+                        TimeSpan nextgap = new TimeSpan(0, 0, mins);
+                        SaveTime(nextgap, "NextValidGap");
                     }
                     else
                     {
-                        SaveTime(directshortsScheduler.LastScheduledTime.TimeOfDay, "LastScheduledTime");
-                    }
+                        DateTime nextsch = nextSchedule.Date.AddDays(1);
+                        var stdef = LoadTime("ScheduleTimeStart_Default");
+                        if (stdef.HasValue)
+                        {
+                            SaveDates(nextsch, "ScheduleDate");
+                            var starttime = nextsch.AtTime(stdef.Value);
+                            SaveTime(starttime.TimeOfDay, "ScheduleTimeStart");
+                        }
 
+                    }
                 });
             }
             catch (Exception ex)

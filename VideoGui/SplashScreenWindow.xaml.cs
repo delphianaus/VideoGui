@@ -1,5 +1,7 @@
-﻿using ABI.System;
+﻿    using ABI.System;
 using CliWrap;
+using FirebirdSql.Data.Services;
+using HtmlAgilityPack;
 using Microsoft.Win32;
 using Nancy;
 using Nancy.Owin;
@@ -14,6 +16,7 @@ using System.Drawing;
 using System.Drawing.Printing;
 using System.IO;
 using System.IO.Compression;
+using System.IO.Enumeration;
 using System.Linq;
 using System.Management;
 using System.Net.Http;
@@ -24,6 +27,7 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Security.Policy;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Transactions;
@@ -37,6 +41,7 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using VideoGui.ffmpeg.Streams.MediaInfo;
 using VideoGui.Models.delegates;
 using static System.Net.WebRequestMethods;
 using static System.Windows.Forms.LinkLabel;
@@ -68,12 +73,14 @@ namespace VideoGui
         float percent = 0;
         long prcdone = 0;
         string onfinish = "";
+        bool firebird = false;
         public SplashScreenWindow()
         {
             try
             {
                 InitializeComponent();
                 KillFFMPEG().ConfigureAwait(true);
+
                 DbLayerInitiateTimer = new System.Windows.Forms.Timer();
                 DbLayerInitiateTimer.Tick += new EventHandler(DbLayerInitiateTimer_Tick);
                 DbLayerInitiateTimer.Interval = (int)new TimeSpan(0, 0, 1).TotalMilliseconds;
@@ -100,6 +107,214 @@ namespace VideoGui
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
             }
         }
+
+        public async Task<bool> FirebirdDownloader(string url)
+        {
+            try
+            {
+                var key5 = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                var dateStr = key5.GetValueStr("firebird_Date", "");
+                key5?.Close();
+                var allowDownload = string.IsNullOrEmpty(dateStr) ||
+                                    DateTime.ParseExact(dateStr, "dd-MM-yyyy", null) < DateTime.Now.AddDays(-3);
+
+                if (!allowDownload)
+                {
+                    firebird = true;
+                    return false;
+                }
+
+                string DownloadUrl = "";
+                using (var client = new HttpClient())
+                {
+                    var response = await client.SendAsync(
+                      new HttpRequestMessage(HttpMethod.Get, url));
+                    response.EnsureSuccessStatusCode();  // This will throw if status code isn't 2xx
+                    var html = await response.Content.ReadAsStringAsync();
+                    HtmlDocument doc = new HtmlDocument();
+                    doc.LoadHtml(Regex.Unescape(html));
+                    // First find the table with class "Table"
+                    var table = doc.DocumentNode.SelectSingleNode("//table[@class='Table']");
+                    if (table != null)
+                    {
+                        var tbody = table.SelectSingleNode(".//tbody");
+                        if (tbody != null)
+                        {
+                            var whiteRows = tbody.SelectNodes(".//tr[@class='Table_Row_Grey']")?.ToList() ?? new List<HtmlNode>();
+                            foreach (var row in whiteRows)
+                            {
+                                var whiteRows2 = row.SelectNodes(".//td")?.ToList() ?? new List<HtmlNode>();
+                                var lastindex = whiteRows2.LastOrDefault();
+                                string InstallType = (lastindex is not null) ? lastindex.InnerText : "";
+                                if (InstallType == "Zip kit for manual/custom installs")
+                                {
+                                    string refkit = whiteRows2[1].InnerText;
+                                    if (refkit.ContainsAll(new[] { "windows", "x64", ".zip" }))
+                                    {
+                                        string rs = whiteRows2[1].InnerHtml;
+                                        int r = rs.IndexOf("href=");
+                                        int r2 = rs.IndexOf(".zip");
+                                        DownloadUrl = rs.Substring(r + 6, r2 - r - 2);
+                                    }
+                                }
+                                if (DownloadUrl != "") break;
+                            }
+                        }
+                    }
+
+                    if (DownloadUrl != "")
+                    {
+                        var p = GetEncryptedString(new int[] { 181, 101, 115,
+                                       102, 227, 200, 201, 65, 243, 112, 77, 135, 221,
+                                       144, 74, 107, 5, 169, 209, 204, 185, 215, 245,
+                                    59, 2, 54, 212, 248, 35 }.Select(i => (byte)i).ToArray());
+                        string AppPath = p;
+                        int rr = DownloadUrl.IndexOf("Firebird-");
+                        int rr2 = DownloadUrl.IndexOf("windows");
+                        string version = DownloadUrl.Substring(rr + 9, rr2 - rr - 9);
+                        Dispatcher.Invoke(() =>
+                        {
+                            SevenZipExtractor.SetLibraryPath(AppPath);
+                        });
+                        var key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                        var firebirdv = key.GetValueStr("firebirdversion", "");
+                        key?.Close();
+                        if (firebirdv != version)
+                        {
+                            Dispatcher.Invoke(() =>
+                            {
+                                lblStatus.Content = "Downloading Firebird...";
+                            });
+                            var data = await DownloadFileAsync(DownloadUrl,
+                                104857, 12, UpdateDownloadProgress_Firebird);
+                            List<string> vgfiles = new List<string>() {
+                            "fbclient.dll","fbembed.dll","fbembed3.dll","firebird.msg",
+                            "fbmaestro.dll","ib_util.dll", "icudt30.dll",
+                            "icudt52.dll","icudt52l.dat","icudt63.dll","icudt63l.dat",
+                            "icuin30.dll","icuin52.dll","icuin63.dll","icuuc30.dll",
+                            "icuuc52.dll","icuuc63.dll","libcrypto-3-x64.dll",
+                            "libcurl.dll", "libmediainfo.dll","libssl-3-x64.dll",
+                            "msalruntime.dll","msvcp100.dll", "msvcp140.dll",
+                            "msvcp80.dll","msvcr100.dll","msvcr80.dll",
+                            "PenImc_cor3.dll","vcruntime140.dll","vcruntime140_cor3.dll"};
+                            List<string> Plugins = new List<string>()
+                            {
+                                "chacha.dll","engine13.dll","fbtrace.dll",
+                                "ib_util.dll","icudt63.dll","icudt63l.dat",
+                                "icuin63.dll","icuuc63.dll","legacy_auth.dll",
+                                "legacy_usermanager.dll","srp.dll"
+                            };
+                            List<string> Udrs = new List<string>()
+                            {
+                                "udr_engine.conf","udr_engine.dll",
+                                "UdfBackwardCompatibility.sql","udf_compat.dll",
+                                "udrcpp_example.dll"
+                            };
+
+                            List<string> AllFiles = new List<string>();
+
+                            AllFiles.AddRange(vgfiles);
+                            AllFiles.AddRange(Plugins);
+                            AllFiles.AddRange(Udrs);
+                            List<Stream> ZipStreams = new List<Stream>();
+                            List<string> ZipFileNames = new List<string>();
+                            string AppName = GetExePath();
+                            using (var ms = new MemoryStream(data))
+                            {
+                                using (var arch = new SevenZipExtractor(ms))
+                                {
+                                    var mylist = arch.ArchiveFileNames.
+                                        Where(s => !s.ToLower().StartsWith("doc")
+                                        && !s.ToLower().StartsWith("include")
+                                        && !s.ToLower().StartsWith("tzdata")
+                                        && !s.ToLower().StartsWith("lib")
+                                        && !s.ToLower().StartsWith("intl")
+                                        && !s.ToLower().StartsWith("system32")
+                                        && !s.ToLower().Contains(".exe")
+                                        && !s.ToLower().Contains(".fdb")
+                                        && !s.ToLower().Contains(".bat")
+                                        && !s.ToLower().Contains(".txt")
+                                        && !s.ToLower().StartsWith("misc")
+                                        && s != "lib" && s != "databases.conf"
+                                        && s != "fbtrace.conf" && s != "firebird.conf"
+                                        && s != "firebird.msg"
+                                        && s != "plugins"
+                                        && s != "plugins.conf"
+                                        && s != "plugins\\default_profiler.dll"
+                                        && s != "plugins\\udr" && s != "replication.conf"
+                                        && s != "vcruntime140_1.dll"&& s != "zlib1.dll"
+                                        && !s.ToLower().StartsWith("examples")).ToList();
+
+                                    List<string> filesnotfound = new List<string>();
+                                   
+                                    foreach (string filename in mylist)
+                                    {
+                                        string DestinationPath = ""; 
+                                        if (vgfiles.Contains(Path.GetFileName(filename)))
+                                        {
+                                            DestinationPath = AppName + "\\" + Path.GetFileName(filename);
+                                        }
+                                        else if (Plugins.Contains(Path.GetFileName(filename)))
+                                        {
+                                            DestinationPath = AppName + "\\plugins\\" + Path.GetFileName(filename);
+                                        }
+                                        else if (Udrs.Contains(Path.GetFileName(filename)))
+                                        {
+                                            DestinationPath = AppName + "\\plugins\\udr\\" + Path.GetFileName(filename);
+                                        }
+
+                                        Stream msx = new MemoryStream();
+                                        ZipStreams.Add(msx);
+                                        arch.ExtractFile(filename, msx);
+                                        ZipFileNames.Add(DestinationPath);
+                                    }
+                                }
+                            }
+                            int streamindex = 0;
+                            List<Task> ListOfTasks = new List<Task>();
+                            foreach (Stream mss in ZipStreams)
+                            {
+                                string filename = ZipFileNames[streamindex++];
+                                ListOfTasks.Add(Task.Run(() => WriteStream(mss, filename)));
+                            }
+                            Task.WaitAll(ListOfTasks.ToArray());
+                            var key2 = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                            key2.SetValue("firebirdversion", version);
+                            key2.SetValue("firebird_Date", DateTime.Now.ToString("dd-MM-yyyy"));
+                            key2?.Close();
+                        }
+                    }
+
+                }
+                firebird = true;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"FirebirdDownloader {MethodBase.GetCurrentMethod().Name} {ex.Message}");
+                return false;
+            }
+        }
+
+        private void UpdateDownloadProgress_Firebird(double arg1, bool arg2)
+        {
+            try
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    if (arg2)
+                    {
+                        lblStatus.Content = $"Firebird Download Complete";
+                    }
+                    else lblStatus.Content = $"Downloading Firebird... {Math.Round(arg1)}";
+                });
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+            }
+        }
+
         public bool IsAMDGPUVERSIONOK()
         {
             try
@@ -252,6 +467,8 @@ namespace VideoGui
                 {
                     Task.Run(() => Download7zip());
                 }
+
+                FirebirdDownloader("https://www.firebirdsql.org/en/firebird-5-0").ConfigureAwait(true);
                 Update_ffmpeg().ConfigureAwait(true);
             }
             catch (Exception ex)
@@ -282,7 +499,7 @@ namespace VideoGui
                 DbLayerInitiateTimer.Stop();
                 if (isLoggedOn())
                 {
-                    while (!ffmpegready)
+                    while (!ffmpegready || !firebird)
                     {
                         Thread.Sleep(250);
                         System.Windows.Forms.Application.DoEvents();
@@ -343,7 +560,7 @@ namespace VideoGui
             }
         }
 
-        public void UpdateDownloadProgress(double _percent, bool _done=false)
+        public void UpdateDownloadProgress(double _percent, bool _done = false)
         {
             try
             {
@@ -496,7 +713,7 @@ namespace VideoGui
             {
                 if (!Dispatcher.CheckAccess())
                 {
-                    Dispatcher.Invoke(() => RunFFMPEGDownload(URL, gitversion ));
+                    Dispatcher.Invoke(() => RunFFMPEGDownload(URL, gitversion));
                     return;
                 }
 
@@ -569,7 +786,7 @@ namespace VideoGui
             }
         }
 
-        public async Task<byte[]> DownloadFileAsync(string url, long chunkSize, int numThreads, Action<double,bool> progressCallback = null)
+        public async Task<byte[]> DownloadFileAsync(string url, long chunkSize, int numThreads, Action<double, bool> progressCallback = null)
         {
             try
             {
@@ -588,7 +805,7 @@ namespace VideoGui
                         var endPos = Math.Min(startPos + chunkSize - 1, totalSize - 1);
                         chunks[i] = new MemoryStream();
                         var threadIndex = i;
-                        downloadTasks.Add(DownloadChunkAsync(url,startPos, endPos, chunks[threadIndex],
+                        downloadTasks.Add(DownloadChunkAsync(url, startPos, endPos, chunks[threadIndex],
                             (bytesRead) =>
                             {
                                 Interlocked.Add(ref totalBytesRead, bytesRead);
@@ -618,7 +835,7 @@ namespace VideoGui
             }
         }
 
-        private async Task DownloadChunkAsync(string url,long startPos, long endPos, MemoryStream destination, Action<long> progressCallback)
+        private async Task DownloadChunkAsync(string url, long startPos, long endPos, MemoryStream destination, Action<long> progressCallback)
         {
             try
             {
@@ -706,6 +923,10 @@ namespace VideoGui
         {
             try
             {
+                while (!firebird)
+                {
+                    await Task.Delay(100);
+                }
                 using var client = new HttpClient();
                 client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0");
                 var response = await client.GetAsync("https://www.gyan.dev/ffmpeg/builds/");
@@ -724,8 +945,8 @@ namespace VideoGui
                 var currentVersion = key.GetValueStr("ffmpegversion", "");
                 var dateStr = key.GetValueStr("ffmpegDate", "");
                 key?.Close();
-                var allowDownload = string.IsNullOrEmpty(dateStr) ||
-                                    DateTime.ParseExact(dateStr, "dd-MM-yyyy", null) < DateTime.Now.AddDays(-3) ||
+                    var allowDownload = string.IsNullOrEmpty(dateStr) ||
+                                        DateTime.ParseExact(dateStr, "dd-MM-yyyy", null) < DateTime.Now.AddDays(-3) ||
                                     nodeId != currentVersion;
 
                 string exepath = GetExePath();
@@ -917,7 +1138,7 @@ namespace VideoGui
                     lblStatus.Content = GetEncryptedString(new int[] { 165, 43, 78, 66, 228, 212, 142, 9, 178, 94, 5,
                         164, 215, 151, 70, 118, 62, 190, 186, 249, 162, 135, 158,
                         86, 49, 72, 144, 225, 63, 229, 127, 179, 54 }.Select(i => (byte)i).ToArray());
-                    
+
                     string sbpath = "";
                     string AppPath = System.IO.Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
                     if (AppPath != "")
@@ -937,7 +1158,7 @@ namespace VideoGui
                         lblStatus.Content = GetEncryptedString(new int[] { 165, 43, 78, 66, 228, 212, 142, 9, 178,
                             89, 2, 182, 218, 144, 64, 121, 61, 247, 146, 241, 240, 225,
                             239, 65, 40, 93, 247 }.Select(i => (byte)i).ToArray());
-                        while (!ffmpegready && !done)
+                        while (!ffmpegready && !done && !firebird)
                         {
                             switch (statusupdate)
                             {

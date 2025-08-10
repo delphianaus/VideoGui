@@ -292,7 +292,27 @@ namespace VideoGui
             }
         }
 
-
+        public int GetNextGap(TimeOnly LastValidTime)
+        {
+            try
+            {
+                int GapTime = -1;
+                foreach (var Schedule in ScheduleList)
+                {
+                    if (LastValidTime >= Schedule.Start && LastValidTime <= Schedule.End)
+                    {
+                        GapTime = Schedule.Gap;
+                        break;
+                    }
+                }
+                return GapTime;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"GetNextGap {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+                return -1;
+            }
+        }
         public FinishType DoSchedule(string videoId, string TitleStr, string DescStr)
         {
             try
