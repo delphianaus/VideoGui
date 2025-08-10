@@ -698,6 +698,10 @@ namespace VideoGui
                     {
                         InsertUpdateMultiShorts(LinkedId, uploaddir);
                     }
+                    foreach (var ssd in ShortsDirectoryList)
+                    {
+                        ssd.IsActive = !SelectedShortsDirectoriesList.Any(ssdk => ssdk.DirectoryName.ToLower() == ssd.DirectoryName.ToLower());
+                    }
                 }
                 else if (tld is CustomParams_MoveDirectory CPMD)
                 {
@@ -731,17 +735,7 @@ namespace VideoGui
                         }
                         foreach (var ssd in ShortsDirectoryList)
                         {
-                            bool IsActiveSSD = false;
-                            int ns = ssd.NumberOfShorts;
-                            foreach (var ssdk in SelectedShortsDirectoriesList)
-                            {
-                                if (ssd.DirectoryName.ToLower() == ssdk.DirectoryName.ToLower())
-                                {
-                                    IsActiveSSD = true;
-                                    break;
-                                }
-                            }
-                            ssd.IsActive = !IsActiveSSD;
+                            ssd.IsActive = !SelectedShortsDirectoriesList.Any(ssdk => ssdk.DirectoryName.ToLower() == ssd.DirectoryName.ToLower());
                         }
                     }
                 }
@@ -776,7 +770,7 @@ namespace VideoGui
                             if (files.Any())
                             {
                                 bool IsLinked = false;
-                                ShortsDirectoryList.Add(new MultiShortsInfo(dir, files.Count(), IsActive ));
+                                ShortsDirectoryList.Add(new MultiShortsInfo(dir, files.Count(), IsActive));
                             }
 
                         }
@@ -859,20 +853,10 @@ namespace VideoGui
                             break;
                         }
                     }
-                    
-                    foreach(var ssd in ShortsDirectoryList)
+
+                    foreach (var ssd in ShortsDirectoryList)
                     {
-                        bool IsActiveSSD = false;
-                        int ns = ssd.NumberOfShorts;
-                        foreach(var ssdk in SelectedShortsDirectoriesList)
-                        {
-                            if (ssd.DirectoryName.ToLower() == ssdk.DirectoryName.ToLower())
-                            {
-                                IsActiveSSD = true;
-                                break;
-                            } 
-                        }
-                        ssd.IsActive = !IsActiveSSD;
+                        ssd.IsActive = !SelectedShortsDirectoriesList.Any(ssdk => ssdk.DirectoryName.ToLower() == ssd.DirectoryName.ToLower());
                     }
 
                     frmMultiShortsUploader.msuShorts.ItemsSource = ShortsDirectoryList;
@@ -1203,7 +1187,7 @@ namespace VideoGui
 
                     if (et.HasValue && st.HasValue)
                     {
-                        TimeSpan ts = new TimeSpan(0,0,0);
+                        TimeSpan ts = new TimeSpan(0, 0, 0);
                         if (st.Value == ts && et.Value == ts)
                         {
                             st = new TimeSpan(11, 0, 0);
@@ -10591,7 +10575,7 @@ namespace VideoGui
                         Nullable<DateTime> startdate = LoadDate("ScheduleDate");
                         Nullable<DateTime> enddate = DateTime.Now.AddHours(10);
                         Nullable<TimeSpan> ts = LoadTime("ScheduleTime");
-                       
+
                         if (startdate.HasValue)
                         {
                             enddate = startdate.Value;
