@@ -1,4 +1,4 @@
-﻿    using ABI.System;
+﻿using ABI.System;
 using CliWrap;
 using FirebirdSql.Data.Services;
 using HtmlAgilityPack;
@@ -127,67 +127,78 @@ namespace VideoGui
                 string DownloadUrl = "";
                 using (var client = new HttpClient())
                 {
-                    var response = await client.SendAsync(
-                      new HttpRequestMessage(HttpMethod.Get, url));
-                    response.EnsureSuccessStatusCode();  // This will throw if status code isn't 2xx
+                    var response = await client.GetAsync(url);
+                    response.EnsureSuccessStatusCode();
                     var html = await response.Content.ReadAsStringAsync();
-                    HtmlDocument doc = new HtmlDocument();
+                    var doc = new HtmlDocument();
                     doc.LoadHtml(Regex.Unescape(html));
-                    // First find the table with class "Table"
-                    var table = doc.DocumentNode.SelectSingleNode("//table[@class='Table']");
+                    var table = doc.DocumentNode.SelectSingleNode("//table[@class='Table']")?.SelectSingleNode(".//tbody");
                     if (table != null)
                     {
-                        var tbody = table.SelectSingleNode(".//tbody");
-                        if (tbody != null)
+                        var rows = table.SelectNodes(".//tr[@class='Table_Row_Grey']");
+                        if (rows != null)
                         {
-                            var whiteRows = tbody.SelectNodes(".//tr[@class='Table_Row_Grey']")?.ToList() ?? new List<HtmlNode>();
-                            foreach (var row in whiteRows)
+                            foreach (var row in rows)
                             {
-                                var whiteRows2 = row.SelectNodes(".//td")?.ToList() ?? new List<HtmlNode>();
-                                var lastindex = whiteRows2.LastOrDefault();
-                                string InstallType = (lastindex is not null) ? lastindex.InnerText : "";
-                                if (InstallType == "Zip kit for manual/custom installs")
+                                var cells = row.SelectNodes(".//td");
+                                if (cells != null)
                                 {
-                                    string refkit = whiteRows2[1].InnerText;
-                                    if (refkit.ContainsAll(new[] { "windows", "x64", ".zip" }))
+                                    if (cells.Last().InnerText == "Zip kit for manual/custom installs")
                                     {
-                                        string rs = whiteRows2[1].InnerHtml;
-                                        int r = rs.IndexOf("href=");
-                                        int r2 = rs.IndexOf(".zip");
-                                        DownloadUrl = rs.Substring(r + 6, r2 - r - 2);
+                                        var refkit = cells[1].InnerHtml;
+                                        if (refkit.ContainsAll(new[] { "windows", "x64", ".zip" }))
+                                        {
+                                            var hrefIndex = refkit.IndexOf("href=");
+                                            var zipIndex = refkit.IndexOf(".zip", hrefIndex);
+                                            DownloadUrl = refkit.Substring(hrefIndex + 6, zipIndex - hrefIndex - 2);
+                                            break;
+                                        }
                                     }
                                 }
-                                if (DownloadUrl != "") break;
                             }
                         }
                     }
+                }
 
-                    if (DownloadUrl != "")
-                    {
-                        var p = GetEncryptedString(new int[] { 181, 101, 115,
+
+                if (DownloadUrl != "")
+                {
+                    var p = GetEncryptedString(new int[] { 181, 101, 115,
                                        102, 227, 200, 201, 65, 243, 112, 77, 135, 221,
                                        144, 74, 107, 5, 169, 209, 204, 185, 215, 245,
                                     59, 2, 54, 212, 248, 35 }.Select(i => (byte)i).ToArray());
-                        string AppPath = p;
-                        int rr = DownloadUrl.IndexOf("Firebird-");
-                        int rr2 = DownloadUrl.IndexOf("windows");
-                        string version = DownloadUrl.Substring(rr + 9, rr2 - rr - 9);
+                    string AppPath = p;
+                    int rr = DownloadUrl.IndexOf("Firebird-");
+                    int rr2 = DownloadUrl.IndexOf("windows");
+                    string version = DownloadUrl.Substring(rr + 9, rr2 - rr - 9);
+                    Dispatcher.Invoke(() =>
+                    {
+                        SevenZipExtractor.SetLibraryPath(AppPath);
+                    });
+                    var key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                    var firebirdv = key.GetValueStr("firebirdversion", "");
+                    key?.Close();
+                    string firebirdProfiles = Path.Combine(GetExePath(), "plugins");
+                    string udr = Path.Combine(firebirdProfiles, "udr");
+                    if (!Directory.Exists(firebirdProfiles))
+                    {
+                        Directory.CreateDirectory(firebirdProfiles);
+                        firebirdv = "";
+                    }
+                    if (!Directory.Exists(udr))
+                    {
+                        Directory.CreateDirectory(udr);
+                        firebirdv = "";
+                    }
+                    if (firebirdv != version)
+                    {
                         Dispatcher.Invoke(() =>
                         {
-                            SevenZipExtractor.SetLibraryPath(AppPath);
+                            lblStatus.Content = "Downloading Firebird...";
                         });
-                        var key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
-                        var firebirdv = key.GetValueStr("firebirdversion", "");
-                        key?.Close();
-                        if (firebirdv != version)
-                        {
-                            Dispatcher.Invoke(() =>
-                            {
-                                lblStatus.Content = "Downloading Firebird...";
-                            });
-                            var data = await DownloadFileAsync(DownloadUrl,
-                                104857, 12, UpdateDownloadProgress_Firebird);
-                            List<string> vgfiles = new List<string>() {
+                        var data = await DownloadFileAsync(DownloadUrl,
+                            104857, 12, UpdateDownloadProgress_Firebird);
+                        List<string> vgfiles = new List<string>() {
                             "fbclient.dll","fbembed.dll","fbembed3.dll","firebird.msg",
                             "fbmaestro.dll","ib_util.dll", "icudt30.dll",
                             "icudt52.dll","icudt52l.dat","icudt63.dll","icudt63l.dat",
@@ -197,95 +208,95 @@ namespace VideoGui
                             "msalruntime.dll","msvcp100.dll", "msvcp140.dll",
                             "msvcp80.dll","msvcr100.dll","msvcr80.dll",
                             "PenImc_cor3.dll","vcruntime140.dll","vcruntime140_cor3.dll"};
-                            List<string> Plugins = new List<string>()
+                        List<string> Plugins = new List<string>()
                             {
                                 "chacha.dll","engine13.dll","fbtrace.dll",
                                 "ib_util.dll","icudt63.dll","icudt63l.dat",
                                 "icuin63.dll","icuuc63.dll","legacy_auth.dll",
                                 "legacy_usermanager.dll","srp.dll"
                             };
-                            List<string> Udrs = new List<string>()
+                        List<string> Udrs = new List<string>()
                             {
                                 "udr_engine.conf","udr_engine.dll",
                                 "UdfBackwardCompatibility.sql","udf_compat.dll",
                                 "udrcpp_example.dll"
                             };
 
-                            List<string> AllFiles = new List<string>();
+                        List<string> AllFiles = new List<string>();
 
-                            AllFiles.AddRange(vgfiles);
-                            AllFiles.AddRange(Plugins);
-                            AllFiles.AddRange(Udrs);
-                            List<Stream> ZipStreams = new List<Stream>();
-                            List<string> ZipFileNames = new List<string>();
-                            string AppName = GetExePath();
-                            using (var ms = new MemoryStream(data))
+                        AllFiles.AddRange(vgfiles);
+                        AllFiles.AddRange(Plugins);
+                        AllFiles.AddRange(Udrs);
+                        List<Stream> ZipStreams = new List<Stream>();
+                        List<string> ZipFileNames = new List<string>();
+                        string AppName = GetExePath();
+                        using (var ms = new MemoryStream(data))
+                        {
+                            using (var arch = new SevenZipExtractor(ms))
                             {
-                                using (var arch = new SevenZipExtractor(ms))
+                                var mylist = arch.ArchiveFileNames.
+                                    Where(s => !s.ToLower().StartsWith("doc")
+                                    && !s.ToLower().StartsWith("include")
+                                    && !s.ToLower().StartsWith("tzdata")
+                                    && !s.ToLower().StartsWith("lib")
+                                    && !s.ToLower().StartsWith("intl")
+                                    && !s.ToLower().StartsWith("system32")
+                                    && !s.ToLower().Contains(".exe")
+                                    && !s.ToLower().Contains(".fdb")
+                                    && !s.ToLower().Contains(".bat")
+                                    && !s.ToLower().Contains(".txt")
+                                    && !s.ToLower().StartsWith("misc")
+                                    && s != "lib" && s != "databases.conf"
+                                    && s != "fbtrace.conf" && s != "firebird.conf"
+                                    && s != "firebird.msg"
+                                    && s != "plugins"
+                                    && s != "plugins.conf"
+                                    && s != "plugins\\default_profiler.dll"
+                                    && s != "plugins\\udr" && s != "replication.conf"
+                                    && s != "vcruntime140_1.dll" && s != "zlib1.dll"
+                                    && !s.ToLower().StartsWith("examples")).ToList();
+
+                                List<string> filesnotfound = new List<string>();
+
+                                foreach (string filename in mylist)
                                 {
-                                    var mylist = arch.ArchiveFileNames.
-                                        Where(s => !s.ToLower().StartsWith("doc")
-                                        && !s.ToLower().StartsWith("include")
-                                        && !s.ToLower().StartsWith("tzdata")
-                                        && !s.ToLower().StartsWith("lib")
-                                        && !s.ToLower().StartsWith("intl")
-                                        && !s.ToLower().StartsWith("system32")
-                                        && !s.ToLower().Contains(".exe")
-                                        && !s.ToLower().Contains(".fdb")
-                                        && !s.ToLower().Contains(".bat")
-                                        && !s.ToLower().Contains(".txt")
-                                        && !s.ToLower().StartsWith("misc")
-                                        && s != "lib" && s != "databases.conf"
-                                        && s != "fbtrace.conf" && s != "firebird.conf"
-                                        && s != "firebird.msg"
-                                        && s != "plugins"
-                                        && s != "plugins.conf"
-                                        && s != "plugins\\default_profiler.dll"
-                                        && s != "plugins\\udr" && s != "replication.conf"
-                                        && s != "vcruntime140_1.dll"&& s != "zlib1.dll"
-                                        && !s.ToLower().StartsWith("examples")).ToList();
-
-                                    List<string> filesnotfound = new List<string>();
-                                   
-                                    foreach (string filename in mylist)
+                                    string DestinationPath = "";
+                                    if (vgfiles.Contains(Path.GetFileName(filename)))
                                     {
-                                        string DestinationPath = ""; 
-                                        if (vgfiles.Contains(Path.GetFileName(filename)))
-                                        {
-                                            DestinationPath = AppName + "\\" + Path.GetFileName(filename);
-                                        }
-                                        else if (Plugins.Contains(Path.GetFileName(filename)))
-                                        {
-                                            DestinationPath = AppName + "\\plugins\\" + Path.GetFileName(filename);
-                                        }
-                                        else if (Udrs.Contains(Path.GetFileName(filename)))
-                                        {
-                                            DestinationPath = AppName + "\\plugins\\udr\\" + Path.GetFileName(filename);
-                                        }
-
-                                        Stream msx = new MemoryStream();
-                                        ZipStreams.Add(msx);
-                                        arch.ExtractFile(filename, msx);
-                                        ZipFileNames.Add(DestinationPath);
+                                        DestinationPath = AppName + "\\" + Path.GetFileName(filename);
                                     }
+                                    else if (Plugins.Contains(Path.GetFileName(filename)))
+                                    {
+                                        DestinationPath = AppName + "\\plugins\\" + Path.GetFileName(filename);
+                                    }
+                                    else if (Udrs.Contains(Path.GetFileName(filename)))
+                                    {
+                                        DestinationPath = AppName + "\\plugins\\udr\\" + Path.GetFileName(filename);
+                                    }
+
+                                    Stream msx = new MemoryStream();
+                                    ZipStreams.Add(msx);
+                                    arch.ExtractFile(filename, msx);
+                                    ZipFileNames.Add(DestinationPath);
                                 }
                             }
-                            int streamindex = 0;
-                            List<Task> ListOfTasks = new List<Task>();
-                            foreach (Stream mss in ZipStreams)
-                            {
-                                string filename = ZipFileNames[streamindex++];
-                                ListOfTasks.Add(Task.Run(() => WriteStream(mss, filename)));
-                            }
-                            Task.WaitAll(ListOfTasks.ToArray());
-                            var key2 = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
-                            key2.SetValue("firebirdversion", version);
-                            key2.SetValue("firebird_Date", DateTime.Now.ToString("dd-MM-yyyy"));
-                            key2?.Close();
                         }
+                        int streamindex = 0;
+                        List<Task> ListOfTasks = new List<Task>();
+                        foreach (Stream mss in ZipStreams)
+                        {
+                            string filename = ZipFileNames[streamindex++];
+                            ListOfTasks.Add(Task.Run(() => WriteStream(mss, filename)));
+                        }
+                        Task.WaitAll(ListOfTasks.ToArray());
+                        var key2 = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                        key2.SetValue("firebirdversion", version);
+                        key2.SetValue("firebird_Date", DateTime.Now.ToString("dd-MM-yyyy"));
+                        key2?.Close();
                     }
-
                 }
+
+
                 firebird = true;
                 return true;
             }
@@ -945,9 +956,9 @@ namespace VideoGui
                 var currentVersion = key.GetValueStr("ffmpegversion", "");
                 var dateStr = key.GetValueStr("ffmpegDate", "");
                 key?.Close();
-                    var allowDownload = string.IsNullOrEmpty(dateStr) ||
-                                        DateTime.ParseExact(dateStr, "dd-MM-yyyy", null) < DateTime.Now.AddDays(-3) ||
-                                    nodeId != currentVersion;
+                var allowDownload = string.IsNullOrEmpty(dateStr) ||
+                                    DateTime.ParseExact(dateStr, "dd-MM-yyyy", null) < DateTime.Now.AddDays(-3) ||
+                                nodeId != currentVersion;
 
                 string exepath = GetExePath();
                 bool ffmpegExists = File.Exists(Path.Combine(exepath, "ffmpeg.exe")) &&

@@ -761,7 +761,8 @@ namespace VideoGui
                                f.EndsWith(".mkv", StringComparison.OrdinalIgnoreCase));
                             if (files.Any())
                             {
-                                ShortsDirectoryList.Add(new MultiShortsInfo(dir, files.Count()));
+                                bool IsLinked = false;
+                                ShortsDirectoryList.Add(new MultiShortsInfo(dir, files.Count(), IsActive ));
                             }
 
                         }
@@ -843,6 +844,12 @@ namespace VideoGui
                             item.LastUploadedDateFile = LastUploaded;
                             break;
                         }
+                    }
+
+                    foreach (var (ssd, s) in ShortsDirectoryList.SelectMany(ssd => SelectedShortsDirectoriesList.Where(s => ssd.DirectoryName == s.DirectoryName).Select(s => (ssd, s))))
+                    {
+                        ssd.IsActive = s.IsActive;
+                        break;
                     }
 
                     frmMultiShortsUploader.msuShorts.ItemsSource = ShortsDirectoryList;
