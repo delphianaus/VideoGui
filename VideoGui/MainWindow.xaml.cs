@@ -729,6 +729,20 @@ namespace VideoGui
                                 break;
                             }
                         }
+                        foreach (var ssd in ShortsDirectoryList)
+                        {
+                            bool IsActiveSSD = false;
+                            int ns = ssd.NumberOfShorts;
+                            foreach (var ssdk in SelectedShortsDirectoriesList)
+                            {
+                                if (ssd.DirectoryName.ToLower() == ssdk.DirectoryName.ToLower())
+                                {
+                                    IsActiveSSD = true;
+                                    break;
+                                }
+                            }
+                            ssd.IsActive = !IsActiveSSD;
+                        }
                     }
                 }
                 else if (tld is CustomParams_Initialize CPRE)
@@ -845,11 +859,20 @@ namespace VideoGui
                             break;
                         }
                     }
-
-                    foreach (var (ssd, s) in ShortsDirectoryList.SelectMany(ssd => SelectedShortsDirectoriesList.Where(s => ssd.DirectoryName == s.DirectoryName).Select(s => (ssd, s))))
+                    
+                    foreach(var ssd in ShortsDirectoryList)
                     {
-                        ssd.IsActive = s.IsActive;
-                        break;
+                        bool IsActiveSSD = false;
+                        int ns = ssd.NumberOfShorts;
+                        foreach(var ssdk in SelectedShortsDirectoriesList)
+                        {
+                            if (ssd.DirectoryName.ToLower() == ssdk.DirectoryName.ToLower())
+                            {
+                                IsActiveSSD = true;
+                                break;
+                            } 
+                        }
+                        ssd.IsActive = !IsActiveSSD;
                     }
 
                     frmMultiShortsUploader.msuShorts.ItemsSource = ShortsDirectoryList;

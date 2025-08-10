@@ -62,9 +62,10 @@
                     <MSU:MultiListbox.ColumnDefinitions>
                         <MSU:MultiListboxColumnDefinition HeaderText="Shorts Directory" 
                       DataField="DirectoryName" WidthBinding="ShortsDirectoryNameWidth"  
-                         ComponentType="TextBlock"/>
+                         FontWeight="AutoFontWeight"  ComponentType="TextBlock"/>
                         <MSU:MultiListboxColumnDefinition HeaderText="Number Of Shorts" Width="105" 
-                   ContentHorizontalAlignment="Center" DataField="NumberOfShorts" ComponentType="TextBlock"/>
+                        ContentHorizontalAlignment="Center" FontWeight="AutoFontWeight" 
+                        DataField="NumberOfShorts" ComponentType="TextBlock"/>
                     </MSU:MultiListbox.ColumnDefinitions>
                     <MSU:MultiListbox.ItemsContextMenu>
                         <ContextMenu>
