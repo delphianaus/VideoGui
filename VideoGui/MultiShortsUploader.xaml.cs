@@ -578,34 +578,34 @@ namespace VideoGui
                     string rootfolder = FindUploadPath();
                     string BaseDir = key.GetValueStr("shortsdirectory", @"D:\shorts");
                     key?.Close();
-                    int cnt = Directory.EnumerateFiles(rootfolder, "*.mp4", SearchOption.AllDirectories).ToList().Count();
                     if (!sa.KilledUploads && sa.TotalScheduled > 0)
                     {
                         List<string> filesdone = new List<string>();
                         bool Exc = sa.Exceeded;
+                        bool FindNextRec = false;
                         filesdone.AddRange(sa.ScheduledOk);
                         int Uploaded = sa.TotalScheduled;
                         int shortsleft = Directory.EnumerateFiles(rootfolder, "*.mp4", SearchOption.AllDirectories).ToList().Count();
                         foreach (var rp in msuSchedules.ItemsSource.OfType<SelectedShortsDirectories>().Where(x => x.IsActive))
                         {
-                            break;
+                            var dir =
+                                Directory.EnumerateDirectories(BaseDir, rp.DirectoryName,
+                                SearchOption.AllDirectories).ToList().FirstOrDefault();
+                            if (dir.ToLower() != rootfolder.ToLower()) continue;
+
+                            int cnt = Directory.EnumerateFiles(dir, "*.mp4", SearchOption.AllDirectories).ToList().Count();
                             rp.NumberOfShorts = cnt;
                             if (cnt == 0) rp.IsActive = false;
-                            string DirPath = rp.DirectoryName;
-                            string newpath = Path.Combine(BaseDir, DirPath);
-                            if (Path.Exists(newpath))
-                            {
-                                shortsleft = Directory.EnumerateFiles(newpath, "*.mp4", SearchOption.AllDirectories).ToList().Count();
-                                rp.NumberOfShorts = shortsleft;
-                                string sql = "UPDATE MULTISHORTSINFO SET NUMBEROFSHORTS = @NUMBEROFSHORTS WHERE LINKEDSHORTSDIRECTORYID = @LINKEDSHORTSDIRECTORYID";
-                                connectionStr.ExecuteNonQuery(sql,
-                                    [("@NUMBEROFSHORTS", shortsleft),
+                            string sql = "UPDATE MULTISHORTSINFO SET NUMBEROFSHORTS = @NUMBEROFSHORTS WHERE LINKEDSHORTSDIRECTORYID = @LINKEDSHORTSDIRECTORYID";
+                            connectionStr.ExecuteNonQuery(sql,
+                                [("@NUMBEROFSHORTS", shortsleft),
                                 ("@LINKEDSHORTSDIRECTORYID", rp.LinkedShortsDirectoryId)]);
-                            }
+                            dbInit?.Invoke(this, new CustomParams_RemoveMulitShortsInfoById(rp.LinkedShortsDirectoryId));
+                            FindNextRec = true;
+                            break;
                         }
-                        bool remove = !msuSchedules.ItemsSource.OfType<SelectedShortsDirectories>().Any(x => x.NumberOfShorts == 0);
-                        if (remove) dbInit?.Invoke(this, new CustomParams_RemoveMulitShortsInfoById(-1));
-                        if (cnt == 0)
+                        
+                        if (FindNextRec)
                         {
                             int acnt = 0;
                             foreach (var rp in msuSchedules.ItemsSource.OfType<SelectedShortsDirectories>().Where(x => x.IsActive && x.NumberOfShorts > 0))
@@ -647,7 +647,7 @@ namespace VideoGui
                                         key?.Close();
                                         CheckLinkedIds(item, newpath);
                                         var Idx = dbInit?.Invoke(this, new CustomParams_GetDirectory(item.DirectoryName));
-                                        item.Id = (Idx is int _id && item.Id != _id) ? _id : item.Id;
+                                        item.LinkedShortsDirectoryId = (Idx is int _id && item.LinkedShortsDirectoryId != _id) ? _id : item.LinkedShortsDirectoryId;
                                     }
                                 }
                             }
@@ -669,7 +669,7 @@ namespace VideoGui
                                         key.SetValue("UploadPath", newpath);
                                         key?.Close();
                                         var Idx = dbInit?.Invoke(this, new CustomParams_GetDirectory(item.DirectoryName));
-                                        item.Id = (Idx is int _id && item.Id != _id) ? _id : item.Id;
+                                        item.LinkedShortsDirectoryId = (Idx is int _id && item.LinkedShortsDirectoryId != _id) ? _id : item.LinkedShortsDirectoryId;
                                         CheckLinkedIds(item, newpath);
                                     }
                                 }
@@ -733,6 +733,14 @@ namespace VideoGui
                     }
                     else
                     {
+                        if (Debugger.IsAttached)
+                        {
+                            "Schedule _04".WriteLog();
+                            if (true)
+                            {
+
+                            }
+                        }
                         sa = null;
                         Show();
                     }
@@ -880,6 +888,49 @@ namespace VideoGui
             catch (Exception ex)
             {
                 ex.LogWrite($"txtMaxUpload_KeyDown {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
+            }
+        }
+
+        public void mnuUploadSelected_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                BtnRunUploaders_Click(sender, e);
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"mnuUploadSelected_Click {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
+            }
+        }
+        public void mnuOpenDirectory_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (e.OriginalSource is MenuItem m && m.DataContext is SelectedShortsDirectories rp)
+                {
+
+                    RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                    string ShortsBase = key.GetValueStr("shortsdirectory", "");
+                    key?.Close();
+                    string ShortsDirectory = rp.DirectoryName;
+                    if (ShortsBase != "" && ShortsDirectory != "")
+                    {
+                        var directoryInfo = Directory.EnumerateDirectories(ShortsBase, ShortsDirectory, SearchOption.AllDirectories).ToList();
+                        string SelectedDirectory = directoryInfo.FirstOrDefault();
+                        ProcessStartInfo startInfo = new ProcessStartInfo
+                        {
+                            FileName = "explorer.exe",
+                            Arguments = SelectedDirectory
+                        };
+                        Process.Start(startInfo);
+                    }
+
+                    // dbInit?.Invoke(this, new CustomParams_RemoveSchedule(rp.Id));
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"mnuOpenDirectory_Click {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
         }
         private void mnuRemoveSchedule(object sender, RoutedEventArgs e)

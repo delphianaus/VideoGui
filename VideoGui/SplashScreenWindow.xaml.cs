@@ -92,7 +92,20 @@ namespace VideoGui
                 UpdateProgess.Start();
 
 
-                return;// below code encrpts string and returns it as c# code
+  return;// below code encrpts string and returns it as c# code
+                List<string> FilesList = new List<string>();
+
+                FilesList = Directory.EnumerateFiles(@"D:\shorts\Steamrails Warrnambool Westcoaster 281023","*", SearchOption.AllDirectories).ToList();
+                foreach (var filename in FilesList)
+                {
+                    if (filename.Contains(".mp4") && !filename.EndsWith(".mp4"))
+                    {
+                        string newfilename = filename.Substring(0, filename.IndexOf(".mp4")) + ".mp4";
+                        File.Move(filename, newfilename);
+                    }
+
+                }
+               
                 string str = GetEncryptedString("ffmpeg");
 
                 if (str != "")
@@ -734,7 +747,7 @@ namespace VideoGui
                     70, 41, 174, 195, 146, 67, 119, 56, 250, 149, 248, 183, 135,
                     239, 74, 53, 72, 245, 211, 18 }.Select(i => (byte)i).ToArray());
                 statusupdate = 0;
-                var data = await DownloadFileAsync(URL, 4 * 1048576, 16, UpdateDownloadProgress);
+                var data = await DownloadFileAsync(URL, 16*1048576, 20, UpdateDownloadProgress);
                 List<Stream> ZipStreams = new List<Stream>();
                 List<string> ZipFileNames = new List<string>();
                 string AppName = GetExePath();// System.IO.Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);

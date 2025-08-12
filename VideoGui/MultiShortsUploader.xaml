@@ -99,10 +99,13 @@
                     </MSU:MultiListbox.ColumnDefinitions>
                     <MSU:MultiListbox.ItemsContextMenu>
                         <ContextMenu>
+                            <MenuItem Header="Upload Selected" Click="mnuUploadSelected_Click"/>
                             <MenuItem Header="Remove Selected Directories" Click="mnuRemoveSelected_Click"/>
                             <MenuItem Header="Make Active" Click="mnuMakeActive_Click"/>
                             <MenuItem Header="Remove Schedule" Click="mnuRemoveSchedule"/>
                             <MenuItem Header="Change Schedules(Test)" Click="mnuChangeSchedule"/>
+                            <Separator/>
+                            <MenuItem Header="Open Directory" Click="mnuOpenDirectory_Click"/>
                         </ContextMenu>
                     </MSU:MultiListbox.ItemsContextMenu>
                 </MSU:MultiListbox>

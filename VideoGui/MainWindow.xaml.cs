@@ -10550,20 +10550,8 @@ namespace VideoGui
                     bool Unfinished = false;
                     Nullable<TimeSpan> te = LoadTime("ScheduleTimeEnd");
                     Nullable<TimeSpan> tl = LoadTime("ScheduleTimeStart");
-                    Nullable<TimeSpan> trs = LoadTime("NextValidGap");
-                    if (trs.HasValue && tl.HasValue)
-                    {
-                        tl += trs.Value;
-                    }
-                    if (te.HasValue && tl.HasValue)
-                    {
-                        if (tl.Value < te.Value)
-                        {
-                            Unfinished = true;
-                            SaveTime(tl.Value, "ScheduleTimeStart");
-                        }
-                    }
-                    if (ss.TaskHasCancelled || Unfinished)
+                    
+                    if (ss.TaskHasCancelled || !ss.HasCompleted)
                     {
                         string sqla = "SELECT ID FROM SETTINGS WHERE SETTINGNAME = @P0";
                         int iScheduleID = connectionString.ExecuteScalar(sqla, [("@P0", "CURRENTSCHEDULINGID")]).ToInt(-1);

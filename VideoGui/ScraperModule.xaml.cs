@@ -2885,6 +2885,7 @@ namespace VideoGui
                     int r = directshortsScheduler.ScheduleNumber;
                     if (r >= ScheduleMax - 1) r = ScheduleMax - 1;
                     lstMain.Items.Insert(0, $"{r + 1} Schedules Complete");
+
                     if (Days > 1)
                     {
                         if (CurrentDay > Days - 1) return false;
@@ -2909,6 +2910,7 @@ namespace VideoGui
                     {
                         cancelds();
                         canceltoken.Cancel();
+                        HasCompleted = true;
                         Nullable<TimeSpan> st = LoadTime("ScheduleTimeStart");
                         Nullable<TimeSpan> et = LoadTime("ScheduleTimeEnd");
                         if (st.HasValue && et.HasValue)
@@ -3015,6 +3017,7 @@ namespace VideoGui
                 ex.LogWrite($"DoAutoCancelClose {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
+        public bool HasCompleted = false;
         private void DoReportSchedule(DateTime dateTime, string id, string title)
         {
             try
@@ -3038,9 +3041,11 @@ namespace VideoGui
                         int mins = directshortsScheduler.GetNextGap(nexttime);
                         TimeSpan nextgap = new TimeSpan(0, 0, mins);
                         SaveTime(nextgap, "NextValidGap");
+                        HasCompleted = false;
                     }
                     else
                     {
+                        HasCompleted = true;
                         DateTime nextsch = nextSchedule.Date.AddDays(1);
                         var stdef = LoadTime("ScheduleTimeStart_Default");
                         if (stdef.HasValue)
@@ -3284,6 +3289,7 @@ namespace VideoGui
                     {
                         NodeUpdate(Span_Name, ScheduledGet);
                         InsertIntoUploadFiles(VideoFiles, connectStr);
+                        DeleteFiles(VideoFiles, "Z:\\");
                         Close();
                         break;
                     }
@@ -3317,6 +3323,7 @@ namespace VideoGui
                         {
                             NodeUpdate(Span_Name, ScheduledGet);
                             InsertIntoUploadFiles(VideoFiles, connectStr);
+                            DeleteFiles(VideoFiles, "Z:\\");
                             break;
                         }
                         NodeUpdate(Span_Name, ScheduledGet);
@@ -3333,6 +3340,7 @@ namespace VideoGui
                             {
                                 CompleteCnt++;
                                 UploadedHandler(Span_Name, connectStr, filename1);
+                                DeleteFiles(new List<string> {filename1}, "Z:\\");
                             }
                             if (Regex.IsMatch(Nodes[i].InnerText, @"Waiting"))
                             {
@@ -3379,6 +3387,7 @@ namespace VideoGui
                                         {
                                             cts.Cancel();
                                             InsertIntoUploadFiles(VideoFiles, connectStr);
+                                            DeleteFiles(VideoFiles, "Z:\\");
                                             continue;
                                         }
                                         if (htmlcheck is not null && htmlcheck.Contains("https://youtu.be/"))
@@ -3429,8 +3438,8 @@ namespace VideoGui
                                     if (Regex.IsMatch(html.ToLower(), @"processing will begin shortly|your video template has been saved as draft|saving|save and close|title-row style-scope ytcp-uploads-dialog|daily limit"))
                                     {
                                         Thread.Sleep(300);
+                                        DeleteFiles(VideoFiles, "Z:\\");
                                         InsertIntoUploadFiles(VideoFiles, connectStr);
-                                        await ActiveWebView[1].ExecuteScriptAsync(Script_Close);
                                     }
                                     found = true;
                                 }
@@ -3447,6 +3456,7 @@ namespace VideoGui
                 var htmlcheck1 = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
                 if (Regex.IsMatch(htmlcheck1, @"Uploads complete|processing will begin shortly|your video template has been saved as draft|saving|save and close|title-row style-scope ytcp-uploads-dialog|daily limit"))
                 {
+                    DeleteFiles(VideoFiles, "Z:\\");
                     return false;
                 }
                 return true;
@@ -3455,6 +3465,27 @@ namespace VideoGui
             {
                 ex.LogWrite($"ScheduledGet {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
                 return false;
+            }
+        }
+
+        public void DeleteFiles(List<string> files, string basedirectory)
+        {
+            try
+            {
+                foreach (string file in files)
+                {
+                    var ft = Directory.EnumerateFiles(basedirectory, file + ".*",
+                        SearchOption.AllDirectories).FirstOrDefault();
+                    if (ft is not null)
+                    {
+                        File.Delete(ft);
+                        lstMain.Items.Insert(0, $"{file} Deleted");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"DeleteFiles {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
         public void ProcessHTML(string html, int id, string IntId, object sender)
