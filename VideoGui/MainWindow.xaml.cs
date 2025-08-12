@@ -1202,6 +1202,12 @@ namespace VideoGui
                     DateTime r = new DateTime(1, 1, 1);
                     if (dt.HasValue && st.HasValue && et.HasValue && pp != "")
                     {
+                        if (dt.Value.Year < 1900)
+                        {
+                            dt = DateTime.Now.Date;
+                            int yrdiff = DateTime.Now.Year - dt.Value.Year;
+                            dt = dt.Value.AddYears(yrdiff);
+                        }
                         manualScheduler.txtMaxSchedules.Text = pp;
                         manualScheduler.ReleaseDate.Value = dt.Value.Date;
                         manualScheduler.ReleaseTimeStart.Value = r.AtTime(st);
@@ -10282,12 +10288,25 @@ namespace VideoGui
 
         }
 
+        public void ShowMyForm(object id)
+        {
+            try
+            {
+                Show();
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"ShowMyForm {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
+            }
+        }
         private void btnSchedule_Click(object sender, RoutedEventArgs e)
         {
             try
             {
                 var _manualScheduler = new ManualScheduler(ModuleCallback, ManualSchedulerFinish);
                 _manualScheduler.ShowActivated = true;
+                _manualScheduler.ShowMultiForm = ShowMyForm;
+                _manualScheduler.IsMultiForm = true;
                 Hide();
                 _manualScheduler.Show();
             }
@@ -10550,8 +10569,12 @@ namespace VideoGui
                     bool Unfinished = false;
                     Nullable<TimeSpan> te = LoadTime("ScheduleTimeEnd");
                     Nullable<TimeSpan> tl = LoadTime("ScheduleTimeStart");
-                    
-                    if (ss.TaskHasCancelled || !ss.HasCompleted)
+
+                    //bool Allow = (!ss.Errored && !ss.QuotaExceeded && !ss.KilledUploads &&
+                    //    !ss.HasCompleted ) || ss.TaskHasCancelled;
+
+                    if ((!ss.Errored && !ss.QuotaExceeded && !ss.KilledUploads &&
+                        !ss.HasCompleted) || ss.TaskHasCancelled)
                     {
                         string sqla = "SELECT ID FROM SETTINGS WHERE SETTINGNAME = @P0";
                         int iScheduleID = connectionString.ExecuteScalar(sqla, [("@P0", "CURRENTSCHEDULINGID")]).ToInt(-1);
@@ -10582,7 +10605,7 @@ namespace VideoGui
                     {
                         if (ss.IsMultiForm)
                         {
-                            ss.ShowMultiForm(this);
+                            ss.ShowMultiForm?.Invoke(this);
                         }
                         else
                         {

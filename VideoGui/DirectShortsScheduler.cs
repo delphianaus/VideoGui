@@ -37,6 +37,7 @@ namespace VideoGui
         public DateTime StartDate = DateTime.Now, EndDate = DateTime.Now, LastValidDate = DateTime.Now;
         List<DateTime> AvailableSchedules = new List<DateTime>();
         ReportVideoScheduled DoReportScheduled = null;
+        ReportQuotaExceeded DoReportQuotaExceeded = null;
         ScheduleTaskCancelled TaskCanceledScheduled = null;
         public int MaxNumberSchedules = 100, ScheduleNumber = 0, ListScheduleIndex = 0, LastGap = -1;
         bool setup = false, BeginMode = false, FinishMode = false, FirstTime = false;
@@ -47,7 +48,9 @@ namespace VideoGui
             DateTime startDate, DateTime endDate,
             ReportVideoScheduled doReportSchedule,
             ScheduleTaskCancelled ScheduleTaskCanceled,
+            ReportQuotaExceeded reportQuotaExceeded,
             int maxNumberSchedules, CancellationTokenSource _cts,
+
             bool isTest)
         {
             try
@@ -57,6 +60,7 @@ namespace VideoGui
                 MaxNumberSchedules = maxNumberSchedules;
                 DoReportScheduled = doReportSchedule;
                 DoOnFinish = doOnFinish;
+                DoReportQuotaExceeded = reportQuotaExceeded;
                 ScheduleList = listSchedules;
                 StartDate = startDate;
                 EndDate = endDate;
@@ -244,7 +248,7 @@ namespace VideoGui
                 {
                     string ls = $"YouTube Quota Exceeded @ ";
                     CanSchedule = false;
-                    DoReportScheduled?.Invoke(DateTime.Now, "", ls);
+                    DoReportQuotaExceeded?.Invoke("") ;
                 }
                 else
                 {
@@ -257,7 +261,7 @@ namespace VideoGui
                     }
                     else
                     {
-                        DoReportScheduled?.Invoke(DateTime.Now, videoId, message);
+                        DoReportQuotaExceeded?.Invoke(ex.Message);
                         return FinishType.Error;
                     }
                 }

@@ -45,6 +45,7 @@ namespace VideoGui.Models.delegates
     public delegate string OnGetTagIds(int id);
     public delegate void GetNextNode();
     public delegate void ScheduleTaskCancelled();
+    public delegate void ReportQuotaExceeded(string message);
     public delegate void ReportVideoScheduled(DateTime dateTime, string id, string title);
     public delegate void AudioJoinerOnClose();
     public delegate void AddressUpdate(string address);

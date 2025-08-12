@@ -112,7 +112,8 @@ namespace VideoGui
         bool Valid = false, IsVideoLookupShort = false, IsValid = false, IsUnlisted = false, IsDashboardMode = false, CanSpool = false, FirstRun = true, done = false, HasExited = false;
         bool DoNextNode = true, finished = false, TimedOut = false, Uploading = false, NextRecord = false, Processing = false, clickupload = true;
         public bool IsClosing = false, IsClosed = false, Exceeded = false, KilledUploads = false, SwapEnabled = false, IsTitleEditor = false;
-        public bool TaskHasCancelled = false, NewSession = false;
+        public bool TaskHasCancelled = false, NewSession = false, QuotaExceeded = false, Errored = false;
+
         string SendKeysString = "", UploadPath = "", LastNode = "", DefaultUrl = "", LastValidFileName = "", TableDestination = "";
         List<ScraperUploads> Scraper_uploaded = new();
         List<string> IdNodes = new(), titles = new List<string>(), nextaddress = new(), Ids = new(), Idx = new(), ufiles = new(), Files = new();// DoneFiles = new();
@@ -2519,6 +2520,7 @@ namespace VideoGui
                 {
                     KilledUploads = true;
                     await BuildFiles();
+
                     Close();
                 }
             }
@@ -2715,6 +2717,7 @@ namespace VideoGui
                                 ReleaseDate.Value, ReleaseEndDate.Value,
                                 DoReportSchedule,
                                 DoScheduleTaskCancel,
+                                DoQuotaExceeded,
                                 ScheduleMax, canceltoken, IsTest);
                             directshortsScheduler.connectionString = connectionStr;
                         }
@@ -2779,6 +2782,35 @@ namespace VideoGui
                 return false;
             }
         }
+        
+        private void DoQuotaExceeded(string message)
+        {
+            try
+            {
+                if (message == "")
+                {
+                    QuotaExceeded = true;
+                }
+                else
+                {
+                    Errored = true;
+                    lstMain.Items.Insert(0, $"Schedule Error: {message} @ {DateTime.Now}");
+                }
+                CancellationTokenSource cts = new CancellationTokenSource();
+                cts.CancelAfter(TimeSpan.FromSeconds(2));
+                while (!cts.IsCancellationRequested)
+                {
+                    Thread.Sleep(100);
+                }
+                Close();
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"DoQuotaExceeded {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+
+        }
+
         private void DoScheduleTaskCancel()
         {
             try
@@ -2932,6 +2964,12 @@ namespace VideoGui
                             Nullable<DateTime> dt = LoadDate("ScheduleDate");
                             if (dt.HasValue)
                             {
+                                if (dt.Value.Year < 1900)
+                                {
+                                    var yt = DateTime.Now.Year;
+                                    var dif = dt.Value.Year - yt;
+                                    dt.Value.AddYears(dif);
+                                }
                                 SaveDates(dt.Value.AddDays(1), "ScheduleDate");
                             }
                         }
@@ -3047,6 +3085,7 @@ namespace VideoGui
                     {
                         HasCompleted = true;
                         DateTime nextsch = nextSchedule.Date.AddDays(1);
+
                         var stdef = LoadTime("ScheduleTimeStart_Default");
                         if (stdef.HasValue)
                         {
@@ -3340,7 +3379,7 @@ namespace VideoGui
                             {
                                 CompleteCnt++;
                                 UploadedHandler(Span_Name, connectStr, filename1);
-                                DeleteFiles(new List<string> {filename1}, "Z:\\");
+                                DeleteFiles(new List<string> { filename1 }, "Z:\\");
                             }
                             if (Regex.IsMatch(Nodes[i].InnerText, @"Waiting"))
                             {
