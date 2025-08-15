@@ -44,7 +44,8 @@ namespace VideoGui
         public bool IsClosing = false, IsClosed = false, Ready = false, IsFirstResize = false;
         private bool _isFirstResize = true;
         DispatcherTimer LocationChangedTimer = new DispatcherTimer(), LocationChanger = new DispatcherTimer();
-
+        bool DebugStep = false;
+        public TraceDebuggerInfo tbi = null;
         public static readonly DependencyProperty ShortsDirectoryNameWidthProperty =
             DependencyProperty.Register(nameof(ShortsDirectoryNameWidth), typeof(double),
                 typeof(MultiShortsUploader),
@@ -95,6 +96,11 @@ namespace VideoGui
                 connectionStr = dbInit.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
                 ShortsIndex = connectionStr.ExecuteScalar(sqla,
                     [("@DIRECTORYNAME", DirName)]).ToInt(-1);
+                RegistryKey keyx = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                tbDebug.IsChecked = keyx.GetValueBool("DebugStep", false);
+                DebugStep = tbDebug.IsChecked.Value;
+                keyx?.Close();
+
             }
             catch (Exception ex)
             {
@@ -215,14 +221,16 @@ namespace VideoGui
                     MainScroller.Height = _height;
                     MainContent.Height = _height;
                     ResizeMultilistBoxes(msuShorts.Height);
-                    Canvas.SetTop(BtnClose, _height - 68);
-                    Canvas.SetTop(btnSchdule, _height - 68);
-                    Canvas.SetTop(BtnRunUploaders, _height - 68);
-                    Canvas.SetTop(txtTotalUploads, _height - 64.5);
-                    Canvas.SetTop(txtMaxUpload, _height - 64.5);
-                    Canvas.SetTop(lblupload, _height - 67.5);
-                    Canvas.SetTop(lblmax, _height - 67.5);
-                    Canvas.SetTop(lblUploaded, _height - 70.5);// Height - 386 = 420- 386 = 34
+                    Canvas.SetTop(BtnClose, _height - 78);
+                    Canvas.SetTop(BtnRunUploaders, _height - 78);
+                    Canvas.SetTop(btnSchdule, _height - 78);
+                    Canvas.SetTop(tbDebug, _height - 82);
+                    double r = 4.2;
+                    Canvas.SetTop(txtTotalUploads, _height - 64.5 - r);
+                    Canvas.SetTop(txtMaxUpload, _height - 64.5 - r);
+                    Canvas.SetTop(lblupload, _height - 67.5 - r);
+                    Canvas.SetTop(lblmax, _height - 67.5 - r);
+                    Canvas.SetTop(lblUploaded, _height - 70.5 - r);// Height - 386 = 420- 386 = 34
                 }
                 if (SetWidth)
                 {
@@ -232,6 +240,7 @@ namespace VideoGui
                     msuShorts.Width = _width - 15;
                     msuSchedules.Width = msuShorts.Width;
                     Canvas.SetLeft(BtnClose, _width - BtnClose.Width - 25);
+                    //Canvas.SetLeft(tbDebug, _width - tbDebug.Width - BtnClose.Width - 25);
                     var r = _width - 530;
                     ShortsDirectoryNameWidth = r > 0 ? r : 100;
                     MultiShortsDirectoryNameWidth = r > 0 ? r : 100;
@@ -463,6 +472,15 @@ namespace VideoGui
         {
             try
             {
+                if (DebugStep)
+                {
+                    if (tbi is null)
+                    {
+                        tbi = new(OnClose);
+                        tbi.ShowActivated = true;
+                        tbi.Show();
+                    }
+                }
                 string newdir = "", UploadFile = "", PathToCheck = "";
                 int LinkedId = -1;
                 bool Valid = true, Processed = false, IsProcessing = true;
@@ -557,6 +575,10 @@ namespace VideoGui
                     int UploadsPerSlot = (txtMaxUpload.Text != "") ? txtMaxUpload.Text.ToInt(5) : 5;
                     var _scraperModule = new ScraperModule(dbInit, doOnFinish, gUrl, Maxuploads, UploadsPerSlot, 0, true);
                     _scraperModule.ShowActivated = true;
+                    if (tbi is not null)
+                    {
+                        _scraperModule.SendTraceInfo = tbi.InsertNewTrace;
+                    }
                     Hide();
                     _scraperModule.Show();
                 }
@@ -566,6 +588,23 @@ namespace VideoGui
                 ex.LogWrite($"BtnRunUploaders_Click {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
+
+        private void OnClose(object obj)
+        {
+            try
+            {
+                if (obj is TraceDebuggerInfo tbix)
+                {
+                    tbix = null;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"OnClose {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+        }
+
         private void doOnFinish(object sender, int id)
         {
             try
@@ -604,7 +643,7 @@ namespace VideoGui
                             FindNextRec = true;
                             break;
                         }
-                        
+
                         if (FindNextRec)
                         {
                             int acnt = 0;
@@ -687,6 +726,10 @@ namespace VideoGui
                             foreach (Process process in webView2Processes)
                             {
                                 process.Kill();
+                            }
+                            if (tbi is not null)
+                            {
+                                sscraperModule.SendTraceInfo = tbi.InsertNewTrace;
                             }
                             sscraperModule.Show();
                             return;
@@ -933,6 +976,41 @@ namespace VideoGui
                 ex.LogWrite($"mnuOpenDirectory_Click {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
         }
+
+        private void tbDebug_Checked(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void tbDebug_LostFocus(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                key.SetValue("DebugStep", tbDebug.IsChecked.ToString());
+                key?.Close();
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"tbDebug_LostFocus {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
+            }
+        }
+
+        private void tbDebug_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                DebugStep = tbDebug.IsChecked.Value;
+                RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                key.SetValue("DebugStep", tbDebug.IsChecked.ToString());
+                key?.Close();
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"tbDebug_Click {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
+            }
+        }
+
         private void mnuRemoveSchedule(object sender, RoutedEventArgs e)
         {
             try

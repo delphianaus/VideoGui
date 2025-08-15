@@ -12,8 +12,8 @@
     <StartupObject>VideoGui.App</StartupObject>
     <ApplicationIcon>Properties\computer.ico</ApplicationIcon>
     <Platforms>x64</Platforms>
-    <AssemblyVersion>1.0.0.397</AssemblyVersion>
-    <FileVersion>1.0.0.397</FileVersion>
+    <AssemblyVersion>1.0.0.398</AssemblyVersion>
+    <FileVersion>1.0.0.398</FileVersion>
     <Nullable>annotations</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <UseWindowsForms>True</UseWindowsForms>
@@ -77,6 +77,8 @@
     <None Remove="Icons\save.png" />
     <None Remove="Icons\SelectDown.png" />
     <None Remove="Icons\set.png" />
+    <None Remove="Icons\StepOff.png" />
+    <None Remove="Icons\StepOn.png" />
     <None Remove="Icons\upArrow.png" />
     <None Remove="Icons\update.png" />
     <None Remove="Icons\update2.png" />
@@ -176,6 +178,10 @@
     <Resource Include="Icons\set.png">
       <CopyToOutputDirectory>f</CopyToOutputDirectory>
     </Resource>
+
+    <Resource Include="Icons\StepOff.png" />
+
+    <Resource Include="Icons\StepOn.png" />
 
     <Resource Include="Icons\upArrow.png" />
 

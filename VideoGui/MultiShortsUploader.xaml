@@ -13,6 +13,27 @@
     <Window.Resources>
         <BitmapImage x:Key="SET" UriSource="icons/set.png"/>
         <BitmapImage x:Key="EDIT" UriSource="icons/edit.png"/>
+        <BitmapImage x:Key="STEPON" UriSource="icons/stepon.png"/>
+        <BitmapImage x:Key="STEPOFF" UriSource="icons/stepoff.png"/>
+        <Style x:Key="ToggleStepStyle" TargetType="{x:Type ToggleButton}">
+            <Setter Property="Height" Value="23"/>
+            <Setter Property="Width" Value="45"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ToggleButton}">
+                        <Image x:Name="PART_Image"  />
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="true">
+                                <Setter TargetName="PART_Image" Property="Source" Value="{StaticResource STEPON}"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="False">
+                                <Setter TargetName="PART_Image" Property="Source" Value="{StaticResource STEPOFF}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
         <Style x:Key="ToggleSetEditStyle" TargetType="{x:Type ToggleButton}">
             <Setter Property="Height" Value="23"/>
             <Setter Property="Width" Value="45"/>
@@ -75,8 +96,8 @@
                     </MSU:MultiListbox.ItemsContextMenu>
                 </MSU:MultiListbox>
                 <MSU:MultiListbox x:Name="msuSchedules" Header="Active Schedules" 
-                  Width="560" Canvas.Top="165"  VerticalContentAlignment="Bottom" 
-                   Height="218" HorizontalAlignment="Center" ItemHeight="15" >
+                  Width="560" Canvas.Top="168"  VerticalContentAlignment="Bottom" 
+                   Height="218" HorizontalAlignment="Center" ItemHeight="15" VerticalAlignment="Top" >
                     <MSU:MultiListbox.ColumnDefinitions>
                         <MSU:MultiListboxColumnDefinition DataField="Id" Width="0" ComponentType="TextBlock"/>
                         <MSU:MultiListboxColumnDefinition HeaderText="Shorts Directory" 
@@ -109,17 +130,21 @@
                         </ContextMenu>
                     </MSU:MultiListbox.ItemsContextMenu>
                 </MSU:MultiListbox>
-                <Button Name="BtnClose" Content="Close" HorizontalAlignment="Left" VerticalAlignment="Center" Height="25" Width="58" Click="BtnClose_Click" Canvas.Left="487" Canvas.Top="388"/>
-                <Button x:Name="BtnRunUploaders" Content="Upload" HorizontalAlignment="Left" VerticalAlignment="Center" Height="25" Width="61" Click="BtnRunUploaders_Click" Canvas.Left="8" Canvas.Top="388"/>
-                <Label x:Name="lblupload" Content="Uploads Per Slot" HorizontalAlignment="Left" VerticalAlignment="Center" Canvas.Left="144" Canvas.Top="388"/>
+                <ToggleButton x:Name="tbDebug" Width="44" Height="44" Canvas.Left="133" LostFocus="tbDebug_LostFocus"
+                              Canvas.Top="379" HorizontalAlignment="Left" VerticalAlignment="Center" 
+                              Style="{StaticResource ToggleStepStyle}" ToolTip="Debug Mode" Click="tbDebug_Click"/>
+                <Button Name="BtnClose" Content="Close" HorizontalAlignment="Left" VerticalAlignment="Center" Height="36" Width="58" Click="BtnClose_Click" Canvas.Left="487" Canvas.Top="386"/>
+                <Button x:Name="BtnRunUploaders" Content="Upload" HorizontalAlignment="Left" VerticalAlignment="Center" Height="36" Width="56" Click="BtnRunUploaders_Click" Canvas.Left="8" Canvas.Top="386"/>
+                <Label x:Name="lblupload" Content="Uploads Per Slot" HorizontalAlignment="Left" VerticalAlignment="Center" Canvas.Left="184" Canvas.Top="388"/>
                 <TextBox x:Name="txtMaxUpload" Text="5" TextWrapping="Wrap" 
-            KeyDown="txtMaxUpload_KeyDown" LostFocus="txtMaxUpload_LostFocus" VerticalAlignment="Center" HorizontalAlignment="Left" Width="20" Height="20" Canvas.Left="232" Canvas.Top="390"/>
-                <Label x:Name="lblmax" Content="Max Uploads" VerticalAlignment="Center" HorizontalAlignment="Left" Canvas.Left="255" Canvas.Top="388"/>
+            KeyDown="txtMaxUpload_KeyDown" LostFocus="txtMaxUpload_LostFocus" VerticalAlignment="Center" HorizontalAlignment="Left" Width="20" Height="20" Canvas.Left="278" Canvas.Top="390"/>
+                <Label x:Name="lblmax" Content="Max Uploads" VerticalAlignment="Center" HorizontalAlignment="Left" Canvas.Left="296" Canvas.Top="388"/>
                 <TextBox x:Name="txtTotalUploads" Text="100" TextWrapping="Wrap" 
             KeyDown="txtTotalUploads_KeyDown" VerticalAlignment="Center" 
-                             HorizontalAlignment="Left" Width="27" Height="20" Canvas.Left="327" Canvas.Top="390"/>
-                <Label x:Name="lblUploaded" Content="Last Upload:" Canvas.Left="359" Canvas.Top="386" HorizontalAlignment="Left" VerticalAlignment="Center" FontSize="14" Background="Transparent" Foreground="#FFFF1414" FontWeight="Bold"/>
-                <Button x:Name="btnSchdule" Content="Schedule" Height="25" Width="65" Click="btnSchdule_Click" Canvas.Left="79" Canvas.Top="388" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                             HorizontalAlignment="Left" Width="27" Height="20" Canvas.Left="366" Canvas.Top="390"/>
+                <Label x:Name="lblUploaded" Content="Last Upload:" Canvas.Left="391" Canvas.Top
+                       ="386" HorizontalAlignment="Left" VerticalAlignment="Center" FontSize="14" Background="Transparent" Foreground="#FFFF1414" FontWeight="Bold"/>
+                <Button x:Name="btnSchdule" Content="Schedule" Height="36" Width="56" Click="btnSchdule_Click" Canvas.Left="74" Canvas.Top="386" HorizontalAlignment="Left" VerticalAlignment="Center"/>
             </Canvas>
         </Grid>
     </ScrollViewer>

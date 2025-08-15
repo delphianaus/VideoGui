@@ -83,7 +83,10 @@ namespace VideoGui
         public static bool ContainsAll(this string data, string[] containsall)
         {
             bool res = false;
-            res = containsall.All(s => data.Contains(s));
+
+            
+
+            res = containsall.All(s => data.ToLower().Contains(s.ToLower()));
             return res;
         }
         public static bool ContainsAny(this string data, List<string> containsall)

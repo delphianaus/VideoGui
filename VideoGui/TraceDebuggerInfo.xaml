@@ -1,0 +1,26 @@
+﻿<Window x:Class="VideoGui.TraceDebuggerInfo"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:VideoGui" WindowStyle="ToolWindow"
+        mc:Ignorable="d" SizeChanged="Window_SizeChanged"
+        ResizeMode="CanResize" WindowStartupLocation="CenterScreen" 
+        Title="Debugger Trace Info" Height="450" Width="800">
+    <Grid>
+        <Border x:Name="brd1" BorderBrush="Black" BorderThickness="2" HorizontalAlignment="Left"
+                Height="370" Width="792" Margin="3,7,2,0" VerticalAlignment="Top">
+            <ScrollViewer x:Name="scrlMain" VerticalScrollBarVisibility="Hidden" 
+                  HorizontalScrollBarVisibility="Disabled" HorizontalAlignment="Left" VerticalAlignment="Top">
+                <ListBox x:Name="txttrace" Height="359" Width="780" Margin="3,3,3,3" FontSize="16"/>
+            </ScrollViewer>
+        </Border>
+        <Button x:Name="btnsave" Content="Save" Height="33" Width="100" Margin="10,392,690,10" Click="btnsave_Click"/>
+        <Button x:Name="btnclose" Content="Close" Height="33" Width="100" 
+                HorizontalAlignment="Right" Margin="0,0,12,13" 
+                VerticalAlignment="Bottom" 
+                Click="btnclose_Click"/>
+        <Button x:Name="btnclear" Content="Clear" Height="33" Width="100" Margin="125,392,575,10" Click="btnclear_Click"/>
+        <Button x:Name="btnOpen" Content="Open" Height="33" Width="100" Margin="242,392,458,10" Click="btnOpen_Click"/>
+    </Grid>
+</Window>

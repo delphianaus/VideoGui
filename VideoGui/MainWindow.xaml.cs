@@ -1204,7 +1204,6 @@ namespace VideoGui
                     {
                         if (dt.Value.Year < 1900)
                         {
-                            dt = DateTime.Now.Date;
                             int yrdiff = DateTime.Now.Year - dt.Value.Year;
                             dt = dt.Value.AddYears(yrdiff);
                         }
@@ -10288,24 +10287,14 @@ namespace VideoGui
 
         }
 
-        public void ShowMyForm(object id)
-        {
-            try
-            {
-                Show();
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite($"ShowMyForm {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
-            }
-        }
+       
         private void btnSchedule_Click(object sender, RoutedEventArgs e)
         {
             try
             {
                 var _manualScheduler = new ManualScheduler(ModuleCallback, ManualSchedulerFinish);
                 _manualScheduler.ShowActivated = true;
-                _manualScheduler.ShowMultiForm = ShowMyForm;
+                _manualScheduler.ShowMultiForm += (sender) => { Show(); };
                 _manualScheduler.IsMultiForm = true;
                 Hide();
                 _manualScheduler.Show();
