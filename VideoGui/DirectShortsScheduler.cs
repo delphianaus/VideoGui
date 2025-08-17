@@ -263,6 +263,7 @@ namespace VideoGui
                     else
                     {
                         DoReportQuotaExceeded?.Invoke(ex.Message);
+                        ex.LogWrite($"DoReportQuotaExceeded {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
                         return FinishType.Error;
                     }
                 }

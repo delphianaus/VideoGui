@@ -2792,6 +2792,7 @@ namespace VideoGui
                 else
                 {
                     Errored = true;
+                    message.WriteLog("QuotaExceeded");
                     lstMain.Items.Insert(0, $"Schedule Error: {message} @ {DateTime.Now}");
                 }
                 CancellationTokenSource cts = new CancellationTokenSource();
@@ -3103,7 +3104,7 @@ namespace VideoGui
 
         private void MenuClicker(WebView2 webView)
         {
-            if (Dispatcher.CurrentDispatcher.CheckAccess())
+            if (!Dispatcher.CurrentDispatcher.CheckAccess())
             {
                 Dispatcher.Invoke(() => { MenuClicker(webView); });
             }
@@ -3247,6 +3248,13 @@ namespace VideoGui
         {
             try
             {
+                if (!Dispatcher.CurrentDispatcher.CheckAccess())
+                {
+                    Dispatcher.Invoke(() => { SimulateMouseWheel(webView, isUp); });
+                    return;
+                }
+
+
                 if (webView == null || canceltoken.IsCancellationRequested) return;
                 var wih = new System.Windows.Interop.WindowInteropHelper(Window.GetWindow(webView));
                 var handle = wih.Handle;
@@ -3434,7 +3442,7 @@ namespace VideoGui
                                         SendTraceInfo?.Invoke(this, $"Waiting For Edit Window For {newfile}");
                                         var htmlx = await wv2.CoreWebView2.ExecuteScriptAsync("document.body.innerHTML");
                                         var ehtmlx = Regex.Unescape(htmlx);
-                                        if (!Regex.IsMatch(ehtmlx.ToLower(), @"youtube.be")|| Regex.IsMatch(ehtmlx.ToLower(), @"youtube.com/shorts"))
+                                        if (!Regex.IsMatch(ehtmlx.ToLower(), @"youtube.be") || Regex.IsMatch(ehtmlx.ToLower(), @"youtube.com/shorts"))
                                         {
                                             fnd = true;
                                             SendTraceInfo?.Invoke(this, $"Found Edit Window For {newfile}");
@@ -3503,7 +3511,7 @@ namespace VideoGui
                                             else
                                             {
                                                 var index1 = htmlcheck.IndexOf("youtube.be");
-                                                int len1= "youtube.be".Length;
+                                                int len1 = "youtube.be".Length;
                                                 if (index1 != -1)
                                                 {
                                                     vid = htmlcheck.Substring(index1 + len1, 11);
