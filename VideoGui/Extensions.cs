@@ -2184,7 +2184,7 @@ namespace VideoGui
             try
             {
 
-                string m_exePath = System.IO.Path.GetDirectoryName(Debugger.IsAttached ? GetAppPath() : Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
+                string m_exePath = System.IO.Path.GetDirectoryName(Debugger.IsAttached ? GetAppPath() : Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName));
                 string InternalCallingMethod = MethodBase.GetCurrentMethod().Name.ToString();
                 if (callingmethod != "")
                 {
