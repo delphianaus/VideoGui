@@ -57,6 +57,7 @@ using System.Xml;
 using System.Xml.Linq;
 using VideoGui.Models;
 using VideoGui.Models.delegates;
+using Windows.UI.WebUI;
 using Windows.Web.UI.Interop;
 using static Microsoft.WindowsAPICodePack.Shell.PropertySystem.SystemProperties.System;
 using static System.Net.WebRequestMethods;
@@ -1111,6 +1112,7 @@ namespace VideoGui
                             break;
                         }
                         if (ExitDialog) return;
+                        TimerSimulate.Start();
                         NodeUpdate(Span_Name, ScheduledGet);
                         var html1 = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
                         List<HtmlNode> Nodes1 = GetNodes(html1, Span_Name);
@@ -1160,6 +1162,7 @@ namespace VideoGui
                             }
                             Close();
                         }
+                        else TimerSimulate.Start();
                     }
                 }
             }
@@ -3097,6 +3100,31 @@ namespace VideoGui
                 ex.LogWrite($"DoReportSchedule {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
+
+        private void MenuClicker(WebView2 webView)
+        {
+            if (Dispatcher.CurrentDispatcher.CheckAccess())
+            {
+                Dispatcher.Invoke(() => { MenuClicker(webView); });
+            }
+            try
+            {
+                webView.Dispatcher.Invoke(() =>
+                {
+                    webView.Focus();
+                    SimulateMouseWheel(webView, true);
+                    System.Threading.Thread.Sleep(100);
+                    SimulateMouseWheel(webView, false);
+                    webView.Focus();
+                });
+
+                System.Windows.Forms.Application.DoEvents();
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"MenuClicker {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
+            }
+        }
         public Nullable<TimeSpan> LoadTime(string name)
         {
             try
@@ -3459,7 +3487,9 @@ namespace VideoGui
                                             continue;
                                         }
                                         string vid = "";
-                                        while (true)
+                                        var ctxs = new CancellationTokenSource();
+                                        ctxs.CancelAfter(TimeSpan.FromSeconds(5));
+                                        while (true && !ctxs.IsCancellationRequested)
                                         {
                                             htmlcheck = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
                                             SendTraceInfo?.Invoke(this, $"Getting videoid {filename1}");

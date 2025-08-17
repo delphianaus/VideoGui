@@ -10491,6 +10491,7 @@ namespace VideoGui
             }
         }
 
+        
         private void ManualSchedulerFinish(object sender, int id)
         {
             try
@@ -10514,6 +10515,9 @@ namespace VideoGui
                             startdate = startdate.Value.Date.Add(tsa.ToTimeSpan());
                             enddate = enddate.Value.Date.Add(tsb.ToTimeSpan());
                             IsTest = manualScheduler.TestMode;
+                            SaveDates(startdate.Value, "ScheduleDate");
+                            SaveTime(tsa.ToTimeSpan(), "ScheduleTimeStart");
+                            SaveTime(tsb.ToTimeSpan(), "ScheduleTimeEnd");
                         }
 
                         string sqla = "SELECT ID FROM SETTINGS WHERE SETTINGNAME = @P0";
@@ -10575,7 +10579,14 @@ namespace VideoGui
                         Nullable<DateTime> startdate = LoadDate("ScheduleDate");
                         Nullable<DateTime> enddate = DateTime.Now.AddHours(10);
                         Nullable<TimeSpan> ts = LoadTime("ScheduleTime");
+                        if (ss.TaskHasCancelled)
+                        {
+                            ts = LoadTime("ScheduleTimeStart");
+                            if (ts.HasValue)
+                            {
 
+                            }
+                        }
                         if (startdate.HasValue)
                         {
                             enddate = startdate.Value;

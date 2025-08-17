@@ -252,8 +252,9 @@ namespace VideoGui
                 }
                 else
                 {
-                    string[] msx = new string[] { "task", "cancelled" };
+                    string[] msx = new string[] { "task", "canceled","was" };
                     string[] msx2 = new string[] { "ssl", "connection" };
+                    //A task was canceled.
                     if (message.ToLower().ContainsAll(msx)|| message.ToLower().ContainsAll(msx2))
                     {
                         TaskCanceledScheduled?.Invoke();
@@ -364,18 +365,18 @@ namespace VideoGui
                             var r = ApplyVideoSchedule(videoId, TitleStr, DescStr, ScheduleDate).ConfigureAwait(false).GetAwaiter().GetResult();
                             if (r == FinishType.Scheduled)
                             {
+                                LastScheduledTime = ScheduleDate;
+                                LastGap = GapTime.Minutes;
                                 DoReportScheduled(ScheduleDate, videoId, TitleStr);
                                 CurrentTime = CurrentTime.Add(GapTime);
-                                LastScheduledTime = ScheduleDate; 
-                                LastGap = GapTime.Minutes;
                             }
                             return r;
                         }
                         else
                         {
+                            CurrentTime = CurrentTime.Add(GapTime);
                             DoReportScheduled(ScheduleDate, videoId, TitleStr);
                             ScheduleNumber++;
-                            CurrentTime = CurrentTime.Add(GapTime);
                             return FinishType.InTest;
                         }
 
