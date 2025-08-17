@@ -56,7 +56,7 @@ namespace VideoGui
                 ffmpeg.Streams.Video.IVideoStream videostream = new ffmpeg.Streams.Video.VideoStream();
                 ffmpeg.Streams.Audio.IAudioStream audiostream = new ffmpeg.Streams.Audio.AudioStream();
                 List<ffmpeg.Streams.Text.TextStream> textstream = new List<ffmpeg.Streams.Text.TextStream>();
-                
+
                 var mw1 = new MediaInfo.MediaInfo();
                 mw1.Open(filePath);
                 double durgen = mw1.Get(StreamKind.General, 0, "Duration").ToDouble();
@@ -90,8 +90,8 @@ namespace VideoGui
                     int CompressionMode = mw1.Get(StreamKind.Text, 0, "Compression mode").ToInt();
                     int Default = mw1.Get(StreamKind.Text, 0, "Default").ToIntYesNo();
                     int Forced = mw1.Get(StreamKind.Text, 0, "Forced").ToIntYesNo();
-                    textstream.Add(new TextStream(Codec,  Duration,CodecID, CodecIDInfo,
-                       Title, Language, CompressionMode, Default, Forced,ID));
+                    textstream.Add(new TextStream(Codec, Duration, CodecID, CodecIDInfo,
+                       Title, Language, CompressionMode, Default, Forced, ID));
                     /*
                      public ITextStream Initialize(string _Codec, 
                     TimeSpan _Duration,
@@ -122,42 +122,47 @@ namespace VideoGui
                     {
                         pixelfrm += "10le";
                     }
-                    videostream.Initialize(filePath, Codec, AspectRatioMode, Duration, pixelfrm, Width, Height, Bitrate, (float)FrameRate, Default, Forced, ID);
+                    videostream.Initialize(filePath, Codec, AspectRatioMode, Duration, pixelfrm, 
+                        Width, Height, Bitrate, (float)FrameRate, Default, Forced, ID);
                 }
                 if (astrcnt > 0)
                 {
                     for (int i = 0; i < astrcnt; i++)
                     {
+                        string Language = mw1.Get(StreamKind.Audio, i, "Language");
+                        string IsDefault = mw1.Get(StreamKind.Audio, i, "Default");
                         int ID2 = mw1.Get(StreamKind.Audio, i, "ID").ToInt();
-                        if (ID2 != 0)
+                        int vID = mw1.Get(StreamKind.Video, 0, "ID").ToInt();
+                        if (i == 0 && ID2 - vID > 1) ID2 = vID + 1;
+                       
+                        if (Language == "en") Language += "g";
+                        if (IsDefault == "Yes" || Language == "eng" || (Language == "" && astrcnt == 1) || astrcnt == 1)
                         {
-                            string Language = mw1.Get(StreamKind.Audio, i, "Language");
+                            string Codec = mw1.Get(MediaInfo.StreamKind.Audio, i, "Format").Replace("-", "").ToLower();
+                            TimeSpan Duration = TimeSpan.FromMilliseconds(mw1.Get(StreamKind.Audio, i, "Duration").ToDouble());
+                            int Bitrate = mw1.Get(StreamKind.Audio, i, "BitRate").ToInt();
+                            string BitrateMode = mw1.Get(StreamKind.Audio, i, "BitRate_Mode");
+                            string CompressionMode = mw1.Get(StreamKind.Audio, i, "Compression_Mode");
+                            string ChannelPositions = mw1.Get(StreamKind.Audio, i, "ChannelPositions");
+                            int SamplingRate = mw1.Get(StreamKind.Audio, i, "SamplingRate").ToInt();
+                            int channels = mw1.Get(StreamKind.Audio, i, "Channels").ToInt();
+                            int Default2 = mw1.Get(StreamKind.Audio, i, "Default").ToIntYesNo();
+                            int Forced2 = mw1.Get(StreamKind.Audio, i, "Forced").ToIntYesNo();
                             if (Language == "en") Language += "g";
-                            if (Language == "eng" || (Language == "" && astrcnt == 1) || astrcnt == 1)
-                            {
-                                string Codec = mw1.Get(MediaInfo.StreamKind.Audio, i, "Format").Replace("-", "").ToLower();
-                                TimeSpan Duration = TimeSpan.FromMilliseconds(mw1.Get(StreamKind.Audio, i, "Duration").ToDouble());
-                                int Bitrate = mw1.Get(StreamKind.Audio, i, "BitRate").ToInt();
-                                string BitrateMode = mw1.Get(StreamKind.Audio, i, "BitRate_Mode");
-                                string CompressionMode = mw1.Get(StreamKind.Audio, i, "Compression_Mode");
-                                string ChannelPositions = mw1.Get(StreamKind.Audio, i, "ChannelPositions");
-                                int SamplingRate = mw1.Get(StreamKind.Audio, i, "SamplingRate").ToInt();
-                                int channels = mw1.Get(StreamKind.Audio, i, "Channels").ToInt();
-                                int Default2 = mw1.Get(StreamKind.Audio, i, "Default").ToIntYesNo();
-                                int Forced2 = mw1.Get(StreamKind.Audio, i, "Forced").ToIntYesNo();
-                                if (Language == "en") Language += "g";
-                                audiostream.Initialize(filePath, Codec, Bitrate, channels, SamplingRate, Duration, Language, Default2, Forced2, ID2);
-                            }
+                            audiostream.Initialize(filePath, Codec, Bitrate, channels, 
+                                SamplingRate, Duration, Language, Default2, Forced2, ID2);
+                            break;
+
                         }
                     }
                 }
                 mw1.Close();
-                return (videostream, audiostream, textstream,DurationGen);
+                return (videostream, audiostream, textstream, DurationGen);
             }
             catch (Exception ex)
             {
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
-                return (null, null, null,TimeSpan.Zero);
+                return (null, null, null, TimeSpan.Zero);
             }
         }
         public ffmpegbridge()
