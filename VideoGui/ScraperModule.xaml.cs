@@ -2664,6 +2664,14 @@ namespace VideoGui
             try
             {
 
+                if (!Dispatcher.CheckAccess())
+                {
+                    Dispatcher.Invoke(() =>
+                    {
+                        Click_Upload();
+                        return;
+                    });
+                }
                 string script = @"
         var createButton = document.getElementById('upload-icon');
         if (createButton) {
@@ -2685,6 +2693,14 @@ namespace VideoGui
         {
             try
             {
+                if (!Dispatcher.CheckAccess())
+                {
+                    Dispatcher.Invoke(() =>
+                    {
+                        Close_Upload(wv2);
+                        return;
+                    });
+                }
                 // Execute script to click the second button with the ID "close-button"
                 await wv2.CoreWebView2.ExecuteScriptAsync(@"
                 var buttons = document.querySelectorAll('#close-button');
@@ -3104,9 +3120,10 @@ namespace VideoGui
 
         private void MenuClicker(WebView2 webView)
         {
-            if (!Dispatcher.CurrentDispatcher.CheckAccess())
+            if (!Dispatcher.CheckAccess())
             {
                 Dispatcher.Invoke(() => { MenuClicker(webView); });
+                return;
             }
             try
             {
@@ -3248,7 +3265,7 @@ namespace VideoGui
         {
             try
             {
-                if (!Dispatcher.CurrentDispatcher.CheckAccess())
+                if (!Dispatcher.CheckAccess())
                 {
                     Dispatcher.Invoke(() => { SimulateMouseWheel(webView, isUp); });
                     return;
@@ -3501,6 +3518,7 @@ namespace VideoGui
                                         {
                                             htmlcheck = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
                                             SendTraceInfo?.Invoke(this, $"Getting videoid {filename1}");
+                                            if (htmlcheck.Contains("Channel analytics")) break;
                                             var index = htmlcheck.IndexOf("youtube.com/shorts");
                                             int len = "youtube.com/shorts".Length;
                                             if (index != -1)
@@ -3515,6 +3533,7 @@ namespace VideoGui
                                                 if (index1 != -1)
                                                 {
                                                     vid = htmlcheck.Substring(index1 + len1, 11);
+                                                    ctsx.Cancel();
                                                     break;
                                                 }
                                                 Thread.Sleep(500);

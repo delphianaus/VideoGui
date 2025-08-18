@@ -39,7 +39,17 @@ namespace VideoGui
                 string frmname = sender.GetType().Name;
                 string msg = $"{DateTime.Now:HH:mm:ss} {frmname} {text}";
                 txttrace.Items.Insert(0, msg);
-                msg.WriteLog(@"c:\videogui\DebuggerInfo_logs.txt");
+                msg.WriteLog(@"c:\videogui\DebuggerInfo_logs.log");
+
+                if (sender is Control frm)
+                {
+                    frm.Focus();
+                }
+                else
+                {
+                    var nm = sender.GetType().Name;
+                    nm.WriteLog(@"c:\videogui\DebuggerInfo_logs.txt");
+                }
             }
             catch (Exception ex)
             {
