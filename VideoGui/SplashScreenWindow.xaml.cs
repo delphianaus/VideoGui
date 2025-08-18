@@ -93,18 +93,7 @@ namespace VideoGui
 
 
   return;// below code encrpts string and returns it as c# code
-                List<string> FilesList = new List<string>();
-
-                FilesList = Directory.EnumerateFiles(@"D:\shorts\Steamrails Warrnambool Westcoaster 281023","*", SearchOption.AllDirectories).ToList();
-                foreach (var filename in FilesList)
-                {
-                    if (filename.Contains(".mp4") && !filename.EndsWith(".mp4"))
-                    {
-                        string newfilename = filename.Substring(0, filename.IndexOf(".mp4")) + ".mp4";
-                        File.Move(filename, newfilename);
-                    }
-
-                }
+               
                
                 string str = GetEncryptedString("ffmpeg");
 

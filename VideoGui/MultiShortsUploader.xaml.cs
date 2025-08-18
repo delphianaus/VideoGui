@@ -538,7 +538,10 @@ namespace VideoGui
                         if (filename != "" && filePath != "" && ext != "")
                         {
                             string newfile = Path.Combine(filePath, filename + $"_{LinkedId}" + ext);
-                            File.Move(file, newfile);
+                            if (newfile.EndsWith(".mp4"))
+                            {
+                                File.Move(file, newfile);
+                            }
                             reload = true;
                         }
                     }
@@ -683,10 +686,10 @@ namespace VideoGui
                                         break;
                                     }
                                 }
-                                
+
                             }
                         }
-                        else 
+                        else
                         {
                             int acnt = 0;
                             foreach (var rp in msuSchedules.ItemsSource.OfType<SelectedShortsDirectories>().Where(x => x.IsActive && x.NumberOfShorts > 0))
@@ -854,7 +857,10 @@ namespace VideoGui
                     string newPath = filex.Contains("_")
                                             ? filex.Substring(0, filex.IndexOf("_")) + LinkedShortsDirectoryId + Path.GetExtension(filex)
                                             : filex + LinkedShortsDirectoryId;
-                    File.Move(filex, newPath);
+                    if (newpath.EndsWith(".mp4"))
+                    {
+                        File.Move(filex, newPath);
+                    }
                 }
             }
             catch (Exception ex)
@@ -985,6 +991,44 @@ namespace VideoGui
             catch (Exception ex)
             {
                 ex.LogWrite($"mnuUploadSelected_Click {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
+            }
+        }
+
+        public void mnuFileFix_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (e.OriginalSource is MenuItem m && m.DataContext is SelectedShortsDirectories rp)
+                {
+
+                    RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                    string ShortsBase = key.GetValueStr("shortsdirectory", "D:\\shorts");
+                    string ShortsDirectory = rp.DirectoryName;
+                    key?.Close();
+
+                    string newpath = Path.Combine(ShortsBase, ShortsDirectory);
+                    if (Directory.Exists(newpath))
+                    {
+                        List<string> FilesList = new List<string>();
+                        FilesList = Directory.EnumerateFiles(newpath, "*", SearchOption.AllDirectories).ToList();
+                        foreach (var filename in FilesList)
+                        {
+                            if (filename.Contains(".mp4") && !filename.EndsWith(".mp4"))
+                            {
+                                string newfilename = filename.Substring(0, filename.IndexOf(".mp4")) + ".mp4";
+                                File.Move(filename, newfilename);
+                            }
+                        }
+                        int cnt = Directory.EnumerateFiles(newpath, "*.mp4", SearchOption.AllDirectories).ToList().Count();
+                        rp.NumberOfShorts = cnt;
+                        
+                    }
+
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"mnuFileFix_Click {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
         }
         public void mnuOpenDirectory_Click(object sender, RoutedEventArgs e)

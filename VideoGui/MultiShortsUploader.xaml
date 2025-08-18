@@ -127,6 +127,7 @@
                             <MenuItem Header="Change Schedules(Test)" Click="mnuChangeSchedule"/>
                             <Separator/>
                             <MenuItem Header="Open Directory" Click="mnuOpenDirectory_Click"/>
+                            <MenuItem Header="Run File Fixer" Click="mnuFileFix_Click"/>
                         </ContextMenu>
                     </MSU:MultiListbox.ItemsContextMenu>
                 </MSU:MultiListbox>
