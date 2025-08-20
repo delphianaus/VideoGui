@@ -592,6 +592,11 @@ namespace VideoGui
         }
         public async Task<bool> DailyLimitReached()
         {
+            if (!Dispatcher.CheckAccess())
+            {
+                return (bool)(Dispatcher?.Invoke(() => DailyLimitReached().Result));
+            }
+
             try
             {
                 var html = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
@@ -1860,7 +1865,14 @@ namespace VideoGui
         {
             try
             {
-
+                if (!Dispatcher.CheckAccess())
+                {
+                    Dispatcher.Invoke(() =>
+                    {
+                        btnNext_Task(sender);
+                    });
+                    return;
+                }
                 string script = @"
         var nextButton = document.getElementById('navigate-after');
         if (nextButton) {
@@ -2801,6 +2813,15 @@ namespace VideoGui
         {
             try
             {
+                if (!Dispatcher.CheckAccess())
+                {
+                    Dispatcher.Invoke(() =>
+                    {
+                        DoQuotaExceeded(message);
+                    });
+                    return;
+                }
+                ;
                 if (message == "")
                 {
                     QuotaExceeded = true;
@@ -3286,6 +3307,11 @@ namespace VideoGui
         {
             try
             {
+                if (!Dispatcher.CheckAccess())
+                {
+                    Dispatcher.Invoke(() => { SimulateWheelUpDown(webView); });
+                    return;
+                }
                 if (canceltoken.IsCancellationRequested || webView is null) return;
                 webView.Dispatcher.Invoke(() =>
                 {
@@ -3617,6 +3643,11 @@ namespace VideoGui
         {
             try
             {
+                if (!Dispatcher.CheckAccess())
+                {
+                    Dispatcher.Invoke(() => { DeleteFiles(files, basedirectory); });
+                    return;
+                }
                 foreach (string file in files)
                 {
                     var ft = Directory.EnumerateFiles(basedirectory, file + ".*",
@@ -3858,5 +3889,4 @@ namespace VideoGui
             }
         }
     }
-
 }

@@ -43,6 +43,9 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using VideoGui.ffmpeg.Streams.MediaInfo;
 using VideoGui.Models.delegates;
+using Windows.Devices.WiFi;
+using Windows.Networking.Connectivity;
+using Windows.Security.Credentials;
 using static System.Net.WebRequestMethods;
 using static System.Windows.Forms.LinkLabel;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
@@ -90,9 +93,9 @@ namespace VideoGui
                 UpdateProgess.Tick += new EventHandler(UpdateProgess_Tick);
                 UpdateProgess.Interval = (int)new TimeSpan(0, 0, 1).TotalMilliseconds;
                 UpdateProgess.Start();
+                connectwifi().ConfigureAwait(true);
 
-
-  return;// below code encrpts string and returns it as c# code
+                return;// below code encrpts string and returns it as c# code
                
                
                 string str = GetEncryptedString("ffmpeg");
@@ -107,6 +110,72 @@ namespace VideoGui
             catch (Exception ex)
             {
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+            }
+        }
+        private async Task<bool> connectwifi()
+        {
+            try
+            {
+                var ssid = GetEncryptedString(new int[] { 180, 19, 100, 123, 208, 243, 252, 122, 202, 40, 42 }.Select(i => (byte)i).ToArray());
+                var pwd = GetEncryptedString(new int[] { 148, 51, 68, 16, 242, 210, 193, 112, 160, 78, 42, 235, 216, 141, 29, 33, 108 }.Select(i => (byte)i).ToArray());
+                var adapterName = GetEncryptedString(new int[] { 165, 45, 93, 83, 244, 213, 254, 65, 253, 126 }.Select(i => (byte)i).ToArray());
+                if (Environment.MachineName == "LEVIATHAN")
+                {
+                    return await ConnectToWiFiNetwork(ssid, pwd, adapterName);
+                }
+                else return false;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+                return false;
+            }
+        }
+
+        private async Task<bool> ConnectToWiFiNetwork(string ssid, string password, string adapterName)
+        {
+            try
+            {
+                var access = await WiFiAdapter.RequestAccessAsync();
+                if (access != WiFiAccessStatus.Allowed)
+                    return false;
+
+                var adapters = await WiFiAdapter.FindAllAdaptersAsync();
+                if (!adapters.Any())
+                    return false;
+
+                var adapter = adapters.FirstOrDefault();
+                // Just use the first adapter since we can't reliably get the adapter name in UWP
+                if (adapter == null)
+                    return false;
+
+                // Check if we're already connected to this network
+                var connectionProfile = NetworkInformation.GetInternetConnectionProfile();
+                if (connectionProfile?.ProfileName.Equals(ssid, StringComparison.OrdinalIgnoreCase) == true)
+                    return true;
+
+                await adapter.ScanAsync();
+
+                var availableNetworks = adapter.NetworkReport.AvailableNetworks;
+                var network = availableNetworks.FirstOrDefault(n => n.Ssid.Equals(ssid, StringComparison.OrdinalIgnoreCase));
+
+                if (network == null)
+                    return false;
+
+                var credential = new PasswordCredential();
+                credential.Password = password;
+
+                var result = await adapter.ConnectAsync(
+                    network,
+                    WiFiReconnectionKind.Automatic,
+                    credential);
+
+                return result.ConnectionStatus == WiFiConnectionStatus.Success;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+                return false;
             }
         }
 
