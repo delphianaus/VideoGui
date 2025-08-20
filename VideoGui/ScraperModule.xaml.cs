@@ -2977,14 +2977,11 @@ namespace VideoGui
                             }
                             SaveTime(st.Value, "ScheduleTimeEnd");
                             Nullable<DateTime> dt = LoadDate("ScheduleDate");
-                            if (dt.HasValue)
+                            if (dt.HasValue && dt.Value.Year < 1900)
                             {
-                                if (dt.Value.Year < 1900)
-                                {
-                                    var yt = DateTime.Now.Year;
-                                    var dif = dt.Value.Year - yt;
-                                    dt.Value.AddYears(dif);
-                                }
+                                var yt = DateTime.Now.Year;
+                                var dif = dt.Value.Year - yt;
+                                dt.Value.AddYears(dif);
                                 SaveDates(dt.Value.AddDays(1), "ScheduleDate");
                             }
                         }

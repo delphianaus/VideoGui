@@ -1421,20 +1421,13 @@ namespace VideoGui
 
         public static void LogWrite(this Exception Debugx, string callingmethod = "")
         {
-            string m_exePath = System.IO.Path.GetDirectoryName(Debugger.IsAttached ? GetAppPath() : Process.GetCurrentProcess().MainModule.FileName);
+            string m_exePath = Debugger.IsAttached ? GetAppPath() : System.IO.Path.GetDirectoryName( Process.GetCurrentProcess().MainModule.FileName);
             try
             {
                 string InternalCallingMethod = MethodBase.GetCurrentMethod().Name.ToString();
-                if (callingmethod != "")
-                {
-                    if (InternalCallingMethod != callingmethod)
-                    {
-                        InternalCallingMethod = callingmethod;
-                    }
-                }
                 string date = DateTime.Now.ToString("dd_MM_yyyy");
                 using var txtWriter = System.IO.File.AppendText(m_exePath + $"\\{date}-log.log");
-                txtWriter.Write("\r\n", "Log Entry : {0}", InternalCallingMethod);
+                txtWriter.Write("\r\n", "Log Entry : {0}", callingmethod);
                 txtWriter.WriteLine("{0}", DateTime.Now.ToLongTimeString());
                 txtWriter.WriteLine("Error :{0}", Debugx.Message);
                 txtWriter.WriteLine("-------------------------------");
@@ -2211,7 +2204,7 @@ namespace VideoGui
         public static void WriteLog(this string obj, string LogName = "")
         {
 
-            string m_exePath = System.IO.Path.GetDirectoryName(Debugger.IsAttached ? GetAppPath() : Process.GetCurrentProcess().MainModule.FileName);
+            string m_exePath = Debugger.IsAttached ? GetAppPath() : System.IO.Path.GetDirectoryName( Process.GetCurrentProcess().MainModule.FileName);
             try
             {
                 if (m_exePath.Contains("Debug")) m_exePath = GetAppPath();
