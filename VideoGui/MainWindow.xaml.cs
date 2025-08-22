@@ -597,6 +597,7 @@ namespace VideoGui
                     int index = -1;
                     bool found = false;
                     string DirName = (tld as CustomParams_GetDirectory).DirectoryName;
+                    string HostDir = DirName;
                     DirName = (DirName.Contains("\\")) ? DirName.Split('\\').LastOrDefault() : DirName;
                     foreach (var item in EditableshortsDirectoryList.Where(
                         s => s.Directory.ToUpper() == DirName.ToUpper()))
@@ -608,6 +609,16 @@ namespace VideoGui
                     if (!found)
                     {
                         index = InsertUpdateShorts(DirName);
+                        string indexStr = $"_{index}.mp4";
+                        var files = Directory.EnumerateFiles(HostDir, "*.mp4", SearchOption.AllDirectories).ToList();
+                        foreach (var _file in files.Where(s=>!s.Contains("_")))
+                        {
+                            string fx = _file.Replace(".mp4", $"{indexStr}");
+                            if (fx.EndsWith(".mp4"))
+                            {
+                                File.Move(_file, fx);
+                            }
+                        }    
                     }
 
                     return index;

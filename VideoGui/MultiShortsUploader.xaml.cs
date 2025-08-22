@@ -732,6 +732,8 @@ namespace VideoGui
                                         CheckLinkedIds(item, newpath);
                                         var Idx = dbInit?.Invoke(this, new CustomParams_GetDirectory(item.DirectoryName));
                                         item.LinkedShortsDirectoryId = (Idx is int _id && item.LinkedShortsDirectoryId != _id) ? _id : item.LinkedShortsDirectoryId;
+                                        
+                                    
                                     }
                                 }
                             }

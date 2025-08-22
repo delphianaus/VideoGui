@@ -30,12 +30,12 @@ namespace VideoGui
         int dispatchcnt = 0;
         int TotalTime = 30;
         string DestName;
-        public AutoCancel(OnFinishIdObj _OnFinished, string destName, 
+        public AutoCancel(OnFinishIdObj _OnFinished, string destName,
             int _totaltime = 30, string captiontitle = "")
         {
             InitializeComponent();
             Closing += (s, e) => { IsClosing = true; };
-            Closed += (s, e) => { IsClosed = true; _OnFinished?.Invoke(this,0); };
+            Closed += (s, e) => { IsClosed = true; _OnFinished?.Invoke(this, 0); };
             TotalTime = _totaltime;
             dispatchcnt = _totaltime;
             lblTime.Content = TotalTime.ToString();
@@ -87,6 +87,11 @@ namespace VideoGui
         {
             try
             {
+                if (!Dispatcher.CheckAccess())
+                {
+                    Dispatcher.Invoke(() => TimerEvent_Handler(state));
+                    return;
+                }
                 DateTime nowx = DateTime.Now;
                 if (nowx.Subtract(timereventtime).TotalSeconds >= 1)
                 {
@@ -126,6 +131,11 @@ namespace VideoGui
         {
             try
             {
+                if (!Dispatcher.CheckAccess())
+                {
+                    Dispatcher.Invoke(() => AutoCloseTimer_Tick(sender, e));
+                    return;
+                }
                 dispatchcnt--;
                 lblTime.Content = dispatchcnt.ToString();
                 if (dispatchcnt == 0)

@@ -2832,8 +2832,7 @@ namespace VideoGui
                     message.WriteLog("QuotaExceeded");
                     lstMain.Items.Insert(0, $"Schedule Error: {message} @ {DateTime.Now}");
                 }
-                CancellationTokenSource cts = new CancellationTokenSource();
-                cts.CancelAfter(TimeSpan.FromSeconds(2));
+                CancellationTokenSource cts = new CancellationTokenSource(TimeSpan.FromSeconds(2));
                 while (!cts.IsCancellationRequested)
                 {
                     Thread.Sleep(100);
@@ -3627,6 +3626,7 @@ namespace VideoGui
                 var htmlcheck1 = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
                 if (Regex.IsMatch(htmlcheck1, @"Uploads complete|processing will begin shortly|your video template has been saved as draft|saving|save and close|title-row style-scope ytcp-uploads-dialog|daily limit"))
                 {
+                    
                     DeleteFiles(VideoFiles, "Z:\\");
                     return false;
                 }
@@ -3648,6 +3648,7 @@ namespace VideoGui
                     Dispatcher.Invoke(() => { DeleteFiles(files, basedirectory); });
                     return;
                 }
+                if (TotalScheduled == 0) TotalScheduled += files.Count;
                 foreach (string file in files)
                 {
                     var ft = Directory.EnumerateFiles(basedirectory, file + ".*",

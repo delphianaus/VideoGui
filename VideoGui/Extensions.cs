@@ -1431,7 +1431,8 @@ namespace VideoGui
                 txtWriter.WriteLine("{0}", DateTime.Now.ToLongTimeString());
                 txtWriter.WriteLine("Error :{0}", Debugx.Message);
                 txtWriter.WriteLine("-------------------------------");
-
+                txtWriter.WriteLine("\r\n");
+                txtWriter.WriteLine("Stack Trace :{0}", Debugx.StackTrace); 
             }
             catch (Exception ex)
             {
