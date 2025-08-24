@@ -46,7 +46,7 @@ namespace VideoGui
         //FileImporterClear File_Importer_Clear;
         int MaxFile = 0;
         private bool _isFirstResize = true;
-        databasehook<object> ModuleCallBack;
+        databasehook<object> Invoker;
         bool IsFirstResize = true, Ready = false, IsClosed = false, IsClosing = false;
         DispatcherTimer LocationChangedTimer = new DispatcherTimer();
         DispatcherTimer LocationChanger = new DispatcherTimer();
@@ -69,10 +69,10 @@ namespace VideoGui
             get => (double)GetValue(SuggestedWidthProperty);
             set => SetValue(SuggestedWidthProperty, value);
         }
-        public MediaImporter(databasehook<object> _ModuleCallback, OnFinishIdObj _DoOnFinish)
+        public MediaImporter(databasehook<object> _Invoker, OnFinishIdObj _DoOnFinish)
         {
             InitializeComponent();
-            ModuleCallBack = _ModuleCallback;
+            Invoker = _Invoker;
             Closing += (s, e) => { IsClosing = true; };
             Closed += (s, e) =>
             {
@@ -251,7 +251,7 @@ namespace VideoGui
             {
                 MediaInfoTimes.Clear();
                 MediaInfoTimesSort.Clear();
-                ModuleCallBack?.Invoke(this, new CustomParams_ClearCheck(ClearModes.ClearTimes));
+                Invoker?.Invoke(this, new CustomParams_ClearCheck(ClearModes.ClearTimes));
                 files = Directory.EnumerateFiles(SourceDir, "*.mp4", SearchOption.AllDirectories).ToList();
                 foreach (string file in files)
                 {
@@ -299,10 +299,10 @@ namespace VideoGui
                 }
                 foreach (var f in MediaInfoTimes)
                 {
-                    ModuleCallBack?.Invoke(this, new CustomParams_ImportRecord(f.Item3, f.Item4, f.Item2));
+                    Invoker?.Invoke(this, new CustomParams_ImportRecord(f.Item3, f.Item4, f.Item2));
                     Thread.Sleep(15);
                 }
-                btnRename.IsEnabled = ModuleCallBack.Invoke(this,
+                btnRename.IsEnabled = Invoker.Invoke(this,
                    new CustomParams_ClearCheck(ClearModes.CheckImports)) is bool b ? b : false;
             }
             catch (Exception ex)
@@ -315,7 +315,7 @@ namespace VideoGui
         {
             try
             {
-                ModuleCallBack?.Invoke(this, new CustomParams_DataSelect());
+                Invoker?.Invoke(this, new CustomParams_DataSelect());
                 RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                 string Root = key.GetValueStr("MediaImporterSource", "c:\\");
                 key?.Close();
@@ -369,7 +369,7 @@ namespace VideoGui
         {
             try
             {
-                ModuleCallBack?.Invoke(this, new CustomParams_ReOrderFiles(txtsrcdir.Text));
+                Invoker?.Invoke(this, new CustomParams_ReOrderFiles(txtsrcdir.Text));
                 System.Windows.MessageBox.Show("Done");
                 GetFiles(txtsrcdir.Text).ConfigureAwait(false);
             }
@@ -385,7 +385,7 @@ namespace VideoGui
             {
                 if (IsLoaded)
                 {
-                    ModuleCallBack?.Invoke(this, new CustomParams_Initialize());
+                    Invoker?.Invoke(this, new CustomParams_Initialize());
                 }
 
                 LocationChanger.Interval = TimeSpan.FromMilliseconds(10);
@@ -434,7 +434,7 @@ namespace VideoGui
                     var p = msuSchedules.SelectedItems[msuSchedules.SelectedItems.Count - 1];
                     if (p is FileInfoGoPro fpgx)
                     {
-                        TimeSpan result = ModuleCallBack?.Invoke(this, new CustomParams_SetTimeSpan(fpgx.TimeData, TimeSpanMode.ToTime)) is TimeSpan s ? s : TimeSpan.Zero;
+                        TimeSpan result = Invoker?.Invoke(this, new CustomParams_SetTimeSpan(fpgx.TimeData, TimeSpanMode.ToTime)) is TimeSpan s ? s : TimeSpan.Zero;
                         txtEnd.Text = result.ToFFmpeg().Replace(".000", "");
                         Thread.Sleep(100);
                     }
@@ -469,7 +469,7 @@ namespace VideoGui
                     var p = msuSchedules.SelectedItems[0];
                     if (p is FileInfoGoPro fpgx)
                     {
-                        TimeSpan result = ModuleCallBack?.Invoke(this, new CustomParams_SetTimeSpan(fpgx.TimeData, TimeSpanMode.FromTime)) is TimeSpan s ? s : TimeSpan.Zero;
+                        TimeSpan result = Invoker?.Invoke(this, new CustomParams_SetTimeSpan(fpgx.TimeData, TimeSpanMode.FromTime)) is TimeSpan s ? s : TimeSpan.Zero;
                         txtStart.Text = result.ToFFmpeg().Replace(".000", "");
                         Thread.Sleep(100);
                     }
@@ -485,7 +485,7 @@ namespace VideoGui
         {
             try
             {
-                ModuleCallBack?.Invoke(this, new CustomParams_ClearCheck(ClearModes.ClearTimes));
+                Invoker?.Invoke(this, new CustomParams_ClearCheck(ClearModes.ClearTimes));
             }
             catch (Exception ex)
             {
@@ -616,7 +616,7 @@ namespace VideoGui
         {
             try
             {
-                ModuleCallBack?.Invoke(this, new CustomParams_ClearCheck(ClearModes.ClearTimes));
+                Invoker?.Invoke(this, new CustomParams_ClearCheck(ClearModes.ClearTimes));
                 txtStart.Text = string.Empty;
                 txtEnd.Text = string.Empty;
             }
@@ -633,7 +633,7 @@ namespace VideoGui
                 if (e.Key == Key.Enter)
                 {
                     var data = txtStart.Text.FromStrToTimeSpan();
-                    ModuleCallBack?.Invoke(this, 
+                    Invoker?.Invoke(this, 
                         new CustomParams_SetTimeSpan(data, TimeSpanMode.FromTime));
                 }
             }
@@ -649,7 +649,7 @@ namespace VideoGui
             {
                 if (e.Key == Key.Enter)
                 {
-                    ModuleCallBack?.Invoke(this, 
+                    Invoker?.Invoke(this, 
                         new CustomParams_SetTimeSpan(txtEnd.Text.FromStrToTimeSpan(), TimeSpanMode.ToTime));
                 }
             }
@@ -698,7 +698,7 @@ namespace VideoGui
                 {
                     var t = DoCalcs(txtStart.Text);
                     txtStart.Text = t.ToFFmpeg().Replace(".000", "");
-                    ModuleCallBack?.Invoke(this,
+                    Invoker?.Invoke(this,
                          new CustomParams_SetTimeSpan(t, TimeSpanMode.FromTime));
                 }
             }
@@ -716,7 +716,7 @@ namespace VideoGui
                 {
                     var t = DoCalcs(txtEnd.Text);
                     txtEnd.Text = t.ToFFmpeg().Replace(".000", "");
-                    ModuleCallBack?.Invoke(this, new CustomParams_SetTimeSpan(t, TimeSpanMode.ToTime));
+                    Invoker?.Invoke(this, new CustomParams_SetTimeSpan(t, TimeSpanMode.ToTime));
                 }
             }
             catch (Exception ex)
@@ -731,7 +731,7 @@ namespace VideoGui
             {
                 if (e.OriginalSource is MenuItem mnu && mnu.DataContext is FileInfoGoPro fpgx)
                 {
-                    TimeSpan result = ModuleCallBack?.Invoke(this, 
+                    TimeSpan result = Invoker?.Invoke(this, 
                         new CustomParams_SetTimeSpan(fpgx.TimeData, TimeSpanMode.FromTime)) is TimeSpan s ? s : TimeSpan.Zero;
                     txtStart.Text = result.ToFFmpeg().Replace(".000", "");
                     Thread.Sleep(100);
@@ -749,7 +749,7 @@ namespace VideoGui
             {
                 if (e.OriginalSource is MenuItem mnu && mnu.DataContext is FileInfoGoPro fpgx)
                 {
-                    TimeSpan Result = ModuleCallBack?.Invoke(this,
+                    TimeSpan Result = Invoker?.Invoke(this,
                         new CustomParams_SetTimeSpan(fpgx.TimeData, TimeSpanMode.ToTime)) is TimeSpan s ? s : TimeSpan.Zero;
                     txtEnd.Text = Result.ToFFmpeg().Replace(".000", "");
                     Thread.Sleep(100);

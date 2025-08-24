@@ -31,18 +31,18 @@ namespace VideoGui
     /// </summary>
     public partial class SelectShortUpload : Window
     {
-        databasehook<object> dbInit = null;
+        databasehook<object> Invoker = null;
         public bool IsClosing = false, IsClosed = false;
 
         public int uploadedcnt = 0;
         public WebViewDebug webviewDebug = null;
         string connectionStr = "";
-        public SelectShortUpload(databasehook<object> _dbInit,
+        public SelectShortUpload(databasehook<object> _Invoker,
             OnFinishIdObj _DoOnFinished)
         {
             InitializeComponent();
-            dbInit = _dbInit;
-            connectionStr = dbInit?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
+            Invoker = _Invoker;
+            connectionStr = Invoker?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
             Closing += (s, e) => { IsClosing = true; };
             Closed += (s, e) => { IsClosed = true; _DoOnFinished?.Invoke(this, -1); };
         }
@@ -70,9 +70,9 @@ namespace VideoGui
                     //InsertUpdate into SHORTSDIRECTORY(TITLEID,DESCID,DIRECTORYNAME) Returning ID as LinkedId
 
                     txtsrcdir.Text = ofg.SelectedFolder;
-                    string connectionStr = dbInit?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
+                    string connectionStr = Invoker?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
                     string ThisDir = ofg.SelectedFolder.Split(@"\").ToList().LastOrDefault();
-                    var ress = dbInit?.Invoke(this, new CustomParams_InsertIntoShortsDirectory(ThisDir));// ToInt(-1)
+                    var ress = Invoker?.Invoke(this, new CustomParams_InsertIntoShortsDirectory(ThisDir));// ToInt(-1)
                     if (ress is int res && res != -1) LinkedId = res;
                     /*string sql = "select ID from SHORTSDIRECTORY WHERE DIRECTORYNAME = @P0";
                     int res = connectionStr.ExecuteScalar(sql.ToUpper(), [("@P0", ThisDir.ToUpper())]).ToInt(-1);
@@ -86,7 +86,7 @@ namespace VideoGui
                         int LinkedId = res, NumberofShorts = Directory.EnumerateFiles(ofg.SelectedFolder, "*.mp4", SearchOption.AllDirectories).Count();
                         string uploaddir = ofg.SelectedFolder;
                         (LastTimeUploaded, processed) = CheckUploads(LinkedId);
-                        dbInit?.Invoke(this, new CustomParams_Select(res));
+                        Invoker?.Invoke(this, new CustomParams_Select(res));
                         sql = "SELECT ID FROM DESCRIPTIONS WHERE NAME = @P0";
                         int rres = connectionStr.ExecuteScalar(sql, [("@P0", ThisDir.ToUpper())]).ToInt(-1);
                         if (rres == -1)
@@ -102,7 +102,7 @@ namespace VideoGui
                             {
                                 sql = "UPDATE SHORTSDIRECTORY SET DESCID = @P0 WHERE ID = @P1";
                                 connectionStr.ExecuteNonQuery(sql.ToUpper(), [("@P0", descid), ("@P1", res)]);
-                                dbInit?.Invoke(this, new CustomParams_Update(res, UpdateType.Description));
+                                Invoker?.Invoke(this, new CustomParams_Update(res, UpdateType.Description));
                             }
                         }
                         sql = "SELECT ID FROM TITLES WHERE DESCRIPTION = @P0";
@@ -116,7 +116,7 @@ namespace VideoGui
                             {
                                 sql = "UPDATE SHORTSDIRECTORY SET TITLEID = @P0 WHERE ID = @P1";
                                 connectionStr.ExecuteNonQuery(sql.ToUpper(), [("@P0", titleid), ("@P1", res)]);
-                                dbInit?.Invoke(this, new CustomParams_UpdateTitleById(res, titleid));
+                                Invoker?.Invoke(this, new CustomParams_UpdateTitleById(res, titleid));
                             }
 
                         }*/
@@ -128,12 +128,12 @@ namespace VideoGui
                     {
                         // InsertIntoMultiShortsInfo(NumberofShorts, LinkedId, LastTimeUploaded, true);
                         // add customparam_insert into tbl multi shorts info
-                        dbInit?.Invoke(this,
+                        Invoker?.Invoke(this,
                             new CustomParams_InsertMultiShortsInfo(NumberofShorts, LinkedId, LastTimeUploaded, true));
                     }
                     else
                     {
-                        dbInit?.Invoke(this, new CustomParams_UpdateMultiShortsInfo(LinkedId, NumberofShorts,
+                        Invoker?.Invoke(this, new CustomParams_UpdateMultiShortsInfo(LinkedId, NumberofShorts,
                             LastTimeUploaded, uploaddir));
                     }*/
 
@@ -144,9 +144,9 @@ namespace VideoGui
                     btnEditTitle.IsChecked = false;
                     btnEditDesc.IsChecked = false;
                     ShortsIndex = LinkedId;
-                    dbInit?.Invoke(this, new CustomParams_Select(LinkedId));
+                    Invoker?.Invoke(this, new CustomParams_Select(LinkedId));
                     CancellationTokenSource cts = new CancellationTokenSource();
-                    string connectStr = dbInit?.Invoke(this, new CustomParams_GetConnectionString()) is string con1n ? con1n : "";
+                    string connectStr = Invoker?.Invoke(this, new CustomParams_GetConnectionString()) is string con1n ? con1n : "";
                     connectStr.ExecuteReader(GetShortsDirectorySql(LinkedId), cts, (FbDataReader r) =>
                     {
                         int titleid = r["TITLEID"].ToInt(-1);
@@ -278,7 +278,7 @@ namespace VideoGui
             try
             {
                 SelectedTitleId = TitleId;
-                var _DoTitleSelectFrm = new TitleSelectFrm(DoOnFinishTitleSelect, dbInit,
+                var _DoTitleSelectFrm = new TitleSelectFrm(DoOnFinishTitleSelect, Invoker,
                     true, TitleId, LinkedId);
                 Hide();
                 _DoTitleSelectFrm.ShowActivated = true;
@@ -369,7 +369,7 @@ namespace VideoGui
                     {
                         int Maxuploads = (txtTotalUploads.Text != "") ? txtTotalUploads.Text.ToInt(100) : 100;
                         int UploadsPerSlot = (txtMaxUpload.Text != "") ? txtMaxUpload.Text.ToInt(5) : 5;
-                        var tscraperModule = new ScraperModule(dbInit, doOnFinish, gUrl, Maxuploads, UploadsPerSlot, 0, false);
+                        var tscraperModule = new ScraperModule(Invoker, doOnFinish, gUrl, Maxuploads, UploadsPerSlot, 0, false);
                         tscraperModule.ShowActivated = true;
                         tscraperModule.ScheduledOk.AddRange(filesdone);
                         Hide();
@@ -386,7 +386,7 @@ namespace VideoGui
                         string DirectoryPath = rootfolder.Split(@"\").ToList().LastOrDefault();
                         if (DirectoryPath != "")
                         {
-                            dbInit?.Invoke(this, new CustomParams_UpdateMultishortsByDir(DirectoryPath, ""));
+                            Invoker?.Invoke(this, new CustomParams_UpdateMultishortsByDir(DirectoryPath, ""));
                         }
                     }
 
@@ -421,7 +421,7 @@ namespace VideoGui
                 key?.Close();
                 if (Directory.Exists(selFolder))
                 {
-                    string connectionStr = dbInit?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
+                    string connectionStr = Invoker?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
                     List<string> files = Directory.EnumerateFiles(selFolder, "*.mp4", SearchOption.AllDirectories).ToList();
                     string firstfile = files.FirstOrDefault();
                     if (firstfile is not null && File.Exists(firstfile))
@@ -449,11 +449,11 @@ namespace VideoGui
                         if (!Valid)
                         {
                             string dir = selFolder.Split(@"\").ToList().LastOrDefault().ToUpper();
-                            var r = dbInit?.Invoke(this, new
+                            var r = Invoker?.Invoke(this, new
                                 CustomParams_RematchedUpdate(ShortsIndex, dir));
                             if (r is bool res) Valid = res;
 
-                            //todo do in modulecallback 
+                            //todo do in Invoker 
 
                         }
                     }
@@ -474,7 +474,7 @@ namespace VideoGui
                         Maxuploads = lblShortNo.Content.ToInt();
                     }
 
-                    var xscraperModule = new ScraperModule(dbInit, doOnFinish, gUrl, Maxuploads, UploadsPerSlot, 0, true);
+                    var xscraperModule = new ScraperModule(Invoker, doOnFinish, gUrl, Maxuploads, UploadsPerSlot, 0, true);
 
                     xscraperModule.ShowActivated = true;
                     Hide();
@@ -569,7 +569,7 @@ namespace VideoGui
             try
             {
                 string Dir = txtsrcdir.Text.Split(@"\").ToList().LastOrDefault();
-                var r = dbInit?.Invoke(this, new CustomParams_LookUpTitleId(Dir));
+                var r = Invoker?.Invoke(this, new CustomParams_LookUpTitleId(Dir));
                 if (r is not null)
                 {
                     DoTitleSelectCreate(r.ToInt(-1));
@@ -588,7 +588,7 @@ namespace VideoGui
                 string sql = "SELECT DESCID FROM SHORTSDIRECTORY WHERE ID = @ID";
                 SelectedDescId = connectionStr.ExecuteScalar(sql,
                     [("@ID", LinkedId)]).ToInt(-1);
-                var _DoDescSelectFrm = new DescSelectFrm(OnSelectFormClose, dbInit, true, SelectedDescId);
+                var _DoDescSelectFrm = new DescSelectFrm(OnSelectFormClose, Invoker, true, SelectedDescId);
                 Hide();
                 _DoDescSelectFrm.ShowActivated = true;
                 _DoDescSelectFrm.Show();
@@ -641,7 +641,7 @@ namespace VideoGui
                 string MaxUploads = key.GetValueStr("MaxUploads", "100");
                 key?.Close();
                 //ConnnectLists?.Invoke(3);
-                string connectionStr = dbInit?.Invoke(this, new CustomParams_GetConnectionString()) is string con2n ? con2n : "";
+                string connectionStr = Invoker?.Invoke(this, new CustomParams_GetConnectionString()) is string con2n ? con2n : "";
                 bool found = false;
                 txtsrcdir.Text = rootfolder;// : txtsrcdir.Text;
                 txtMaxUpload.Text = (uploadsnumber != "") ? uploadsnumber : txtMaxUpload.Text;
@@ -655,7 +655,7 @@ namespace VideoGui
                 if (rootfolder != "")
                 {
                     string ThisDir = rootfolder.Split(@"\").ToList().LastOrDefault();
-                    if (dbInit?.Invoke(this, new CustomParams_AddDirectory(ThisDir.ToUpper())) is TurlpeDualString tds)
+                    if (Invoker?.Invoke(this, new CustomParams_AddDirectory(ThisDir.ToUpper())) is TurlpeDualString tds)
                     {
                         string sqle = GetShortsDirectorySql(tds.Id);
                         CancellationTokenSource cts = new CancellationTokenSource();
@@ -689,14 +689,14 @@ namespace VideoGui
                                 ("@P1", false), ("@P2", res)]).ToInt(-1);
                             if (titleid != -1)
                             {
-                                dbInit?.Invoke(this, new CustomParams_Select(titleid));
+                                Invoker?.Invoke(this, new CustomParams_Select(titleid));
                             }
                         }
 
                     }
                     else
                     {
-                        dbInit?.Invoke(this, new CustomParams_Select(res));
+                        Invoker?.Invoke(this, new CustomParams_Select(res));
                         string sq = "SELECT ID FROM TITLES WHERE GROUPID = @GID AND ISTAG = @ISTAG";
                         int idd = connectionStr.ExecuteScalar(sq, [("@GID", res), ("@ISTAG", false)]).ToInt(-1);
                         if (idd == -1)
@@ -710,14 +710,14 @@ namespace VideoGui
                                 ("@P1", false), ("@P2", res)]).ToInt(-1);
                                 if (titleid != -1)
                                 {
-                                    dbInit?.Invoke(this, new CustomParams_Select(titleid));
+                                    Invoker?.Invoke(this, new CustomParams_Select(titleid));
                                 }
                             }
                             else
                             {
                                 sq = "UPDATE TITLES SET GROUPID = @GID WHERE ID = @ID";
                                 connectionStr.ExecuteScalar(sq, [("@ID", idy), ("@GID", res)]);
-                                dbInit?.Invoke(this, new CustomParams_Select(idy));
+                                Invoker?.Invoke(this, new CustomParams_Select(idy));
                             }
                         }
 

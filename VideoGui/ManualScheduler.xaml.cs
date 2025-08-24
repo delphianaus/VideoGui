@@ -23,7 +23,7 @@ namespace VideoGui
     /// </summary>
     public partial class ManualScheduler : Window
     {
-        databasehook<Object> ModuleCallBack = null;
+        databasehook<Object> Invoker = null;
         public bool IsClosed = false, IsClosing = false, IsCopy = false, 
             HasValues = false, TestMode = false, RunSchedule = false;
         public Nullable<DateTime> SelectedDate = null;
@@ -73,12 +73,12 @@ namespace VideoGui
             }
         }
 
-        public ManualScheduler(databasehook<Object> _ModuleCallBack, OnFinishIdObj DoOnFinish)
+        public ManualScheduler(databasehook<Object> _Invoker, OnFinishIdObj DoOnFinish)
         {
             try
             {
                 InitializeComponent();
-                ModuleCallBack = _ModuleCallBack;
+                Invoker = _Invoker;
                 Closing += (s, e) => { GetValues(); IsClosing = true; };
                 Closed += (s, e) => { IsClosed = true; DoOnFinish?.Invoke(this, -1); };
             }
@@ -109,7 +109,7 @@ namespace VideoGui
                 TestMode = chkSchedule.IsChecked.Value;
                 if (HasValues)
                 {
-                    ModuleCallBack?.Invoke(this, new CustomParams_SaveSchedule(SelectedDate.Value,
+                    Invoker?.Invoke(this, new CustomParams_SaveSchedule(SelectedDate.Value,
                         ReleaseTimeStart.Value.Value.TimeOfDay, 
                         ReleaseTimeEnd.Value.Value.TimeOfDay, txtMaxSchedules.Text.ToInt(0), chkSchedule.IsChecked.Value)) ;
                 }
@@ -129,7 +129,7 @@ namespace VideoGui
         {
             try
             {
-                ModuleCallBack?.Invoke(this, new CustomParams_Initialize());
+                Invoker?.Invoke(this, new CustomParams_Initialize());
                 Width++;
                 Height++;
             }

@@ -13,13 +13,13 @@ namespace VideoGui
     public partial class MasterTagSelectForm : Window
     {
         OnFinish DoOnFinish;
-        databasehook<Object> DoDbHook;
+        databasehook<Object> Invoker;
         dataupdate DoUpdate;
         public bool IsTitleTag = false, IsShort = false, IsChanged = false,
             TagSetChanged = false, IsClosing = false, IsClosed = false;
         public int SelectedTagId = -1, SelectedId = -1, ParentId = -1;
         public MasterTagSelectForm(bool _IsShort,
-            OnFinish _DoOnFinish, databasehook<Object> _DoDbHook,
+            OnFinish _DoOnFinish, databasehook<Object> _Invoker,
             bool _IsTitleTag = true, int TagFilter = -1)
         {
             try
@@ -31,7 +31,7 @@ namespace VideoGui
                 ParentId = TagFilter;
                 IsShort = _IsShort;
                 DoOnFinish = _DoOnFinish;
-                DoDbHook = _DoDbHook;
+                Invoker = _Invoker;
             }
             catch (Exception ex)
             {
@@ -44,7 +44,7 @@ namespace VideoGui
         {
             try
             {
-                DoDbHook?.Invoke(this, new CustomParams_Initialize());
+                Invoker?.Invoke(this, new CustomParams_Initialize());
             }
             catch (Exception ex)
             {
@@ -60,7 +60,7 @@ namespace VideoGui
                 {
                     int selectid = (lstDescriptions.SelectedItem is Titles tgt) ? tgt.Id : -1;
                     if (selectid != -1) IsChanged = true;
-                    DoDbHook?.Invoke(this, new CustomParams_Get(selectid, ""));
+                    Invoker?.Invoke(this, new CustomParams_Get(selectid, ""));
                     Close();
                 }
             }
@@ -78,7 +78,7 @@ namespace VideoGui
                 {
                     int selectid = (lstDescriptions.SelectedItem is Titles tgt) ? tgt.Id : -1;
 
-                    DoDbHook?.Invoke(this, new CustomParams_Select(selectid));
+                    Invoker?.Invoke(this, new CustomParams_Select(selectid));
                 }
             }
             catch (Exception ex)

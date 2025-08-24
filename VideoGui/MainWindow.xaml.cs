@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.VisualBasic;
 using Microsoft.Win32;
 using Microsoft.WindowsAPICodePack.Shell;
+using MS.WindowsAPICodePack.Internal;
 using Nancy;
 using Nancy.Diagnostics;
 using Nancy.Extensions;
@@ -93,11 +94,11 @@ using static VideoGui.ffmpeg.Probe.ProbeModel;
 using Application = System.Windows.Application;
 using File = System.IO.File;
 using FolderBrowserDialog = FolderBrowserEx.FolderBrowserDialog;
+using HtmlDocument = HtmlAgilityPack.HtmlDocument;
 using Object = System.Object;
 using Path = System.IO.Path;
 using Stream = System.IO.Stream;
 using Window = System.Windows.Window;
-using HtmlDocument = HtmlAgilityPack.HtmlDocument;
 
 
 
@@ -291,7 +292,7 @@ namespace VideoGui
                 string TargetUrl = webAddressBuilder.AddFilterByDraftShorts().GetHTML();
                 OldgUrl = gUrl;
                 OldTarget = TargetUrl;
-                var __scraperModule = new ScraperModule(ModuleCallback, FinishScraper, gUrl, TargetUrl, 0);
+                var __scraperModule = new ScraperModule(InvokerHandler<object>, FinishScraper, gUrl, TargetUrl, 0);
                 Hide();
                 __scraperModule.ShowActivated = true;
                 __scraperModule.Show();
@@ -303,7 +304,7 @@ namespace VideoGui
         }
 
         string OldTarget = "", OldgUrl = "";
-        private object ModuleCallback(object ThisForm, object tld)
+        private TResult InvokerHandler<TResult>(object ThisForm, object tld)
         {
             try
             {
@@ -311,75 +312,75 @@ namespace VideoGui
                 {
                     case MultiShortsUploader frmMultiShortsUploader:
                         {
-                            return formObjectHandler_MultiShortsUploader(tld, frmMultiShortsUploader);
+                            return formObjectHandler_MultiShortsUploader<TResult>(tld, frmMultiShortsUploader);
                         }
                     case TitleSelectFrm frmTitleSelect:
                         {
-                            return formObjectHandler_TitleSelect(ThisForm, tld, frmTitleSelect);
+                            return formObjectHandler_TitleSelect<TResult>(tld, frmTitleSelect);
                         }
                     case ScraperModule scraperModule:
                         {
-                            return scraperModule_Handler(ThisForm, tld);
+                            return scraperModule_Handler<TResult>(tld, scraperModule);
                         }
                     case SelectShortUpload selectShortUpload:
                         {
-                            return selectShortUpload_Handler(ThisForm, tld);
+                            return selectShortUpload_Handler<TResult>(tld, selectShortUpload);
                         }
                     case MasterTagSelectForm frmMasterTagSelectForm:
                         {
-                            return formObjectHandler_MasterTagSelect(tld, frmMasterTagSelectForm);
+                            return formObjectHandler_MasterTagSelect<TResult>(tld, frmMasterTagSelectForm);
                         }
                     case DescSelectFrm frmDescSelectFrm:
                         {
-                            return formObjectHandler_DescSelect(tld, frmDescSelectFrm);
+                            return formObjectHandler_DescSelect<TResult>(tld, frmDescSelectFrm);
                         }
                     case ScheduleEventCreator scheduleEventCreatorFrm:
                         {
-                            return formObjectHandler_scheduleEventCreator(tld, scheduleEventCreatorFrm);
+                            return formObjectHandler_scheduleEventCreator<TResult>(tld, scheduleEventCreatorFrm);
                         }
                     case DirectoryTitleDescEditor directoryTitleDescEditor:
                         {
-                            return formObjectHandler_DirectoryTitleDescEditor(tld, directoryTitleDescEditor);
+                            return formObjectHandler_DirectoryTitleDescEditor<TResult>(tld, directoryTitleDescEditor);
                         }
                     case SelectReleaseSchedule selectReleaseSchedule:
                         {
-                            return formObjectHandler_SelectReleaseSchedule(tld, selectReleaseSchedule);
+                            return formObjectHandler_SelectReleaseSchedule<TResult>(tld, selectReleaseSchedule);
                         }
                     case SchedulingSelectEditor schedulingSelectEditor:
                         {
-                            return formObjectHandler_SchedulingSelectEditor(tld, schedulingSelectEditor);
+                            return formObjectHandler_SchedulingSelectEditor<TResult>(tld, schedulingSelectEditor);
                         }
                     case ScheduleActioner scheduleActioner:
                         {
-                            return formObjectHandler_ScheduleActioner(tld, scheduleActioner);
+                            return formObjectHandler_ScheduleActioner<TResult>(tld, scheduleActioner);
                         }
                     case ActionScheduleSelector actionScheduleSelector:
                         {
-                            return formObjectHandler_ActionScheduleSelector(tld, actionScheduleSelector);
+                            return formObjectHandler_ActionScheduleSelector<TResult>(tld, actionScheduleSelector);
                         }
                     case ManualScheduler manualScheduler:
                         {
-                            return formObjectHandler_ManualScheduler(tld, manualScheduler);
+                            return formObjectHandler_ManualScheduler<TResult>(tld, manualScheduler);
                         }
                     case ComplexSchedular complexSchedular:
                         {
-                            return formObjectHandler_ComplexSchedular(tld, complexSchedular);
+                            return formObjectHandler_ComplexSchedular<TResult>(tld, complexSchedular);
                         }
                     case MediaImporter goProMediaImporter:
                         {
-                            return formObjectHandler_GoProMediaImporter(tld, goProMediaImporter);
+                            return formObjectHandler_GoProMediaImporter<TResult>(tld, goProMediaImporter);
                         }
 
                 }
-                return null;
+                return default(TResult);
             }
             catch (Exception ex)
             {
-                ex.LogWrite($"ModuleCallback {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
-                return null;
+                ex.LogWrite($"InvokerHandler {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+                return default(TResult);
             }
-
         }
+
 
         public void InsertIntoMultiShortsInfo(int NumberofShorts,
             int LinkedId, DateTime LastTimeUploaded, bool _IsActive = false)
@@ -484,13 +485,13 @@ namespace VideoGui
             }
         }
 
-        private object formObjectHandler_MultiShortsUploader(object tld, MultiShortsUploader frmMultiShortsUploader)
+        private TResult formObjectHandler_MultiShortsUploader<TResult>(object tld, MultiShortsUploader frmMultiShortsUploader)
         {
             try
             {
                 if (tld is CustomParams_ScheduleShorts cpsss)
                 {
-                    var _manualScheduler = new ManualScheduler(ModuleCallback,
+                    var _manualScheduler = new ManualScheduler(InvokerHandler<object>,
                         ManualSchedulerFinish);
                     _manualScheduler.ShowActivated = true;
                     _manualScheduler.IsMultiForm = true;
@@ -514,7 +515,7 @@ namespace VideoGui
                             break;
                         }
                     }
-                    return null;
+                    return default(TResult);
                 }
 
                 if (tld is CustomParams_RemoveMulitShortsInfoById cpRMSI)
@@ -531,8 +532,7 @@ namespace VideoGui
                             SelectedShortsDirectoriesList.RemoveAt(i);
                         }
                     }
-                    //frmMultiShortsUploader.msuSchedules.ItemsSource = SelectedShortsDirectoriesList;
-                    return null;
+                    return default(TResult);
                 }
                 if (tld is CustomParams_SetActive tsa)
                 {
@@ -579,7 +579,7 @@ namespace VideoGui
                 {
                     foreach (var item in RematchedList.Where(s => s.OldId == cpRL.oldId))
                     {
-                        return item.NewId;
+                        return (TResult)Convert.ChangeType(item.NewId, typeof(TResult));
                     }
                 }
 
@@ -588,9 +588,9 @@ namespace VideoGui
                     string dir = pclki.DirectoryName.ToUpper();
                     foreach (var item in EditableshortsDirectoryList.Where(s => s.Directory.ToUpper() == dir))
                     {
-                        return item.Id;
+                        return (TResult)Convert.ChangeType(item.Id, typeof(TResult));
                     }
-                    return -1;
+                    return (TResult)Convert.ChangeType(-1, typeof(TResult));
                 }
                 else if (tld is CustomParams_GetDirectory cgfd)
                 {
@@ -611,23 +611,24 @@ namespace VideoGui
                         index = InsertUpdateShorts(DirName);
                         string indexStr = $"_{index}.mp4";
                         var files = Directory.EnumerateFiles(HostDir, "*.mp4", SearchOption.AllDirectories).ToList();
-                        foreach (var _file in files.Where(s=>!s.Contains("_")))
+                        foreach (var _file in files.Where(s => !s.Contains("_")))
                         {
                             string fx = _file.Replace(".mp4", $"{indexStr}");
                             if (fx.EndsWith(".mp4"))
                             {
                                 File.Move(_file, fx);
                             }
-                        }    
+                        }
                     }
 
-                    return index;
+                    return (TResult)Convert.ChangeType(index, typeof(TResult));
                 }
                 else if (tld is CustomParams_DescUpdate pcdu)
                 {
                     string DirName = (tld as CustomParams_DescUpdate).DirectoryName;
                     string Desc = (tld as CustomParams_DescUpdate).Description;
-                    return DescUpdater(frmMultiShortsUploader, DirName, Desc, false);
+                    var result = DescUpdater(frmMultiShortsUploader, DirName, Desc, false);
+                    return (TResult)Convert.ChangeType(result, typeof(TResult));
                 }
                 else if (tld is CustomParams_UpdateDescById CPUDI)
                 {
@@ -687,7 +688,7 @@ namespace VideoGui
                 }
                 else if (tld is CustomParams_GetConnectionString)
                 {
-                    return connectionString;
+                    return (TResult)Convert.ChangeType(connectionString, typeof(TResult));
                 }
                 else if (tld is CustomParams_RemoveSelectedDirectory CPRSD)
                 {
@@ -873,12 +874,12 @@ namespace VideoGui
                     frmMultiShortsUploader.msuShorts.ItemsSource = ShortsDirectoryList;
                     frmMultiShortsUploader.msuSchedules.ItemsSource = SelectedShortsDirectoriesList;
                 }
-                return null;
+                return default(TResult);
             }
             catch (Exception ex)
             {
                 ex.LogWrite($"formObjectHandler_MultiShortsUploader {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
-                return null;
+                return default(TResult);
             }
         }
 
@@ -909,7 +910,7 @@ namespace VideoGui
             }
         }
 
-        private object formObjectHandler_GoProMediaImporter(object tld, MediaImporter goProMediaImporter)
+        private TResult formObjectHandler_GoProMediaImporter<TResult>(object tld, MediaImporter goProMediaImporter)
         {
             try
             {
@@ -953,7 +954,7 @@ namespace VideoGui
                                 break;
                             }
                         }
-                        return res;
+                        return (TResult)Convert.ChangeType(res, typeof(TResult));
                     }
                 }
                 if (tld is CustomParams_SetTimeSpan cts)
@@ -970,7 +971,7 @@ namespace VideoGui
                 if (tld is CustomParams_GetConnectionString CGCS)
                 {
                     CGCS.ConnectionString = connectionString;
-                    return connectionString;
+                    return (TResult)Convert.ChangeType(connectionString, typeof(TResult));
                 }
                 else if (tld is CustomParams_Initialize cpInit)
                 {
@@ -980,7 +981,7 @@ namespace VideoGui
                         ObservableCollectionFilter.ImportCollectionViewSource.Source = FileRenamer;
                         ObservableCollectionFilter.ImportCollectionViewSource.View.Refresh();
                         goProMediaImporter.msuSchedules.ItemsSource = ObservableCollectionFilter.ImportCollectionViewSource.View;
-                        return true;
+                        return (TResult)Convert.ChangeType(true, typeof(TResult));
                     }
                 }
                 else if (tld is CustomParams_DataSelect cds)
@@ -991,20 +992,19 @@ namespace VideoGui
                         ObservableCollectionFilter.ImportCollectionViewSource.Source = FileRenamer;
                         ObservableCollectionFilter.ImportCollectionViewSource.View.Refresh();
                         goProMediaImporter.msuSchedules.ItemsSource = ObservableCollectionFilter.ImportCollectionViewSource.View;
-                        return true;
-
+                        return (TResult)Convert.ChangeType(true, typeof(TResult));
                     }
                 }
-                return null;
+                return default(TResult);
             }
             catch (Exception ex)
             {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
-                return null;
+                ex.LogWrite($"formObjectHandler_GoProMediaImporter {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+                return default(TResult);
             }
         }
 
-        private object formObjectHandler_ComplexSchedular(object tld, ComplexSchedular complexSchedular)
+        private TResult formObjectHandler_ComplexSchedular<TResult>(object tld, ComplexSchedular complexSchedular)
         {
             try
             {
@@ -1014,19 +1014,19 @@ namespace VideoGui
                     {
                         ObservableCollectionFilter.CurrentCollectionViewSource.Source = ComplexProcessingJobList;
                         complexSchedular.msuComplexSchedules.ItemsSource = ObservableCollectionFilter.CurrentCollectionViewSource.View;
-                        return true;
+                        return (TResult)Convert.ChangeType(true, typeof(TResult));
                     }
                     else if (cds.Id == 1)
                     {
                         ObservableCollectionFilter.HistoricCollectionViewSource.Source = ComplexProcessingJobHistory;
                         complexSchedular.msuComplexSchedules.ItemsSource = ObservableCollectionFilter.HistoricCollectionViewSource.View;
-                        return true;
+                        return (TResult)Convert.ChangeType(true, typeof(TResult));
                     }
                 }
                 else if (tld is CustomParams_GetConnectionString CGCS)
                 {
                     CGCS.ConnectionString = connectionString;
-                    return connectionString;
+                    return (TResult)Convert.ChangeType(connectionString, typeof(TResult));
                 }
                 else if (tld is CustomParams_Initialize cpInit)
                 {
@@ -1034,21 +1034,21 @@ namespace VideoGui
                     {
                         ObservableCollectionFilter.CurrentCollectionViewSource.Source = ComplexProcessingJobList;
                         complexSchedular.msuComplexSchedules.ItemsSource = ObservableCollectionFilter.CurrentCollectionViewSource.View;
-                        return true;
+                        return (TResult)Convert.ChangeType(true, typeof(TResult));
                     }
                     else if (cpInit.Id == 1)
                     {
                         ObservableCollectionFilter.HistoricCollectionViewSource.Source = ComplexProcessingJobHistory;
                         complexSchedular.msuComplexSchedules.ItemsSource = ObservableCollectionFilter.HistoricCollectionViewSource.View;
-                        return true;
+                        return (TResult)Convert.ChangeType(true, typeof(TResult));
                     }
                 }
-                return null;
+                return default(TResult);
             }
             catch (Exception ex)
             {
                 ex.LogWrite($"formObjectHandler_ComplexSchedular {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
-                return null;
+                return default(TResult);
             }
         }
 
@@ -1185,7 +1185,7 @@ namespace VideoGui
             }
         }
 
-        private object formObjectHandler_ManualScheduler(object tld, ManualScheduler manualScheduler)
+        private TResult formObjectHandler_ManualScheduler<TResult>(object tld, ManualScheduler manualScheduler)
         {
             try
             {
@@ -1236,15 +1236,15 @@ namespace VideoGui
                     SaveString(cpSaveSchedule.TestMode.ToString(), "TestMode");
                     SaveString(cpSaveSchedule.max.ToString(), "maxr");
                 }
-                return null;
+                return default(TResult);
             }
             catch (Exception ex)
             {
                 ex.LogWrite($"formObjectHandler_ManualScheduler {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
-                return null;
+                return default(TResult);
             }
         }
-        private object formObjectHandler_ActionScheduleSelector(object tld, ActionScheduleSelector actionScheduleSelector)
+        private TResult formObjectHandler_ActionScheduleSelector<TResult>(object tld, ActionScheduleSelector actionScheduleSelector)
         {
             try
             {
@@ -1268,16 +1268,16 @@ namespace VideoGui
                     }
 
                 }
-                return null;
+                return default(TResult);
             }
             catch (Exception ex)
             {
                 ex.LogWrite($"formObjectHandler_ActionScheduleSelector {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
-                return null;
+                return default(TResult);
             }
         }
 
-        private object formObjectHandler_ScheduleActioner(object tld, ScheduleActioner scheduleActioner)
+        private TResult formObjectHandler_ScheduleActioner<TResult>(object tld, ScheduleActioner scheduleActioner)
         {
             try
             {
@@ -1469,16 +1469,16 @@ namespace VideoGui
                     }
                 }
 
-                return null;
+                return default(TResult);
             }
             catch (Exception ex)
             {
                 ex.LogWrite($"formObjectHandler_ScheduleActioner {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
-                return null;
+                return default(TResult);
             }
         }
 
-        private object formObjectHandler_SelectReleaseSchedule(object tld, SelectReleaseSchedule selectReleaseSchedule)
+        private TResult formObjectHandler_SelectReleaseSchedule<TResult>(object tld, SelectReleaseSchedule selectReleaseSchedule)
         {
             try
             {
@@ -1573,12 +1573,12 @@ namespace VideoGui
                         }
                     }
                 }
-                return true;
+                return (TResult)Convert.ChangeType(true, typeof(TResult));
             }
             catch (Exception ex)
             {
                 ex.LogWrite($"formObjectHandler_SelectReleaseSchedule {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
-                return null;
+                return default(TResult);
             }
         }
 
@@ -1663,7 +1663,7 @@ namespace VideoGui
                 return null;
             }
         }
-        private object formObjectHandler_SchedulingSelectEditor(object tld, SchedulingSelectEditor schedulingSelectEditor)
+        private TResult formObjectHandler_SchedulingSelectEditor<TResult>(object tld, SchedulingSelectEditor schedulingSelectEditor)
         {
             try
             {
@@ -1744,12 +1744,12 @@ namespace VideoGui
                         break;
                     }
                 }
-                return null;
+                return default(TResult);
             }
             catch (Exception ex)
             {
                 ex.LogWrite($"formObjectHandler_SchedulingSelectEditor {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
-                return null;
+                return default(TResult);
             }
         }
 
@@ -1849,7 +1849,7 @@ namespace VideoGui
                 return "";
             }
         }
-        private object formObjectHandler_DirectoryTitleDescEditor(object tld, DirectoryTitleDescEditor directoryTitleDescEditor)
+        private TResult formObjectHandler_DirectoryTitleDescEditor<TResult>(object tld, DirectoryTitleDescEditor directoryTitleDescEditor)
         {
             try
             {
@@ -1925,18 +1925,18 @@ namespace VideoGui
                     int id = connectionString.ExecuteScalar(sql, [("@ID", cts.UploadsReleaseInfo.Id)]).ToInt(-1);
                     if (id != -1) cts.UploadsReleaseInfo.TitleId = TitleId;
                 }
-                return null;
+                return default(TResult);
             }
             catch (Exception ex)
             {
                 ex.LogWrite($"formObjectHandler_DirectoryTitleDescEditor {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
-                return null;
+                return default(TResult);
             }
         }
 
         public Nullable<int> EventId = null;
 
-        private object formObjectHandler_scheduleEventCreator(object tld, ScheduleEventCreator scheduleEventCreatorFrm)
+        private TResult formObjectHandler_scheduleEventCreator<TResult>(object tld, ScheduleEventCreator scheduleEventCreatorFrm)
         {
             try
             {
@@ -2086,17 +2086,17 @@ namespace VideoGui
                         }
                     }
                 }
-                return null;
+                return default(TResult);
             }
             catch (Exception ex)
             {
                 ex.LogWrite($"formObjectHandler_scheduleEventCreator {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
-                return null;
+                return default(TResult);
 
             }
         }
 
-        private object formObjectHandler_DescSelect(object tld, DescSelectFrm frmDescSelectFrm, bool IsShort = false)
+        private TResult formObjectHandler_DescSelect<TResult>(object tld, DescSelectFrm frmDescSelectFrm, bool IsShort = false)
         {
             try
             {
@@ -2106,7 +2106,8 @@ namespace VideoGui
                         {
                             string DirName = (tld as CustomParams_DescUpdate).DirectoryName;
                             string Desc = (tld as CustomParams_DescUpdate).Description;
-                            return DescUpdater(frmDescSelectFrm, DirName, Desc, false);
+                            var r = DescUpdater(frmDescSelectFrm, DirName, Desc, false);
+                            return (TResult)Convert.ChangeType(r, typeof(TResult));
                             break;
                         }
                     case CustomParams_Update:
@@ -2154,7 +2155,7 @@ namespace VideoGui
                                     selectShortUpload.UpdateDescId(p.id, linkeddescids);
                                 }
                             }
-                            return null;
+                            return default(TResult);
                             break;
                         }
                     case CustomParams_Initialize cpInit:
@@ -2218,13 +2219,13 @@ namespace VideoGui
                                     break;
                                 }
                             }
-                            return null;
+                            return default(TResult);
                             break;
                         }
                     case null:
                         {
                             frmDescSelectFrm.lstAllDescriptions.ItemsSource = DescriptionsList;
-                            return null;
+                            return default(TResult);
                             break;
                         }
                     case CustomParams_Remove cpRemove:
@@ -2242,7 +2243,7 @@ namespace VideoGui
                                     }
                                 }
                             }
-                            return null;
+                            return default(TResult);
                             break;
                         }
                     case CustomParams_AddDescription cpAdd:
@@ -2286,16 +2287,16 @@ namespace VideoGui
                                     break;
                                 }
                             }
-                            return null;
+                            return default(TResult);
                             break;
                         }
                 }
-                return null;
+                return default(TResult);
             }
             catch (Exception ex)
             {
-                ex.LogWrite($"ObjectHandler - {this} {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
-                return null;
+                ex.LogWrite($"formObjectHandler_DescSelect - {this} {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+                return default(TResult);
             }
         }
 
@@ -2397,7 +2398,7 @@ namespace VideoGui
             }
         }
 
-        private object formObjectHandler_MasterTagSelect(object tld, MasterTagSelectForm frmMasterTagSelectForm)
+        private TResult formObjectHandler_MasterTagSelect<TResult>(object tld, MasterTagSelectForm frmMasterTagSelectForm)
         {
             try
             {
@@ -2468,7 +2469,7 @@ namespace VideoGui
                                 frmMasterTagSelectForm.TagSetChanged = true;
 
                             }
-                            return null;
+                            return default(TResult);
                             break;
                         }
                     case CustomParams_Select cpSelect:
@@ -2507,7 +2508,7 @@ namespace VideoGui
 
                             frmMasterTagSelectForm.txtTags.Text = TagList;
 
-                            return null;
+                            return default(TResult);
                             break;
                         }
                     case CustomParams_Initialize:
@@ -2519,13 +2520,13 @@ namespace VideoGui
 
                             frmMasterTagSelectForm.lstDescriptions.ItemsSource =
                                 TitlesList2.Where(idx => idx.Id != frmMasterTagSelectForm.ParentId);//.Where(ind => ind.IsTag = frmMasterTagSelectForm.IsTitleTag);
-                            return null;
+                            return default(TResult);
                             break;
                         }
                     case null:
                         {
                             frmMasterTagSelectForm.lstDescriptions.ItemsSource = TitlesList.Where(ind => ind.IsTag);
-                            return null;
+                            return default(TResult);
                             break;
                         }
                     case CustomParams_Add cpAdd:
@@ -2537,16 +2538,16 @@ namespace VideoGui
                             {
                                 DescriptionsList.Add(new Descriptions(idx, cpAdd.Name, false, "", cpAdd.Name, true));
                             }
-                            return null;
+                            return default(TResult);
                             break;
                         }
                 }
-                return null;
+                return default(TResult);
             }
             catch (Exception ex)
             {
-                ex.LogWrite($"ObjectHandler - {this} {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
-                return null;
+                ex.LogWrite($"formObjectHandler_MasterTagSelect {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+                return default(TResult);
             }
         }
         private void OnReadTitlesTags2(FbDataReader reader)
@@ -2561,7 +2562,7 @@ namespace VideoGui
             }
         }
         int ShortsDirectoryIndex = -1;
-        private object formObjectHandler_TitleSelect(object FormObject, object tld, TitleSelectFrm frmTitleSelect)
+        private TResult formObjectHandler_TitleSelect<TResult>(object tld, TitleSelectFrm frmTitleSelect)
         {
             try
             {
@@ -2572,9 +2573,9 @@ namespace VideoGui
                             string Dir = (tld as CustomParams_LookUpTitleId).DirectoryName.ToUpper();
                             foreach (var item in EditableshortsDirectoryList.Where(s => s.Directory.ToUpper() == Dir))
                             {
-                                return item.Id;
+                                return (TResult)Convert.ChangeType(item.Id, typeof(TResult));
                             }
-                            return -1;
+                            return (TResult)Convert.ChangeType(-1, typeof(TResult));
                             break;
                         }
                     case CustomParams_SetFilterId:
@@ -2632,7 +2633,7 @@ namespace VideoGui
                                 frmTitleSelect.lblTitleLength.Content = BaseStr1.Trim().Length;
 
                             }
-                            return null;
+                            return default(TResult);
                             break;
                         }
                     case CustomParams_Update:
@@ -2663,7 +2664,7 @@ namespace VideoGui
                                     selectShortUpload.UpdateTitleId(p.id, linkedtitleids);
                                 }
                             }
-                            return null;
+                            return default(TResult);
                             break;
                         }
                     case CustomParams_Initialize:
@@ -2697,7 +2698,7 @@ namespace VideoGui
                                         connectionString.ExecuteScalar(SQLa, [("@ID", ShortsDirectoryIndex),
                                             ("@TID", t.Id)]);
                                         frmTitleSelect.SetTitleTag(t.Id);
-                                        return null;
+                                        return default(TResult);
                                         break;
                                     }
                                 }
@@ -2810,7 +2811,7 @@ namespace VideoGui
                                 frmTitleSelect.TagAvailable.ItemsSource = availabletagsViewSource.View;
                                 frmTitleSelect.TagsGrp.ItemsSource = titletagsViewSource.View;
                             }
-                            return null;
+                            return default(TResult);
                             break;
                         }
                     case CustomParams_Refresh:
@@ -2824,30 +2825,30 @@ namespace VideoGui
                             frmTitleSelect.txtTitle.Text = BaseStr.Trim();
                             frmTitleSelect.lblTitleLength.Content = BaseStr.Trim().Length;
                             RefreshView();
-                            return null;
+                            return default(TResult);
                             break;
                         }
                     case CustomParams_InsertWithId cpInsert:
                         {
-                            TagUpdate(dataUpdatType.Insert, cpInsert.id, cpInsert.Groupid, FormObject);
+                            TagUpdate(dataUpdatType.Insert, cpInsert.id, cpInsert.Groupid, frmTitleSelect);
                             int titleid = frmTitleSelect.TitleId;
                             string x = OnGetAllTags(frmTitleSelect.GetTitleTag());
                             cpInsert.TitleLength = x.Length;
-                            return null;
+                            return default(TResult);
                             break;
                         }
                     case CustomParams_Remove cpRemove:
                         {
-                            TagUpdate(dataUpdatType.Remove, cpRemove.id, -1, FormObject, cpRemove.Name);
+                            TagUpdate(dataUpdatType.Remove, cpRemove.id, -1, frmTitleSelect, cpRemove.Name);
                             string x = OnGetAllTags(frmTitleSelect.GetTitleTag());
                             cpRemove.TitleLength = x.Length;
-                            return null;
+                            return default(TResult);
                             break;
                         }
                     case CustomParams_Add cpAdd:
                         {
-                            AddAvailableTag(cpAdd.data_string, FormObject);
-                            return null;
+                            AddAvailableTag(cpAdd.data_string, frmTitleSelect);
+                            return default(TResult);
                             break;
                         }
                     case CustomParams_EditName cp_Update:
@@ -2863,7 +2864,7 @@ namespace VideoGui
                                 string sql = "UPDATE TITLES SET DESCRIPTION = @name WHERE ID = @id;";
                                 connectionString.ExecuteScalar(sql, [("@name", cp_Update.name), ("@id", cp_Update.id)]);
                             }
-                            return null;
+                            return default(TResult);
                             break;
                         }
                     case CustomParams_Get cpGet:
@@ -2873,20 +2874,20 @@ namespace VideoGui
                             {
                                 frmTitleSelect.Hide();
                                 MasterTagSelectFrm = new MasterTagSelectForm(frmTitleSelect.IsShorts,
-                                    () => { frmTitleSelect.Show(); DoMasterTagClose(); }, ModuleCallback, true, frmTitleSelect.TitleId);
+                                    () => { frmTitleSelect.Show(); DoMasterTagClose(); }, InvokerHandler<object>, true, frmTitleSelect.TitleId);
                                 MasterTagSelectFrm.ParentId = frmTitleSelect.TitleId;
                                 MasterTagSelectFrm.Show();
                             }
-                            return null;
+                            return default(TResult);
                             break;
                         }
                 }
-                return null;
+                return default(TResult);
             }
             catch (Exception ex)
             {
-                ex.LogWrite($"ObjectHandler - {this} {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
-                return null;
+                ex.LogWrite($"formObjectHandler_TitleSelect - {this} {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+                return default(TResult);
             }
         }
         private void OnReadTitlesTags(FbDataReader reader)
@@ -3311,271 +3312,282 @@ namespace VideoGui
             }
         }
 
-        private object selectShortUpload_Handler(object thisForm, object tld)
+        private TResult selectShortUpload_Handler<TResult>(object tld, SelectShortUpload selectShortUpload)
         {
-            if (tld is CustomParams_GetShortsDirectoryById pcGSD)
+            try
             {
-                int TitleId = -1, DescId = -1, idx = pcGSD.Id;
-                foreach (var item in EditableshortsDirectoryList.Where(s => s.Id == idx))
+                if (tld is CustomParams_GetShortsDirectoryById pcGSD)
                 {
-                    TitleId = item.TitleId;
-                    DescId = item.DescId;
-                    break;
-                }
-                string Title = (TitleId == -1) ? "" : TitlesList.Where(s => s.Id == TitleId).
-                    FirstOrDefault(new Titles(-1)).Description;
-                string BaseStr = " ";
-                if (TitleId != -1)
-                {
-                    foreach (var item2 in TitleTagsList.Where(s => s.GroupId == TitleId))
-                    {
-                        if (!BaseStr.Contains($"#{item2.Description}"))
-                        {
-                            BaseStr += $"#{item2.Description} ";
-                        }
-                    }
-                    Title += BaseStr;
-                }
-
-
-
-                string Desc = (DescId == -1) ? "" : DescriptionsList.Where(s => s.Id == DescId).
-                    FirstOrDefault(new Descriptions(-1)).Description;
-
-                return new TurlpeDualString(Title.Trim(), Desc, idx);
-            }
-
-            if (tld is CustomParams_AddDirectory cpAPD)
-            {
-                string Title = "", Desc = "";
-                int TitleId = -1, DescId = -1;
-                int idx = InsertUpdateShorts(cpAPD.DirectoryName);
-
-                if (idx != -1)
-                {
+                    int TitleId = -1, DescId = -1, idx = pcGSD.Id;
                     foreach (var item in EditableshortsDirectoryList.Where(s => s.Id == idx))
                     {
                         TitleId = item.TitleId;
                         DescId = item.DescId;
                         break;
                     }
-                }
-                Title = (TitleId == -1) ? "" : TitlesList.Where(s => s.Id == TitleId).FirstOrDefault(new Titles(-1)).Description;
-                Desc = (DescId == -1) ? "" : DescriptionsList.Where(s => s.Id == DescId).FirstOrDefault(new Descriptions(-1)).Description;
-                string BaseStr = " ";
-                if (TitleId != -1)
-                {
-                    foreach (var item2 in TitleTagsList.Where(s => s.GroupId == TitleId))
+                    string Title = (TitleId == -1) ? "" : TitlesList.Where(s => s.Id == TitleId).
+                        FirstOrDefault(new Titles(-1)).Description;
+                    string BaseStr = " ";
+                    if (TitleId != -1)
                     {
-                        if (!BaseStr.Contains($"#{item2.Description}"))
+                        foreach (var item2 in TitleTagsList.Where(s => s.GroupId == TitleId))
                         {
-                            BaseStr += $"#{item2.Description} ";
+                            if (!BaseStr.Contains($"#{item2.Description}"))
+                            {
+                                BaseStr += $"#{item2.Description} ";
+                            }
                         }
+                        Title += BaseStr;
                     }
-                    Title += BaseStr;
-                }
-                return new TurlpeDualString(Title.Trim(), Desc, idx);
-            }
-            if (tld is CustomParams_RematchedUpdate rfu)
-            {
-                string sql = "SELECT ID FROM SHORTSDIRECTORY WHERE DIRECTORYNAME = @P0";
-                var sid = connectionString.ExecuteScalar(sql, [("@P0", rfu.directory)]).ToInt(-1);
-                int OldId = -1, NewId = -1;
-                foreach (var item in RematchedList.Where(r => r.OldId == rfu.newid))
-                {
-                    OldId = item.OldId;
-                    NewId = item.NewId;
-                    break;
-                }
-                if (OldId == -1)
-                {
-                    CancellationTokenSource cts = new CancellationTokenSource(2000);
-                    sql = "SELECT NEWID,OLDID FROM REMATCHED WHERE OLDID = @P0";
-                    connectionString.ExecuteReader(sql, [("@P0", rfu.newid)], cts, (r) =>
-                    {
-                        OldId = (r["OLDID"] is int oldid) ? oldid : -1;
-                        NewId = (r["NEWID"] is int newid) ? newid : -1;
-                        cts.Cancel();
-                    });
+
+
+
+                    string Desc = (DescId == -1) ? "" : DescriptionsList.Where(s => s.Id == DescId).
+                        FirstOrDefault(new Descriptions(-1)).Description;
+
+                    var r = new TurlpeDualString(Title.Trim(), Desc, idx);
+                    return (TResult)Convert.ChangeType(r, typeof(TResult));
                 }
 
-                if ((OldId == -1 && NewId == -1))
+                if (tld is CustomParams_AddDirectory cpAPD)
                 {
-                    sql = "INSERT INTO REMATCHED(NEWID,OLDID) VALUES (@P0,@P1) returning ID";
-                    int idx = connectionString.ExecuteScalar(sql,
-                        [("@P0", rfu.newid), ("@P1", sid)]).ToInt(-1);
-                    RematchedList.Add(new Rematched(idx, rfu.newid, sid, ""));
-                    return true;
-                }
-                else
-                {
-                    if (NewId != sid)
+                    string Title = "", Desc = "";
+                    int TitleId = -1, DescId = -1;
+                    int idx = InsertUpdateShorts(cpAPD.DirectoryName);
+
+                    if (idx != -1)
                     {
-                        sql = "UPDATE REMATCHED SET NEWID = @P0 WHERE OLDID = @P1";
-                        connectionString.ExecuteNonQuery(sql,
-                            [("@P0", sid), ("@P1", OldId)]);
-                        foreach (var r in RematchedList.Where(s => s.OldId == OldId))
+                        foreach (var item in EditableshortsDirectoryList.Where(s => s.Id == idx))
                         {
-                            r.NewId = sid;
+                            TitleId = item.TitleId;
+                            DescId = item.DescId;
                             break;
                         }
-                        return true;
                     }
-                    return true;
-                }
-            }
-            else if (tld is CustomParams_GetDescIdByDirectory CGGG)
-            {
-                string Dir = CGGG.DirectoryName.ToUpper();
-                foreach (var item in EditableshortsDirectoryList.Where(
-                    s => s.Directory.ToUpper() == Dir))
-                {
-                    return item.DescId;
-                }
-            }
-
-            else if (tld is CustomParams_DescUpdate CPDE)
-            {
-                return DescUpdater(thisForm, CPDE.DirectoryName, CPDE.Description, false);
-            }
-            else if (tld is CustomParams_GetCurrentDescId CGCD)
-            {
-                int DescId = -1;
-                foreach (var item in EditableshortsDirectoryList.Where(s => s.Id == ShortsDirectoryIndex))
-                {
-                    DescId = item.DescId;
-                    break;
-                }
-                return DescId;
-            }
-            else if (tld is CustomParams_LookUpTitleId CPTI)
-            {
-                int id = InsertUpdateShorts(CPTI.DirectoryName.ToUpper());
-                if (id != -1)
-                {
-                    int TitleId = -1;
-                    foreach (var item in EditableshortsDirectoryList.Where(s => s.Id == id))
+                    Title = (TitleId == -1) ? "" : TitlesList.Where(s => s.Id == TitleId).FirstOrDefault(new Titles(-1)).Description;
+                    Desc = (DescId == -1) ? "" : DescriptionsList.Where(s => s.Id == DescId).FirstOrDefault(new Descriptions(-1)).Description;
+                    string BaseStr = " ";
+                    if (TitleId != -1)
                     {
-                        TitleId = item.TitleId;
+                        foreach (var item2 in TitleTagsList.Where(s => s.GroupId == TitleId))
+                        {
+                            if (!BaseStr.Contains($"#{item2.Description}"))
+                            {
+                                BaseStr += $"#{item2.Description} ";
+                            }
+                        }
+                        Title += BaseStr;
+                    }
+                    var rr = new TurlpeDualString(Title.Trim(), Desc, idx);
+                    return (TResult)Convert.ChangeType(rr, typeof(TResult));
+                }
+                if (tld is CustomParams_RematchedUpdate rfu)
+                {
+                    string sql = "SELECT ID FROM SHORTSDIRECTORY WHERE DIRECTORYNAME = @P0";
+                    var sid = connectionString.ExecuteScalar(sql, [("@P0", rfu.directory)]).ToInt(-1);
+                    int OldId = -1, NewId = -1;
+                    foreach (var item in RematchedList.Where(r => r.OldId == rfu.newid))
+                    {
+                        OldId = item.OldId;
+                        NewId = item.NewId;
                         break;
                     }
-                    return TitleId;
-                }
-            }
-            else if (tld is CustomParams_LookUpId CPSTI)
-            {
-                //int id = InsertUpdateShorts(CPSTI.DirectoryName.ToUpper());
-                int TitleId = -1;
-                foreach (var item in EditableshortsDirectoryList.Where(
-                    s => s.Directory.ToUpper() == CPSTI.DirectoryName.ToUpper()))
-                {
-                    TitleId = item.Id;
-                    break;
-                }
-                return TitleId;
-
-            }
-            if (tld is CustomParams_InsertIntoShortsDirectory CPISD)
-            {
-                int _TitleId = InsertUpdateTitle(CPISD.DirectoryName, ShortsDirectoryIndex);
-                int _DescId = InsertUpdateDescription(CPISD.DirectoryName, ShortsDirectoryIndex);
-                if (ShortsDirectoryIndex == -1)
-                {
-                    int IDX = InsertUpdateShorts(CPISD.DirectoryName, _TitleId, _DescId);
-                    ShortsDirectoryIndex = IDX;
-                }
-
-                string sql = "update MULTISHORTS set ISSHORTSACTIVE = @ACTIVE where LINKEDSHORTSDIRECTORYID = @ID;";
-                connectionString.ExecuteNonQuery(sql, [("@ACTIVE", 1), ("@ID", ShortsDirectoryIndex)]);
-                sql = "update MULTISHORTS set ISSHORTSACTIVE = @ACTIVE where LINKEDSHORTSDIRECTORYID != @ID;";
-                connectionString.ExecuteNonQuery(sql, [("@ACTIVE", 0), ("@ID", ShortsDirectoryIndex)]);
-                string linkedtitleids = "", linkeddescids = "";
-                CancellationTokenSource cts = new CancellationTokenSource();
-                connectionString.ExecuteReader(GetUploadReleaseBuilderSql(ShortsDirectoryIndex), (FbDataReader r) =>
-                {
-                    linkedtitleids = (r["LINKEDTITLEIDS"] is string ldid1 ? ldid1 : "");
-                    linkeddescids = (r["LINKEDDESCIDS"] is string lditt ? lditt : "");
-                    cts.Cancel();
-                });
-                selectShortUpload.UpdateTitleId(ShortsDirectoryIndex, linkedtitleids);
-                selectShortUpload.UpdateDescId(ShortsDirectoryIndex, linkeddescids);
-                InsertUpdateMultiShorts(ShortsDirectoryIndex, CPISD.DirectoryName);
-                return ShortsDirectoryIndex;
-            }
-            else if (tld is CustomParams_UpdateMultishortsByDir CPAD)
-            {
-                string sql = "";
-                int LinkedId = InsertUpdateShorts(CPAD.DirectoryName);
-                bool found = SelectedShortsDirectoriesList.Any(item => item.DirectoryName == CPAD.DirectoryName);
-                if (!found && CPAD.DirectoryName != "")
-                {
-                    InsertUpdateMultiShorts(LinkedId, CPAD.DirectoryName);
-                }
-                return null;
-            }
-            if (tld is CustomParams_InsertMultiShortsInfo cpsi)
-            {
-                InsertIntoMultiShortsInfo(cpsi.numberofShorts, cpsi.linkedId, cpsi.lastTimeUploaded, cpsi.IsActive);
-            }
-            else if (tld is CustomParams_UpdateMultiShortsInfo cpup)
-            {
-                UpdateMultiShortsInfo(cpup.numberofShorts, cpup.linkedId, cpup.lastTimeUploaded, cpup.uploaddir);
-            }
-            else if (tld is CustomParams_GetConnectionString CGCS)
-            {
-                CGCS.ConnectionString = GetConectionString();
-                return CGCS.ConnectionString;
-            }
-            else if (tld is CustomParams_Select SPS)
-            {
-                ShortsDirectoryIndex = SPS.Id;
-                if (!EditableshortsDirectoryList.Any(s => s.Id == SPS.Id))
-                {
-                    string sql = "SELECT * FROM SHORTSDIRECTORY WHERE ID = @ID";
-                    CancellationTokenSource cts = new CancellationTokenSource();
-                    connectionString.ExecuteReader(sql, [("@ID", SPS.Id)], cts, (FbDataReader r) =>
+                    if (OldId == -1)
                     {
-                        EditableshortsDirectoryList.Add(new ShortsDirectory(r));
-                        cts.Cancel();
-                    });
-                    TitleTagsSrc = SPS.Id;
+                        CancellationTokenSource cts = new CancellationTokenSource(2000);
+                        sql = "SELECT NEWID,OLDID FROM REMATCHED WHERE OLDID = @P0";
+                        connectionString.ExecuteReader(sql, [("@P0", rfu.newid)], cts, (r) =>
+                        {
+                            OldId = (r["OLDID"] is int oldid) ? oldid : -1;
+                            NewId = (r["NEWID"] is int newid) ? newid : -1;
+                            cts.Cancel();
+                        });
+                    }
 
-
-                }
-            }
-            else if (tld is CustomParams_UpdateTitleById SPU)
-            {
-                foreach (var p in EditableshortsDirectoryList.Where(s => s.Id == SPU.Id))
-                {
-                    p.TitleId = SPU.Title;
-                    break;
-                }
-                if (!TitlesList.Any(s => s.Id == SPU.Title))
-                {
-                    string sql = "SELECT * FROM TITLES WHERE ID = @ID";
-                    CancellationTokenSource cts = new CancellationTokenSource();
-                    connectionString.ExecuteReader(sql, [("@ID", SPU.Title)], cts, (FbDataReader r) =>
+                    if ((OldId == -1 && NewId == -1))
                     {
-                        TitlesList.Add(new Titles(r));
-                        cts.Cancel();
-                    });
-                }
-
-            }
-            else if (tld is CustomParams_Get)
-            {
-                if (ShortsDirectoryIndex == -1)
-                {
-                    var r = EditableshortsDirectoryList.LastOrDefault();
-                    if (r is not null)
+                        sql = "INSERT INTO REMATCHED(NEWID,OLDID) VALUES (@P0,@P1) returning ID";
+                        int idx = connectionString.ExecuteScalar(sql,
+                            [("@P0", rfu.newid), ("@P1", sid)]).ToInt(-1);
+                        RematchedList.Add(new Rematched(idx, rfu.newid, sid, ""));
+                        return (TResult)Convert.ChangeType(true, typeof(TResult));
+                    }
+                    else
                     {
-                        return r.Id;
+                        if (NewId != sid)
+                        {
+                            sql = "UPDATE REMATCHED SET NEWID = @P0 WHERE OLDID = @P1";
+                            connectionString.ExecuteNonQuery(sql,
+                                [("@P0", sid), ("@P1", OldId)]);
+                            foreach (var r in RematchedList.Where(s => s.OldId == OldId))
+                            {
+                                r.NewId = sid;
+                                break;
+                            }
+                            return (TResult)Convert.ChangeType(true, typeof(TResult));
+                        }
+                        return (TResult)Convert.ChangeType(true, typeof(TResult));
                     }
                 }
-                return null;
-            }
+                else if (tld is CustomParams_GetDescIdByDirectory CGGG)
+                {
+                    string Dir = CGGG.DirectoryName.ToUpper();
+                    foreach (var item in EditableshortsDirectoryList.Where(
+                        s => s.Directory.ToUpper() == Dir))
+                    {
+                        return (TResult)Convert.ChangeType(item.DescId, typeof(TResult));
+                    }
+                }
 
-            return null;
+                else if (tld is CustomParams_DescUpdate CPDE)
+                {
+                    var ss = DescUpdater(selectShortUpload, CPDE.DirectoryName, CPDE.Description, false);
+                    return (TResult)Convert.ChangeType(ss, typeof(TResult));
+                }
+                else if (tld is CustomParams_GetCurrentDescId CGCD)
+                {
+                    int DescId = -1;
+                    foreach (var item in EditableshortsDirectoryList.Where(s => s.Id == ShortsDirectoryIndex))
+                    {
+                        DescId = item.DescId;
+                        break;
+                    }
+                    return (TResult)Convert.ChangeType(DescId, typeof(TResult));
+                }
+                else if (tld is CustomParams_LookUpTitleId CPTI)
+                {
+                    int id = InsertUpdateShorts(CPTI.DirectoryName.ToUpper());
+                    if (id != -1)
+                    {
+                        int TitleId = -1;
+                        foreach (var item in EditableshortsDirectoryList.Where(s => s.Id == id))
+                        {
+                            TitleId = item.TitleId;
+                            break;
+                        }
+                        return (TResult)Convert.ChangeType(TitleId, typeof(TResult));
+                    }
+                }
+                else if (tld is CustomParams_LookUpId CPSTI)
+                {
+                    //int id = InsertUpdateShorts(CPSTI.DirectoryName.ToUpper());
+                    int TitleId = -1;
+                    foreach (var item in EditableshortsDirectoryList.Where(
+                        s => s.Directory.ToUpper() == CPSTI.DirectoryName.ToUpper()))
+                    {
+                        TitleId = item.Id;
+                        break;
+                    }
+                    return (TResult)Convert.ChangeType(TitleId, typeof(TResult));
+
+                }
+                if (tld is CustomParams_InsertIntoShortsDirectory CPISD)
+                {
+                    int _TitleId = InsertUpdateTitle(CPISD.DirectoryName, ShortsDirectoryIndex);
+                    int _DescId = InsertUpdateDescription(CPISD.DirectoryName, ShortsDirectoryIndex);
+                    if (ShortsDirectoryIndex == -1)
+                    {
+                        int IDX = InsertUpdateShorts(CPISD.DirectoryName, _TitleId, _DescId);
+                        ShortsDirectoryIndex = IDX;
+                    }
+
+                    string sql = "update MULTISHORTS set ISSHORTSACTIVE = @ACTIVE where LINKEDSHORTSDIRECTORYID = @ID;";
+                    connectionString.ExecuteNonQuery(sql, [("@ACTIVE", 1), ("@ID", ShortsDirectoryIndex)]);
+                    sql = "update MULTISHORTS set ISSHORTSACTIVE = @ACTIVE where LINKEDSHORTSDIRECTORYID != @ID;";
+                    connectionString.ExecuteNonQuery(sql, [("@ACTIVE", 0), ("@ID", ShortsDirectoryIndex)]);
+                    string linkedtitleids = "", linkeddescids = "";
+                    CancellationTokenSource cts = new CancellationTokenSource();
+                    connectionString.ExecuteReader(GetUploadReleaseBuilderSql(ShortsDirectoryIndex), (FbDataReader r) =>
+                    {
+                        linkedtitleids = (r["LINKEDTITLEIDS"] is string ldid1 ? ldid1 : "");
+                        linkeddescids = (r["LINKEDDESCIDS"] is string lditt ? lditt : "");
+                        cts.Cancel();
+                    });
+                    selectShortUpload.UpdateTitleId(ShortsDirectoryIndex, linkedtitleids);
+                    selectShortUpload.UpdateDescId(ShortsDirectoryIndex, linkeddescids);
+                    InsertUpdateMultiShorts(ShortsDirectoryIndex, CPISD.DirectoryName);
+                    return (TResult)Convert.ChangeType(ShortsDirectoryIndex, typeof(TResult));
+                }
+                else if (tld is CustomParams_UpdateMultishortsByDir CPAD)
+                {
+                    string sql = "";
+                    int LinkedId = InsertUpdateShorts(CPAD.DirectoryName);
+                    bool found = SelectedShortsDirectoriesList.Any(item => item.DirectoryName == CPAD.DirectoryName);
+                    if (!found && CPAD.DirectoryName != "")
+                    {
+                        InsertUpdateMultiShorts(LinkedId, CPAD.DirectoryName);
+                    }
+                    return default(TResult);
+                }
+                if (tld is CustomParams_InsertMultiShortsInfo cpsi)
+                {
+                    InsertIntoMultiShortsInfo(cpsi.numberofShorts, cpsi.linkedId, cpsi.lastTimeUploaded, cpsi.IsActive);
+                }
+                else if (tld is CustomParams_UpdateMultiShortsInfo cpup)
+                {
+                    UpdateMultiShortsInfo(cpup.numberofShorts, cpup.linkedId, cpup.lastTimeUploaded, cpup.uploaddir);
+                }
+                else if (tld is CustomParams_GetConnectionString CGCS)
+                {
+                    CGCS.ConnectionString = GetConectionString();
+                    return (TResult)Convert.ChangeType(CGCS.ConnectionString, typeof(TResult));
+                }
+                else if (tld is CustomParams_Select SPS)
+                {
+                    ShortsDirectoryIndex = SPS.Id;
+                    if (!EditableshortsDirectoryList.Any(s => s.Id == SPS.Id))
+                    {
+                        string sql = "SELECT * FROM SHORTSDIRECTORY WHERE ID = @ID";
+                        CancellationTokenSource cts = new CancellationTokenSource();
+                        connectionString.ExecuteReader(sql, [("@ID", SPS.Id)], cts, (FbDataReader r) =>
+                        {
+                            EditableshortsDirectoryList.Add(new ShortsDirectory(r));
+                            cts.Cancel();
+                        });
+                        TitleTagsSrc = SPS.Id;
+
+
+                    }
+                }
+                else if (tld is CustomParams_UpdateTitleById SPU)
+                {
+                    foreach (var p in EditableshortsDirectoryList.Where(s => s.Id == SPU.Id))
+                    {
+                        p.TitleId = SPU.Title;
+                        break;
+                    }
+                    if (!TitlesList.Any(s => s.Id == SPU.Title))
+                    {
+                        string sql = "SELECT * FROM TITLES WHERE ID = @ID";
+                        CancellationTokenSource cts = new CancellationTokenSource();
+                        connectionString.ExecuteReader(sql, [("@ID", SPU.Title)], cts, (FbDataReader r) =>
+                        {
+                            TitlesList.Add(new Titles(r));
+                            cts.Cancel();
+                        });
+                    }
+
+                }
+                else if (tld is CustomParams_Get)
+                {
+                    if (ShortsDirectoryIndex == -1)
+                    {
+                        var r = EditableshortsDirectoryList.LastOrDefault();
+                        if (r is not null)
+                        {
+                            return (TResult)Convert.ChangeType(r.Id, typeof(TResult));
+                        }
+                    }
+                    return default(TResult);
+                }
+
+                return default(TResult);
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"selectShortUpload_Handler - {this} {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+                return default(TResult);
+            }
         }
 
         private void UpdateMultiShortsInfo(int NumberofShorts, int LinkedId, DateTime LastTimeUploaded, string uploaddir)
@@ -3640,284 +3652,279 @@ namespace VideoGui
         }
 
 
-        private object scraperModule_Handler(object thisForm, object tld)
+        private TResult scraperModule_Handler<TResult>(object tld, ScraperModule scraperModule)
         {
             try
             {
-                if (thisForm is ScraperModule scs)
+                if (tld is CustomParams_GetShortsDirectoryById pcGSD)
                 {
-                    if (tld is CustomParams_GetShortsDirectoryById pcGSD)
+                    int TitleId = -1, DescId = -1, idx = pcGSD.Id;
+                    foreach (var item in EditableshortsDirectoryList.Where(s => s.Id == idx))
                     {
-                        int TitleId = -1, DescId = -1, idx = pcGSD.Id;
+                        TitleId = item.TitleId;
+                        DescId = item.DescId;
+                        break;
+                    }
+                    string Title = (TitleId == -1) ? "" : TitlesList.Where(s => s.Id == TitleId).
+                        FirstOrDefault(new Titles(-1)).Description;
+                    string Desc = (DescId == -1) ? "" : DescriptionsList.Where(s => s.Id == DescId).
+                        FirstOrDefault(new Descriptions(-1)).Description;
+                    string BaseStr = " ";
+                    if (TitleId != -1)
+                    {
+                        foreach (var item2 in TitleTagsList.Where(s => s.GroupId == TitleId))
+                        {
+                            if (!BaseStr.Contains($"#{item2.Description}"))
+                            {
+                                BaseStr += $"#{item2.Description} ";
+                            }
+                        }
+                        Title += BaseStr;
+                    }
+                    var r = new TurlpeDualString(Title.Trim(), Desc, idx);
+                    return (TResult)Convert.ChangeType(r, typeof(TResult));
+                }
+                if (tld is CustomParams_AddDirectory cpAPD)
+                {
+                    string Title = "", Desc = "";
+                    int TitleId = -1, DescId = -1;
+                    int idx = InsertUpdateShorts(cpAPD.DirectoryName);
+                    if (idx != -1)
+                    {
                         foreach (var item in EditableshortsDirectoryList.Where(s => s.Id == idx))
                         {
                             TitleId = item.TitleId;
                             DescId = item.DescId;
                             break;
                         }
-                        string Title = (TitleId == -1) ? "" : TitlesList.Where(s => s.Id == TitleId).
-                            FirstOrDefault(new Titles(-1)).Description;
-                        string Desc = (DescId == -1) ? "" : DescriptionsList.Where(s => s.Id == DescId).
-                            FirstOrDefault(new Descriptions(-1)).Description;
-                        string BaseStr = " ";
-                        if (TitleId != -1)
-                        {
-                            foreach (var item2 in TitleTagsList.Where(s => s.GroupId == TitleId))
-                            {
-                                if (!BaseStr.Contains($"#{item2.Description}"))
-                                {
-                                    BaseStr += $"#{item2.Description} ";
-                                }
-                            }
-                            Title += BaseStr;
-                        }
-                        return new TurlpeDualString(Title.Trim(), Desc, idx);
                     }
-                    if (tld is CustomParams_AddDirectory cpAPD)
+                    Title = (TitleId == -1) ? "" : TitlesList.Where(s => s.Id == TitleId).FirstOrDefault(new Titles(-1)).Description;
+                    Desc = (DescId == -1) ? "" : DescriptionsList.Where(s => s.Id == DescId).FirstOrDefault(new Descriptions(-1)).Description;
+                    string BaseStr = " ";
+                    if (TitleId != -1)
                     {
-                        string Title = "", Desc = "";
-                        int TitleId = -1, DescId = -1;
-                        int idx = InsertUpdateShorts(cpAPD.DirectoryName);
-                        if (idx != -1)
+                        foreach (var item2 in TitleTagsList.Where(s => s.GroupId == TitleId))
                         {
-                            foreach (var item in EditableshortsDirectoryList.Where(s => s.Id == idx))
+                            if (!BaseStr.Contains($"#{item2.Description}"))
                             {
-                                TitleId = item.TitleId;
-                                DescId = item.DescId;
+                                BaseStr += $"#{item2.Description} ";
+                            }
+                        }
+                        Title += BaseStr;
+                    }
+
+                    var rr = new TurlpeDualString(Title.Trim(), Desc, idx);
+                    return (TResult)Convert.ChangeType(rr, typeof(TResult));
+                }
+                if (tld is CustomParams_GetUploadsRecCnt cpGURC)
+                {
+                    string sql = "select count(Id) from UPLOADSRECORD WHERE UPLOAD_DATE = @P0 AND UPLOADTYPE = 0";
+                    if (cpGURC.IsLast24Hours)
+                    {
+                        sql = "SELECT Count(Id) FROM UPLOADSRECORD WHERE UPLOAD_DATE = CURRENT_DATE AND " +
+                        "UPLOAD_TIME >= CURRENT_TIME - 1 AND UPLOADTYPE = 0 OR UPLOAD_DATE = CURRENT_DATE - 1 " +
+                        "AND UPLOAD_TIME >= CURRENT_TIME - 1 AND UPLOADTYPE = 0 AND UPLOADSRECORD.UPLOADFILE NOT LIKE '%mp4'";
+                    }
+                    var k = connectionString.ExecuteScalar(sql, [("@p0", DateTime.Now.Date)]).ToInt(-1);
+                    return (TResult)Convert.ChangeType(k, typeof(TResult));
+                }
+                if (tld is CustomParams_UpdateUploadsRecords CPUUR)
+                {
+                    foreach (var file in CPUUR.DirectoryName)
+                    {
+                        string fname = Path.GetFileNameWithoutExtension(file.ToUpper());
+                        string sql = "SELECT ID FROM UPLOADSRECORD WHERE UPLOADFILE = @P0 AND UPLOADTYPE = 0";
+                        int id = connectionString.ExecuteScalar(sql.ToUpper(), [("@P0", fname)]).ToInt(-1);
+                        if (id == -1)
+                        {
+                            sql = "INSERT INTO UPLOADSRECORD(UPLOADFILE, UPLOAD_DATE, UPLOAD_TIME,UPLOADTYPE,DIRECTORYNAME)" +
+                                " VALUES (@P0,@P1,@P2,@P3,@P4) RETURNING ID";
+                            id = connectionString.ExecuteScalar(sql.ToUpper(), [("@P0", fname),
+                                      ("@P1", DateTime.Now.Date), ("@P2", DateTime.Now.TimeOfDay), ("@P3", 0),
+                                      ("@P4", CPUUR.ParentDirectory)]).ToInt(-1);
+                        }
+                    }
+                }
+                if (tld is CustomParams_UpdateStats CPUSS)
+                {
+                    string sgl = "SELECT ID FROM SHORTSDIRECTORY WHERE DIRECTORYNAME = @P0";
+                    int sid = connectionString.ExecuteScalar(sgl.ToUpper(),
+                        [("@P0", CPUSS.DirectoryName.ToUpper())]).ToInt(-1);
+                    if (sid != -1)
+                    {
+                        sgl = "UPDATE MULTISHORTSINFO SET LASTUPLOADEDDATE = @P1, LASTUPLOADEDTIME = @P2 " +
+                              "DIRECTORYNAME = @P0" +
+                            "WHERE LINKEDSHORTSDIRECTORYID = @iD";
+                        connectionString.ExecuteNonQuery(sgl.ToUpper(),
+                            [("@P1", DateTime.Now.Date), ("@P2", DateTime.Now.TimeOfDay),
+                                ("@iD", sid)]);
+                    }
+                    int res = -1;
+                    string fname = Path.GetFileNameWithoutExtension(CPUSS.DirectoryName.ToUpper());
+                    string sql = "select ID from UPLOADSRECORD WHERE UPLOADFILE = @P0 AND UPLOADTYPE = 0";
+                    res = connectionString.ExecuteScalar(sql.ToUpper(), [("@P0", fname)]).ToInt(-1);
+                    if (res == -1)
+                    {
+                        sql = "INSERT INTO UPLOADSRECORD(UPLOADFILE, UPLOAD_DATE, UPLOAD_TIME,UPLOADTYPE,DIRECTORYNAME) " +
+                            "VALUES (@P0,@P1,@P2,@P3,@P4) RETURNING ID";
+                        res = connectionString.ExecuteScalar(sql.ToUpper(), [("@P0", fname), ("@P1", DateTime.Now.Date),
+                                ("@P2", DateTime.Now.TimeOfDay), ("@P3", 0), ("@P4", CPUSS.DirectoryName.ToUpper())]).ToInt(-1);
+                    }
+                    else
+                    {
+                        sql = "UPDATE UPLOADSRECORD SET UPLOAD_DATE = @P1, UPLOAD_TIME = @P2 WHERE ID = @P0";
+                        connectionString.ExecuteNonQuery(sql.ToUpper(), [("@P0", res), ("@P1", DateTime.Now.Date),
+                                ("@P2", DateTime.Now.TimeOfDay)]);
+                    }
+                }
+                if (tld is CustomParams_SetTimeSpans STT)
+                {
+                    return (TResult)Convert.ChangeType(EventTypes.ShortsSchedule, typeof(TResult));
+                }
+
+                if (tld is CustomParams_SelectById csi)
+                {
+                    string filename = "", vid = "";
+                    foreach (var item in DraftShortsList.Where(s => s.VideoId == csi.VideoId))
+                    {
+                        filename = item.FileName;
+                        vid = item.VideoId;
+
+                        for (int i = 0; i < scraperModule.lstMain.Items.Count; i++)
+                        {
+                            object id = scraperModule.lstMain.Items[i];
+                            if (id is string s && s.StartsWith(vid))
+                            {
+                                string o = scraperModule.lstMain.Items[i] as string;
+                                o = o + $" {filename}";
+                                scraperModule.lstMain.Items[i] = o;
                                 break;
                             }
                         }
-                        Title = (TitleId == -1) ? "" : TitlesList.Where(s => s.Id == TitleId).FirstOrDefault(new Titles(-1)).Description;
-                        Desc = (DescId == -1) ? "" : DescriptionsList.Where(s => s.Id == DescId).FirstOrDefault(new Descriptions(-1)).Description;
-                        string BaseStr = " ";
-                        if (TitleId != -1)
-                        {
-                            foreach (var item2 in TitleTagsList.Where(s => s.GroupId == TitleId))
-                            {
-                                if (!BaseStr.Contains($"#{item2.Description}"))
-                                {
-                                    BaseStr += $"#{item2.Description} ";
-                                }
-                            }
-                            Title += BaseStr;
-                        }
-
-                        return new TurlpeDualString(Title.Trim(), Desc, idx);
+                        return (TResult)Convert.ChangeType(item.FileName, typeof(TResult));
                     }
-                    if (tld is CustomParams_GetUploadsRecCnt cpGURC)
-                    {
-                        string sql = "select count(Id) from UPLOADSRECORD WHERE UPLOAD_DATE = @P0 AND UPLOADTYPE = 0";
-                        if (cpGURC.IsLast24Hours)
-                        {
-                            sql = "SELECT Count(Id) FROM UPLOADSRECORD WHERE UPLOAD_DATE = CURRENT_DATE AND " +
-                            "UPLOAD_TIME >= CURRENT_TIME - 1 AND UPLOADTYPE = 0 OR UPLOAD_DATE = CURRENT_DATE - 1 " +
-                            "AND UPLOAD_TIME >= CURRENT_TIME - 1 AND UPLOADTYPE = 0 AND UPLOADSRECORD.UPLOADFILE NOT LIKE '%mp4'";
-                        }
-                        return connectionString.ExecuteScalar(sql, [("@p0", DateTime.Now.Date)]).ToInt(-1);
-                    }
-                    if (tld is CustomParams_UpdateUploadsRecords CPUUR)
-                    {
-                        foreach (var file in CPUUR.DirectoryName)
-                        {
-                            string fname = Path.GetFileNameWithoutExtension(file.ToUpper());
-                            string sql = "SELECT ID FROM UPLOADSRECORD WHERE UPLOADFILE = @P0 AND UPLOADTYPE = 0";
-                            int id = connectionString.ExecuteScalar(sql.ToUpper(), [("@P0", fname)]).ToInt(-1);
-                            if (id == -1)
-                            {
-                                sql = "INSERT INTO UPLOADSRECORD(UPLOADFILE, UPLOAD_DATE, UPLOAD_TIME,UPLOADTYPE,DIRECTORYNAME)" +
-                                    " VALUES (@P0,@P1,@P2,@P3,@P4) RETURNING ID";
-                                id = connectionString.ExecuteScalar(sql.ToUpper(), [("@P0", fname),
-                                      ("@P1", DateTime.Now.Date), ("@P2", DateTime.Now.TimeOfDay), ("@P3", 0),
-                                      ("@P4", CPUUR.ParentDirectory)]).ToInt(-1);
-                            }
-                        }
-                    }
-                    if (tld is CustomParams_UpdateStats CPUSS)
-                    {
-                        string sgl = "SELECT ID FROM SHORTSDIRECTORY WHERE DIRECTORYNAME = @P0";
-                        int sid = connectionString.ExecuteScalar(sgl.ToUpper(),
-                            [("@P0", CPUSS.DirectoryName.ToUpper())]).ToInt(-1);
-                        if (sid != -1)
-                        {
-                            sgl = "UPDATE MULTISHORTSINFO SET LASTUPLOADEDDATE = @P1, LASTUPLOADEDTIME = @P2 " +
-                                  "DIRECTORYNAME = @P0" +
-                                "WHERE LINKEDSHORTSDIRECTORYID = @iD";
-                            connectionString.ExecuteNonQuery(sgl.ToUpper(),
-                                [("@P1", DateTime.Now.Date), ("@P2", DateTime.Now.TimeOfDay),
-                                ("@iD", sid)]);
-                        }
-                        int res = -1;
-                        string fname = Path.GetFileNameWithoutExtension(CPUSS.DirectoryName.ToUpper());
-                        string sql = "select ID from UPLOADSRECORD WHERE UPLOADFILE = @P0 AND UPLOADTYPE = 0";
-                        res = connectionString.ExecuteScalar(sql.ToUpper(), [("@P0", fname)]).ToInt(-1);
-                        if (res == -1)
-                        {
-                            sql = "INSERT INTO UPLOADSRECORD(UPLOADFILE, UPLOAD_DATE, UPLOAD_TIME,UPLOADTYPE,DIRECTORYNAME) " +
-                                "VALUES (@P0,@P1,@P2,@P3,@P4) RETURNING ID";
-                            res = connectionString.ExecuteScalar(sql.ToUpper(), [("@P0", fname), ("@P1", DateTime.Now.Date),
-                                ("@P2", DateTime.Now.TimeOfDay), ("@P3", 0), ("@P4", CPUSS.DirectoryName.ToUpper())]).ToInt(-1);
-                        }
-                        else
-                        {
-                            sql = "UPDATE UPLOADSRECORD SET UPLOAD_DATE = @P1, UPLOAD_TIME = @P2 WHERE ID = @P0";
-                            connectionString.ExecuteNonQuery(sql.ToUpper(), [("@P0", res), ("@P1", DateTime.Now.Date),
-                                ("@P2", DateTime.Now.TimeOfDay)]);
-                        }
-                    }
-                    if (tld is CustomParams_SetTimeSpans STT)
-                    {
-                        scs.ScraperType = EventTypes.ShortsSchedule;
-                    }
-
-                    if (tld is CustomParams_SelectById csi)
-                    {
-                        string filename = "", vid = "";
-                        foreach (var item in DraftShortsList.Where(s => s.VideoId == csi.VideoId))
-                        {
-                            filename = item.FileName;
-                            vid = item.VideoId;
-
-                            for (int i = 0; i < scs.lstMain.Items.Count; i++)
-                            {
-                                object id = scs.lstMain.Items[i];
-                                if (id is string s && s.StartsWith(vid))
-                                {
-                                    string o = scs.lstMain.Items[i] as string;
-                                    o = o + $" {filename}";
-                                    scs.lstMain.Items[i] = o;
-                                    break;
-                                }
-                            }
-                            return item.FileName;
-                            break;
-                        }
-                        return null;
-                    }
-                    if (tld is CustomParams_GetDesc cgd)
-                    {
-                        foreach (var item in DescriptionsList.Where(s => s.TitleTagId == cgd.id))
-                        {
-                            cgd.name = item.Description;
-                            break;
-                        }
-                        if ((!cgd.name.Contains("https://www.patreon.com/join/JustinsTrainJourneys"))
-                                && (!cgd.name.Contains("www.patreon.com")))
-                        {
-                            cgd.name += Environment.NewLine + Environment.NewLine +
-                                 "Support Me On Patreon - https://www.patreon.com/join/JustinsTrainJourneys";
-                        }
-                        return cgd.name;
-                    }
-                    else if (tld is CustomParams_GetTitle cgt)
-                    {
-                        foreach (var item in EditableshortsDirectoryList.Where(item => item.Id == cgt.id))
-                        {
-                            string BaseTitle = item.Directory;
-                            if (item.TitleId != -1)
-                            {
-                                foreach (var t in TitlesList.Where(i => i.GroupId == cgt.id && !i.IsTag))
-                                {
-                                    BaseTitle = t.Description;
-                                    break;
-                                }
-                            }
-                            string BaseStr = "";
-                            foreach (var item2 in TitleTagsList.Where(s => s.GroupId == cgt.title))
-                            {
-                                if (!BaseStr.Contains($"#{item2.Description}"))
-                                {
-                                    BaseStr += $"#{item2.Description} ";
-                                }
-                            }
-                            BaseStr = BaseStr.Trim();
-                            cgt.name = BaseTitle.ToPascalCase() + " " + BaseStr;
-
-
-                            return cgt.name;
-                            break;
-                        }
-                    }
-                    else if (tld is CustomParams_AddVideoInfo avi)
-                    {
-                        int id = -1;
-                        string sql = $"SELECT ID FROM {avi.TableName} WHERE FILENAME = @FILENAME";
-                        id = connectionString.ExecuteScalar(sql, [("@FILENAME", avi.filename)]).ToInt(-1);
-                        if (id == -1)
-                        {
-                            sql = $"INSERT INTO {avi.TableName} (VIDEOID,FILENAME) VALUES (@VIDEOID,@FILENAME)";
-                            connectionString.ExecuteScalar(sql, [("@VIDEOID", avi.id), ("@FILENAME", avi.filename)]);
-                        }
-                        else
-                        {
-                            sql = $"UPDATE {avi.TableName} SET VIDEOID = @VIDEOID WHERE ID = @ID AND FILENAME = @FILENAME";
-                            connectionString.ExecuteScalar(sql, [("@ID", id), ("@VIDEOID", avi.id), ("@FILENAME", avi.filename)]);
-                        }
-                        return null;
-                    }
-                    else if (tld is CustomParams_InsertIntoTable cit)
-                    {
-                        int id = -1;
-                        bool found = false;
-                        foreach (var item in DraftShortsList.Where(s => s.FileName == cit.filename && s.VideoId == cit.id))
-                        {
-                            id = item.Id;
-                            found = true;
-                            break;
-                        }
-                        string sql = "SELECT ID FROM DRAFTSHORTS WHERE FILENAME = @FILENAME AND VIDEOID = @VIDEOID";
-                        if (!found)
-                        {
-                            id = connectionString.ExecuteScalar(sql, [("@FILENAME", cit.filename), ("@VIDEOID", cit.id)]).ToInt(-1);
-                        }
-                        if (id == -1)
-                        {
-                            sql = "INSERT INTO DRAFTSHORTS (VIDEOID,FILENAME) VALUES (@VIDEOID,@FILENAME) RETURNING ID";
-                            int idxx = connectionString.ExecuteScalar(sql, [("@VIDEOID", cit.id), ("@FILENAME", cit.filename)]).ToInt(-1);
-                            if (idxx != -1)
-                            {
-                                sql = "SELECT * FROM DRAFTSHORTS WHERE ID = @ID";
-                                CancellationTokenSource cts = new CancellationTokenSource(2000);
-                                connectionString.ExecuteReader(sql, [("@ID", idxx)], (FbDataReader r) =>
-                                {
-                                    DraftShortsList.Add(new DraftShorts(r));
-                                    cts.Cancel();
-                                });
-
-                            }
-                            else
-                            {
-                                sql = "UPDATE DRAFTSHORTS SET VIDEOID = @VIDEOID WHERE ID = @ID AND FILENAME = @FILENAME";
-                                connectionString.ExecuteScalar(sql, [("@ID", id), ("@VIDEOID", cit.id), ("@FILENAME", cit.filename)]);
-                                foreach (var draft in DraftShortsList.Where(s => s.Id == id))
-                                {
-                                    draft.VideoId = cit.id;
-                                    break;
-                                }
-                            }
-                        }
-                        return null;
-                    }
-
-
-                    if (tld is CustomParams_Wait)
-                    {
-                        UploadWaitTime = DateTime.Now.TimeOfDay.Add(TimeSpan.FromMinutes(5));
-                        return null;
-                    }
-
-                    if (tld is CustomParams_GetConnectionString CGCS)
-                    {
-                        CGCS.ConnectionString = GetConectionString();
-                        return CGCS.ConnectionString;
-                    }
-
+                    return default(TResult);
                 }
-                return null;
+                if (tld is CustomParams_GetDesc cgd)
+                {
+                    foreach (var item in DescriptionsList.Where(s => s.TitleTagId == cgd.id))
+                    {
+                        cgd.name = item.Description;
+                        break;
+                    }
+                    if ((!cgd.name.Contains("https://www.patreon.com/join/JustinsTrainJourneys"))
+                            && (!cgd.name.Contains("www.patreon.com")))
+                    {
+                        cgd.name += Environment.NewLine + Environment.NewLine +
+                             "Support Me On Patreon - https://www.patreon.com/join/JustinsTrainJourneys";
+                    }
+                    return (TResult)Convert.ChangeType(cgd.name, typeof(TResult));
+                }
+                else if (tld is CustomParams_GetTitle cgt)
+                {
+                    foreach (var item in EditableshortsDirectoryList.Where(item => item.Id == cgt.id))
+                    {
+                        string BaseTitle = item.Directory;
+                        if (item.TitleId != -1)
+                        {
+                            foreach (var t in TitlesList.Where(i => i.GroupId == cgt.id && !i.IsTag))
+                            {
+                                BaseTitle = t.Description;
+                                break;
+                            }
+                        }
+                        string BaseStr = "";
+                        foreach (var item2 in TitleTagsList.Where(s => s.GroupId == cgt.title))
+                        {
+                            if (!BaseStr.Contains($"#{item2.Description}"))
+                            {
+                                BaseStr += $"#{item2.Description} ";
+                            }
+                        }
+                        BaseStr = BaseStr.Trim();
+                        cgt.name = BaseTitle.ToPascalCase() + " " + BaseStr;
+                        return (TResult)Convert.ChangeType(cgt.name, typeof(TResult));
+                    }
+                }
+                else if (tld is CustomParams_AddVideoInfo avi)
+                {
+                    int id = -1;
+                    string sql = $"SELECT ID FROM {avi.TableName} WHERE FILENAME = @FILENAME";
+                    id = connectionString.ExecuteScalar(sql, [("@FILENAME", avi.filename)]).ToInt(-1);
+                    if (id == -1)
+                    {
+                        sql = $"INSERT INTO {avi.TableName} (VIDEOID,FILENAME) VALUES (@VIDEOID,@FILENAME)";
+                        connectionString.ExecuteScalar(sql, [("@VIDEOID", avi.id), ("@FILENAME", avi.filename)]);
+                    }
+                    else
+                    {
+                        sql = $"UPDATE {avi.TableName} SET VIDEOID = @VIDEOID WHERE ID = @ID AND FILENAME = @FILENAME";
+                        connectionString.ExecuteScalar(sql, [("@ID", id), ("@VIDEOID", avi.id), ("@FILENAME", avi.filename)]);
+                    }
+                    return default(TResult);
+                }
+                else if (tld is CustomParams_InsertIntoTable cit)
+                {
+                    int id = -1;
+                    bool found = false;
+                    foreach (var item in DraftShortsList.Where(s => s.FileName == cit.filename && s.VideoId == cit.id))
+                    {
+                        id = item.Id;
+                        found = true;
+                        break;
+                    }
+                    string sql = "SELECT ID FROM DRAFTSHORTS WHERE FILENAME = @FILENAME AND VIDEOID = @VIDEOID";
+                    if (!found)
+                    {
+                        id = connectionString.ExecuteScalar(sql, [("@FILENAME", cit.filename), ("@VIDEOID", cit.id)]).ToInt(-1);
+                    }
+                    if (id == -1)
+                    {
+                        sql = "INSERT INTO DRAFTSHORTS (VIDEOID,FILENAME) VALUES (@VIDEOID,@FILENAME) RETURNING ID";
+                        int idxx = connectionString.ExecuteScalar(sql, [("@VIDEOID", cit.id), ("@FILENAME", cit.filename)]).ToInt(-1);
+                        if (idxx != -1)
+                        {
+                            sql = "SELECT * FROM DRAFTSHORTS WHERE ID = @ID";
+                            CancellationTokenSource cts = new CancellationTokenSource(2000);
+                            connectionString.ExecuteReader(sql, [("@ID", idxx)], (FbDataReader r) =>
+                            {
+                                DraftShortsList.Add(new DraftShorts(r));
+                                cts.Cancel();
+                            });
+
+                        }
+                        else
+                        {
+                            sql = "UPDATE DRAFTSHORTS SET VIDEOID = @VIDEOID WHERE ID = @ID AND FILENAME = @FILENAME";
+                            connectionString.ExecuteScalar(sql, [("@ID", id), ("@VIDEOID", cit.id), ("@FILENAME", cit.filename)]);
+                            foreach (var draft in DraftShortsList.Where(s => s.Id == id))
+                            {
+                                draft.VideoId = cit.id;
+                                break;
+                            }
+                        }
+                    }
+                    return default(TResult);
+                }
+
+
+                if (tld is CustomParams_Wait)
+                {
+                    UploadWaitTime = DateTime.Now.TimeOfDay.Add(TimeSpan.FromMinutes(5));
+                    return default(TResult);
+                }
+
+                if (tld is CustomParams_GetConnectionString CGCS)
+                {
+                    CGCS.ConnectionString = GetConectionString();
+                    return (TResult)Convert.ChangeType(CGCS.ConnectionString, typeof(TResult));
+                }
+                return default(TResult);
             }
             catch (Exception ex)
             {
                 ex.LogWrite($"scraperModule_Handler {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
-                return null;
+                return default(TResult);
             }
         }
 
@@ -3931,7 +3938,7 @@ namespace VideoGui
                     scraperModulex = null;
                     if (IsTimeOut)
                     {
-                        var scraperModules = new ScraperModule(ModuleCallback, FinishScraper, OldgUrl, OldTarget, 0);
+                        var scraperModules = new ScraperModule(InvokerHandler<object>, FinishScraper, OldgUrl, OldTarget, 0);
                         Hide();
                         scraperModules.ShowActivated = true;
                         scraperModules.Show();
@@ -4101,7 +4108,7 @@ namespace VideoGui
                         int shortsleft = GetFileCount(rootfolder);
                         if (!Exc && shortsleft > 0 && Uploaded < MaxUploads)
                         {
-                            var xxscraperModule = new ScraperModule(ModuleCallback, uploadonfinish, gUrl, MaxUploads, 15);
+                            var xxscraperModule = new ScraperModule(InvokerHandler<object>, uploadonfinish, gUrl, MaxUploads, 15);
                             xxscraperModule.ShowActivated = true;
                             xxscraperModule.ScheduledOk.AddRange(filesdone);
                             Hide();
@@ -4322,7 +4329,7 @@ namespace VideoGui
                 return -1;
             }
         }
-        public void DbInit()
+        public void Invoker()
         {
             try
             {
@@ -5206,7 +5213,7 @@ namespace VideoGui
                 Loadsettings();
                 string clientSecret = "", p = "";
                 connectionString = GetConectionString();
-                DbInit();
+                Invoker();
                 connectionString.ExecuteReader("SELECT * FROM SETTINGS WHERE SETTINGNAME = 'CLIENT_SECRET';", (FbDataReader r) =>
                 {
                     clientSecret = (r["SETTINGBLOB"] is byte[] res) ? Encoding.ASCII.GetString(CryptData(res)) : "";
@@ -10237,7 +10244,7 @@ namespace VideoGui
             {
 
 
-                var _schedulingSelectEditor = new SchedulingSelectEditor(SchedulingEditorOnFinish, ModuleCallback);
+                var _schedulingSelectEditor = new SchedulingSelectEditor(SchedulingEditorOnFinish, InvokerHandler<object>);
                 _schedulingSelectEditor.ShowActivated = true;
                 Hide();
                 _schedulingSelectEditor.Show();
@@ -10282,7 +10289,7 @@ namespace VideoGui
         {
             try
             {
-                var _actionScheduleSelector = new ActionScheduleSelector(ActionScheduleSelectorFinish, ModuleCallback);
+                var _actionScheduleSelector = new ActionScheduleSelector(ActionScheduleSelectorFinish, InvokerHandler<object>);
                 _actionScheduleSelector.ShowActivated = true;
                 Hide();
                 _actionScheduleSelector.Show();
@@ -10298,12 +10305,12 @@ namespace VideoGui
 
         }
 
-       
+
         private void btnSchedule_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                var _manualScheduler = new ManualScheduler(ModuleCallback, ManualSchedulerFinish);
+                var _manualScheduler = new ManualScheduler(InvokerHandler<object>, ManualSchedulerFinish);
                 _manualScheduler.ShowActivated = true;
                 _manualScheduler.ShowMultiForm += (sender) => { Show(); };
                 _manualScheduler.IsMultiForm = true;
@@ -10491,7 +10498,7 @@ namespace VideoGui
                 }
 
 
-                var _multiShortsUploader = new MultiShortsUploader(ModuleCallback,
+                var _multiShortsUploader = new MultiShortsUploader(InvokerHandler<object>,
                     MultiShortsUploader_onFinish);
                 _multiShortsUploader.ShowActivated = true;
                 _multiShortsUploader.ShowDialog();
@@ -10502,7 +10509,7 @@ namespace VideoGui
             }
         }
 
-        
+
         private void ManualSchedulerFinish(object sender, int id)
         {
             try
@@ -10540,7 +10547,7 @@ namespace VideoGui
                             WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
                             string gUrl = webAddressBuilder.AddFilterByDraftShorts().GetHTML();
 
-                            var _scheduleScraperModule = new ScraperModule(ModuleCallback, mnl_scraper_OnFinish, gUrl,
+                            var _scheduleScraperModule = new ScraperModule(InvokerHandler<object>, mnl_scraper_OnFinish, gUrl,
                                 startdate, enddate, max, _listItems, 0, IsTest);
                             _scheduleScraperModule.ShowActivated = true;
                             _scheduleScraperModule.IsMultiForm = true;
@@ -10603,7 +10610,7 @@ namespace VideoGui
                             enddate = startdate.Value;
                             startdate.Value.AtTime(ts);
                             enddate.Value.AtTime(te);
-                            var _scheduleScraperModule = new ScraperModule(ModuleCallback, mnl_scraper_OnFinish, gUrl,
+                            var _scheduleScraperModule = new ScraperModule(InvokerHandler<object>, mnl_scraper_OnFinish, gUrl,
                                 startdate, enddate, Max, _listItems, 0, false);
                             _scheduleScraperModule.ShowActivated = true;
                             _scheduleScraperModule.IsMultiForm = ss.IsMultiForm;
@@ -10658,7 +10665,7 @@ namespace VideoGui
             try
             {
                 Hide();
-                var _GoProMediaImporter = new MediaImporter(ModuleCallback, MediaImportOnFinish);
+                var _GoProMediaImporter = new MediaImporter(InvokerHandler<object>, MediaImportOnFinish);
                 _GoProMediaImporter.ShowActivated = true;
                 _GoProMediaImporter.Show();
             }
@@ -10689,7 +10696,7 @@ namespace VideoGui
             try
             {
 
-                var _directoryTitleDescEditor = new DirectoryTitleDescEditor(ModuleCallback,
+                var _directoryTitleDescEditor = new DirectoryTitleDescEditor(InvokerHandler<object>,
                     directoryEditorOnFinish);
                 _directoryTitleDescEditor.ShowActivated = true;
                 Hide();
@@ -10733,7 +10740,7 @@ namespace VideoGui
         {
             try
             {
-                var _complexfrm = new ComplexSchedular(ModuleCallback, AddRecord, DeleteRecord, CloseDialogComplexEditor,
+                var _complexfrm = new ComplexSchedular(InvokerHandler<object>, AddRecord, DeleteRecord, CloseDialogComplexEditor,
                      LocalSetFilterAge, LocalSetFilterString, GetFilterAges, GetFilterString);
                 Hide();
                 _complexfrm.ShowDialog();
@@ -10907,7 +10914,7 @@ namespace VideoGui
                 {
 
                     Hide();
-                    var _selectShortUpload = new SelectShortUpload(ModuleCallback,
+                    var _selectShortUpload = new SelectShortUpload(InvokerHandler<object>,
                         SelectShortUpload_onFinish);
                     _selectShortUpload.ShowActivated = true;
                     _selectShortUpload.ShowDialog();
@@ -10916,7 +10923,7 @@ namespace VideoGui
                 {
 
                     Hide();
-                    var _multiShortsUploader = new MultiShortsUploader(ModuleCallback,
+                    var _multiShortsUploader = new MultiShortsUploader(InvokerHandler<object>,
                         MultiShortsUploader_onFinish);
                     _multiShortsUploader.ShowActivated = true;
                     _multiShortsUploader.ShowDialog();
@@ -10974,7 +10981,7 @@ namespace VideoGui
             try
             {
 
-                var _DirectoryTitleDescEditorFrm = new DirectoryTitleDescEditor(ModuleCallback, directoryEditorOnFinish);
+                var _DirectoryTitleDescEditorFrm = new DirectoryTitleDescEditor(InvokerHandler<object>, directoryEditorOnFinish);
                 _DirectoryTitleDescEditorFrm.ShowActivated = true;
                 Hide();
                 _DirectoryTitleDescEditorFrm.Show();
@@ -10997,7 +11004,7 @@ namespace VideoGui
                 string AppliedSchedules = key.GetValueStr("AppliedSchedules", "");
                 if (AppliedSchedules != "" || AppliedSchedulesList.Count == 0)
                 {
-                    var _SelectReleaseScheduleFrm = new SelectReleaseSchedule(ScheduleOnFinish, ModuleCallback, false);
+                    var _SelectReleaseScheduleFrm = new SelectReleaseSchedule(ScheduleOnFinish, InvokerHandler<object>, false);
                     _SelectReleaseScheduleFrm.ShowActivated = true;
                     Hide();
                     _SelectReleaseScheduleFrm.Show();

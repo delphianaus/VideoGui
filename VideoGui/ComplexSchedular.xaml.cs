@@ -46,7 +46,7 @@ namespace VideoGui
         public SetFilterAge DoSetFilterAge;
         public SetFilterString DoSetFilterString;
         public GetFilerString DoGetFilerString;
-        databasehook<object> ModuleCallBack = null;
+        databasehook<object> Invoker = null;
         public GetFilterAges DoGetFilterAges;
         public Visibility deletemenuvisible = Visibility.Visible;
         public Visibility AgeFilter = Visibility.Collapsed;
@@ -56,7 +56,7 @@ namespace VideoGui
         public CustomStringEntry DestinationFileEntry = null;
         public bool IsClosing = false, IsClosed = false;
         bool Ready = false;
-        DispatcherTimer LocationChanger = new(), LocationChangedTimer= new();
+        DispatcherTimer LocationChanger = new(), LocationChangedTimer = new();
 
         public static readonly DependencyProperty SrcFileNameWidthProperty =
             DependencyProperty.Register(nameof(SrcFileNameWidth), typeof(double),
@@ -79,7 +79,7 @@ namespace VideoGui
             get => (double)GetValue(DestFileNameWidthProperty);
             set => SetValue(DestFileNameWidthProperty, value);
         }
-        public ComplexSchedular(databasehook<object> _ModuleCallBack, AddRecordDelegate _AdddRecord,
+        public ComplexSchedular(databasehook<object> _Invoker, AddRecordDelegate _AdddRecord,
             RemoveRecordDelegate _RemoveRecord,
             OnFinishIdObj _ComplexFinished, SetFilterAge _SetFilterAge,
             SetFilterString _SetFilterString, GetFilterAges _GetFilterAges,
@@ -89,7 +89,7 @@ namespace VideoGui
             {
                 InitializeComponent();
                 LastWidth = ActualWidth;
-                ModuleCallBack = _ModuleCallBack;
+                Invoker = _Invoker;
                 //lstSchedules.ItemsSource = data;
                 DoAddRecord = _AdddRecord;
                 DoGetFilterAges = _GetFilterAges;
@@ -292,14 +292,14 @@ namespace VideoGui
                     btnInject.Visibility = Visibility.Hidden;
                     deletemenuvisible = Visibility.Hidden;
                     AgeFilter = Visibility.Collapsed;
-                    ModuleCallBack?.Invoke(this, new CustomParams_DataSelect(1));
+                    Invoker?.Invoke(this, new CustomParams_DataSelect(1));
                 }
                 else
                 {
                     btnInject.Visibility = Visibility.Visible;
                     deletemenuvisible = Visibility.Visible;
                     AgeFilter = Visibility.Visible;
-                    ModuleCallBack?.Invoke(this, new CustomParams_DataSelect(0));
+                    Invoker?.Invoke(this, new CustomParams_DataSelect(0));
                 }
             }
             catch (Exception ex)
@@ -308,9 +308,9 @@ namespace VideoGui
             }
         }
 
-        
 
-        public void ResizeWindows(double _w, double _h, bool WidthChanged = false, 
+
+        public void ResizeWindows(double _w, double _h, bool WidthChanged = false,
             bool HeightChanged = false)
         {
             try
@@ -332,10 +332,10 @@ namespace VideoGui
                     Canvas.SetLeft(tglflip, _w - 112);
                     Canvas.SetLeft(btnInject, _w - 182);
                     Canvas.SetLeft(btnNew, _w - 262);
-                }             
+                }
                 if (IsLoaded && HeightChanged && Ready)
                 {
-                    msuComplexSchedules.Height = _h - (474-222)-15;
+                    msuComplexSchedules.Height = _h - (474 - 222) - 15;
                 }
 
                 if (HeightChanged || WidthChanged && Ready)
@@ -351,7 +351,7 @@ namespace VideoGui
                 ex.LogWrite($"ReiszeWindows {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
         }
-        
+
 
         private void btnSelectDestDir_Click(object sender, RoutedEventArgs e)
         {
@@ -452,7 +452,7 @@ namespace VideoGui
             {
                 if (IsLoaded && Ready)
                 {
-                    ResizeWindows(e.NewSize.Width, e.NewSize.Height, 
+                    ResizeWindows(e.NewSize.Width, e.NewSize.Height,
                         e.WidthChanged, e.HeightChanged);
                 }
             }
@@ -730,7 +730,7 @@ namespace VideoGui
                 string rootfolder = key.GetValueStr("DestinationDir", "c:\\");
                 key?.Close();
                 txtdestdir.Text = rootfolder;
-                ModuleCallBack?.Invoke(this, new CustomParams_Initialize(0));
+                Invoker?.Invoke(this, new CustomParams_Initialize(0));
                 LocationChanger.Interval = TimeSpan.FromMilliseconds(10);
                 LocationChanger.Tick += LocationChanger_Tick;
                 LocationChanger.Start();

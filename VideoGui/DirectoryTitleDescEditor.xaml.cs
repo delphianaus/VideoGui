@@ -28,9 +28,9 @@ namespace VideoGui
     /// </summary>
     public partial class DirectoryTitleDescEditor : Window
     {
-        databasehook<object> dbInit = null;
+        databasehook<object> Invoker = null;
         public bool IsClosing = false, IsClosed = false;
-        databasehook<object> ModuleCallBack = null;
+        databasehook<object> Invoker = null;
         public static readonly DependencyProperty SourceDirectoryProperty =
             DependencyProperty.Register(nameof(SourceDirectory), typeof(double),
                 typeof(DirectoryTitleDescEditor), new FrameworkPropertyMetadata(100.0));
@@ -50,7 +50,7 @@ namespace VideoGui
             {
                 if (IsLoaded)
                 {
-                    ModuleCallBack?.Invoke(this, new CustomParams_Initialize());
+                    Invoker?.Invoke(this, new CustomParams_Initialize());
                     LocationChanger.Interval = TimeSpan.FromMilliseconds(10);
                     LocationChanger.Tick += LocationChanger_Tick;
                     LocationChanger.Start();
@@ -96,8 +96,8 @@ namespace VideoGui
                 if ((sender is ToggleButton cbf) && (cbf.DataContext is ShortsDirectory ReleaseInfo))
                 {
                     cbf.IsChecked = (ReleaseInfo.IsTitleAvailable) ? ReleaseInfo.IsTitleAvailable : cbf.IsChecked;
-                    ModuleCallBack?.Invoke(this, new CustomParams_Select(ReleaseInfo.Id));
-                    ModuleCallBack?.Invoke(this, new CustomParams_TitleSelect(ReleaseInfo));
+                    Invoker?.Invoke(this, new CustomParams_Select(ReleaseInfo.Id));
+                    Invoker?.Invoke(this, new CustomParams_TitleSelect(ReleaseInfo));
                 }
             }
             catch (Exception ex)
@@ -111,7 +111,7 @@ namespace VideoGui
             try
             {
                 var _DoTitleSelectFrm = new TitleSelectFrm(DoOnFinishTitleSelect,
-                    ModuleCallBack, true, TitleId, LinkedId);
+                    Invoker, true, TitleId, LinkedId);
                 Hide();
                 _DoTitleSelectFrm.ShowActivated = true;
                 _DoTitleSelectFrm.Show();
@@ -126,7 +126,7 @@ namespace VideoGui
         {
             try
             {
-                var _DoDescSelectFrm = new DescSelectFrm(OnSelectFormClose, ModuleCallBack,
+                var _DoDescSelectFrm = new DescSelectFrm(OnSelectFormClose, Invoker,
                     true, DescId, LinkedId);
                 Hide();
                 _DoDescSelectFrm.ShowActivated = true;
@@ -144,7 +144,7 @@ namespace VideoGui
             {
                 if (sender is DescSelectFrm frm)
                 {
-                    ModuleCallBack?.Invoke(this,
+                    Invoker?.Invoke(this,
                         new CustomParams_Update(frm.TitleTagId, UpdateType.Description));
                 }
                 Show();
@@ -161,7 +161,7 @@ namespace VideoGui
             {
                 if (sender is TitleSelectFrm frm)
                 {
-                    ModuleCallBack?.Invoke(this, new CustomParams_Update(frm.TitleId, UpdateType.Title));
+                    Invoker?.Invoke(this, new CustomParams_Update(frm.TitleId, UpdateType.Title));
                 }
                 Show();
             }
@@ -178,8 +178,8 @@ namespace VideoGui
                 if ((sender is ToggleButton cbf) && (cbf.DataContext is ShortsDirectory ReleaseInfo))
                 {
                     cbf.IsChecked = (ReleaseInfo.IsDescAvailable) ? ReleaseInfo.IsDescAvailable : cbf.IsChecked;
-                    ModuleCallBack?.Invoke(this, new CustomParams_Select(ReleaseInfo.Id));
-                    ModuleCallBack?.Invoke(this, new CustomParams_DescSelect(ReleaseInfo));
+                    Invoker?.Invoke(this, new CustomParams_Select(ReleaseInfo.Id));
+                    Invoker?.Invoke(this, new CustomParams_DescSelect(ReleaseInfo));
                 }
             }
             catch (Exception ex)
@@ -210,12 +210,12 @@ namespace VideoGui
             }
         }
 
-        public DirectoryTitleDescEditor(databasehook<object> _dbInit, OnFinishIdObj _DoOnFinished)
+        public DirectoryTitleDescEditor(databasehook<object> _Invoker, OnFinishIdObj _DoOnFinished)
         {
             try
             {
                 InitializeComponent();
-                ModuleCallBack = _dbInit;
+                Invoker = _Invoker;
                 Closing += (s, e) => { IsClosing = true; };
                 Closed += (s, e) =>
                 {

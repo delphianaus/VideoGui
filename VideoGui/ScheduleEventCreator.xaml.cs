@@ -31,14 +31,14 @@ namespace VideoGui
     {
         OnFinish DoOnFinish;
         public bool IsClosed = false, IsClosing = false;
-        databasehook<Object> ModuleCallBack = null;
-        public ScheduleEventCreator(OnFinish _DoOnFinish, databasehook<Object> _DoDbHook)
+        databasehook<Object> Invoker = null;
+        public ScheduleEventCreator(OnFinish _DoOnFinish, databasehook<Object> _Invoker)
         {
             try
             {
                 InitializeComponent();
                 DoOnFinish = _DoOnFinish;
-                ModuleCallBack = _DoDbHook;
+                Invoker = _Invoker;
                 EnableDisableDataEntry(false);
 
                 Closing += (s, e) => { IsClosing = true; };
@@ -140,7 +140,7 @@ namespace VideoGui
                 key?.Close();
                 //txtdestdir.Text = rootfolder;
                 //DoSetLists?.Invoke(0);// Set to true for Current
-                ModuleCallBack?.Invoke(this, new CustomParams_Initialize());
+                Invoker?.Invoke(this, new CustomParams_Initialize());
                 // callback Module Init - Get Lists for both listbox sources
                 // Get Current Evenet Start and EndDate and populate and enable 
                 // other query data 

@@ -15,17 +15,17 @@ namespace VideoGui
     public partial class DescSelectFrm : Window
     {
         bool IsUploadsBuilder = false;
-        databasehook<object> DoDbHook;
+        databasehook<object> Invoker;
         public string Desc = "";
         public bool IsShortVideo = false, IsDescChanged = false, IsClosed = false, 
             IsClosing = false;
         public int Id = -1, LinkedId = -1, TitleTagId = -1;
-        public DescSelectFrm(OnFinishIdObj _DoOnFinish, databasehook<Object> _DoDbHook,
+        public DescSelectFrm(OnFinishIdObj _DoOnFinish, databasehook<Object> _Invoker,
             bool _IsUploadsBuilder = false, int _id = -1,int _Linkedid = -1)
         {
             try
             {
-                DoDbHook = _DoDbHook;
+                Invoker = _Invoker;
                 Id = _id;
                 LinkedId = _Linkedid;
                 IsUploadsBuilder = _IsUploadsBuilder;
@@ -44,7 +44,7 @@ namespace VideoGui
         {
             try
             {
-                DoDbHook?.Invoke(this, new CustomParams_AddDescription(Id, txtDesc.Text, txtDescName.Text));
+                Invoker?.Invoke(this, new CustomParams_AddDescription(Id, txtDesc.Text, txtDescName.Text));
                 //DoOnUpdate?.Invoke(dataUpdatType.Add,-1,txtDesc.Text+"|"+txtDescName.Text,this);
             }
             catch (Exception ex)
@@ -88,7 +88,7 @@ namespace VideoGui
         {
             try
             {
-                DoDbHook?.Invoke(this, IsUploadsBuilder ? new CustomParams_Initialize(IsUploadsBuilder, Id) : null);
+                Invoker?.Invoke(this, IsUploadsBuilder ? new CustomParams_Initialize(IsUploadsBuilder, Id) : null);
             }
             catch (Exception ex)
             {
@@ -107,7 +107,7 @@ namespace VideoGui
                 
                 if (e.OriginalSource is MenuItem mnu && mnu.DataContext is Descriptions DS)
                 {
-                    DoDbHook?.Invoke(this, new CustomParams_Remove(DS.Id));
+                    Invoker?.Invoke(this, new CustomParams_Remove(DS.Id));
                 }
             }
             catch (Exception ex)

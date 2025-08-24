@@ -25,19 +25,19 @@ namespace VideoGui
     /// </summary>
     public partial class ScheduleActioner : Window
     {
-        databasehook<Object> ModuleCallBack = null;
+        databasehook<Object> Invoker = null;
         public bool IsClosed = false, IsClosing = false, IsCopy = false;
         Nullable<DateTime> actionDate = null, completeDate = null;
         Nullable<DateOnly> scheduleDate = null;
         Nullable<TimeSpan> scheduleTimeStart = null, scheduleTimeEnd = null;
         public int actionScheduleID = -1;
 
-        public ScheduleActioner(OnFinishIdObj DoOnFinish, databasehook<Object> _ModuleCallBack)
+        public ScheduleActioner(OnFinishIdObj DoOnFinish, databasehook<Object> _Invoker)
         {
             try
             {
                 InitializeComponent();
-                ModuleCallBack = _ModuleCallBack;
+                Invoker = _Invoker;
                 Closing += (s, e) => { IsClosing = true; };
                 Closed += (s, e) => { IsClosed = true; DoOnFinish?.Invoke(this,-1); };
             }
@@ -51,7 +51,7 @@ namespace VideoGui
         {
             try
             {
-                ModuleCallBack?.Invoke(this, new CustomParams_Initialize(actionScheduleID));
+                Invoker?.Invoke(this, new CustomParams_Initialize(actionScheduleID));
                 Width = Width + 7;
                 Height = Height + 20;
             }
@@ -65,7 +65,7 @@ namespace VideoGui
         {
             try
             {
-                var _selectReleaseSchedule = new SelectReleaseSchedule(selectReleaseSchedule_OnFinish, ModuleCallBack);
+                var _selectReleaseSchedule = new SelectReleaseSchedule(selectReleaseSchedule_OnFinish, Invoker);
                 Hide();
                 _selectReleaseSchedule.ShowActivated = true;
                 _selectReleaseSchedule.Show();
@@ -100,7 +100,7 @@ namespace VideoGui
         {
             try
             {
-                var _frmActionScheduleSelector = new ActionScheduleSelector(ActionScheduleSelector_OnFinish, ModuleCallBack);
+                var _frmActionScheduleSelector = new ActionScheduleSelector(ActionScheduleSelector_OnFinish, Invoker);
                 Hide();
                 _frmActionScheduleSelector.ShowActivated = true;
                 _frmActionScheduleSelector.Show();
@@ -234,7 +234,7 @@ namespace VideoGui
                 var p = txtMaxSchedules.Text.ToInt(0);
 
 
-                ModuleCallBack?.Invoke(this, new
+                Invoker?.Invoke(this, new
                     CustomParams_UpdateAction(actionScheduleID, actionDate, scheduleDate,
                     scheduleTimeStart, scheduleTimeEnd, completeDate,
                     txtSchName.Text, txtActionName.Text, txtMaxSchedules.Text.ToInt(0)));

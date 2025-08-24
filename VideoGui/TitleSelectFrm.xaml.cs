@@ -20,7 +20,7 @@ namespace VideoGui
         public delegate void ShowEditor();
         public ShowEditor _ShowEditor;
         OnFinish OnFinished;
-        databasehook<object> dbhookup;
+        databasehook<object> Invoker;
         public int TitleId = -1, LinkedId = -1;
         string Title = "";
         string TagTitle = "";
@@ -28,20 +28,20 @@ namespace VideoGui
         CustomStringEntry CPS = null;
 
         bool IsUploadsBuilder = false;
-        public TitleSelectFrm(OnFinishIdObj OnFinished, databasehook<Object> dbhook,
+        public TitleSelectFrm(OnFinishIdObj OnFinished, databasehook<Object> _Invoker,
             bool _IsUploadsBuilder = false, int _TitleId = -1, int _LinkedId = -1)
         {
             try
             {
-                dbhookup = dbhook;
+                Invoker = _Invoker;
                 Closing += (s, e) => { IsClosing = true; };
                 Closed += (s, e) => { IsClosed = true; IsTitleChanged = false; OnFinished?.Invoke(this, -1); };
                 IsUploadsBuilder = _IsUploadsBuilder;
                 InitializeComponent();
                 TitleId = _TitleId;
                 LinkedId = _LinkedId;
-                dbhookup?.Invoke(this, new CustomParams_SetFilterId(_LinkedId, _TitleId));
-                dbhookup?.Invoke(this, new CustomParams_Initialize(IsUploadsBuilder));  
+                Invoker?.Invoke(this, new CustomParams_SetFilterId(_LinkedId, _TitleId));
+                Invoker?.Invoke(this, new CustomParams_Initialize(IsUploadsBuilder));  
                 /*txtTitle.Text = _Title; Handle this in onload?.Invoke.
                 BaseTitle = _Title;
                 txtBaseTitle.Content = $"({_Title})";*/
@@ -101,8 +101,8 @@ namespace VideoGui
                     int TextLength = txtTitle.Text.Length + p.TitleLength;
                     lblTitleLength.Content = TextLength.ToString();
 
-                    dbhookup?.Invoke(this, p);
-                    dbhookup?.Invoke(this, new CustomParams_Refresh());
+                    Invoker?.Invoke(this, p);
+                    Invoker?.Invoke(this, new CustomParams_Refresh());
                 }
             }
             catch (Exception ex)
@@ -155,7 +155,7 @@ namespace VideoGui
         {
             try
             {
-                dbhookup?.Invoke(this, new CustomParams_Initialize(IsUploadsBuilder));
+                Invoker?.Invoke(this, new CustomParams_Initialize(IsUploadsBuilder));
             }
             catch (Exception ex)
             {
@@ -183,8 +183,8 @@ namespace VideoGui
                 foreach (var item in TagAvailable.SelectedItems.OfType<AvailableTags>().ToList())
                 {
                     var p = new CustomParams_InsertWithId(item.Id, TitleId);
-                    dbhookup?.Invoke(this, p);
-                    dbhookup?.Invoke(this, new CustomParams_Refresh());
+                    Invoker?.Invoke(this, p);
+                    Invoker?.Invoke(this, new CustomParams_Refresh());
                     int TextLength = txtTitle.Text.Length;
                     if (TextLength < 101)
                     {
@@ -196,7 +196,7 @@ namespace VideoGui
                     }
                     TagsGrp.Items.Refresh();
                     TagAvailable.Items.Refresh();
-                    dbhookup?.Invoke(this, new CustomParams_Refresh());
+                    Invoker?.Invoke(this, new CustomParams_Refresh());
                 }
             }
             catch (Exception ex)
@@ -211,7 +211,7 @@ namespace VideoGui
             {
                 if (txtTitle.Text.Trim() != "")
                 {
-                    dbhookup?.Invoke(this, new CustomParams_Get(TitleId, BaseTitle));
+                    Invoker?.Invoke(this, new CustomParams_Get(TitleId, BaseTitle));
                     //DoOnTagGroupInsert?.Invoke(txtTitle.Text, this);
                 }
             }
@@ -228,8 +228,8 @@ namespace VideoGui
                 if (e.Key == Key.Enter)
                 {
                     var p = new CustomParams_Remove(-1);
-                    dbhookup?.Invoke(this, p);
-                    dbhookup?.Invoke(this, new CustomParams_Refresh());
+                    Invoker?.Invoke(this, p);
+                    Invoker?.Invoke(this, new CustomParams_Refresh());
                     TagsGrp.Items.Refresh();
                     int TextLength = txtTitle.Text.Length + p.TitleLength;
                     lblTitleLength.Content = TextLength.ToString();
@@ -248,7 +248,7 @@ namespace VideoGui
                 try
                 {
                     var p = new CustomParams_Add("AVAILTAGADD", txtNewTag.Text);
-                    dbhookup?.Invoke(this, p);
+                    Invoker?.Invoke(this, p);
                     Thread.Sleep(100);
                     txtNewTag.Text = "";
                 }
@@ -299,7 +299,7 @@ namespace VideoGui
                         IsTitleChanged = true;
                         txtBaseTitle.Content = frm.txtData.Text;
                         BaseTitle = frm.txtData.Text;
-                        dbhookup?.Invoke(this, new CustomParams_EditName(TitleId, frm.txtData.Text));
+                        Invoker?.Invoke(this, new CustomParams_EditName(TitleId, frm.txtData.Text));
                     }
 
                     frm = null;
@@ -318,7 +318,7 @@ namespace VideoGui
             {
                 if (lstTitles.SelectedItem is GroupTitleTags GTT)
                 {
-                    dbhookup?.Invoke(this, new CustomParams_InsertTags(
+                    Invoker?.Invoke(this, new CustomParams_InsertTags(
                         GTT.Ids.Split(',').ToArray<string>().Where(s =>
                         s.ToInt(-1) != -1).Select(s => s.ToInt()).ToList<int>(), TitleId));
                 }
@@ -339,8 +339,8 @@ namespace VideoGui
                 foreach (var item in Tags)
                 {
                     var p = new CustomParams_InsertWithId(item.Id, TitleId);
-                    dbhookup?.Invoke(this, p);
-                    dbhookup?.Invoke(this, new CustomParams_Refresh());
+                    Invoker?.Invoke(this, p);
+                    Invoker?.Invoke(this, new CustomParams_Refresh());
                     int TextLength = txtTitle.Text.Length;
                     if (TextLength < 101)
                     {
@@ -365,7 +365,7 @@ namespace VideoGui
                 if (txtTitle.Text.Trim() == "") return;
                 if (lstTitles.SelectedItem is GroupTitleTags GTT)
                 {
-                    dbhookup?.Invoke(this, new CustomParams_InsertTags(
+                    Invoker?.Invoke(this, new CustomParams_InsertTags(
                         GTT.Ids.Split(',').ToArray<string>().Where(s =>
                         s.ToInt(-1) != -1).Select(s => s.ToInt()).ToList<int>(), TitleId));
                 }
@@ -398,8 +398,8 @@ namespace VideoGui
                     var p = new CustomParams_Remove(item.Id);
                     int TextLength = txtTitle.Text.Length + p.TitleLength;
                     lblTitleLength.Content = TextLength.ToString();
-                    dbhookup?.Invoke(this, p);
-                    dbhookup?.Invoke(this, new CustomParams_Refresh());
+                    Invoker?.Invoke(this, p);
+                    Invoker?.Invoke(this, new CustomParams_Refresh());
                     TagsGrp.Items.Refresh();
                 }
             }

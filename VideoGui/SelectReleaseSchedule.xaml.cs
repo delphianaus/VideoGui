@@ -24,22 +24,22 @@ namespace VideoGui
     public partial class SelectReleaseSchedule : Window
     {
         public bool IsApplied = false, IsClosing = false, IsClosed = false;
-        databasehook<object> dbInitialzer = null;
+        databasehook<object> Invoker = null;
         public string SelectedItem = "";
         public int SelectedId = -1;
 
 
-        public SelectReleaseSchedule(OnFinishIdObj _OnFinish, databasehook<object> _dbInitialzer, bool Is_Applied = false)
+        public SelectReleaseSchedule(OnFinishIdObj _OnFinish, databasehook<object> _Invoker, bool Is_Applied = false)
         {
             try
             {
                 InitializeComponent();
                 IsApplied = Is_Applied;
-                dbInitialzer = _dbInitialzer;
+                Invoker = _Invoker;
                 Closing += (s, e) => { IsClosing = true; };
                 Closed += (s, e) =>
                 {
-                    dbInitialzer?.Invoke(this, new CustomParams_Finish(txtScheduleName.Text));
+                    Invoker?.Invoke(this, new CustomParams_Finish(txtScheduleName.Text));
                     IsClosed = true;
                     _OnFinish?.Invoke(this, -1);
                 };
@@ -74,7 +74,7 @@ namespace VideoGui
                     if (SMN != null && SMN.Id != -1)
                     {
 
-                        var _schedulingSelectEditor = new SchedulingSelectEditor(SchedulingEditorOnFinish, dbInitialzer);
+                        var _schedulingSelectEditor = new SchedulingSelectEditor(SchedulingEditorOnFinish, Invoker);
                         _schedulingSelectEditor.ShowActivated = true;
                         _schedulingSelectEditor.TitleId = SMN.Id;
                         Hide();
@@ -111,7 +111,7 @@ namespace VideoGui
             {
                 if (lstMainSchedules.SelectedItem is ScheduleMapNames SMN)
                 {
-                    dbInitialzer?.Invoke(this, new CustomParams_Delete(SMN.Id, ""));
+                    Invoker?.Invoke(this, new CustomParams_Delete(SMN.Id, ""));
                 }
             }
             catch (Exception ex)
@@ -126,7 +126,7 @@ namespace VideoGui
         {
             try
             {
-                dbInitialzer?.Invoke(this, new CustomParams_Initialize());
+                Invoker?.Invoke(this, new CustomParams_Initialize());
             }
             catch (Exception ex)
             {
@@ -143,7 +143,7 @@ namespace VideoGui
         {
             try
             {
-                dbInitialzer?.Invoke(this, new CustomParams_Finish(txtScheduleName.Text));
+                Invoker?.Invoke(this, new CustomParams_Finish(txtScheduleName.Text));
             }
             catch (Exception ex)
             {
@@ -160,7 +160,7 @@ namespace VideoGui
                 {
                     Id = SMN.Id;
                 }
-                dbInitialzer?.Invoke(this, new CustomParams_Save(txtScheduleName.Text, Id));
+                Invoker?.Invoke(this, new CustomParams_Save(txtScheduleName.Text, Id));
             }
             catch (Exception ex)
             {
@@ -177,7 +177,7 @@ namespace VideoGui
                     txtScheduleName.Text = SMN.Name;
                     SelectedItem = SMN.Name;
                     SelectedId = SMN.Id;
-                    dbInitialzer?.Invoke(this, new CustomParams_Select(SMN.Id));
+                    Invoker?.Invoke(this, new CustomParams_Select(SMN.Id));
                     Close();
                 }
             }

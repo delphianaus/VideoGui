@@ -20,7 +20,7 @@ namespace VideoGui
         private string _username;
         private int _bufferSize = 1024; // default buffer size to 1024 bytes (1KB)
         private string _password;
-        databasehook<object> ModuleCallBack = null;
+        databasehook<object> Invoker = null;
         private bool _loggedIn = false;
         private bool AuthenticatedUser = false;
         private bool AuthenticatedPassword = false;
@@ -31,14 +31,14 @@ namespace VideoGui
         private TcpListener _dataListener;
         private int _umask;
 
-        public FtpSession(TcpClient client, string rootDirectory, databasehook<object> _Modulecallback)
+        public FtpSession(TcpClient client, string rootDirectory, databasehook<object> _Invoker)
         {
             try
             {
                 _client = client;
                 _rootDirectory = rootDirectory;
                 _currentDirectory = rootDirectory;
-                ModuleCallBack = _Modulecallback;
+                Invoker = _Invoker;
             }
             catch (Exception ex)
             {
@@ -904,7 +904,7 @@ namespace VideoGui
             {
                 _username = username;
                 var auth = new CustomParams_Authorize(username, true);
-                ModuleCallBack?.Invoke(this, auth);
+                Invoker?.Invoke(this, auth);
                 _username = (!auth.Authorized) ? username : "Unauthorized";
             }
             catch (Exception ex)
@@ -920,7 +920,7 @@ namespace VideoGui
                 if (_password != "Unauthorized")
                 {
                     var auth = new CustomParams_Authorize(password, false);
-                    ModuleCallBack?.Invoke(this, auth);
+                    Invoker?.Invoke(this, auth);
                     _password = (!auth.Authorized) ? password : "Unauthorized";
                 }
                 else
@@ -931,7 +931,7 @@ namespace VideoGui
                 if (_loggedIn)
                 {
                     var bd = new CustomParams_GetBaseDirectory(_username);
-                    ModuleCallBack?.Invoke(this, bd);
+                    Invoker?.Invoke(this, bd);
                     if (bd.found)
                     {
                         _rootDirectory = bd.basedir;

@@ -22,17 +22,17 @@ namespace VideoGui
     /// </summary>
     public partial class SchedulingSelectEditor : Window
     {
-        databasehook<object> dbInitialzer = null;
+        databasehook<object> Invoker = null;
         public bool IsClosing = false, IsClosed = false;
         public int TitleId = -1;
-        public SchedulingSelectEditor(OnFinishIdObj _OnFinish, databasehook<object> _dbInitialzer)
+        public SchedulingSelectEditor(OnFinishIdObj _OnFinish, databasehook<object> _Invoker)
         {
             try
             {
                 InitializeComponent();
                 Closing += (s, e) => { IsClosing = true; };
                 Closed += (s, e) => { IsClosed = true; _OnFinish?.Invoke(this,-1); };
-                dbInitialzer = _dbInitialzer;
+                Invoker = _Invoker;
             }
             catch (Exception ex)
             {
@@ -69,7 +69,7 @@ namespace VideoGui
         {
             try
             {
-                dbInitialzer?.Invoke(this, new CustomParams_Initialize(TitleId));
+                Invoker?.Invoke(this, new CustomParams_Initialize(TitleId));
             }
             catch (Exception ex)
             {
@@ -130,7 +130,7 @@ namespace VideoGui
             {
                 if (lstTitles.SelectedItem is ScheduleMapItem smi && smi.Id != -1)
                 {
-                    dbInitialzer?.Invoke(this, new CustomParams_RemoveTimeSpans(smi.Id));
+                    Invoker?.Invoke(this, new CustomParams_RemoveTimeSpans(smi.Id));
                 }
             }
             catch (Exception ex)
@@ -144,7 +144,7 @@ namespace VideoGui
             try
             {
                 Show();
-                dbInitialzer(this, new CustomParams_Refresh());
+                Invoker(this, new CustomParams_Refresh());
             }
             catch (Exception ex)
             {
@@ -156,7 +156,7 @@ namespace VideoGui
             try
             {
                 Hide();
-                var _SRS = new SelectReleaseSchedule(DoShow, dbInitialzer);
+                var _SRS = new SelectReleaseSchedule(DoShow, Invoker);
                 _SRS.ShowActivated = true;  
                 _SRS.Show();
             }
@@ -173,7 +173,7 @@ namespace VideoGui
                 if (TitleId != -1 && ReleaseDate.Value.HasValue &&
                     ReleaseEndDate.Value.HasValue && txtGap.Text.ToInt(-1) != -1)
                 {
-                    dbInitialzer?.Invoke(this,
+                    Invoker?.Invoke(this,
                         new CustomParams_AddTimeSpanEntries(ReleaseDate.Value.Value.TimeOfDay,
                         ReleaseEndDate.Value.Value.TimeOfDay, txtGap.Text.ToInt()));
                 }
@@ -193,7 +193,7 @@ namespace VideoGui
                     if (smi.Id != -1 && TitleId != -1 && ReleaseDate.Value.HasValue &&
                      ReleaseEndDate.Value.HasValue && txtGap.Text.ToInt(-1) != -1)
                     {
-                        dbInitialzer?.Invoke(this,
+                        Invoker?.Invoke(this,
                          new CustomParams_EditTimeSpans(smi.Id, ReleaseDate.Value.Value.TimeOfDay,
                          ReleaseEndDate.Value.Value.TimeOfDay,
                          txtGap.Text.ToInt()));
@@ -247,7 +247,7 @@ namespace VideoGui
         {
             try
             {
-                dbInitialzer?.Invoke(this,
+                Invoker?.Invoke(this,
                          new CustomParams_RemoveTimeSpans(TitleId, true));
             }
             catch (Exception ex)

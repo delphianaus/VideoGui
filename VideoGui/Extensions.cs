@@ -808,7 +808,23 @@ namespace VideoGui
                 ex.LogWrite($"ExecuteReader {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
             }
         }
-
+        public static TResult InvokeWithReturn<TResult>(this databasehook<object> Handler,
+            object ThisForm, object tld)
+        {
+            try
+            {
+                var result = Handler.Invoke(ThisForm, tld);
+                if (result is TResult resultT)
+                    return resultT;
+                else
+                    return default(TResult);
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"InvokeWithReturn {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+                return default(TResult);
+            }
+        }
         public static object ExecuteScalar(this string connectionStr, string sql, List<(string, object)>? parameters = null)
         {
             try

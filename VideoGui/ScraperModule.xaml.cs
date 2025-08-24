@@ -1,4 +1,4 @@
-﻿using CliWrap;
+using CliWrap;
 using CliWrap.EventStream;
 using FirebirdSql.Data.FirebirdClient;
 using FirebirdSql.Data.Isql;
@@ -132,7 +132,7 @@ namespace VideoGui
         string TitleStr = "", DescStr = "", TargetUrl = "";
         StatusTypes VStatusType = StatusTypes.PRIVATE;
         WebAddressBuilder webAddressBuilder = null;
-        databasehook<object> dbInitializer = null;
+        databasehook<object> Invoker = null;
         List<Rematched> RematchedList = new(); // <shortname>
         OnFinishIdObj DoOnFinish = null;
         public bool ScheduledFinished = true;
@@ -155,21 +155,60 @@ namespace VideoGui
         public EventTypes ScraperType = EventTypes.VideoUpload;
         private const int WM_MOUSEWHEEL = 0x020A;
         private const int WHEEL_DELTA = 120; // Standard wheel delta value
+        private const int INPUT_MOUSE = 0;
+        private const int MOUSEEVENTF_WHEEL = 0x0800;
+
         [DllImport("user32.dll", SetLastError = true)]
         private static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
+
         [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         private static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, IntPtr wParam, string lParam);
+
         [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         private static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
+
         [DllImport("user32.dll")]
         private static extern bool EnumChildWindows(IntPtr hWndParent, EnumWindowProc lpEnumFunc, IntPtr lParam);
+
         [DllImport("user32.dll")]
         private static extern int GetDlgCtrlID(IntPtr hwnd);
+
         [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
-        public static extern int GetWindowText(IntPtr hWnd, System.Text.StringBuilder lpString, int nMaxCount);
-        private const int BM_CLICK = 0x00F5;
+        private static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
+
         [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        private static extern int GetClassName(IntPtr hWnd, System.Text.StringBuilder lpClassName, int nMaxCount);
+        private static extern int GetClassName(IntPtr hWnd, StringBuilder lpClassName, int nMaxCount);
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct MOUSEINPUT
+        {
+            public int dx;
+            public int dy;
+            public int mouseData;
+            public int dwFlags;
+            public int time;
+            public IntPtr dwExtraInfo;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct INPUT
+        {
+            public int type;
+            public MOUSEINPUT mi;
+        }
+
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern uint SendInput(uint nInputs, INPUT[] pInputs, int cbSize);
+
+        [DllImport("user32.dll")]
+        private static extern bool GetCursorPos(out POINT lpPoint);
+
+        [DllImport("user32.dll")]
+        private static extern bool SetCursorPos(int X, int Y);
+
+        private const int BM_CLICK = 0x00F5;
+        
+       
         private delegate bool EnumWindowProc(IntPtr hWnd, IntPtr parameter);
         public void DoLocationTimer()
         {
@@ -191,7 +230,7 @@ namespace VideoGui
                 ex.LogWrite($"LocationTimer {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-        public ScraperModule(databasehook<object> _dbInit, OnFinishIdObj _OnFinish,
+        public ScraperModule(databasehook<object> _Invoker, OnFinishIdObj _OnFinish,
             List<string> directories, bool IsShort)
         {
             try
@@ -205,7 +244,7 @@ namespace VideoGui
                 IsVideoLookupShort = IsShort;
                 IsDashboardMode = true;
                 AutoClose = true;
-                dbInitializer = _dbInit;
+                Invoker = _Invoker;
                 InitializeComponent();
                 webAddressBuilder = new WebAddressBuilder(null, null, "UCdMH7lMpKJRGbbszk5AUc7w");
                 Closing += (s, e) =>
@@ -257,7 +296,7 @@ namespace VideoGui
                 ex.LogWrite($"WebViewFileName_CoreWebView2InitializationCompleted {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
             }
         }
-        public ScraperModule(databasehook<object> _dbInit, OnFinishIdObj _OnFinish, string _Default_url, string _TargetUrl, int _EventId)
+        public ScraperModule(databasehook<object> _Invoker, OnFinishIdObj _OnFinish, string _Default_url, string _TargetUrl, int _EventId)
         {
             try
             {
@@ -268,7 +307,7 @@ namespace VideoGui
                 DefaultUrl = _Default_url;
                 EventId = _EventId;
                 IsDashboardMode = true;
-                dbInitializer = _dbInit;
+                Invoker = _Invoker;
                 InitializeComponent();
                 Closing += (s, e) =>
                 {
@@ -333,7 +372,7 @@ namespace VideoGui
                 ex.LogWrite($"ReportNewAddress {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
             }
         }
-        public ScraperModule(databasehook<object> _dbInit, OnFinishIdObj _OnFinish,
+        public ScraperModule(databasehook<object> _Invoker, OnFinishIdObj _OnFinish,
             string _Default_url,
             Nullable<DateTime> Start, Nullable<DateTime> End, int MaxUoploads,
             List<ListScheduleItems> _listSchedules, int _eventid, bool _IsTest)
@@ -350,7 +389,7 @@ namespace VideoGui
                 ScheduleMax = MaxUoploads;
                 IsDashboardMode = true;
                 IsTest = _IsTest;
-                dbInitializer = _dbInit;
+                Invoker = _Invoker;
                 InitializeComponent();
                 Closing += (s, e) =>
                 {
@@ -387,7 +426,7 @@ namespace VideoGui
                 ex.LogWrite($"Constructor Shorts.Schedule {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-        public ScraperModule(databasehook<object> _dbInit, OnFinishIdObj _OnFinish,
+        public ScraperModule(databasehook<object> _Invoker, OnFinishIdObj _OnFinish,
             string _Default_url, int maxuploads = 100, int slotsperupload = 5,
             int _EventId = -1, bool _NewSession = false)
         {
@@ -402,7 +441,7 @@ namespace VideoGui
                 DoOnFinish = _OnFinish;
                 DefaultUrl = _Default_url;
                 IsDashboardMode = true;
-                dbInitializer = _dbInit;
+                Invoker = _Invoker;
                 IsUnlisted = false;
                 SlotsPerUpload = slotsperupload;
                 InitializeComponent();
@@ -461,7 +500,7 @@ namespace VideoGui
             }
         }
 
-        public ScraperModule(databasehook<object> _dbInit, OnFinishIdObj _OnFinish,
+        public ScraperModule(databasehook<object> _Invoker, OnFinishIdObj _OnFinish,
             string _Default_url, WebView2 wb2)
         {
             try
@@ -473,7 +512,7 @@ namespace VideoGui
                 DoOnFinish = _OnFinish;
                 DefaultUrl = _Default_url;
                 IsDashboardMode = true;
-                dbInitializer = _dbInit;
+                Invoker = _Invoker;
                 IsUnlisted = false;
                 SlotsPerUpload = 2;
                 InitializeComponent();
@@ -696,7 +735,7 @@ namespace VideoGui
                 await wv2A8.EnsureCoreWebView2Async(env);
                 await wv2A9.EnsureCoreWebView2Async(env);
                 await wv2A10.EnsureCoreWebView2Async(env);
-                var connectionString = dbInitializer?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
+                var connectionString = Invoker?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
                 connectionString.ExecuteReader(GetUploadReleaseBuilderSql(), (FbDataReader r) =>
                 {
                     ShortsDirectoriesList.Add(new ShortsDirectory(r));
@@ -1037,10 +1076,10 @@ namespace VideoGui
                         }
                     }
                     int max = 0;
-                    string connectStr = dbInitializer?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
+                    string connectStr = Invoker?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
                     SendKeysString = "";
                     int res = -1;// GetUploadsRecCnt(connectStr, false);
-                    if (dbInitializer?.Invoke(this, new CustomParams_GetUploadsRecCnt(false)) is int cnt) res = cnt;
+                    if (Invoker?.Invoke(this, new CustomParams_GetUploadsRecCnt(false)) is int cnt) res = cnt;
                     TotalScheduled = res;
                     lblTotal.Content = TotalScheduled.ToString();
                     SetMargin(StatusBar);
@@ -1091,7 +1130,7 @@ namespace VideoGui
                 {
                     HasExited = false;
                     ExitDialog = false;
-                    string connectStr = dbInitializer?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
+                    string connectStr = Invoker?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
                     bool Exit = false, finished = false;
                     while (true || !finished)
                     {
@@ -1184,7 +1223,7 @@ namespace VideoGui
         {
             try
             {
-                dbInitializer?.Invoke(this, new CustomParams_UpdateUploadsRecords(videofiles, DirectoryPath));
+                Invoker?.Invoke(this, new CustomParams_UpdateUploadsRecords(videofiles, DirectoryPath));
             }
             catch (Exception ex)
             {
@@ -1205,7 +1244,7 @@ namespace VideoGui
                         NodeUpdate(Span_Name, ScheduledGet);
                         lstMain.Items.Insert(0, $"{file} Deleted");
                         InsertIntoUploadFiles(new List<string> { file }, connectStr);
-                        dbInitializer?.Invoke(this, new CustomParams_UpdateStats(file));
+                        Invoker?.Invoke(this, new CustomParams_UpdateStats(file));
                         if (ScheduledOk.IndexOf(filename1) == -1)
                         {
                             ScheduledOk.Add(filename1);
@@ -1324,13 +1363,13 @@ namespace VideoGui
                 if (Parent is MainWindow mainWindow)
                 {
                     var r = new CustomParams_SetTimeSpans(null, null);
-                    dbInitializer?.Invoke(this, r);
+                    Invoker?.Invoke(this, r);
                 }
                 wv2.CoreWebView2InitializationCompleted += (sender, args) =>
                 {
                     ActiveWebView[1].Source = new Uri(webAddressBuilder.GetChannelURL().Address);
                 };
-                string connectionString = dbInitializer?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
+                string connectionString = Invoker?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
                 int TitleId = -1, DescId = -1, idr = -1;
                 connectionString.ExecuteReader("SELECT * FROM REMATCHED", (FbDataReader r) =>
                 {
@@ -1432,7 +1471,7 @@ namespace VideoGui
                 newtitle = string.Join(" ", spliter.Where(item => !item.StartsWith("#"))).Trim();
                 titles.Add(newtitle);
                 Ids.Insert(0, Id);
-                dbInitializer?.Invoke(this, new CustomParams_AddVideoInfo(null, VStatusType, Id, Title,
+                Invoker?.Invoke(this, new CustomParams_AddVideoInfo(null, VStatusType, Id, Title,
                 FileName, -1, false));
                 Id = (Id.Contains("webp/")) ? Id.Replace("webp/", "") : Id;
                 webAddressBuilder.ScopeVideo(Id, true);
@@ -1484,11 +1523,6 @@ namespace VideoGui
                             SimulateWheelUpDown(wv2);
                         }));
                         timeractive = false;
-                        WheelMoveNode++;
-                        if (WheelMoveNode < 10)
-                        {
-                            timer.Start();
-                        }
                     };
                     string divclassname = "right-section style-scope ytcp-video-list-cell-video";
                     string idclass = "style-scope ytcp-img-with-fallback";
@@ -1558,7 +1592,7 @@ namespace VideoGui
 
                                 // grab video filename. await till its got it
                                 string gUrl2 = $"https://studio.youtube.com/video/{Id}/edit";
-                                var vid = dbInitializer?.Invoke(this, new CustomParams_SelectById(Id));
+                                var vid = Invoker?.Invoke(this, new CustomParams_SelectById(Id));
                                 string vidoeid = (vid is string v) ? v : "";
                                 WaitingFileName = vidoeid == "";
                                 if (!WaitingFileName)
@@ -1683,7 +1717,7 @@ namespace VideoGui
                                             lstMain.Items.Insert(0, $"{Id} ");
                                         }
                                     });
-                                    var vid = dbInitializer?.Invoke(this, new CustomParams_SelectById(Id));
+                                    var vid = Invoker?.Invoke(this, new CustomParams_SelectById(Id));
 
                                     if (vid is string v)
                                     {
@@ -2081,7 +2115,7 @@ namespace VideoGui
                 DateTime Opt = new DateTime(1900, 1, 1);
                 string sqla = "SELECT * FROM UPLOADSRECORD u WHERE u.UPLOAD_DATE >= current_date -1 AND UPLOADTYPE = 0 " +
                     "ORDER BY UPLOAD_DATE DESC FETCH FIRST 150 ROWS ONLY";
-                string connectStr = dbInitializer?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
+                string connectStr = Invoker?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
                 connectStr?.ExecuteReader(sqla.ToUpper(), (FbDataReader r) =>
                 {
                     var dt = (r["UPLOAD_DATE"] is DateTime d) ? d : Opt;// new DateTime(1900, 1, 1);
@@ -2270,11 +2304,11 @@ namespace VideoGui
         {
             try
             {
-                string connectionStr = dbInitializer?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
+                string connectionStr = Invoker?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
                 int TitleId = -1, DescId = -1, idr = -1;
                 if (LastId == -1 || LastId != id)
                 {
-                    if (dbInitializer?.Invoke(this, new CustomParams_GetShortsDirectoryById(id)) is TurlpeDualString tds)
+                    if (Invoker?.Invoke(this, new CustomParams_GetShortsDirectoryById(id)) is TurlpeDualString tds)
                     {
                         TitleStr = tds.turlpe1;
                         if (tds.turlpe2 is not null && tds.turlpe2 != "")
@@ -2288,7 +2322,7 @@ namespace VideoGui
                     {
                         if (TitleStr.NotNullOrEmpty() && DescStr.NotNullOrEmpty())
                         {
-                            //itleStr = dbInitializer?.Invoke(this, new CustomParams_GetTitle(id, TitleId)) is string s1 ? s1 : "";
+                            //itleStr = Invoker?.Invoke(this, new CustomParams_GetTitle(id, TitleId)) is string s1 ? s1 : "";
                             var r = TitleStr.Split(" ").ToList<string>().Where(s => !s.StartsWith("#") &&
                             s != "" && s.ToLower() != "vline").ToList<string>();
                             foreach (var item in r)
@@ -2737,7 +2771,7 @@ namespace VideoGui
                     {
                         if (ScraperType == EventTypes.ShortsSchedule && directshortsScheduler is null && ReleaseDate.HasValue && ReleaseEndDate.HasValue)
                         {
-                            string connectionStr = dbInitializer?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
+                            string connectionStr = Invoker?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
                             directshortsScheduler = new DirectshortsScheduler(() => { Show(); },
                                 DoOnScheduleComplete, listSchedules,
                                 ReleaseDate.Value, ReleaseEndDate.Value,
@@ -3023,7 +3057,7 @@ namespace VideoGui
         {
             try
             {
-                var connectionString = dbInitializer?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
+                var connectionString = Invoker?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
                 string sql = "SELECT * FROM SETTINGS WHERE SETTINGNAME = @P0";
                 int id = connectionString.ExecuteScalar(sql, [("@P0", name)]).ToInt(-1);
                 if (id != -1)
@@ -3046,7 +3080,7 @@ namespace VideoGui
         {
             try
             {
-                var connectionString = dbInitializer?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
+                var connectionString = Invoker?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
                 string sql = "SELECT ID FROM SETTINGS WHERE SETTINGNAME = @P0";
                 int idx = connectionString.ExecuteScalar(sql, [("@P0", name)]).ToInt(-1);
                 if (idx == -1) return null;
@@ -3147,9 +3181,9 @@ namespace VideoGui
                 webView.Dispatcher.Invoke(() =>
                 {
                     webView.Focus();
-                    SimulateMouseWheel(webView, true);
+                    SimulateMouseWheel(webView, true, 10);
                     System.Threading.Thread.Sleep(100);
-                    SimulateMouseWheel(webView, false);
+                    SimulateMouseWheel(webView, false, 10);
                     webView.Focus();
                 });
 
@@ -3164,7 +3198,7 @@ namespace VideoGui
         {
             try
             {
-                var connectionString = dbInitializer?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
+                var connectionString = Invoker?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
                 string sql = "SELECT ID FROM SETTINGS WHERE SETTINGNAME = @P0";
                 int idx = connectionString.ExecuteScalar(sql, [("@P0", name)]).ToInt(-1);
                 if (idx == -1) return null;
@@ -3186,7 +3220,7 @@ namespace VideoGui
         {
             try
             {
-                var connectionString = dbInitializer?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
+                var connectionString = Invoker?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
                 string sql = "SELECT * FROM SETTINGS WHERE SETTINGNAME = @P0";
                 int id = connectionString.ExecuteScalar(sql, [("@P0", name)]).ToInt(-1);
                 if (id != -1)
@@ -3278,47 +3312,87 @@ namespace VideoGui
         {
             return (IntPtr)((delta << 16) | keys);
         }
-        public void SimulateMouseWheel(WebView2 webView, bool isUp)
+        public void SimulateMouseWheel(WebView2 webView, bool isUp, int repeatCount = 10)
         {
             try
             {
                 if (!Dispatcher.CheckAccess())
                 {
-                    Dispatcher.Invoke(() => { SimulateMouseWheel(webView, isUp); });
+                    Dispatcher.Invoke(() => { SimulateMouseWheel(webView, isUp, repeatCount); });
                     return;
                 }
 
+                if (webView == null || canceltoken.IsCancellationRequested || repeatCount == 0) return;
 
-                if (webView == null || canceltoken.IsCancellationRequested) return;
-                var wih = new System.Windows.Interop.WindowInteropHelper(Window.GetWindow(webView));
-                var handle = wih.Handle;
-                Point position = webView.PointToScreen(new Point(webView.ActualWidth / 2, webView.ActualHeight / 2));
-                IntPtr lParam = MakeLParam((int)position.X, (int)position.Y);
-                IntPtr wParam = MakeWParam(0, isUp ? WHEEL_DELTA : -WHEEL_DELTA);
-                SendMessage(handle, WM_MOUSEWHEEL, wParam, lParam);
+                // Get the current cursor position
+                POINT currentPos;
+                GetCursorPos(out currentPos);
+
+                // Create single mouse input structure with larger delta
+                INPUT[] inputs = new INPUT[1];
+                inputs[0].type = INPUT_MOUSE;
+                inputs[0].mi.dx = currentPos.X;
+                inputs[0].mi.dy = currentPos.Y;
+                inputs[0].mi.mouseData = (isUp ? WHEEL_DELTA : -WHEEL_DELTA) * repeatCount;
+                inputs[0].mi.dwFlags = MOUSEEVENTF_WHEEL;
+                inputs[0].mi.time = 0;
+                inputs[0].mi.dwExtraInfo = IntPtr.Zero;
+
+                // Send the input
+                SendInput(1, inputs, Marshal.SizeOf(typeof(INPUT)));
+                Thread.Sleep(50); // Small delay after wheel event
             }
             catch (Exception ex)
             {
                 ex.LogWrite($"SimulateMouseWheel {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-        public void SimulateWheelUpDown(WebView2 webView)
+        private async Task SimulateWheelUpDownAsync(WebView2 webView, Point? elementPoint = null)
+        {
+            if (canceltoken.IsCancellationRequested || webView is null) return;
+            await webView.Dispatcher.InvokeAsync(async () =>
+            {
+                webView.Focus();
+                // Get upload counter span position
+                var script = @"var span = document.querySelector('span.count.style-scope.ytcp-multi-progress-monitor');
+                             if(span) {
+                                 var rect = span.getBoundingClientRect();
+                                 return JSON.stringify({x: rect.left + rect.width/2, y: rect.top + rect.height/2});
+                             }
+                             return null;";
+                var result = await webView.ExecuteScriptAsync(script);
+                Point targetPoint;
+                if (result != "null")
+                {
+                    var pos = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, double>>(result.Trim('"'));
+                    targetPoint = new Point(pos["x"], pos["y"]);
+                    targetPoint.X += 50;
+                    targetPoint.Y += 50;
+                }
+                else
+                {
+                    // Fallback to bottom-right if span not found
+                    targetPoint = new Point(webView.ActualWidth - 50, webView.ActualHeight - 100);
+                }
+                Point position = webView.PointToScreen(targetPoint);
+                SetCursorPos((int)position.X, (int)position.Y);
+                Thread.Sleep(50); // Wait for cursor to settle
+                SimulateMouseWheel(webView, true, 10);
+                System.Threading.Thread.Sleep(100);
+                SimulateMouseWheel(webView, false, 10);
+            });
+        }
+
+        public void SimulateWheelUpDown(WebView2 webView, Point? elementPoint = null)
         {
             try
             {
                 if (!Dispatcher.CheckAccess())
                 {
-                    Dispatcher.Invoke(() => { SimulateWheelUpDown(webView); });
+                    Dispatcher.Invoke(() => SimulateWheelUpDown(webView, elementPoint));
                     return;
                 }
-                if (canceltoken.IsCancellationRequested || webView is null) return;
-                webView.Dispatcher.Invoke(() =>
-                {
-                    webView.Focus();
-                    SimulateMouseWheel(webView, true);
-                    System.Threading.Thread.Sleep(100);
-                    SimulateMouseWheel(webView, false);
-                });
+                SimulateWheelUpDownAsync(webView, elementPoint).Wait();
             }
             catch (Exception ex)
             {
@@ -3693,7 +3767,7 @@ namespace VideoGui
                                         string idp = filename.Split("_").ToArray<string>().ToList().LastOrDefault().Trim();
                                         if (idp is not null && idp != "")
                                         {
-                                            if (dbInitializer?.Invoke(this, new CustomParams_AddDirectory(idp)) is TurlpeDualString tds)
+                                            if (Invoker?.Invoke(this, new CustomParams_AddDirectory(idp)) is TurlpeDualString tds)
                                             {
                                                 TitleStr = tds.turlpe1;
                                                 DescStr = tds.turlpe2;
@@ -3823,7 +3897,7 @@ namespace VideoGui
                 }
                 if (ScraperType == EventTypes.ScapeSchedule)
                 {
-                    dbInitializer?.Invoke(this, new CustomParams_InsertIntoTable(IntId, filename));
+                    Invoker?.Invoke(this, new CustomParams_InsertIntoTable(IntId, filename));
                     inserted++;
                 }
                 if (IntId == LastIdNode && inserted >= MaxCnts)

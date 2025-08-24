@@ -35,7 +35,7 @@ namespace VideoGui
     /// </summary>
     public partial class MultiShortsUploader : Window
     {
-        databasehook<object> dbInit = null;
+        databasehook<object> Invoker = null;
         public TitleSelectFrm DoTitleSelectFrm = null;
         public DescSelectFrm DoDescSelectFrm = null;
         string connectionStr = "", OldTarget, OldgUrl;
@@ -71,12 +71,12 @@ namespace VideoGui
         }
 
 
-        public MultiShortsUploader(databasehook<object> _dbInit, OnFinishIdObj _DoOnFinished)
+        public MultiShortsUploader(databasehook<object> _Invoker, OnFinishIdObj _DoOnFinished)
         {
             try
             {
                 InitializeComponent();
-                dbInit = _dbInit;
+                Invoker = _Invoker;
                 Closing += (s, e) =>
                 {
                     IsClosing = true;
@@ -93,7 +93,7 @@ namespace VideoGui
                 key?.Close();
                 string DirName = dir.Split(@"\").ToList().LastOrDefault();
                 string sqla = "SELECT ID FROM SHORTSDIRECTORY WHERE DIRECTORYNAME = @DIRECTORYNAME";
-                connectionStr = dbInit.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
+                connectionStr = Invoker.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
                 ShortsIndex = connectionStr.ExecuteScalar(sqla,
                     [("@DIRECTORYNAME", DirName)]).ToInt(-1);
                 RegistryKey keyx = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
@@ -143,7 +143,7 @@ namespace VideoGui
             try
             {
                 connectionStr =
-                      dbInit?.Invoke(this, new CustomParams_GetConnectionString())
+                      Invoker?.Invoke(this, new CustomParams_GetConnectionString())
                       is string conn ? conn : "";
                 RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                 string rootfolder = FindUploadPath();
@@ -151,7 +151,7 @@ namespace VideoGui
                 string MaxUploads = key.GetValueStr("MaxUploads", "100");
                 txtMaxUpload.Text = uploadsnumber.NotNullOrEmpty() ? uploadsnumber : txtMaxUpload.Text;
                 txtTotalUploads.Text = MaxUploads.NotNullOrEmpty() ? MaxUploads : txtTotalUploads.Text;
-                dbInit?.Invoke(this, new CustomParams_Initialize());
+                Invoker?.Invoke(this, new CustomParams_Initialize());
                 key?.Close();
                 Ready = false;
                 LocationChanger.Interval = TimeSpan.FromMilliseconds(20);
@@ -286,7 +286,7 @@ namespace VideoGui
             {
                 if (e.OriginalSource is MenuItem m && m.DataContext is SelectedShortsDirectories rp)
                 {
-                    dbInit?.Invoke(this, new CustomParams_ChangeSchedule());
+                    Invoker?.Invoke(this, new CustomParams_ChangeSchedule());
                 }
             }
             catch (Exception ex)
@@ -300,7 +300,7 @@ namespace VideoGui
             {
                 foreach (MultiShortsInfo info in msuShorts.SelectedItems)
                 {
-                    dbInit?.Invoke(this, new CustomParams_MoveDirectory(info.DirectoryName));
+                    Invoker?.Invoke(this, new CustomParams_MoveDirectory(info.DirectoryName));
                 }
             }
             catch (Exception ex)
@@ -316,7 +316,7 @@ namespace VideoGui
                 {
                     foreach (MultiShortsInfo info in msuShorts.SelectedItems)
                     {
-                        dbInit?.Invoke(this, new CustomParams_AddDirectory(info.DirectoryName));
+                        Invoker?.Invoke(this, new CustomParams_AddDirectory(info.DirectoryName));
                     }
                 }
                 catch (Exception ex)
@@ -335,7 +335,7 @@ namespace VideoGui
             {
 
 
-                var _DoDescSelectFrm = new DescSelectFrm(OnSelectFormClose, dbInit,
+                var _DoDescSelectFrm = new DescSelectFrm(OnSelectFormClose, Invoker,
                     true, DescId, LinkedId);
                 Hide();
                 _DoDescSelectFrm.ShowActivated = true;
@@ -407,7 +407,7 @@ namespace VideoGui
                 if (sender is ToggleButton t && t.DataContext is SelectedShortsDirectories info)
                 {
                     e.Handled = true;
-                    dbInit?.Invoke(this, new CustomParams_SetIndex(info.LinkedShortsDirectoryId));
+                    Invoker?.Invoke(this, new CustomParams_SetIndex(info.LinkedShortsDirectoryId));
                     DoTitleSelectCreate(info.TitleId, info.LinkedShortsDirectoryId);
                 }
             }
@@ -423,7 +423,7 @@ namespace VideoGui
                 SelectedTitleId = TitleId;
 
                 var _DoTitleSelectFrm = new TitleSelectFrm(DoOnFinishTitleSelect,
-                    dbInit, true, TitleId, LinkedId);
+                    Invoker, true, TitleId, LinkedId);
                 Hide();
                 _DoTitleSelectFrm.ShowActivated = true;
                 _DoTitleSelectFrm.Show();
@@ -514,7 +514,7 @@ namespace VideoGui
                                 sch.NumberOfShorts = 0;
                                 LinkedId = -1;
                             }
-                            //var Idx = dbInit?.Invoke(this, new CustomParams_GetDirectory(sch.DirectoryName));
+                            //var Idx = Invoker?.Invoke(this, new CustomParams_GetDirectory(sch.DirectoryName));
                             //sch.Id = (Idx is int _id && _id != -1) ? _id : sch.Id;
                         }
                     }
@@ -560,11 +560,11 @@ namespace VideoGui
                     {
                         string fid = Path.GetFileNameWithoutExtension(firstfile).Split('_').LastOrDefault();
                         string DirName = rootfolder.Split(@"\").ToList().LastOrDefault();
-                        var r = dbInit?.Invoke(this, new CustomParams_LookUpId(DirName));
+                        var r = Invoker?.Invoke(this, new CustomParams_LookUpId(DirName));
                         ShortsIndex = (r is not null) ? r.ToInt(-1) : ShortsIndex;
                         if (ShortsIndex == -1)
                         {
-                            var r1r = dbInit?.Invoke(this, new CustomParams_RematchedUpdate(ShortsIndex, DirName));
+                            var r1r = Invoker?.Invoke(this, new CustomParams_RematchedUpdate(ShortsIndex, DirName));
                             if (r1r is bool res) Valid = res;
                         }
                         else Valid = true;
@@ -576,7 +576,7 @@ namespace VideoGui
                     string gUrl = webAddressBuilder.Dashboard().Address;
                     int Maxuploads = (txtTotalUploads.Text != "") ? txtTotalUploads.Text.ToInt(100) : 100;
                     int UploadsPerSlot = (txtMaxUpload.Text != "") ? txtMaxUpload.Text.ToInt(5) : 5;
-                    var _scraperModule = new ScraperModule(dbInit, doOnFinish, gUrl, Maxuploads, UploadsPerSlot, 0, true);
+                    var _scraperModule = new ScraperModule(Invoker, doOnFinish, gUrl, Maxuploads, UploadsPerSlot, 0, true);
                     _scraperModule.ShowActivated = true;
                     if (tbi is not null)
                     {
@@ -642,7 +642,7 @@ namespace VideoGui
                             connectionStr.ExecuteNonQuery(sql,
                                 [("@NUMBEROFSHORTS", shortsleft),
                                 ("@LINKEDSHORTSDIRECTORYID", rp.LinkedShortsDirectoryId)]);
-                            dbInit?.Invoke(this, new CustomParams_RemoveMulitShortsInfoById(rp.LinkedShortsDirectoryId));
+                            Invoker?.Invoke(this, new CustomParams_RemoveMulitShortsInfoById(rp.LinkedShortsDirectoryId));
                             FindNextRec = true;
                             break;
                         }
@@ -665,7 +665,7 @@ namespace VideoGui
                                             [("@NUMBEROFSHORTS", shortsleft),
                                         ("@ACTIVE", false),
                                         ("@LINKEDSHORTSDIRECTORYID", rp.LinkedShortsDirectoryId)]);
-                                        dbInit?.Invoke(this, new
+                                        Invoker?.Invoke(this, new
                                             CustomParams_RemoveMulitShortsInfoById(rp.LinkedShortsDirectoryId));
                                     }
                                     else
@@ -680,7 +680,7 @@ namespace VideoGui
                                             key.SetValue("UploadPath", newpath);
                                             key?.Close();
                                             CheckLinkedIds(rp, newpath);
-                                            var Idx = dbInit?.Invoke(this, new CustomParams_GetDirectory(rp.DirectoryName));
+                                            var Idx = Invoker?.Invoke(this, new CustomParams_GetDirectory(rp.DirectoryName));
                                             rp.LinkedShortsDirectoryId = (Idx is int _id && rp.LinkedShortsDirectoryId != _id) ? _id : rp.LinkedShortsDirectoryId;
                                         }
                                         break;
@@ -709,7 +709,7 @@ namespace VideoGui
                                             [("@NUMBEROFSHORTS", shortsleft),
                                         ("@ACTIVE", false),
                                         ("@LINKEDSHORTSDIRECTORYID", rp.LinkedShortsDirectoryId)]);
-                                        dbInit?.Invoke(this, new
+                                        Invoker?.Invoke(this, new
                                             CustomParams_RemoveMulitShortsInfoById(rp.LinkedShortsDirectoryId));
                                     }
                                 }
@@ -730,7 +730,7 @@ namespace VideoGui
                                         key.SetValue("UploadPath", newpath);
                                         key?.Close();
                                         CheckLinkedIds(item, newpath);
-                                        var Idx = dbInit?.Invoke(this, new CustomParams_GetDirectory(item.DirectoryName));
+                                        var Idx = Invoker?.Invoke(this, new CustomParams_GetDirectory(item.DirectoryName));
                                         item.LinkedShortsDirectoryId = (Idx is int _id && item.LinkedShortsDirectoryId != _id) ? _id : item.LinkedShortsDirectoryId;
                                         
                                     
@@ -754,7 +754,7 @@ namespace VideoGui
                                         key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                                         key.SetValue("UploadPath", newpath);
                                         key?.Close();
-                                        var Idx = dbInit?.Invoke(this, new CustomParams_GetDirectory(item.DirectoryName));
+                                        var Idx = Invoker?.Invoke(this, new CustomParams_GetDirectory(item.DirectoryName));
                                         item.LinkedShortsDirectoryId = (Idx is int _id && item.LinkedShortsDirectoryId != _id) ? _id : item.LinkedShortsDirectoryId;
                                         CheckLinkedIds(item, newpath);
                                     }
@@ -765,7 +765,7 @@ namespace VideoGui
                         {
                             int Maxuploads = (txtTotalUploads.Text != "") ? txtTotalUploads.Text.ToInt(100) : 100;
                             int UploadsPerSlot = (txtMaxUpload.Text != "") ? txtMaxUpload.Text.ToInt(5) : 5;
-                            var sscraperModule = new ScraperModule(dbInit, doOnFinish, gUrl, Maxuploads, UploadsPerSlot, 0, false);
+                            var sscraperModule = new ScraperModule(Invoker, doOnFinish, gUrl, Maxuploads, UploadsPerSlot, 0, false);
                             sscraperModule.ShowActivated = true;
                             sscraperModule.ScheduledOk.AddRange(filesdone);
                             Hide();
@@ -795,7 +795,7 @@ namespace VideoGui
                                     {
                                         string UploadFile = (r["UPLOADFILE"] is string f) ? f : "";
                                         int idx = UploadFile.Split('_').LastOrDefault().ToInt(-1);
-                                        idx = (dbInit?.Invoke(this, new CustomParams_RematchedLookup(idx)) is int trs) ? trs : idx;
+                                        idx = (Invoker?.Invoke(this, new CustomParams_RematchedLookup(idx)) is int trs) ? trs : idx;
                                         if (idx == linkedId)
                                         {
                                             DateTime dtr = r["UPLOAD_DATE"] as DateTime? ?? DateTime.Now.AddYears(-200);
@@ -884,7 +884,7 @@ namespace VideoGui
                 string TargetUrl = webAddressBuilder.AddFilterByDraftShorts().GetHTML();
                 OldgUrl = gUrl;
                 OldTarget = TargetUrl;
-                var _scraperModule = new ScraperModule(dbInit, FinishScraper, gUrl, TargetUrl, 0);
+                var _scraperModule = new ScraperModule(Invoker, FinishScraper, gUrl, TargetUrl, 0);
                 Hide();
                 _scraperModule.ShowActivated = true;
                 _scraperModule.Show();
@@ -934,7 +934,7 @@ namespace VideoGui
         {
             try
             {
-                dbInit?.Invoke(this, new CustomParams_ScheduleShorts());
+                Invoker?.Invoke(this, new CustomParams_ScheduleShorts());
             }
             catch (Exception ex)
             {
@@ -954,7 +954,7 @@ namespace VideoGui
                     {
                         Dispatcher.Invoke(() =>
                         {
-                            var gscraperModule = new ScraperModule(dbInit, FinishScraper, OldgUrl, OldTarget, 0);
+                            var gscraperModule = new ScraperModule(Invoker, FinishScraper, OldgUrl, OldTarget, 0);
                             gscraperModule.ShowActivated = true;
                             gscraperModule.Show();
                         });
@@ -1056,7 +1056,7 @@ namespace VideoGui
                         Process.Start(startInfo);
                     }
 
-                    // dbInit?.Invoke(this, new CustomParams_RemoveSchedule(rp.Id));
+                    // Invoker?.Invoke(this, new CustomParams_RemoveSchedule(rp.Id));
                 }
             }
             catch (Exception ex)
@@ -1105,7 +1105,7 @@ namespace VideoGui
             {
                 if (e.OriginalSource is MenuItem m && m.DataContext is SelectedShortsDirectories rp)
                 {
-                    dbInit?.Invoke(this, new CustomParams_RemoveSchedule(rp.Id));
+                    Invoker?.Invoke(this, new CustomParams_RemoveSchedule(rp.Id));
                 }
             }
             catch (Exception ex)
@@ -1120,7 +1120,7 @@ namespace VideoGui
                 if (e.OriginalSource is MenuItem m &&
                     m.DataContext is SelectedShortsDirectories rp)// && !rp.IsActive)
                 {
-                    dbInit?.Invoke(this, new CustomParams_SetActive(rp.LinkedShortsDirectoryId));
+                    Invoker?.Invoke(this, new CustomParams_SetActive(rp.LinkedShortsDirectoryId));
                 }
             }
             catch (Exception ex)
@@ -1167,7 +1167,7 @@ namespace VideoGui
             {
                 if (e.OriginalSource is MenuItem mnu && mnu.DataContext is SelectedShortsDirectories info)
                 {
-                    dbInit?.Invoke(this, new CustomParams_RemoveSelectedDirectory(info.Id, info.DirectoryName));
+                    Invoker?.Invoke(this, new CustomParams_RemoveSelectedDirectory(info.Id, info.DirectoryName));
                 }
             }
             catch (Exception ex)

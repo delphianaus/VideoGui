@@ -23,16 +23,16 @@ namespace VideoGui
     /// </summary>
     public partial class ActionScheduleSelector : Window
     {
-        databasehook<Object> ModuleCallBack = null;
+        databasehook<Object> Invoker = null;
         public bool IsClosed = false, IsClosing = false;
         public string Title = "";
         public int TitleId = -1;
-        public ActionScheduleSelector(OnFinishIdObj DoOnFinish, databasehook<Object> _ModuleCallBack)
+        public ActionScheduleSelector(OnFinishIdObj DoOnFinish, databasehook<Object> _Invoker)
         {
             try
             {
                 InitializeComponent();
-                ModuleCallBack = _ModuleCallBack;
+                Invoker = _Invoker;
                 Closing += (s, e) => { IsClosing = true; };
                 Closed += (s, e) => { IsClosed = true; DoOnFinish?.Invoke(this, -1); };
             }
@@ -44,7 +44,7 @@ namespace VideoGui
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            ModuleCallBack?.Invoke(this, new CustomParams_Initialize());
+            Invoker?.Invoke(this, new CustomParams_Initialize());
             Width++;
             Height++;
         }
@@ -91,7 +91,7 @@ namespace VideoGui
             try
             {
 
-                var _frmScheduleActioner = new ScheduleActioner(scheduleActioner_onfinish, ModuleCallBack);
+                var _frmScheduleActioner = new ScheduleActioner(scheduleActioner_onfinish, Invoker);
                 Hide();
                 _frmScheduleActioner.ShowActivated = true;
                 _frmScheduleActioner.IsCopy = IsCopy;
@@ -148,7 +148,7 @@ namespace VideoGui
                 {
                     if (item is ScheduledActions sitem)
                     {
-                        ModuleCallBack?.Invoke(this, new CustomParams_Delete(sitem.Id, ""));
+                        Invoker?.Invoke(this, new CustomParams_Delete(sitem.Id, ""));
                         break;
                     }
                 }

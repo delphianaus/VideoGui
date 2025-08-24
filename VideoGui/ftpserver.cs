@@ -18,14 +18,14 @@ public class FtpServer : IDisposable
 {
     private TcpListener _listener;
     private string _rootDirectory;
-    databasehook<object> ModuleCallBack = null;
+    databasehook<object> Invoker = null;
     private System.Threading.Timer _startTimer;
     private bool disposedValue;
     private List<TcpClient> _clients = new List<TcpClient>();
 
     private List<TcpListener> _listeners;
     private List<IPAddress> _ipAddresses;
-    public FtpServer(int port, string rootDirectory, databasehook<object> _Modulecallback, List<IPAddress> ipAddresses)
+    public FtpServer(int port, string rootDirectory, databasehook<object> _Invoker, List<IPAddress> ipAddresses)
     {
         try
         {
@@ -36,7 +36,7 @@ public class FtpServer : IDisposable
                 _listeners.Add(new TcpListener(ipAddress, port));
             }
             _rootDirectory = rootDirectory;
-            ModuleCallBack = _Modulecallback;
+            Invoker = _Invoker;
             _startTimer = new System.Threading.Timer(StartFtpServer, null, 5000, Timeout.Infinite);
         }
         catch (Exception ex)
@@ -82,7 +82,7 @@ public class FtpServer : IDisposable
         try
         {
             TcpClient tcpClient = (TcpClient)client;
-            FtpSession session = new FtpSession(tcpClient, _rootDirectory, ModuleCallBack);
+            FtpSession session = new FtpSession(tcpClient, _rootDirectory, Invoker);
             try
             {
                 session.HandleCommands();
