@@ -613,7 +613,7 @@ namespace VideoGui
                         var files = Directory.EnumerateFiles(HostDir, "*.mp4", SearchOption.AllDirectories).ToList();
                         foreach (var _file in files.Where(s => !s.Contains("_")))
                         {
-                            string fx = _file.Replace(".mp4", $"{indexStr}");
+                            string fx = _file.ToLower().Replace(".mp4", $"{indexStr}");
                             if (fx.EndsWith(".mp4"))
                             {
                                 File.Move(_file, fx);

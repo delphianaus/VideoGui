@@ -207,8 +207,8 @@ namespace VideoGui
         private static extern bool SetCursorPos(int X, int Y);
 
         private const int BM_CLICK = 0x00F5;
-        
-       
+
+
         private delegate bool EnumWindowProc(IntPtr hWnd, IntPtr parameter);
         public void DoLocationTimer()
         {
@@ -735,7 +735,7 @@ namespace VideoGui
                 await wv2A8.EnsureCoreWebView2Async(env);
                 await wv2A9.EnsureCoreWebView2Async(env);
                 await wv2A10.EnsureCoreWebView2Async(env);
-                var connectionString = Invoker?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
+                var connectionString = Invoker.InvokeWithReturn<string>(this, new CustomParams_GetConnectionString());
                 connectionString.ExecuteReader(GetUploadReleaseBuilderSql(), (FbDataReader r) =>
                 {
                     ShortsDirectoriesList.Add(new ShortsDirectory(r));
@@ -1076,7 +1076,7 @@ namespace VideoGui
                         }
                     }
                     int max = 0;
-                    string connectStr = Invoker?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
+                    string connectStr = Invoker.InvokeWithReturn<string>(this, new CustomParams_GetConnectionString());
                     SendKeysString = "";
                     int res = -1;// GetUploadsRecCnt(connectStr, false);
                     if (Invoker?.Invoke(this, new CustomParams_GetUploadsRecCnt(false)) is int cnt) res = cnt;
@@ -1130,7 +1130,7 @@ namespace VideoGui
                 {
                     HasExited = false;
                     ExitDialog = false;
-                    string connectStr = Invoker?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
+                    string connectStr = Invoker.InvokeWithReturn<string>(this, new CustomParams_GetConnectionString());
                     bool Exit = false, finished = false;
                     while (true || !finished)
                     {
@@ -1369,7 +1369,7 @@ namespace VideoGui
                 {
                     ActiveWebView[1].Source = new Uri(webAddressBuilder.GetChannelURL().Address);
                 };
-                string connectionString = Invoker?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
+                string connectionString = Invoker.InvokeWithReturn<string>(this, new CustomParams_GetConnectionString());
                 int TitleId = -1, DescId = -1, idr = -1;
                 connectionString.ExecuteReader("SELECT * FROM REMATCHED", (FbDataReader r) =>
                 {
@@ -1592,8 +1592,7 @@ namespace VideoGui
 
                                 // grab video filename. await till its got it
                                 string gUrl2 = $"https://studio.youtube.com/video/{Id}/edit";
-                                var vid = Invoker?.Invoke(this, new CustomParams_SelectById(Id));
-                                string vidoeid = (vid is string v) ? v : "";
+                                var vidoeid = Invoker.InvokeWithReturn<string>(this, new CustomParams_SelectById(Id));
                                 WaitingFileName = vidoeid == "";
                                 if (!WaitingFileName)
                                 {
@@ -1717,9 +1716,8 @@ namespace VideoGui
                                             lstMain.Items.Insert(0, $"{Id} ");
                                         }
                                     });
-                                    var vid = Invoker?.Invoke(this, new CustomParams_SelectById(Id));
-
-                                    if (vid is string v)
+                                    var vid = Invoker.InvokeWithReturn<string>(this, new CustomParams_SelectById(Id));
+                                    if (vid is string v && v != "")
                                     {
                                         files++;
                                         dbfiles++;
@@ -2115,7 +2113,7 @@ namespace VideoGui
                 DateTime Opt = new DateTime(1900, 1, 1);
                 string sqla = "SELECT * FROM UPLOADSRECORD u WHERE u.UPLOAD_DATE >= current_date -1 AND UPLOADTYPE = 0 " +
                     "ORDER BY UPLOAD_DATE DESC FETCH FIRST 150 ROWS ONLY";
-                string connectStr = Invoker?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
+                string connectStr = Invoker.InvokeWithReturn<string>(this, new CustomParams_GetConnectionString());
                 connectStr?.ExecuteReader(sqla.ToUpper(), (FbDataReader r) =>
                 {
                     var dt = (r["UPLOAD_DATE"] is DateTime d) ? d : Opt;// new DateTime(1900, 1, 1);
@@ -2304,25 +2302,24 @@ namespace VideoGui
         {
             try
             {
-                string connectionStr = Invoker?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
+                string connectionStr = Invoker.InvokeWithReturn<string>(this, new CustomParams_GetConnectionString());
                 int TitleId = -1, DescId = -1, idr = -1;
                 if (LastId == -1 || LastId != id)
                 {
-                    if (Invoker?.Invoke(this, new CustomParams_GetShortsDirectoryById(id)) is TurlpeDualString tds)
+                    var tds = Invoker.InvokeWithReturn<TurlpeDualString>(this, new CustomParams_GetShortsDirectoryById(id));// is TurlpeDualString tds)
+                    TitleStr = tds.turlpe1;
+                    if (tds.turlpe2 is not null && tds.turlpe2 != "")
                     {
-                        TitleStr = tds.turlpe1;
-                        if (tds.turlpe2 is not null && tds.turlpe2 != "")
-                        {
-                            DescStr = CleanUpDesc(tds.turlpe2);
-                        }
-                        idr = tds.Id;
+                        DescStr = CleanUpDesc(tds.turlpe2);
                     }
+                    idr = tds.Id;
+
                     LastId = idr;
                     if (idr != -1)
                     {
                         if (TitleStr.NotNullOrEmpty() && DescStr.NotNullOrEmpty())
                         {
-                            //itleStr = Invoker?.Invoke(this, new CustomParams_GetTitle(id, TitleId)) is string s1 ? s1 : "";
+                            TitleStr = Invoker.InvokeWithReturn<string>(this, new CustomParams_GetTitle(id, TitleId));
                             var r = TitleStr.Split(" ").ToList<string>().Where(s => !s.StartsWith("#") &&
                             s != "" && s.ToLower() != "vline").ToList<string>();
                             foreach (var item in r)
@@ -2771,7 +2768,7 @@ namespace VideoGui
                     {
                         if (ScraperType == EventTypes.ShortsSchedule && directshortsScheduler is null && ReleaseDate.HasValue && ReleaseEndDate.HasValue)
                         {
-                            string connectionStr = Invoker?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
+                            string connectionStr = Invoker.InvokeWithReturn<string>(this, new CustomParams_GetConnectionString());
                             directshortsScheduler = new DirectshortsScheduler(() => { Show(); },
                                 DoOnScheduleComplete, listSchedules,
                                 ReleaseDate.Value, ReleaseEndDate.Value,
@@ -3057,7 +3054,7 @@ namespace VideoGui
         {
             try
             {
-                var connectionString = Invoker?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
+                var connectionString = Invoker.InvokeWithReturn<string>(this, new CustomParams_GetConnectionString());
                 string sql = "SELECT * FROM SETTINGS WHERE SETTINGNAME = @P0";
                 int id = connectionString.ExecuteScalar(sql, [("@P0", name)]).ToInt(-1);
                 if (id != -1)
@@ -3080,7 +3077,7 @@ namespace VideoGui
         {
             try
             {
-                var connectionString = Invoker?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
+                var connectionString = Invoker.InvokeWithReturn<string>(this, new CustomParams_GetConnectionString());
                 string sql = "SELECT ID FROM SETTINGS WHERE SETTINGNAME = @P0";
                 int idx = connectionString.ExecuteScalar(sql, [("@P0", name)]).ToInt(-1);
                 if (idx == -1) return null;
@@ -3198,7 +3195,7 @@ namespace VideoGui
         {
             try
             {
-                var connectionString = Invoker?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
+                var connectionString = Invoker.InvokeWithReturn<string>(this, new CustomParams_GetConnectionString());
                 string sql = "SELECT ID FROM SETTINGS WHERE SETTINGNAME = @P0";
                 int idx = connectionString.ExecuteScalar(sql, [("@P0", name)]).ToInt(-1);
                 if (idx == -1) return null;
@@ -3220,7 +3217,7 @@ namespace VideoGui
         {
             try
             {
-                var connectionString = Invoker?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
+                var connectionString = Invoker.InvokeWithReturn<string>(this, new CustomParams_GetConnectionString());
                 string sql = "SELECT * FROM SETTINGS WHERE SETTINGNAME = @P0";
                 int id = connectionString.ExecuteScalar(sql, [("@P0", name)]).ToInt(-1);
                 if (id != -1)
@@ -3349,38 +3346,49 @@ namespace VideoGui
         }
         private async Task SimulateWheelUpDownAsync(WebView2 webView, Point? elementPoint = null)
         {
-            if (canceltoken.IsCancellationRequested || webView is null) return;
-            await webView.Dispatcher.InvokeAsync(async () =>
+            try
             {
-                webView.Focus();
-                // Get upload counter span position
-                var script = @"var span = document.querySelector('span.count.style-scope.ytcp-multi-progress-monitor');
+                if (canceltoken.IsCancellationRequested || webView is null) return;
+                var html = Regex.Unescape(await webView.ExecuteScriptAsync("document.body.innerHTML"));
+                if (html.Contains("Daily upload limit reached")) return;
+                await webView.Dispatcher.InvokeAsync(async () =>
+                {
+                    webView.Focus();
+                    webView.BringIntoView();
+                    System.Threading.Thread.Sleep(100);
+                    // Get upload counter span position
+                    var script = @"var span = document.querySelector('span.count.style-scope.ytcp-multi-progress-monitor');
                              if(span) {
                                  var rect = span.getBoundingClientRect();
                                  return JSON.stringify({x: rect.left + rect.width/2, y: rect.top + rect.height/2});
                              }
                              return null;";
-                var result = await webView.ExecuteScriptAsync(script);
-                Point targetPoint;
-                if (result != "null")
-                {
-                    var pos = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, double>>(result.Trim('"'));
-                    targetPoint = new Point(pos["x"], pos["y"]);
-                    targetPoint.X += 50;
-                    targetPoint.Y += 50;
-                }
-                else
-                {
-                    // Fallback to bottom-right if span not found
-                    targetPoint = new Point(webView.ActualWidth - 50, webView.ActualHeight - 100);
-                }
-                Point position = webView.PointToScreen(targetPoint);
-                SetCursorPos((int)position.X, (int)position.Y);
-                Thread.Sleep(50); // Wait for cursor to settle
-                SimulateMouseWheel(webView, true, 10);
-                System.Threading.Thread.Sleep(100);
-                SimulateMouseWheel(webView, false, 10);
-            });
+                    var result = await webView.ExecuteScriptAsync(script);
+                    Point targetPoint;
+                    if (result != "null")
+                    {
+                        var pos = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, double>>(result.Trim('"'));
+                        targetPoint = new Point(pos["x"], pos["y"]);
+                        targetPoint.X += 50;
+                        targetPoint.Y += 50;
+                    }
+                    else
+                    {
+                        // Fallback to bottom-right if span not found
+                        targetPoint = new Point(webView.ActualWidth - 50, webView.ActualHeight - 100);
+                    }
+                    Point position = webView.PointToScreen(targetPoint);
+                    SetCursorPos((int)position.X, (int)position.Y);
+                    Thread.Sleep(50); // Wait for cursor to settle
+                    SimulateMouseWheel(webView, true, 10);
+                    System.Threading.Thread.Sleep(100);
+                    SimulateMouseWheel(webView, false, 10);
+                });
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"SimulateWheelUpDownAsync {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
         }
 
         public void SimulateWheelUpDown(WebView2 webView, Point? elementPoint = null)
@@ -3392,7 +3400,10 @@ namespace VideoGui
                     Dispatcher.Invoke(() => SimulateWheelUpDown(webView, elementPoint));
                     return;
                 }
-                SimulateWheelUpDownAsync(webView, elementPoint).Wait();
+                Task.Run(() =>
+                {
+                    SimulateWheelUpDownAsync(webView, elementPoint);
+                });
             }
             catch (Exception ex)
             {
@@ -3700,7 +3711,7 @@ namespace VideoGui
                 var htmlcheck1 = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
                 if (Regex.IsMatch(htmlcheck1, @"Uploads complete|processing will begin shortly|your video template has been saved as draft|saving|save and close|title-row style-scope ytcp-uploads-dialog|daily limit"))
                 {
-                    
+
                     DeleteFiles(VideoFiles, "Z:\\");
                     return false;
                 }

@@ -30,7 +30,6 @@ namespace VideoGui
     {
         databasehook<object> Invoker = null;
         public bool IsClosing = false, IsClosed = false;
-        databasehook<object> Invoker = null;
         public static readonly DependencyProperty SourceDirectoryProperty =
             DependencyProperty.Register(nameof(SourceDirectory), typeof(double),
                 typeof(DirectoryTitleDescEditor), new FrameworkPropertyMetadata(100.0));

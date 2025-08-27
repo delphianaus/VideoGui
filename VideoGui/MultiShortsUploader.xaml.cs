@@ -93,7 +93,7 @@ namespace VideoGui
                 key?.Close();
                 string DirName = dir.Split(@"\").ToList().LastOrDefault();
                 string sqla = "SELECT ID FROM SHORTSDIRECTORY WHERE DIRECTORYNAME = @DIRECTORYNAME";
-                connectionStr = Invoker.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
+                connectionStr = Invoker.InvokeWithReturn<string>(this, new CustomParams_GetConnectionString());
                 ShortsIndex = connectionStr.ExecuteScalar(sqla,
                     [("@DIRECTORYNAME", DirName)]).ToInt(-1);
                 RegistryKey keyx = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
@@ -142,9 +142,7 @@ namespace VideoGui
         {
             try
             {
-                connectionStr =
-                      Invoker?.Invoke(this, new CustomParams_GetConnectionString())
-                      is string conn ? conn : "";
+                connectionStr = Invoker.InvokeWithReturn<string>(this, new CustomParams_GetConnectionString());
                 RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                 string rootfolder = FindUploadPath();
                 string uploadsnumber = key.GetValueStr("UploadNumber", "5");
@@ -1015,9 +1013,16 @@ namespace VideoGui
                         FilesList = Directory.EnumerateFiles(newpath, "*", SearchOption.AllDirectories).ToList();
                         foreach (var filename in FilesList)
                         {
-                            if (filename.Contains(".mp4") && !filename.EndsWith(".mp4"))
+                            if (filename.ToLower().Contains(".mp4") && !filename.ToLower().EndsWith(".mp4"))
                             {
                                 string newfilename = filename.Substring(0, filename.IndexOf(".mp4")) + ".mp4";
+                                File.Move(filename, newfilename);
+                            }
+                            else if (!filename.ToLower().Contains("_"))
+                            {
+                                var index = rp.LinkedShortsDirectoryId;
+                                string indexStr = $"_{index}.mp4";
+                                string newfilename = filename.Substring(0, filename.ToLower().IndexOf(".mp4")) + indexStr;
                                 File.Move(filename, newfilename);
                             }
                         }

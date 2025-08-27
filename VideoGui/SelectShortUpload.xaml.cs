@@ -42,7 +42,7 @@ namespace VideoGui
         {
             InitializeComponent();
             Invoker = _Invoker;
-            connectionStr = Invoker?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
+            connectionStr = Invoker.InvokeWithReturn<string>(this, new CustomParams_GetConnectionString());
             Closing += (s, e) => { IsClosing = true; };
             Closed += (s, e) => { IsClosed = true; _DoOnFinished?.Invoke(this, -1); };
         }
@@ -70,7 +70,7 @@ namespace VideoGui
                     //InsertUpdate into SHORTSDIRECTORY(TITLEID,DESCID,DIRECTORYNAME) Returning ID as LinkedId
 
                     txtsrcdir.Text = ofg.SelectedFolder;
-                    string connectionStr = Invoker?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
+                    string connectionStr = Invoker.InvokeWithReturn<string>(this, new CustomParams_GetConnectionString());
                     string ThisDir = ofg.SelectedFolder.Split(@"\").ToList().LastOrDefault();
                     var ress = Invoker?.Invoke(this, new CustomParams_InsertIntoShortsDirectory(ThisDir));// ToInt(-1)
                     if (ress is int res && res != -1) LinkedId = res;
@@ -146,7 +146,7 @@ namespace VideoGui
                     ShortsIndex = LinkedId;
                     Invoker?.Invoke(this, new CustomParams_Select(LinkedId));
                     CancellationTokenSource cts = new CancellationTokenSource();
-                    string connectStr = Invoker?.Invoke(this, new CustomParams_GetConnectionString()) is string con1n ? con1n : "";
+                    string connectStr = Invoker.InvokeWithReturn<string>(this, new CustomParams_GetConnectionString());
                     connectStr.ExecuteReader(GetShortsDirectorySql(LinkedId), cts, (FbDataReader r) =>
                     {
                         int titleid = r["TITLEID"].ToInt(-1);
@@ -421,7 +421,7 @@ namespace VideoGui
                 key?.Close();
                 if (Directory.Exists(selFolder))
                 {
-                    string connectionStr = Invoker?.Invoke(this, new CustomParams_GetConnectionString()) is string conn ? conn : "";
+                    string connectionStr = Invoker.InvokeWithReturn<string>(this, new CustomParams_GetConnectionString());
                     List<string> files = Directory.EnumerateFiles(selFolder, "*.mp4", SearchOption.AllDirectories).ToList();
                     string firstfile = files.FirstOrDefault();
                     if (firstfile is not null && File.Exists(firstfile))
@@ -641,7 +641,7 @@ namespace VideoGui
                 string MaxUploads = key.GetValueStr("MaxUploads", "100");
                 key?.Close();
                 //ConnnectLists?.Invoke(3);
-                string connectionStr = Invoker?.Invoke(this, new CustomParams_GetConnectionString()) is string con2n ? con2n : "";
+                string connectionStr = Invoker.InvokeWithReturn<string>(this, new CustomParams_GetConnectionString());
                 bool found = false;
                 txtsrcdir.Text = rootfolder;// : txtsrcdir.Text;
                 txtMaxUpload.Text = (uploadsnumber != "") ? uploadsnumber : txtMaxUpload.Text;
