@@ -42,6 +42,13 @@ namespace VideoGui.Models
             this.index = index;
         }
     }
+
+    public class CustomParams_MoveOrphanFiles
+    {
+        public CustomParams_MoveOrphanFiles()
+        {
+        }
+    }
     public class CustomParams_RemoveSchedule
     {
         public int id = -1;

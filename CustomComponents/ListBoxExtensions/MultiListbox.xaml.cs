@@ -1610,6 +1610,8 @@ namespace CustomComponents.ListBoxExtensions
                     textBlock.Foreground ?? new SolidColorBrush(Colors.Black),
                     VisualTreeHelper.GetDpi(this).PixelsPerDip);
                         var maxheightoff = (control.Height - ft.Height) / 2;
+                        if (maxheightoff < 0) maxheightoff = 0;
+
                         textBlock.Padding = new Thickness(0, maxheightoff, 0, 0);
                         if (ItemHeightProperty is not null)
                         {

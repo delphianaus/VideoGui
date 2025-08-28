@@ -1104,6 +1104,20 @@ namespace VideoGui
             }
         }
 
+        private void mnuMoveOrphanFiles_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (e.OriginalSource is MenuItem m && m.DataContext is SelectedShortsDirectories rp)
+                {
+                    Invoker?.Invoke(this, new CustomParams_MoveOrphanFiles());
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"mnuMoveOrphanFiles_Click {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
+            }
+        }
         private void mnuRemoveSchedule(object sender, RoutedEventArgs e)
         {
             try

@@ -489,6 +489,75 @@ namespace VideoGui
         {
             try
             {
+                if (tld is CustomParams_MoveOrphanFiles cpMOF)
+                {
+                    string ActiveDir = "";
+                    foreach (var t in SelectedShortsDirectoriesList.
+                        Where(t => t.IsShortActive && t.NumberOfShorts > 0))
+                    {
+                        ActiveDir = t.DirectoryName;
+                        break;
+                    }
+                    if (ActiveDir != "")
+                    {
+                        int cnt = 0;
+                        RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                        string shortsdir = key.GetValueStr("shortsdirectory", @"D:\shorts\");
+                        key?.Close();
+                        string MoveDir = Path.Combine(shortsdir, ActiveDir);
+                        string MDir = Directory.EnumerateDirectories(MoveDir).FirstOrDefault();
+                        MoveDir = MDir;
+                        string SearchDir = "";
+                        var inactiveDirs = SelectedShortsDirectoriesList
+                         .Where(t => !t.IsShortActive)
+                         .Select(t => Path.Combine(shortsdir, t.DirectoryName))
+                         .Where(Directory.Exists);
+
+                        foreach (var searchDir in inactiveDirs)
+                        {
+
+                            if (Directory.Exists(MoveDir))
+                            {
+                                string ssearch = searchDir.Replace(shortsdir, "").Replace("\\", "").ToLower();
+
+                                int LinkedId = SelectedShortsDirectoriesList.
+                                        Where(t => t.DirectoryName.ToLower() == ssearch).
+                                        FirstOrDefault(new SelectedShortsDirectories()).Id;
+                                if (LinkedId != -1)
+                                {
+                                    var filesToMove = Directory.EnumerateFiles(searchDir, "*.mp4", SearchOption.AllDirectories).Take(4);
+                                    foreach (var file in filesToMove)
+                                    {
+                                        string newfile = file;
+                                        if (!file.Contains("_"))
+                                        {
+                                            newfile = file.Remove(file.LastIndexOf(".")) + "_" + LinkedId.ToString() + ".mp4";
+                                        }
+                                        File.Move(file, Path.Combine(MoveDir, Path.GetFileName(newfile)));
+                                        cnt++;
+                                    }
+                                }
+                            }
+                        }
+                        for (int i = SelectedShortsDirectoriesList.Count - 1; i >= 0; i--)
+                        {
+                            var item = SelectedShortsDirectoriesList[i];
+                            if (!item.IsShortActive)
+                            {
+                                string dir = Path.Combine(shortsdir, item.DirectoryName);
+                                if (!Directory.EnumerateFiles(dir, "*.mp4", SearchOption.AllDirectories).Any())
+                                {
+                                    string sql = "DELETE FROM MULTISHORTSINFO WHERE ID = @ID;";
+                                    connectionString.ExecuteScalar(sql, [("@ID", item.Id)]);
+                                    SelectedShortsDirectoriesList.RemoveAt(i);
+                                }
+                            }
+                        }
+                    }
+
+
+                    return default(TResult);
+                }
                 if (tld is CustomParams_ScheduleShorts cpsss)
                 {
                     var _manualScheduler = new ManualScheduler(InvokerHandler<object>,
