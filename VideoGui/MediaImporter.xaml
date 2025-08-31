@@ -38,7 +38,7 @@
            Header="Media" Width="625" Canvas.Top="0" 
            VerticalAlignment="Top" VerticalContentAlignment="Bottom" 
            BorderBrush="Black" BorderThickness="2" Height="241" 
-           HorizontalAlignment="Left" Canvas.Left="0" Margin="0,49,0,0">
+           HorizontalAlignment="Left" Canvas.Left="0" Margin="0,49,0,0" SelectionMode="Multiple">
                     <MSU:MultiListbox.ColumnDefinitions>
                         <MSU:MultiListboxColumnDefinition DataField="FileName" WidthBinding="FileNameWidth"
                          ContentVerticalAlignment="Top" HeaderText="FileName" ComponentType="TextBlock"/>
@@ -50,8 +50,8 @@
                     </MSU:MultiListbox.ColumnDefinitions>
                     <MSU:MultiListbox.ItemsContextMenu>
                         <ContextMenu>
-                            <MenuItem IsCheckable="True" IsChecked="False" Header="Selecy/Deslect Time To Filter From " Click="mnuFilterFrom_Click"/>
-                            <MenuItem IsCheckable="True" IsChecked="False" Header="Selecy/Deslect Time To Filter" Click="mnuFilterTo_Click" />
+                            <MenuItem IsCheckable="True" IsChecked="False" Header="Select/Deselect Time To Filter From " Click="mnuFilterFrom_Click"/>
+                            <MenuItem IsCheckable="True" IsChecked="False" Header="Select/Deselect Time To Filter" Click="mnuFilterTo_Click" />
                             <MenuItem Header="Clear Filters" Click="mnuClearFilters_Click"/>
                             <Separator/>
                             <MenuItem Header="Select From Date" Click="mnuSelectDateFrom_Click"/>

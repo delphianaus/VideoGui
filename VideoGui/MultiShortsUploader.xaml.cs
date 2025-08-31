@@ -26,6 +26,7 @@ using VideoGui.Models.delegates;
 using Windows.Devices.Geolocation;
 using Windows.Graphics.DirectX.Direct3D11;
 using Windows.Media.Core;
+using Windows.UI.Composition;
 using Path = System.IO.Path;
 
 namespace VideoGui
@@ -641,7 +642,30 @@ namespace VideoGui
                                 [("@NUMBEROFSHORTS", shortsleft),
                                 ("@LINKEDSHORTSDIRECTORYID", rp.LinkedShortsDirectoryId)]);
                             Invoker?.Invoke(this, new CustomParams_RemoveMulitShortsInfoById(rp.LinkedShortsDirectoryId));
-                            FindNextRec = true;
+                            if (cnt < 3)
+                            {
+                                rp.IsActive = false;
+                                string sql1 = "UPDATE MULTISHORTSINFO SET ACTIVE = @ACTIVE WHERE LINKEDSHORTSDIRECTORYID = @LINKEDSHORTSDIRECTORYID";
+                                connectionStr.ExecuteNonQuery(sql1,
+                                    [("@ACTIVE", false),
+                                    ("@LINKEDSHORTSDIRECTORYID", rp.LinkedShortsDirectoryId)]);
+                                FindNextRec = false;
+                                string OldDirName = Path.Combine(BaseDir, rp.DirectoryName);
+                                var OldFileList = Directory.EnumerateFiles(OldDirName, "*.mp4", SearchOption.AllDirectories).ToList();
+                                foreach (var rpx in msuSchedules.ItemsSource.OfType<SelectedShortsDirectories>().Where(x => x.IsActive == false && x.NumberOfShorts > 0))
+                                {
+                                    string newdir = Path.Combine(BaseDir, rpx.DirectoryName);
+                                    foreach (var file in OldFileList)
+                                    {
+                                        string newfile = Path.Combine(newdir, Path.GetFileName(file));
+                                        if (!File.Exists(newfile))
+                                        {
+                                            File.Move(file, newfile);
+                                        }
+                                    }
+                                }
+                            }
+                            else FindNextRec = true;
                             break;
                         }
                         if (!FindNextRec)
@@ -730,8 +754,8 @@ namespace VideoGui
                                         CheckLinkedIds(item, newpath);
                                         var Idx = Invoker?.Invoke(this, new CustomParams_GetDirectory(item.DirectoryName));
                                         item.LinkedShortsDirectoryId = (Idx is int _id && item.LinkedShortsDirectoryId != _id) ? _id : item.LinkedShortsDirectoryId;
-                                        
-                                    
+
+
                                     }
                                 }
                             }
@@ -1028,7 +1052,7 @@ namespace VideoGui
                         }
                         int cnt = Directory.EnumerateFiles(newpath, "*.mp4", SearchOption.AllDirectories).ToList().Count();
                         rp.NumberOfShorts = cnt;
-                        
+
                     }
 
                 }

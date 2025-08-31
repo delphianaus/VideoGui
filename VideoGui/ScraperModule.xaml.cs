@@ -1593,6 +1593,10 @@ namespace VideoGui
                                 // grab video filename. await till its got it
                                 string gUrl2 = $"https://studio.youtube.com/video/{Id}/edit";
                                 var vidoeid = Invoker.InvokeWithReturn<string>(this, new CustomParams_SelectById(Id));
+                                if (vidoeid is null)
+                                {
+                                    vidoeid = "";
+                                }
                                 WaitingFileName = vidoeid == "";
                                 if (!WaitingFileName)
                                 {
@@ -1787,7 +1791,8 @@ namespace VideoGui
                             }
                         }
                         string Range = nodes.FirstOrDefault();
-                        string MaxCnt = nodes.LastOrDefault();
+
+                        string MaxCnt = nodes.LastOrDefault().Replace(",", "").Trim(); 
                         int iCnt = MaxCnt.ToInt(-1);
                         string CntNow = Range.Split('–').LastOrDefault();
                         int iCntNow = CntNow.ToInt(-1);
@@ -2307,14 +2312,23 @@ namespace VideoGui
                 if (LastId == -1 || LastId != id)
                 {
                     var tds = Invoker.InvokeWithReturn<TurlpeDualString>(this, new CustomParams_GetShortsDirectoryById(id));// is TurlpeDualString tds)
-                    TitleStr = tds.turlpe1;
-                    if (tds.turlpe2 is not null && tds.turlpe2 != "")
+                    if (tds is not null)
                     {
-                        DescStr = CleanUpDesc(tds.turlpe2);
+                        TitleStr = tds.turlpe1;
+                        if (tds.turlpe2 is not null && tds.turlpe2 != "")
+                        {
+                            DescStr = CleanUpDesc(tds.turlpe2);
+                        }
+                        idr = tds.Id;
                     }
-                    idr = tds.Id;
+                    else
+                    {
+                        if (true)
+                        {
 
-                    LastId = idr;
+                        }
+                    }
+                        LastId = idr;
                     if (idr != -1)
                     {
                         if (TitleStr.NotNullOrEmpty() && DescStr.NotNullOrEmpty())
@@ -3348,9 +3362,17 @@ namespace VideoGui
         {
             try
             {
+                if (!Dispatcher.CheckAccess())
+                {
+                    Dispatcher.Invoke(() => { SimulateWheelUpDownAsync(webView, elementPoint); });
+                    return;
+                }
+
+
                 if (canceltoken.IsCancellationRequested || webView is null) return;
                 var html = Regex.Unescape(await webView.ExecuteScriptAsync("document.body.innerHTML"));
                 if (html.Contains("Daily upload limit reached")) return;
+                if (!html.Contains("<span class=\"count style-scope ytcp-multi-progress-monitor\">")) return;
                 await webView.Dispatcher.InvokeAsync(async () =>
                 {
                     webView.Focus();
@@ -3521,6 +3543,7 @@ namespace VideoGui
                             break;
                         }
                         NodeUpdate(Span_Name, ScheduledGet);
+                        
                         for (int i = Nodes.Count - 1; i >= 0; i--)
                         {
                             int start = Nodes[i].InnerText.IndexOf("\n") + 1;
@@ -3548,6 +3571,7 @@ namespace VideoGui
                                 if (!clicks.Any(clicks => clicks.FileName == filename1))
                                 {
                                     clicks.Add(new Uploads(filename1, "Waiting"));
+
                                     string newfile = filename1;//.Replace("\"", "");
                                     if (newfile.Contains("."))
                                     {
@@ -3563,6 +3587,7 @@ namespace VideoGui
                                     bool fnd = false;
                                     while (!ctsx.IsCancellationRequested)
                                     {
+                                        
                                         SendTraceInfo?.Invoke(this, $"Waiting For Edit Window For {newfile}");
                                         var htmlx = await wv2.CoreWebView2.ExecuteScriptAsync("document.body.innerHTML");
                                         var ehtmlx = Regex.Unescape(htmlx);
@@ -3571,6 +3596,7 @@ namespace VideoGui
                                             fnd = true;
                                             SendTraceInfo?.Invoke(this, $"Found Edit Window For {newfile}");
                                             ctsx.Cancel();
+
                                             break;
                                         }
                                         SendTraceInfo?.Invoke(this, $"Finished Waiting For Edit Window For {newfile}");
@@ -3578,7 +3604,7 @@ namespace VideoGui
                                     }
                                     var htmlx1 = await wv2.CoreWebView2.ExecuteScriptAsync("document.body.innerHTML");
                                     var ehtmlx1 = Regex.Unescape(htmlx1);
-
+                                    TimerSimulate.Start();
                                     if (ehtmlx1.ToLower().Contains("uploads complete"))
                                     {
                                         canceltoken.Cancel();
@@ -3608,7 +3634,7 @@ namespace VideoGui
                                             cts.Cancel();
                                             return false;
                                         }
-                                        SendTraceInfo?.Invoke(this, $"Detecting Uploads Comp111lete {filename1}");
+                                        SendTraceInfo?.Invoke(this, $"Detecting Uploads Complete {filename1}");
                                         var htmlcheck = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
                                         if (Regex.IsMatch(htmlcheck, @"Uploads complete"))
                                         {

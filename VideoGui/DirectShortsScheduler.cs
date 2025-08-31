@@ -195,7 +195,7 @@ namespace VideoGui
                     // Get video details
                     var videoRequest = youtubeService.Videos.List("snippet,status");
                     videoRequest.Id = videoId;
-                    var videoResponse = await videoRequest.ExecuteAsync(cts.Token);
+                    var videoResponse = videoRequest.Execute();// Async(cts.Token);
                     var video = videoResponse.Items.FirstOrDefault();
                     if (video != null && video.Status is not null && video.Status.PrivacyStatus != "public")
                     {
@@ -225,7 +225,7 @@ namespace VideoGui
                             video.Snippet.Description = Desc_Str;
                             video.Snippet.Title = Title_str;
                             var updateRequest = youtubeService.Videos.Update(video, $"Id,snippet,status");
-                            var updateResponse = await updateRequest.ExecuteAsync(cts.Token);
+                            var updateResponse = updateRequest.Execute();// Async(cts.Token);
                             ScheduleNumber++;
                             LastValidDate = ScheduleAt;
                             return FinishType.Scheduled;

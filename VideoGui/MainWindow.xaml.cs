@@ -1023,7 +1023,7 @@ namespace VideoGui
                                 break;
                             }
                         }
-                        return (TResult)Convert.ChangeType(res, typeof(TResult));
+                        return (TResult)Convert.ChangeType(!res, typeof(TResult));
                     }
                 }
                 if (tld is CustomParams_SetTimeSpan cts)
@@ -3872,7 +3872,7 @@ namespace VideoGui
                         }
                         return (TResult)Convert.ChangeType(item.FileName, typeof(TResult));
                     }
-                    return default(TResult);
+                    return (TResult)Convert.ChangeType("", typeof(TResult));
                 }
                 if (tld is CustomParams_GetDesc cgd)
                 {

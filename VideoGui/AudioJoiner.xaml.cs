@@ -327,8 +327,15 @@ namespace VideoGui
                 {
                     RegistryKey key2 = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                     key2.SetValue("AudioJoinerSourceDir", folderBrowserDialog.SelectedFolder);
-                    key2?.Close();
                     folder = folderBrowserDialog.SelectedFolder;
+                    string Dest = Path.Combine(folder, "dest");
+                    if (!Directory.Exists(Dest))
+                    { 
+                        Directory.CreateDirectory(Dest);
+                    }
+                    key2.SetValue("AudioJoinerDestDir", Dest);
+                    key2?.Close();
+                    txtDestDir.Text = Dest;
                     txtsrcdir.Text = folder;
                     GetFiles(folder).ConfigureAwait(false);
                 }
