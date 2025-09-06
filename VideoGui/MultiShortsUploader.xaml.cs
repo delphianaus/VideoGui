@@ -1142,6 +1142,57 @@ namespace VideoGui
                 ex.LogWrite($"mnuMoveOrphanFiles_Click {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
         }
+
+        private void BtnScrapeDrafts_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                Nullable<DateTime> startdate = DateTime.Now, enddate = DateTime.Now.AddHours(10);
+                List<ListScheduleItems> listSchedules2 = new();
+                int _eventid = 0;
+                SchMaxUploads = 100;
+                ShowScraper(startdate, enddate, listSchedules2, SchMaxUploads, _eventid);
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"BtnScrapeDrafts_Click {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
+            }
+        }
+
+        public bool NewTarget = true;
+
+        
+        private void btnSchduleScraper_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                NewTarget = true;
+                WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
+                string TargetUrl = webAddressBuilder.AddFilterByDraftShorts().GetHTML();
+                string gUrl = webAddressBuilder.Dashboard().Address;
+                var __scraperModule = new ScraperModule(Invoker, FinishScraperTargets, gUrl, TargetUrl);
+                Hide();
+                __scraperModule.ShowActivated = true;
+                __scraperModule.Show();
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"btnSchduleScraper_Click {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
+            }
+        }
+
+        private void FinishScraperTargets(object ThisForm, int id)
+        {
+            try
+            {
+                
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"FinishScraperTargets {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
+            }
+        }
+
         private void mnuRemoveSchedule(object sender, RoutedEventArgs e)
         {
             try

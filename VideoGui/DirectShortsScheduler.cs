@@ -204,6 +204,37 @@ namespace VideoGui
                         video.Status.PublishAtDateTimeOffset = publishDateTime;
                         video.Status.PublishAt = publishDateTime;
                         video.Status.PrivacyStatus = "private";
+                        if (Desc_Str != "" && Title_str == "")
+                        {
+                            if (Desc_Str.Contains("\r"))
+                            {
+                                string BaseStr = Desc_Str.Substring(0, Desc_Str.IndexOf("\r"));
+                                List<string> Tags = new List<string> {
+                               "#TRAINS", "#TRAVEL", "#SHORTS", "#RAILFANS",
+                               "#RAILWAY", "#RAIL"};
+                                BaseStr += " ";
+                                if (BaseStr.Contains("VLINE"))
+                                {
+                                    Tags.Insert(0, "#VLINE");
+                                }
+                                while (Tags.Count > 0 && BaseStr.Length < 100)
+                                {
+                                    string tg = BaseStr + " " + Tags[0];
+                                    if (tg.Length < 100)
+                                    {
+                                        BaseStr = tg;
+                                        Tags.RemoveAt(0);
+                                    }
+                                    else
+                                    {
+                                        break;
+                                    }
+                                }
+                                Title_str = BaseStr;
+                            }
+                        }
+
+
                         if (Desc_Str != "" && Title_str != "")
                         {
                             int iidx = Title_str.IndexOf("#");
@@ -226,6 +257,7 @@ namespace VideoGui
                             video.Snippet.Title = Title_str;
                             var updateRequest = youtubeService.Videos.Update(video, $"Id,snippet,status");
                             var updateResponse = updateRequest.Execute();// Async(cts.Token);
+                            DoReportScheduled(ScheduleAt, videoId, Title_str);
                             ScheduleNumber++;
                             LastValidDate = ScheduleAt;
                             return FinishType.Scheduled;
@@ -368,7 +400,7 @@ namespace VideoGui
                             {
                                 LastScheduledTime = ScheduleDate;
                                 LastGap = GapTime.Minutes;
-                                DoReportScheduled(ScheduleDate, videoId, TitleStr);
+                                
                                 CurrentTime = CurrentTime.Add(GapTime);
                             }
                             return r;

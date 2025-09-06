@@ -132,21 +132,38 @@
                         </ContextMenu>
                     </MSU:MultiListbox.ItemsContextMenu>
                 </MSU:MultiListbox>
-                <ToggleButton x:Name="tbDebug" Width="44" Height="44" Canvas.Left="133" LostFocus="tbDebug_LostFocus"
+                <ToggleButton x:Name="tbDebug" Width="44" Height="44" Canvas.Left="219" LostFocus="tbDebug_LostFocus"
                               Canvas.Top="379" HorizontalAlignment="Left" VerticalAlignment="Center" 
                               Style="{StaticResource ToggleStepStyle}" ToolTip="Debug Mode" Click="tbDebug_Click"/>
                 <Button Name="BtnClose" Content="Close" HorizontalAlignment="Left" VerticalAlignment="Center" Height="36" Width="58" Click="BtnClose_Click" Canvas.Left="487" Canvas.Top="386"/>
-                <Button x:Name="BtnRunUploaders" Content="Upload" HorizontalAlignment="Left" VerticalAlignment="Center" Height="36" Width="56" Click="BtnRunUploaders_Click" Canvas.Left="8" Canvas.Top="386"/>
-                <Label x:Name="lblupload" Content="Uploads Per Slot" HorizontalAlignment="Left" VerticalAlignment="Center" Canvas.Left="184" Canvas.Top="388"/>
+                <Button x:Name="BtnRunUploaders" Content="Upload" HorizontalAlignment="Left" VerticalAlignment="Center" Height="36" Width="46" Click="BtnRunUploaders_Click" Canvas.Left="4" Canvas.Top="386"/>
+                <Label x:Name="lblupload" Content="Uploads Per Slot" HorizontalAlignment="Left" VerticalAlignment="Center" Canvas.Left="261" Canvas.Top="388"/>
                 <TextBox x:Name="txtMaxUpload" Text="5" TextWrapping="Wrap" 
-            KeyDown="txtMaxUpload_KeyDown" LostFocus="txtMaxUpload_LostFocus" VerticalAlignment="Center" HorizontalAlignment="Left" Width="20" Height="20" Canvas.Left="278" Canvas.Top="390"/>
-                <Label x:Name="lblmax" Content="Max Uploads" VerticalAlignment="Center" HorizontalAlignment="Left" Canvas.Left="296" Canvas.Top="388"/>
+            KeyDown="txtMaxUpload_KeyDown" LostFocus="txtMaxUpload_LostFocus" VerticalAlignment="Center" HorizontalAlignment="Left" Width="20" Height="20" Canvas.Left="352" Canvas.Top="390"/>
+                <Label x:Name="lblmax" Content="Max Uploads" VerticalAlignment="Center" HorizontalAlignment="Left" Canvas.Left="370" Canvas.Top="388"/>
                 <TextBox x:Name="txtTotalUploads" Text="100" TextWrapping="Wrap" 
             KeyDown="txtTotalUploads_KeyDown" VerticalAlignment="Center" 
-                             HorizontalAlignment="Left" Width="27" Height="20" Canvas.Left="366" Canvas.Top="390"/>
-                <Label x:Name="lblUploaded" Content="Last Upload:" Canvas.Left="391" Canvas.Top
+                             HorizontalAlignment="Left" Width="27" Height="20" Canvas.Left="445" Canvas.Top="390"/>
+                <Label x:Name="lblUploaded" Content="Last Upload:" Canvas.Left="473" Canvas.Top
                        ="386" HorizontalAlignment="Left" VerticalAlignment="Center" FontSize="14" Background="Transparent" Foreground="#FFFF1414" FontWeight="Bold"/>
-                <Button x:Name="btnSchdule" Content="Schedule" Height="36" Width="56" Click="btnSchdule_Click" Canvas.Left="74" Canvas.Top="386" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                <Button x:Name="btnSchdule" Content="Schedule" Height="36" Width="51" Click="btnSchdule_Click" Canvas.Left="56" Canvas.Top="386" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                <Button x:Name="BtnScrapeDrafts" Height="36" Width="41" Click="BtnScrapeDrafts_Click" 
+                        Canvas.Left="112" Canvas.Top="386" HorizontalAlignment="Left" VerticalAlignment="Center">
+                    <Canvas Width="36" Height="36">
+                        <TextBlock Text="Scrape" HorizontalAlignment="Left" VerticalAlignment="Center" Canvas.Top="1" 
+                                   Canvas.Left="2"/>
+                        <TextBlock Text="Drafts" Canvas.Left="4" Canvas.Top="14" HorizontalAlignment="Left" 
+                                   VerticalAlignment="Center"/>
+                    </Canvas>
+                </Button>
+                <Button x:Name="btnSchduleScraper" Height="36" Width="51" Click="btnSchduleScraper_Click" 
+                        Canvas.Left="158" Canvas.Top="386" HorizontalAlignment="Left" VerticalAlignment="Center">
+                    <Canvas Width="48" Height="36">
+                        <TextBlock Text="Schedule" HorizontalAlignment="Left" VerticalAlignment="Center" Canvas.Top="1" Canvas.Left="2"/>
+                        <TextBlock Text="Scraper" Canvas.Left="6" Canvas.Top="14" HorizontalAlignment="Left" 
+                             VerticalAlignment="Center"/>
+                    </Canvas>
+                </Button>
             </Canvas>
         </Grid>
     </ScrollViewer>

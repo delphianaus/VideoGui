@@ -343,6 +343,55 @@ namespace VideoGui
                 ex.LogWrite($"Constructor Scraper.Schedule {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
+        Action<string, int, string, string> TargetUpdate = null;
+        public ScraperModule(databasehook<object> _Invoker, OnFinishIdObj _OnFinish, 
+            string _Default_url, string _TargetUrl)
+        {
+            try
+            {
+                ScraperType = EventTypes.ScrapeDraftSchedules;
+                DoOnFinish = _OnFinish;
+                TargetUrl = _TargetUrl;
+                AutoClose = true;
+                DefaultUrl = _Default_url;
+                EventId = 0;
+                IsDashboardMode = true;
+                Invoker = _Invoker;
+                InitializeComponent();
+                Closing += (s, e) =>
+                {
+                    TimerSimulate?.Stop();
+                    timer?.Stop();
+                    IsClosing = true;
+                    canceltoken.Cancel();
+                    cancelds();
+                    uploadedcnt = TotalScheduled;
+                    LocationTimer.Stop();
+                    TimerSimulate.Stop();
+                };
+                Closed += (s, e) =>
+                {
+                    IsClosed = true;
+                    DoOnFinish?.Invoke(this, EventId);
+                };
+                webAddressBuilder = new WebAddressBuilder(null, ReportNewAddress, "UCdMH7lMpKJRGbbszk5AUc7w");
+                wv2Dictionary.Add(1, wv2A1);//20
+                wv2Dictionary.Add(2, wv2A2);//30
+                wv2Dictionary.Add(3, wv2A3);//40
+                wv2Dictionary.Add(4, wv2A4);//50
+                wv2Dictionary.Add(5, wv2A5);//60
+                wv2Dictionary.Add(6, wv2A6);//70
+                wv2Dictionary.Add(7, wv2A7);//80
+                wv2Dictionary.Add(8, wv2A8);//90
+                wv2Dictionary.Add(9, wv2A9);//100
+                wv2Dictionary.Add(10, wv2A10);
+                ActiveWebView.Add(1, wv2);
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"Constructor Scraper.Schedule {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+        }
         private void ReportNewAddress(string address, string id)
         {
             try
@@ -1670,7 +1719,9 @@ namespace VideoGui
                                         }
                                         if (!IsTaskCanceled)
                                         {
-                                            lstMain.Items.Insert(0, $"Error on Scheduling Detected.");
+                                            lstMain.Items.Insert(0, $"Error on Scheduling Detected. {Id}");
+                                            string webAddress = $"https://studio.youtube.com/video/{Id}/edit";
+                                            System.Windows.Clipboard.SetText(webAddress);
                                             canceltoken.Cancel();
                                             break;
                                         }
@@ -1682,6 +1733,8 @@ namespace VideoGui
                                     else if (HandlerOk == FinishType.LookUpError)
                                     {
                                         lstMain.Items.Insert(0, $"Lookup Error on Scheduling Detected.");
+                                        string webAddress = $"https://studio.youtube.com/video/{Id}/edit";
+                                        System.Windows.Clipboard.SetText(webAddress);
                                         canceltoken.Cancel();
                                         break;
                                     }
@@ -1707,9 +1760,21 @@ namespace VideoGui
                             }
                             else
                             {
-                                if (DoNextNode && ScraperType == EventTypes.ShortsSchedule)
+                                if (DoNextNode && (ScraperType == EventTypes.ShortsSchedule || 
+                                    ScraperType == EventTypes.ScrapeDraftSchedules))
                                 {
                                     DoNextNode = DoNodeScrapeUpdate(Id, TitleStr, DescStr, "", StatusStr, dateTime);
+                                    if (ScraperType == EventTypes.ScrapeDraftSchedules)
+                                    {
+                                        var vid = Invoker.InvokeWithReturn<string>(this, new CustomParams_SelectById(Id));
+                                        int LinkedId = -1;
+                                        if (vid is string v && v.Contains("_"))
+                                        {
+                                            LinkedId = v.Split('_')[1].ToInt(-1);
+                                        }
+
+                                        Invoker?.Invoke(this, new CustomParams_ProcessTargets(Id, LinkedId, TitleStr, DescStr));
+                                    }
                                 }
                                 else if (DoNextNode && Id != "" && ScraperType == EventTypes.ScapeSchedule)
                                 {
@@ -2328,7 +2393,6 @@ namespace VideoGui
 
                         }
                     }
-                        LastId = idr;
                     if (idr != -1)
                     {
                         if (TitleStr.NotNullOrEmpty() && DescStr.NotNullOrEmpty())
@@ -2346,6 +2410,7 @@ namespace VideoGui
                             }
                             LTitleStr = TitleStr;
                             LDescStr = DescStr;
+                            LastId = idr;
                         }
                     }
                 }

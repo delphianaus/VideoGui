@@ -16,6 +16,9 @@
     <Compile Update="MultiShortsUploader.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="ProcessDraftTargets.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="ScheduleActioner.xaml.cs">
       <SubType>Code</SubType>
     </Compile>

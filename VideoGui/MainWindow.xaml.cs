@@ -165,6 +165,7 @@ namespace VideoGui
         ObservableCollection<ScheduleMapItem> SchedulingItemsList = new ObservableCollection<ScheduleMapItem>();
         ObservableCollection<ScheduledActions> YTScheduledActionsList = new ObservableCollection<ScheduledActions>();
         ObservableCollection<Rematched> RematchedList = new ObservableCollection<Rematched>();
+        ObservableCollection<ProcessTargets> ProcessTargetsList = new ObservableCollection<ProcessTargets>();
         ObservableCollection<MultiShortsInfo> ShortsDirectoryList = new ObservableCollection<MultiShortsInfo>();
         ObservableCollection<SelectedShortsDirectories> SelectedShortsDirectoriesList = new ObservableCollection<SelectedShortsDirectories>();
         ObservableCollection<SelectedShortsDirectories> SelectedShortsDirectoriesListTest = new ObservableCollection<SelectedShortsDirectories>();
@@ -3399,11 +3400,37 @@ namespace VideoGui
                     string BaseStr = " ";
                     if (TitleId != -1)
                     {
+                        int TagCnt = 0;
                         foreach (var item2 in TitleTagsList.Where(s => s.GroupId == TitleId))
                         {
                             if (!BaseStr.Contains($"#{item2.Description}"))
                             {
                                 BaseStr += $"#{item2.Description} ";
+                                TagCnt++;
+                            }
+                        }
+                        if (TagCnt == 0)
+                        {
+                            List<string> Tags = new List<string> {
+                               "#TRAINS", "#TRAVEL", "#SHORTS", "#RAILFANS",
+                               "#RAILWAY", "#RAIL"};
+
+                            if (BaseStr.Contains("VLINE"))
+                            {
+                                Tags.Insert(0, "#VLINE");
+                            }
+                            while (Tags.Count > 0 && BaseStr.Length < 100)
+                            {
+                                string tg = BaseStr + " " + Tags[0];
+                                if (tg.Length < 100)
+                                {
+                                    BaseStr = tg;
+                                    Tags.RemoveAt(0);
+                                }
+                                else
+                                {
+                                    break;
+                                }
                             }
                         }
                         Title += BaseStr;
@@ -3720,12 +3747,87 @@ namespace VideoGui
             }
         }
 
+        int _LastPTLinked = -1, _LastTitleId = -1, _LastDescId = -1;
+        string _LastPTTitle = "";
+        string _LastPTDesc = "";
 
         private TResult scraperModule_Handler<TResult>(object tld, ScraperModule scraperModule)
         {
             try
             {
-                if (tld is CustomParams_GetShortsDirectoryById pcGSD)
+                if (tld is CustomParams_ProcessTargets cpPTT)
+                {
+                    int LinkedId = cpPTT.LinkedId;
+                    if (cpPTT.LinkedId == -1)
+                    {
+                        foreach (var drshort in DraftShortsList.Where(s => s.VideoId == cpPTT.VideoId))
+                        {
+                            string filen = drshort.FileName;
+                            if (filen.Contains("_"))
+                            {
+                                LinkedId = filen.Split('_')[1].ToInt(-1);
+                            }
+                            break;
+                        }
+                        if (LinkedId == -1)
+                        {
+                            ProcessTargetsList.Add(new ProcessTargets(cpPTT.VideoId, -1, "",-1, "",-1));
+                        }
+
+                        return default(TResult);
+                    }
+                    else
+                    {
+                        bool found = false;
+                        if (ProcessTargetsList.Where(s => s.LinkedId == LinkedId).Count() == 0)
+                        {
+                            string Title = cpPTT.Title;
+                            string Desc = cpPTT.Description;
+                            if (_LastPTLinked != LinkedId)
+                            {
+                                foreach (var editable in EditableshortsDirectoryList.Where(s => s.Id == LinkedId))
+                                {
+                                    int TitleId = editable.TitleId;
+                                    int DescId = editable.DescId;
+                                    _LastTitleId = TitleId;
+                                    _LastDescId = DescId;
+                                    if (TitleId != -1)
+                                    {
+                                        Title = TitlesList.Where(s => s.Id == TitleId).FirstOrDefault(new Titles(-1)).Description;
+                                        string BaseStr = " ";
+                                        foreach (var item2 in TitleTagsList.Where(s => s.GroupId == TitleId))
+                                        {
+                                            if (!BaseStr.Contains($"#{item2.Description}"))
+                                            {
+                                                BaseStr += $"#{item2.Description} ";
+                                            }
+                                        }
+                                        Title += BaseStr;
+                                    }
+                                    if (DescId != -1)
+                                    {
+                                        Desc = DescriptionsList.Where(s => s.Id == DescId).FirstOrDefault(new Descriptions(-1)).Description;
+                                    }
+                                    _LastPTLinked = LinkedId;
+                                    break;
+                                }
+                            }
+                            else
+                            {
+                                Title = _LastPTTitle;
+                                Desc = _LastPTDesc;
+                            }
+                            if (!ProcessTargetsList.Any(s => s.LinkedId == LinkedId))
+                            {
+                                ProcessTargetsList.Add(new ProcessTargets("", 
+                                    LinkedId, Title, _LastTitleId,
+                                    Desc, _LastDescId));
+                            }
+                            found = true;
+                        }
+                    }
+                }
+                else if (tld is CustomParams_GetShortsDirectoryById pcGSD)
                 {
                     int TitleId = -1, DescId = -1, idx = pcGSD.Id;
                     foreach (var item in EditableshortsDirectoryList.Where(s => s.Id == idx))
@@ -8835,7 +8937,8 @@ namespace VideoGui
                     {
                         string SourceDirectory = (Is4K) ? SourceDirectory4K : (Is1080p) ? SourceDirectory1080p : SourceDirectory720p;
                         if (IsAdobe) SourceDirectory = SourceDirectoryAdobe4K;
-
+                        SourceDirectory.WriteLog("AsyncFinish.log");
+                        SourceFileIs.WriteLog("AsyncFinish.log");
                         List<string> files = Directory.EnumerateFiles(SourceDirectory, SourceFileIs, SearchOption.AllDirectories).ToList();
                         if (files.Count > 0)
                         {

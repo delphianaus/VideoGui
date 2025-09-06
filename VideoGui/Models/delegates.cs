@@ -27,7 +27,8 @@ namespace VideoGui.Models.delegates
     //
     // Summary:
     //     Specifies the day of the week.
-    public enum EventTypes { VideoUpload = 0, ShortsSchedule = 1, FullSchedule = 2, ScapeSchedule = 3, UploadTest = 4, VideoLookup = 5 };
+    public enum EventTypes { VideoUpload = 0, ShortsSchedule = 1, FullSchedule = 2, 
+        ScapeSchedule = 3, UploadTest = 4, VideoLookup = 5, ScrapeDraftSchedules = 6};
     public enum MadeForKids { MFK_SET_BY_YOU, MFK_SET_BY_YOUTUBE, NOT_MADE_FOR_KIDS, NO_SELECTION };
     public delegate void _StatsHandlerDateTimeSetter(string filename, DateTime start);
     public delegate DateTime _StatsHandlerDateTimeGetter(string filename);

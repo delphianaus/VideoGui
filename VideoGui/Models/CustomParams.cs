@@ -49,6 +49,19 @@ namespace VideoGui.Models
         {
         }
     }
+
+    public class CustomParams_ProcessTargets
+    {
+        public int LinkedId = -1;
+        public string VideoId = "", Title = "", Description = "";
+        public CustomParams_ProcessTargets(string _VideoId, int _Linkedid, string _Title, string _Description)
+        {
+            VideoId = _VideoId;
+            Title = _Title;
+         
+            Description = _Description;
+        }
+    }
     public class CustomParams_RemoveSchedule
     {
         public int id = -1;
@@ -234,7 +247,7 @@ namespace VideoGui.Models
 
     public class CustomParams_GetUploadsRecCnt
     {
-        public bool IsLast24Hours { get; set; } = false;    
+        public bool IsLast24Hours { get; set; } = false;
         public CustomParams_GetUploadsRecCnt(bool IsLast24Hours)
         {
             this.IsLast24Hours = IsLast24Hours;
@@ -445,7 +458,7 @@ namespace VideoGui.Models
         public int FilterId { get; set; } = 0;
 
         public int LinkedId { get; set; } = 0;
-        public CustomParams_SetFilterId(int _FilterId, int _LinkedId=-1)
+        public CustomParams_SetFilterId(int _FilterId, int _LinkedId = -1)
         {
             FilterId = _FilterId;
             LinkedId = _LinkedId;
@@ -744,7 +757,7 @@ namespace VideoGui.Models
     {
         public CustomParams_ChangeSchedule()
         {
-        }   
+        }
     }
     public class CustomParams_InsertIntoTable
     {
