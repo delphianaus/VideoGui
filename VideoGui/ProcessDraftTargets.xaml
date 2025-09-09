@@ -39,20 +39,6 @@
                    WidthBinding="SuggestedWidth" ContentHorizontalAlignment="Center"
                    DataField="NewFile" ContentVerticalAlignment="Top" ComponentType="TextBlock"/>
                     </MSU:MultiListbox.ColumnDefinitions>
-                    <MSU:MultiListbox.ItemsContextMenu>
-                        <ContextMenu>
-                            <MenuItem IsCheckable="True" IsChecked="False" Header="Select/Deselect Time To Filter From " Click="mnuFilterFrom_Click"/>
-                            <MenuItem IsCheckable="True" IsChecked="False" Header="Select/Deselect Time To Filter" Click="mnuFilterTo_Click" />
-                            <MenuItem Header="Clear Filters" Click="mnuClearFilters_Click"/>
-                            <Separator/>
-                            <MenuItem Header="Select From Date" Click="mnuSelectDateFrom_Click"/>
-                            <MenuItem Header="Select To Date" Click="mnuSelectDateTo_Click"/>
-                            <Separator/>
-                            <MenuItem Header="Move Selected Files" Click="mnuMoveSelected_Click"/>
-                            <Separator/>
-                            <MenuItem Header="Select All" Click="mnuSelectAll_Click"/>
-                        </ContextMenu>
-                    </MSU:MultiListbox.ItemsContextMenu>
                 </MSU:MultiListbox>
                 <Canvas x:Name="brdt2" Canvas.Left="631" Canvas.Top="60"/>
                 <Border x:Name="brdControls" BorderBrush="Black" BorderThickness="2" Height="54" RenderTransformOrigin="0.5,0.5" VerticalAlignment="Bottom" Margin="4,0,4,3" Canvas.Top="295" Width="717">
