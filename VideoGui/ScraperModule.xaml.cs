@@ -664,14 +664,14 @@ namespace VideoGui
             {
                 if (e.IsSuccess && sender is not null)
                 {
-                    int Id = (sender as WebView2).Name.Replace("wv2A", "").ToInt(-1);
-                    string source = (sender as WebView2).Source.AbsoluteUri.ToString(), IntId = "";
+                    int Id = (sender as WebView2CompositionControl).Name.Replace("wv2A", "").ToInt(-1);
+                    string source = (sender as WebView2CompositionControl).Source.AbsoluteUri.ToString(), IntId = "";
                     int p1 = source.IndexOf("video/"), p2 = source.IndexOf("/edit");
                     if (p1 != -1 && p2 != -1)
                     {
                         IntId = source.Substring(p1 + 6, p2 - p1 - 6);
                     }
-                    var task = (sender as WebView2).ExecuteScriptAsync("document.body.innerHTML");
+                    var task = (sender as WebView2CompositionControl).ExecuteScriptAsync("document.body.innerHTML");
                     task.ContinueWith(x => { ProcessHTML(x.Result, Id, IntId, sender); },
                         TaskScheduler.FromCurrentSynchronizationContext());
                 }
@@ -741,47 +741,47 @@ namespace VideoGui
                 }
                 wv2A1.CoreWebView2InitializationCompleted += (s, e) =>
                 {
-                    (s as WebView2).Tag = 1;
+                    (s as WebView2CompositionControl).Tag = 1;
                 };
                 wv2A2.CoreWebView2InitializationCompleted += (s, e) =>
                 {
-                    (s as WebView2).Tag = 1;
+                    (s as WebView2CompositionControl).Tag = 1;
                 };
                 wv2A3.CoreWebView2InitializationCompleted += (s, e) =>
                 {
-                    (s as WebView2).Tag = 1;
+                    (s as WebView2CompositionControl).Tag = 1;
                 };
                 wv2A4.CoreWebView2InitializationCompleted += (s, e) =>
                 {
-                    (s as WebView2).Tag = 1;
+                    (s as WebView2CompositionControl).Tag = 1;
                 };
                 wv2A5.CoreWebView2InitializationCompleted += (s, e) =>
                 {
-                    (s as WebView2).Tag = 1;
+                    (s as WebView2CompositionControl).Tag = 1;
                 };
                 wv2A6.CoreWebView2InitializationCompleted += (s, e) =>
                 {
-                    (s as WebView2).Tag = 1;
+                    (s as WebView2CompositionControl).Tag = 1;
                 };
                 wv2A7.CoreWebView2InitializationCompleted += (s, e) =>
                 {
-                    (s as WebView2).Tag = 1;
+                    (s as WebView2CompositionControl).Tag = 1;
                 };
                 wv2A8.CoreWebView2InitializationCompleted += (s, e) =>
                 {
-                    (s as WebView2).Tag = 1;
+                    (s as WebView2CompositionControl).Tag = 1;
                 };
                 wv2A9.CoreWebView2InitializationCompleted += (s, e) =>
                 {
-                    (s as WebView2).Tag = 1;
+                    (s as WebView2CompositionControl).Tag = 1;
                 };
                 wv2A10.CoreWebView2InitializationCompleted += (s, e) =>
                 {
-                    (s as WebView2).Tag = 1;
+                    (s as WebView2CompositionControl).Tag = 1;
                 };
                 wv2A6.CoreWebView2InitializationCompleted += (s, e) =>
                 {
-                    (s as WebView2).Tag = 1;
+                    (s as WebView2CompositionControl).Tag = 1;
                 };
                 await wv2.EnsureCoreWebView2Async(env);
                 await wv2A1.EnsureCoreWebView2Async(env);
@@ -1508,7 +1508,7 @@ namespace VideoGui
                                 System.Windows.Forms.Application.DoEvents();
                                 Thread.Sleep(100);
                             }
-                            html = Regex.Unescape(await (sender as WebView2).ExecuteScriptAsync("document.body.innerHTML"));
+                            html = Regex.Unescape(await (sender as WebView2CompositionControl).ExecuteScriptAsync("document.body.innerHTML"));
                             ProcessWV2Completed_ShortsScheduler(html, sender);
                         }
                     }
@@ -1899,7 +1899,7 @@ namespace VideoGui
                                     if (!ehtml.Contains(LastNode) && ehtml != "") break;
                                 }
                                 NextRecord = false;
-                                var task1 = (sender as WebView2).CoreWebView2.ExecuteScriptAsync("document.body.innerHTML");
+                                var task1 = (sender as WebView2CompositionControl).CoreWebView2.ExecuteScriptAsync("document.body.innerHTML");
 
                                 task1.ContinueWith(x =>
                                 {
@@ -1995,7 +1995,7 @@ namespace VideoGui
         }
     ";
 
-                var webView2 = sender as WebView2;
+                var webView2 = sender as WebView2CompositionControl;
                 //webView2.NavigationCompleted += wv2v_NavigationCompleted;
                 await webView2.ExecuteScriptAsync(script);
 
@@ -2275,11 +2275,11 @@ namespace VideoGui
                     ProcessWebView_Filename(sender);
                     return;
                 }
-                int Id = (sender as WebView2).Name.Replace("wv2A", "").ToInt(-1);
-                string source = (sender as WebView2).Source.AbsoluteUri.ToString(), IntId = "";
+                int Id = (sender as WebView2CompositionControl).Name.Replace("wv2A", "").ToInt(-1);
+                string source = (sender as WebView2CompositionControl).Source.AbsoluteUri.ToString(), IntId = "";
                 int p1 = source.IndexOf("video/"), p2 = source.IndexOf("/edit");
                 IntId = (p1 != -1 && p2 != -1) ? source.Substring(p1 + 6, p2 - p1 - 6) : IntId;
-                var task = (sender as WebView2).ExecuteScriptAsync("document.body.innerHTML");
+                var task = (sender as WebView2CompositionControl).ExecuteScriptAsync("document.body.innerHTML");
                 task.ContinueWith(x => { ProcessHTML_Filename(x.Result, Id, IntId, sender); },
                     TaskScheduler.FromCurrentSynchronizationContext());
             }
@@ -2510,7 +2510,7 @@ namespace VideoGui
 
                         }
                     }
-                    var task = (sender as WebView2).CoreWebView2.ExecuteScriptAsync("document.body.innerHTML");
+                    var task = (sender as WebView2CompositionControl).CoreWebView2.ExecuteScriptAsync("document.body.innerHTML");
 
                     task.ContinueWith(x => { ProcessWV2Completed_ShortsScheduler(x.Result, sender); }, TaskScheduler.FromCurrentSynchronizationContext());
 
@@ -2985,7 +2985,7 @@ namespace VideoGui
             if ((e is not null && e.IsSuccess) || e is null)
             {
                 NextRecord = false;
-                var task = (sender as WebView2).CoreWebView2.ExecuteScriptAsync("document.body.innerHTML");
+                var task = (sender as WebView2CompositionControl).CoreWebView2.ExecuteScriptAsync("document.body.innerHTML");
                 task.ContinueWith(x => { ProcessWV2Completed_VideoLookup(x.Result, sender); }, TaskScheduler.FromCurrentSynchronizationContext());
             }
         }
