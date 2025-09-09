@@ -3,6 +3,7 @@ using FirebirdSql.Data.FirebirdClient;
 using FirebirdSql.Data.FirebirdClient;
 using Microsoft.Extensions.Primitives;
 using Microsoft.VisualBasic.Logging;
+using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.Wpf;
 using Microsoft.Win32;
 using Microsoft.Win32.SafeHandles;
@@ -411,6 +412,21 @@ namespace VideoGui
             }
         }
 
+        public static void SetURL(this WebView2CompositionControl webview, string URL)
+        {
+            try
+            {
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    webview.AllowDrop = false;
+                    webview.Source = new Uri(URL);
+                });
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"SetURL {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
         public static double ToDouble(this object obj, double defaultint = -1)
         {
             try

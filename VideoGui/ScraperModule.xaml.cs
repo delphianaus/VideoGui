@@ -146,8 +146,8 @@ namespace VideoGui
         public Action<object> ShowMultiForm = null;
         public Action<object, string> SendTraceInfo = null;
         List<DirectoriesProbe> Directories = new(); //Directories
-        Dictionary<int, WebView2> wv2Dictionary = new Dictionary<int, WebView2>();
-        Dictionary<int, WebView2> ActiveWebView = new Dictionary<int, WebView2>();
+        Dictionary<int, WebView2CompositionControl> wv2Dictionary = new Dictionary<int, WebView2CompositionControl>();
+        Dictionary<int, WebView2CompositionControl> ActiveWebView = new Dictionary<int, WebView2CompositionControl>();
         DispatcherTimer InternalTimer = new DispatcherTimer();
         TaskCompletionSource<bool> tcs = new TaskCompletionSource<bool>();
         public Nullable<DateTime> ReleaseDate = null, ReleaseEndDate = null;
@@ -550,7 +550,7 @@ namespace VideoGui
         }
 
         public ScraperModule(databasehook<object> _Invoker, OnFinishIdObj _OnFinish,
-            string _Default_url, WebView2 wb2)
+            string _Default_url, WebView2CompositionControl wb2)
         {
             try
             {
@@ -2633,10 +2633,10 @@ namespace VideoGui
 
                 if (SwapEnabled)
                 {
-                    WebView2 temp = brdmain.Child as WebView2;
+                    WebView2CompositionControl temp = brdmain.Child as WebView2CompositionControl;
                     temp.NavigationCompleted += Wv2s_NavigationCompleted;
                     wv2Dictionary[swap].NavigationCompleted += wv2_NavigationCompleted;
-                    brdmain.Child = wv2Dictionary[swap] as WebView2;
+                    brdmain.Child = wv2Dictionary[swap] as WebView2CompositionControl;
                     wv2Dictionary[swap] = temp;
                     if (swap < wv2Dictionary.Count)
                     {
@@ -2811,7 +2811,7 @@ namespace VideoGui
                 ex.LogWrite($"Click_Upload {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-        public async void Close_Upload(WebView2 wv2)
+        public async void Close_Upload(WebView2CompositionControl wv2)
         {
             try
             {
@@ -3245,7 +3245,7 @@ namespace VideoGui
             }
         }
 
-        private void MenuClicker(WebView2 webView)
+        private void MenuClicker(WebView2CompositionControl webView)
         {
             if (!Dispatcher.CheckAccess())
             {
@@ -3388,7 +3388,7 @@ namespace VideoGui
         {
             return (IntPtr)((delta << 16) | keys);
         }
-        public void SimulateMouseWheel(WebView2 webView, bool isUp, int repeatCount = 10)
+        public void SimulateMouseWheel(WebView2CompositionControl webView, bool isUp, int repeatCount = 10)
         {
             try
             {
@@ -3423,7 +3423,7 @@ namespace VideoGui
                 ex.LogWrite($"SimulateMouseWheel {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-        private async Task SimulateWheelUpDownAsync(WebView2 webView, Point? elementPoint = null)
+        private async Task SimulateWheelUpDownAsync(WebView2CompositionControl webView, Point? elementPoint = null)
         {
             try
             {
@@ -3478,7 +3478,7 @@ namespace VideoGui
             }
         }
 
-        public void SimulateWheelUpDown(WebView2 webView, Point? elementPoint = null)
+        public void SimulateWheelUpDown(WebView2CompositionControl webView, Point? elementPoint = null)
         {
             try
             {

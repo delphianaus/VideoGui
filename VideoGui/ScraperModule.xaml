@@ -14,38 +14,38 @@
     <Grid UseLayoutRounding="True" x:Name="gridmain">
         <Border x:Name="brdmain" BorderBrush="Black" BorderThickness="3" Margin="2,1,3,40" AllowDrop="True"
                 VerticalAlignment="Top" >
-            <wv2:WebView2 x:Name="wv2" Margin="3,3,3,3" ZoomFactor="0.5" MouseMove="wv2_MouseMove" 
+            <wv2:WebView2CompositionControl x:Name="wv2" Margin="3,3,3,3" ZoomFactor="0.5" MouseMove="wv2_MouseMove" 
               NavigationCompleted="wv2_NavigationCompleted" />
         </Border>
         <Border x:Name="brdmainA1" VerticalAlignment="Bottom" BorderThickness="3" BorderBrush="Black" Margin="2,2,2,121" Height="300">
-            <wv2:WebView2 x:Name="wv2A1" Height="0" NavigationCompleted="Wv2s_NavigationCompleted"/>
+            <wv2:WebView2CompositionControl x:Name="wv2A1" Height="0" NavigationCompleted="Wv2s_NavigationCompleted"/>
         </Border>
         <Border x:Name="brdmainA2" VerticalAlignment="Top">
-            <wv2:WebView2 x:Name="wv2A2" Height="0" AllowDrop="True" NavigationCompleted="Wv2s_NavigationCompleted"/>
+            <wv2:WebView2CompositionControl x:Name="wv2A2" Height="0" AllowDrop="True" NavigationCompleted="Wv2s_NavigationCompleted"/>
         </Border>
         <Border x:Name="brdmainA3" VerticalAlignment="Top">
-            <wv2:WebView2 x:Name="wv2A3" Height="0" AllowDrop="True" NavigationCompleted="Wv2s_NavigationCompleted"/>
+            <wv2:WebView2CompositionControl x:Name="wv2A3" Height="0" AllowDrop="True" NavigationCompleted="Wv2s_NavigationCompleted"/>
         </Border>
         <Border x:Name="brdmainA4" VerticalAlignment="Top">
-            <wv2:WebView2 x:Name="wv2A4" Height="0" AllowDrop="True" NavigationCompleted="Wv2s_NavigationCompleted"/>
+            <wv2:WebView2CompositionControl x:Name="wv2A4" Height="0" AllowDrop="True" NavigationCompleted="Wv2s_NavigationCompleted"/>
         </Border>
         <Border x:Name="brdmainA5" VerticalAlignment="Top">
-            <wv2:WebView2 x:Name="wv2A5" Height="0" AllowDrop="True" NavigationCompleted="Wv2s_NavigationCompleted"/>
+            <wv2:WebView2CompositionControl x:Name="wv2A5" Height="0" AllowDrop="True" NavigationCompleted="Wv2s_NavigationCompleted"/>
         </Border>
         <Border x:Name="brdmainA6" VerticalAlignment="Top">
-            <wv2:WebView2 x:Name="wv2A6" Height="0" AllowDrop="True" NavigationCompleted="Wv2s_NavigationCompleted"/>
+            <wv2:WebView2CompositionControl x:Name="wv2A6" Height="0" AllowDrop="True" NavigationCompleted="Wv2s_NavigationCompleted"/>
         </Border>
         <Border x:Name="brdmainA7" VerticalAlignment="Top">
-            <wv2:WebView2 x:Name="wv2A7" Height="0" AllowDrop="True" NavigationCompleted="Wv2s_NavigationCompleted"/>
+            <wv2:WebView2CompositionControl x:Name="wv2A7" Height="0" AllowDrop="True" NavigationCompleted="Wv2s_NavigationCompleted"/>
         </Border>
         <Border x:Name="brdmainA8" VerticalAlignment="Top">
-            <wv2:WebView2 x:Name="wv2A8" Height="0" AllowDrop="True" NavigationCompleted="Wv2s_NavigationCompleted"/>
+            <wv2:WebView2CompositionControl x:Name="wv2A8" Height="0" AllowDrop="True" NavigationCompleted="Wv2s_NavigationCompleted"/>
         </Border>
         <Border x:Name="brdmainA9" VerticalAlignment="Top">
-            <wv2:WebView2 x:Name="wv2A9" Height="0" AllowDrop="True" NavigationCompleted="Wv2s_NavigationCompleted"/>
+            <wv2:WebView2CompositionControl x:Name="wv2A9" Height="0" AllowDrop="True" NavigationCompleted="Wv2s_NavigationCompleted"/>
         </Border>
         <Border x:Name="brdmainA10" VerticalAlignment="Top">
-            <wv2:WebView2 x:Name="wv2A10" Height="0" AllowDrop="True" NavigationCompleted="Wv2s_NavigationCompleted"/>
+            <wv2:WebView2CompositionControl x:Name="wv2A10" Height="0" AllowDrop="True" NavigationCompleted="Wv2s_NavigationCompleted"/>
         </Border>
         <Border x:Name="brdInfo" BorderBrush="Black" BorderThickness="2" Margin="2,1,3,42" 
                 VerticalAlignment="Bottom" >
