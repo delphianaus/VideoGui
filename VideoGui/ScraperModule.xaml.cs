@@ -7,6 +7,7 @@ using HtmlAgilityPack;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Web.WebView2.Core;
+using Microsoft.Web.WebView2.Core.Raw;
 using Microsoft.Web.WebView2.WinForms;
 using Microsoft.Web.WebView2.Wpf;
 using Microsoft.Win32;
@@ -51,6 +52,7 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
+using System.Windows.Interop;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 using System.Xml;
@@ -157,6 +159,7 @@ namespace VideoGui
         private const int WHEEL_DELTA = 120; // Standard wheel delta value
         private const int INPUT_MOUSE = 0;
         private const int MOUSEEVENTF_WHEEL = 0x0800;
+        private CoreWebView2CompositionController wv2CompositionController;
 
         [DllImport("user32.dll", SetLastError = true)]
         private static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
@@ -344,7 +347,7 @@ namespace VideoGui
             }
         }
         Action<string, int, string, string> TargetUpdate = null;
-        public ScraperModule(databasehook<object> _Invoker, OnFinishIdObj _OnFinish, 
+        public ScraperModule(databasehook<object> _Invoker, OnFinishIdObj _OnFinish,
             string _Default_url, string _TargetUrl)
         {
             try
@@ -729,6 +732,13 @@ namespace VideoGui
                 {
                     done = true;
                 };
+                await wv2.EnsureCoreWebView2Async(env);
+                var hwndSource = (HwndSource)PresentationSource.FromVisual(wv2);
+                if (hwndSource != null)
+                {
+                    var handle = hwndSource.Handle;
+                    wv2CompositionController = await env.CreateCoreWebView2CompositionControllerAsync(handle);
+                }
                 wv2A1.CoreWebView2InitializationCompleted += (s, e) =>
                 {
                     (s as WebView2).Tag = 1;
@@ -1760,7 +1770,7 @@ namespace VideoGui
                             }
                             else
                             {
-                                if (DoNextNode && (ScraperType == EventTypes.ShortsSchedule || 
+                                if (DoNextNode && (ScraperType == EventTypes.ShortsSchedule ||
                                     ScraperType == EventTypes.ScrapeDraftSchedules))
                                 {
                                     DoNextNode = DoNodeScrapeUpdate(Id, TitleStr, DescStr, "", StatusStr, dateTime);
@@ -1857,7 +1867,7 @@ namespace VideoGui
                         }
                         string Range = nodes.FirstOrDefault();
 
-                        string MaxCnt = nodes.LastOrDefault().Replace(",", "").Trim(); 
+                        string MaxCnt = nodes.LastOrDefault().Replace(",", "").Trim();
                         int iCnt = MaxCnt.ToInt(-1);
                         string CntNow = Range.Split('–').LastOrDefault();
                         int iCntNow = CntNow.ToInt(-1);
@@ -3357,7 +3367,7 @@ namespace VideoGui
                 ex.LogWrite($"cancelds {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-        public async Task<ButtonReturnType> IsButtonEnabled(WebView2 webView2)
+        public async Task<ButtonReturnType> IsButtonEnabled(WebView2CompositionControl webView2)
         {
             try
             {
@@ -3404,19 +3414,16 @@ namespace VideoGui
                 POINT currentPos;
                 GetCursorPos(out currentPos);
 
-                // Create single mouse input structure with larger delta
-                INPUT[] inputs = new INPUT[1];
-                inputs[0].type = INPUT_MOUSE;
-                inputs[0].mi.dx = currentPos.X;
-                inputs[0].mi.dy = currentPos.Y;
-                inputs[0].mi.mouseData = (isUp ? WHEEL_DELTA : -WHEEL_DELTA) * repeatCount;
-                inputs[0].mi.dwFlags = MOUSEEVENTF_WHEEL;
-                inputs[0].mi.time = 0;
-                inputs[0].mi.dwExtraInfo = IntPtr.Zero;
-
-                // Send the input
-                SendInput(1, inputs, Marshal.SizeOf(typeof(INPUT)));
-                Thread.Sleep(50); // Small delay after wheel event
+                // Use composition controller to send wheel event
+                if (wv2CompositionController != null)
+                {
+                    var deltaY = (isUp ? WHEEL_DELTA : -WHEEL_DELTA) * repeatCount;
+                    var clientPoint = webView.PointFromScreen(new Point(currentPos.X, currentPos.Y));
+                    System.Drawing.Point clientPoint2 = new System.Drawing.Point((int)clientPoint.X, (int)clientPoint.Y);
+                    wv2CompositionController.SendMouseInput(CoreWebView2MouseEventKind.Wheel, 
+                        CoreWebView2MouseEventVirtualKeys.None,(uint)deltaY, clientPoint2);
+                    Thread.Sleep(50); // Small delay after wheel event
+                }
             }
             catch (Exception ex)
             {
@@ -3608,7 +3615,7 @@ namespace VideoGui
                             break;
                         }
                         NodeUpdate(Span_Name, ScheduledGet);
-                        
+
                         for (int i = Nodes.Count - 1; i >= 0; i--)
                         {
                             int start = Nodes[i].InnerText.IndexOf("\n") + 1;
@@ -3652,7 +3659,7 @@ namespace VideoGui
                                     bool fnd = false;
                                     while (!ctsx.IsCancellationRequested)
                                     {
-                                        
+
                                         SendTraceInfo?.Invoke(this, $"Waiting For Edit Window For {newfile}");
                                         var htmlx = await wv2.CoreWebView2.ExecuteScriptAsync("document.body.innerHTML");
                                         var ehtmlx = Regex.Unescape(htmlx);
@@ -3876,14 +3883,14 @@ namespace VideoGui
                                             }
                                             if (TitleStr != "")
                                             {
-                                                if ((sender as WebView2).CoreWebView2 != null)
+                                                if ((sender as WebView2CompositionControl).CoreWebView2 != null)
                                                 {
                                                     string script = "var divElements = document.querySelectorAll('[aria-label=\"Tell viewers about your video (type @ to mention a channel)\"]');" +
                                                        "divElements.forEach(function(divElement) {" +
                                                       $"   divElement.textContent = '{TitleStr}';" +
                                                        "});";
 
-                                                    (sender as WebView2).CoreWebView2.ExecuteScriptAsync(script);
+                                                    (sender as WebView2CompositionControl).CoreWebView2.ExecuteScriptAsync(script);
                                                 }
                                             }
                                             if (DescStr != "")
@@ -3892,15 +3899,15 @@ namespace VideoGui
                                                        "divElements.forEach(function(divElement) {" +
                                                       $"   divElement.textContent = '{DescStr}';" +
                                                        "});";
-                                                (sender as WebView2).CoreWebView2.ExecuteScriptAsync(script2);
+                                                (sender as WebView2CompositionControl).CoreWebView2.ExecuteScriptAsync(script2);
                                             }
                                             if (TitleStr != "" || DescStr != "")
                                             {
-                                                if ((sender as WebView2).CoreWebView2 != null)
+                                                if ((sender as WebView2CompositionControl).CoreWebView2 != null)
                                                 {
                                                     while (true)
                                                     {
-                                                        var p = IsButtonEnabled((sender as WebView2)).GetAwaiter().GetResult();
+                                                        var p = IsButtonEnabled((sender as WebView2CompositionControl)).GetAwaiter().GetResult();
                                                         if (p == ButtonReturnType.Enabled)
                                                         {
                                                             break;
@@ -3911,10 +3918,10 @@ namespace VideoGui
                                                                    "if (saveButton) {" +
                                                                    "   saveButton.click();" +
                                                                    "}";
-                                                    (sender as WebView2).CoreWebView2.ExecuteScriptAsync(script1);
+                                                    (sender as WebView2CompositionControl).CoreWebView2.ExecuteScriptAsync(script1);
                                                     while (true)
                                                     {
-                                                        var p = IsButtonEnabled((sender as WebView2)).GetAwaiter().GetResult();
+                                                        var p = IsButtonEnabled((sender as WebView2CompositionControl)).GetAwaiter().GetResult();
                                                         if (p == ButtonReturnType.Disabled)
                                                         {
                                                             break;
