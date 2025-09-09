@@ -289,7 +289,7 @@ namespace VideoGui
         {
             try
             {
-                if (sender is WebView2 wv)
+                if (sender is WebView2CompositionControl wv)
                 {
                     //wv2.IsInitialized = true;
                 }
@@ -2228,7 +2228,7 @@ namespace VideoGui
                     ProcessWebViewComplete(sender);
                     return;
                 }
-                if (sender is WebView2 webView2Instance)
+                if (sender is WebView2CompositionControl webView2Instance)
                 {
                     var task = webView2Instance.ExecuteScriptAsync("document.body.innerHTML");
                     if (ScraperType != EventTypes.ShortsSchedule && ScraperType != EventTypes.ScapeSchedule)
@@ -2255,7 +2255,7 @@ namespace VideoGui
                     ProcessWebView(sender);
                     return;
                 }
-                if (sender is WebView2 webView2Instance)
+                if (sender is WebView2CompositionControl webView2Instance)
                 {
                     var task = webView2Instance.ExecuteScriptAsync("document.body.innerHTML");
                     task.ContinueWith(x => { ProcessWV2(x.Result, sender); }, TaskScheduler.FromCurrentSynchronizationContext());
@@ -2502,7 +2502,7 @@ namespace VideoGui
                 {
                     NextRecord = false;
 
-                    if (sender is WebView2 webView2Instance)
+                    if (sender is WebView2CompositionControl webView2Instance)
                     {
                         string Urlx = webView2Instance.Source.ToString();
                         if (Urlx is not null)

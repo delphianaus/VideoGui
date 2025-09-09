@@ -4891,25 +4891,7 @@ namespace VideoGui
                     sql = "UPDATE MULTISHORTSINFO SET LINKEDSHORTSDIRECTORYID = @ID WHERE ID = @ID2;";
                     connectionString.ExecuteScalar(sql, [("@ID", Idx), ("@ID2", t.Id)]);
                     string newpath = Path.Combine(BaseDirectory, t.DirectoryName);
-                    if (Directory.Exists(newpath))
-                    {
-                        List<string> files =
-                            Directory.EnumerateFiles(newpath, "*.mp4", SearchOption.AllDirectories).ToList().
-                            Where(s => s.Contains("_")).ToList();
-                        foreach (var f in files)
-                        {
-                            string fn = Path.GetFileNameWithoutExtension(f);
-                            string ext = Path.GetExtension(f);
-                            string path = Path.GetDirectoryName(f);
-                            int idxa = fn.IndexOf("_");
-                            string newfn = fn.Substring(0, idxa) + $"_{t.LinkedShortsDirectoryId}";
-                            if (fn != newfn)
-                            {
-                                string newf2 = Path.Combine(path, newfn + ext);
-                                File.Move(f, newf2);
-                            }
-                        }
-                    }
+                    
                 }
                 FilterActiveShortsDirlectoryList();
                 bool _fnd = false;

@@ -223,6 +223,11 @@ namespace VideoGui
                     Canvas.SetTop(BtnClose, _height - 78);
                     Canvas.SetTop(BtnRunUploaders, _height - 78);
                     Canvas.SetTop(btnSchdule, _height - 78);
+
+                    Canvas.SetTop(BtnScrapeDrafts, _height - 78);
+                    Canvas.SetTop(btnSchduleScraper, _height - 78);
+
+
                     Canvas.SetTop(tbDebug, _height - 82);
                     double r = 4.2;
                     Canvas.SetTop(txtTotalUploads, _height - 64.5 - r);
