@@ -311,6 +311,11 @@ namespace VideoGui
             {
                 switch (ThisForm)
                 {
+
+                    case ProcessDraftTargets processDraftTargets:
+                        {
+                            return processDraftTargets_Handler<TResult>(tld, processDraftTargets);
+                        }
                     case MultiShortsUploader frmMultiShortsUploader:
                         {
                             return formObjectHandler_MultiShortsUploader<TResult>(tld, frmMultiShortsUploader);
@@ -382,6 +387,32 @@ namespace VideoGui
             }
         }
 
+        private TResult processDraftTargets_Handler<TResult>(object tld, ProcessDraftTargets processDraftTargets)
+        {
+            try
+            {
+                if (tld is CustomParams_SetIndex cpsii)
+                {
+                    ShortsDirectoryIndex = cpsii.index;
+                }
+                else if (tld is CustomParams_GetConnectionString CGCS)
+                {
+                    CGCS.ConnectionString = connectionString;
+                    return (TResult)Convert.ChangeType(connectionString, typeof(TResult));
+                }
+                else if (tld is CustomParams_Initialize cpInit)
+                {
+                    processDraftTargets.msuTargets.ItemsSource = ProcessTargetsList;
+                }
+                return default(TResult);
+                //return (TResult)Convert.ChangeType(true, typeof(TResult));
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"processDraftTargets_Handler {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+                return default(TResult);
+            }
+        }
 
         public void InsertIntoMultiShortsInfo(int NumberofShorts,
             int LinkedId, DateTime LastTimeUploaded, bool _IsActive = false)
@@ -3755,6 +3786,12 @@ namespace VideoGui
         {
             try
             {
+                if (tld is CustomParams_DisplayTargets cpDTT)
+                {
+                    var _DisplayT = new ProcessDraftTargets(InvokerHandler<object>, 
+                        OnTargetsClose, cpDTT.ShowAction);
+                    _DisplayT.Show();
+                }
                 if (tld is CustomParams_ProcessTargets cpPTT)
                 {
                     int LinkedId = cpPTT.LinkedId;
@@ -3771,7 +3808,7 @@ namespace VideoGui
                         }
                         if (LinkedId == -1)
                         {
-                            ProcessTargetsList.Add(new ProcessTargets(cpPTT.VideoId, -1, "",-1, "",-1));
+                            ProcessTargetsList.Add(new ProcessTargets(ProcessTargetsList.Count + 1, cpPTT.VideoId, -1, "",-1, "",-1));
                         }
 
                         return default(TResult);
@@ -3819,7 +3856,8 @@ namespace VideoGui
                             }
                             if (!ProcessTargetsList.Any(s => s.LinkedId == LinkedId))
                             {
-                                ProcessTargetsList.Add(new ProcessTargets("", 
+
+                                ProcessTargetsList.Add(new ProcessTargets(ProcessTargetsList.Count+1,"", 
                                     LinkedId, Title, _LastTitleId,
                                     Desc, _LastDescId));
                             }
@@ -4096,6 +4134,22 @@ namespace VideoGui
             {
                 ex.LogWrite($"scraperModule_Handler {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
                 return default(TResult);
+            }
+        }
+
+        private void OnTargetsClose(object ThisForm)
+        {
+            try
+            {
+                if (ThisForm is ProcessDraftTargets pdt)
+                {
+                    pdt.ShowParent();
+                    pdt = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"OnTargetsClose {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
 
@@ -4500,7 +4554,7 @@ namespace VideoGui
                 return -1;
             }
         }
-        public void Invoker()
+        public void CreateDBInvoker()
         {
             try
             {
@@ -5366,7 +5420,7 @@ namespace VideoGui
                 Loadsettings();
                 string clientSecret = "", p = "";
                 connectionString = GetConectionString();
-                Invoker();
+                CreateDBInvoker();
                 connectionString.ExecuteReader("SELECT * FROM SETTINGS WHERE SETTINGNAME = 'CLIENT_SECRET';", (FbDataReader r) =>
                 {
                     clientSecret = (r["SETTINGBLOB"] is byte[] res) ? Encoding.ASCII.GetString(CryptData(res)) : "";

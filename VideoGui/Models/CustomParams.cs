@@ -43,6 +43,15 @@ namespace VideoGui.Models
         }
     }
 
+    public class CustomParams_DisplayTargets
+    {
+        public Action<object> ShowAction = null;
+        public CustomParams_DisplayTargets(Action<object> _ShowAction)
+        {
+            ShowAction = _ShowAction;
+        }
+    }
+
     public class CustomParams_MoveOrphanFiles
     {
         public CustomParams_MoveOrphanFiles()

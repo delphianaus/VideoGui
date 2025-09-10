@@ -75,6 +75,7 @@ namespace VideoGui.Models.delegates
     public delegate void OnFinish();
     public delegate bool OnFinishBool();
     public delegate void OnFinishId(int id);
+    public delegate void OnFinishObj(object ThisForm);
     public delegate void OnFinishIdObj(object ThisForm, int id);
     public delegate void ProcessSchedule(int id, DateTime start, DateTime end, int max, int ScheduleID);
     public delegate void OnStart(string SourceFileName);

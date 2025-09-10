@@ -3410,6 +3410,9 @@ namespace VideoGui
 
                 if (webView == null || canceltoken.IsCancellationRequested || repeatCount == 0) return;
 
+
+
+
                 // Get the current cursor position
                 POINT currentPos;
                 GetCursorPos(out currentPos);
