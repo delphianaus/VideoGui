@@ -1181,11 +1181,27 @@ namespace VideoGui
             }
         }
 
+        private void ShowThisForm(object sender)
+        {
+            try
+            {
+                Show();
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"ShowThisForm {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
+            }
+        }
+
         private void FinishScraperTargets(object ThisForm, int id)
         {
             try
             {
-                
+                if (ThisForm is ScraperModule rl)
+                {
+                    // assume targets collected.
+                    Invoker?.Invoke(this, new CustomParams_DisplayTargets(ShowThisForm));
+                }
             }
             catch (Exception ex)
             {
