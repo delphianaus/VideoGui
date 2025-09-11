@@ -650,7 +650,7 @@ namespace VideoGui
                             if (cnt < 3)
                             {
                                 rp.IsActive = false;
-                                string sql1 = "UPDATE MULTISHORTSINFO SET ACTIVE = @ACTIVE WHERE LINKEDSHORTSDIRECTORYID = @LINKEDSHORTSDIRECTORYID";
+                                string sql1 = "UPDATE MULTISHORTSINFO SET ISSHORTSACTIVE = @ACTIVE WHERE LINKEDSHORTSDIRECTORYID = @LINKEDSHORTSDIRECTORYID";
                                 connectionStr.ExecuteNonQuery(sql1,
                                     [("@ACTIVE", false),
                                     ("@LINKEDSHORTSDIRECTORYID", rp.LinkedShortsDirectoryId)]);
@@ -686,7 +686,7 @@ namespace VideoGui
                                     {
                                         rp.IsActive = false;
                                         string sql = "UPDATE MULTISHORTSINFO SET " +
-                                            "NUMBEROFSHORTS = @NUMBEROFSHORTS, ACTIVE = @ACTIVE " +
+                                            "NUMBEROFSHORTS = @NUMBEROFSHORTS, ISSHORTSACTIVE = @ACTIVE " +
                                             "WHERE LINKEDSHORTSDIRECTORYID = @LINKEDSHORTSDIRECTORYID";
                                         connectionStr.ExecuteNonQuery(sql,
                                             [("@NUMBEROFSHORTS", shortsleft),
@@ -730,7 +730,7 @@ namespace VideoGui
                                     {
                                         rp.IsActive = false;
                                         string sql = "UPDATE MULTISHORTSINFO SET " +
-                                            "NUMBEROFSHORTS = @NUMBEROFSHORTS, ACTIVE = @ACTIVE " +
+                                            "NUMBEROFSHORTS = @NUMBEROFSHORTS, ISSHORTSACTIVE = @ACTIVE " +
                                             "WHERE LINKEDSHORTSDIRECTORYID = @LINKEDSHORTSDIRECTORYID";
                                         connectionStr.ExecuteNonQuery(sql,
                                             [("@NUMBEROFSHORTS", shortsleft),

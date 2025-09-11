@@ -25,7 +25,7 @@ namespace VideoGui
         private double _TotalSeconds;
         //CET MOD
         private bool _IsTwitchStream, _Is5K, _Is4kAdobe, _IsMSJ, _IsNVM, _Complete, 
-            _ConversionStarted, _ProbePassed, _KeepSource, _IsMulti,
+            _ConversionStarted, _ProbePassed, _KeepSource, _IsMulti, _IsDownloads,
             _fisheye, _processed, _X264Override, _ComplexMode, _Is720p,
             _Is48K, _IsComplex, _ProbeLock, _IsAc3_2Channel, _IsAc3_6Channel,
             _InProcess, _IsSkipped, _IsShorts,_Mpeg4ASP, _Mpeg4AVC, _Is1080p, 
@@ -98,6 +98,7 @@ namespace VideoGui
 
 
         public bool IsShorts { get => _IsShorts; set { _IsShorts = value; OnPropertyChanged(); } }
+        public bool IsDownloads { get => _IsDownloads; set { _IsDownloads = value; OnPropertyChanged(); } }
         public int IsCreateShorts { get => _IsCreateShorts; set { _IsCreateShorts = value; OnPropertyChanged(); } }
 
         public bool Is4KAdobe { get => _Is4kAdobe; set { _Is4kAdobe = value; OnPropertyChanged(); } }
@@ -154,6 +155,7 @@ namespace VideoGui
             {
                 Is5K = false;
                 RTMP = "";
+                IsDownloads = false;
                 bool IsComplexYT = false;
                 var srcdir = reader["SRCDIR"].ToString();
                 var destfname = reader["DESTFNAME"].ToString();
@@ -253,13 +255,14 @@ namespace VideoGui
                 ex.LogWrite($"{this} {MethodBase.GetCurrentMethod().Name}");
             }
         }
-        public JobListDetails(string _Title, int _SourceFileIndex, int _Autoinssertid, string _ScriptFile,
+        public JobListDetails(bool _IsDownloads,string _Title, int _SourceFileIndex, int _Autoinssertid, string _ScriptFile,
             int _ScriptType, bool _Is1080p = false, bool _Is4Kp = false, bool _ISMJS = false,
             bool __Is4KAdobe = false, bool __IsShorts = false, int __IsCreateShorts = 0,
             string _FIleInfo = "", bool __IsMuxed = false, string __muxdata = "")
         {
             // _ScriptType - 0 = src, 1 cst, 2 edt
             DeletionFileHandle = -1;
+            IsDownloads = _IsDownloads;
             (Fileinfo, Progress, SourceFileIndex, Is1080p, Is4K, ScriptFile) = (_FIleInfo, 0, _SourceFileIndex, _Is1080p, _Is4Kp, _ScriptFile);
             (ProbePassed, Complete, ProbeLock, _ProbeStarted, _ConversionStarted, Processed) = (true, false, false, false, false, false);
             (JobDate, MultiFile) = (DateTime.Now, _Title);
@@ -324,7 +327,7 @@ namespace VideoGui
             }
         }
 
-        public JobListDetails(string _Title, int _SourceFileIndex, bool _Is1080p = false,
+        public JobListDetails(bool _IsDownloads,string _Title, int _SourceFileIndex, bool _Is1080p = false,
             bool _Is4Kp = false, bool _Is4KAdobe = false, string _FIleInfo = "",
             int _Progress = 0, bool x265Override = false, bool _IsMpeg4ASP = false,
             bool _IsMpeg4AVC = false)
@@ -339,6 +342,7 @@ namespace VideoGui
             Is4KAdobe |= _Is4KAdobe;
             Is1080p = _Is1080p;
             Is4K = _Is4Kp;
+            _IsDownloads = _IsDownloads;
             Handle = "";
             if (Is4KAdobe)
             {

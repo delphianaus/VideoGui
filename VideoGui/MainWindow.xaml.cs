@@ -3440,8 +3440,9 @@ namespace VideoGui
                                 TagCnt++;
                             }
                         }
-                        if (TagCnt == 0)
+                        if (TagCnt <= 2)
                         {
+                            BaseStr = " ";
                             List<string> Tags = new List<string> {
                                "#TRAINS", "#TRAVEL", "#SHORTS", "#RAILFANS",
                                "#RAILWAY", "#RAIL"};
@@ -4043,14 +4044,40 @@ namespace VideoGui
                             }
                         }
                         string BaseStr = "";
+                        int TagCnt = 0;
                         foreach (var item2 in TitleTagsList.Where(s => s.GroupId == cgt.title))
                         {
                             if (!BaseStr.Contains($"#{item2.Description}"))
                             {
                                 BaseStr += $"#{item2.Description} ";
+                                TagCnt++;
                             }
                         }
                         BaseStr = BaseStr.Trim();
+                        if (TagCnt <= 2)
+                        {
+                            BaseStr = "";
+                            List<string> Tags = new List<string> {
+                               "#TRAINS", "#TRAVEL", "#SHORTS", "#RAILFANS",
+                               "#RAILWAY", "#RAIL"};
+                            if (BaseStr.Contains("VLINE"))
+                            {
+                                Tags.Insert(0, "#VLINE");
+                            }
+                            while (Tags.Count > 0 && BaseStr.Length < 100)
+                            {
+                                string tg = BaseStr + " " + Tags[0];
+                                if (tg.Length < 100)
+                                {
+                                    BaseStr = tg;
+                                    Tags.RemoveAt(0);
+                                }
+                                else
+                                {
+                                    break;
+                                }
+                            }
+                        }
                         cgt.name = BaseTitle.ToPascalCase() + " " + BaseStr;
                         return (TResult)Convert.ChangeType(cgt.name, typeof(TResult));
                     }
@@ -5085,6 +5112,7 @@ namespace VideoGui
                     jp.Start = textstart.FromStrToTimeSpan();
                     jp.IsCutTrim = IsCutEncode;
                     jp.IsEncodeTrim = IsTrimEncode;
+                    jp.IsDownloads = false;
                     jp.RTMP = RTMP;
                     if (!ismuxed)
                     {
@@ -5126,7 +5154,7 @@ namespace VideoGui
                         if (IsCutEncode) ScriptType = 1;
                         string CutFrames = ((textstart != "") || (textduration != "")) ? $"|{textstart}|{Final.ToFFmpeg()}|time" : "";
                         string ScriptFile = $"true|{destFilename}|{sourcedirectory}|*.mp4{CutFrames}";
-                        JobListDetails InMemoryJob = new JobListDetails(Title, SourceIndex++, iddx, ScriptFile,
+                        JobListDetails InMemoryJob = new JobListDetails(false,Title, SourceIndex++, iddx, ScriptFile,
                             ScriptType, false, true,
                             IsPersistantSource, IsAdobe, IsShorts, IsCreateShorts, "", ismuxed, muxdata);
                         if (InMemoryJob.GetCutList().Count > 0 || RTMP != "")
@@ -5168,7 +5196,7 @@ namespace VideoGui
 
                         ComplexJobList cjl = new ComplexJobList(sourcedirectory, destFilename,
                             textstart.FromStrToTimeSpan(), Final, Is720P, IsShorts, IsCreateShorts,
-                            IsTrimEncode, IsCutEncode, IsDeleteMonitored, IsPersistantSource, idx, ismuxed, muxdata);
+                            IsTrimEncode, IsCutEncode, IsDeleteMonitored, IsPersistantSource, idx, ismuxed, muxdata, false);
                         if (RTMP != "" && twitchschedule.HasValue)
                         {
                             cjl.RTMP = RTMP;
@@ -5187,7 +5215,7 @@ namespace VideoGui
                         if (IsTwitchStream) ScriptType = 5;
                         string CutFrames = ((textstart != "") && (textduration != "")) ? $"|{textstart}|{Final.ToFFmpeg()}|time" : "";
                         string ScriptFile = $"true|{destFilename}|{sourcedirectory}|*.mp4{CutFrames}";
-                        JobListDetails InMemoryJob = new JobListDetails(Title, SourceIndex++, idx, ScriptFile, ScriptType,
+                        JobListDetails InMemoryJob = new JobListDetails(false,Title, SourceIndex++, idx, ScriptFile, ScriptType,
                             false, true, IsPersistantSource, IsAdobe, IsShorts, IsCreateShorts, "", ismuxed, muxdata);
                         if (InMemoryJob.GetCutList().Count > 0 || RTMP != "" || ismuxed)
                         {
@@ -8905,7 +8933,8 @@ namespace VideoGui
                         ProcessingTimeGlobal += TimeToProcess;
                     }
                     info = $"[{total}@{fps}fps]";
-                    bool IsTwitchActive = false, KeepSource = false, Is1080p = false, IsComplex = false, Is4K = false, IsSrc = false, IsMulti = false, IsAdobe = false;
+                    bool IsTwitchActive = false, KeepSource = false, Is1080p = false, IsComplex = false, 
+                        Is4K = false, IsSrc = false, IsMulti = false, IsAdobe = false, IsDownloads = false;
                     List<string> Cuts = new List<string>();
                     string SourceFileIs = "", destmfile = "", Multifile = "", DestMFile = "", Title = "";
                     bool IsNVM = false, IsMonitoredSource = false, bIsMuxed = false;
@@ -8915,6 +8944,7 @@ namespace VideoGui
                         if (ProcessingJobs[jindex].FileNoExt == sourcefile)
                         {
                             IsNVM = ProcessingJobs[jindex].IsNVM;
+                            
                             ID = ProcessingJobs[jindex].DeletionFileHandle;
                             SourceFileIs = ProcessingJobs[jindex].SourceFile;
                             IsSrc = ProcessingJobs[jindex].IsMulti;
@@ -8922,6 +8952,7 @@ namespace VideoGui
                             IsAdobe = ProcessingJobs[jindex].Is4KAdobe;
                             IsTwitchActive = ProcessingJobs[jindex].IsTwitchActive;
                             bIsMuxed = ProcessingJobs[jindex].IsMuxed;
+                            IsDownloads = ProcessingJobs[jindex].IsDownloads;
                             destmfile = (IsSrc) ? ProcessingJobs[jindex].DestMFile : ""; ;
                             Multifile = (IsSrc) ? ProcessingJobs[jindex].MultiFile : ""; ;
                             if (IsSrc) Cuts.AddRange(ProcessingJobs[jindex].GetCutList());
@@ -8971,10 +9002,11 @@ namespace VideoGui
 
                     if (!File.Exists(SourceFileIs) && !IsMuxed)
                     {
-                        string SourceDirectory = (Is4K) ? SourceDirectory4K : (Is1080p) ? SourceDirectory1080p : SourceDirectory720p;
+                        string SourceDirectory =(IsDownloads) ? GetDownloadsFolder() : (Is4K) ? SourceDirectory4K : (Is1080p) ? SourceDirectory1080p : SourceDirectory720p;
                         if (IsAdobe) SourceDirectory = SourceDirectoryAdobe4K;
                         SourceDirectory.WriteLog("AsyncFinish.log");
                         SourceFileIs.WriteLog("AsyncFinish.log");
+                        if (IsDownloads) SourceFileIs = Path.GetFileName(SourceFileIs);
                         List<string> files = Directory.EnumerateFiles(SourceDirectory, SourceFileIs, SearchOption.AllDirectories).ToList();
                         if (files.Count > 0)
                         {
@@ -11770,7 +11802,7 @@ namespace VideoGui
                 bool IsNotDownloads = Path.GetDirectoryName(SourceDir).Contains(DownloadsDir);// """DownloadsDir;
                 IsNotDownloads = !IsNotDownloads;
 
-                var newjob = new JobListDetails(newfile, SourceIndex++, SourceDir.Contains("1080p") && IsNotDownloads,
+                var newjob = new JobListDetails(!IsNotDownloads,newfile, SourceIndex++, SourceDir.Contains("1080p") && IsNotDownloads,
                     SourceDir.ToUpper().EndsWith("4K") && IsNotDownloads, SourceDir.ToUpper().EndsWith("4KADOBE") && IsNotDownloads);
                 if (newjob.IsMulti)
                 {
