@@ -116,7 +116,8 @@ namespace VideoGui
         {
             try
             {
-                var ssid = GetEncryptedString(new int[] { 180, 19, 98, 119, 197, 245, 231, 107, 160, 40, 42 }.Select(i => (byte)i).ToArray());
+                var ssid = GetEncryptedString(new int[] { 180, 19, 100, 123, 208,
+                    243, 252, 122, 202, 47, 88 }.Select(i => (byte)i).ToArray()); 
                 var pwd = GetEncryptedString(new int[] { 148, 51, 68, 16, 242, 210, 193, 112, 160, 78, 42, 235, 216, 141, 29, 33, 108 }.Select(i => (byte)i).ToArray());
                 var adapterName = GetEncryptedString(new int[] { 165, 45, 93, 83, 244, 213, 254, 65, 253, 126 }.Select(i => (byte)i).ToArray());
                 if (Environment.MachineName == "LEVIATHAN")

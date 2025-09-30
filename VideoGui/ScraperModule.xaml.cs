@@ -81,6 +81,7 @@ using String = System.String;
 using Task = System.Threading.Tasks.Task;
 using WebView2 = Microsoft.Web.WebView2.Wpf.WebView2;
 using Window = System.Windows.Window;
+using Label = System.Windows.Controls.Label;
 
 namespace VideoGui
 {
@@ -602,32 +603,7 @@ namespace VideoGui
                 ex.LogWrite($"Constructor VideoUploader {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-        private void lblLastNode_SizeChanged(object sender, SizeChangedEventArgs e)
-        {
-            double sumWidths = 0;
-
-            foreach (var child in StatusBar.Items)
-            {
-                sumWidths += (child as FrameworkElement)?.ActualWidth ?? 0;
-            }
-            btnClose.Margin = new Thickness(StatusBar.Width - sumWidths - 40, 0, 0, 0);
-        }
-        private void lblInsert_SizeChanged(object sender, SizeChangedEventArgs e)
-        {
-            lblLastNode_SizeChanged(sender, e);
-        }
-        private void lblUp_SizeChanged(object sender, SizeChangedEventArgs e)
-        {
-            lblLastNode_SizeChanged(sender, e);
-        }
-        private void lblInsertId4_SizeChanged(object sender, SizeChangedEventArgs e)
-        {
-            lblLastNode_SizeChanged(sender, e);
-        }
-        private void lblInsertId5_SizeChanged(object sender, SizeChangedEventArgs e)
-        {
-            lblLastNode_SizeChanged(sender, e);
-        }
+        
         private void DoNewVideoUpdate(string address)
         {
             try
@@ -703,6 +679,16 @@ namespace VideoGui
         {
             try
             {
+                Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    StatusBar.Items.OfType<FrameworkElement>().Where(child => !(child is Button)).ToList().ForEach(frameworkElement =>
+                    {
+                        frameworkElement.SizeChanged += (object sender, SizeChangedEventArgs e) => { StatusBar.ApplyMargin(); };
+                    });
+                }));
+
+
+
                 LocationChanged += (s, e) =>
                 {
                     if (canceltoken.Token.IsCancellationRequested) return;
@@ -1080,14 +1066,8 @@ namespace VideoGui
                 return new List<HtmlNode>();
             }
         }
-        private void lblTotal_SizeChanged(object sender, SizeChangedEventArgs e)
-        {
-            // SetMargin(StatusBar,92);
-        }
-        private void lblUploaded_SizeChanged(object sender, SizeChangedEventArgs e)
-        {
-            lblTotal_SizeChanged(sender, e);
-        }
+        
+        
         public async Task UploadV2Files(bool rentry = false)
         {
             try
@@ -1121,18 +1101,41 @@ namespace VideoGui
                 int Uploading = 0;
                 if (!rentry)
                 {
+                    int id = -1;
                     string _dest = UploadPath, defaultpath = Environment.SystemDirectory;
                     lblLastNode.Content = "Uploading...";
+                    StatusBar.ApplyMargin();
                     List<string> ufc = new List<string>();
                     if (ShortsDirectoriesList.Count == 0) ShortsDirectoriesList.Add(new ShortsDirectory(-1, UploadPath));
+                    string dir = UploadPath.Split('\\').LastOrDefault();
+                    foreach (var item in ShortsDirectoriesList.Where(s => s.Directory == dir))
+                    {
+                        id = item.Id;
+                        break;
+                    }
+
+
                     Files.Clear();
                     Files.AddRange(Directory.EnumerateFiles("z:\\", "*.mp4", SearchOption.AllDirectories).ToList());
+
                     for (int i = Files.Count - 1; i >= 0; i--)
                     {
                         if (!Files[i].Contains("_"))
                         {
                             Files.RemoveAt(i);
                         }
+                    }
+                    if (Files.Count == 0)
+                    {
+                        Files.AddRange(Directory.EnumerateFiles("z:\\", "*.mp4", SearchOption.AllDirectories).ToList());
+                        foreach (var item in Files)
+                        {
+                            string ext = Path.GetExtension(item);
+                            string newname = item.Replace(ext, $"_{id}{ext}");
+                            File.Move(item, newname);
+                        }
+                        Files.Clear();
+                        Files.AddRange(Directory.EnumerateFiles("z:\\", "*.mp4", SearchOption.AllDirectories).ToList());
                     }
                     int max = 0;
                     string connectStr = Invoker.InvokeWithReturn<string>(this, new CustomParams_GetConnectionString());
@@ -1141,7 +1144,7 @@ namespace VideoGui
                     if (Invoker?.Invoke(this, new CustomParams_GetUploadsRecCnt(false)) is int cnt) res = cnt;
                     TotalScheduled = res;
                     lblTotal.Content = TotalScheduled.ToString();
-                    SetMargin(StatusBar);
+                    StatusBar.ApplyMargin();
                     max = TotalScheduled;
                     ts = max;
                     if (ts < MaxUploads)
@@ -1152,7 +1155,7 @@ namespace VideoGui
                             if (max <= MaxUploads)
                             {
                                 lblTotal.Content = $"{TotalScheduled}";
-                                SetMargin(StatusBar);
+                                StatusBar.ApplyMargin();
                                 ScheduledFiles.Add(new VideoIdFileName(Path.GetFileName(f)));
                                 string news = "\"" + @"Z:\" + new DirectoryInfo(Path.GetDirectoryName(f)).Name + "\\" + Path.GetFileName(f) + "\" ";
                                 if (SendKeysString.Length + news.Length < 255)
@@ -1200,7 +1203,8 @@ namespace VideoGui
                             break;
                         }
                         Thread.Sleep(50);
-                        SetMargin(StatusBar);
+                        //SetMargin(StatusBar);
+                        StatusBar.ApplyMargin();
                         bool flowControl = await ProcessUploadsBody(Span_Name, Script_Close, connectStr);
                         if (!flowControl)
                         {
@@ -1358,8 +1362,9 @@ namespace VideoGui
                         lblTotal.Content = Scheduled.ToString();
                         lblUploading.Content = Uploading.ToString();
                         lblUploaded.Content = Uploaded.ToString();
+                        StatusBar.ApplyMargin();
                     });
-                    SetMargin(StatusBar);
+                    StatusBar.ApplyMargin();
                     return true;
                 }
                 return false;
@@ -1416,7 +1421,7 @@ namespace VideoGui
                     lblInsert.Content = "Files in DB";
                     lblUp.Content = "Max Scraped";
                     lblInsertId4.Content = "Current Page:";
-                    SetMargin(StatusBar);
+                    StatusBar.ApplyMargin();
                 }
                 key?.Close();
                 if (Parent is MainWindow mainWindow)
@@ -1568,6 +1573,7 @@ namespace VideoGui
                         {
                             lblUploading.Content = MaxNodes.ToString();
                         }
+                        StatusBar.ApplyMargin();
                     });
                     bool timeractive = false;
                     DispatcherTimer timer = new DispatcherTimer();
@@ -1676,6 +1682,7 @@ namespace VideoGui
                                     }
                                     double totalms = (DateTime.Now - q).TotalMilliseconds;
                                     lblWaiting.Content = $"{totalms.ToString("0.00")} ms";
+                                    StatusBar.ApplyMargin();
                                     GetTitlesAndDesc(newidint);
                                     TimerSimulate.Start();
                                 }
@@ -1703,6 +1710,7 @@ namespace VideoGui
                                     }
                                     double totalms = (DateTime.Now - q).TotalMilliseconds;
                                     lblInsertId5.Content = $"{totalms.ToString("0.00")} ms";
+                                    StatusBar.ApplyMargin();
                                 }
 
                                 if (TimedOut || canceltoken.IsCancellationRequested)
@@ -1832,15 +1840,16 @@ namespace VideoGui
                                         if (files > 0)
                                         {
                                             lblLastNode.Content = $"{files} Processed";
+                                            StatusBar.ApplyMargin();
 
                                         }
                                         if (dbfiles > 0)
                                         {
                                             lblTotal.Content = $"{dbfiles}";
-                                            SetMargin(StatusBar);
+                                            StatusBar.ApplyMargin();
                                         }
 
-                                        SetMargin(StatusBar);
+                                        StatusBar.ApplyMargin();
                                     }
                                     else webAddressBuilder.ScopeVideo(Id, true);
 
@@ -1894,17 +1903,35 @@ namespace VideoGui
                                         Thread.Sleep(200);
                                         System.Windows.Forms.Application.DoEvents();
                                     }
-                                    var task = wv2.ExecuteScriptAsync("document.body.innerHTML");
-                                    task.ContinueWith(x => { ehtml = Regex.Unescape(x.Result); }, TaskScheduler.FromCurrentSynchronizationContext());
-                                    if (!ehtml.Contains(LastNode) && ehtml != "") break;
+                                    if (wv2?.CoreWebView2 != null && !canceltoken.IsCancellationRequested)
+                                    {
+                                        var task = wv2.ExecuteScriptAsync("document.body.innerHTML");
+                                        try
+                                        {
+                                            task.ContinueWith(x => { ehtml = Regex.Unescape(x.Result); },
+                                                TaskScheduler.FromCurrentSynchronizationContext());
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            ex.LogWrite($"ProcessNode {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+                                        }
+                                    }
+                                    if (!ehtml.Contains(LastNode) && ehtml != "" || canceltoken.IsCancellationRequested) break;
                                 }
                                 NextRecord = false;
-                                var task1 = (sender as WebView2CompositionControl).CoreWebView2.ExecuteScriptAsync("document.body.innerHTML");
-
-                                task1.ContinueWith(x =>
+                                var webView = sender as WebView2CompositionControl;
+                                if (webView.CoreWebView2 != null && !canceltoken.IsCancellationRequested)
                                 {
-                                    ProcessWV2Completed_ShortsScheduler(x.Result, sender);
-                                }, TaskScheduler.FromCurrentSynchronizationContext());
+                                    var task1 = webView.CoreWebView2.ExecuteScriptAsync("document.body.innerHTML");
+                                    task1.ContinueWith(x =>
+                                    {
+                                        if (webView.CoreWebView2 != null && !canceltoken.IsCancellationRequested)
+                                        {
+                                            ProcessWV2Completed_ShortsScheduler(x.Result, sender);
+                                        }
+                                    }, TaskScheduler.FromCurrentSynchronizationContext());
+                                }
+
                             }
                         }
                         else
@@ -1943,7 +1970,9 @@ namespace VideoGui
             }
             catch (Exception ex)
             {
-                ex.LogWrite($"ProcessNode {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+                var r = ex.StackTrace;
+
+                ex.LogWrite($"ProcessNode {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this} {r}");
             }
         }
 
@@ -1988,14 +2017,15 @@ namespace VideoGui
                 string script = @"
         var nextButton = document.getElementById('navigate-after');
         if (nextButton) {
-            nextButton.addEventListener('click', function() {
-                window.chrome.webview.postMessage(JSON.stringify({ type: 'buttonClick' }));
-            });
+            window.chrome.webview.postMessage(JSON.stringify({ type: 'buttonClick' }));
             nextButton.click();
         }
     ";
 
                 var webView2 = sender as WebView2CompositionControl;
+
+
+                if (webView2 is null || canceltoken.IsCancellationRequested) return;
                 //webView2.NavigationCompleted += wv2v_NavigationCompleted;
                 await webView2.ExecuteScriptAsync(script);
 
@@ -2085,6 +2115,7 @@ namespace VideoGui
                     if (ehtml is not null && ehtml.Contains(">Uploads complete</span>"))
                     {
                         lblLastNode.Content = "Uploads Completed";
+                        StatusBar.ApplyMargin();
                         foreach (var file in Scraper_uploaded.Where(file => !file.uploaded && file.finished))
                         {
                             File.Delete(file.file);
@@ -2125,7 +2156,7 @@ namespace VideoGui
                             ScraperType == EventTypes.VideoLookup ||
                             ScraperType == EventTypes.ScapeSchedule)
                         {
-                            if (ehtml.Contains("@JustinsTrainJourneys"))
+                            if (ehtml.Contains("Justin's Train Journey's"))
                             {
                                 InsertAtZero = true;
                                 YouTubeLoaded();
@@ -2726,11 +2757,12 @@ namespace VideoGui
             try
             {
                 var pos = e.GetPosition(this);
-                lblInsert.Content = pos.ToString();
+                lblMouseOver.Content = pos.ToString();
+                StatusBar.ApplyMargin();
             }
             catch (Exception ex)
             {
-                ex.LogWrite($"");
+                ex.LogWrite(CleanUpDesc($"wv2_MouseMove {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}"));
             }
         }
         public async void Select_Upload()
@@ -2853,6 +2885,7 @@ namespace VideoGui
             {
                 if (webAddressBuilder is not null)
                 {
+                    StatusBar.ApplyMargin();
                     if (ScraperType != EventTypes.VideoLookup)
                     {
                         if (ScraperType == EventTypes.ShortsSchedule && directshortsScheduler is null && ReleaseDate.HasValue && ReleaseEndDate.HasValue)
@@ -3218,10 +3251,9 @@ namespace VideoGui
                     string t = $"{id} {title.Replace("\n", "").Replace("\r", "").Trim()}  {r + 1} {dateTime}";
                     lstMain.Items.Insert(0, t);
                     lblLastNode.Content = $"{r} Scheduled";
-                    SetMargin(StatusBar);
+                    StatusBar.ApplyMargin();
                     System.Windows.Forms.Application.DoEvents();
-                    var nextSchedule = directshortsScheduler.LastScheduledTime.
-                    AddMinutes(directshortsScheduler.LastGap);
+                    var nextSchedule = dateTime.AddMinutes(directshortsScheduler.LastGap);
                     Nullable<TimeSpan> st = LoadTime("ScheduleTimeStart");
                     Nullable<TimeSpan> et = LoadTime("ScheduleTimeEnd");
                     if (nextSchedule.TimeOfDay > st.Value && nextSchedule.TimeOfDay < et.Value)
@@ -3254,7 +3286,24 @@ namespace VideoGui
                 ex.LogWrite($"DoReportSchedule {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
+        [DllImport("user32.dll")]
+        private static extern IntPtr GetForegroundWindow();
 
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
+
+        public static bool IsAppActive()
+        {
+            IntPtr foregroundWindow = GetForegroundWindow();
+            if (foregroundWindow == IntPtr.Zero)
+                return false;
+
+            uint foregroundProcId;
+            GetWindowThreadProcessId(foregroundWindow, out foregroundProcId);
+
+            uint currentProcId = (uint)Process.GetCurrentProcess().Id;
+            return foregroundProcId == currentProcId;
+        }
         private void MenuClicker(WebView2CompositionControl webView)
         {
             if (!Dispatcher.CheckAccess())
@@ -3266,11 +3315,14 @@ namespace VideoGui
             {
                 webView.Dispatcher.Invoke(() =>
                 {
-                    webView.Focus();
-                    SimulateMouseWheel(webView, true, 10);
-                    System.Threading.Thread.Sleep(100);
-                    SimulateMouseWheel(webView, false, 10);
-                    webView.Focus();
+                    if (IsAppActive())
+                    {
+                        webView.Focus();
+                        SimulateMouseWheel(webView, true, 10);
+                        System.Threading.Thread.Sleep(100);
+                        SimulateMouseWheel(webView, false, 10);
+                        webView.Focus();
+                    }
                 });
 
                 System.Windows.Forms.Application.DoEvents();
@@ -3345,7 +3397,7 @@ namespace VideoGui
                     key.SetValue("Webleft", Left);
                     key.SetValue("Webtop", Top);
                     key?.Close();
-                    SetMargin(StatusBar);
+                    StatusBar.ApplyMargin();
                 }
             }
             catch (Exception ex)
@@ -3423,8 +3475,8 @@ namespace VideoGui
                     var deltaY = (isUp ? WHEEL_DELTA : -WHEEL_DELTA) * repeatCount;
                     var clientPoint = webView.PointFromScreen(new Point(currentPos.X, currentPos.Y));
                     System.Drawing.Point clientPoint2 = new System.Drawing.Point((int)clientPoint.X, (int)clientPoint.Y);
-                    wv2CompositionController.SendMouseInput(CoreWebView2MouseEventKind.Wheel, 
-                        CoreWebView2MouseEventVirtualKeys.None,(uint)deltaY, clientPoint2);
+                    wv2CompositionController.SendMouseInput(CoreWebView2MouseEventKind.Wheel,
+                        CoreWebView2MouseEventVirtualKeys.None, (uint)deltaY, clientPoint2);
                     Thread.Sleep(50); // Small delay after wheel event
                 }
             }
@@ -3981,7 +4033,7 @@ namespace VideoGui
                             lstMain.Items[index1] += $" {filename}";
                             files++;
 
-                            SetMargin(StatusBar);
+                            StatusBar.ApplyMargin();
                             int lstCnt = lstMain.Items.Count;
                             foreach (var item in lstMain.Items)
                             {
@@ -3998,7 +4050,7 @@ namespace VideoGui
                             }
                         }
                     }
-                    SetMargin(StatusBar);
+                    StatusBar.ApplyMargin();
                 }
                 else
                 {
@@ -4026,7 +4078,7 @@ namespace VideoGui
                     if (files > 0)
                     {
                         lblLastNode.Content = $"{files} Processed";
-                        SetMargin(StatusBar);
+                        StatusBar.ApplyMargin();
                     }
                 });
                 if (wv2Dictionary.ContainsKey(id))

@@ -2861,15 +2861,17 @@ namespace VideoGui
                                     BaseStr += $"#{item.Description} ";
                                 }
                             }
-                            groupTitleTagsList.Clear();
-                            string sql = "SELECT T.GROUPID, D.NAME, LIST(MT.TAG, '|#') AS TAGS, LIST(T.TAGID, ',') AS IDS FROM TITLETAGS " +
+
+                            /* string sql = "SELECT T.GROUPID, D.DESCRIPTION, "+
+                                "LIST(T.TAG, '|#') AS TAGS, LIST(T.TAGID, ',') AS IDS FROM TITLETAGS T" +
+                                "INNER JOIN TITLES D ON T.GROUPID = D.GROUPID "+
                                $"WHERE T.GROUPID != {index} AND D.ISTAG = 0 GROUP BY D.NAME,T.GROUPID;";
                             connectionString.ExecuteReader(sql, (FbDataReader r) =>
                             {
                                 groupTitleTagsList.Add(new GroupTitleTags(r));
-                            });
+                            })*/
                             if (groupTitleTagsList.Count != 0)
-                            {
+                            {   
                                 frmTitleSelect.lstTitles.Items.Clear();
                                 frmTitleSelect.lstTitles.ItemsSource = null;
                                 frmTitleSelect.lstTitles.ItemsSource = groupTitleTagsList;
@@ -3420,6 +3422,12 @@ namespace VideoGui
                 if (tld is CustomParams_GetShortsDirectoryById pcGSD)
                 {
                     int TitleId = -1, DescId = -1, idx = pcGSD.Id;
+                    foreach(var it in RematchedList.Where(s => s.OldId == idx))
+                    {
+                        idx = it.NewId;
+                        break;
+                    }
+
                     foreach (var item in EditableshortsDirectoryList.Where(s => s.Id == idx))
                     {
                         TitleId = item.TitleId;
@@ -3869,6 +3877,12 @@ namespace VideoGui
                 else if (tld is CustomParams_GetShortsDirectoryById pcGSD)
                 {
                     int TitleId = -1, DescId = -1, idx = pcGSD.Id;
+                    foreach (var it in RematchedList.Where(s => s.OldId == idx))
+                    {
+                        idx = it.NewId;
+                        break;
+                    }
+
                     foreach (var item in EditableshortsDirectoryList.Where(s => s.Id == idx))
                     {
                         TitleId = item.TitleId;
@@ -9006,6 +9020,14 @@ namespace VideoGui
                         if (IsAdobe) SourceDirectory = SourceDirectoryAdobe4K;
                         SourceDirectory.WriteLog("AsyncFinish.log");
                         SourceFileIs.WriteLog("AsyncFinish.log");
+
+                        var downloads_dir = GetDownloadsFolder();
+
+                        if (SourceFileIs.Contains(downloads_dir))
+                        {
+                            IsDownloads = true;
+                        }
+
                         if (IsDownloads) SourceFileIs = Path.GetFileName(SourceFileIs);
                         List<string> files = Directory.EnumerateFiles(SourceDirectory, SourceFileIs, SearchOption.AllDirectories).ToList();
                         if (files.Count > 0)
@@ -9069,8 +9091,8 @@ namespace VideoGui
                                 RunDelete = false;
                             }
                         }
-                        string SQL = $"Delete from ProcessingLog where Source = {SourceFileIs};";
-                        connectionString.ExecuteScalar(SQL.ToUpper()).ToInt(-1);
+                        string SQL = "Delete from ProcessingLog where Source = @SFS";
+                        connectionString.ExecuteScalar(SQL.ToUpper(), [("SFS", SourceFileIs)]).ToInt(-1);
                         if (!isTwitchStream && !IsMuxed)
                         {
                             if ((IsNVM) && (DoesDeletionFileExist(Path.GetFileName(destdir))))

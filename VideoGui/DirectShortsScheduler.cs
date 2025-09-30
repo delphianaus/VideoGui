@@ -403,7 +403,12 @@ namespace VideoGui
                                 
                                 CurrentTime = CurrentTime.Add(GapTime);
                             }
-                            return r;
+                            else
+                            {
+                                LastScheduledTime = ScheduleDate;
+                                LastGap = GapTime.Minutes;
+                            }
+                                return r;
                         }
                         else
                         {
@@ -416,6 +421,9 @@ namespace VideoGui
                     }
                     else if (ScheduleDate > EndDate)
                     {
+
+                        LastScheduledTime = ScheduleDate;
+                        LastGap = GapTime.Minutes;
                         DoOnFinishSchedulesComplete.Invoke();
                         return FinishType.Finished;
                     }
