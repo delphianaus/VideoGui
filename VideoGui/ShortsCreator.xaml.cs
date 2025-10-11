@@ -26,6 +26,7 @@ using MS.WindowsAPICodePack.Internal;
 using VideoGui.Models;
 using static System.Net.WebRequestMethods;
 using File = System.IO.File;
+using System.Resources.Extensions;
 
 namespace VideoGui
 {
@@ -47,10 +48,10 @@ namespace VideoGui
         int NumberShorts = 0;
         public bool IsClosing = false, IsClosed = false;
         public ShortsCreator(OnFinishIdObj _DoOnFinish)
-        {  
+        {
             InitializeComponent();
             Closing += (s, e) => { IsClosing = true; };
-            Closed += (s, e) => { IsClosed = true; _DoOnFinish?.Invoke(this,-1); };
+            Closed += (s, e) => { IsClosed = true; _DoOnFinish?.Invoke(this, -1); };
         }
 
 
@@ -336,6 +337,14 @@ namespace VideoGui
                     string oldfile = Path.Combine(subp, $"{list[iir]}.mp4");
                     if (oldfile != destDir)
                     {
+                        int ii = 0;
+                        var s = destDir;
+                        while (File.Exists(destDir))
+                        {
+                            destDir = $"{ii}{s}";
+                            ii++;
+                        }
+
                         File.Move(oldfile, destDir);
                     }
                     list.RemoveAt(iir);
@@ -373,7 +382,16 @@ namespace VideoGui
                     Directory.Delete(subp, true);
                 }
 
-                Dispatcher.Invoke(() => { lblShortNo.Content = "Finished"; });
+                Dispatcher.Invoke(() =>
+                {
+                    lblShortNo.Content = "Finished";
+                    btnSelectSourceDir.IsEnabled = true;
+                    var Shortsbase = Path.GetDirectoryName(shortsfile);
+                    var ShortsDirectory = Path.GetFileName(shortsfile);
+                    var newfile = Path.Combine(Shortsbase, "done", ShortsDirectory);
+                    File.Move(shortsfile, newfile);
+
+                });
                 var logof = shortsfile.Replace("(shorts)", "(shorts_logo)");
                 //"D:\\filter\\120525\\dest\\VLINE Ararat To Southern Cross 060525 (shorts).mp4"
                 if (File.Exists(logof))
@@ -545,7 +563,10 @@ namespace VideoGui
             {
                 // upgraded to new shorts length
                 source = await AddLogo(shortsfile, @"C:\videogui\logo.png");
-
+                Dispatcher.Invoke(() =>
+                {
+                    btnSelectSourceDir.IsEnabled = false;
+                });
                 EData.Clear();
                 Data.Clear();
                 var qs = "\"";
@@ -844,7 +865,7 @@ namespace VideoGui
                     DoOnStart = DoOnStartEvent;
                     mondir = newpath;
                     lblShortNo.Content = "";
-
+                    btnSelectSourceDir.IsEnabled = false;
                     CreateShorts(shortsfile, OnShortsCreated).ConfigureAwait(false);
                 }
             }
@@ -854,7 +875,7 @@ namespace VideoGui
             }
         }
 
-        
+
 
 
         private void Window_Loaded(object sender, RoutedEventArgs e)

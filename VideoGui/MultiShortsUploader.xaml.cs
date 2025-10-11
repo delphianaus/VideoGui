@@ -638,61 +638,28 @@ namespace VideoGui
                                 Directory.EnumerateDirectories(BaseDir, rp.DirectoryName,
                                 SearchOption.AllDirectories).ToList().FirstOrDefault();
                             if (dir.ToLower() != rootfolder.ToLower()) continue;
-
                             int cnt = Directory.EnumerateFiles(dir, "*.mp4", SearchOption.AllDirectories).ToList().Count();
                             rp.NumberOfShorts = cnt;
-                            if (cnt == 0) rp.IsActive = false;
-                            string sql = "UPDATE MULTISHORTSINFO SET NUMBEROFSHORTS = @NUMBEROFSHORTS WHERE LINKEDSHORTSDIRECTORYID = @LINKEDSHORTSDIRECTORYID";
-                            connectionStr.ExecuteNonQuery(sql,
-                                [("@NUMBEROFSHORTS", shortsleft),
-                                ("@LINKEDSHORTSDIRECTORYID", rp.LinkedShortsDirectoryId)]);
-                            Invoker?.Invoke(this, new CustomParams_RemoveMulitShortsInfoById(rp.LinkedShortsDirectoryId));
-                            if (cnt < 3)
+                            if (cnt == 0)
                             {
                                 rp.IsActive = false;
-                                string sql1 = "UPDATE MULTISHORTSINFO SET ISSHORTSACTIVE = @ACTIVE WHERE LINKEDSHORTSDIRECTORYID = @LINKEDSHORTSDIRECTORYID";
-                                connectionStr.ExecuteNonQuery(sql1,
-                                    [("@ACTIVE", false),
-                                    ("@LINKEDSHORTSDIRECTORYID", rp.LinkedShortsDirectoryId)]);
-                                FindNextRec = false;
-                                string OldDirName = Path.Combine(BaseDir, rp.DirectoryName);
-                                var OldFileList = Directory.EnumerateFiles(OldDirName, "*.mp4", SearchOption.AllDirectories).ToList();
-                                foreach (var rpx in msuSchedules.ItemsSource.OfType<SelectedShortsDirectories>().Where(x => x.IsActive == false && x.NumberOfShorts > 0))
-                                {
-                                    string newdir = Path.Combine(BaseDir, rpx.DirectoryName);
-                                    foreach (var file in OldFileList)
-                                    {
-                                        string newfile = Path.Combine(newdir, Path.GetFileName(file));
-                                        if (!File.Exists(newfile))
-                                        {
-                                            File.Move(file, newfile);
-                                        }
-                                    }
-                                }
+                                FindNextRec = true;
+                                ResetShortsToZeroInDB(rp.LinkedShortsDirectoryId);
                             }
-                            else FindNextRec = true;
-                            break;
+                            else if (cnt < 3)
+                            {
+                                FindNextRec = MoveLeftOvers(BaseDir, rp);
+                                if (FindNextRec) break;
+                            }
                         }
                         if (!FindNextRec)
                         {
-                            foreach (var rp in msuSchedules.ItemsSource.OfType<SelectedShortsDirectories>().Where(x => x.IsActive == false && x.NumberOfShorts > 0))
+                            foreach (var rp in msuSchedules.ItemsSource.OfType<SelectedShortsDirectories>().Where(x => !x.IsActive && x.NumberOfShorts > 0))
                             {
                                 string _newpaths = Path.Combine(BaseDir, rp.DirectoryName);
                                 shortsleft = Directory.EnumerateFiles(_newpaths, "*.mp4", SearchOption.AllDirectories).ToList().Count();
                                     rp.NumberOfShorts = shortsleft;
-                                if (shortsleft == 0)
-                                {
-                                    rp.IsActive = false;
-                                    string sql = "UPDATE MULTISHORTSINFO SET " +
-                                        "NUMBEROFSHORTS = @NUMBEROFSHORTS, ISSHORTSACTIVE = @ACTIVE " +
-                                        "WHERE LINKEDSHORTSDIRECTORYID = @LINKEDSHORTSDIRECTORYID";
-                                    connectionStr.ExecuteNonQuery(sql,
-                                        [("@NUMBEROFSHORTS", shortsleft),
-                                        ("@ACTIVE", false),
-                                        ("@LINKEDSHORTSDIRECTORYID", rp.LinkedShortsDirectoryId)]);
-                                    Invoker?.Invoke(this, new
-                                        CustomParams_RemoveMulitShortsInfoById(rp.LinkedShortsDirectoryId));
-                                }
+                                if (shortsleft == 0) ResetShortsToZeroInDB(rp.LinkedShortsDirectoryId);
                                 else
                                 {
                                     rp.IsActive = true;
@@ -710,8 +677,6 @@ namespace VideoGui
                                     }
                                     break;
                                 }
-                                
-
                             }
                         }
                         else
@@ -723,20 +688,13 @@ namespace VideoGui
                                 shortsleft = Directory.EnumerateFiles(newpaths, "*.mp4", SearchOption.AllDirectories).ToList().Count();
                                 if (shortsleft != rp.NumberOfShorts)
                                 {
-                                    rp.NumberOfShorts = shortsleft;
                                     if (shortsleft == 0)
                                     {
                                         rp.IsActive = false;
-                                        string sql = "UPDATE MULTISHORTSINFO SET " +
-                                            "NUMBEROFSHORTS = @NUMBEROFSHORTS, ISSHORTSACTIVE = @ACTIVE " +
-                                            "WHERE LINKEDSHORTSDIRECTORYID = @LINKEDSHORTSDIRECTORYID";
-                                        connectionStr.ExecuteNonQuery(sql,
-                                            [("@NUMBEROFSHORTS", shortsleft),
-                                        ("@ACTIVE", false),
-                                        ("@LINKEDSHORTSDIRECTORYID", rp.LinkedShortsDirectoryId)]);
-                                        Invoker?.Invoke(this, new
-                                            CustomParams_RemoveMulitShortsInfoById(rp.LinkedShortsDirectoryId));
+                                        rp.NumberOfShorts = 0;
+                                        ResetShortsToZeroInDB(rp.LinkedShortsDirectoryId);
                                     }
+                                    else rp.NumberOfShorts = shortsleft;
                                 }
                                 else if (rp.NumberOfShorts > 0) acnt++;
                             }
@@ -757,8 +715,6 @@ namespace VideoGui
                                         CheckLinkedIds(item, newpath);
                                         var Idx = Invoker?.Invoke(this, new CustomParams_GetDirectory(item.DirectoryName));
                                         item.LinkedShortsDirectoryId = (Idx is int _id && item.LinkedShortsDirectoryId != _id) ? _id : item.LinkedShortsDirectoryId;
-
-
                                     }
                                 }
                             }
@@ -770,9 +726,11 @@ namespace VideoGui
                                     if (Path.Exists(newpath))
                                     {
                                         shortsleft = Directory.EnumerateFiles(newpath, "*.mp4", SearchOption.AllDirectories).ToList().Count();
-                                        if (shortsleft == 0)
+                                        if (Directory.EnumerateFiles(newpath, "*.mp4", SearchOption.AllDirectories).ToList().Count() == 0)
                                         {
                                             item.IsActive = false;
+                                            item.NumberOfShorts = 0;
+                                            ResetShortsToZeroInDB(item.LinkedShortsDirectoryId);
                                             continue;
                                         }
                                         item.NumberOfShorts = shortsleft;
@@ -866,6 +824,67 @@ namespace VideoGui
                 ex.LogWrite($"doOnFinish {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
         }
+
+        private void ResetShortsToZeroInDB(int LinkedId)
+        {
+            try
+            {
+                string sql = "UPDATE MULTISHORTSINFO SET " +
+                                                        "NUMBEROFSHORTS = @NUMBEROFSHORTS, ISSHORTSACTIVE = @ACTIVE " +
+                                                        "WHERE LINKEDSHORTSDIRECTORYID = @LINKEDSHORTSDIRECTORYID";
+                connectionStr.ExecuteNonQuery(sql,
+                    [("@NUMBEROFSHORTS", 0), ("@ACTIVE", false),
+                                        ("@LINKEDSHORTSDIRECTORYID", LinkedId)]);
+                Invoker?.Invoke(this, new
+                    CustomParams_RemoveMulitShortsInfoById(LinkedId));
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"DeleteShortFromDB {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+        }
+
+        private bool MoveLeftOvers(string BaseDir, SelectedShortsDirectories rp)
+        {
+            try
+            {
+                bool FindNextRec;
+                rp.IsActive = false;
+                string sql1 = "UPDATE MULTISHORTSINFO SET ISSHORTSACTIVE = @ACTIVE WHERE LINKEDSHORTSDIRECTORYID = @LINKEDSHORTSDIRECTORYID";
+                connectionStr.ExecuteNonQuery(sql1,
+                    [("@ACTIVE", false),
+                     ("@LINKEDSHORTSDIRECTORYID", rp.LinkedShortsDirectoryId)]);
+                FindNextRec = false;
+
+                string OldDirName = Path.Combine(BaseDir, rp.DirectoryName);
+                var OldFileList = Directory.EnumerateFiles(OldDirName, "*.mp4", SearchOption.AllDirectories).ToList();
+                foreach (var rpx in msuSchedules.ItemsSource.OfType<SelectedShortsDirectories>().Where(x => x.IsActive == false && x.NumberOfShorts > 0))
+                {
+                    string newdir = Path.Combine(BaseDir, rpx.DirectoryName);
+                    foreach (var file in OldFileList)
+                    {
+                        string newfile = Path.Combine(newdir, Path.GetFileName(file));
+                        if (!File.Exists(newfile))
+                        {
+                            File.Move(file, newfile);
+                            FindNextRec = true;
+                        }
+                    }
+                }
+                
+                if (FindNextRec)
+                {
+                    rp.IsActive = false;
+                }
+                return FindNextRec;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"MoveLeftOvers {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+                return false;
+            }
+        }
+
         private void CheckLinkedIds(SelectedShortsDirectories item, string newpath)
         {
             try

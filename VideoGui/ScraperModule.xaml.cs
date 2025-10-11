@@ -2757,7 +2757,7 @@ namespace VideoGui
             try
             {
                 var pos = e.GetPosition(this);
-                lblMouseOver.Content = pos.ToString();
+                lblMouseOver.Content = $"X: {pos.X:F2}, Y: {pos.Y:F2}";
                 StatusBar.ApplyMargin();
             }
             catch (Exception ex)

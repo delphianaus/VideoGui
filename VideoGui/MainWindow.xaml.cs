@@ -2788,6 +2788,7 @@ namespace VideoGui
                             foreach (var item in EditableshortsDirectoryList.Where(item => item.Id == ShortsDirectoryIndex))
                             {
                                 BaseTitle = item.Directory;
+                                var _tid = item.TitleId;
                                 if (item.TitleId == -1)
                                 {
                                     foreach (var t in TitlesList.Where(i => i.GroupId == ShortsDirectoryIndex && !i.IsTag))
@@ -2805,13 +2806,41 @@ namespace VideoGui
                                 }
                                 else
                                 {
-                                    foreach (var t in TitlesList.Where(i => i.Id == item.TitleId && !i.IsTag))
+                                    bool fnd = false;
+                                    foreach (var t in TitlesList.Where(i => i.GroupId == ShortsDirectoryIndex && !i.IsTag))
                                     {
                                         BaseTitle = t.Description;
                                         index = t.Id;
                                         TitleId = t.Id;
                                         frmTitleSelect.SetTitleTag(t.Id);
+                                        fnd = true;
                                         break;
+                                    }
+                                    if (!fnd)
+                                    {
+                                        foreach (var t in TitlesList.Where(i => i.Description == BaseTitle && !i.IsTag))
+                                        {
+                                            if (t.GroupId == -1)
+                                            {
+                                                string sql = "";
+                                                t.GroupId = ShortsDirectoryIndex;
+                                                if (t.Id != _tid)
+                                                {
+                                                    item.TitleId = t.Id;
+                                                    index = t.Id;
+                                                    sql = "UPDATE SHORTSDIRECTORY SET TITLEID = @TID WHERE ID = @ID;";
+                                                    connectionString.ExecuteScalar(sql, [("@ID", 
+                                                        ShortsDirectoryIndex), ("@TID", t.Id)]);
+                                                }
+                                                else index = t.Id;
+                                                sql = "UPDATE TITLES SET GROUPID = @GRPID WHERE ID =@ID";
+                                                connectionString.ExecuteScalar(sql, [("@GRPID", ShortsDirectoryIndex), ("@ID", t.Id)]);
+
+                                            }
+                                            frmTitleSelect.SetTitleTag(t.Id);
+                                            fnd = true;
+                                            break;
+                                        }
                                     }
                                 }
 
@@ -2871,7 +2900,7 @@ namespace VideoGui
                                 groupTitleTagsList.Add(new GroupTitleTags(r));
                             })*/
                             if (groupTitleTagsList.Count != 0)
-                            {   
+                            {
                                 frmTitleSelect.lstTitles.Items.Clear();
                                 frmTitleSelect.lstTitles.ItemsSource = null;
                                 frmTitleSelect.lstTitles.ItemsSource = groupTitleTagsList;
@@ -3422,7 +3451,7 @@ namespace VideoGui
                 if (tld is CustomParams_GetShortsDirectoryById pcGSD)
                 {
                     int TitleId = -1, DescId = -1, idx = pcGSD.Id;
-                    foreach(var it in RematchedList.Where(s => s.OldId == idx))
+                    foreach (var it in RematchedList.Where(s => s.OldId == idx))
                     {
                         idx = it.NewId;
                         break;
@@ -3797,7 +3826,7 @@ namespace VideoGui
             {
                 if (tld is CustomParams_DisplayTargets cpDTT)
                 {
-                    var _DisplayT = new ProcessDraftTargets(InvokerHandler<object>, 
+                    var _DisplayT = new ProcessDraftTargets(InvokerHandler<object>,
                         OnTargetsClose, cpDTT.ShowAction);
                     _DisplayT.Show();
                 }
@@ -3817,7 +3846,7 @@ namespace VideoGui
                         }
                         if (LinkedId == -1)
                         {
-                            ProcessTargetsList.Add(new ProcessTargets(ProcessTargetsList.Count + 1, cpPTT.VideoId, -1, "",-1, "",-1));
+                            ProcessTargetsList.Add(new ProcessTargets(ProcessTargetsList.Count + 1, cpPTT.VideoId, -1, "", -1, "", -1));
                         }
 
                         return default(TResult);
@@ -3866,7 +3895,7 @@ namespace VideoGui
                             if (!ProcessTargetsList.Any(s => s.LinkedId == LinkedId))
                             {
 
-                                ProcessTargetsList.Add(new ProcessTargets(ProcessTargetsList.Count+1,"", 
+                                ProcessTargetsList.Add(new ProcessTargets(ProcessTargetsList.Count + 1, "",
                                     LinkedId, Title, _LastTitleId,
                                     Desc, _LastDescId));
                             }
@@ -4059,7 +4088,7 @@ namespace VideoGui
                         }
                         string BaseStr = "";
                         int TagCnt = 0;
-                        foreach (var item2 in TitleTagsList.Where(s => s.GroupId == cgt.title))
+                        foreach (var item2 in TitleTagsList.Where(s => s.GroupId == cgt.id))
                         {
                             if (!BaseStr.Contains($"#{item2.Description}"))
                             {
@@ -4986,7 +5015,7 @@ namespace VideoGui
                     sql = "UPDATE MULTISHORTSINFO SET LINKEDSHORTSDIRECTORYID = @ID WHERE ID = @ID2;";
                     connectionString.ExecuteScalar(sql, [("@ID", Idx), ("@ID2", t.Id)]);
                     string newpath = Path.Combine(BaseDirectory, t.DirectoryName);
-                    
+
                 }
                 FilterActiveShortsDirlectoryList();
                 bool _fnd = false;
@@ -5168,7 +5197,7 @@ namespace VideoGui
                         if (IsCutEncode) ScriptType = 1;
                         string CutFrames = ((textstart != "") || (textduration != "")) ? $"|{textstart}|{Final.ToFFmpeg()}|time" : "";
                         string ScriptFile = $"true|{destFilename}|{sourcedirectory}|*.mp4{CutFrames}";
-                        JobListDetails InMemoryJob = new JobListDetails(false,Title, SourceIndex++, iddx, ScriptFile,
+                        JobListDetails InMemoryJob = new JobListDetails(false, Title, SourceIndex++, iddx, ScriptFile,
                             ScriptType, false, true,
                             IsPersistantSource, IsAdobe, IsShorts, IsCreateShorts, "", ismuxed, muxdata);
                         if (InMemoryJob.GetCutList().Count > 0 || RTMP != "")
@@ -5229,7 +5258,7 @@ namespace VideoGui
                         if (IsTwitchStream) ScriptType = 5;
                         string CutFrames = ((textstart != "") && (textduration != "")) ? $"|{textstart}|{Final.ToFFmpeg()}|time" : "";
                         string ScriptFile = $"true|{destFilename}|{sourcedirectory}|*.mp4{CutFrames}";
-                        JobListDetails InMemoryJob = new JobListDetails(false,Title, SourceIndex++, idx, ScriptFile, ScriptType,
+                        JobListDetails InMemoryJob = new JobListDetails(false, Title, SourceIndex++, idx, ScriptFile, ScriptType,
                             false, true, IsPersistantSource, IsAdobe, IsShorts, IsCreateShorts, "", ismuxed, muxdata);
                         if (InMemoryJob.GetCutList().Count > 0 || RTMP != "" || ismuxed)
                         {
@@ -8947,7 +8976,7 @@ namespace VideoGui
                         ProcessingTimeGlobal += TimeToProcess;
                     }
                     info = $"[{total}@{fps}fps]";
-                    bool IsTwitchActive = false, KeepSource = false, Is1080p = false, IsComplex = false, 
+                    bool IsTwitchActive = false, KeepSource = false, Is1080p = false, IsComplex = false,
                         Is4K = false, IsSrc = false, IsMulti = false, IsAdobe = false, IsDownloads = false;
                     List<string> Cuts = new List<string>();
                     string SourceFileIs = "", destmfile = "", Multifile = "", DestMFile = "", Title = "";
@@ -8958,7 +8987,7 @@ namespace VideoGui
                         if (ProcessingJobs[jindex].FileNoExt == sourcefile)
                         {
                             IsNVM = ProcessingJobs[jindex].IsNVM;
-                            
+
                             ID = ProcessingJobs[jindex].DeletionFileHandle;
                             SourceFileIs = ProcessingJobs[jindex].SourceFile;
                             IsSrc = ProcessingJobs[jindex].IsMulti;
@@ -9016,7 +9045,7 @@ namespace VideoGui
 
                     if (!File.Exists(SourceFileIs) && !IsMuxed)
                     {
-                        string SourceDirectory =(IsDownloads) ? GetDownloadsFolder() : (Is4K) ? SourceDirectory4K : (Is1080p) ? SourceDirectory1080p : SourceDirectory720p;
+                        string SourceDirectory = (IsDownloads) ? GetDownloadsFolder() : (Is4K) ? SourceDirectory4K : (Is1080p) ? SourceDirectory1080p : SourceDirectory720p;
                         if (IsAdobe) SourceDirectory = SourceDirectoryAdobe4K;
                         SourceDirectory.WriteLog("AsyncFinish.log");
                         SourceFileIs.WriteLog("AsyncFinish.log");
@@ -11824,7 +11853,7 @@ namespace VideoGui
                 bool IsNotDownloads = Path.GetDirectoryName(SourceDir).Contains(DownloadsDir);// """DownloadsDir;
                 IsNotDownloads = !IsNotDownloads;
 
-                var newjob = new JobListDetails(!IsNotDownloads,newfile, SourceIndex++, SourceDir.Contains("1080p") && IsNotDownloads,
+                var newjob = new JobListDetails(!IsNotDownloads, newfile, SourceIndex++, SourceDir.Contains("1080p") && IsNotDownloads,
                     SourceDir.ToUpper().EndsWith("4K") && IsNotDownloads, SourceDir.ToUpper().EndsWith("4KADOBE") && IsNotDownloads);
                 if (newjob.IsMulti)
                 {

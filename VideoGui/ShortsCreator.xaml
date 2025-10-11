@@ -15,12 +15,12 @@
                 <TextBox x:Name="txtsrcdir" HorizontalAlignment="Center" TextWrapping="Wrap" VerticalAlignment="Top" Width="422" Canvas.Left="84" Canvas.Top="15"/>
                 <Button x:Name="btnSelectSourceDir" HorizontalAlignment="Center" VerticalAlignment="Center" Width="20" Height="20" Canvas.Left="617" Canvas.Top="13" Click="btnSelectSourceDir_Click" RenderTransformOrigin="-13.634,1.02" />
                 <Label Content="Short Number:" Height="26" Canvas.Left="9" Canvas.Top="40" HorizontalAlignment="Center" VerticalAlignment="Top"/>
-                <Label Content="Duration :" Height="26" Canvas.Left="184" Canvas.Top="40" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                <Label x:Name="lblDuration" Content="00:00:00" Height="26" Canvas.Left="251" Canvas.Top="40" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                <Label Content="Duration :" Height="26" Canvas.Left="178" Canvas.Top="40" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                <Label x:Name="lblDuration" Content="00:00:00" Height="26" Canvas.Left="242" Canvas.Top="40" HorizontalAlignment="Left" VerticalAlignment="Center"/>
                 <Label x:Name="lblShortNo" Content="" Height="26" Canvas.Left="108" Canvas.Top="40" HorizontalAlignment="Left" VerticalAlignment="Top"/>
-                <Label x:Name="lblProgress" Content="Progress : " Height="26" Canvas.Left="306" Canvas.Top="40" HorizontalAlignment="Left" VerticalAlignment="Center" Width="59"/>
-                <ProgressBar x:Name="pg1" Height="19" Canvas.Left="387" Canvas.Top="43" Width="250" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                <Label x:Name="lblPercent" Content="0" Height="26" Canvas.Left="358" Canvas.Top="40" HorizontalAlignment="Left" VerticalAlignment="Center" Width="28"/>
+                <Label x:Name="lblProgress" Content="Progress : " Height="26" Canvas.Left="300" Canvas.Top="40" HorizontalAlignment="Left" VerticalAlignment="Center" Width="59"/>
+                <ProgressBar x:Name="pg1" Height="19" Canvas.Left="396" Canvas.Top="43" Width="241" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                <Label x:Name="lblPercent" Content="0" Height="26" Canvas.Left="358" Canvas.Top="40" HorizontalAlignment="Left" VerticalAlignment="Center" Width="33"/>
                 <CheckBox x:Name="chkFormat" Content="Long/Short FMT" Canvas.Left="511" Canvas.Top="15" HorizontalAlignment="Center" VerticalAlignment="Center"/>
             </Canvas>
         </Border>

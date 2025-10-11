@@ -314,7 +314,7 @@ namespace VideoGui
     public static class Extensions
     {
 
-        public static void ApplyMargin(this StatusBar statusBar, int offset = 60)
+        public static void ApplyMargin(this StatusBar statusBar, int offset = 85)
         {
             try
             {

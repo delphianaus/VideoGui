@@ -63,7 +63,7 @@ namespace VideoGui
             InitializeComponent();
             // marked for mcu listbox upgrade
             Closing += (s, e) => { IsClosing = true; };
-            Closed += (s, e) => { IsClosed = true; _OnClose?.Invoke(this,-1); };
+            Closed += (s, e) => { IsClosed = true; _OnClose?.Invoke(this, -1); };
         }
 
 
@@ -330,11 +330,30 @@ namespace VideoGui
                     folder = folderBrowserDialog.SelectedFolder;
                     string Dest = Path.Combine(folder, "dest");
                     if (!Directory.Exists(Dest))
-                    { 
+                    {
                         Directory.CreateDirectory(Dest);
                     }
                     key2.SetValue("AudioJoinerDestDir", Dest);
                     key2?.Close();
+                    string DestLst = Path.GetFileName(Dest);
+                    string SrcLst = Path.GetFileName(folder);
+
+                    string srcBase = folder;
+                    string destBase = Path.GetDirectoryName(Dest) ?? "";
+                    if ((destBase.EndsWith("dest")|| (!string.Equals(srcBase, destBase, StringComparison.OrdinalIgnoreCase))))
+                    {
+                        Dest = Path.Combine(srcBase, "dest");
+                        if (!Directory.Exists(Dest))
+                        {
+                            Directory.CreateDirectory(Dest);
+                        }
+                        using (RegistryKey key3 = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser))
+                        {
+                            key3?.SetValue("AudioJoinerDestDir", Dest);
+                        }
+                    }
+
+                   
                     txtDestDir.Text = Dest;
                     txtsrcdir.Text = folder;
                     GetFiles(folder).ConfigureAwait(false);
@@ -465,7 +484,7 @@ namespace VideoGui
                     if (MediaInfoTimes[i].FileName == SourceFileName)
                     {
                         MediaInfoTimes[i].Status = $"Script Starting";
-                        
+
                         break;
                     }
                 }
@@ -481,7 +500,7 @@ namespace VideoGui
                     if (MediaInfoTimes[i].FileName == SourceFileName)
                     {
                         MediaInfoTimes[i].Status = $"Processed";
-                       
+
                         break;
                     }
                 }
@@ -505,7 +524,7 @@ namespace VideoGui
                         }
 
                         MediaInfoTimes[i].Status = s;
-                        
+
 
                         break;
                     }
