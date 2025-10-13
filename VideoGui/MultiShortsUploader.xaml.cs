@@ -659,7 +659,19 @@ namespace VideoGui
                                 string _newpaths = Path.Combine(BaseDir, rp.DirectoryName);
                                 shortsleft = Directory.EnumerateFiles(_newpaths, "*.mp4", SearchOption.AllDirectories).ToList().Count();
                                     rp.NumberOfShorts = shortsleft;
-                                if (shortsleft == 0) ResetShortsToZeroInDB(rp.LinkedShortsDirectoryId);
+                                if (shortsleft < 3)
+                                {
+                                    if (MoveLeftOvers(BaseDir, rp))
+                                    {
+                                        continue;
+                                    }
+                                }
+
+
+                                if (shortsleft == 0)
+                                {
+                                    ResetShortsToZeroInDB(rp.LinkedShortsDirectoryId);
+                                }
                                 else
                                 {
                                     rp.IsActive = true;
