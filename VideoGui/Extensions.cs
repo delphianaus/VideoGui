@@ -195,7 +195,52 @@ namespace VideoGui
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
             }
         }
+        public static bool SourceIs4K(this string dir)
+        {
+            try
+            {
+                RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                string shortsdir = key.GetValueStr("SourceDirectory4K", @"D:\shorts\");
+                key?.Close();
+                return dir == shortsdir;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+                return false;
+            }
+        }
 
+		public static bool SourceIs1440p(this string dir)
+		{
+			try
+			{
+				RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+				string shortsdir = key.GetValueStr("SourceDirectory1440p", @"D:\shorts\");
+				key?.Close();
+				return dir == shortsdir;
+			}
+			catch (Exception ex)
+			{
+				ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+				return false;
+			}
+		}
+		public static bool SourceIs4KAdobe(this string dir)
+        {
+            try
+            {
+                RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                string shortsdir = key.GetValueStr("SourceDirectory4KAdobe", @"D:\shorts\");
+                key?.Close();
+                return dir == shortsdir;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+                return false;
+            }
+        }
         public static bool IfContains(this string obj, string data)
         {
             try
@@ -1807,9 +1852,9 @@ namespace VideoGui
                 }
 
 
-                if (_ShowName.Contains("1080p"))
+                if (_ShowName.Contains("1440p"))
                 {
-                    int Indx = _ShowName.IndexOf("1080p");
+                    int Indx = _ShowName.IndexOf("1440p");
                     if (Indx > 0) _ShowName = _ShowName.Substring(0, Indx);
                 }
                 if (_ShowName.Contains("hdtv"))

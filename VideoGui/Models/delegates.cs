@@ -35,7 +35,7 @@ namespace VideoGui.Models.delegates
     public delegate bool _StatsHandlerBool(int mode, string filename);
     public delegate void _AddConverterProgress(string Name, string Value);
     public delegate void _StatsHandlerExtra(string record, string filename);
-    public delegate void _UpdateSpeed(string filename, float framess, float totalb, int framecalc, string Frames1080p);
+    public delegate void _UpdateSpeed(string filename, float framess, float totalb, int framecalc, string Frames1440p);
     public delegate void _UpdateProgress(string filename, double Progress, TimeSpan Duration, TimeSpan Total);
     public delegate void _UpdateTime(int mode, string filename, TimeSpan eta);
     public delegate bool IsFileInUse(string filename, int threadid);

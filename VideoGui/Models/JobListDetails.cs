@@ -28,7 +28,7 @@ namespace VideoGui
             _ConversionStarted, _ProbePassed, _KeepSource, _IsMulti, _IsDownloads,
             _fisheye, _processed, _X264Override, _ComplexMode, _Is720p,
             _Is48K, _IsComplex, _ProbeLock, _IsAc3_2Channel, _IsAc3_6Channel,
-            _InProcess, _IsSkipped, _IsShorts,_Mpeg4ASP, _Mpeg4AVC, _Is1080p, 
+            _InProcess, _IsSkipped, _IsShorts,_Mpeg4ASP, _Mpeg4AVC, _Is1440p, 
             _Is4K, _IsInterlaced, _ProbeStarted,    _IsMuxed;
         private FontStyle _ItemFontStyle;
         private Color _ForegroundColor;
@@ -133,7 +133,7 @@ namespace VideoGui
 
         public bool X264Override { get => _X264Override; set { _X264Override = value; OnPropertyChanged(); } }
         public bool ProbeLock { get => _ProbeLock; set { _ProbeLock = value; OnPropertyChanged(); } }
-        public bool Is1080p { get => _Is1080p; set { _Is1080p = value; OnPropertyChanged(); } }
+        public bool Is1440p { get => _Is1440p; set { _Is1440p = value; OnPropertyChanged(); } }
         public bool IsInterlaced { get => _IsInterlaced; set { _IsInterlaced = value; OnPropertyChanged(); } }
 
         public bool Complete { get => _Complete; set { _Complete = value; OnPropertyChanged(); } }
@@ -206,7 +206,7 @@ namespace VideoGui
                     $"|{_StartPos.ToFFmpeg()}|{_Duration.ToFFmpeg()}|time" : "";
                 ScriptFile = $"true|{destfname}|{srcdir}|*.mp4{CutFrames}";
                 SourceFileIndex = cnt;
-                (_Is1080p, _Is4K) = (false, true);
+                (_Is1440p, _Is4K) = (false, true);
                 RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                 var DestDirectoryAdobe4K = key.GetValueStr("DestDirectoryAdobe4k");
                 key?.Close();
@@ -255,15 +255,16 @@ namespace VideoGui
                 ex.LogWrite($"{this} {MethodBase.GetCurrentMethod().Name}");
             }
         }
-        public JobListDetails(bool _IsDownloads,string _Title, int _SourceFileIndex, int _Autoinssertid, string _ScriptFile,
-            int _ScriptType, bool _Is1080p = false, bool _Is4Kp = false, bool _ISMJS = false,
+        public JobListDetails(bool _IsDownloads,string _Title, int _SourceFileIndex, 
+            int _Autoinssertid, string _ScriptFile,
+            int _ScriptType, bool _Is1440p = false, bool _Is4Kp = false, bool _ISMJS = false,
             bool __Is4KAdobe = false, bool __IsShorts = false, int __IsCreateShorts = 0,
             string _FIleInfo = "", bool __IsMuxed = false, string __muxdata = "")
         {
             // _ScriptType - 0 = src, 1 cst, 2 edt
             DeletionFileHandle = -1;
             IsDownloads = _IsDownloads;
-            (Fileinfo, Progress, SourceFileIndex, Is1080p, Is4K, ScriptFile) = (_FIleInfo, 0, _SourceFileIndex, _Is1080p, _Is4Kp, _ScriptFile);
+            (Fileinfo, Progress, SourceFileIndex, Is1440p, Is4K, ScriptFile) = (_FIleInfo, 0, _SourceFileIndex, _Is1440p, _Is4Kp, _ScriptFile);
             (ProbePassed, Complete, ProbeLock, _ProbeStarted, _ConversionStarted, Processed) = (true, false, false, false, false, false);
             (JobDate, MultiFile) = (DateTime.Now, _Title);
             _IsNVM = true;
@@ -327,21 +328,20 @@ namespace VideoGui
             }
         }
 
-        public JobListDetails(bool _IsDownloads,string _Title, int _SourceFileIndex, bool _Is1080p = false,
-            bool _Is4Kp = false, bool _Is4KAdobe = false, string _FIleInfo = "",
+        public JobListDetails(bool _IsDownloads,string _Title, int _SourceFileIndex, string _SourceDir = "",
             int _Progress = 0, bool x265Override = false, bool _IsMpeg4ASP = false,
             bool _IsMpeg4AVC = false)
         {
-            Fileinfo = _FIleInfo;
+            Fileinfo = "Awaiting Conversion";
             Progress = _Progress;
             RTMP = "";
             twitchschedule = DateTime.Now.AddYears(-100);
             Processed = false;
             SourceFileIndex = _SourceFileIndex;
             DeletionFileHandle = -1;
-            Is4KAdobe |= _Is4KAdobe;
-            Is1080p = _Is1080p;
-            Is4K = _Is4Kp;
+            Is4KAdobe = _SourceDir.SourceIs4KAdobe();
+            Is1440p = _SourceDir.SourceIs1440p();
+            Is4K = _SourceDir.SourceIs4K(); 
             _IsDownloads = _IsDownloads;
             Handle = "";
             if (Is4KAdobe)
@@ -358,7 +358,7 @@ namespace VideoGui
             _ProbeStarted = false;
             ScriptFile = "";
             IsNVM = false;
-            if (!Is1080p && !Is4K && !Is4KAdobe)
+            if (!Is1440p && !Is4K && !Is4KAdobe)
             {
                 Is720P = true;
             }

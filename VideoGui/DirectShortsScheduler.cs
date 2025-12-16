@@ -197,7 +197,7 @@ namespace VideoGui
                     videoRequest.Id = videoId;
                     var videoResponse = videoRequest.Execute();// Async(cts.Token);
                     var video = videoResponse.Items.FirstOrDefault();
-                    if (video != null && video.Status is not null && video.Status.PrivacyStatus != "public")
+                    if (video != null && video.Status is not null && video.Status.PrivacyStatus != "public" )
                     {
                         DateTime publishDateTime = ScheduleAt;
                         publishDateTime = DateTime.SpecifyKind(publishDateTime, DateTimeKind.Local);

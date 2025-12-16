@@ -17,14 +17,14 @@ namespace VideoGui
         public delegate void UpdateTwoStrings(string A, string B);
         public delegate void UpdateSIngleString(string A);
         public delegate void UpdatePercents(string A, double B);
-        public delegate void UpdateSpeeds(string bitrate, string bitratespeed, string fps, string frames, string Frames1080p);
+        public delegate void UpdateSpeeds(string bitrate, string bitratespeed, string fps, string frames, string Frames1440p);
         public UpdateETA _UpdateETA;
         public UpdateTwoStrings TotalDuration;
         public UpdateSIngleString TotalTime;
         public UpdatePercents ProgressValues;
         public UpdateSpeeds UpdateTotalSpeeds;
         public int count720p = 0;
-        public int count1080p = 0;
+        public int count1440p = 0;
         public int count4k = 0;
         object __lockObj;
         bool __lockWasTaken;
@@ -279,7 +279,7 @@ namespace VideoGui
                 //DoUnlock();
             }
         }
-        public void UpdateSpeed(string filename, float fps, float bitrate, int frames, string frames1080p)
+        public void UpdateSpeed(string filename, float fps, float bitrate, int frames, string frames1440p)
         {
             try
             {
@@ -290,7 +290,7 @@ namespace VideoGui
                     stats.fps = fps;
                     stats.bitrate = bitrate;
                     stats.frames = frames;
-                    stats.CurrentFrame = frames1080p.ToInt();
+                    stats.CurrentFrame = frames1440p.ToInt();
 
 
                     break;

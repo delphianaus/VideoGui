@@ -77,10 +77,10 @@
                 <CheckBox x:Name="chkmovecompleted" Content="Auto Move" Canvas.Left="677" 
                           Canvas.Top="278" HorizontalAlignment="Center" 
                           VerticalAlignment="Top" IsChecked="True"/>
-                <Label Content="1080p" Height="22" Width ="49" 
+                <Label Content="1440p" Height="22" Width ="49" 
                     FontSize="14" Padding="0,1,0,2" Canvas.Left="401" Canvas.Top="204" 
                        HorizontalAlignment="Left" VerticalAlignment="Top"/>
-                <TextBox x:Name="txtComp1080p" Text="Completed1080p" 
+                <TextBox x:Name="txtComp1440p" Text="Completed1440p" 
                     Height="28" TextWrapping="Wrap" Width="250" 
                     FontSize="14" Canvas.Left="454" Canvas.Top="201" 
                          HorizontalAlignment="Left" VerticalAlignment="Top"/>
@@ -97,14 +97,14 @@
                 <Button x:Name="BtnCompleted4k" Width="30" Height="30" 
                     Canvas.Left="360" Canvas.Top="238" Click="BtnCompleted4k_Click" 
                         HorizontalAlignment="Center" VerticalAlignment="Top"/>
-                <Label Content="1080p" Height="22" Width ="50" 
+                <Label Content="1440p" Height="22" Width ="50" 
                     FontSize="14" Padding="0,1,0,2" Canvas.Left="404" Canvas.Top="90" 
                        HorizontalAlignment="Center" VerticalAlignment="Top"/>
-                <TextBox x:Name="txtDone1080p" Text="Done1080p" Height="28" TextWrapping="Wrap" 
+                <TextBox x:Name="txtDone1440p" Text="Done1440p" Height="28" TextWrapping="Wrap" 
                          Width="250" FontSize="14" Canvas.Left="454" Canvas.Top="87" HorizontalAlignment="Center" 
                          VerticalAlignment="Top"/>
-                <Button x:Name="btnDoneSelectDir1080p" Width="30" Height="30"
-                    Click="btnDoneSelectDir1080p_Click" Canvas.Left="705" Canvas.Top="86" HorizontalAlignment="Center" 
+                <Button x:Name="btnDoneSelectDir1440p" Width="30" Height="30"
+                    Click="btnDoneSelectDir1440p_Click" Canvas.Left="705" Canvas.Top="86" HorizontalAlignment="Center" 
                         VerticalAlignment="Top"/>
                 <Label Content="Output 4k" Height="22" Width ="67" 
                     FontSize="14" Padding="0,1,0,2" Canvas.Left="8" Canvas.Top="129" HorizontalAlignment="Center" VerticalAlignment="Top"/>
@@ -131,13 +131,13 @@
                 <TextBox x:Name="txtSrc720p" Text="720p" Height="28" TextWrapping="Wrap" Width="248" FontSize="14" Canvas.Left="110" Canvas.Top="10" HorizontalAlignment="Center" VerticalAlignment="Top"/>
                 <Button x:Name="btnSrc720p" Width="30" Height="30"
                     Click="btnSrc720p_Click" Canvas.Left="360" Canvas.Top="9" HorizontalAlignment="Center" VerticalAlignment="Top"/>
-                <Label Content="1080p" Height="22" Width ="50" 
+                <Label Content="1440p" Height="22" Width ="50" 
                     FontSize="14" Padding="0,1,0,2" Canvas.Left="404" Canvas.Top="13" 
                        HorizontalAlignment="Center" VerticalAlignment="Top"/>
-                <TextBox x:Name="txtSrc1080p" Text="1080p" Height="28" TextWrapping="Wrap" 
+                <TextBox x:Name="txtSrc1440p" Text="1440p" Height="28" TextWrapping="Wrap" 
                     Width="250" FontSize="14" Canvas.Left="454" Canvas.Top="10" HorizontalAlignment="Center" VerticalAlignment="Top"/>
-                <Button x:Name="btnSrc1080p" Width="30" Height="30"
-                    Click="btnSrc1080p_Click" Canvas.Left="705" Canvas.Top="9" HorizontalAlignment="Center" VerticalAlignment="Top"/>
+                <Button x:Name="btnSrc1440p" Width="30" Height="30"
+                    Click="btnSrc1440p_Click" Canvas.Left="705" Canvas.Top="9" HorizontalAlignment="Center" VerticalAlignment="Top"/>
                 <Label Content="Source 4k" Height="22" Width ="67" 
                     FontSize="14" Padding="0,1,0,2" Canvas.Left="8" Canvas.Top="52" HorizontalAlignment="Center" VerticalAlignment="Top"/>
                 <TextBox x:Name="txtSrc4K" Text="4K" Height="28" TextWrapping="Wrap" Width="250" FontSize="14"
@@ -164,8 +164,8 @@
                     <ComboBoxItem Content="3"/>
                     <ComboBoxItem Content="4"/>
                 </ComboBox>
-                <Label Content="1080P Threads" Height="28" Width="81" HorizontalAlignment="Center" VerticalAlignment="Top" Canvas.Left="125" Canvas.Top="33"/>
-                <ComboBox x:Name="cmbMax1080pThreads" Width="40"  SelectedIndex="1" HorizontalAlignment="Center" VerticalAlignment="Top" Height="28" Canvas.Left="208" Canvas.Top="33">
+                <Label Content="1440p Threads" Height="28" Width="81" HorizontalAlignment="Center" VerticalAlignment="Top" Canvas.Left="125" Canvas.Top="33"/>
+                <ComboBox x:Name="cmbMax1440pThreads" Width="40"  SelectedIndex="1" HorizontalAlignment="Center" VerticalAlignment="Top" Height="28" Canvas.Left="208" Canvas.Top="33">
                     <ComboBoxItem Content="1" />
                     <ComboBoxItem Content="2"/>
                     <ComboBoxItem Content="3"/>

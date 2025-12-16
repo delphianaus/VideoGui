@@ -53,15 +53,15 @@ namespace VideoGui
                 chkmovecompleted.IsChecked = key.GetValueBool("movecompleted", true);
                 ChkMonitorDownloads.IsChecked = key.GetValueBool("MonitorDownloads", true);
                 txtSrc720p.Text = key.GetValueStr("SourceDirectory720p", defaultdrive);
-                txtSrc1080p.Text = key.GetValueStr("SourceDirectory1080p", defaultdrive);
+                txtSrc1440p.Text = key.GetValueStr("SourceDirectory1440p", defaultdrive);
                 txtSrc4K.Text = key.GetValueStr("SourceDirectory4K", defaultdrive);
                 txtSrc4KAdobe.Text = key.GetValueStr("SourceDirectory4KAdobe", defaultdrive);
                 txtComp720p.Text = key.GetValueStr("CompDirectory720p", defaultdrive);
-                txtComp1080p.Text = key.GetValueStr("CompDirectory1080p", defaultdrive);
+                txtComp1440p.Text = key.GetValueStr("CompDirectory1440p", defaultdrive);
                 txtComp4K.Text = key.GetValueStr("CompDirectory4K", defaultdrive);
                 txtComp4KAdobe.Text = key.GetValueStr("CompDirectory4KAdobe", defaultdrive);
                 txtDone720p.Text = key.GetValueStr("DestDirectory720p", defaultdrive);
-                txtDone1080p.Text = key.GetValueStr("DestDirectory1080p", defaultdrive);
+                txtDone1440p.Text = key.GetValueStr("DestDirectory1440p", defaultdrive);
                 txtDone4k.Text = key.GetValueStr("DestDirectory4k", defaultdrive);
                 txtDone4KAdobe.Text = key.GetValueStr("DestDirectoryAdobe4k", defaultdrive);
                 txtErrorPath.Text = key.GetValueStr("ErrorDirectory", defaultdrive);
@@ -79,15 +79,15 @@ namespace VideoGui
                 txtWidth.Text = key.GetValueStr("ResizeWidth", "720");
                 txtRounding.Text = key.GetValueStr("Rounding", "16");
                 int Max = key.GetValueInt("maxthreads", 2);
-                int Max1080p = key.GetValueInt("max1080pthreads", 1);
+                int Max1440p = key.GetValueInt("max1440pthreads", 1);
                 int Max4K = key.GetValueInt("max4Kthreads", 1);
                 int dx = this.GetIndexOf("cmbMaxThreads", Max.ToString());
                 cmbH64Target.SelectedIndex = key.GetValueInt("h264Target",-1);
-                string[] cmbname = { "cmbMaxThreads", "cmbMax1080pThreads", "cmb4KThreads" };
+                string[] cmbname = { "cmbMaxThreads", "cmbMax1440pThreads", "cmb4KThreads" };
                 foreach (string CmbName in cmbname)
                 {
                     int cnt = 0;
-                    if (CmbName.Contains("1080p")) Max = Max1080p;
+                    if (CmbName.Contains("1440p")) Max = Max1440p;
                     else if (CmbName.Contains("4K")) Max = Max4K;
                     for (int i = 0; i < this.GetCount(CmbName); i++)
                     {
@@ -223,15 +223,15 @@ namespace VideoGui
                     string defaultdrive = Path.GetPathRoot(Process.GetCurrentProcess().MainModule.FileName);
                     key.SetValue("MonitorDownloads", ChkMonitorDownloads.IsChecked);
                     key.SetValue("SourceDirectory720p", txtSrc720p.Text);
-                    key.SetValue("SourceDirectory1080p", txtSrc1080p.Text );
+                    key.SetValue("SourceDirectory1440p", txtSrc1440p.Text );
                     key.SetValue("SourceDirectory4K", txtSrc4K.Text);
                     key.SetValue("SourceDirectory4KAdobe", txtSrc4KAdobe.Text);
                     key.SetValue("CompDirectory720p", txtComp720p.Text);
-                    key.SetValue("CompDirectory1080p", txtComp1080p.Text);
+                    key.SetValue("CompDirectory1440p", txtComp1440p.Text);
                     key.SetValue("CompDirectory4K", txtComp4K.Text);
                     key.SetValue("CompDirectory4KAdobe", txtComp4KAdobe.Text);
                     key.SetValue("DestDirectory720p", txtDone720p.Text);
-                    key.SetValue("DestDirectory1080p", txtDone1080p.Text);
+                    key.SetValue("DestDirectory1440p", txtDone1440p.Text);
                     key.SetValue("DestDirectoryAdobe4k", txtDone4k.Text);
                     key.SetValue("DestDirectory4KAdobe", txtDone4KAdobe.Text);
                     key?.SetValue("ErrorDirectory", txtErrorPath.Text);
@@ -369,11 +369,11 @@ namespace VideoGui
             }
         }
 
-        private void btnDoneSelectDir1080p_Click(object sender, RoutedEventArgs e)
+        private void btnDoneSelectDir1440p_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                txtDone4k.Text = SelectMasterDir("Select Output 1080p Directory", "DestDirectory10080p");
+                txtDone4k.Text = SelectMasterDir("Select Output 1440p Directory", "DestDirectory10080p");
             }
             catch (Exception ex)
             {
@@ -393,11 +393,11 @@ namespace VideoGui
             }
         }
 
-        private void btnSrc1080p_Click(object sender, RoutedEventArgs e)
+        private void btnSrc1440p_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                txtSrc1080p.Text = SelectMasterDir("Select Source 1080p Directory", "SourceDirectory1080p");
+                txtSrc1440p.Text = SelectMasterDir("Select Source 1440p Directory", "SourceDirectory1440p");
             }
             catch (Exception ex)
             {
@@ -438,7 +438,7 @@ namespace VideoGui
                     RegistryKey key = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\VideoProcessor", true);
                     key.SetValue("shortsdirectory", txtShortspath.Text);
                     key?.SetValue("maxthreads", this.GetCmbContentToInt("cmbMaxThreads"));
-                    key?.SetValue("max1080pthreads", this.GetCmbContentToInt("cmbMax1080pThreads"));
+                    key?.SetValue("max1440pthreads", this.GetCmbContentToInt("cmbMax1440pThreads"));
                     key?.SetValue("max4Kthreads", this.GetCmbContentToInt("cmb4KThreads"));
                     key?.SetValue("Audiomode", this.GetCmbContentToInt("cmbAudioMode"));
                     key.SetValue("reencodefile", ChkReEncode.IsChecked);

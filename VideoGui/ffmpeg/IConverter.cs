@@ -62,7 +62,7 @@ namespace VideoGui.ffmpeg
         IConverter SetOverlay(string Source, bool IsShortVideo);
 
         Task<IConversionResult> Start();
-        Task<bool> ProbeFile(string filename, bool is1080p);
+        Task<bool> ProbeFile(string filename, bool is1440p);
         /// <returns>IConversion object</returns>
         //public Snippets FromSnippet = new Snippets()
         //IConverter event ConverterProbDataEventHandler OnProbeData;

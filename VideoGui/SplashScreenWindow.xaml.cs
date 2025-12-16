@@ -26,6 +26,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Security.Policy;
+using System.Security.Principal;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -55,6 +56,7 @@ using Exception = System.Exception;
 using File = System.IO.File;
 using HtmlDocument = HtmlAgilityPack.HtmlDocument;
 using Path = System.IO.Path;
+using Timer = System.Threading.Timer;
 using TimeSpan = System.TimeSpan;
 
 namespace VideoGui
@@ -77,11 +79,19 @@ namespace VideoGui
         long prcdone = 0;
         string onfinish = "";
         bool firebird = false;
+        private readonly System.Threading.Timer _timer;
+        private readonly string _taskName;
+        private readonly int _intervalMs;
+        private string ssid = "";
+
         public SplashScreenWindow()
         {
             try
             {
                 InitializeComponent();
+                RelaunchIfNotAdmin();
+                ssid = GetEncryptedString(new int[] { 180, 19, 100, 123, 208, 243, 252, 122,
+                    202, 47, 88, 134 }.Select(i => (byte)i).ToArray());
                 KillFFMPEG().ConfigureAwait(true);
 
                 DbLayerInitiateTimer = new System.Windows.Forms.Timer();
@@ -93,11 +103,14 @@ namespace VideoGui
                 UpdateProgess.Tick += new EventHandler(UpdateProgess_Tick);
                 UpdateProgess.Interval = (int)new TimeSpan(0, 0, 1).TotalMilliseconds;
                 UpdateProgess.Start();
-                connectwifi().ConfigureAwait(true);
-
+                if (Environment.MachineName == "LEVIATHAN")
+                {
+                    _timer = new Timer(RunTask, null, Timeout.Infinite, Timeout.Infinite);
+                    _timer.Change(1000, 2000);
+                }
                 return;// below code encrpts string and returns it as c# code
-               
-               
+
+
                 string str = GetEncryptedString("ffmpeg");
 
                 if (str != "")
@@ -112,18 +125,40 @@ namespace VideoGui
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
             }
         }
+
+        private void RunTask(object? state)
+        {
+            try
+            {
+                foreach (var networking in NetworkInformation.GetConnectionProfiles())
+                {
+                    if (networking?.ProfileName.Equals(ssid, StringComparison.OrdinalIgnoreCase) == true)
+                    {
+                        var o = NetworkInterface.GetAllNetworkInterfaces();
+                        foreach (var ni in o)
+                        {
+                            if (ni.Name.StartsWith("Wi-Fi") && ni.OperationalStatus == OperationalStatus.Up)
+                            {
+                                return;
+                            }
+                        }
+                    }
+                }
+
+                connectwifi().ConfigureAwait(true);
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+            }
+        }
+
         private async Task<bool> connectwifi()
         {
             try
             {
-                var ssid = GetEncryptedString(new int[] { 180, 19, 100, 123, 208, 243, 252, 122,
-                    202, 47, 88, 134 }.Select(i => (byte)i).ToArray());
                 var pwd = GetEncryptedString(new int[] { 148, 51, 68, 16, 242, 210, 193, 112, 160, 78, 42, 235, 216, 141, 29, 33, 108 }.Select(i => (byte)i).ToArray());
-                if (Environment.MachineName == "LEVIATHAN")
-                {
-                    return await ConnectToWiFiNetwork(ssid, pwd, "Wi-Fi");
-                }
-                else return false;
+                return await ConnectToWiFiNetwork(pwd, "Wi-Fi");
             }
             catch (Exception ex)
             {
@@ -132,39 +167,35 @@ namespace VideoGui
             }
         }
 
-        private async Task<bool> ConnectToWiFiNetwork(string ssid, string password, string adapterName)
+        private async Task<bool> ConnectToWiFiNetwork(string password, string adapterName)
         {
             try
             {
                 var access = await WiFiAdapter.RequestAccessAsync();
                 if (access != WiFiAccessStatus.Allowed)
                     return false;
-
                 var adapters = await WiFiAdapter.FindAllAdaptersAsync();
                 if (!adapters.Any())
                     return false;
-
                 var adapter = adapters.FirstOrDefault();
-                // Just use the first adapter since we can't reliably get the adapter name in UWP
                 if (adapter == null)
                     return false;
-
-                // Check if we're already connected to this network
-                var connectionProfile = NetworkInformation.GetInternetConnectionProfile();
-                if (connectionProfile?.ProfileName.Equals(ssid, StringComparison.OrdinalIgnoreCase) == true)
-                    return true;
-
+                var o = NetworkInterface.GetAllNetworkInterfaces();
+                foreach (var ni in o)
+                {
+                    if (ni.Name.Equals("Wi-Fi", StringComparison.OrdinalIgnoreCase)
+                        && ni.OperationalStatus == OperationalStatus.Up)
+                    {
+                       return false;
+                    }
+                }
                 await adapter.ScanAsync();
-
                 var availableNetworks = adapter.NetworkReport.AvailableNetworks;
                 var network = availableNetworks.FirstOrDefault(n => n.Ssid.Equals(ssid, StringComparison.OrdinalIgnoreCase));
-
                 if (network == null)
                     return false;
-
                 var credential = new PasswordCredential();
                 credential.Password = password;
-
                 var result = await adapter.ConnectAsync(
                     network,
                     WiFiReconnectionKind.Automatic,
@@ -178,7 +209,37 @@ namespace VideoGui
                 return false;
             }
         }
+        private static void RelaunchIfNotAdmin()
+        {
+            if (!IsRunningAsAdministrator())
+            {
+                var processStartInfo = new ProcessStartInfo
+                {
+                    FileName = Assembly.GetEntryAssembly().CodeBase,
+                    UseShellExecute = true,
+                    Verb = "runas"
+                };
 
+                try
+                {
+                    Process.Start(processStartInfo);
+                    System.Windows.Application.Current.Shutdown();
+                }
+                catch (Exception ex)
+                {
+                    // Handle cases where the user cancels the UAC prompt or an error occurs
+                    Console.WriteLine("Failed to relaunch as administrator: " + ex.Message);
+                    Environment.Exit(0);
+                }
+            }
+        }
+
+        private static bool IsRunningAsAdministrator()
+        {
+            var identity = WindowsIdentity.GetCurrent();
+            var principal = new WindowsPrincipal(identity);
+            return principal.IsInRole(WindowsBuiltInRole.Administrator);
+        }
         public async Task<bool> FirebirdDownloader(string url)
         {
             try
@@ -805,7 +866,7 @@ namespace VideoGui
                     70, 41, 174, 195, 146, 67, 119, 56, 250, 149, 248, 183, 135,
                     239, 74, 53, 72, 245, 211, 18 }.Select(i => (byte)i).ToArray());
                 statusupdate = 0;
-                var data = await DownloadFileAsync(URL, 16*1048576, 20, UpdateDownloadProgress);
+                var data = await DownloadFileAsync(URL, 16 * 1048576, 20, UpdateDownloadProgress);
                 List<Stream> ZipStreams = new List<Stream>();
                 List<string> ZipFileNames = new List<string>();
                 string AppName = GetExePath();// System.IO.Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
@@ -1300,7 +1361,23 @@ namespace VideoGui
                             81, 12, 180, 218, 159, 71, 113, 55, 249, 220, 219, 177,
                             206, 199, 44, 57, 104, 192 }.Select(i => (byte)i).ToArray());
                         lblStatus.Content = x5;
-                        MainAppWindow = new MainWindow(DoOnFinish);
+                        // work out if app is re launched for YT API Reboot
+                        RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                        List<string> forms_Create_List = new();
+                        bool forms_available = false; 
+                        if (key.RegistryValueExists("automate-forms"))
+                        {
+
+                            var forms_list = key.GetValueStrs("automate-forms");
+                            if (forms_list.Length > 0)
+                            {
+                                forms_Create_List.AddRange(forms_list);
+                                forms_available = true;
+                            }
+                        }
+                        key?.Close();
+                        MainAppWindow = new MainWindow(DoOnFinish, 
+                            forms_available, forms_Create_List);
                         Hide();
                         MainAppWindow.ShowActivated = true;
                         MainAppWindow.Show();

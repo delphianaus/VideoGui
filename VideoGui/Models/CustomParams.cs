@@ -106,9 +106,11 @@ namespace VideoGui.Models
     public class CustomParams_ClearCheck
     {
         public ClearModes mode = ClearModes.ClearImports;
-        public CustomParams_ClearCheck(ClearModes mode)
+        public List<string> files = new List<string>();
+        public CustomParams_ClearCheck(ClearModes mode, List<string> files)
         {
             this.mode = mode;
+            this.files = files;
         }
     }
     public enum TimeSpanMode { ToTime, FromTime };

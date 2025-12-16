@@ -1,5 +1,6 @@
 ﻿using AsyncAwaitBestPractices;
 using FolderBrowserEx;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
@@ -251,7 +252,7 @@ namespace VideoGui
             {
                 MediaInfoTimes.Clear();
                 MediaInfoTimesSort.Clear();
-                Invoker?.Invoke(this, new CustomParams_ClearCheck(ClearModes.ClearTimes));
+                Invoker?.Invoke(this, new CustomParams_ClearCheck(ClearModes.ClearTimes, new List<string>()));
                 files = Directory.EnumerateFiles(SourceDir, "*.mp4", SearchOption.AllDirectories).ToList();
                 foreach (string file in files)
                 {
@@ -276,6 +277,15 @@ namespace VideoGui
                     id = i.ToString().PadLeft(3, '0');
                     MediaInfoTimesSort[i] = (TS, FN, id);
                 }
+
+                List<string> Rs = (from (string, TimeSpan, string, string) v in MediaInfoTimes
+                                   let r = v.Item1
+                                   where r != ""
+                                   let fname = r.Split('\\').ToList().LastOrDefault()
+                                   where fname.Contains("_")
+                                   select fname).ToList();
+
+
                 for (int i = 0; i < MediaInfoTimes.Count; i++)
                 {
                     (string, TimeSpan, string, string) fileinfos = MediaInfoTimes[i];
@@ -290,10 +300,18 @@ namespace VideoGui
                         {
                             nname = fname.Replace("GX", "GX_" + f.Item3 + "_");
                         }
-                        if (FN1.Contains("GX_"))
+                        else if (fname != "" && fname.Contains("GX_"))
+                        {
+                            List<string> Names = fname.Split("_").ToList();
+                            string f1 = "GX_" + f.Item3 + "_";
+                            string f2 = Names.LastOrDefault();
+                            f1 += f2;
+                            nname = f1;
+                        }
+                        /*if (FN1.Contains("GX_"))
                         {
                             nname = fname;
-                        }
+                        }*/
                         MediaInfoTimes[i] = (FN1, TSA, fname, nname);
                     }
                 }
@@ -303,7 +321,15 @@ namespace VideoGui
                     Thread.Sleep(15);
                 }
                 btnRename.IsEnabled = Invoker.InvokeWithReturn<bool>(this,
-                   new CustomParams_ClearCheck(ClearModes.CheckImports));//is bool b ? b : false;
+                   new CustomParams_ClearCheck(ClearModes.CheckImports,Rs));//is bool b ? b : false;
+                if (true)
+                {
+                    if (msuSchedules.ItemsSource is not null)
+                    {
+
+                    }
+                }
+            
             }
             catch (Exception ex)
             {
@@ -485,7 +511,7 @@ namespace VideoGui
         {
             try
             {
-                Invoker.Invoke(this, new CustomParams_ClearCheck(ClearModes.ClearTimes));
+                Invoker.Invoke(this, new CustomParams_ClearCheck(ClearModes.ClearTimes, new List<string>()));
             }
             catch (Exception ex)
             {
@@ -616,7 +642,7 @@ namespace VideoGui
         {
             try
             {
-                Invoker.Invoke(this, new CustomParams_ClearCheck(ClearModes.ClearTimes));
+                Invoker.Invoke(this, new CustomParams_ClearCheck(ClearModes.ClearTimes, new List<string>()));
                 txtStart.Text = string.Empty;
                 txtEnd.Text = string.Empty;
             }

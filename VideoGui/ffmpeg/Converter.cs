@@ -45,7 +45,7 @@ namespace VideoGui.ffmpeg
         private VsyncParams _vsyncmode;
         private bool _IsProbe = false, _IsComplex = false, _IsConcat = false, IsMuxed = false;
         private string ComplexBitRate = string.Empty, MuxData = "";
-        public bool _Is1080p;
+        public bool _Is1440p;
         public int mtscnt = 0;
         private TimeSpan startime = TimeSpan.Zero;
         private Command cmd = null;
@@ -405,11 +405,11 @@ namespace VideoGui.ffmpeg
         bool ProcessRunning = false;
         int InternalProcessId = -1;
 
-        public async Task<bool> ProbeFile(string filename, bool is1080p)
+        public async Task<bool> ProbeFile(string filename, bool is1440p)
         {
             try
             {
-                _Is1080p = is1080p;
+                _Is1440p = is1440p;
                 if ((defaultpath == "") || (Debugger.IsAttached))
                 {
                     defaultpath = (!Debugger.IsAttached) ? Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName) : Extensions.GetAppPath();
@@ -506,7 +506,7 @@ namespace VideoGui.ffmpeg
             int errn = 0;
             try
             {
-                _Is1080p = false;
+                _Is1440p = false;
                 bool bIsEncoding = false;
                 bool bSideDataRec = false;
                 errn = 1;
@@ -921,7 +921,7 @@ namespace VideoGui.ffmpeg
         {
             try
             {
-                _Is1080p = false;
+                _Is1440p = false;
                 bool bIsEncoding = false;
                 bool bSideDataRec = false;
                 List<string> ProbeData = new List<string>();

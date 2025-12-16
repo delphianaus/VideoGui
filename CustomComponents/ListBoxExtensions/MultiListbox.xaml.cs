@@ -1021,7 +1021,7 @@ namespace CustomComponents.ListBoxExtensions
                 return TextBlock.TextProperty;
             }
         }
-
+        bool ready = false;
         private void ItemContainerGenerator_StatusChanged(object? sender, EventArgs e)
         {
             try
@@ -1043,9 +1043,10 @@ namespace CustomComponents.ListBoxExtensions
                                     if (contentPresenter != null && VisualTreeHelper.GetChildrenCount(contentPresenter) > 0)
                                     {
                                         var grid = VisualTreeHelper.GetChild(contentPresenter, 0) as Grid;
-                                        if (grid != null)
+                                        if (grid != null && !ready)
                                         {
                                             InitializeGrid(grid);
+                                            ready = true;
                                         }
                                     }
                                 }

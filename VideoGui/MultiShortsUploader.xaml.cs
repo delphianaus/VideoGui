@@ -16,6 +16,7 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Documents;
+using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -27,6 +28,8 @@ using Windows.Devices.Geolocation;
 using Windows.Graphics.DirectX.Direct3D11;
 using Windows.Media.Core;
 using Windows.UI.Composition;
+using static Microsoft.WindowsAPICodePack.Shell.PropertySystem.SystemProperties.System;
+using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 using Path = System.IO.Path;
 
 namespace VideoGui
@@ -618,6 +621,7 @@ namespace VideoGui
             {
                 if (sender is ScraperModule sa)
                 {
+                    int Linked_Id = -1;
                     WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
                     string gUrl = webAddressBuilder.Dashboard().Address;
                     RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
@@ -626,138 +630,74 @@ namespace VideoGui
                     key?.Close();
                     if (!sa.KilledUploads && sa.TotalScheduled > 0)
                     {
+                        int shortsleft = 0;
+                        int Uploaded = sa.TotalScheduled;
                         List<string> filesdone = new List<string>();
                         bool Exc = sa.Exceeded;
-                        bool FindNextRec = false;
-                        filesdone.AddRange(sa.ScheduledOk);
-                        int Uploaded = sa.TotalScheduled;
-                        int shortsleft = Directory.EnumerateFiles(rootfolder, "*.mp4", SearchOption.AllDirectories).ToList().Count();
-                        foreach (var rp in msuSchedules.ItemsSource.OfType<SelectedShortsDirectories>().Where(x => x.IsActive))
+                        if (sa.HasUploaded)
                         {
-                            var dir =
-                                Directory.EnumerateDirectories(BaseDir, rp.DirectoryName,
-                                SearchOption.AllDirectories).ToList().FirstOrDefault();
-                            if (dir.ToLower() != rootfolder.ToLower()) continue;
-                            int cnt = Directory.EnumerateFiles(dir, "*.mp4", SearchOption.AllDirectories).ToList().Count();
-                            rp.NumberOfShorts = cnt;
-                            if (cnt == 0)
+                            
+                            bool FindNextRec = false;
+                            filesdone.AddRange(sa.ScheduledOk);
+                            shortsleft = Directory.EnumerateFiles(rootfolder, "*.mp4", SearchOption.AllDirectories).ToList().Count();
+                            foreach (var rp in msuSchedules.ItemsSource.OfType<SelectedShortsDirectories>().Where(x => x.IsActive))
                             {
-                                rp.IsActive = false;
-                                FindNextRec = true;
-                                ResetShortsToZeroInDB(rp.LinkedShortsDirectoryId);
-                            }
-                            else if (cnt < 3)
-                            {
-                                FindNextRec = MoveLeftOvers(BaseDir, rp);
-                                if (FindNextRec) break;
-                            }
-                        }
-                        if (!FindNextRec)
-                        {
-                            foreach (var rp in msuSchedules.ItemsSource.OfType<SelectedShortsDirectories>().Where(x => !x.IsActive && x.NumberOfShorts > 0))
-                            {
-                                string _newpaths = Path.Combine(BaseDir, rp.DirectoryName);
-                                shortsleft = Directory.EnumerateFiles(_newpaths, "*.mp4", SearchOption.AllDirectories).ToList().Count();
-                                    rp.NumberOfShorts = shortsleft;
-                                if (shortsleft < 3)
+                                var dir =
+                                    Directory.EnumerateDirectories(BaseDir, rp.DirectoryName,
+                                    SearchOption.AllDirectories).ToList().FirstOrDefault();
+                                if (dir.ToLower() != rootfolder.ToLower()) continue;
+                                int cnt = Directory.EnumerateFiles(dir, "*.mp4", SearchOption.AllDirectories).ToList().Count();
+                                rp.NumberOfShorts = cnt;
+                                if (cnt == 0)
                                 {
-                                    if (MoveLeftOvers(BaseDir, rp))
+                                    rp.IsActive = false;
+                                    FindNextRec = true;
+                                    ResetShortsToZeroInDB(rp.LinkedShortsDirectoryId);
+                                }
+                                else if (cnt < 3)
+                                {
+                                    FindNextRec = MoveLeftOvers(BaseDir, rp);
+                                    if (FindNextRec) break;
+                                }
+                            }
+                            if (msuSchedules.ItemsSource.OfType<SelectedShortsDirectories>().Where(x => x.IsActive).Count() == 0)
+                            {
+                                foreach (var rp in msuSchedules.ItemsSource.OfType<SelectedShortsDirectories>().Where(x => !x.IsActive && x.NumberOfShorts > 0))
+                                {
+                                    LinkedId = rp.LinkedShortsDirectoryId;
+                                    string _newpaths = Path.Combine(BaseDir, rp.DirectoryName);
+                                    shortsleft = Directory.EnumerateFiles(_newpaths, "*.mp4", SearchOption.AllDirectories).ToList().Count();
+                                    rp.NumberOfShorts = shortsleft;
+                                    if (shortsleft < 3 && MoveLeftOvers(BaseDir, rp))
                                     {
                                         continue;
                                     }
-                                }
 
-
-                                if (shortsleft == 0)
-                                {
-                                    ResetShortsToZeroInDB(rp.LinkedShortsDirectoryId);
-                                }
-                                else
-                                {
-                                    rp.IsActive = true;
-                                    string newpath = Path.Combine(BaseDir, rp.DirectoryName);
-                                    if (Path.Exists(newpath))
-                                    {
-                                        shortsleft = Directory.EnumerateFiles(newpath, "*.mp4", SearchOption.AllDirectories).ToList().Count();
-                                        rp.NumberOfShorts = shortsleft;
-                                        key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
-                                        key.SetValue("UploadPath", newpath);
-                                        key?.Close();
-                                        CheckLinkedIds(rp, newpath);
-                                        var Idx = Invoker?.Invoke(this, new CustomParams_GetDirectory(rp.DirectoryName));
-                                        rp.LinkedShortsDirectoryId = (Idx is int _id && rp.LinkedShortsDirectoryId != _id) ? _id : rp.LinkedShortsDirectoryId;
-                                    }
-                                    break;
-                                }
-                            }
-                        }
-                        else
-                        {
-                            int acnt = 0;
-                            foreach (var rp in msuSchedules.ItemsSource.OfType<SelectedShortsDirectories>().Where(x => x.IsActive && x.NumberOfShorts > 0))
-                            {
-                                string newpaths = Path.Combine(BaseDir, rp.DirectoryName);
-                                shortsleft = Directory.EnumerateFiles(newpaths, "*.mp4", SearchOption.AllDirectories).ToList().Count();
-                                if (shortsleft != rp.NumberOfShorts)
-                                {
                                     if (shortsleft == 0)
                                     {
-                                        rp.IsActive = false;
-                                        rp.NumberOfShorts = 0;
                                         ResetShortsToZeroInDB(rp.LinkedShortsDirectoryId);
+                                        continue;
                                     }
-                                    else rp.NumberOfShorts = shortsleft;
-                                }
-                                else if (rp.NumberOfShorts > 0) acnt++;
-                            }
-                            if (acnt == 0)
-                            {
-                                var item = msuSchedules.ItemsSource.OfType<SelectedShortsDirectories>().FirstOrDefault();
-                                if (item is not null)
-                                {
-                                    item.IsActive = true;
-                                    string newpath = Path.Combine(BaseDir, item.DirectoryName);
-                                    if (Path.Exists(newpath))
+                                    else
                                     {
-                                        shortsleft = Directory.EnumerateFiles(newpath, "*.mp4", SearchOption.AllDirectories).ToList().Count();
-                                        item.NumberOfShorts = shortsleft;
-                                        key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
-                                        key.SetValue("UploadPath", newpath);
-                                        key?.Close();
-                                        CheckLinkedIds(item, newpath);
-                                        var Idx = Invoker?.Invoke(this, new CustomParams_GetDirectory(item.DirectoryName));
-                                        item.LinkedShortsDirectoryId = (Idx is int _id && item.LinkedShortsDirectoryId != _id) ? _id : item.LinkedShortsDirectoryId;
+                                        string newpath = Path.Combine(BaseDir, rp.DirectoryName);
+                                        CheckNumberOfShorts(newpath,
+                                            rp.LinkedShortsDirectoryId, rp.NumberOfShorts, true);
+                                        break;
                                     }
                                 }
                             }
-                            else
-                            {
-                                foreach (var item in msuSchedules.ItemsSource.OfType<SelectedShortsDirectories>().Where(x => x.IsActive && x.NumberOfShorts > 0))
-                                {
-                                    string newpath = Path.Combine(BaseDir, item.DirectoryName);
-                                    if (Path.Exists(newpath))
-                                    {
-                                        shortsleft = Directory.EnumerateFiles(newpath, "*.mp4", SearchOption.AllDirectories).ToList().Count();
-                                        if (Directory.EnumerateFiles(newpath, "*.mp4", SearchOption.AllDirectories).ToList().Count() == 0)
-                                        {
-                                            item.IsActive = false;
-                                            item.NumberOfShorts = 0;
-                                            ResetShortsToZeroInDB(item.LinkedShortsDirectoryId);
-                                            continue;
-                                        }
-                                        item.NumberOfShorts = shortsleft;
-                                        key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
-                                        key.SetValue("UploadPath", newpath);
-                                        key?.Close();
-                                        var Idx = Invoker?.Invoke(this, new CustomParams_GetDirectory(item.DirectoryName));
-                                        item.LinkedShortsDirectoryId = (Idx is int _id && item.LinkedShortsDirectoryId != _id) ? _id : item.LinkedShortsDirectoryId;
-                                        CheckLinkedIds(item, newpath);
-                                    }
-                                }
-                            }
+                            
                         }
                         if (!Exc && shortsleft > 0 && Uploaded < txtTotalUploads.Text.ToInt())
                         {
+                            foreach (var item_r in msuSchedules.ItemsSource.OfType<SelectedShortsDirectories>().Where(x => x.IsActive &&
+                              x.LinkedShortsDirectoryId != Linked_Id))
+                            {
+                                item_r.IsActive = false;
+                            }
+
+
                             int Maxuploads = (txtTotalUploads.Text != "") ? txtTotalUploads.Text.ToInt(100) : 100;
                             int UploadsPerSlot = (txtMaxUpload.Text != "") ? txtMaxUpload.Text.ToInt(5) : 5;
                             var sscraperModule = new ScraperModule(Invoker, doOnFinish, gUrl, Maxuploads, UploadsPerSlot, 0, false);
@@ -836,7 +776,47 @@ namespace VideoGui
                 ex.LogWrite($"doOnFinish {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
         }
+        private Tuple<bool, int> CheckNumberOfShorts(string pathToCheck, int _LinkedId, int shorts_left, bool update = false)
+        {
+            try
+            {
+                bool HasChanged = false;
+                string LinkedId = _LinkedId.ToString();
+                if (Directory.Exists(pathToCheck))
+                {
+                    int shortsleft = Directory.EnumerateFiles(pathToCheck, "*.mp4", SearchOption.AllDirectories).ToList().Count();
+                    if (shorts_left != shortsleft)
+                    {
+                        //rp.NumberOfShorts = shortsleft;
+                        HasChanged = true;
+                        var key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                        key.SetValue("UploadPath", pathToCheck);
+                        key?.Close();
+                        CheckLinkedIds(LinkedId, pathToCheck);
+                        if (update)
+                        {
+                            foreach (var rp in msuSchedules.ItemsSource.OfType<SelectedShortsDirectories>().Where(x => x.IsActive &&
+                                  x.LinkedShortsDirectoryId == _LinkedId))
+                            {
+                                rp.NumberOfShorts = shortsleft;
+                                rp.IsActive = (shortsleft == 0) ? false : true;//  false;
+                                var Idx = Invoker?.Invoke(this, new CustomParams_GetDirectory(rp.DirectoryName));
+                                rp.LinkedShortsDirectoryId = (Idx is int _id && rp.LinkedShortsDirectoryId != _id)
+                                    ? _id : rp.LinkedShortsDirectoryId;
+                            }
+                        }
 
+                        return new Tuple<bool, int>(HasChanged, shortsleft);
+                    }
+                }
+                return new Tuple<bool, int>(HasChanged, shorts_left);
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"DeleteShortFromDB {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+                return new Tuple<bool, int>(false, shorts_left);
+            }
+        }
         private void ResetShortsToZeroInDB(int LinkedId)
         {
             try
@@ -883,7 +863,7 @@ namespace VideoGui
                         }
                     }
                 }
-                
+
                 if (FindNextRec)
                 {
                     rp.IsActive = false;
@@ -897,14 +877,12 @@ namespace VideoGui
             }
         }
 
-        private void CheckLinkedIds(SelectedShortsDirectories item, string newpath)
+        private void CheckLinkedIds(string LinkedShortsDirectoryId, string newpath)
         {
             try
             {
                 List<string> files = Directory.EnumerateFiles(newpath, "*.mp4",
                                                            SearchOption.AllDirectories).ToList();
-                string LinkedShortsDirectoryId =
-                    item.LinkedShortsDirectoryId.ToString();
                 if (LinkedShortsDirectoryId is not null && LinkedShortsDirectoryId != "")
                 {
                     LinkedShortsDirectoryId = "_" + LinkedShortsDirectoryId;
@@ -1195,7 +1173,7 @@ namespace VideoGui
 
         public bool NewTarget = true;
 
-        
+
         private void btnSchduleScraper_Click(object sender, RoutedEventArgs e)
         {
             try
