@@ -705,7 +705,7 @@ namespace VideoGui
                     if (canceltoken.Token.IsCancellationRequested) return;
                     Dispatcher.BeginInvoke(new Action(() =>
                     {
-                        SimulateWheelUpDown(wv2);
+                        //SimulateWheelUpDown(wv2);
                     }));
                     WheelMove++;
                     if (WheelMove < 10)
@@ -1225,6 +1225,13 @@ namespace VideoGui
                         var html1 = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
                         List<HtmlNode> Nodes1 = GetNodes(html1, Span_Name);
                         int finishedz = 0;
+                        if (html1.Contains("No matching videos"))
+                        {
+                            Exceeded = true;
+                            break;
+                        }
+
+
                         foreach (HtmlNode Node in Nodes1)
                         {
                             finishedz++;
@@ -1241,6 +1248,8 @@ namespace VideoGui
                                 }
                             }
                         }
+
+
                         if (Exceeded)
                         {
                             html1 = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
@@ -1595,7 +1604,7 @@ namespace VideoGui
                         timer.Stop();
                         Dispatcher.BeginInvoke(new Action(() =>
                         {
-                            SimulateWheelUpDown(wv2);
+                           // SimulateWheelUpDown(wv2);
                         }));
                         timeractive = false;
                     };
@@ -1851,6 +1860,7 @@ namespace VideoGui
 
                                         if (lstCnt == 0 && lstMain.Items.Count == MaxNodes)
                                         {
+                                            AutoClosedReboot = true;
                                             var _DoAutoCancel = new AutoCancel(DoAutoCancelCloseScraper, $"Scraped {files} Files", 5, "Scraper Finished");
                                             _DoAutoCancel.ShowActivated = true;
                                             _DoAutoCancel.Show();
@@ -1977,6 +1987,7 @@ namespace VideoGui
 
                                 if (lstCnt2 == 0 && lstMain.Items.Count == MaxNodes)
                                 {
+                                    AutoClosedReboot = true;
                                     var _DoAutoCancel = new AutoCancel(DoAutoCancelCloseScraper, $"Scraped {files} Files", 5, "Scraper Finished");
                                     _DoAutoCancel.ShowActivated = true;
                                     _DoAutoCancel.Show();
@@ -2018,6 +2029,10 @@ namespace VideoGui
                         canceltoken.Cancel();
                         cancelds();
                         Close();
+                        if (AutoClosedReboot)
+                        {
+                            Invoker?.Invoke(this, new CustomParams_SetScheduleRestartCheck());
+                        }
                         return;
                     }
 
@@ -3558,11 +3573,11 @@ namespace VideoGui
                         targetPoint = new Point(webView.ActualWidth - 50, webView.ActualHeight - 100);
                     }
                     Point position = webView.PointToScreen(targetPoint);
-                    SetCursorPos((int)position.X, (int)position.Y);
+                    //SetCursorPos((int)position.X, (int)position.Y);
                     Thread.Sleep(50); // Wait for cursor to settle
-                    SimulateMouseWheel(webView, true, 10);
+                    //SimulateMouseWheel(webView, true, 10);
                     System.Threading.Thread.Sleep(100);
-                    SimulateMouseWheel(webView, false, 10);
+                    ////SimulateMouseWheel(webView, false, 10);
                 });
             }
             catch (Exception ex)
@@ -3582,7 +3597,7 @@ namespace VideoGui
                 }
                 Task.Run(() =>
                 {
-                    SimulateWheelUpDownAsync(webView, elementPoint);
+                    //SimulateWheelUpDownAsync(webView, elementPoint);
                 });
             }
             catch (Exception ex)
@@ -3614,7 +3629,7 @@ namespace VideoGui
                     scrollcnt++;
                     Dispatcher.BeginInvoke(new Action(() =>
                     {
-                        SimulateWheelUpDown(wv2);
+                        //SimulateWheelUpDown(wv2);
                     }));
                     WheelBody++;
                     if (WheelBody < 10)
@@ -3981,6 +3996,8 @@ namespace VideoGui
                 return TotalScheduled;
             }
         }
+
+        bool AutoClosedReboot = false;
         public void ProcessHTML(string html, int id, string IntId, object sender)
         {
             try
@@ -4122,8 +4139,10 @@ namespace VideoGui
                             }
                             if (files == lstCnt && lstMain.Items.Count == MaxCnts)
                             {
+                                AutoClosedReboot = true;
                                 var _DoAutoCancel = new AutoCancel(DoAutoCancelCloseScraper, $"Scraped {files} Files", 5, "Scraper Finished");
                                 _DoAutoCancel.ShowActivated = true;
+                                
                                 _DoAutoCancel.Show();
                             }
                         }

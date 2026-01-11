@@ -17,6 +17,9 @@ using System.ComponentModel;
 using System.ComponentModel;
 using System.Data.SqlTypes;
 using System.Diagnostics;
+using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -43,9 +46,11 @@ using System.Windows.Forms;
 using System.Windows.Forms.VisualStyles;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using VideoGui.ffmpeg;
 using VideoGui.Models.delegates;
 using Application = System.Windows.Application;
+using Brushes = System.Windows.Media.Brushes;
 using FlowDirection = System.Windows.FlowDirection;
 using Label = System.Windows.Controls.Label;
 
@@ -316,9 +321,56 @@ namespace VideoGui
                 return false;
             }
         }
+        public static Bitmap ConvertToBitmap(this BitmapSource bitmapSource)
+        {
+            try
+            {
+                Bitmap bitmap;
+                using (var outStream = new MemoryStream())
+                {
+                    BitmapEncoder enc = new BmpBitmapEncoder();
+                    enc.Frames.Add(BitmapFrame.Create(bitmapSource));
+                    enc.Save(outStream);
+                    bitmap = new Bitmap(outStream);
+                }
+                return bitmap;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"ConvertToBitmap {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+                return null;
+            }
+        }
         public static string ToHex(this int number)
         {
             return number.ToString("X");
+        }
+        public static T FindParent<T>(DependencyObject child) where T : DependencyObject
+        {
+            while (child != null)
+            {
+                if (child is T parent)
+                    return parent;
+
+                child = VisualTreeHelper.GetParent(child);
+            }
+            return null;
+        }
+        public static void Save(this WriteableBitmap wbitmap, string filename)
+        {
+            try
+            {
+                using (FileStream stream = new FileStream(filename, FileMode.Create))
+                {
+                    PngBitmapEncoder encoder = new PngBitmapEncoder();
+                    encoder.Frames.Add(BitmapFrame.Create(wbitmap));
+                    encoder.Save(stream);
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"ToInt(string) {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
         }
         public static double MeasureString(this FrameworkElement frameworkelement, string labelname, string content = "")
         {
@@ -358,7 +410,80 @@ namespace VideoGui
     }
     public static class Extensions
     {
+        public static BitmapImage ToBitmapImage(this Bitmap bitmap)
+        {
 
+            if (bitmap == null ) return null;
+            using (var memory = new MemoryStream())
+            {
+                bitmap.Save(memory, ImageFormat.Png);
+                memory.Position = 0;
+
+                var bitmapImage = new BitmapImage();
+                bitmapImage.BeginInit();
+                bitmapImage.StreamSource = memory;
+                bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
+                bitmapImage.EndInit();
+                bitmapImage.Freeze();
+
+                return bitmapImage;
+            }
+        }
+        public static Bitmap Resize(this Bitmap SourceImage, int Margin, System.Drawing.Color BackgroundColor, int newWidth = 0, int newHeight = 0)
+        {
+            try
+            {
+                int maximumWidth = (newWidth == 0) ? SourceImage.Width : newWidth;
+                int maximumHeight = (newHeight == 0) ? SourceImage.Height + Margin : newHeight + Margin;
+                int originalWidth = SourceImage.Width;
+                int originalHeight = SourceImage.Height;
+                int MM = Margin;
+                if (MM > SourceImage.Height) MM = SourceImage.Height;
+                SourceImage.SetResolution(originalWidth, originalHeight - MM);
+                var imageEncoders = ImageCodecInfo.GetImageEncoders();
+                EncoderParameters encoderParameters = new EncoderParameters(1);
+                encoderParameters.Param[0] = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, 100L);
+                var canvasWidth = maximumWidth;
+                var canvasHeight = maximumHeight;
+                var newImageWidth = maximumWidth;
+                var newImageHeight = maximumHeight;
+                var xPosition = 0;
+                var yPosition = 0;
+                var ratioX = maximumWidth / (double)SourceImage.Width;
+                var ratioY = maximumHeight / (double)SourceImage.Height;
+                var ratio = ratioX < ratioY ? ratioX : ratioY;
+                newImageHeight = (int)(SourceImage.Height * ratio);
+                newImageWidth = (int)(SourceImage.Width * ratio);
+                xPosition = (int)((maximumWidth - (SourceImage.Width * ratio)) / 2);
+                yPosition = 0;
+                var thumbnail = new Bitmap(canvasWidth, canvasHeight);
+                var graphic = Graphics.FromImage(thumbnail);
+                graphic.Clear(BackgroundColor);
+                graphic.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                graphic.SmoothingMode = SmoothingMode.HighQuality;
+                graphic.PixelOffsetMode = PixelOffsetMode.HighQuality;
+                graphic.CompositingQuality = CompositingQuality.HighQuality;
+                int ImgHeight = (Margin != 0) ? SourceImage.Height : newImageHeight;
+                graphic.DrawImage(SourceImage, xPosition, yPosition, newImageWidth, ImgHeight);
+                return thumbnail;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"IfContains {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+                return null;
+            }
+        }
+        public static T FindParent<T>(DependencyObject child) where T : DependencyObject
+        {
+            while (child != null)
+            {
+                if (child is T parent)
+                    return parent;
+
+                child = VisualTreeHelper.GetParent(child);
+            }
+            return null;
+        }
         public static void ApplyMargin(this StatusBar statusBar, int offset = 85)
         {
             try

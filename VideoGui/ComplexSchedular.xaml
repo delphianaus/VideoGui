@@ -64,14 +64,6 @@
                 <TextBox x:Name="txtdestdir" HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Center" Width="710" Canvas.Left="145" Canvas.Top="33" />
                 <Button x:Name="btnSelectSourceDir" HorizontalAlignment="Right" VerticalAlignment="Center" Width="20" Height="20" Canvas.Left="865" Canvas.Top="8" Click="btnSelectSourceDir_Click" />
                 <CheckBox x:Name="chkDeleteMonitored" Content="Delete Monitored Source" HorizontalAlignment="Center" VerticalAlignment="Top" Canvas.Left="13" Canvas.Top="94"/>
-                <ComboBox x:Name="ComboShortType" HorizontalAlignment="Left" VerticalAlignment="Center" 
-                                  Canvas.Left="288" Canvas.Top="92" Width="166" Height="20" 
-                                  AllowDrop="True" SelectedIndex="0" Panel.ZIndex="3" MinWidth="1" 
-                                  Visibility="Hidden">
-                    <ComboBoxItem Content="Master Only"/>
-                    <ComboBoxItem Content="Use Short Format"/>
-                    <ComboBoxItem Content="Use Long Format"/>
-                </ComboBox>
                 <CheckBox x:Name="chkPersistantSource" Content="Persistant Job" HorizontalAlignment="Center" VerticalAlignment="Top" Canvas.Left="181" Canvas.Top="94"/>
                 <Button x:Name="btnInject" Width="56" Height="41" HorizontalAlignment="Left" VerticalAlignment="Center" Content="Inject" Canvas.Top="80" Canvas.Left="746" Click="btnInject_Click"/>
                 <Button x:Name="btnNew" Width="68" HorizontalAlignment="Center" VerticalAlignment="Center" Content="New" Canvas.Top="80" Canvas.Left="665" Height="41" Click="btnNew_Click"/>

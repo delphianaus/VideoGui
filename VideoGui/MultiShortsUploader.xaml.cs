@@ -47,7 +47,9 @@ namespace VideoGui
         int SchMaxUploads = 100, LinkedId = -1, SelectedTitleId = -1;
         public bool IsClosing = false, IsClosed = false, Ready = false, IsFirstResize = false;
         private bool _isFirstResize = true;
-        DispatcherTimer LocationChangedTimer = new DispatcherTimer(), LocationChanger = new DispatcherTimer();
+        DispatcherTimer LocationChangedTimer = new DispatcherTimer(),
+            LocationChanger = new DispatcherTimer(),
+            RestartTimer = new DispatcherTimer();
         bool DebugStep = false;
         public TraceDebuggerInfo tbi = null;
         public static readonly DependencyProperty ShortsDirectoryNameWidthProperty =
@@ -173,12 +175,35 @@ namespace VideoGui
                     };
                     LocationChangedTimer.Start();
                 };
+                RestartTimer.Interval = TimeSpan.FromMilliseconds(600);
+                RestartTimer.Tick += new EventHandler(OnRestart);
+                RestartTimer.Start();
+
             }
             catch (Exception ex)
             {
                 ex.LogWrite($"Window_Loaded {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
+
+        private void OnRestart(object? sender, EventArgs e)
+        {
+            try
+            {
+                RestartTimer?.Stop();
+                var isRestart = Invoker?.Invoke(this, new CustomParams_ScheduleRestartCheck());
+                if (isRestart is bool restart && restart == true)
+                {
+                    Invoker?.Invoke(this, new CustomParams_ScheduleShorts());
+                }
+
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"OnRestart {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+        }
+
         private void LocationChanger_Tick(object? sender, EventArgs e)
         {
             try
@@ -636,7 +661,6 @@ namespace VideoGui
                         bool Exc = sa.Exceeded;
                         if (sa.HasUploaded)
                         {
-                            
                             bool FindNextRec = false;
                             filesdone.AddRange(sa.ScheduledOk);
                             shortsleft = Directory.EnumerateFiles(rootfolder, "*.mp4", SearchOption.AllDirectories).ToList().Count();
@@ -704,11 +728,7 @@ namespace VideoGui
                             sscraperModule.ShowActivated = true;
                             sscraperModule.ScheduledOk.AddRange(filesdone);
                             Hide();
-                            Process[] webView2Processes = Process.GetProcessesByName("MicrosoftEdgeWebview2");
-                            foreach (Process process in webView2Processes)
-                            {
-                                process.Kill();
-                            }
+                            
                             if (tbi is not null)
                             {
                                 sscraperModule.SendTraceInfo = tbi.InsertNewTrace;
@@ -743,6 +763,9 @@ namespace VideoGui
                                         ctscc.Cancel();
                                     });
                                 }
+
+                                // Max uploaded = true
+                                MaxUploaded = true;
                                 Nullable<DateTime> startdate = DateTime.Now, enddate = DateTime.Now.AddHours(10);
                                 List<ListScheduleItems> listSchedules2 = new();
                                 int _eventid = 0;
@@ -776,6 +799,8 @@ namespace VideoGui
                 ex.LogWrite($"doOnFinish {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
         }
+
+        bool MaxUploaded = false;
         private Tuple<bool, int> CheckNumberOfShorts(string pathToCheck, int _LinkedId, int shorts_left, bool update = false)
         {
             try
@@ -968,14 +993,18 @@ namespace VideoGui
         {
             try
             {
-                Invoker?.Invoke(this, new CustomParams_ScheduleShorts());
+                if (!AutoClose)
+                {
+                    Invoker?.Invoke(this, new CustomParams_ScheduleShorts());
+                }
+                else Invoker?.Invoke(this, new CustomParams_ScheduleRestartCheck());
             }
             catch (Exception ex)
             {
                 ex.LogWrite($"btnSchdule_Click {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-
+        bool AutoClose = false;
         private void FinishScraper(object sender, int id)
         {
             try
@@ -993,7 +1022,15 @@ namespace VideoGui
                             gscraperModule.Show();
                         });
                     }
-                    else Show();
+                    else
+                    {
+                        // if MaxUploaded set autoclose.
+                        if (MaxUploaded)
+                        {
+                            AutoClose = true;
+                        }
+                        Show();
+                    }
                 }
             }
             catch (Exception ex)

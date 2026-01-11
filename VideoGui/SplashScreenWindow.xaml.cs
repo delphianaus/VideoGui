@@ -66,7 +66,7 @@ namespace VideoGui
     /// </summary>
     public partial class SplashScreenWindow : System.Windows.Window
     {
-        System.Windows.Forms.Timer DbLayerInitiateTimer, UpdateProgess;
+        System.Windows.Forms.Timer DbLayerInitiateTimer, UpdateProgess, RestartTimer;
         MainWindow MainAppWindow;
         string filename_pegpeg, link;
         long bytesdone = 0, oldbytesdone = -1;
@@ -90,6 +90,9 @@ namespace VideoGui
             {
                 InitializeComponent();
                 RelaunchIfNotAdmin();
+                
+
+                
                 ssid = GetEncryptedString(new int[] { 180, 19, 100, 123, 208, 243, 252, 122,
                     202, 47, 88, 134 }.Select(i => (byte)i).ToArray());
                 KillFFMPEG().ConfigureAwait(true);
@@ -108,6 +111,8 @@ namespace VideoGui
                     _timer = new Timer(RunTask, null, Timeout.Infinite, Timeout.Infinite);
                     _timer.Change(1000, 2000);
                 }
+
+                
                 return;// below code encrpts string and returns it as c# code
 
 
@@ -126,6 +131,7 @@ namespace VideoGui
             }
         }
 
+        
         private void RunTask(object? state)
         {
             try

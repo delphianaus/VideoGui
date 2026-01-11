@@ -1,4 +1,5 @@
 ﻿using AsyncAwaitBestPractices;
+using AsyncAwaitBestPractices;
 using CliWrap;
 using Coravel.Scheduling.Schedule;
 using FirebirdSql.Data.FirebirdClient;
@@ -152,6 +153,9 @@ namespace VideoGui
         List<ListScheduleItems> ScheduleListItems = new List<ListScheduleItems>();
         List<ListScheduleItems> ScheduleListedItems = new List<ListScheduleItems>();
         System.Threading.Timer EventTimer = null;
+        System.Windows.Forms.Timer RestartTimer;
+        public bool RestartScheduler = false;
+        List<ThumbnailsInfo> thumbnailList = new List<ThumbnailsInfo>();
         ObservableCollection<GroupTitleTags> groupTitleTagsList = new ObservableCollection<GroupTitleTags>();
         ObservableCollection<Descriptions> DescriptionsList = new ObservableCollection<Descriptions>();
         ObservableCollection<SelectedTags> selectedTagsList = new ObservableCollection<SelectedTags>();
@@ -522,7 +526,16 @@ namespace VideoGui
         {
             try
             {
-                if (tld is CustomParams_MoveOrphanFiles cpMOF)
+                if (tld is CustomParams_ScheduleRestartCheck scsbool)
+                {
+                    return (TResult)Convert.ChangeType(IsRestart, typeof(TResult));
+                }
+                else if (tld is CustomParams_SetScheduleRestartCheck scsb)
+                {
+                    IsRestart = true; 
+                }
+
+                else if (tld is CustomParams_MoveOrphanFiles cpMOF)
                 {
                     string ActiveDir = "";
                     foreach (var t in SelectedShortsDirectoriesList.
@@ -593,6 +606,27 @@ namespace VideoGui
                 }
                 if (tld is CustomParams_ScheduleShorts cpsss)
                 {
+                    if (IsRestart)
+                    {
+                        var processStartInfo = new ProcessStartInfo
+                        {
+                            FileName = Assembly.GetEntryAssembly().CodeBase,
+                            UseShellExecute = true,
+                            Verb = "runas"
+                        };
+
+                        try
+                        {
+                            processStartInfo.Arguments = "SCHEDULER_RESTART";
+                            Process.Start(processStartInfo);
+                            System.Windows.Application.Current.Shutdown();
+                        }
+                        catch (Exception es)
+                        {
+
+                        }
+                    }
+
                     var _manualScheduler = new ManualScheduler(InvokerHandler<object>,
                         ManualSchedulerFinish);
                     _manualScheduler.ShowActivated = true;
@@ -3865,7 +3899,16 @@ namespace VideoGui
         {
             try
             {
-                if (tld is CustomParams_DisplayTargets cpDTT)
+                // Add restart Modules.
+                if (tld is CustomParams_ScheduleRestartCheck sid)
+                {
+                    return (TResult)Convert.ChangeType(IsRestart, typeof(TResult));
+                }
+                else if (tld is CustomParams_SetScheduleRestartCheck ssrc)
+                {
+                    IsRestart = true;
+                }
+                else if (tld is CustomParams_DisplayTargets cpDTT)
                 {
                     var _DisplayT = new ProcessDraftTargets(InvokerHandler<object>,
                         OnTargetsClose, cpDTT.ShowAction);
@@ -4811,6 +4854,11 @@ namespace VideoGui
                     "VIDEOHEIGHT VARCHAR(255),ARMODULAS VARCHAR(255), RESIZEENABLE SMALLINT," +
                     "ARROUNDENABLE SMALLINT,ARSCALINGENABLED SMALLINT,VSYNCEABLE SMALLINT);";
                 connectionString.CreateTableIfNotExists(sqlstring);
+                sqlstring = $"CREATE TABLE THUMBNAILDATA({Id}, TITLE1 VARCHAR(255), TITLE2 VARCHAR(255)," +
+              "SOURCEDIRECTORY VARCHAR(255), SOURCEIMAGE VARCHAR(255), RECT_X DOUBLE PRECISION, RECT_Y DOUBLE PRECISION," +
+              "RECT_WIDTH DOUBLE PRECISION,RECT_HEIGHT DOUBLE PRECISION, TEXTSIZE1 INTEGER, TEXTSIZE2 INTEGER," +
+              "TEXTOFFSET1 INTEGER, TEXTOFFSET2 INTEGER);";
+                connectionString.CreateTableIfNotExists(sqlstring);
                 sqlstring = $"CREATE TABLE YTACTIONS({Id}, SCHEDULENAMEID INTEGER, SCHEDULENAME VARCHAR(255)," +
                              "ACTIONNAME VARCHAR(255), MAXSCHEDULES INTEGER, VIDEOTYPE INTEGER, SCHEDULED_DATE DATE, SCHEDULED_TIME_START TIME, SCHEDULED_TIME_END TIME," +
                              "ACTION_DATE DATE, ACTION_TIME TIME, COMPLETED_DATE DATE, COMPLETED_TIME TIME, ISACTIONED SMALLINT);";
@@ -4905,6 +4953,7 @@ namespace VideoGui
         {
             try
             {
+                thumbnailList.Clear();
                 connectionString.ExecuteReader("SELECT * FROM AUTOINSERT", (FbDataReader r) =>
                 {
                     ComplexProcessingJobList.Add(new ComplexJobList(r));
@@ -4969,7 +5018,10 @@ namespace VideoGui
                 });
 
 
-
+                connectionString.ExecuteReader("SELECT * FROM THUMBNAILDATA", (FbDataReader r) =>
+                {
+                    thumbnailList.Add(new ThumbnailsInfo(r));
+                });
 
 
                 connectionString.ExecuteReader("SELECT * FROM DRAFTSHORTS", (FbDataReader r) =>
@@ -5471,6 +5523,7 @@ namespace VideoGui
             }
         }
 
+        bool IsRestart = false;
         public (int, int) GetFilterAges()
         {
             try
@@ -5614,6 +5667,30 @@ namespace VideoGui
                 FormResizerEvent.Interval = (int)new TimeSpan(0, 0, 2).TotalSeconds;
                 FormResizerEvent.Start();
                 lstBoxJobs.AllowDrop = true;
+
+                IsRestart = false;
+                string[] args = Environment.GetCommandLineArgs();
+                if (args != null && args.Length > 0)
+                {
+                    foreach (string arg in args)
+                    {
+                        if (arg == "SCHEDULER_RESTART")
+                        {
+                            IsRestart = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (IsRestart)
+                {
+                    RestartScheduler = true;
+                    RestartTimer = new System.Windows.Forms.Timer();
+                    RestartTimer.Tick += new EventHandler(RestartTimer_Tick);
+                    RestartTimer.Interval = (int)new TimeSpan(0, 0, 250).TotalMilliseconds;
+                    RestartTimer.Start();
+                }
+
             }
             catch (Exception ex)
             {
@@ -5621,6 +5698,19 @@ namespace VideoGui
             }
         }
 
+        private void RestartTimer_Tick(object? sender, EventArgs e)
+        {
+            try
+            {
+                RestartTimer.Stop();
+                btnShortsInfo_Click(sender, null);
+
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"RestartTimer_Tick {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+        }
 
 
         public async Task ClearLogs()
@@ -10670,6 +10760,105 @@ namespace VideoGui
 
         }
 
+        
+        private void DoOnloadTemplate(object ThisForm, string templatedirectory)
+        {
+            try
+            {
+                if (templatedirectory != "" && ThisForm is ThumbnailCreator tncf)
+                {
+                    foreach (var item in thumbnailList.Where(s => s.sourcedirectory == templatedirectory))
+                    {
+                        tncf.setTemplate(item);
+                        break;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"DoOnLoadTemplate {this} {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
+
+        private void DoOnSaveTemplate(object ThisForm, string templatedirectory)
+        {
+            try
+            {
+                if (templatedirectory != "" && ThisForm is ThumbnailCreator tncf)
+                {
+                    bool found = false;
+
+                    foreach (var item in thumbnailList.Where(s => s.sourcedirectory == templatedirectory))
+                    {
+                        found = true;
+                        break;
+                    }
+                    if (found)
+                    {
+                        for (int i = 0; i < thumbnailList.Count; i++)
+                        {
+                            if (thumbnailList[i].sourcedirectory == templatedirectory)
+                            {
+                                thumbnailList[i].title1 = tncf.txtLine1.Text;
+                                thumbnailList[i].title2 = tncf.txtLine2.Text;
+                                thumbnailList[i].TextSize1 = tncf.txtfFontSize1.Text.ToInt();
+                                thumbnailList[i].TextSize2 = tncf.txtfFontSize2.Text.ToInt();
+                                thumbnailList[i].TextOffset1 = tncf.txtfOffset1.Text.ToInt();
+                                thumbnailList[i].TextOffset2 = tncf.txtfOffset2.Text.ToInt();
+                                thumbnailList[i].sourceimage = tncf.txtImage.Text;
+                                int Id = thumbnailList[i].Id;
+                                if (thumbnailList[i].IsChanged(tncf))
+                                {
+                                    string updatecols = "";
+
+                                    if (updatecols != "")
+                                    {
+                                        string sql = $"UPDATE THUMBNAILDATA {updatecols} WHERE ID = @P0;";
+                                        connectionString.ExecuteScalar(sql, [("@P0", Id)]);
+                                    }
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
+
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"DoOnSaveTemplate {this} {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
+        private void CloseHandler_Thumbnail(object thisform, int id)
+        {
+            try
+            {
+                Show();
+                if (thisform is ThumbnailCreator thfx && thfx is not null)
+                {
+                    thfx = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite(MethodBase.GetCurrentMethod().Name + " " + ex.Message);
+            }
+        }
+
+        private void btnThumbNails_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var tfp = new ThumbnailCreator("", DoOnloadTemplate, DoOnSaveTemplate,
+                   CloseHandler_Thumbnail);
+                Hide();
+                tfp.Show();
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"btnThumbNails_Click {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
+            }
+        }
 
         private void btnSchedule_Click(object sender, RoutedEventArgs e)
         {
@@ -11535,6 +11724,57 @@ namespace VideoGui
                 return false;
             }
         }
+
+        private int GetProcessCountByName(string ProcessName)
+        {
+
+            try
+            {
+                int pCnt = 0;
+                string myStrQuote = "\"";
+                ManagementObjectSearcher searcher = new($"SELECT * FROM Win32_Process where name = {myStrQuote}{ProcessName}{myStrQuote}");
+                foreach (ManagementObject o in searcher.Get())
+                {
+                    if (o.Properties["Handle"] is null || o.Properties["ProcessID"] is null)
+                    {
+                        continue;
+                    }
+                    string HandleID = o.Properties["Handle"].Value.ToString();
+                    string ParentProcessId = "";
+                    ParentProcessId = (o.Properties["ParentProcessID"] is not null) ?
+                        o.Properties["ParentProcessID"].Value.ToString() : "";
+                    string ID = o.Properties["ProcessID"].Value.ToString();
+                    if (o["CommandLine"] != null)
+                    {
+                        string comstr = o["CommandLine"].ToString();
+                        if (comstr.ToUpper().Contains("RTMP:")) continue;
+                    }
+                    if (ParentProcessId != "")
+                    {
+                        try
+                        {
+                            var pr = Process.GetProcessById(ParentProcessId.ToInt());
+                        }
+                        catch (Exception ex)
+                        {
+                            if (ex.Message.ContainsAny(new List<string> { "not", "running", "Process", ParentProcessId.ToString() }))
+                            {
+                                var rpt = Process.GetProcessById(ID.ToInt());
+                                pCnt++;
+                            }
+                        }
+                    }
+                    return pCnt;
+                }
+                return 0;
+
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"KillOrphanProcess {ProcessName} {MethodBase.GetCurrentMethod().Name}");
+                return 0;
+            }
+        }
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             try
@@ -12215,57 +12455,7 @@ namespace VideoGui
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
             }
         }
-        private void DeleteSel_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-
-                if (CmbScanDirectory.SelectedItem != null)
-                {
-                    string selitem = CmbScanDirectory.Text;
-                    int selindex = CmbScanDirectory.Items.IndexOf(selitem);
-                    if (selindex != -1)
-                    {
-                        CmbScanDirectory.Items.RemoveAt(selindex);
-                        CmbScanDirectory.SelectedIndex = 0;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
-            }
-        }
-        private void CmbScanDirectory_LostFocus(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                List<string> DirList = new();
-                int index = CmbScanDirectory.SelectedIndex;
-                foreach (string ss in CmbScanDirectory.Items)
-                {
-                    if (ss != "Default")
-                    {
-                        DirList.Add(ss);
-                    }
-                }
-                RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
-                bool LoadedKey = (key != null);
-                if (key != null)
-                {
-                    key.SetValue("ComparitorList", DirList.ToArray(), RegistryValueKind.MultiString);
-                    if (index != -1)
-                    {
-                        key.SetValue("ComparitorListIndex", index);
-                    }
-                }
-                key.Close();
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
-            }
-        }
+        
         private void ResetErrored_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -12363,25 +12553,7 @@ namespace VideoGui
             }
         }
 
-        private void CmbScanDirectory_KeyUp(object sender, System.Windows.Input.KeyEventArgs e)
-        {
-            try
-            {
-                if (e.Key == Key.Enter)
-                {
-                    string newentry = CmbScanDirectory.Text;
-                    if (CmbScanDirectory.Items.IndexOf(newentry) == -1)
-                    {
-                        CmbScanDirectory.Items.Add(newentry);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
-            }
-        }
-
+        
         private void OpenLogFile_Click(object sender, RoutedEventArgs e)
         {
             try

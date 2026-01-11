@@ -42,7 +42,8 @@ namespace VideoGui.Models.delegates
     public delegate void _StatsHandler(int mode, string filename);
     public delegate void CompairFinished();
     public delegate void ComplexFinished();
-
+    public delegate void LoadTemplate(object ThisForm, string name);
+    public delegate void SaveTemplate(object ThisForm, string name);
     public delegate string OnGetTagIds(int id);
     public delegate void GetNextNode();
     public delegate void ScheduleTaskCancelled();

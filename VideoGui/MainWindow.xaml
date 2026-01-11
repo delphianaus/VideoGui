@@ -98,11 +98,6 @@
         <ToggleButton x:Name="Fisheye" Style="{StaticResource  ToggleStyle3}"  Margin="1025,0,7,76" Height="24"  Width="Auto" HorizontalAlignment="Left" VerticalAlignment="Bottom"/>
 
         <Button x:Name="btnConfig" Content="Configuration" HorizontalAlignment="Left" Height="22" Margin="26,0,0,113" VerticalAlignment="Bottom" Click="BtnConfig_Click" Width="97"/>
-        <Button x:Name="DeleteSel"  HorizontalAlignment="Left" Height="26" Margin="264,0,0,82" VerticalAlignment="Bottom" Width="24" Click="DeleteSel_Click">
-            <Image Source="/Icons/cancel.png" VerticalAlignment="Center"/>
-        </Button>
-        <ComboBox x:Name="CmbScanDirectory" HorizontalAlignment="Left" Margin="190,0,0,84" VerticalAlignment="Bottom" Width="70" LostFocus="CmbScanDirectory_LostFocus" KeyUp="CmbScanDirectory_KeyUp"/>
-        <Button x:Name="BtnViewLog" Content="View Log" HorizontalAlignment="Left" Height="26" Margin="132,0,0,82" VerticalAlignment="Bottom" Click="BtnViewLog_Click" Width="54" />
         <StatusBar x:Name="statusbar1" Height="34" Margin="1,0,1,2" VerticalAlignment="Bottom" >
             <Label x:Name="lblTotalStatus" Background="#FFBFBFBF" Width="62" Height="34" Content="Total Time" FontSize="11"/>
             <Label x:Name="LblTotalTIMEAll" Content="" HorizontalAlignment="Left" Height="28" VerticalAlignment="Center" Width="47"/>
@@ -140,13 +135,13 @@
             <Button x:Name="btnYTSchedule" Content="Uploads Info" HorizontalAlignment="Right" Height="28" VerticalAlignment="Center" Width="88" Click="btnYTSchedule_Click" Margin="11,0,0,0"/>
         </StatusBar>
         <Button x:Name="btnShortsInfo" Content="Shorts" HorizontalAlignment="Left" Height="24" Margin="26,0,0,82" VerticalAlignment="Bottom" Width="97" Click="btnShortsInfo_Click"/>
-        <Button x:Name="BtnVideoCardDetails" Content="GPU details" HorizontalAlignment="Left" Height="26" Margin="291,0,0,82" VerticalAlignment="Bottom" Width="67" Click="BtnVideoCardDetails_Click" RenderTransformOrigin="-0.864,0.693"/>
-        <Button x:Name="btnEditDirectories" Content="Edit Dirs" Height="26" Margin="361,0,0,82" VerticalAlignment="Bottom" HorizontalAlignment="Left" Click="btnEditDirectories_Click" Width="52"/>
-        <Button x:Name="btnEditSchedules" Content="Edit Schedules" Height="26" Margin="416,0,0,82" VerticalAlignment="Bottom" HorizontalAlignment="Left" Click="btnEditSchedules_Click" Width="82"/>
-        <Button x:Name="btnEditActions" Content="Edit Actions" Height="26" Margin="500,0,0,82" VerticalAlignment="Bottom" HorizontalAlignment="Left" Click="btnEditActions_Click" Width="68"/>
-        <Button x:Name="btnSchedule" Content="Scheduler" Height="26" Margin="571,0,0,82" VerticalAlignment="Bottom" HorizontalAlignment="Left" Click="btnSchedule_Click" Width="60"/>
-        <Button x:Name="btnRunTest" Content="Audio Joiner" HorizontalAlignment="Left" Height="26" VerticalAlignment="Bottom" Width="72" Click="btnRunTest_Click" Margin="634,0,0,82"/>
-        <Button x:Name="btnShortsCreator" Content="Create Shorts" HorizontalAlignment="Left" Height="26" VerticalAlignment="Bottom" Width="74" Click="btnShortsCreator_Click" Margin="709,0,0,82"/>
+        <Button x:Name="btnEditDirectories" Content="Edit Directories" Height="26" Margin="246,0,0,82" VerticalAlignment="Bottom" HorizontalAlignment="Left" Click="btnEditDirectories_Click" Width="102"/>
+        <Button x:Name="btnEditSchedules" Content="Edit Schedules" Height="26" Margin="353,0,0,82" VerticalAlignment="Bottom" HorizontalAlignment="Left" Click="btnEditSchedules_Click" Width="82"/>
+        <Button x:Name="btnEditActions" Content="Edit Actions" Height="26" Margin="441,0,0,82" VerticalAlignment="Bottom" HorizontalAlignment="Left" Click="btnEditActions_Click" Width="68"/>
+        <Button x:Name="btnSchedule" Content="Scheduler" Height="26" Margin="514,540,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Click="btnSchedule_Click" Width="60"/>
+        <Button x:Name="btnRunTest" Content="Audio Joiner" HorizontalAlignment="Left" Height="26" VerticalAlignment="Bottom" Width="72" Click="btnRunTest_Click" Margin="580,0,0,82"/>
+        <Button x:Name="btnShortsCreator" Content="Create Shorts" HorizontalAlignment="Left" Height="26" VerticalAlignment="Bottom" Width="74" Click="btnShortsCreator_Click" Margin="658,0,0,82"/>
+        <Button x:Name="btnThumbnails" Content="Thumbnails Editor" Height="26" Margin="131,0,0,82" VerticalAlignment="Bottom" HorizontalAlignment="Left" Click="btnThumbNails_Click" Width="109"/>
 
     </Grid>
 
