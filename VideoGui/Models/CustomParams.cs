@@ -88,6 +88,14 @@ namespace VideoGui.Models
         }
     }
 
+    public class CustomParams_ScheduleRestart
+    {
+        public CustomParams_ScheduleRestart()
+        {
+
+        }
+    }
+
     public class CustomParams_SetScheduleRestartCheck
     {
         public CustomParams_SetScheduleRestartCheck()

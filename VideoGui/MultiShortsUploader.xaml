@@ -7,7 +7,7 @@
         xmlns:MSU="clr-namespace:CustomComponents.ListBoxExtensions;assembly=CustomComponents"
         SizeChanged="Window_SizeChanged" 
         ResizeMode="CanResize" WindowStartupLocation="CenterScreen" 
-        WindowStyle="ToolWindow"
+        WindowStyle="ToolWindow" KeyDown="frmMultiShortsUploader_KeyDown"
         mc:Ignorable="d" 
         Title="Multi Shorts Uploader" Height="439" Width="559">
     <Window.Resources>
@@ -97,7 +97,7 @@
                 </MSU:MultiListbox>
                 <MSU:MultiListbox x:Name="msuSchedules" Header="Active Schedules" 
                   Width="560" Canvas.Top="168"  VerticalContentAlignment="Bottom" 
-                   Height="218" HorizontalAlignment="Center" ItemHeight="15" VerticalAlignment="Top" >
+                   Height="218" HorizontalAlignment="Center" ItemHeight="15" VerticalAlignment="Top" MouseDoubleClick="msuSchedules_MouseDoubleClick" >
                     <MSU:MultiListbox.ColumnDefinitions>
                         <MSU:MultiListboxColumnDefinition DataField="Id" Width="0" ComponentType="TextBlock"/>
                         <MSU:MultiListboxColumnDefinition HeaderText="Shorts Directory" 
@@ -146,7 +146,7 @@
                              HorizontalAlignment="Left" Width="27" Height="20" Canvas.Left="445" Canvas.Top="390"/>
                 <Label x:Name="lblUploaded" Content="Last Upload:" Canvas.Left="473" Canvas.Top
                        ="386" HorizontalAlignment="Left" VerticalAlignment="Center" FontSize="14" Background="Transparent" Foreground="#FFFF1414" FontWeight="Bold"/>
-                <Button x:Name="btnSchdule" Content="Schedule" Height="36" Width="51" Click="btnSchdule_Click" Canvas.Left="56" Canvas.Top="386" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                <Button x:Name="btnSchdule" Content="Schedule" Height="36" Width="51" Click="btnSchdule_Click" Canvas.Left="56" Canvas.Top="386" HorizontalAlignment="Left" VerticalAlignment="Center" KeyDown="btnSchdule_KeyDown"/>
                 <Button x:Name="BtnScrapeDrafts" Height="36" Width="46" Click="BtnScrapeDrafts_Click" 
                         Canvas.Left="112" Canvas.Top="386" HorizontalAlignment="Left" VerticalAlignment="Center">
                     <Canvas Width="36" Height="36">
@@ -169,4 +169,5 @@
             </Canvas>
         </Grid>
     </ScrollViewer>
+    
 </Window>

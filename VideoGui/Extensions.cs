@@ -90,7 +90,7 @@ namespace VideoGui
         {
             bool res = false;
 
-            
+
 
             res = containsall.All(s => data.ToLower().Contains(s.ToLower()));
             return res;
@@ -216,22 +216,22 @@ namespace VideoGui
             }
         }
 
-		public static bool SourceIs1440p(this string dir)
-		{
-			try
-			{
-				RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
-				string shortsdir = key.GetValueStr("SourceDirectory1440p", @"D:\shorts\");
-				key?.Close();
-				return dir == shortsdir;
-			}
-			catch (Exception ex)
-			{
-				ex.LogWrite(MethodBase.GetCurrentMethod().Name);
-				return false;
-			}
-		}
-		public static bool SourceIs4KAdobe(this string dir)
+        public static bool SourceIs1440p(this string dir)
+        {
+            try
+            {
+                RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                string shortsdir = key.GetValueStr("SourceDirectory1440p", @"D:\shorts\");
+                key?.Close();
+                return dir == shortsdir;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+                return false;
+            }
+        }
+        public static bool SourceIs4KAdobe(this string dir)
         {
             try
             {
@@ -413,7 +413,7 @@ namespace VideoGui
         public static BitmapImage ToBitmapImage(this Bitmap bitmap)
         {
 
-            if (bitmap == null ) return null;
+            if (bitmap == null) return null;
             using (var memory = new MemoryStream())
             {
                 bitmap.Save(memory, ImageFormat.Png);
@@ -1240,7 +1240,7 @@ namespace VideoGui
             try
             {
                 if (!AddTime.HasValue) return thisdate;
-                return new DateTime(thisdate.Year, thisdate.Month, thisdate.Day, 
+                return new DateTime(thisdate.Year, thisdate.Month, thisdate.Day,
                     AddTime.Value.Hours, AddTime.Value.Minutes, AddTime.Value.Seconds);
             }
             catch (Exception ex)
@@ -1623,7 +1623,7 @@ namespace VideoGui
 
         public static void LogWrite(this Exception Debugx, string callingmethod = "")
         {
-            string m_exePath = Debugger.IsAttached ? GetAppPath() : System.IO.Path.GetDirectoryName( Process.GetCurrentProcess().MainModule.FileName);
+            string m_exePath = Debugger.IsAttached ? GetAppPath() : System.IO.Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
             try
             {
                 string InternalCallingMethod = MethodBase.GetCurrentMethod().Name.ToString();
@@ -1634,7 +1634,7 @@ namespace VideoGui
                 txtWriter.WriteLine("Error :{0}", Debugx.Message);
                 txtWriter.WriteLine("-------------------------------");
                 txtWriter.WriteLine("\r\n");
-                txtWriter.WriteLine("Stack Trace :{0}", Debugx.StackTrace); 
+                txtWriter.WriteLine("Stack Trace :{0}", Debugx.StackTrace);
             }
             catch (Exception ex)
             {
@@ -2407,7 +2407,7 @@ namespace VideoGui
         public static void WriteLog(this string obj, string LogName = "")
         {
 
-            string m_exePath = Debugger.IsAttached ? GetAppPath() : System.IO.Path.GetDirectoryName( Process.GetCurrentProcess().MainModule.FileName);
+            string m_exePath = Debugger.IsAttached ? GetAppPath() : System.IO.Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
             try
             {
                 if (m_exePath.Contains("Debug")) m_exePath = GetAppPath();
@@ -2430,7 +2430,44 @@ namespace VideoGui
             }
         }
 
+        public static void WriteLog(this string obj, string LogName = "", string opt = "")
+        {
 
+            string m_exePath = Debugger.IsAttached ? GetAppPath() : System.IO.Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
+            try
+            {
+                if (m_exePath.Contains("Debug")) m_exePath = GetAppPath();
+                string date = DateTime.Now.ToString("dd_MM_yyyy");
+                if (LogName != "" && !LogName.ToLower().EndsWith(".log"))
+                {
+                    LogName += ".log";
+                }
+                if (LogName == "")
+                {
+                    LogName = "-WRITELOG.log";
+                }
+                using (StreamWriter txtWriter = File.AppendText(m_exePath + $"\\{date}-{LogName}"))
+                {
+                    if (LogName == "")
+                    {
+                        txtWriter.Write("\r\n", "Log Entry : ");
+                        txtWriter.WriteLine("{0} {1}", DateTime.Now.ToLongTimeString(), DateTime.Now.ToLongDateString());
+                        txtWriter.WriteLine("  :");
+
+                    }
+                    txtWriter.WriteLine($"{DateTime.Now.ToLongTimeString()} :{obj}");
+                    if (opt != "")
+                    {
+                        txtWriter.WriteLine(opt);
+                    }
+                    if (LogName == "") txtWriter.WriteLine("-------------------------------");
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.Print(MethodBase.GetCurrentMethod().Name.ToString() + " LogWrite" + ex.Message);
+            }
+        }
 
     }
 }

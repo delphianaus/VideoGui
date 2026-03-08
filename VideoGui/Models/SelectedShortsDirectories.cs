@@ -86,18 +86,26 @@ namespace VideoGui.Models
         }
         public string GetUploadedDateString()
         {
-            if (_LastUploadedDate.Year < 2000) return "";
+            try
+            {
+                if (_LastUploadedDate.Year < 2000) return "";
 
-            string data = $"   {_LastUploadedDate.ToString("dd/MM/yyyy")}";
-            //{ActionScheduleStart.Value.ToString("HH:mm")} - {ActionScheduleEnd.Value.ToString("HH:mm")}";
-            var start = _LastUploadedDate.TimeOfDay;
-            string fillA1 = (start.Minutes < 10) ? "0" : "";
-            string fillA2 = (start.Seconds < 10) ? "0" : "";
-            string dx = $":{fillA1}{start.Minutes}:{fillA2}{start.Seconds}";
-            
-            data += (start.Hours > 12) ? $" {start.Hours - 12}{dx} PM" : $" {start.Hours}{dx} AM";
-        
-            return data;
+                string data = $"   {_LastUploadedDate.ToString("dd/MM/yyyy")}";
+                //{ActionScheduleStart.Value.ToString("HH:mm")} - {ActionScheduleEnd.Value.ToString("HH:mm")}";
+                var start = _LastUploadedDate.TimeOfDay;
+                string fillA1 = (start.Minutes < 10) ? "0" : "";
+                string fillA2 = (start.Seconds < 10) ? "0" : "";
+                string dx = $":{fillA1}{start.Minutes}:{fillA2}{start.Seconds}";
+
+                data += (start.Hours > 12) ? $" {start.Hours - 12}{dx} PM" : $" {start.Hours}{dx} AM";
+
+                return data;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"GetUploadedDateString {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+                return "";
+            }
         }
         public SelectedShortsDirectories(int _Id, string _DirectoryName, bool _IsActive,
             int _LinkedShortsDirectoryId, int _NumberOfShorts, 
@@ -122,24 +130,46 @@ namespace VideoGui.Models
 
         public void GetLinkedTitle()
         {
-            if (LinkedTitleId is not null)
+            try
             {
-                IsTitleAvailable = LinkedTitleId.Length > 0;
+                if (LinkedTitleId is not null)
+                {
+                    IsTitleAvailable = LinkedTitleId.Length > 0;
+                }
+            }
+            catch(Exception ex)
+            {
+                ex.LogWrite($"GetLinkedTitle {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
 
         public void SetActive(bool value)
         {
-            AutoFontWeight = value ? FontWeights.Bold : FontWeights.Normal;  // Reversed this line
-            AutoFontColor = value ? new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.Red) :
-                new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.Black);
+            try
+            {
+                AutoFontWeight = value ? FontWeights.Bold : FontWeights.Normal;  // Reversed this line
+                AutoFontColor = value ? new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.Red) :
+                    new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.Black);
+                OnPropertyChanged();
+            }
+            catch(Exception ex)
+            {
+                ex.LogWrite($"SetActive {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
         }
 
         public void GetLinkedDescId()
         {
-            if (LinkedDescId is not null)
+            try
             {
-                IsDescAvailable = LinkedDescId.Length > 0;
+                            if (LinkedDescId is not null)
+                {
+                    IsDescAvailable = LinkedDescId.Length > 0;
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"GetLinkedDescId {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
         public SelectedShortsDirectories(FbDataReader reader)

@@ -89,10 +89,9 @@ namespace VideoGui
             try
             {
                 InitializeComponent();
-                RelaunchIfNotAdmin();
-                
 
-                
+                RelaunchIfNotAdmin();
+
                 ssid = GetEncryptedString(new int[] { 180, 19, 100, 123, 208, 243, 252, 122,
                     202, 47, 88, 134 }.Select(i => (byte)i).ToArray());
                 KillFFMPEG().ConfigureAwait(true);
@@ -112,7 +111,7 @@ namespace VideoGui
                     _timer.Change(1000, 2000);
                 }
 
-                
+
                 return;// below code encrpts string and returns it as c# code
 
 
@@ -131,7 +130,7 @@ namespace VideoGui
             }
         }
 
-        
+
         private void RunTask(object? state)
         {
             try
@@ -192,7 +191,7 @@ namespace VideoGui
                     if (ni.Name.Equals("Wi-Fi", StringComparison.OrdinalIgnoreCase)
                         && ni.OperationalStatus == OperationalStatus.Up)
                     {
-                       return false;
+                        return false;
                     }
                 }
                 await adapter.ScanAsync();
@@ -221,7 +220,7 @@ namespace VideoGui
             {
                 var processStartInfo = new ProcessStartInfo
                 {
-                    FileName = Assembly.GetEntryAssembly().CodeBase,
+                    FileName = Process.GetCurrentProcess().MainModule.FileName,
                     UseShellExecute = true,
                     Verb = "runas"
                 };
@@ -626,14 +625,26 @@ namespace VideoGui
             }
         }
 
+
+        bool IsRestart = false;
         public bool isLoggedOn()
         {
             try
             {
+
+                int ThisId = Process.GetCurrentProcess().Id;
                 var x = GetEncryptedString(new int[] { 129, 54, 65, 90, 254, 192, 193, 93 }.Select(i => (byte)i).ToArray());
                 Process[] pname = Process.GetProcessesByName(x);
-                return (pname.Length == 0) ? false : true;
+                if (pname.Length > 0)
+                {
+
+
+                    pname = Process.GetProcessesByName(x);
+                }
+                return (pname.Length > 0);
+
             }
+
             catch (Exception ex)
             {
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
@@ -646,20 +657,52 @@ namespace VideoGui
             try
             {
                 DbLayerInitiateTimer.Stop();
-                if (isLoggedOn())
+                List<string> arguments = Environment.GetCommandLineArgs().ToList();
+                IsRestart = arguments.Contains("SCHEDULER_RESTART");
+                if (IsRestart)
                 {
-                    while (!ffmpegready || !firebird)
+                    foreach (var arg in arguments.Where(s => s != "SCHEDULER_RESTART"))
                     {
-                        Thread.Sleep(250);
-                        System.Windows.Forms.Application.DoEvents();
+                        int pid = arg.ToInt(-1);
+                        if (pid != -1)
+                        {
+                            IsRestart = true;
+                            /*var videogui = Process.GetProcessById(pid);
+                            if (videogui is not null)
+                            {
+                                Dispatcher.Invoke(new Action(() =>
+                                {
+                                    videogui.Kill();
+                                }));
+                            }*/
+                            while (!ffmpegready || !firebird)
+                            {
+                                Thread.Sleep(250);
+                                System.Windows.Forms.Application.DoEvents();
+                            }
+                            lblStatus.Content = "Re-Launching Main App";
+                            RunMainApp(IsRestart);
+                            return;
+                        }
                     }
-                    lblStatus.Content = "Lauching Main App";
-                    RunMainApp();
                 }
                 else
                 {
-                    DbLayerInitiateTimer.Interval = (int)new TimeSpan(0, 0, 15).TotalMilliseconds;
-                    DbLayerInitiateTimer.Start();
+                    if (isLoggedOn())
+                    {
+                        while (!ffmpegready || !firebird)
+                        {
+                            Thread.Sleep(250);
+                            System.Windows.Forms.Application.DoEvents();
+                        }
+                        lblStatus.Content = "Lauching Main App";
+                        RunMainApp(IsRestart);
+                    }
+                    else
+                    {
+                        DbLayerInitiateTimer.Interval = (int)new TimeSpan(0, 0, 15).TotalMilliseconds;
+                        DbLayerInitiateTimer.Start();
+                    }
                 }
             }
             catch (Exception ex)
@@ -1215,7 +1258,7 @@ namespace VideoGui
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name.ToString() + " 14a2 " + ex.Message);
             }
         }
-        public void RunMainApp()
+        public void RunMainApp(bool IsScheduleRestart = false)
         {
             try
             {
@@ -1228,6 +1271,19 @@ namespace VideoGui
                         20, 90, 9, 104, 94, 141, 187 }.Select(i => (byte)i).ToArray());
                     Terminate();
                 }
+
+                int pidIgnore = -1;
+                List<string> cmdArgs = Environment.GetCommandLineArgs().ToList();
+                bool isrestart = cmdArgs.Contains("SCHEDULER_RESTART");
+                if (isrestart)
+                {
+
+                    foreach (string arg in cmdArgs.Where(s => s != "SCHEDULER_RESTART"))
+                    {
+                        pidIgnore = arg.ToInt(-1);
+                    }
+                }
+
                 string AppNames = Process.GetCurrentProcess().ProcessName;
                 int _Id = Process.GetCurrentProcess().Id;
                 var ps = Process.GetProcessesByName(AppNames).Where(i => i.Id != _Id).ToList();
@@ -1238,6 +1294,13 @@ namespace VideoGui
                     int cnt = 0;
                     foreach (Process v in ps)
                     {
+                        if (pidIgnore != -1)
+                        {
+                            if (v.Id == pidIgnore)
+                            {
+                                continue;
+                            }
+                        }
                         found = false;
                         if (!v.HasExited)
                         {
@@ -1251,7 +1314,7 @@ namespace VideoGui
                             228, 212, 142, 9, 178, 92, 1, 179, 209, 157, 75, 97,
                             121, 204, 137, 248, 190, 206, 199, 107 }.Select(i => (byte)i).ToArray());
                         lblStatus.Content = x;
-                        Thread.Sleep(4000);
+                        Thread.Sleep(1000);
                         Terminate();
                     }
 
@@ -1274,14 +1337,14 @@ namespace VideoGui
 
                     lblYouTubeHelper.Content += " " + Assembly.GetExecutingAssembly().GetName().Version.ToString();
                     var cts1 = new CancellationTokenSource();
-                    cts1.CancelAfter(TimeSpan.FromSeconds(3));
+                    cts1.CancelAfter(TimeSpan.FromSeconds(2));
                     while (!cts1.IsCancellationRequested)
                     {
                         Thread.Sleep(100);
                     }
                     if (!Dispatcher.CheckAccess())
                     {
-                        Dispatcher.Invoke(() => RunMainApp());
+                        Dispatcher.Invoke(() => RunMainApp(IsRestart));
                         return;
                     }
                     lblStatus.Content = GetEncryptedString(new int[] { 165, 43, 78, 66, 228, 212, 142, 9, 178, 94, 5,
@@ -1366,11 +1429,12 @@ namespace VideoGui
                         var x5 = GetEncryptedString(new int[] { 165, 43, 78, 66, 228, 212, 142, 9, 178,
                             81, 12, 180, 218, 159, 71, 113, 55, 249, 220, 219, 177,
                             206, 199, 44, 57, 104, 192 }.Select(i => (byte)i).ToArray());
+                        if (IsRestart) x5 = "Restarting Main App";
                         lblStatus.Content = x5;
                         // work out if app is re launched for YT API Reboot
                         RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                         List<string> forms_Create_List = new();
-                        bool forms_available = false; 
+                        bool forms_available = false;
                         if (key.RegistryValueExists("automate-forms"))
                         {
 
@@ -1382,8 +1446,12 @@ namespace VideoGui
                             }
                         }
                         key?.Close();
-                        MainAppWindow = new MainWindow(DoOnFinish, 
-                            forms_available, forms_Create_List);
+
+
+                        IsRestart = pidIgnore != -1;
+
+                        MainAppWindow = new MainWindow(DoOnFinish,
+                            forms_available, forms_Create_List, IsRestart);
                         Hide();
                         MainAppWindow.ShowActivated = true;
                         MainAppWindow.Show();
@@ -1393,24 +1461,47 @@ namespace VideoGui
             }
             catch (Exception ex)
             {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+                ex.LogWrite($"RunMainApp {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
                 Close();
             }
         }
 
-        private void DoOnFinish()
+        private void DoOnFinish(bool reload)
         {
-            if (MainAppWindow.canclose || MainAppWindow.ShiftActiveWindowClosing)
+            try
             {
-                var x6 = GetEncryptedString(new int[] { 165, 43, 78, 66, 228, 212, 142, 9, 178, 78,
+
+                if (MainAppWindow.canclose || MainAppWindow.ShiftActiveWindowClosing || reload)
+                {
+                    var x6 = GetEncryptedString(new int[] { 165, 43, 78, 66, 228, 212, 142, 9, 178, 78,
                     5, 180, 192, 136, 70, 118, 62, 190, 184, 249,
                     167, 201, 137, 77, 8, 104 }.Select(i => (byte)i).ToArray());
-                lblStatus.Content = x6;
-                Terminate();
+                    lblStatus.Content = x6;
+                    if (reload)
+                    {
+                        var processStartInfo = new ProcessStartInfo
+                        {
+                            FileName = (Debugger.IsAttached) ? @"C:\VideoGui\VideoGui.Exe" : Process.GetCurrentProcess().MainModule.FileName,
+                            UseShellExecute = true,
+                            WorkingDirectory = @"C:\VideoGui",
+                            Verb = "runas"
+                        };
+                        string pid = Process.GetCurrentProcess().Id.ToString();
+                        processStartInfo.Arguments = $"SCHEDULER_RESTART {pid}";
+                        var r = Process.Start(processStartInfo);
+                        if (r != null)
+                        {
+                            Terminate();
+                        }
+                    }
+                    else Terminate();
+                }
+
             }
-            else MainAppWindow.HideWindow();
+            catch (Exception ex)
+            {
+                ex.LogWrite($"RunMainApp {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
+            }
         }
-
-
     }
 }

@@ -526,15 +526,26 @@ namespace VideoGui
         {
             try
             {
+                string loginfo = "formObjectHandler_MultiShortsUploader";
                 if (tld is CustomParams_ScheduleRestartCheck scsbool)
                 {
+                    loginfo.WriteLog("restart.log", "CustomParams_ScheduleRestartCheck");
                     return (TResult)Convert.ChangeType(IsRestart, typeof(TResult));
                 }
                 else if (tld is CustomParams_SetScheduleRestartCheck scsb)
                 {
-                    IsRestart = true; 
+                    IsRestart = true;
+                    loginfo.WriteLog("restart.log", "CustomParams_SetScheduleRestartCheck");
                 }
+                else if (tld is CustomParams_ScheduleRestart sr)
+                {
 
+                    frmMultiShortsUploader.Close();
+                    canclose = true;
+                    AutoClose = true;
+                    loginfo.WriteLog("restart.log", "CustomParams_ScheduleRestart");
+                    Close();
+                }
                 else if (tld is CustomParams_MoveOrphanFiles cpMOF)
                 {
                     string ActiveDir = "";
@@ -606,25 +617,10 @@ namespace VideoGui
                 }
                 if (tld is CustomParams_ScheduleShorts cpsss)
                 {
+                    loginfo.WriteLog("restart.log", $"CustomParams_ScheduleShorts {IsRestart}");
                     if (IsRestart)
                     {
-                        var processStartInfo = new ProcessStartInfo
-                        {
-                            FileName = Assembly.GetEntryAssembly().CodeBase,
-                            UseShellExecute = true,
-                            Verb = "runas"
-                        };
-
-                        try
-                        {
-                            processStartInfo.Arguments = "SCHEDULER_RESTART";
-                            Process.Start(processStartInfo);
-                            System.Windows.Application.Current.Shutdown();
-                        }
-                        catch (Exception es)
-                        {
-
-                        }
+                        Close();
                     }
 
                     var _manualScheduler = new ManualScheduler(InvokerHandler<object>,
@@ -700,6 +696,21 @@ namespace VideoGui
                                     }
                                 }
                             });
+
+                            if (true)
+                            {
+                                item.IsActive = false;
+                                var ctsx = new CancellationTokenSource();
+                                ctsx.CancelAfter(500);
+                                item.IsShortActive = true;
+                                item.SetActive(true);
+
+                                if (item.LastUploadedDateFile.Year < 2000)
+                                {
+                                    item.IsShortActive = true;
+                                }
+
+                            }
                         }
                         else
                         {
@@ -1096,7 +1107,7 @@ namespace VideoGui
                             bool SortNeeded = false;
                             foreach (var f in FileRenamer)
                             {
-                                
+
                                 if (!cpcc.files.Contains(f.NewFile))
                                 {
                                     res = false;
@@ -1104,13 +1115,13 @@ namespace VideoGui
                                     break;
                                 }
                             }
-                           
+
                             if (res)
                             {
                                 List<(string, TimeSpan)> FileData = new();
-                                foreach(var r in cpcc.files)
+                                foreach (var r in cpcc.files)
                                 {
-                                    foreach(var r1 in FileRenamer.Where(s=>s.FileName == r))
+                                    foreach (var r1 in FileRenamer.Where(s => s.FileName == r))
                                     {
                                         FileData.Add(new(r, r1.TimeData));
                                     }
@@ -3494,6 +3505,7 @@ namespace VideoGui
                 int id = connectionString.ExecuteScalar(sql, [("@LINKEDID", LinkedId)]).ToInt(-1);
                 if (id == -1)
                 {
+                    
                     InsertIntoMultiShortsInfo(NumberofShorts, LinkedId, LastTimeUploaded);
                 }
                 else
@@ -3900,12 +3912,15 @@ namespace VideoGui
             try
             {
                 // Add restart Modules.
+                string logfile = "scraperModule_Handler";
                 if (tld is CustomParams_ScheduleRestartCheck sid)
                 {
+                    logfile.WriteLog("restart.log", $"CustomParams_ScheduleRestartCheck {IsRestart}");
                     return (TResult)Convert.ChangeType(IsRestart, typeof(TResult));
                 }
                 else if (tld is CustomParams_SetScheduleRestartCheck ssrc)
                 {
+                    logfile.WriteLog("restart.log", $"CustomParams_SetScheduleRestartCheck {IsRestart}");
                     IsRestart = true;
                 }
                 else if (tld is CustomParams_DisplayTargets cpDTT)
@@ -4093,16 +4108,16 @@ namespace VideoGui
                 if (tld is CustomParams_UpdateStats CPUSS)
                 {
                     string sgl = "SELECT ID FROM SHORTSDIRECTORY WHERE DIRECTORYNAME = @P0";
-                    int sid = connectionString.ExecuteScalar(sgl.ToUpper(),
+                    int sid1 = connectionString.ExecuteScalar(sgl.ToUpper(),
                         [("@P0", CPUSS.DirectoryName.ToUpper())]).ToInt(-1);
-                    if (sid != -1)
+                    if (sid1 != -1)
                     {
                         sgl = "UPDATE MULTISHORTSINFO SET LASTUPLOADEDDATE = @P1, LASTUPLOADEDTIME = @P2 " +
                               "DIRECTORYNAME = @P0" +
                             "WHERE LINKEDSHORTSDIRECTORYID = @iD";
                         connectionString.ExecuteNonQuery(sgl.ToUpper(),
                             [("@P1", DateTime.Now.Date), ("@P2", DateTime.Now.TimeOfDay),
-                                ("@iD", sid)]);
+                                ("@iD", sid1)]);
                     }
                     int res = -1;
                     string fname = Path.GetFileNameWithoutExtension(CPUSS.DirectoryName.ToUpper());
@@ -5559,20 +5574,51 @@ namespace VideoGui
             }
         }
 
+        public void RestartClose()
+        {
+            canclose = true;
+            Close();
+        }
+
         public bool IsClosed = false, IsClosing = false;
-        public MainWindow(OnFinish DoOnFinish, bool IsReloaded = false, object formsList = null)
+        public MainWindow(OnFinishReload DoOnFinish, bool IsReloaded = false,
+            object formsList = null, bool IsRestart = false)
         {
             try
             {
                 Closing += (s, e) =>
                 {
                     IsClosing = true;
-                    DoOnFinish?.Invoke();
+                    RegistryKey key = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\VideoProcessor", true);
+                    key?.SetValue("Width", MainWindowX.ActualWidth);//876
+                    key?.SetValue("Height", MainWindowX.ActualHeight);//444
+                    key?.Close();
+
+                    if (canclose || ShiftActiveWindowClosing)
+                    {
+                        RequestStop();
+                        Task.Run(() => { KillOrphanProcess(); });
+                        Task.Run(() => { KillOrphanProcess("avidemux_cli"); });
+                    }
+                    else
+                    {
+                        trayicon.Visibility = Visibility.Visible;
+                        e.Cancel = true;
+                        InTray = true;
+                        TrayIcon = new DispatcherTimer();
+                        TrayIcon.Tick += (ChangeIcon);
+                        TrayIcon.Interval = new TimeSpan(0, 0, 23);
+                        TrayIcon.Start();
+                        IsRestart = false;
+                        AutoClose = false;
+                        Hide();
+                    }
+
                 };
                 Closed += (s, e) =>
                 {
                     IsClosed = true;
-                    DoOnFinish?.Invoke();
+                    DoOnFinish?.Invoke(IsRestart || AutoClose);
                 };
                 _syncContext = SynchronizationContext.Current;
                 ThreadStatsHandler = new(StatsHandledForThreads);
@@ -5633,7 +5679,7 @@ namespace VideoGui
                 if (!isok)
                 {
                     string err = e;
-                    err.WriteLog();
+
                     string AppPath = GetExePath();
                     //DeleteIfExists(AppPath + ffp);
                     //DeleteIfExists(AppPath + ffm);
@@ -5668,28 +5714,8 @@ namespace VideoGui
                 FormResizerEvent.Start();
                 lstBoxJobs.AllowDrop = true;
 
-                IsRestart = false;
-                string[] args = Environment.GetCommandLineArgs();
-                if (args != null && args.Length > 0)
-                {
-                    foreach (string arg in args)
-                    {
-                        if (arg == "SCHEDULER_RESTART")
-                        {
-                            IsRestart = true;
-                            break;
-                        }
-                    }
-                }
 
-                if (IsRestart)
-                {
-                    RestartScheduler = true;
-                    RestartTimer = new System.Windows.Forms.Timer();
-                    RestartTimer.Tick += new EventHandler(RestartTimer_Tick);
-                    RestartTimer.Interval = (int)new TimeSpan(0, 0, 250).TotalMilliseconds;
-                    RestartTimer.Start();
-                }
+
 
             }
             catch (Exception ex)
@@ -5703,8 +5729,8 @@ namespace VideoGui
             try
             {
                 RestartTimer.Stop();
+                IsRestart = false;
                 btnShortsInfo_Click(sender, null);
-
             }
             catch (Exception ex)
             {
@@ -10760,7 +10786,7 @@ namespace VideoGui
 
         }
 
-        
+
         private void DoOnloadTemplate(object ThisForm, string templatedirectory)
         {
             try
@@ -10884,6 +10910,25 @@ namespace VideoGui
 
                 Hide();
                 SelectedShortsDirectoriesList.Clear();
+                string sqlA = "SELECT " +
+                 "M.ID, M.ISSHORTSACTIVE, M.NUMBEROFSHORTS, " +
+                 "M.LASTUPLOADEDDATE, M.LASTUPLOADEDTIME, M.LINKEDSHORTSDIRECTORYID, " +
+                 "COALESCE(S2.ID, S1.ID) as SHORTSDIRECTORY_ID, " +
+                 "COALESCE(S2.DIRECTORYNAME, S1.DIRECTORYNAME) as DIRECTORYNAME, " +
+                 "COALESCE(S2.TITLEID, S1.TITLEID) as TITLEID, " +
+                 "COALESCE(S2.DESCID, S1.DESCID) as DESCID, " +
+                 "COALESCE(" +
+                 "(SELECT LIST(TAGID, ',') FROM TITLETAGS WHERE GROUPID = S2.TITLEID), " +
+                 "(SELECT LIST(TAGID, ',') FROM TITLETAGS WHERE GROUPID = S1.TITLEID)" +
+                 ") AS LINKEDTITLEIDS, " + "COALESCE(" +
+                 "(SELECT LIST(ID,',') FROM DESCRIPTIONS WHERE ID = S2.DESCID), " +
+                 "(SELECT LIST(ID,',') FROM DESCRIPTIONS WHERE ID = S1.DESCID)" +
+                 ") AS LINKEDDESCIDS " + "FROM MULTISHORTSINFO M " +
+                 "LEFT JOIN (" + "REMATCHED R " +
+                 "INNER JOIN SHORTSDIRECTORY S2 ON R.OLDID = S2.ID" +
+                 ") ON M.LINKEDSHORTSDIRECTORYID = R.NEWID " +
+                 "LEFT JOIN SHORTSDIRECTORY S1 ON M.LINKEDSHORTSDIRECTORYID = S1.ID " +
+                "WHERE COALESCE(S2.ID, S1.ID) IS NOT NULL AND M.ID = @ID";
                 string sql = "SELECT " +
               "M.ID, M.ISSHORTSACTIVE, M.NUMBEROFSHORTS, " +
               "M.LASTUPLOADEDDATE, M.LASTUPLOADEDTIME, M.LINKEDSHORTSDIRECTORYID, " +
@@ -11779,49 +11824,7 @@ namespace VideoGui
         {
             try
             {
-                RegistryKey key = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\VideoProcessor", true);
-                key?.SetValue("Width", MainWindowX.ActualWidth);//876
-                key?.SetValue("Height", MainWindowX.ActualHeight);//444
-                int maxid = -1;
-                /*switch (MainWindowX.WindowState)
-                {
-                    case WindowState.Normal:
-                        {
-                            maxid = 0;
-                            break;
-                        }
-                    case WindowState.Maximized:
-                        {
-                            maxid = 1;
-                            break;
-                        }
-                    case WindowState.Minimized:
-                        {
-                            maxid = 2;
-                            break;
-                        }
-                }*/
-                key?.SetValue("WindowState", maxid);//444
-                key?.Close();
 
-                if (canclose || ShiftActiveWindowClosing)
-                {
-                    RequestStop();
-                    Task.Run(() => { KillOrphanProcess(); });
-                    Task.Run(() => { KillOrphanProcess("avidemux_cli"); });
-
-                }
-                else
-                {
-                    trayicon.Visibility = Visibility.Visible;
-                    e.Cancel = true;
-                    InTray = true;
-                    TrayIcon = new DispatcherTimer();
-                    TrayIcon.Tick += (ChangeIcon);
-                    TrayIcon.Interval = new TimeSpan(0, 0, 23);
-                    TrayIcon.Start();
-                    Hide();
-                }
             }
             catch (Exception ex)
             {
@@ -11884,6 +11887,8 @@ namespace VideoGui
             try
             {
                 canclose = true;
+                IsRestart = false;
+                AutoClose = false;
                 Close();
             }
             catch (Exception ex)
@@ -12455,7 +12460,7 @@ namespace VideoGui
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
             }
         }
-        
+
         private void ResetErrored_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -12512,8 +12517,21 @@ namespace VideoGui
         {
             try
             {
+                List<string> args = Environment.GetCommandLineArgs().ToList();
+
+                IsRestart = args.Contains("SCHEDULER_RESTART");
+
+               
 
 
+                if (IsRestart)
+                {
+                    RestartScheduler = true;
+                    RestartTimer = new System.Windows.Forms.Timer();
+                    RestartTimer.Tick += new EventHandler(RestartTimer_Tick);
+                    RestartTimer.Interval = (int)new TimeSpan(0, 0, 1).TotalMilliseconds;
+                    RestartTimer.Start();
+                }
                 lstboxresize();
 
                 Application.Current.Dispatcher.Invoke(() =>
@@ -12553,7 +12571,7 @@ namespace VideoGui
             }
         }
 
-        
+
         private void OpenLogFile_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -12635,7 +12653,7 @@ namespace VideoGui
         {
             try
             {
-                logMessage.WriteLog();
+                logMessage.WriteLog(logMessage);
             }
             catch (Exception ex)
             {

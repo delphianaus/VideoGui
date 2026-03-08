@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:tb="http://www.hardcodet.net/taskbar"
         mc:Ignorable="d"
-        Title="Video Procesor" Name="MainWindowX" Closing="Window_Closing" 
+        Title="Video Procesor" Name="MainWindowX" 
         WindowStyle="ToolWindow" WindowStartupLocation="CenterOwner" 
         ResizeMode="CanResize" 
         SizeToContent="Manual"
@@ -15,7 +15,8 @@
         IsVisibleChanged="MainWindowX_IsVisibleChanged" 
         SizeChanged="MainWindowX_SizeChanged" 
         FocusableChanged="Window_FocusableChanged"
-        AutomationProperties.IsColumnHeader="True" GotFocus="MainWindowX_GotFocus">
+        AutomationProperties.IsColumnHeader="True" 
+        GotFocus="MainWindowX_GotFocus">
     <Grid x:Name="Grid1" Focusable="True" Width="1143">
         <tb:TaskbarIcon x:Name="trayicon"  IconSource="/Icons/computer.ico"
                 ToolTipText="Video Gui" Visibility="Collapsed" TrayMouseDoubleClick="Restore_Click">
@@ -138,7 +139,7 @@
         <Button x:Name="btnEditDirectories" Content="Edit Directories" Height="26" Margin="246,0,0,82" VerticalAlignment="Bottom" HorizontalAlignment="Left" Click="btnEditDirectories_Click" Width="102"/>
         <Button x:Name="btnEditSchedules" Content="Edit Schedules" Height="26" Margin="353,0,0,82" VerticalAlignment="Bottom" HorizontalAlignment="Left" Click="btnEditSchedules_Click" Width="82"/>
         <Button x:Name="btnEditActions" Content="Edit Actions" Height="26" Margin="441,0,0,82" VerticalAlignment="Bottom" HorizontalAlignment="Left" Click="btnEditActions_Click" Width="68"/>
-        <Button x:Name="btnSchedule" Content="Scheduler" Height="26" Margin="514,540,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Click="btnSchedule_Click" Width="60"/>
+        <Button x:Name="btnSchedule" Content="Scheduler" Height="26" Margin="514,0,0,82" VerticalAlignment="Bottom" HorizontalAlignment="Left" Click="btnSchedule_Click" Width="60"/>
         <Button x:Name="btnRunTest" Content="Audio Joiner" HorizontalAlignment="Left" Height="26" VerticalAlignment="Bottom" Width="72" Click="btnRunTest_Click" Margin="580,0,0,82"/>
         <Button x:Name="btnShortsCreator" Content="Create Shorts" HorizontalAlignment="Left" Height="26" VerticalAlignment="Bottom" Width="74" Click="btnShortsCreator_Click" Margin="658,0,0,82"/>
         <Button x:Name="btnThumbnails" Content="Thumbnails Editor" Height="26" Margin="131,0,0,82" VerticalAlignment="Bottom" HorizontalAlignment="Left" Click="btnThumbNails_Click" Width="109"/>

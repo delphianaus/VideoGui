@@ -1,4 +1,5 @@
 using CliWrap;
+using CliWrap;
 using CliWrap.EventStream;
 using FirebirdSql.Data.FirebirdClient;
 using FirebirdSql.Data.Isql;
@@ -2460,6 +2461,22 @@ namespace VideoGui
             try
             {
                 string connectionStr = Invoker.InvokeWithReturn<string>(this, new CustomParams_GetConnectionString());
+                string sqlb = "SELECT DISTINCT U.DIRECTORYNAME,SHORTSDIRECTORY.ID FROM UPLOADSRECORD U " +
+                              "INNER JOIN SHORTSDIRECTORY ON U.DIRECTORYNAME = SHORTSDIRECTORY.DIRECTORYNAME " + 
+                              "WHERE UPLOADFILE LIKE @IDX ORDER BY U.ID DESC ROWS 100000";
+                var cts = new CancellationTokenSource();
+                int my_id = -1;
+
+                connectionStr.ExecuteReader(sqlb, [("IDX", $"%_{id}")], cts, (FbDataReader r) =>
+                {
+                    my_id = r[1] is int R ? R : -1;//.ToInt(-1);
+                    cts.Cancel();
+                });
+
+                if (my_id != -1)
+                {
+                    id = my_id;
+                }
                 int TitleId = -1, DescId = -1, idr = -1;
                 if (LastId == -1 || LastId != id)
                 {

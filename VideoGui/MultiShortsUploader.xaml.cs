@@ -178,6 +178,14 @@ namespace VideoGui
                 RestartTimer.Interval = TimeSpan.FromMilliseconds(600);
                 RestartTimer.Tick += new EventHandler(OnRestart);
                 RestartTimer.Start();
+                List<string> args = Environment.GetCommandLineArgs().ToList();
+                if (args.Contains("SCHEDULER_RESTART"))
+                {
+                    AutoClose = false;
+                    btnSchdule_Click(sender, e);
+                }
+
+
 
             }
             catch (Exception ex)
@@ -197,7 +205,7 @@ namespace VideoGui
                     Invoker?.Invoke(this, new CustomParams_ScheduleShorts());
                 }
 
-            }
+            }   
             catch (Exception ex)
             {
                 ex.LogWrite($"OnRestart {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
@@ -783,7 +791,7 @@ namespace VideoGui
                     {
                         if (Debugger.IsAttached)
                         {
-                            "Schedule _04".WriteLog();
+                            //"Schedule _04".WriteLog();
                             if (true)
                             {
 
@@ -989,15 +997,32 @@ namespace VideoGui
             }
         }
 
+
+        bool KeyState = false;
         private void btnSchdule_Click(object sender, RoutedEventArgs e)
         {
             try
             {
+                string logfile = "btnSchdule_Click";
+                // AutoClose = true;
+                if (KeyState)
+                {
+                    AutoClose = true;
+                }
+
+
                 if (!AutoClose)
                 {
+                    logfile.WriteLog("restart.log", "CustomParams_ScheduleShorts");
                     Invoker?.Invoke(this, new CustomParams_ScheduleShorts());
                 }
-                else Invoker?.Invoke(this, new CustomParams_ScheduleRestartCheck());
+                else
+                {
+                    logfile.WriteLog("restart.log", "CustomParams_ScheduleRestart");
+                   
+                    Invoker?.Invoke(this, new CustomParams_ScheduleRestart());
+                    Close();
+                }
             }
             catch (Exception ex)
             {
@@ -1239,6 +1264,46 @@ namespace VideoGui
             catch (Exception ex)
             {
                 ex.LogWrite($"ShowThisForm {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
+            }
+        }
+
+        private void btnSchdule_KeyDown(object sender, KeyEventArgs e)
+        {
+            try
+            {
+                KeyState = (e.Key == Key.LeftShift || e.Key == Key.RightShift);
+            }
+            catch(Exception ex) 
+            {
+                ex.LogWrite($"btnSchdule_KeyDown {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
+            }
+        }
+
+        private void frmMultiShortsUploader_KeyDown(object sender, KeyEventArgs e)
+        {
+            try
+            {
+                KeyState = (e.Key == Key.LeftShift || e.Key == Key.RightShift);
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"btnSchdule_KeyDown {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
+            }
+        }
+
+        private void msuSchedules_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            try
+            {
+                if (e.OriginalSource is TextBlock m &&
+                    m.DataContext is SelectedShortsDirectories rp)// && !rp.IsActive)
+                {
+                    Invoker?.Invoke(this, new CustomParams_SetActive(rp.LinkedShortsDirectoryId));
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"msuSchedules_MouseDoubleClick {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
         }
 
