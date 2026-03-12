@@ -15,6 +15,9 @@
         <BitmapImage x:Key="EDIT" UriSource="icons/edit.png"/>
         <BitmapImage x:Key="STEPON" UriSource="icons/stepon.png"/>
         <BitmapImage x:Key="STEPOFF" UriSource="icons/stepoff.png"/>
+        <BitmapImage x:Key="AUTOON" UriSource="icons/set.png"/>
+        <BitmapImage x:Key="AUTOOFF" UriSource="icons/edit.png"/>
+
         <Style x:Key="ToggleStepStyle" TargetType="{x:Type ToggleButton}">
             <Setter Property="Height" Value="23"/>
             <Setter Property="Width" Value="45"/>
@@ -34,7 +37,8 @@
                 </Setter.Value>
             </Setter>
         </Style>
-        <Style x:Key="ToggleSetEditStyle" TargetType="{x:Type ToggleButton}">
+        
+        <Style x:Key="ToggleSetAutoStyle" TargetType="{x:Type ToggleButton}">
             <Setter Property="Height" Value="23"/>
             <Setter Property="Width" Value="45"/>
             <Setter Property="Template">
@@ -43,10 +47,10 @@
                         <Image x:Name="PART_Image"  />
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsChecked" Value="true">
-                                <Setter TargetName="PART_Image" Property="Source" Value="{StaticResource EDIT}"/>
+                                <Setter TargetName="PART_Image" Property="Source" Value="{StaticResource AUTOOFF}"/>
                             </Trigger>
                             <Trigger Property="IsChecked" Value="False">
-                                <Setter TargetName="PART_Image" Property="Source" Value="{StaticResource SET}"/>
+                                <Setter TargetName="PART_Image" Property="Source" Value="{StaticResource AUTOON}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -105,6 +109,9 @@
                            ContentVerticalAlignment="Center" DataField="DirectoryName"
                             FontWeight="AutoFontWeight" Foreground="AutoFontColor"
                             ComponentType="TextBlock"/>
+                        <MSU:MultiListboxColumnDefinition HeaderText="Priority" WidthBinding="PriorityWidth" 
+                            ContentVerticalAlignment="Center" DataField="Priority" ComponentType="TextBlock"
+                            FontWeight="AutoFontWeight" Foreground="AutoFontColor" />
                         <MSU:MultiListboxColumnDefinition HeaderText="Number of Shorts" 
                  ContentHorizontalAlignment="Center" FontWeight="AutoFontWeight" Foreground="AutoFontColor"
                  DataField="NumberOfShorts" Width="105" ComponentType="TextBlock"/>
@@ -125,6 +132,8 @@
                             <MenuItem Header="Make Active" Click="mnuMakeActive_Click"/>
                             <MenuItem Header="Remove Schedule" Click="mnuRemoveSchedule"/>
                             <MenuItem Header="Change Schedules(Test)" Click="mnuChangeSchedule"/>
+                            <MenuItem Header="Priority +1" Click="MenuItem_AddToPriority"/>
+                            <MenuItem Header="Priority -1" Click="MenuItem_DeleteFromPriority"/>
                             <Separator/>
                             <MenuItem Header="Open Directory" Click="mnuOpenDirectory_Click"/>
                             <MenuItem Header="Run File Fixer" Click="mnuFileFix_Click"/>
@@ -135,6 +144,10 @@
                 <ToggleButton x:Name="tbDebug" Width="44" Height="44" Canvas.Left="219" LostFocus="tbDebug_LostFocus"
                               Canvas.Top="379" HorizontalAlignment="Left" VerticalAlignment="Center" 
                               Style="{StaticResource ToggleStepStyle}" ToolTip="Debug Mode" Click="tbDebug_Click"/>
+
+                <ToggleButton x:Name="tbAutoUpload" Width="44" Height="44" Canvas.Left="819" LostFocus="tbAutoUpload_LostFocus"
+               Canvas.Top="379" HorizontalAlignment="Left" VerticalAlignment="Center" 
+               Style="{StaticResource ToggleStepStyle}" ToolTip="Debug Mode" Click="tbDebug_Click"/>
                 <Button Name="BtnClose" Content="Close" HorizontalAlignment="Left" VerticalAlignment="Center" Height="36" Width="58" Click="BtnClose_Click" Canvas.Left="487" Canvas.Top="386"/>
                 <Button x:Name="BtnRunUploaders" Content="Upload" HorizontalAlignment="Left" VerticalAlignment="Center" Height="36" Width="46" Click="BtnRunUploaders_Click" Canvas.Left="4" Canvas.Top="386"/>
                 <Label x:Name="lblupload" Content="Uploads Per Slot" HorizontalAlignment="Left" VerticalAlignment="Center" Canvas.Left="261" Canvas.Top="388"/>

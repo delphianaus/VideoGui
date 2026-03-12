@@ -157,6 +157,20 @@ namespace VideoGui.Models
 
         }
     }
+
+    public class CustomParams_ChangePriority
+    {
+        public bool Ascending = false;
+        public int Id = -1, _CurrentPriority = -1;
+        public CustomParams_ChangePriority(int _id,int CurrentPriority,bool Asc = true)
+        {
+            Ascending = Asc;
+            Id = _id;
+            _CurrentPriority = CurrentPriority;
+        }
+    }
+
+
     public class CustomParams_SetActive
     {
         public int index = 0;

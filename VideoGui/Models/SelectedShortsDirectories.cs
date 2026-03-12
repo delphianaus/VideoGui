@@ -20,13 +20,14 @@ namespace VideoGui.Models
 {
     public class SelectedShortsDirectories : INotifyPropertyChanged
     {
-        private int _Id = -1, _LinkedShortsDirectoryId = -1, _NumberOfShorts = 0, _TitleId = -1, _DescId = -1;
+        private int _Id = -1, _Priority = 1, _LinkedShortsDirectoryId = -1, _NumberOfShorts = 0, 
+            _TitleId = -1, _DescId = -1;
         private string _DirectoryName = "", _LinkedDescId = "", _LinkedTitleId = "";
         private DateTime _LastUploadedDate = DateTime.Now.Date.AddYears(-100);
         private bool _IsActive = false;
         private FontWeight _FontWeight = FontWeights.Normal;
         private SolidColorBrush _Color = new SolidColorBrush(Colors.Black);
-
+       
         public bool IsActive
         {
             get => _IsActive;
@@ -38,6 +39,15 @@ namespace VideoGui.Models
             }
         }
 
+        public int Priority
+        {
+            get => _Priority;
+            set
+            {
+                _Priority = value;
+                OnPropertyChanged();
+            }
+        }   
         public FontWeight AutoFontWeight
         {
             get => _FontWeight;
@@ -183,7 +193,7 @@ namespace VideoGui.Models
                 IsShortActive = (reader["ISSHORTSACTIVE"] is short IsActive) ? IsActive == 1 : false;
                 TimeSpan tp = (reader["LASTUPLOADEDDATE"] is TimeSpan tsk) ? tsk : new TimeSpan(0, 0, 0);
                 LastUploadedDateFile = (reader["LASTUPLOADEDTIME"] is DateTime date) ? date.AtTime(tp) : DateTime.Now.Date.AddYears(-100);
-                
+                Priority = (reader["PRIORITY"] is int priority) ? priority : 1;
                 DescId = (reader["DESCID"] is int descid) ? descid : -1;
                 TitleId = (reader["TITLEID"] is int titleid) ? titleid : -1;
                 LinkedDescId = (reader["LINKEDDESCIDS"] is string linkedDescId) ? linkedDescId : "";

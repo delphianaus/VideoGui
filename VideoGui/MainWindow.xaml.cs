@@ -425,33 +425,37 @@ namespace VideoGui
             try
             {
                 string sqlA = "";
-                int NewId = -1;
+                int NewId = -1, PRIORITY = -1;
                 DateTime dtr = LastTimeUploaded.Date;
                 TimeSpan dtt = LastTimeUploaded.TimeOfDay;
+
+                sqlA = "SELECT MAX(PRIORITY) FROM MULTISHORTSINFO;";
+                PRIORITY = connectionString.ExecuteScalar(sqlA).ToInt(0) + 1;
+
                 sqlA = "SELECT * FROM MULTISHORTSINFO WHERE ISSHORTSACTIVE = 1;";
                 int activecnt = connectionString.ExecuteScalar(sqlA).ToInt(-1);
                 bool IsActive = activecnt == -1;
                 if (dtr.Year > 2000)
                 {
-                    sqlA = "INSERT INTO MULTISHORTSINFO (ISSHORTSACTIVE,NUMBEROFSHORTS," +
+                    sqlA = "INSERT INTO MULTISHORTSINFO (PRIORITY,ISSHORTSACTIVE,NUMBEROFSHORTS," +
                         " LINKEDSHORTSDIRECTORYID,LASTUPLOADEDDATE,LASTUPLOADEDTIME)" +
-                        "VALUES (@ISACTIVE,@NUMBEROFSHORTS,@LINKEDID,@DT,@DTT) RETURNING ID;";
-                    NewId = connectionString.ExecuteScalar(sqlA, [("@NUMBEROFSHORTS", NumberofShorts),
+                        "VALUES (@PRIORITY,@ISACTIVE,@NUMBEROFSHORTS,@LINKEDID,@DT,@DTT) RETURNING ID;";
+                    NewId = connectionString.ExecuteScalar(sqlA, [("@PRIORITY",PRIORITY),("@NUMBEROFSHORTS", NumberofShorts),
                      ("@ISACTIVE",IsActive),("@LINKEDID", LinkedId), ("@DT", dtr), ("@DTT", dtt)]).ToInt(-1);
                 }
                 else
                 {
-                    sqlA = "INSERT INTO MULTISHORTSINFO (ISSHORTSACTIVE,NUMBEROFSHORTS," +
+                    sqlA = "INSERT INTO MULTISHORTSINFO (PRIORITY,SSHORTSACTIVE,NUMBEROFSHORTS," +
                      " LINKEDSHORTSDIRECTORYID)" +
-                     "VALUES (@ISACTIVE,@NUMBEROFSHORTS,@LINKEDID) RETURNING ID;";
-                    NewId = connectionString.ExecuteScalar(sqlA, [("@NUMBEROFSHORTS", NumberofShorts),
+                     "VALUES (@PRIORITY,@ISACTIVE,@NUMBEROFSHORTS,@LINKEDID) RETURNING ID;";
+                    NewId = connectionString.ExecuteScalar(sqlA, [("@PRIORITY",PRIORITY),("@NUMBEROFSHORTS", NumberofShorts),
                     ("@ISACTIVE", IsActive),("@LINKEDID", LinkedId)]).ToInt(-1);
                 }
                 if (NewId != -1)
                 {
                     CancellationTokenSource cts = new CancellationTokenSource();
                     sqlA = "SELECT " +
-                  "M.ID, M.ISSHORTSACTIVE, M.NUMBEROFSHORTS, " +
+                  "M.ID, M.ISSHORTSACTIVE, M.NUMBEROFSHORTS, M.PRIORITY," +
                   "M.LASTUPLOADEDDATE, M.LASTUPLOADEDTIME, M.LINKEDSHORTSDIRECTORYID, " +
                   "COALESCE(S2.ID, S1.ID) as SHORTSDIRECTORY_ID, " +
                   "COALESCE(S2.DIRECTORYNAME, S1.DIRECTORYNAME) as DIRECTORYNAME, " +
@@ -527,7 +531,46 @@ namespace VideoGui
             try
             {
                 string loginfo = "formObjectHandler_MultiShortsUploader";
-                if (tld is CustomParams_ScheduleRestartCheck scsbool)
+                if (tld is CustomParams_ChangePriority cpcp)
+                {
+                    int MaxPriority, idx = -1, newpriority = (cpcp.Ascending ? cpcp._CurrentPriority + 1 : cpcp._CurrentPriority - 1);
+                    if (newpriority < 1) newpriority = 1;
+                    string sMax = "SELECT MAX(PRIORITY FROM MULTISHORTSINFO";
+                    MaxPriority = connectionString.ExecuteScalar(sMax).ToInt(-1);
+                    if (MaxPriority == cpcp._CurrentPriority)
+                    {
+                        newpriority = cpcp._CurrentPriority;
+                    }
+
+                    if (newpriority != cpcp._CurrentPriority)
+                    {
+                        string sqql = "SELECT ID FROM MULTISHORTSINFO WHERE PRIORITY = @PRIORITY ";
+
+                        idx = connectionString.ExecuteScalar(sqql, [("@PRIORITY", newpriority)]).ToInt(-1);
+                        if (idx != -1)
+                        {
+                            string saq = "UPDATE MULTISHORTSINFO SET PRIORITY = @PRIORITY " +
+                                " AND ID = @ID";
+                            connectionString.ExecuteNonQuery(saq, [("@PRIORITY", cpcp._CurrentPriority),
+                                ("@ID",idx)]);
+                            connectionString.ExecuteNonQuery(saq, [("@PRIORITY", newpriority),
+                                ("@ID",cpcp.Id)]);
+
+                            foreach (var r in frmMultiShortsUploader.msuSchedules.Items.OfType<SelectedShortsDirectories>())
+                            {
+                                if (r.Id == cpcp.Id)
+                                {
+                                    r.Priority = newpriority;
+                                }
+                                else if (r.Id == idx)
+                                {
+                                    r.Priority = cpcp._CurrentPriority;
+                                }
+                            }
+                        }
+                    }
+                }
+                else if (tld is CustomParams_ScheduleRestartCheck scsbool)
                 {
                     loginfo.WriteLog("restart.log", "CustomParams_ScheduleRestartCheck");
                     return (TResult)Convert.ChangeType(IsRestart, typeof(TResult));
@@ -3505,7 +3548,7 @@ namespace VideoGui
                 int id = connectionString.ExecuteScalar(sql, [("@LINKEDID", LinkedId)]).ToInt(-1);
                 if (id == -1)
                 {
-                    
+
                     InsertIntoMultiShortsInfo(NumberofShorts, LinkedId, LastTimeUploaded);
                 }
                 else
@@ -4864,6 +4907,7 @@ namespace VideoGui
                 sqlstring = $"CREATE TABLE MULTISHORTSINFO({Id},ISSHORTSACTIVE SMALLINT,NUMBEROFSHORTS INTEGER, " +
                     "LINKEDSHORTSDIRECTORYID INTEGER, LASTUPLOADEDDATE DATE, LASTUPLOADEDTIME TIME);";
                 connectionString.CreateTableIfNotExists(sqlstring);
+                connectionString.AddFieldToTable("MULTISHORTSINFO", "PRIORITY", "INTEGER", 1);
                 sqlstring = $"CREATE TABLE CONVERTERSETTINGS({Id},ISDEFAULT SMALLINT,MINBITRATE VARCHAR(255)" +
                     ",MAXBITRATE VARCHAR(255),BITRATEBUFFER VARCHAR(255),VIDEOWIDTH VARCHAR(255)," +
                     "VIDEOHEIGHT VARCHAR(255),ARMODULAS VARCHAR(255), RESIZEENABLE SMALLINT," +
@@ -5095,7 +5139,7 @@ namespace VideoGui
                  */
                 SelectedShortsDirectoriesList.Clear();
                 string sql = "SELECT " +
-                  "M.ID, M.ISSHORTSACTIVE, M.NUMBEROFSHORTS, " +
+                  "M.ID, M.ISSHORTSACTIVE, M.NUMBEROFSHORTS, M.PRIORITY," +
                   "M.LASTUPLOADEDDATE, M.LASTUPLOADEDTIME, M.LINKEDSHORTSDIRECTORYID, " +
                   "COALESCE(S2.ID, S1.ID) as SHORTSDIRECTORY_ID, " +
                   "COALESCE(S2.DIRECTORYNAME, S1.DIRECTORYNAME) as DIRECTORYNAME, " +
@@ -12521,7 +12565,7 @@ namespace VideoGui
 
                 IsRestart = args.Contains("SCHEDULER_RESTART");
 
-               
+
 
 
                 if (IsRestart)

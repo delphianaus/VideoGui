@@ -68,6 +68,16 @@ namespace VideoGui
                 typeof(MultiShortsUploader),
                 new FrameworkPropertyMetadata(375.0));
 
+        public double PriorityWidth
+        {
+            get => (double)GetValue(PriorityWidthProperty);
+            set => SetValue(PriorityWidthProperty, value);
+        }
+
+        public static readonly DependencyProperty PriorityWidthProperty =
+            DependencyProperty.Register(nameof(PriorityWidth), typeof(double),
+                typeof(MultiShortsUploader),
+                new FrameworkPropertyMetadata(50.0));
 
         //ShortsDirectoryNameWidth & MultiShortsDirectoryNameWidth
         public double MultiShortsDirectoryNameWidth
@@ -205,7 +215,7 @@ namespace VideoGui
                     Invoker?.Invoke(this, new CustomParams_ScheduleShorts());
                 }
 
-            }   
+            }
             catch (Exception ex)
             {
                 ex.LogWrite($"OnRestart {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
@@ -257,6 +267,7 @@ namespace VideoGui
                     MainContent.Height = _height;
                     ResizeMultilistBoxes(msuShorts.Height);
                     Canvas.SetTop(BtnClose, _height - 78);
+                    Canvas.SetTop(tbAutoUpload, _height - 82);
                     Canvas.SetTop(BtnRunUploaders, _height - 78);
                     Canvas.SetTop(btnSchdule, _height - 78);
 
@@ -271,6 +282,8 @@ namespace VideoGui
                     Canvas.SetTop(lblupload, _height - 67.5 - r);
                     Canvas.SetTop(lblmax, _height - 67.5 - r);
                     Canvas.SetTop(lblUploaded, _height - 70.5 - r);// Height - 386 = 420- 386 = 34
+
+
                 }
                 if (SetWidth)
                 {
@@ -280,6 +293,7 @@ namespace VideoGui
                     msuShorts.Width = _width - 15;
                     msuSchedules.Width = msuShorts.Width;
                     Canvas.SetLeft(BtnClose, _width - BtnClose.Width - 25);
+                    Canvas.SetLeft(tbAutoUpload, _width - 40 - BtnClose.Width - tbAutoUpload.Width);
                     //Canvas.SetLeft(tbDebug, _width - tbDebug.Width - BtnClose.Width - 25);
                     var r = _width - 530;
                     ShortsDirectoryNameWidth = r > 0 ? r : 100;
@@ -694,8 +708,9 @@ namespace VideoGui
                             }
                             if (msuSchedules.ItemsSource.OfType<SelectedShortsDirectories>().Where(x => x.IsActive).Count() == 0)
                             {
-                                foreach (var rp in msuSchedules.ItemsSource.OfType<SelectedShortsDirectories>().Where(x => !x.IsActive && x.NumberOfShorts > 0))
-                                {
+                                int Id = -1;
+                                foreach (var rp in msuSchedules.ItemsSource.OfType<SelectedShortsDirectories>().Where(x => !x.IsActive && x.NumberOfShorts > 0).OrderBy(i => i.Priority))
+                                { 
                                     LinkedId = rp.LinkedShortsDirectoryId;
                                     string _newpaths = Path.Combine(BaseDir, rp.DirectoryName);
                                     shortsleft = Directory.EnumerateFiles(_newpaths, "*.mp4", SearchOption.AllDirectories).ToList().Count();
@@ -712,6 +727,7 @@ namespace VideoGui
                                     }
                                     else
                                     {
+                                        id = rp.Id;
                                         string newpath = Path.Combine(BaseDir, rp.DirectoryName);
                                         CheckNumberOfShorts(newpath,
                                             rp.LinkedShortsDirectoryId, rp.NumberOfShorts, true);
@@ -719,7 +735,6 @@ namespace VideoGui
                                     }
                                 }
                             }
-                            
                         }
                         if (!Exc && shortsleft > 0 && Uploaded < txtTotalUploads.Text.ToInt())
                         {
@@ -736,7 +751,7 @@ namespace VideoGui
                             sscraperModule.ShowActivated = true;
                             sscraperModule.ScheduledOk.AddRange(filesdone);
                             Hide();
-                            
+
                             if (tbi is not null)
                             {
                                 sscraperModule.SendTraceInfo = tbi.InsertNewTrace;
@@ -855,10 +870,11 @@ namespace VideoGui
             try
             {
                 string sql = "UPDATE MULTISHORTSINFO SET " +
-                                                        "NUMBEROFSHORTS = @NUMBEROFSHORTS, ISSHORTSACTIVE = @ACTIVE " +
-                                                        "WHERE LINKEDSHORTSDIRECTORYID = @LINKEDSHORTSDIRECTORYID";
+                      "PRIORITY = @PRIORITY," +
+                      "NUMBEROFSHORTS = @NUMBEROFSHORTS, ISSHORTSACTIVE = @ACTIVE " +
+                      "WHERE LINKEDSHORTSDIRECTORYID = @LINKEDSHORTSDIRECTORYID";
                 connectionStr.ExecuteNonQuery(sql,
-                    [("@NUMBEROFSHORTS", 0), ("@ACTIVE", false),
+                    [("@NUMBEROFSHORTS", 0), ("@ACTIVE", false),("@PRIORITY",-1),
                                         ("@LINKEDSHORTSDIRECTORYID", LinkedId)]);
                 Invoker?.Invoke(this, new
                     CustomParams_RemoveMulitShortsInfoById(LinkedId));
@@ -875,9 +891,9 @@ namespace VideoGui
             {
                 bool FindNextRec;
                 rp.IsActive = false;
-                string sql1 = "UPDATE MULTISHORTSINFO SET ISSHORTSACTIVE = @ACTIVE WHERE LINKEDSHORTSDIRECTORYID = @LINKEDSHORTSDIRECTORYID";
+                string sql1 = "UPDATE MULTISHORTSINFO SET ISSHORTSACTIVE = @ACTIVE , PRIORITY = @PRIORITY WHERE LINKEDSHORTSDIRECTORYID = @LINKEDSHORTSDIRECTORYID";
                 connectionStr.ExecuteNonQuery(sql1,
-                    [("@ACTIVE", false),
+                    [("@ACTIVE", false),("@PRIORITY",-1),
                      ("@LINKEDSHORTSDIRECTORYID", rp.LinkedShortsDirectoryId)]);
                 FindNextRec = false;
 
@@ -1019,7 +1035,7 @@ namespace VideoGui
                 else
                 {
                     logfile.WriteLog("restart.log", "CustomParams_ScheduleRestart");
-                   
+
                     Invoker?.Invoke(this, new CustomParams_ScheduleRestart());
                     Close();
                 }
@@ -1273,7 +1289,7 @@ namespace VideoGui
             {
                 KeyState = (e.Key == Key.LeftShift || e.Key == Key.RightShift);
             }
-            catch(Exception ex) 
+            catch (Exception ex)
             {
                 ex.LogWrite($"btnSchdule_KeyDown {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
@@ -1304,6 +1320,43 @@ namespace VideoGui
             catch (Exception ex)
             {
                 ex.LogWrite($"msuSchedules_MouseDoubleClick {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
+            }
+        }
+
+        private void tbAutoUpload_LostFocus(object sender, RoutedEventArgs e)
+        {
+            
+        }
+
+        private void MenuItem_AddToPriority(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (e.OriginalSource is TextBlock m &&
+                    m.DataContext is SelectedShortsDirectories rp)// && !rp.IsActive)
+                {
+                    Invoker?.Invoke(this, new CustomParams_ChangePriority(rp.Id, rp.Priority,true));
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"MenuItem_AddToPriority {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
+            }
+        }
+
+        private void MenuItem_DeleteFromPriority(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (e.OriginalSource is TextBlock m &&
+                    m.DataContext is SelectedShortsDirectories rp)// && !rp.IsActive)
+                {
+                    Invoker?.Invoke(this, new CustomParams_ChangePriority(rp.Id, rp.Priority,false));
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"MenuItem_DeleteFromPriority {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
         }
 
