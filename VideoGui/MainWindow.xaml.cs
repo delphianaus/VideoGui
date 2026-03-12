@@ -535,7 +535,7 @@ namespace VideoGui
                 {
                     int MaxPriority, idx = -1, newpriority = (cpcp.Ascending ? cpcp._CurrentPriority + 1 : cpcp._CurrentPriority - 1);
                     if (newpriority < 1) newpriority = 1;
-                    string sMax = "SELECT MAX(PRIORITY FROM MULTISHORTSINFO";
+                    string sMax = "SELECT MAX(PRIORITY) FROM MULTISHORTSINFO";
                     MaxPriority = connectionString.ExecuteScalar(sMax).ToInt(-1);
                     if (MaxPriority == cpcp._CurrentPriority)
                     {
