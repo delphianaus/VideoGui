@@ -1332,7 +1332,7 @@ namespace VideoGui
         {
             try
             {
-                if (e.OriginalSource is TextBlock m &&
+                if (e.OriginalSource is MenuItem m &&
                     m.DataContext is SelectedShortsDirectories rp)// && !rp.IsActive)
                 {
                     Invoker?.Invoke(this, new CustomParams_ChangePriority(rp.Id, rp.Priority,true));
@@ -1348,7 +1348,7 @@ namespace VideoGui
         {
             try
             {
-                if (e.OriginalSource is TextBlock m &&
+                if (e.OriginalSource is MenuItem m &&
                     m.DataContext is SelectedShortsDirectories rp)// && !rp.IsActive)
                 {
                     Invoker?.Invoke(this, new CustomParams_ChangePriority(rp.Id, rp.Priority,false));

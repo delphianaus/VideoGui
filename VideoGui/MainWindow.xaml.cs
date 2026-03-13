@@ -537,22 +537,36 @@ namespace VideoGui
                     if (newpriority < 1) newpriority = 1;
                     string sMax = "SELECT MAX(PRIORITY) FROM MULTISHORTSINFO";
                     MaxPriority = connectionString.ExecuteScalar(sMax).ToInt(-1);
-                    if (MaxPriority == cpcp._CurrentPriority)
-                    {
-                        newpriority = cpcp._CurrentPriority;
-                    }
 
-                    if (newpriority != cpcp._CurrentPriority)
+
+                    if (newpriority != cpcp._CurrentPriority && MaxPriority != cpcp._CurrentPriority)
                     {
                         string sqql = "SELECT ID FROM MULTISHORTSINFO WHERE PRIORITY = @PRIORITY ";
 
-                        idx = connectionString.ExecuteScalar(sqql, [("@PRIORITY", newpriority)]).ToInt(-1);
-                        if (idx != -1)
+
+
+                        string saq = "UPDATE MULTISHORTSINFO SET PRIORITY = @PRIORITY " +
+                            " where ID = @ID";
+
+                        connectionString.ExecuteNonQuery(saq, [("@PRIORITY", newpriority),
+                                ("@ID",cpcp.Id)]);
+
+                        foreach (var r in frmMultiShortsUploader.msuSchedules.Items.OfType<SelectedShortsDirectories>())
+                        {
+                            if (r.Id == cpcp.Id)
+                            {
+                                r.Priority = newpriority;
+                            }
+
+                        }
+
+                    }
+                    else
+                        if (newpriority != cpcp._CurrentPriority)
                         {
                             string saq = "UPDATE MULTISHORTSINFO SET PRIORITY = @PRIORITY " +
-                                " AND ID = @ID";
-                            connectionString.ExecuteNonQuery(saq, [("@PRIORITY", cpcp._CurrentPriority),
-                                ("@ID",idx)]);
+                               " where ID = @ID";
+
                             connectionString.ExecuteNonQuery(saq, [("@PRIORITY", newpriority),
                                 ("@ID",cpcp.Id)]);
 
@@ -562,13 +576,9 @@ namespace VideoGui
                                 {
                                     r.Priority = newpriority;
                                 }
-                                else if (r.Id == idx)
-                                {
-                                    r.Priority = cpcp._CurrentPriority;
-                                }
                             }
                         }
-                    }
+
                 }
                 else if (tld is CustomParams_ScheduleRestartCheck scsbool)
                 {
@@ -10974,7 +10984,7 @@ namespace VideoGui
                  "LEFT JOIN SHORTSDIRECTORY S1 ON M.LINKEDSHORTSDIRECTORYID = S1.ID " +
                 "WHERE COALESCE(S2.ID, S1.ID) IS NOT NULL AND M.ID = @ID";
                 string sql = "SELECT " +
-              "M.ID, M.ISSHORTSACTIVE, M.NUMBEROFSHORTS, " +
+              "M.ID, M.ISSHORTSACTIVE, M.NUMBEROFSHORTS, M.PRIORITY, " +
               "M.LASTUPLOADEDDATE, M.LASTUPLOADEDTIME, M.LINKEDSHORTSDIRECTORYID, " +
               "COALESCE(S2.ID, S1.ID) as SHORTSDIRECTORY_ID, " +
               "COALESCE(S2.DIRECTORYNAME, S1.DIRECTORYNAME) as DIRECTORYNAME, " +

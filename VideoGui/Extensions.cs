@@ -827,9 +827,14 @@ namespace VideoGui
                 }
                 else
                 {
-                    sql = $"ALTER TABLE @P1 ADD @P0 @P2 NOT NULL DEFAULT @DF NOT NULL;";
-                    connectionStr.ExecuteScalar(sql, [("@P0", Field.ToUpper()), ("@P1", Table.ToUpper()),
+                    sql = $"ALTER TABLE @P1 ADD @P0 @P2 DEFAULT @DF NOT NULL;";
+                    var r = connectionStr.ExecuteScalar(sql, [("@P0", Field.ToUpper()), ("@P1", Table.ToUpper()),
                         ("@P2", FieldType.ToUpper()), ("@DF", defaultvalue)]);
+
+                    if (r is null)
+                    {
+
+                    }
                 }
             }
             catch (Exception ex)
