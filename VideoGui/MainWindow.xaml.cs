@@ -5022,6 +5022,7 @@ namespace VideoGui
                     {
                         Hide();
                         DoUploadAutomation();
+
                     }
                 }
             }
