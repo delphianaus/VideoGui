@@ -31,6 +31,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics.X86;
 using System.Security;
+using System.Security.Cryptography;
 using System.Security.Permissions;
 using System.Security.Policy;
 using System.Text;
@@ -48,12 +49,12 @@ using System.Windows.Forms;
 using System.Windows.Forms.Design;
 using System.Windows.Input;
 using System.Windows.Input.Manipulations;
+using System.Windows.Interop;
 using System.Windows.Markup;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
-using System.Windows.Interop;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 using System.Xml;
@@ -76,13 +77,13 @@ using DataObject = System.Windows.DataObject;
 using DragDropEffects = System.Windows.DragDropEffects;
 using File = System.IO.File;
 using HtmlDocument = HtmlAgilityPack.HtmlDocument;
+using Label = System.Windows.Controls.Label;
 using MouseEventArgs = System.Windows.Input.MouseEventArgs;
 using Path = System.IO.Path;
 using String = System.String;
 using Task = System.Threading.Tasks.Task;
 using WebView2 = Microsoft.Web.WebView2.Wpf.WebView2;
 using Window = System.Windows.Window;
-using Label = System.Windows.Controls.Label;
 
 namespace VideoGui
 {
@@ -3634,335 +3635,348 @@ namespace VideoGui
             int ExitCode = -1;
             try
             {
-                List<Uploads> clicks = new List<Uploads>();
-
-                timer.Interval = TimeSpan.FromSeconds(1);
-                bool timeractive = false;
-                int scrollcnt = 0;
-                timer.Tick += (s, e) =>
+                try
                 {
-                    timeractive = true;
-                    timer.Stop();
-                    scrollcnt++;
-                    Dispatcher.BeginInvoke(new Action(() =>
-                    {
-                        //SimulateWheelUpDown(wv2);
-                    }));
-                    WheelBody++;
-                    if (WheelBody < 10)
-                    {
-                        timer.Start();
-                    }
-                    timeractive = false;
-                };
-                while (true && !canceltoken.IsCancellationRequested)
-                {
-                    if (ExitDialog) return false;
-                    var html = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
-                    if (html is not null && html.Contains("Daily upload limit reached"))
-                    {
-                        Exceeded = true;
-                        finished = true;
-                        ExitDialog = true;
-                        break;
-                    }
-                    bool found = false;
-                    List<HtmlNode> Nodes = GetNodes(html, Span_Name);
-                    if (html.ToLower().ContainsAll(new string[] { "daily", "upload", "limit" }))
-                    {
-                        Exceeded = true;
-                        finished = true;
-                        ExitDialog = true;
-                        if (DoUploadsCnt() < 100)
-                        {
-                            await BuildFiles();
-                            Close();
-                        }
-                        break;
-                    }
-                    if (VideoFiles.Count == 1 && Regex.IsMatch(html.ToLower(), @"processing will begin shortly|your video template has been saved as draft|saving|save and close|title-row style-scope ytcp-uploads-dialog"))
-                    {
-                        string[] files = Directory.GetFiles("Z:\\", VideoFiles[0] + ".*", SearchOption.AllDirectories);
-                        if (files.Count() > 0)
-                        {
-                            File.Delete(files[0]);
-                        }
-                        InsertIntoUploadFiles(VideoFiles, connectStr);
-                        ExitDialog = true;
-                        break;
-                    }
-                    if (html.ToLower().Contains("uploads complete"))
-                    {
-                        NodeUpdate(Span_Name, ScheduledGet);
-                        InsertIntoUploadFiles(VideoFiles, connectStr);
-                        DeleteFiles(VideoFiles, "Z:\\");
-                        Close();
-                        break;
-                    }
-                    else NodeUpdate(Span_Name, ScheduledGet);
-                    if (Nodes.Count == 0)
-                    {
-                        Thread.Sleep(150);
-                        continue;
-                    }
+                    List<Uploads> clicks = new List<Uploads>();
 
-                    bool waitingcnt = Nodes.Count > 0 && Nodes.Where(nodex => nodex.InnerText.Contains("Waiting")).Count() > 0;
-                    if (waitingcnt)
+                    timer.Interval = TimeSpan.FromSeconds(1);
+                    bool timeractive = false;
+                    int scrollcnt = 0;
+                    timer.Tick += (s, e) =>
                     {
-                        html = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
-                        List<HtmlNode> Nodes2 = GetNodes(html, Span_Name);
-                        if (Nodes2.Count != Nodes.Count)
+                        timeractive = true;
+                        timer.Stop();
+                        scrollcnt++;
+                        Dispatcher.BeginInvoke(new Action(() =>
                         {
-                            Nodes = Nodes2;
-                        }
-                        else
+                            //SimulateWheelUpDown(wv2);
+                        }));
+                        WheelBody++;
+                        if (WheelBody < 10)
                         {
-                            html = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
-                            Nodes = GetNodes(html, Span_Name);
+                            timer.Start();
                         }
-                    }
-                    int CompleteCnt = 0;
-                    if (Nodes.Count > 0)
+                        timeractive = false;
+                    };
+                    while (true && !canceltoken.IsCancellationRequested)
                     {
-                        html = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
-
+                        if (ExitDialog) return false;
+                        var html = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
+                        if (html is not null && html.Contains("Daily upload limit reached"))
+                        {
+                            Exceeded = true;
+                            finished = true;
+                            ExitDialog = true;
+                            break;
+                        }
+                        bool found = false;
+                        List<HtmlNode> Nodes = GetNodes(html, Span_Name);
+                        if (html.ToLower().ContainsAll(new string[] { "daily", "upload", "limit" }))
+                        {
+                            Exceeded = true;
+                            finished = true;
+                            ExitDialog = true;
+                            if (DoUploadsCnt() < 100)
+                            {
+                                await BuildFiles();
+                                Close();
+                            }
+                            break;
+                        }
+                        if (VideoFiles.Count == 1 && Regex.IsMatch(html.ToLower(), @"processing will begin shortly|your video template has been saved as draft|saving|save and close|title-row style-scope ytcp-uploads-dialog"))
+                        {
+                            string[] files = Directory.GetFiles("Z:\\", VideoFiles[0] + ".*", SearchOption.AllDirectories);
+                            if (files.Count() > 0)
+                            {
+                                File.Delete(files[0]);
+                            }
+                            InsertIntoUploadFiles(VideoFiles, connectStr);
+                            ExitDialog = true;
+                            break;
+                        }
                         if (html.ToLower().Contains("uploads complete"))
                         {
                             NodeUpdate(Span_Name, ScheduledGet);
                             InsertIntoUploadFiles(VideoFiles, connectStr);
                             DeleteFiles(VideoFiles, "Z:\\");
+                            Close();
+                            break;
+                        }
+                        else NodeUpdate(Span_Name, ScheduledGet);
+                        if (Nodes.Count == 0)
+                        {
+                            Thread.Sleep(150);
+                            continue;
+                        }
+
+                        bool waitingcnt = Nodes.Count > 0 && Nodes.Where(nodex => nodex.InnerText.Contains("Waiting")).Count() > 0;
+                        if (waitingcnt)
+                        {
+                            html = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
+                            List<HtmlNode> Nodes2 = GetNodes(html, Span_Name);
+                            if (Nodes2.Count != Nodes.Count)
+                            {
+                                Nodes = Nodes2;
+                            }
+                            else
+                            {
+                                html = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
+                                Nodes = GetNodes(html, Span_Name);
+                            }
+                        }
+                        int CompleteCnt = 0;
+                        if (Nodes.Count > 0)
+                        {
+                            html = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
+
+                            if (html.ToLower().Contains("uploads complete"))
+                            {
+                                NodeUpdate(Span_Name, ScheduledGet);
+                                InsertIntoUploadFiles(VideoFiles, connectStr);
+                                DeleteFiles(VideoFiles, "Z:\\");
+                                break;
+                            }
+                            NodeUpdate(Span_Name, ScheduledGet);
+
+                            for (int i = Nodes.Count - 1; i >= 0; i--)
+                            {
+                                Debug.Print($"node being processed {i}");
+                                int start = Nodes[i].InnerText.IndexOf("\n") + 1;
+                                string filename1 = Nodes[i].InnerText.Substring(start).Split('\n').FirstOrDefault().Trim();
+                                if (ExitDialog)
+                                {
+                                    return false;
+                                }
+                                scrollcnt = 0;
+                                if (Regex.IsMatch(Nodes[i].InnerText, @"complete|100% uploaded"))
+                                {
+                                    CompleteCnt++;
+                                    Debug.Print($"complete|100% uploaded  detected");
+                                    UploadedHandler(Span_Name, connectStr, filename1);
+                                    DeleteFiles(new List<string> { filename1 }, "Z:\\");
+                                }
+                                if (Regex.IsMatch(Nodes[i].InnerText, @"Waiting"))
+                                {
+                                    Debug.Print($"Waiting detect on node {i}");
+                                    var cyss = new CancellationTokenSource();
+                                    cyss.CancelAfter(TimeSpan.FromSeconds(2));
+                                    while (!cyss.IsCancellationRequested)
+                                    {
+                                        System.Windows.Forms.Application.DoEvents();
+                                        Thread.Sleep(15);
+                                    }
+                                    if (html.ToLower().Contains("uploads complete"))
+                                    {
+                                        Debug.Print("uploads complete detected");
+                                        break;
+                                    }
+                                    html = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
+                                    if (!Regex.IsMatch(Nodes[i].InnerText, @"Waiting"))
+                                    {
+                                        Debug.Print("non Waiting detected");
+                                        Debug.Print(Nodes[i].InnerText);
+                                        break;
+                                    }
+                                    if (!clicks.Any(clicks => clicks.FileName == filename1))
+                                    {
+                                        clicks.Add(new Uploads(filename1, "Waiting"));
+
+                                        string newfile = filename1;//.Replace("\"", "");
+                                        if (newfile.Contains("."))
+                                        {
+                                            newfile = newfile.Substring(0, newfile.IndexOf("."));
+                                        }
+                                        Debug.Print($"Attempting click event on ${filename1}");
+                                        var buttonLabel = $"Edit video {filename1}";
+                                        SendTraceInfo?.Invoke(this, $"Getting Edit Window For {newfile}");
+                                        lstMain.Items.Insert(0, $"Getting Edit Window For {newfile}");
+                                        await ActiveWebView[1].ExecuteScriptAsync($"document.querySelector('button[aria-label=\"{buttonLabel}\"]').click()");
+                                        SendTraceInfo?.Invoke(this, $"Got Edit Window For {newfile}");
+                                        var ctsx = new CancellationTokenSource();
+                                        ctsx.CancelAfter(TimeSpan.FromSeconds(5));
+                                        bool fnd = false;
+                                        while (!ctsx.IsCancellationRequested)
+                                        {
+
+                                            SendTraceInfo?.Invoke(this, $"Waiting For Edit Window For {newfile}");
+                                            var htmlx = await wv2.CoreWebView2.ExecuteScriptAsync("document.body.innerHTML");
+                                            var ehtmlx = Regex.Unescape(htmlx);
+                                            if (!Regex.IsMatch(ehtmlx.ToLower(), @"youtube.be") || Regex.IsMatch(ehtmlx.ToLower(), @"youtube.com/shorts"))
+                                            {
+                                                fnd = true;
+                                                SendTraceInfo?.Invoke(this, $"Found Edit Window For {newfile}");
+                                                ctsx.Cancel();
+
+                                                break;
+                                            }
+                                            SendTraceInfo?.Invoke(this, $"Finished Waiting For Edit Window For {newfile}");
+                                            Thread.Sleep(100);
+                                            Debug.Print($"Finished Waiting For Edit Window For {newfile}");
+                                        }
+                                        var htmlx1 = await wv2.CoreWebView2.ExecuteScriptAsync("document.body.innerHTML");
+                                        var ehtmlx1 = Regex.Unescape(htmlx1);
+                                        TimerSimulate.Start();
+                                        if (ehtmlx1.ToLower().Contains("uploads complete"))
+                                        {
+                                            Debug.Print("uploads complete detected");
+                                            canceltoken.Cancel();
+                                            DeleteFiles(VideoFiles, "Z:\\");
+                                            break;
+                                        }
+                                        var cts = new CancellationTokenSource();
+                                        while (!cts.IsCancellationRequested)
+                                        {
+                                            Debug.Print($"Starting Probe");
+                                            SendTraceInfo?.Invoke(this, $"Starting Probe");
+                                            html = await wv2.CoreWebView2.ExecuteScriptAsync("document.body.innerHTML");
+                                            var ehtml = Regex.Unescape(html);
+                                            if (ehtml is not null && ehtml.Contains("Daily upload limit reached"))
+                                            {
+                                                SendTraceInfo?.Invoke(this, $"Daily Upload Limit Reached");
+                                                Debug.Print("Daily Upload Limit Reached");
+                                                Exceeded = true;
+                                                finished = true;
+                                                ExitDialog = true;
+                                                cts.Cancel();
+                                                Close();
+                                            }
+                                            if (ExitDialog || Exceeded)
+                                            {
+                                                ExitCode = 0;
+                                                SendTraceInfo?.Invoke(this, $"ExitDialog Or Exceeded");
+                                                InsertIntoUploadFiles(VideoFiles, connectStr);
+                                                cts.Cancel();
+                                                return false;
+                                            }
+                                            SendTraceInfo?.Invoke(this, $"Detecting Uploads Complete {filename1}");
+                                            var htmlcheck = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
+                                            if (Regex.IsMatch(htmlcheck, @"Uploads complete"))
+                                            {
+                                                Debug.Print("uploads complete detected");
+                                                SendTraceInfo?.Invoke(this, $"Uploads complete Detected");
+                                                cts.Cancel();
+                                                InsertIntoUploadFiles(VideoFiles, connectStr);
+                                                DeleteFiles(VideoFiles, "Z:\\");
+                                                continue;
+                                            }
+                                            string vid = "";
+                                            var ctxs = new CancellationTokenSource();
+                                            ctxs.CancelAfter(TimeSpan.FromSeconds(5));
+                                            while (true && !ctxs.IsCancellationRequested)
+                                            {
+                                                Debug.Print("video id parsing");
+                                                htmlcheck = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
+                                                SendTraceInfo?.Invoke(this, $"Getting videoid {filename1}");
+                                                if (htmlcheck.Contains("Channel analytics")) break;
+                                                var index = htmlcheck.IndexOf("youtube.com/shorts");
+                                                int len = "youtube.com/shorts".Length;
+                                                if (index != -1)
+                                                {
+                                                    vid = htmlcheck.Substring(index + len, 11);
+                                                    ctxs.Cancel();
+                                                }
+                                                else
+                                                {
+                                                    var index1 = htmlcheck.IndexOf("youtube.be");
+                                                    int len1 = "youtube.be".Length;
+                                                    if (index1 != -1)
+                                                    {
+                                                        vid = htmlcheck.Substring(index1 + len1, 11);
+                                                        ctsx.Cancel();
+                                                        continue;
+                                                    }
+                                                    Thread.Sleep(500);
+                                                }
+                                            }
+                                            foreach (var item in ScheduledFiles.Where(item => item.FileName == filename1))
+                                            {
+                                                Debug.Print($"Got videoid {vid} for {filename1}");
+                                                item.VideoId = vid;
+                                                SendTraceInfo?.Invoke(this, $"Got videoid {vid} for {filename1}");
+                                                break;
+                                            }
+                                            if (Regex.IsMatch(htmlcheck.ToLower(), @"daily limit|upload complete ... processing will begin shortly|checks complete. no issues found.|processing up to"))
+                                            {
+                                                Debug.Print($"regex match found");
+                                                finished = true;
+                                                InsertIntoUploadFiles(VideoFiles, connectStr);
+                                                ExitCode = htmlcheck.ToLower() switch
+                                                {
+                                                    var x when x.Contains("daily limit") => 1,
+                                                    var x when x.Contains("upload complete ... processing will begin shortly") => 2,
+                                                    var x when x.Contains("checks complete. no issues found.") => 2,
+                                                    var x when x.Contains("daily limit") => 3,
+                                                    var x when x.Contains("processing up to") => 4,
+                                                    _ => 5,
+                                                };
+                                                SendTraceInfo?.Invoke(this, $"Sending Close Click {ExitCode}");
+                                                Debug.Print($"Sending Close Click {ExitCode}");
+                                                Close_Upload(wv2);
+                                                TimerSimulate.Start();
+                                                SendTraceInfo?.Invoke(this, $"Sent Close Click");
+                                                var cts1 = new CancellationTokenSource();
+                                                cts1.CancelAfter(TimeSpan.FromSeconds(5));
+                                                while (!cts1.IsCancellationRequested)
+                                                {
+                                                    System.Windows.Forms.Application.DoEvents();
+                                                    Thread.Sleep(15);
+                                                }
+                                                cts.Cancel();
+                                                SendTraceInfo?.Invoke(this, $"Exiting loop");
+                                                break;
+                                            }
+                                            if (!Regex.IsMatch(htmlcheck, @"title-row style-scope ytcp-uploads-dialog"))
+                                            {
+                                                foreach (var click in clicks.Where(clicks => clicks.FileName == filename1))
+                                                {
+                                                    click.Status = "Uploading";
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            // processing i of count of files.
+                            if (!timeractive && scrollcnt < 3)
+                            {
+                                timer.Start();
+                            }
+                            Thread.Sleep(100);
+
+                            html = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
+                            Nodes = GetNodes(html, Span_Name);
+                        }
+                        if (CompleteCnt == Nodes.Count && Nodes.Count > 0)
+                        {
                             break;
                         }
                         NodeUpdate(Span_Name, ScheduledGet);
-
-                        for (int i = Nodes.Count - 1; i >= 0; i--)
-                        {
-                            Debug.Print($"node being processed {i}");
-                            int start = Nodes[i].InnerText.IndexOf("\n") + 1;
-                            string filename1 = Nodes[i].InnerText.Substring(start).Split('\n').FirstOrDefault().Trim();
-                            if (ExitDialog)
-                            {
-                                return false;
-                            }
-                            scrollcnt = 0;
-                            if (Regex.IsMatch(Nodes[i].InnerText, @"complete|100% uploaded"))
-                            {
-                                CompleteCnt++;
-                                Debug.Print($"complete|100% uploaded  detected");
-                                UploadedHandler(Span_Name, connectStr, filename1);
-                                DeleteFiles(new List<string> { filename1 }, "Z:\\");
-                            }
-                            if (Regex.IsMatch(Nodes[i].InnerText, @"Waiting"))
-                            {
-                                Debug.Print($"Waiting detect on node {i}");
-                                var cyss = new CancellationTokenSource();
-                                cyss.CancelAfter(TimeSpan.FromSeconds(2));
-                                while (!cyss.IsCancellationRequested)
-                                {
-                                    System.Windows.Forms.Application.DoEvents();
-                                    Thread.Sleep(15);
-                                }
-                                if (html.ToLower().Contains("uploads complete"))
-                                {
-                                    Debug.Print("uploads complete detected");
-                                    break;
-                                }
-                                html = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
-                                if (!Regex.IsMatch(Nodes[i].InnerText, @"Waiting"))
-                                {
-                                    Debug.Print("non Waiting detected");
-                                    Debug.Print(Nodes[i].InnerText);
-                                    break;
-                                }
-                                if (!clicks.Any(clicks => clicks.FileName == filename1))
-                                {
-                                    clicks.Add(new Uploads(filename1, "Waiting"));
-
-                                    string newfile = filename1;//.Replace("\"", "");
-                                    if (newfile.Contains("."))
-                                    {
-                                        newfile = newfile.Substring(0, newfile.IndexOf("."));
-                                    }
-                                    Debug.Print($"Attempting click event on ${filename1}");
-                                    var buttonLabel = $"Edit video {filename1}";
-                                    SendTraceInfo?.Invoke(this, $"Getting Edit Window For {newfile}");
-                                    lstMain.Items.Insert(0, $"Getting Edit Window For {newfile}");
-                                    await ActiveWebView[1].ExecuteScriptAsync($"document.querySelector('button[aria-label=\"{buttonLabel}\"]').click()");
-                                    SendTraceInfo?.Invoke(this, $"Got Edit Window For {newfile}");
-                                    var ctsx = new CancellationTokenSource();
-                                    ctsx.CancelAfter(TimeSpan.FromSeconds(5));
-                                    bool fnd = false;
-                                    while (!ctsx.IsCancellationRequested)
-                                    {
-
-                                        SendTraceInfo?.Invoke(this, $"Waiting For Edit Window For {newfile}");
-                                        var htmlx = await wv2.CoreWebView2.ExecuteScriptAsync("document.body.innerHTML");
-                                        var ehtmlx = Regex.Unescape(htmlx);
-                                        if (!Regex.IsMatch(ehtmlx.ToLower(), @"youtube.be") || Regex.IsMatch(ehtmlx.ToLower(), @"youtube.com/shorts"))
-                                        {
-                                            fnd = true;
-                                            SendTraceInfo?.Invoke(this, $"Found Edit Window For {newfile}");
-                                            ctsx.Cancel();
-
-                                            break;
-                                        }
-                                        SendTraceInfo?.Invoke(this, $"Finished Waiting For Edit Window For {newfile}");
-                                        Thread.Sleep(100);
-                                        Debug.Print($"Finished Waiting For Edit Window For {newfile}");
-                                    }
-                                    var htmlx1 = await wv2.CoreWebView2.ExecuteScriptAsync("document.body.innerHTML");
-                                    var ehtmlx1 = Regex.Unescape(htmlx1);
-                                    TimerSimulate.Start();
-                                    if (ehtmlx1.ToLower().Contains("uploads complete"))
-                                    {
-                                        Debug.Print("uploads complete detected");
-                                        canceltoken.Cancel();
-                                        DeleteFiles(VideoFiles, "Z:\\");
-                                        break;
-                                    }
-                                    var cts = new CancellationTokenSource();
-                                    while (!cts.IsCancellationRequested)
-                                    {
-                                        Debug.Print($"Starting Probe");
-                                        SendTraceInfo?.Invoke(this, $"Starting Probe");
-                                        html = await wv2.CoreWebView2.ExecuteScriptAsync("document.body.innerHTML");
-                                        var ehtml = Regex.Unescape(html);
-                                        if (ehtml is not null && ehtml.Contains("Daily upload limit reached"))
-                                        {
-                                            SendTraceInfo?.Invoke(this, $"Daily Upload Limit Reached");
-                                            Debug.Print("Daily Upload Limit Reached");
-                                            Exceeded = true;
-                                            finished = true;
-                                            ExitDialog = true;
-                                            cts.Cancel();
-                                            Close();
-                                        }
-                                        if (ExitDialog || Exceeded)
-                                        {
-                                            ExitCode = 0;
-                                            SendTraceInfo?.Invoke(this, $"ExitDialog Or Exceeded");
-                                            InsertIntoUploadFiles(VideoFiles, connectStr);
-                                            cts.Cancel();
-                                            return false;
-                                        }
-                                        SendTraceInfo?.Invoke(this, $"Detecting Uploads Complete {filename1}");
-                                        var htmlcheck = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
-                                        if (Regex.IsMatch(htmlcheck, @"Uploads complete"))
-                                        {
-                                            Debug.Print("uploads complete detected");
-                                            SendTraceInfo?.Invoke(this, $"Uploads complete Detected");
-                                            cts.Cancel();
-                                            InsertIntoUploadFiles(VideoFiles, connectStr);
-                                            DeleteFiles(VideoFiles, "Z:\\");
-                                            continue;
-                                        }
-                                        string vid = "";
-                                        var ctxs = new CancellationTokenSource();
-                                        ctxs.CancelAfter(TimeSpan.FromSeconds(5));
-                                        while (true && !ctxs.IsCancellationRequested)
-                                        {
-                                            Debug.Print("video id parsing");
-                                            htmlcheck = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
-                                            SendTraceInfo?.Invoke(this, $"Getting videoid {filename1}");
-                                            if (htmlcheck.Contains("Channel analytics")) break;
-                                            var index = htmlcheck.IndexOf("youtube.com/shorts");
-                                            int len = "youtube.com/shorts".Length;
-                                            if (index != -1)
-                                            {
-                                                vid = htmlcheck.Substring(index + len, 11);
-                                                ctxs.Cancel();
-                                            }
-                                            else
-                                            {
-                                                var index1 = htmlcheck.IndexOf("youtube.be");
-                                                int len1 = "youtube.be".Length;
-                                                if (index1 != -1)
-                                                {
-                                                    vid = htmlcheck.Substring(index1 + len1, 11);
-                                                    ctsx.Cancel();
-                                                    continue;
-                                                }
-                                                Thread.Sleep(500);
-                                            }
-                                        }
-                                        foreach (var item in ScheduledFiles.Where(item => item.FileName == filename1))
-                                        {
-                                            Debug.Print($"Got videoid {vid} for {filename1}");
-                                            item.VideoId = vid;
-                                            SendTraceInfo?.Invoke(this, $"Got videoid {vid} for {filename1}");
-                                            break;
-                                        }
-                                        if (Regex.IsMatch(htmlcheck.ToLower(), @"daily limit|upload complete ... processing will begin shortly|checks complete. no issues found.|processing up to"))
-                                        {
-                                            Debug.Print($"regex match found");
-                                            finished = true;
-                                            InsertIntoUploadFiles(VideoFiles, connectStr);
-                                            ExitCode = htmlcheck.ToLower() switch
-                                            {
-                                                var x when x.Contains("daily limit") => 1,
-                                                var x when x.Contains("upload complete ... processing will begin shortly") => 2,
-                                                var x when x.Contains("checks complete. no issues found.") => 2,
-                                                var x when x.Contains("daily limit") => 3,
-                                                var x when x.Contains("processing up to") => 4,
-                                                _ => 5,
-                                            };
-                                            SendTraceInfo?.Invoke(this, $"Sending Close Click {ExitCode}");
-                                            Debug.Print($"Sending Close Click {ExitCode}");
-                                            Close_Upload(wv2);
-                                            TimerSimulate.Start();
-                                            SendTraceInfo?.Invoke(this, $"Sent Close Click");
-                                            var cts1 = new CancellationTokenSource();
-                                            cts1.CancelAfter(TimeSpan.FromSeconds(5));
-                                            while (!cts1.IsCancellationRequested)
-                                            {
-                                                System.Windows.Forms.Application.DoEvents();
-                                                Thread.Sleep(15);
-                                            }
-                                            cts.Cancel();
-                                            SendTraceInfo?.Invoke(this, $"Exiting loop");
-                                            break;
-                                        }
-                                        if (!Regex.IsMatch(htmlcheck, @"title-row style-scope ytcp-uploads-dialog"))
-                                        {
-                                            foreach (var click in clicks.Where(clicks => clicks.FileName == filename1))
-                                            {
-                                                click.Status = "Uploading";
-                                                break;
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        // processing i of count of files.
-                        if (!timeractive && scrollcnt < 3)
-                        {
-                            timer.Start();
-                        }
-                        Thread.Sleep(100);
-
-                        html = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
-                        Nodes = GetNodes(html, Span_Name);
                     }
-                    if (CompleteCnt == Nodes.Count && Nodes.Count > 0)
+                    var htmlcheck1 = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
+                    if (Regex.IsMatch(htmlcheck1, @"Uploads complete|processing will begin shortly|your video template has been saved as draft|saving|save and close|title-row style-scope ytcp-uploads-dialog|daily limit"))
                     {
-                        break;
-                    }
-                    NodeUpdate(Span_Name, ScheduledGet);
-                }
-                var htmlcheck1 = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
-                if (Regex.IsMatch(htmlcheck1, @"Uploads complete|processing will begin shortly|your video template has been saved as draft|saving|save and close|title-row style-scope ytcp-uploads-dialog|daily limit"))
-                {
 
-                    DeleteFiles(VideoFiles, "Z:\\");
+                        DeleteFiles(VideoFiles, "Z:\\");
+                        return false;
+                    }
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    ex.LogWrite($"ScheduledGet {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
                     return false;
                 }
-                return true;
             }
-            catch (Exception ex)
+            finally
             {
-                ex.LogWrite($"ScheduledGet {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
-                return false;
+                if (Exceeded)
+                {
+                    var connectionString = Invoker.InvokeWithReturn<string>(this, new CustomParams_GetConnectionString());
+                    string sql = "INSERT INTO EXCEEDED (EXCEEDED_DATE, EXCEEDED_TIME) VALUES (@EDATE,@ETIME);";
+                    connectionString.ExecuteScalar(sql, [("@EDATE", DateTime.Now.Date),
+                        ("@ETIME", DateTime.Now.TimeOfDay)]);
+                }
             }
         }
 

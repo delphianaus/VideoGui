@@ -1,12 +1,13 @@
-﻿<Window x:Name="ConfigSettingsWindow" x:Class="VideoGui.ConfigurationSettings"
+﻿<Window
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:VideoGui"
+        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit" x:Name="ConfigSettingsWindow" x:Class="VideoGui.ConfigurationSettings"
         mc:Ignorable="d" Loaded="ConfigSettingsWindow_Loaded" SizeToContent="Manual" WindowStyle="ToolWindow" 
         WindowStartupLocation="CenterScreen" ScrollViewer.VerticalScrollBarVisibility="Disabled"
-        Title="User Configuration Settings" Height="634" Width="784">
+        Title="User Configuration Settings" Height="720" Width="784">
     <Grid Margin="0,0,0,0">
         <GroupBox x:Name="grpMpg4" Header="Mpeg4 Encoder Settings" HorizontalAlignment="Center" Height="56" VerticalAlignment="Top" Width="778" LostFocus="grpMpg4_LostFocus">
             <Canvas x:Name="CanvasMpeg4" Height="68" Margin="0,0,0,0" Width="770">
@@ -122,7 +123,7 @@
                     Canvas.Left="705" Canvas.Top="235" Click="BtnCompleted4KAdobe_Click" HorizontalAlignment="Left" VerticalAlignment="Center"/>
                 <Label Content="Adobe" Height="22" Width ="71" 
                     FontSize="14" Padding="0,1,0,2" Canvas.Left="406" Canvas.Top="129" HorizontalAlignment="Center" VerticalAlignment="Top"/>
-                <TextBox x:Name="txtDone4KAdobe" Text="Done4KAdobe&#xD;&#xA;" Height="28" TextWrapping="Wrap" Width="246"
+                <TextBox x:Name="txtDone4KAdobe" Text="Done4KAdobe&#xA;" Height="28" TextWrapping="Wrap" Width="246"
                          FontSize="14" Canvas.Left="454" Canvas.Top="126" HorizontalAlignment="Center" VerticalAlignment="Top"/>
                 <Button x:Name="btnDoneSelectDir4KAdobe" Width="30" Height="30"
                     Click="btnDoneSelectDir4KAdobe_Click" Canvas.Left="705" Canvas.Top="125" HorizontalAlignment="Center" VerticalAlignment="Top"/>
@@ -217,5 +218,32 @@
             </Canvas>
         </GroupBox>
         <Button x:Name="btnClose" Content="Close" HorizontalAlignment="Left" Margin="715,0,0,10" VerticalAlignment="Bottom" Height="25" Width="53" Click="btnClose_Click"/>
+        <GroupBox x:Name="grpShortsAutomation" Header="Shorts Upload / Schedule Settings" 
+            VerticalAlignment="Top" Margin="3,567,10,0" LostFocus="grpShortsAutomation_LostFocus">
+            <Canvas x:Name="cnvAppSettings1" Margin="0,0,6,0" Height="61">
+                <CheckBox x:Name="chkAutoUpload" Content="Auto Upload" 
+                    IsChecked="False" HorizontalAlignment="Center" Canvas.Top="14" 
+                    VerticalAlignment="Top" Canvas.Left="12" />
+                <CheckBox x:Name="chkAutoSchedule" Content="Auto Schedule" 
+                    HorizontalAlignment="Center" Canvas.Left="12" Canvas.Top="39"
+                    VerticalAlignment="Center" />
+                <Label x:Name="lblMinQ_Copy" Content="Start" Height="26" Canvas.Left="128" Canvas.Top="6" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                <Label x:Name="lblMinQ_Copy1" Content="Start" Height="26" Canvas.Left="128" Canvas.Top="34" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                <Label x:Name="lblMinQ_Copy2" Content="End" Height="26" Canvas.Left="314" Canvas.Top="9" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                <Label x:Name="lblMinQ_Copy3" Content="End" Height="26" Canvas.Left="314" Canvas.Top="34" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                <xctk:TimePicker x:Name="dtStartAU" Format="Custom" 
+                    FormatString="hh:mm:ss tt"  
+                    MinWidth="140" Focusable="True" Width="140" Canvas.Left="163" Canvas.Top="12" HorizontalAlignment="Center" VerticalAlignment="Top" />
+                <xctk:TimePicker x:Name="dtEndAU" Format="Custom" 
+                    FormatString="hh:mm:ss tt"  
+                    MinWidth="140" Focusable="True" Width="140" Canvas.Left="345" Canvas.Top="12" HorizontalAlignment="Left" VerticalAlignment="Center" />
+                <xctk:TimePicker x:Name="dtStartAS" Format="Custom" 
+                    FormatString="hh:mm:ss tt"  
+                    MinWidth="140" Focusable="True" Width="140" Canvas.Left="163" Canvas.Top="37" HorizontalAlignment="Center" VerticalAlignment="Top" />
+                <xctk:TimePicker x:Name="dtEndAS" Format="Custom" 
+                    FormatString="hh:mm:ss tt"  
+                    MinWidth="140" Focusable="True" Width="140" Canvas.Left="345" Canvas.Top="37" HorizontalAlignment="Left" VerticalAlignment="Center" />
+            </Canvas>
+        </GroupBox>
     </Grid>
 </Window>

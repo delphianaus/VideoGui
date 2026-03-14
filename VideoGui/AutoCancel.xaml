@@ -32,8 +32,8 @@
                     <Label x:Name="lblTime" Content="30" FontSize="14" FontStyle="Italic" Margin="183,32,0,0" FontFamily="Maiandra GD" FontWeight="SemiBold" Foreground="Wheat" HorizontalAlignment="Left" Padding="-2,0,5,0" Height="28" VerticalContentAlignment="Center" Width="33" HorizontalContentAlignment="Center" VerticalAlignment="Top" IsEnabled="False"/>
                     <Label x:Name="lbsSeconds" Content="Seconds" FontSize="14" FontStyle="Italic" Margin="216,32,0,0" FontFamily="Maiandra GD" FontWeight="SemiBold" Foreground="Wheat" HorizontalAlignment="Left" Padding="-2,0,5,0" Height="28" VerticalContentAlignment="Center" Width="64" HorizontalContentAlignment="Center" VerticalAlignment="Top" IsEnabled="False"/>
                     <Button Content="Close" HorizontalAlignment="Left" Margin="356,32,0,0" VerticalAlignment="Top" Height="28" Width="75"/>
-                    <Button Content="Close" HorizontalAlignment="Left" Margin="356,32,0,0" VerticalAlignment="Top" Height="28" Width="75" RenderTransformOrigin="-0.328,0.719" Click="Button_Click"/>
-                    <Button Content="Open" HorizontalAlignment="Left" Margin="20,32,0,0" VerticalAlignment="Top" Height="28" Width="76" RenderTransformOrigin="-0.328,0.719" Click="Button_Click_1"/>
+                    <Button x:Name="btnClose" Content="Close" HorizontalAlignment="Left" Margin="356,32,0,0" VerticalAlignment="Top" Height="28" Width="75" RenderTransformOrigin="-0.328,0.719" Click="Button_Click"/>
+                    <Button x:Name="btnOpen" Content="Open" HorizontalAlignment="Left" Margin="20,32,0,0" VerticalAlignment="Top" Height="28" Width="76" RenderTransformOrigin="-0.328,0.719" Click="Button_Click_1"/>
                     <Label x:Name="lblDestName" Content="Conversion Finished Close Progress Panel  ?" FontSize="16" FontStyle="Italic" Margin="0,56,0,0" FontFamily="Maiandra GD" FontWeight="SemiBold"  HorizontalAlignment="Center" Padding="0,-1,0,5" VerticalContentAlignment="Center" Height="24" Width="432" HorizontalContentAlignment="Center" VerticalAlignment="Top" Foreground="#FFFF0F0F" />
                 </Grid>
             </Border>

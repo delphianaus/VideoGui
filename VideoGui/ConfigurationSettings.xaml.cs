@@ -31,7 +31,7 @@ namespace VideoGui
         public ConfigurationSettings()
         {
             InitializeComponent();
-           
+
         }
         public void LoadSettings()
         {
@@ -82,8 +82,34 @@ namespace VideoGui
                 int Max1440p = key.GetValueInt("max1440pthreads", 1);
                 int Max4K = key.GetValueInt("max4Kthreads", 1);
                 int dx = this.GetIndexOf("cmbMaxThreads", Max.ToString());
-                cmbH64Target.SelectedIndex = key.GetValueInt("h264Target",-1);
+                cmbH64Target.SelectedIndex = key.GetValueInt("h264Target", -1);
                 string[] cmbname = { "cmbMaxThreads", "cmbMax1440pThreads", "cmb4KThreads" };
+                this.SetChecked("chkAutoSchedule", key.GetValueBool("AutomationChkAS"));
+                this.SetChecked("chkAutoUpload", key.GetValueBool("AutomationChkAU"));
+                string dateStartAU = key.GetValueStr("dateStartAU", string.Empty);
+                string dateStartAS = key.GetValueStr("dateStartAS", string.Empty);
+                string dateEndAU = key.GetValueStr("dateEndAU", string.Empty);
+                string dateEndAS = key.GetValueStr("dateEndAS", string.Empty);
+
+                dtStartAU.Value = (dateStartAU == "" || dateEndAU == "") ? null :
+                    DateTime.Today.Add(TimeSpan.Parse(dateStartAU));
+                dtEndAU.Value = (dateStartAU == "" || dateEndAU == "") ? null :
+                    DateTime.Today.Add(TimeSpan.Parse(dateEndAU));
+
+                dtStartAS.Value = (dateStartAS == "" || dateEndAS== "") ? null :
+                   DateTime.Today.Add(TimeSpan.Parse(dateStartAS));
+                dtEndAU.Value = (dateStartAS == "" || dateEndAS == "") ? null :
+                    DateTime.Today.Add(TimeSpan.Parse(dateEndAS));
+
+                /*
+                 *  
+                        key.SetValue("dateStartAU", dtStartAU.Value.Value.TimeOfDay);
+                        key.SetValue("dateStartAS", dtStartAS.Value.Value.TimeOfDay);
+                        key.SetValue("dateEndAU", dtEndAU.Value.Value.TimeOfDay);
+                        key.SetValue("dateEndAS", dtEndAS.Value.Value.TimeOfDay);
+                */
+
+
                 foreach (string CmbName in cmbname)
                 {
                     int cnt = 0;
@@ -111,7 +137,7 @@ namespace VideoGui
                 SettingsLoaded = true;
             }
         }
-       
+
         public byte[] _EncryptPassword(byte[] _password)
         {
             int[] AccessKey = { 30, 11, 32, 57, 14, 2, 38, 49, 33, 44, 16, 28, 99, 00, 11, 31, 17, 74, 1, 8, 9, 33, 44, 66, 88, 99, 00, 11, 32, 57, 74, 1, 8, 9, 33, 44, 66, 88, 99, 00, 11, 32, 57, 74, 1, 8, 9, 33, 44, 66, 88, 99 };
@@ -200,7 +226,7 @@ namespace VideoGui
 
         }
 
-        
+
         private void BtnCompleted_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -223,7 +249,7 @@ namespace VideoGui
                     string defaultdrive = Path.GetPathRoot(Process.GetCurrentProcess().MainModule.FileName);
                     key.SetValue("MonitorDownloads", ChkMonitorDownloads.IsChecked);
                     key.SetValue("SourceDirectory720p", txtSrc720p.Text);
-                    key.SetValue("SourceDirectory1440p", txtSrc1440p.Text );
+                    key.SetValue("SourceDirectory1440p", txtSrc1440p.Text);
                     key.SetValue("SourceDirectory4K", txtSrc4K.Text);
                     key.SetValue("SourceDirectory4KAdobe", txtSrc4KAdobe.Text);
                     key.SetValue("CompDirectory720p", txtComp720p.Text);
@@ -235,7 +261,7 @@ namespace VideoGui
                     key.SetValue("DestDirectoryAdobe4k", txtDone4k.Text);
                     key.SetValue("DestDirectory4KAdobe", txtDone4KAdobe.Text);
                     key?.SetValue("ErrorDirectory", txtErrorPath.Text);
-                  
+
                     key?.SetValue("movecompleted", chkmovecompleted.IsChecked);
                     key?.Close();
                 }
@@ -447,6 +473,40 @@ namespace VideoGui
                     key.SetValue("AutoAAC", ChkAutoAAC.IsChecked);
                     key.SetValue("h264Target", cmbH64Target.SelectedIndex);
                     key.SetValue("ChangeFileName", ChkChangeOutputname.IsChecked);
+                    key.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+            }
+        }
+
+        private void grpShortsAutomation_LostFocus(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (IsLoaded && SettingsLoaded)
+                {
+                    RegistryKey key = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\VideoProcessor", true);
+                    if (dtStartAU.Value.HasValue)
+                    {
+                        key.SetValue("dateStartAU", dtStartAU.Value.Value.TimeOfDay);
+                    }
+                    if (dtStartAS.Value.HasValue)
+                    {
+                        key.SetValue("dateStartAS", dtStartAS.Value.Value.TimeOfDay);
+                    }
+                    if (dtEndAU.Value.HasValue)
+                    {
+                        key.SetValue("dateEndAU", dtEndAU.Value.Value.TimeOfDay);
+                    }
+                    if (dtEndAS.Value.HasValue)
+                    {
+                        key.SetValue("dateEndAS", dtEndAS.Value.Value.TimeOfDay);
+                    }
+                    key.SetValue("AutomationChkAS", chkAutoSchedule.IsChecked.Value);
+                    key.SetValue("AutomationChkAU", chkAutoUpload.IsChecked.Value);
                     key.Close();
                 }
             }

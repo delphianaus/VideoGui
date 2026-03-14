@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO.Packaging;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -25,13 +26,16 @@ namespace VideoGui
 
     public partial class AutoCancel : Window
     {
-        public bool IsCloseAction = false, IsClosed = false, IsClosing = false;
+        public bool IsCloseAction = false, IsClosed = false, IsClosing = false, IsOpen = false, IsClose = false;
         System.Threading.Timer AutoCloseTimer;
         int dispatchcnt = 0;
         int TotalTime = 30;
         string DestName;
+        
+
         public AutoCancel(OnFinishIdObj _OnFinished, string destName,
-            int _totaltime = 30, string captiontitle = "")
+            int _totaltime = 30, string captiontitle = "", string LeftButton = "Open", 
+            String RightButton = "Close")
         {
             InitializeComponent();
             Closing += (s, e) => { IsClosing = true; };
@@ -39,6 +43,8 @@ namespace VideoGui
             TotalTime = _totaltime;
             dispatchcnt = _totaltime;
             lblTime.Content = TotalTime.ToString();
+            btnOpen.Content = LeftButton;
+            btnClose.Content = RightButton;
             DestName = destName;
             lblDestName.Content = DestName;
             lblYouTubeHelper.Content = (captiontitle != "") ? captiontitle : lblYouTubeHelper.Content;
@@ -49,6 +55,7 @@ namespace VideoGui
             try
             {
                 IsCloseAction = true;
+                IsClose = true;
                 Close();
             }
             catch (Exception ex)
@@ -62,6 +69,7 @@ namespace VideoGui
             try
             {
                 IsCloseAction = false;
+                IsOpen = true;
                 Close();
             }
             catch (Exception ex)

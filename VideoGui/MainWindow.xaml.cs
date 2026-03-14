@@ -152,7 +152,7 @@ namespace VideoGui
         AutoCancel DoAutoCancel = null;
         List<ListScheduleItems> ScheduleListItems = new List<ListScheduleItems>();
         List<ListScheduleItems> ScheduleListedItems = new List<ListScheduleItems>();
-        System.Threading.Timer EventTimer = null;
+        System.Threading.Timer AutomationTimer = null;
         System.Windows.Forms.Timer RestartTimer;
         public bool RestartScheduler = false;
         List<ThumbnailsInfo> thumbnailList = new List<ThumbnailsInfo>();
@@ -246,6 +246,14 @@ namespace VideoGui
         private ObservableCollectionFilters ObservableCollectionFilter;
         public DirectoryTitleDescEditor directoryTitleDescEditor = null;
         //public List<MediaTranscoder?> transcoders = new List<MediaTranscoder?>();
+
+        string dateStartAU = "";
+        string dateStartAS = "";
+        string dateEndAU = "";
+        string dateEndAS = "";
+
+        bool IsAutoUpload = false, IsAutoSchedule = false;
+
         public class ProgressForegroundConverter2
         {
 
@@ -537,48 +545,24 @@ namespace VideoGui
                     if (newpriority < 1) newpriority = 1;
                     string sMax = "SELECT MAX(PRIORITY) FROM MULTISHORTSINFO";
                     MaxPriority = connectionString.ExecuteScalar(sMax).ToInt(-1);
-
-
+                    string saq = "UPDATE MULTISHORTSINFO SET PRIORITY = @PRIORITY where ID = @ID";
                     if (newpriority != cpcp._CurrentPriority && MaxPriority != cpcp._CurrentPriority)
                     {
-                        string sqql = "SELECT ID FROM MULTISHORTSINFO WHERE PRIORITY = @PRIORITY ";
-
-
-
-                        string saq = "UPDATE MULTISHORTSINFO SET PRIORITY = @PRIORITY " +
-                            " where ID = @ID";
-
-                        connectionString.ExecuteNonQuery(saq, [("@PRIORITY", newpriority),
-                                ("@ID",cpcp.Id)]);
-
-                        foreach (var r in frmMultiShortsUploader.msuSchedules.Items.OfType<SelectedShortsDirectories>())
+                        connectionString.ExecuteNonQuery(saq, [("@PRIORITY", newpriority), ("@ID", cpcp.Id)]);
+                        foreach (var r in frmMultiShortsUploader.msuSchedules.Items.OfType<SelectedShortsDirectories>().Where(r => r.Id == cpcp.Id))
                         {
-                            if (r.Id == cpcp.Id)
-                            {
-                                r.Priority = newpriority;
-                            }
-
+                            r.Priority = newpriority;
                         }
-
                     }
-                    else
-                        if (newpriority != cpcp._CurrentPriority)
+                    else if (newpriority != cpcp._CurrentPriority)
+                    {
+                        saq = "UPDATE MULTISHORTSINFO SET PRIORITY = @PRIORITY where ID = @ID";
+                        connectionString.ExecuteNonQuery(saq, [("@PRIORITY", newpriority), ("@ID", cpcp.Id)]);
+                        foreach (var r in frmMultiShortsUploader.msuSchedules.Items.OfType<SelectedShortsDirectories>().Where(r => r.Id == cpcp.Id))
                         {
-                            string saq = "UPDATE MULTISHORTSINFO SET PRIORITY = @PRIORITY " +
-                               " where ID = @ID";
-
-                            connectionString.ExecuteNonQuery(saq, [("@PRIORITY", newpriority),
-                                ("@ID",cpcp.Id)]);
-
-                            foreach (var r in frmMultiShortsUploader.msuSchedules.Items.OfType<SelectedShortsDirectories>())
-                            {
-                                if (r.Id == cpcp.Id)
-                                {
-                                    r.Priority = newpriority;
-                                }
-                            }
+                            r.Priority = newpriority;
                         }
-
+                    }
                 }
                 else if (tld is CustomParams_ScheduleRestartCheck scsbool)
                 {
@@ -4784,7 +4768,7 @@ namespace VideoGui
                 return -1;
             }
         }
-        public void CreateDBInvoker()
+        public void CreateDB()
         {
             try
             {
@@ -4917,6 +4901,8 @@ namespace VideoGui
                 sqlstring = $"CREATE TABLE MULTISHORTSINFO({Id},ISSHORTSACTIVE SMALLINT,NUMBEROFSHORTS INTEGER, " +
                     "LINKEDSHORTSDIRECTORYID INTEGER, LASTUPLOADEDDATE DATE, LASTUPLOADEDTIME TIME);";
                 connectionString.CreateTableIfNotExists(sqlstring);
+                sqlstring = $"CREATE TABLE EXCEEDED({Id},EXCEEDED_DATE, EXCEEDED_TIME TIME);";
+                connectionString.CreateTableIfNotExists(sqlstring);
                 connectionString.AddFieldToTable("MULTISHORTSINFO", "PRIORITY", "INTEGER", 1);
                 sqlstring = $"CREATE TABLE CONVERTERSETTINGS({Id},ISDEFAULT SMALLINT,MINBITRATE VARCHAR(255)" +
                     ",MAXBITRATE VARCHAR(255),BITRATEBUFFER VARCHAR(255),VIDEOWIDTH VARCHAR(255)," +
@@ -4937,12 +4923,111 @@ namespace VideoGui
                 int idx = connectionString.ExecuteScalar(sqlstring).ToInt(-1);
                 CurrentDbId = (idx != -1) ? idx : CurrentDbId;
                 LoadFromDb();
+                AutomationTimer = new System.Threading.Timer(AutomationTimer_Elapsed);
+                AutomationTimer.Change(TimeSpan.FromSeconds(300), TimeSpan.FromSeconds(5));
+
             }
             catch (Exception ex)
             {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+                ex.LogWrite($"CreateDB {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
             }
         }
+
+        private void AutomationTimer_Elapsed(object? state)
+        {
+            try
+            {
+                AutomationTimer.Change(Timeout.Infinite, Timeout.Infinite);
+                bool Allow = dateStartAS == "" || dateEndAS == "" || dateStartAU == "" || dateEndAU == "";
+
+                if (!IsAutoSchedule || !IsAutoUpload || !Allow)
+                {
+                    AutomationTimer.Change(TimeSpan.FromSeconds(500), TimeSpan.FromSeconds(15));
+                    return;
+                }
+                // Get Last Time Uploaded File from UploadsRecord
+                string SQL = "SELECT * FROM UploadsRecord ORDER BY RDB$RECORD_VERSION DESC ROWS 100;";
+                int Id = -1;
+                List<DateTime> uploadDates = new List<DateTime>();
+
+                connectionString.ExecuteReader(SQL, (FbDataReader r) =>
+                {
+                    var dt = (r["UPLOAD_DATE"] is DateTime d) ? d : DateTime.Now.Date.AddYears(-100);
+                    TimeSpan dtr = (r["UPLOAD_TIME"] is TimeSpan t1) ? t1 : new TimeSpan();
+                    var dts = DateOnly.FromDateTime(dt);
+                    var tts = TimeOnly.FromTimeSpan(dtr);
+                    uploadDates.Add(dt.Date.AtTime(dtr));
+                });
+
+                if (uploadDates.Count > 0)
+                {
+                    bool Passed = false;
+                    var lastUpload = uploadDates.OrderByDescending(d => d).FirstOrDefault();
+                    int count = uploadDates.Where(d => d == lastUpload).Count();
+                    // lastupload > 24 hours`
+                    if (lastUpload < DateTime.Now.AddHours(-24))
+                    {
+                        Passed=true;    
+                    }
+                    else if (count < 100)
+                    {
+                       Passed=true;
+                    }
+                    var startdateAU = DateTime.Parse(dateStartAU);
+                    var enddateAU = DateTime.Parse(dateEndAU);
+
+                    var startdateAS = DateTime.Parse(dateStartAS);
+                    var enddateAS = DateTime.Parse(dateEndAS);
+
+                    var dtspassed = (DateTime.Now >= startdateAU && DateTime.Now <= enddateAU) || (DateTime.Now >= startdateAS && DateTime.Now <= enddateAS);
+
+                    var sql = "SELECT * FROM EXCEEDED ORDER BY RDB$RECORD_VERSION DESC ROWS 1;";
+                    DateTime dt = DateTime.Now.AddYears(-100);
+                    connectionString.ExecuteReader(sql, (FbDataReader r) =>
+                    {
+                        var dtt = (r["EXCEEDED_DATE"] is DateTime d) ? d : DateTime.Now.AddYears(-100);
+                        var dtr = (r["EXCEEDED_TIME"] is TimeSpan t) ? t : new TimeSpan();
+                        dt = dtt.Date.AtTime(dtr);
+                    });
+
+
+                    Passed = (dt.Year > 2000 && dt > DateTime.Now.AddHours(-24)) ? false : Passed;
+                    
+                    if (Passed && dtspassed)
+                    {
+                        var _DoAutomate = new AutoCancel(DoOnCloseAutomation, $"Allow Automation On Shorts", 30, "Autiomation query",
+                            "Abort","Allow");
+                        _DoAutomate.ShowActivated = true;
+                        _DoAutomate.Show();
+                    }
+                    else AutomationTimer.Change(TimeSpan.FromSeconds(500), TimeSpan.FromSeconds(15));
+                }
+
+
+                //AutomationTimer.Change(TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(5));
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"AutomationTimer_Elapsed {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
+
+        private void DoOnCloseAutomation(object ThisForm, int id)
+        {
+            try
+            {
+                if (ThisForm is AutoCancel ac && (ac.IsClose || ac.IsCloseAction))
+                {
+                    Hide();
+
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"AutomationTimer_Elapsed {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
+
         public void DeleteFromAutoInsertTable(int filename)
         {
             try
@@ -5697,7 +5782,7 @@ namespace VideoGui
                 Loadsettings();
                 string clientSecret = "", p = "";
                 connectionString = GetConectionString();
-                CreateDBInvoker();
+                CreateDB();
                 connectionString.ExecuteReader("SELECT * FROM SETTINGS WHERE SETTINGNAME = 'CLIENT_SECRET';", (FbDataReader r) =>
                 {
                     clientSecret = (r["SETTINGBLOB"] is byte[] res) ? Encoding.ASCII.GetString(CryptData(res)) : "";
@@ -7401,6 +7486,26 @@ namespace VideoGui
                 string defaultdrive = Path.GetPathRoot(Process.GetCurrentProcess().MainModule.FileName);
                 RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                 bool LoadedKey = (key != null), SetReg = key.GetValueBool("SetAutoLoad", false);
+                dateStartAU = key.GetValueStr("dateStartAU", string.Empty);
+                dateStartAS = key.GetValueStr("dateStartAS", string.Empty);
+                dateEndAU = key.GetValueStr("dateEndAU", string.Empty);
+                dateEndAS = key.GetValueStr("dateEndAS", string.Empty);
+                IsAutoSchedule = key.GetValueBool("AutomationChkAS");
+                IsAutoUpload = key.GetValueBool("AutomationChkAU");
+
+                /* 
+
+                 dtStartAU.Value = (dateStartAU == "" || dateEndAU == "") ? null :
+                     DateTime.Today.Add(TimeSpan.Parse(dateStartAU));
+                 dtEndAU.Value = (dateStartAU == "" || dateEndAU == "") ? null :
+                     DateTime.Today.Add(TimeSpan.Parse(dateEndAU));
+
+                 dtStartAS.Value = (dateStartAS == "" || dateEndAS == "") ? null :
+                    DateTime.Today.Add(TimeSpan.Parse(dateStartAS));
+                 dtEndAU.Value = (dateStartAS == "" || dateEndAS == "") ? null :
+                     DateTime.Today.Add(TimeSpan.Parse(dateEndAS));
+                */
+
                 key?.Close();
                 LineNum = 1;
                 if (SetReg)
