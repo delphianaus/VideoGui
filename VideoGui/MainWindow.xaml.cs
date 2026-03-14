@@ -4993,7 +4993,7 @@ namespace VideoGui
 
                     Passed = (dt.Year > 2000 && dt > DateTime.Now.AddHours(-24)) ? false : Passed;
                     
-                    if (Passed && dtspassed)
+                    if (Passed && dtspassed && MainWindowX.IsActive)
                     {
                         var _DoAutomate = new AutoCancel(DoOnCloseAutomation, $"Allow Automation On Shorts", 30, "Autiomation query",
                             "Abort","Allow");
