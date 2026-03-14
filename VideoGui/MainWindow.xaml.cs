@@ -4967,11 +4967,11 @@ namespace VideoGui
                     // lastupload > 24 hours`
                     if (lastUpload < DateTime.Now.AddHours(-24))
                     {
-                        Passed=true;    
+                        Passed = true;
                     }
                     else if (count < 100)
                     {
-                       Passed=true;
+                        Passed = true;
                     }
                     var startdateAU = DateTime.Parse(dateStartAU);
                     var enddateAU = DateTime.Parse(dateEndAU);
@@ -4992,11 +4992,11 @@ namespace VideoGui
 
 
                     Passed = (dt.Year > 2000 && dt > DateTime.Now.AddHours(-24)) ? false : Passed;
-                    
+
                     if (Passed && dtspassed && MainWindowX.IsActive)
                     {
                         var _DoAutomate = new AutoCancel(DoOnCloseAutomation, $"Allow Automation On Shorts", 30, "Autiomation query",
-                            "Abort","Allow");
+                            "Abort", "Allow");
                         _DoAutomate.ShowActivated = true;
                         _DoAutomate.Show();
                     }
@@ -5018,14 +5018,191 @@ namespace VideoGui
             {
                 if (ThisForm is AutoCancel ac && (ac.IsClose || ac.IsCloseAction))
                 {
-                    Hide();
-
+                    if (IsAutoUpload)
+                    {
+                        Hide();
+                        DoUploadAutomation();
+                    }
                 }
             }
             catch (Exception ex)
             {
                 ex.LogWrite($"AutomationTimer_Elapsed {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
             }
+        }
+
+        private void DoUploadAutomation()
+        {
+            try
+            {
+                string newdir = "", UploadFile = "", PathToCheck = "";
+                int LinkedId = -1 , ShortsIndex = -1;
+                bool Valid = true, Processed = false, IsProcessing = true;
+                RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                string rootfolder = FindUploadPath();
+                string shortsdir = key.GetValueStr("shortsdirectory", "");
+                CancellationTokenSource cts = new();
+                string SQLB = "SELECT * FROM UploadsRecord ORDER BY RDB$RECORD_VERSION DESC ROWS 100;";
+                
+                while (IsProcessing)
+                {
+                    foreach (var sch in SelectedShortsDirectoriesList.Where(x => x.IsActive && x.NumberOfShorts > 0))
+                    {
+                        IsProcessing = false;
+                        newdir = sch.DirectoryName;
+                        LinkedId = sch.LinkedShortsDirectoryId;
+                        PathToCheck = Path.Combine(shortsdir, newdir);
+                        if (Directory.Exists(PathToCheck))
+                        {
+                            int cnt_files = Directory.EnumerateFiles(PathToCheck, "*.mp4", SearchOption.AllDirectories).ToList().Count();
+                            if (cnt_files > 0)
+                            {
+                                rootfolder = PathToCheck;
+                                key.SetValue("UploadPath", rootfolder);
+                                LinkedId = sch.LinkedShortsDirectoryId;
+                                break;
+                            }
+                            else
+                            {
+                                sch.IsActive = false;
+                                sch.NumberOfShorts = 0;
+                                LinkedId = -1;
+                            }
+                            //var Idx = Invoker?.Invoke(this, new CustomParams_GetDirectory(sch.DirectoryName));
+                            //sch.Id = (Idx is int _id && _id != -1) ? _id : sch.Id;
+                        }
+                    }
+                    if (PathToCheck == "")
+                    {
+                        LinkedId = -1;
+                        var item = SelectedShortsDirectoriesList.FirstOrDefault();
+                        item.IsActive = (item is not null) ? true : item.IsActive;
+                    }
+                }
+                key?.Close();
+                if (Directory.Exists(rootfolder))
+                {
+                    bool reload = false;
+                    List<string> files = Directory.EnumerateFiles(rootfolder, "*.mp4", SearchOption.AllDirectories).ToList();
+                    foreach (var file in files.Where(f => !f.Contains("_")))
+                    {
+                        string filename = Path.GetFileNameWithoutExtension(file);
+                        string filePath = Path.GetDirectoryName(file);
+                        string ext = Path.GetExtension(file);
+                        if (filename != "" && filePath != "" && ext != "")
+                        {
+                            string newfile = Path.Combine(filePath, filename + $"_{LinkedId}" + ext);
+                            if (newfile.EndsWith(".mp4"))
+                            {
+                                File.Move(file, newfile);
+                            }
+                            reload = true;
+                        }
+                    }
+                    if (reload)
+                    {
+                        files.Clear();
+                        files = Directory.EnumerateFiles(rootfolder, "*.mp4", SearchOption.AllDirectories).ToList();
+                    }
+                    string firstfile = files.FirstOrDefault();
+                    if (LinkedId != -1)
+                    {
+                        ShortsIndex = LinkedId;
+                        Valid = true;
+                    }
+                    if (firstfile is not null && File.Exists(firstfile) && LinkedId != -1)
+                    {
+                        string fid = Path.GetFileNameWithoutExtension(firstfile).Split('_').LastOrDefault();
+                        string DirName = rootfolder.Split(@"\").ToList().LastOrDefault();
+                        foreach (var item in EditableshortsDirectoryList.Where(s => s.Directory.ToUpper() == DirName))
+                        {
+                            ShortsIndex = item.Id;
+                        }
+
+                        if (ShortsIndex == -1)
+                        {
+                            Valid = DoRematched(ShortsIndex, DirName);
+                        }
+                        else Valid = true;
+                    }
+                }
+                if (Valid)
+                {
+                    WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
+                    string gUrl = webAddressBuilder.Dashboard().Address;
+                    var _scraperModule = new ScraperModule(InvokerHandler<Object>, doOnFinish, gUrl, 100, 15, 0, true);
+                    _scraperModule.ShowActivated = true;
+                    Hide();
+                    _scraperModule.Show();
+                }
+            }
+
+            catch (Exception ex)
+            {
+                ex.LogWrite($"DoUploadAutomation {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
+
+        private bool DoRematched(int ShortsIndex, string DirName)
+        {
+            try
+            {
+                string sql = "SELECT ID FROM SHORTSDIRECTORY WHERE DIRECTORYNAME = @P0";
+                var sid = connectionString.ExecuteScalar(sql, [("@P0", DirName)]).ToInt(-1);
+                int OldId = -1, NewId = -1;
+                foreach (var item in RematchedList.Where(r => r.OldId == ShortsIndex))
+                {
+                    OldId = item.OldId;
+                    NewId = item.NewId;
+                    break;
+                }
+                if (OldId == -1)
+                {
+                    CancellationTokenSource cts = new CancellationTokenSource(2000);
+                    sql = "SELECT NEWID,OLDID FROM REMATCHED WHERE OLDID = @P0";
+                    connectionString.ExecuteReader(sql, [("@P0", ShortsIndex)], cts, (r) =>
+                    {
+                        OldId = (r["OLDID"] is int oldid) ? oldid : -1;
+                        NewId = (r["NEWID"] is int newid) ? newid : -1;
+                        cts.Cancel();
+                    });
+                }
+
+                if ((OldId == -1 && NewId == -1))
+                {
+                    sql = "INSERT INTO REMATCHED(NEWID,OLDID) VALUES (@P0,@P1) returning ID";
+                    int idx = connectionString.ExecuteScalar(sql,
+                        [("@P0", ShortsIndex), ("@P1", sid)]).ToInt(-1);
+                    RematchedList.Add(new Rematched(idx, ShortsIndex, sid, ""));
+                    return true;//, typeof(TResult));
+                }
+                else
+                {
+                    if (NewId != sid)
+                    {
+                        sql = "UPDATE REMATCHED SET NEWID = @P0 WHERE OLDID = @P1";
+                        connectionString.ExecuteNonQuery(sql,
+                            [("@P0", sid), ("@P1", OldId)]);
+                        foreach (var r in RematchedList.Where(s => s.OldId == OldId))
+                        {
+                            r.NewId = sid;
+                            break;
+                        }
+                        return true;   
+                    }
+                    return true;
+                }
+                return false;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"DoRematched {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+                return false;
+            }
+        }
+        private void doOnFinish(object ThisForm, int id)
+        {
+            throw new NotImplementedException();
         }
 
         public void DeleteFromAutoInsertTable(int filename)
