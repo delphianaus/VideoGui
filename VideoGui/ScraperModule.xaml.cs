@@ -535,6 +535,57 @@ namespace VideoGui
                 ex.LogWrite($"Constructor VideoUploader {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
+
+        public ScraperModule(databasehook<object> _Invoker, OnFinishIdObj _OnFinish,
+            string _Default_url,  bool IsAutoUpload, bool IsAutoSchedule,int maxuploads = 100, int slotsperupload = 5)
+        {
+            try
+            {
+                SwapEnabled = false;
+                ScraperType = EventTypes.AutomatedUploadSchedule;
+                UploadsTimer = new System.Threading.Timer(Uploads_TimerEvent_Handler, null, -1, Timeout.Infinite);
+                MaxUploads = maxuploads;
+                DoOnFinish = _OnFinish;
+                DefaultUrl = _Default_url;
+                IsDashboardMode = true;
+                Invoker = _Invoker;
+                IsUnlisted = false;
+                SlotsPerUpload = slotsperupload;
+                InitializeComponent();
+                Closing += (s, e) =>
+                {
+                    TimerSimulate?.Stop();
+                    IsClosing = true;
+                    timer?.Stop();
+                    canceltoken.Cancel();
+                    cancelds();
+                    uploadedcnt = TotalScheduled;
+                    LocationTimer.Stop();
+                    TimerSimulate.Stop();
+                };
+                Closed += (s, e) =>
+                {
+                    IsClosed = true;
+                    DoOnFinish?.Invoke(this, EventId);
+                };
+                webAddressBuilder = new WebAddressBuilder(null, null, "UCdMH7lMpKJRGbbszk5AUc7w");
+                wv2Dictionary.Add(1, wv2A1);//20
+                wv2Dictionary.Add(2, wv2A2);//30
+                wv2Dictionary.Add(3, wv2A3);//40
+                wv2Dictionary.Add(4, wv2A4);//50;
+                wv2Dictionary.Add(5, wv2A5);//60
+                wv2Dictionary.Add(6, wv2A6);//70
+                wv2Dictionary.Add(7, wv2A7);//80
+                wv2Dictionary.Add(8, wv2A8);//90
+                wv2Dictionary.Add(9, wv2A9);//100
+                wv2Dictionary.Add(10, wv2A10);
+                ActiveWebView.Add(1, wv2);
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"Constructor VideoUploader {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+        }
         private void Uploads_TimerEvent_Handler(object? state)
         {
             try
@@ -2210,7 +2261,7 @@ namespace VideoGui
                                 YouTubeLoaded();
                             }
                         }
-                        else if (clickupload && ScraperType == EventTypes.VideoUpload)
+                        else if (clickupload && (ScraperType == EventTypes.VideoUpload || ScraperType == EventTypes.AutomatedUploadSchedule))
                         {
                             wv2.AllowDrop = true;
                             clickupload = false;
@@ -2981,11 +3032,11 @@ namespace VideoGui
                         if (DefaultUrl is not null && DefaultUrl != "")
                         {
                             ActiveWebView[1].ZoomFactor = 0.6;
-                            if (ScraperType != EventTypes.VideoUpload)
+                            if (ScraperType != EventTypes.VideoUpload && ScraperType != EventTypes.AutomatedUploadSchedule)
                             {
                                 ActiveWebView[1].NavigationCompleted += wv2v_NavigationCompleted;
                             }
-                            if (ScraperType == EventTypes.VideoUpload) clickupload = true;
+                            if (ScraperType == EventTypes.VideoUpload || ScraperType == EventTypes.AutomatedUploadSchedule) clickupload = true;
                             ActiveWebView[1].Source = new Uri(DefaultUrl);
                             return true;
                         }
