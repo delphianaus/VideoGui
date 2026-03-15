@@ -442,8 +442,9 @@ namespace CustomComponents.ListBoxExtensions
                 InitializeComponent();
                 ColumnDefinitions = new ObservableCollection<MultiListboxColumnDefinition>();
                 Loaded += MultiListbox_Loaded;
-               
+
                 SizeChanged += MultiListbox_SizeChanged;
+
                 this.DataContext = this;
                 UpdateResizeThumbsVisibility();
             }
@@ -460,6 +461,7 @@ namespace CustomComponents.ListBoxExtensions
                 if (_headerScroller == null)
                 {
                     _headerScroller = GetScrollViewer(lstTitles);
+                 
                     if (_headerScroller != null)
                     {
                         _headerScroller.ScrollChanged += ScrollViewer_ScrollChanged;
@@ -481,6 +483,9 @@ namespace CustomComponents.ListBoxExtensions
                 Debug.WriteLine($"Error in InitializeScrollViewers: {ex}");
             }
         }
+
+        
+
 
         private ScrollViewer GetScrollViewer(DependencyObject element)
         {
@@ -512,22 +517,7 @@ namespace CustomComponents.ListBoxExtensions
                     {
                         targetScroller.ScrollToHorizontalOffset(e.HorizontalOffset);
                     }
-                    _isScrolling = false;
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Error in ScrollViewer_ScrollChanged: {ex}");
-            }
-        }
-
-        private void MultiListbox_SizeChanged(object sender, SizeChangedEventArgs e)
-        {
-            try
-            {
-                if (e.WidthChanged)
-                {
-                    UpdateAdjustedWidth();
+                        UpdateAdjustedWidth();
                     Dispatcher.BeginInvoke(new Action(() =>
                     {
                         foreach (var item in lstBoxUploadItems.Items)
@@ -551,7 +541,47 @@ namespace CustomComponents.ListBoxExtensions
                             }
                         }
                     }), DispatcherPriority.Loaded);
+                    _isScrolling = false;
                 }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error in ScrollViewer_ScrollChanged: {ex}");
+            }
+        }
+
+        private void MultiListbox_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            try
+            {
+                    if (e.WidthChanged)
+                    {
+                        UpdateAdjustedWidth();
+                    }
+                    Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        foreach (var item in lstBoxUploadItems.Items)
+                        {
+                            var container = lstBoxUploadItems.ItemContainerGenerator.ContainerFromItem(item) as ListBoxItem;
+                            if (container != null)
+                            {
+                                var border = VisualTreeHelper.GetChild(container, 0) as Border;
+                                if (border != null)
+                                {
+                                    var contentPresenter = VisualTreeHelper.GetChild(border, 0) as ContentPresenter;
+                                    if (contentPresenter != null)
+                                    {
+                                        var grid = VisualTreeHelper.GetChild(contentPresenter, 0) as Grid;
+                                        if (grid != null)
+                                        {
+                                            InitializeGrid(grid);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }), DispatcherPriority.Loaded);
+
             }
             catch (Exception ex)
             {
@@ -2145,6 +2175,11 @@ namespace CustomComponents.ListBoxExtensions
         private void lstBoxUploadItems_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             ItemSelectionChanged?.Invoke(sender, e);
+        }
+
+        private void lstBoxUploadItems_MouseWheel(object sender, MouseWheelEventArgs e)
+        {
+
         }
 
         private void lstBoxUploadItems_LostFocus(object sender, RoutedEventArgs e)
