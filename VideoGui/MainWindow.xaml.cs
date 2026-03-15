@@ -453,8 +453,7 @@ namespace VideoGui
                 }
                 else
                 {
-                    sqlA = "INSERT INTO MULTISHORTSINFO (PRIORITY,SSHORTSACTIVE,NUMBEROFSHORTS," +
-                     " LINKEDSHORTSDIRECTORYID)" +
+                    sqlA = "INSERT INTO MULTISHORTSINFO(PRIORITY,ISSHORTSACTIVE,NUMBEROFSHORTS,LINKEDSHORTSDIRECTORYID) " +
                      "VALUES (@PRIORITY,@ISACTIVE,@NUMBEROFSHORTS,@LINKEDID) RETURNING ID;";
                     NewId = connectionString.ExecuteScalar(sqlA, [("@PRIORITY",PRIORITY),("@NUMBEROFSHORTS", NumberofShorts),
                     ("@ISACTIVE", IsActive),("@LINKEDID", LinkedId)]).ToInt(-1);

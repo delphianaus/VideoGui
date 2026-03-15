@@ -442,6 +442,7 @@ namespace CustomComponents.ListBoxExtensions
                 InitializeComponent();
                 ColumnDefinitions = new ObservableCollection<MultiListboxColumnDefinition>();
                 Loaded += MultiListbox_Loaded;
+               
                 SizeChanged += MultiListbox_SizeChanged;
                 this.DataContext = this;
                 UpdateResizeThumbsVisibility();
@@ -527,6 +528,29 @@ namespace CustomComponents.ListBoxExtensions
                 if (e.WidthChanged)
                 {
                     UpdateAdjustedWidth();
+                    Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        foreach (var item in lstBoxUploadItems.Items)
+                        {
+                            var container = lstBoxUploadItems.ItemContainerGenerator.ContainerFromItem(item) as ListBoxItem;
+                            if (container != null)
+                            {
+                                var border = VisualTreeHelper.GetChild(container, 0) as Border;
+                                if (border != null)
+                                {
+                                    var contentPresenter = VisualTreeHelper.GetChild(border, 0) as ContentPresenter;
+                                    if (contentPresenter != null)
+                                    {
+                                        var grid = VisualTreeHelper.GetChild(contentPresenter, 0) as Grid;
+                                        if (grid != null)
+                                        {
+                                            InitializeGrid(grid);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }), DispatcherPriority.Loaded);
                 }
             }
             catch (Exception ex)
@@ -736,7 +760,7 @@ namespace CustomComponents.ListBoxExtensions
 
                 // Update visual tree
                 UpdateVisualTree();
-
+                UpdateVisualTree();
                 if (true)
                 {
 
