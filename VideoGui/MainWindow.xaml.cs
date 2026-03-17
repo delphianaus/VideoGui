@@ -3592,19 +3592,34 @@ namespace VideoGui
                     if (TitleId != -1)
                     {
                         int TagCnt = 0;
+                        bool HasShorts = false;
+                        foreach (var shortname in TitleTagsList.Where(s => s.GroupId == TitleId))
+                        {
+                            if (shortname.Description.ToUpper().Replace("#","") == "SHORTS")
+                            {
+                                //HasBaseStr += "#SHORTS ";
+                                HasShorts = true;
+                                break;
+                            }
+                        }
+                        if (!HasShorts) BaseStr += "#SHORTS ";
+
                         foreach (var item2 in TitleTagsList.Where(s => s.GroupId == TitleId))
                         {
                             if (!BaseStr.Contains($"#{item2.Description}"))
                             {
-                                BaseStr += $"#{item2.Description} ";
-                                TagCnt++;
+                                if ((BaseStr + item2.Description).Length < 100)
+                                {
+                                    BaseStr += $"#{item2.Description} ";
+                                    TagCnt++;
+                                }
                             }
                         }
                         if (TagCnt <= 2)
                         {
                             BaseStr = " ";
                             List<string> Tags = new List<string> {
-                               "#TRAINS", "#TRAVEL", "#SHORTS", "#RAILFANS",
+                               "#SHORTS","#TRAINS", "#TRAVEL", "#RAILFANS",
                                "#RAILWAY", "#RAIL"};
 
                             if (BaseStr.Contains("VLINE"))
@@ -4061,6 +4076,21 @@ namespace VideoGui
                     if (TitleId != -1)
                     {
                         int tl = Title.Length;
+                        bool HasShorts = false;
+                        foreach (var shortname in TitleTagsList.Where(s => s.GroupId == TitleId))
+                        {
+                            if (shortname.Description.ToUpper().Replace("#", "") == "SHORTS")
+                            {
+                                //HasBaseStr += "#SHORTS ";
+                                HasShorts = true;
+                                break;
+                            }
+                        }
+                        if (!HasShorts)
+                        {
+                            BaseStr += "#SHORTS ";
+                            tl = Title.Length + "#SHORTS ".Length;
+                        }
                         foreach (var item2 in TitleTagsList.Where(s => s.GroupId == TitleId))
                         {
                             if (tl + $"#{item2.Description} ".Length < 100)
