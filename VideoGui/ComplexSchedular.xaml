@@ -96,7 +96,8 @@
         </Border>
         <MSU:MultiListbox x:Name="msuComplexSchedules" Header="Complex Schedules"
                           Width="913" ItemHeight="15" Canvas.Top="2" 
-                          Margin="0,177,0,0" Height="199" VerticalAlignment="Top" HorizontalAlignment="Left" >
+                          Margin="0,177,0,0" Height="199" VerticalAlignment="Top" 
+                         HorizontalAlignment="Left" >
             <MSU:MultiListbox.ColumnDefinitions>
                 <MSU:MultiListboxColumnDefinition DataField="Id" Width="0" ComponentType="TextBlock"/>
                 <MSU:MultiListboxColumnDefinition DataField="SRC" HeaderText="Source Directory" 

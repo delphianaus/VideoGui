@@ -217,7 +217,7 @@
                           Canvas.Top="9" VerticalAlignment="Top" />
             </Canvas>
         </GroupBox>
-        <Button x:Name="btnClose" Content="Close" HorizontalAlignment="Left" Margin="715,0,0,10" VerticalAlignment="Bottom" Height="25" Width="53" Click="btnClose_Click"/>
+        <Button x:Name="btnClose" Content="Close" HorizontalAlignment="Right" Margin="0,0,10,10" VerticalAlignment="Bottom" Height="25" Width="53" Click="btnClose_Click"/>
         <GroupBox x:Name="grpShortsAutomation" Header="Shorts Upload / Schedule Settings" 
             VerticalAlignment="Top" Margin="3,567,10,0" LostFocus="grpShortsAutomation_LostFocus">
             <Canvas x:Name="cnvAppSettings1" Margin="0,0,6,0" Height="61">
@@ -242,7 +242,11 @@
                     MinWidth="140" Focusable="True" Width="140" Canvas.Left="163" Canvas.Top="37" HorizontalAlignment="Center" VerticalAlignment="Top" />
                 <xctk:TimePicker x:Name="dtEndAS" Format="Custom" 
                     FormatString="hh:mm:ss tt"  
-                    MinWidth="140" Focusable="True" Width="140" Canvas.Left="345" Canvas.Top="37" HorizontalAlignment="Left" VerticalAlignment="Center" />
+                    MinWidth="140" Focusable="True" Width="140" Canvas.Left="345" Canvas.Top="37"
+                                 HorizontalAlignment="Left" VerticalAlignment="Center" />
+                <Button x:Name="btnExceptions" Content="Upload Limits" Height="25" Width="140"
+                        Click="btnExceptions_Click" HorizontalAlignment="Center" Canvas.Left="548" 
+                        Canvas.Top="20" VerticalAlignment="Top"/>
             </Canvas>
         </GroupBox>
     </Grid>

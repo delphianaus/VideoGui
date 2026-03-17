@@ -743,7 +743,54 @@ namespace VideoGui.Models
         }
     }
 
-    public class CustomParams_GetConnectionString()
+    public class CustomParams_AddNewLimit
+    {
+        public DateOnly LimitDate { get; set; } = new DateOnly();
+        public int Limit { get; set; } = 0;
+        public bool IsActive { get; set; } = false;
+        public CustomParams_AddNewLimit(DateOnly _LD,int _Limit, bool _IsActive)
+        {
+            LimitDate = _LD;
+            Limit = _Limit;
+            IsActive = _IsActive;
+
+        }
+    }
+
+    public class CustomParams_DeleteLimit
+    {
+        public int Id { get; set; } = 0;
+        public CustomParams_DeleteLimit(int _Id)
+        {
+            Id = _Id;
+        }
+    }
+    public class CustomParams_SetActiveFlagLimit
+    {
+        public int Id { get; set; } = 0;
+        public bool IsActive { get; set; } = false;        
+
+        public CustomParams_SetActiveFlagLimit(int _Id, bool _IsActive)
+        {
+            Id = _Id;
+            IsActive = _IsActive;
+        }
+    }
+    public class CustomParams_EditLimit
+    {
+        public int Id { get; set; } = 0;
+        public bool IsActive { get; set; } = false;
+        public int Limit { get; set; } = 0;
+
+        public CustomParams_EditLimit(int _Id, bool _IsActive, int _Limit)
+        {
+            Id = _Id;
+            IsActive = _IsActive;
+            Limit = _Limit;
+        }
+    }
+
+    public class CustomParams_GetConnectionString
     {
         public string ConnectionString = "";
     }

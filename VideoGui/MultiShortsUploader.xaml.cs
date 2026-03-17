@@ -87,7 +87,7 @@ namespace VideoGui
         }
 
 
-        public MultiShortsUploader(databasehook<object> _Invoker, OnFinishIdObj _DoOnFinished)
+        public MultiShortsUploader(databasehook<object> _Invoker, OnFinishIdObj _DoOnFinished)    
         {
             try
             {
@@ -222,7 +222,7 @@ namespace VideoGui
             }
         }
 
-        private void LocationChanger_Tick(object? sender, EventArgs e)
+    private void LocationChanger_Tick(object? sender, EventArgs e)
         {
             try
             {

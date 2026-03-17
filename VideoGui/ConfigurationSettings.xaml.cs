@@ -130,7 +130,7 @@ namespace VideoGui
             }
             catch (Exception ex)
             {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name.ToString() + " 17 " + ex.Message);
+                ex.LogWrite($"ConfigurationSettings.LoadSettings {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
             finally
             {
@@ -179,7 +179,7 @@ namespace VideoGui
             }
             catch (Exception ex)
             {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name.ToString() + " BtnCompPath_Click " + ex.Message);
+                ex.LogWrite($"ConfigurationSettings.btnDoneSelectDir_Click {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
         }
         string Root;
@@ -209,7 +209,7 @@ namespace VideoGui
             }
             catch (Exception ex)
             {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+                ex.LogWrite($"ConfigurationSettings.SelectMasterDir {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
                 return string.Empty;
             }
         }
@@ -221,7 +221,7 @@ namespace VideoGui
             }
             catch (Exception ex)
             {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+                ex.LogWrite($"ConfigurationSettings.btnErrorSelectDir_Click {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
 
         }
@@ -235,7 +235,7 @@ namespace VideoGui
             }
             catch (Exception ex)
             {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name.ToString() + " BtnDestPath_Click " + ex.Message);
+                ex.LogWrite($"ConfigurationSettings.BtnCompleted_Click {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
         }
 
@@ -268,20 +268,27 @@ namespace VideoGui
             }
             catch (Exception ex)
             {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+                ex.LogWrite($"ConfigurationSettings.grpDirectorySettings_LostFocus {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
         }
 
         private void grpMpg4_LostFocus(object sender, RoutedEventArgs e)
         {
-            if (IsLoaded && SettingsLoaded)
+            try
             {
-                RegistryKey key = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\VideoProcessor", true);
-                key?.SetValue("qscale", txtqScale.Text);
-                key?.SetValue("qmin", txtMinQ.Text);
-                key?.SetValue("qmax", txtMaxQ.Text);
-                key?.SetValue("vtag", txtVtag.Text);
-                key?.Close();
+                if (IsLoaded && SettingsLoaded)
+                {
+                    RegistryKey key = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\VideoProcessor", true);
+                    key?.SetValue("qscale", txtqScale.Text);
+                    key?.SetValue("qmin", txtMinQ.Text);
+                    key?.SetValue("qmax", txtMaxQ.Text);
+                    key?.SetValue("vtag", txtVtag.Text);
+                    key?.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"ConfigurationSettings.grpMpg4_LostFocus {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
         }
 
@@ -293,7 +300,7 @@ namespace VideoGui
             }
             catch (Exception ex)
             {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+                ex.LogWrite($"ConfigurationSettings.ConfigSettingsWindow_Loaded {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
         }
 
@@ -306,7 +313,7 @@ namespace VideoGui
             }
             catch (Exception ex)
             {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+                ex.LogWrite($"ConfigurationSettings.btnShortsSelectDir_Click {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
         }
 
@@ -331,7 +338,7 @@ namespace VideoGui
             }
             catch (Exception ex)
             {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+                ex.LogWrite($"ConfigurationSettings.grpEncoderSettings_LostFocus {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
         }
 
@@ -343,7 +350,7 @@ namespace VideoGui
             }
             catch (Exception ex)
             {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+                ex.LogWrite($"ConfigurationSettings.btnCompleted720p_Click {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
         }
 
@@ -355,7 +362,7 @@ namespace VideoGui
             }
             catch (Exception ex)
             {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+                ex.LogWrite($"ConfigurationSettings.BtnCompleted4k_Click {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
         }
 
@@ -367,7 +374,7 @@ namespace VideoGui
             }
             catch (Exception ex)
             {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+                ex.LogWrite($"ConfigurationSettings.BtnCompleted4KAdobe_Click {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
         }
 
@@ -379,7 +386,7 @@ namespace VideoGui
             }
             catch (Exception ex)
             {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+                ex.LogWrite($"ConfigurationSettings.btnDoneSelectDir4K_Click {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
         }
 
@@ -391,7 +398,7 @@ namespace VideoGui
             }
             catch (Exception ex)
             {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+                ex.LogWrite($"ConfigurationSettings.btnDoneSelectDir4KAdobe_Click {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
         }
 
@@ -403,7 +410,7 @@ namespace VideoGui
             }
             catch (Exception ex)
             {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+                ex.LogWrite($"ConfigurationSettings.btnDoneSelectDir1440p_Click {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
         }
 
@@ -415,7 +422,7 @@ namespace VideoGui
             }
             catch (Exception ex)
             {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+                ex.LogWrite($"ConfigurationSettings.btnSrc720p_Click {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
         }
 
@@ -427,7 +434,7 @@ namespace VideoGui
             }
             catch (Exception ex)
             {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+                ex.LogWrite($"ConfigurationSettings.btnSrc1440p_Click {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
         }
 
@@ -439,7 +446,7 @@ namespace VideoGui
             }
             catch (Exception ex)
             {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+                ex.LogWrite($"ConfigurationSettings.btnSrc4K_Click {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
         }
 
@@ -451,7 +458,7 @@ namespace VideoGui
             }
             catch (Exception ex)
             {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+                ex.LogWrite($"ConfigurationSettings.btnSrc4KAdobe_Click {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
         }
 
@@ -478,7 +485,7 @@ namespace VideoGui
             }
             catch (Exception ex)
             {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+                ex.LogWrite($"ConfigurationSettings.grpAppSettings_LostFocus {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
         }
 
@@ -512,7 +519,19 @@ namespace VideoGui
             }
             catch (Exception ex)
             {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+                ex.LogWrite($"ConfigurationSettings.grpShortsAutomation_LostFocus {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
+            }
+        }
+
+        private void btnExceptions_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"ConfigurationSettings.btnExceptions_Click {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
         }
     }

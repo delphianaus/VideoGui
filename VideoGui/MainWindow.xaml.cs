@@ -16,6 +16,7 @@ using MS.WindowsAPICodePack.Internal;
 using Nancy;
 using Nancy.Diagnostics;
 using Nancy.Extensions;
+using Nancy.Security;
 using Nancy.TinyIoc;
 using Nancy.ViewEngines;
 using SevenZip;
@@ -172,6 +173,8 @@ namespace VideoGui
         ObservableCollection<Rematched> RematchedList = new ObservableCollection<Rematched>();
         ObservableCollection<ProcessTargets> ProcessTargetsList = new ObservableCollection<ProcessTargets>();
         ObservableCollection<MultiShortsInfo> ShortsDirectoryList = new ObservableCollection<MultiShortsInfo>();
+
+        ObservableCollection<AutoUploadLimits> AutoUploadLimitsList = new ObservableCollection<AutoUploadLimits>();
         ObservableCollection<SelectedShortsDirectories> SelectedShortsDirectoriesList = new ObservableCollection<SelectedShortsDirectories>();
         ObservableCollection<SelectedShortsDirectories> SelectedShortsDirectoriesListTest = new ObservableCollection<SelectedShortsDirectories>();
         List<ShortsDirectory> EditableshortsDirectoryList = new List<ShortsDirectory>();
@@ -324,7 +327,10 @@ namespace VideoGui
             {
                 switch (ThisForm)
                 {
-
+                    case UploadLimits frmuploadLimits:
+                        {
+                            return UploadLimits_Handler<TResult>(tld, frmuploadLimits);
+                        }
                     case ProcessDraftTargets processDraftTargets:
                         {
                             return processDraftTargets_Handler<TResult>(tld, processDraftTargets);
@@ -391,6 +397,111 @@ namespace VideoGui
                         }
 
                 }
+                return default(TResult);
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"InvokerHandler {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+                return default(TResult);
+            }
+        }
+
+        private TResult UploadLimits_Handler<TResult>(object tld, UploadLimits frmuploadLimits)
+        {
+            try
+            {
+                if (tld is CustomParams_GetConnectionString CGCS)
+                {
+                    CGCS.ConnectionString = connectionString;
+                    return (TResult)Convert.ChangeType(connectionString, typeof(TResult));
+                }
+                else if (tld is CustomParams_Initialize cpInit)
+                {
+                    frmuploadLimits.msuLimits.ItemsSource = AutoUploadLimitsList;
+                }
+                else if (tld is CustomParams_EditLimit CPEL)
+                {
+                    bool Exists = AutoUploadLimitsList.Any(s => s.Id == CPEL.Id);
+                    if (Exists)
+                    {
+                        if (Exists)
+                        {
+                            string sl = "UPDATE AUTOUPLOADLIMITS SET LIMITACTIVE = @LA, SET LIMIT @LM WHERE ID = @ID";
+                            connectionString.ExecuteScalar(sl, [("LM",CPEL.Limit),
+                            ("@LA", CPEL.IsActive ? 1 : 0), ("@ID", CPEL.Id)]);
+                            foreach (var limit in AutoUploadLimitsList.Where(s => s.Id == CPEL.Id))
+                            {
+                                limit.LimitActive = CPEL.IsActive;
+                                limit.Limit = CPEL.Limit;
+                                break;
+                            }
+                        }
+
+                    }
+                }
+                else if (tld is CustomParams_DeleteLimit CPDL)
+                {
+                    bool Exists = AutoUploadLimitsList.Any(s => s.Id == CPDL.Id);
+                    if (Exists)
+                    {
+                        connectionString.ExecuteScalar("DELETE FROM AUTOUPLOADLIMITS WHERE ID = @ID", [("ID", CPDL.Id)]);
+                        int i = 0, xp = -1;
+                        for (i = 0; i < AutoUploadLimitsList.Count - 1; i++)
+                        {
+                            if (AutoUploadLimitsList[i].Id == CPDL.Id)
+                            {
+                                xp = i;
+                                break;
+                            }
+                        }
+                        AutoUploadLimitsList.RemoveAt(xp);
+                    }
+                }
+                else if (tld is CustomParams_SetActiveFlagLimit CPSAF)
+                {
+                    bool Exists = AutoUploadLimitsList.Any(s => s.Id == CPSAF.Id);
+                    if (Exists)
+                    {
+                        string sl = "UPDATE AUTOUPLOADLIMITS SET LIMITACTIVE = @LA WHERE ID = @ID";
+                        connectionString.ExecuteScalar(sl, [("@LA", CPSAF.IsActive ? 1 : 0), ("@ID", CPSAF.Id)]);
+                        foreach (var limit in AutoUploadLimitsList.Where(s => s.Id == CPSAF.Id))
+                        {
+                            limit.LimitActive = CPSAF.IsActive;
+                            break;
+                        }
+                    }
+
+                }
+                else if (tld is CustomParams_AddNewLimit CPAL)
+                {
+                    bool Exists = AutoUploadLimitsList.Any(s => s.LimitDate == CPAL.LimitDate);
+                    if (!Exists)
+                    {
+                        string sql = "INSERT INTO AUTOUPLOADLIMITS(LIMITDATE,LIMIT,LIMITACTIVE) " +
+                                       "VALUES(@LD,@LM,@AL) RETURNING ID:";
+                        int id = connectionString.ExecuteScalar(sql, [("@LD",CPAL.LimitDate),
+                        ("@LD",CPAL.Limit), ("@LA",1)]).ToInt(-1);
+                        if (id != -1)
+                        {
+                            AutoUploadLimitsList.Add(new(id, CPAL.Limit, CPAL.LimitDate, true));
+                        }
+                    }
+                    else
+                    {
+                        int Active = (CPAL.IsActive) ? 1 : 0;
+                        int Id = AutoUploadLimitsList.Where(s => s.LimitDate == CPAL.LimitDate).First().Id;
+                        string sq = "Update AUTOUPLOADLIMITS SET LIMIT = @LL, LIMITACTIVE = @LA WHERE ID = @ID";
+                        connectionString.ExecuteScalar(sq, [("@LL", CPAL.Limit), ("@LL", Active), ("@ID", Id)]);
+                        foreach (var limit in AutoUploadLimitsList.Where(s => s.Id == Id))
+                        {
+                            limit.Limit = CPAL.Limit;
+                            limit.LimitActive = CPAL.IsActive;
+                        }
+
+                    }
+                }
+
+
                 return default(TResult);
             }
             catch (Exception ex)
@@ -3595,7 +3706,7 @@ namespace VideoGui
                         bool HasShorts = false;
                         foreach (var shortname in TitleTagsList.Where(s => s.GroupId == TitleId))
                         {
-                            if (shortname.Description.ToUpper().Replace("#","") == "SHORTS")
+                            if (shortname.Description.ToUpper().Replace("#", "") == "SHORTS")
                             {
                                 //HasBaseStr += "#SHORTS ";
                                 HasShorts = true;
@@ -4868,6 +4979,8 @@ namespace VideoGui
                 connectionString.CreateTableIfNotExists(sqlstring);
                 sqlstring = $"create table SHORTSDIRECTORY({Id},DIRECTORYNAME varchar(500), TITLEID INTEGER);";
                 connectionString.CreateTableIfNotExists(sqlstring);
+                sqlstring = $"create table AUTOUPLOADLIMITS({Id},LIMITDATE DATE, LIMITACTIVE SMALLINT,LIMIT INTEGER);";
+                connectionString.CreateTableIfNotExists(sqlstring);
                 connectionString.AddFieldToTable("SHORTSDIRECTORY", "TITLEID", "INTEGER", -1);
                 connectionString.AddFieldToTable("SHORTSDIRECTORY", "DESCID", "INTEGER", -1);
                 sqlstring = $"create table AutoEdits({Id},Source varchar(500),Destination varchar(500),Threshhold varchar(255)," +
@@ -5066,14 +5179,14 @@ namespace VideoGui
             try
             {
                 string newdir = "", UploadFile = "", PathToCheck = "";
-                int LinkedId = -1 , ShortsIndex = -1;
+                int LinkedId = -1, ShortsIndex = -1;
                 bool Valid = true, Processed = false, IsProcessing = true;
                 RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                 string rootfolder = FindUploadPath();
                 string shortsdir = key.GetValueStr("shortsdirectory", "");
                 CancellationTokenSource cts = new();
                 string SQLB = "SELECT * FROM UploadsRecord ORDER BY RDB$RECORD_VERSION DESC ROWS 100;";
-                
+
                 while (IsProcessing)
                 {
                     foreach (var sch in SelectedShortsDirectoriesList.Where(x => x.IsActive && x.NumberOfShorts > 0))
@@ -5218,7 +5331,7 @@ namespace VideoGui
                             r.NewId = sid;
                             break;
                         }
-                        return true;   
+                        return true;
                     }
                     return true;
                 }
@@ -5314,6 +5427,19 @@ namespace VideoGui
         {
             try
             {
+                AutoUploadLimitsList.Clear();
+                connectionString.ExecuteReader("SELECT * FROM AUTOUPLOADLIMITS", (FbDataReader r) =>
+                {
+                    AutoUploadLimitsList.Add(new AutoUploadLimits(r));
+                });
+
+                foreach (var upload in AutoUploadLimitsList.Where(upload => upload.LimitDate < DateOnly.FromDateTime(DateTime.Now.Date)))
+                {
+                    string asql = "SET LIMITACTIVE = @A WHERE ID = @ID;";
+                    connectionString.ExecuteScalar(asql, [("@A", 0), ("@ID", upload.Id)]);
+                    upload.LimitActive = false;
+                }
+
                 thumbnailList.Clear();
                 connectionString.ExecuteReader("SELECT * FROM AUTOINSERT", (FbDataReader r) =>
                 {
