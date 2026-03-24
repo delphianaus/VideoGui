@@ -131,7 +131,7 @@ namespace VideoGui
                 if (LimitDate.Value.HasValue && txtLimit.ToInt(-1) != -1 && Id != -1)
                 {
                     Invoker?.Invoke(this, new CustomParams_EditLimit(
-                     Id, ChkActive.IsChecked.Value, txtLimit.Text.ToInt(-1));
+                     Id, ChkActive.IsChecked.Value, txtLimit.Text.ToInt(-1)));
                 }
             }
             catch (Exception ex)
@@ -148,7 +148,7 @@ namespace VideoGui
                 {
                     Invoker?.Invoke(this, new CustomParams_AddNewLimit(
                      DateOnly.FromDateTime(LimitDate.Value.Value.Date),
-                    txtLimit.Text.ToInt(-1), ChkActive.IsChecked.Value);
+                    txtLimit.Text.ToInt(-1), ChkActive.IsChecked.Value));
                 }
             }
             catch (Exception ex)
