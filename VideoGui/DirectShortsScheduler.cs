@@ -197,7 +197,7 @@ namespace VideoGui
                     videoRequest.Id = videoId;
                     var videoResponse = videoRequest.Execute();// Async(cts.Token);
                     var video = videoResponse.Items.FirstOrDefault();
-                    if (video != null && video.Status is not null && video.Status.PrivacyStatus != "public" )
+                    if (video != null && video.Status is not null && video.Status.PrivacyStatus != "public")
                     {
                         DateTime publishDateTime = ScheduleAt;
                         publishDateTime = DateTime.SpecifyKind(publishDateTime, DateTimeKind.Local);
@@ -241,8 +241,16 @@ namespace VideoGui
                             if (iidx != -1)
                             {
                                 string r = Title_str.Substring(0, iidx - 1);
+
                                 Title_str = r.ToPascalCase() + " " + Title_str.Substring(iidx);
                             }
+
+                            if (Title_str.Length > 100)
+                            {
+                                var indx2 = Title_str.LastIndexOf("#");
+                                Title_str = Title_str.Substring(0, indx2 - 1).Trim();
+                            }
+
                             if (Desc_Str.ToLower().Contains("https://www.patreon.com/c/JustinsTrainJourneys".ToLower()))
                             {
                                 Desc_Str = Desc_Str.Replace("https://www.patreon.com/c/JustinsTrainJourneys",
@@ -280,14 +288,14 @@ namespace VideoGui
                 {
                     string ls = $"YouTube Quota Exceeded @ ";
                     CanSchedule = false;
-                    DoReportQuotaExceeded?.Invoke("") ;
+                    DoReportQuotaExceeded?.Invoke("");
                 }
                 else
                 {
-                    string[] msx = new string[] { "task", "canceled","was" };
+                    string[] msx = new string[] { "task", "canceled", "was" };
                     string[] msx2 = new string[] { "ssl", "connection" };
                     //A task was canceled.
-                    if (message.ToLower().ContainsAll(msx)|| message.ToLower().ContainsAll(msx2))
+                    if (message.ToLower().ContainsAll(msx) || message.ToLower().ContainsAll(msx2))
                     {
                         TaskCanceledScheduled?.Invoke();
                         return FinishType.TaskCancelled;
@@ -400,7 +408,7 @@ namespace VideoGui
                             {
                                 LastScheduledTime = ScheduleDate;
                                 LastGap = GapTime.Minutes;
-                                
+
                                 CurrentTime = CurrentTime.Add(GapTime);
                             }
                             else
@@ -408,7 +416,7 @@ namespace VideoGui
                                 LastScheduledTime = ScheduleDate;
                                 LastGap = GapTime.Minutes;
                             }
-                                return r;
+                            return r;
                         }
                         else
                         {

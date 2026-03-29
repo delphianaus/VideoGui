@@ -42,7 +42,7 @@ namespace CustomComponents.ListBoxExtensions
 
         public static readonly DependencyProperty HeightProperty =
             DependencyProperty.Register(nameof(Height), typeof(double), typeof(MultiListboxColumnDefinition), 
-                new PropertyMetadata(30.0, OnHeightChanged));
+                new PropertyMetadata(13.0, OnHeightChanged));
 
         public double Height
         {

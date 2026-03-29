@@ -118,8 +118,10 @@
                     </MSU:MultiListbox.ItemsContextMenu>
                 </MSU:MultiListbox>
                 <MSU:MultiListbox x:Name="msuSchedules" Header="Active Schedules" 
-                  Width="560" Canvas.Top="168"  VerticalContentAlignment="Bottom" 
-                   Height="218" HorizontalAlignment="Center" ItemHeight="15" VerticalAlignment="Top" MouseDoubleClick="msuSchedules_MouseDoubleClick" >
+                  Width="560" Canvas.Top="168" VerticalContentAlignment="Top" 
+                   Height="218" HorizontalAlignment="Center" ItemHeight="15" 
+                    VerticalAlignment="Top" 
+                    MouseDoubleClick="msuSchedules_MouseDoubleClick" >
                     <MSU:MultiListbox.ColumnDefinitions>
                         <MSU:MultiListboxColumnDefinition DataField="Id" Width="0" ComponentType="TextBlock"/>
                         <MSU:MultiListboxColumnDefinition HeaderText="Shorts Directory" 

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Data.Common;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -127,6 +128,27 @@ namespace CustomComponents.ListBoxExtensions
         {
             get { return (MultiListboxResizeDirection)GetValue(ResizeDirectionProperty); }
             set { SetValue(ResizeDirectionProperty, value); }
+        }
+        public double CompactModeSize
+        {
+            get { return (double)GetValue(CompactModeProperty); }
+            set { SetValue(CompactModeProperty, value); }
+        }
+
+        public static readonly DependencyProperty CompactModeProperty =
+           DependencyProperty.Register("CompactModeSize", typeof(double), typeof(MultiListbox),
+           new PropertyMetadata(30.0, (d, e) => ((MultiListbox)d).OnCompactChange()));
+
+        private void OnCompactChange()
+        {
+            foreach (var coldef in ColumnDefinitions)
+            {
+                if (coldef.ComponentType.ToString().ToLower() != "togglebutton")
+                {
+                    coldef.MinHeight = CompactModeSize;
+                    coldef.Height = CompactModeSize;
+                }
+            }
         }
 
         private static void OnResizeDirectionChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -336,7 +358,7 @@ namespace CustomComponents.ListBoxExtensions
         public static readonly DependencyProperty ItemHeightProperty =
             DependencyProperty.Register(nameof(ItemHeight), typeof(double),
                 typeof(MultiListbox),
-                new PropertyMetadata(30.0, OnHeightChanged));
+                new PropertyMetadata(13.0, OnHeightChanged));
 
         private static void OnHeightChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
@@ -461,7 +483,7 @@ namespace CustomComponents.ListBoxExtensions
                 if (_headerScroller == null)
                 {
                     _headerScroller = GetScrollViewer(lstTitles);
-                 
+
                     if (_headerScroller != null)
                     {
                         _headerScroller.ScrollChanged += ScrollViewer_ScrollChanged;
@@ -484,7 +506,7 @@ namespace CustomComponents.ListBoxExtensions
             }
         }
 
-        
+
 
 
         private ScrollViewer GetScrollViewer(DependencyObject element)
@@ -517,7 +539,7 @@ namespace CustomComponents.ListBoxExtensions
                     {
                         targetScroller.ScrollToHorizontalOffset(e.HorizontalOffset);
                     }
-                        UpdateAdjustedWidth();
+                    UpdateAdjustedWidth();
                     Dispatcher.BeginInvoke(new Action(() =>
                     {
                         foreach (var item in lstBoxUploadItems.Items)
@@ -554,33 +576,33 @@ namespace CustomComponents.ListBoxExtensions
         {
             try
             {
-                    if (e.WidthChanged)
+                if (e.WidthChanged)
+                {
+                    UpdateAdjustedWidth();
+                }
+                Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    foreach (var item in lstBoxUploadItems.Items)
                     {
-                        UpdateAdjustedWidth();
-                    }
-                    Dispatcher.BeginInvoke(new Action(() =>
-                    {
-                        foreach (var item in lstBoxUploadItems.Items)
+                        var container = lstBoxUploadItems.ItemContainerGenerator.ContainerFromItem(item) as ListBoxItem;
+                        if (container != null)
                         {
-                            var container = lstBoxUploadItems.ItemContainerGenerator.ContainerFromItem(item) as ListBoxItem;
-                            if (container != null)
+                            var border = VisualTreeHelper.GetChild(container, 0) as Border;
+                            if (border != null)
                             {
-                                var border = VisualTreeHelper.GetChild(container, 0) as Border;
-                                if (border != null)
+                                var contentPresenter = VisualTreeHelper.GetChild(border, 0) as ContentPresenter;
+                                if (contentPresenter != null)
                                 {
-                                    var contentPresenter = VisualTreeHelper.GetChild(border, 0) as ContentPresenter;
-                                    if (contentPresenter != null)
+                                    var grid = VisualTreeHelper.GetChild(contentPresenter, 0) as Grid;
+                                    if (grid != null)
                                     {
-                                        var grid = VisualTreeHelper.GetChild(contentPresenter, 0) as Grid;
-                                        if (grid != null)
-                                        {
-                                            InitializeGrid(grid);
-                                        }
+                                        InitializeGrid(grid);
                                     }
                                 }
                             }
                         }
-                    }), DispatcherPriority.Loaded);
+                    }
+                }), DispatcherPriority.Loaded);
 
             }
             catch (Exception ex)
@@ -888,7 +910,7 @@ namespace CustomComponents.ListBoxExtensions
                 // do height thingey here
                 var itemHeight = ColumnDefinitions.Any(cd => cd.Height > 0)
                 ? ColumnDefinitions.Max(cd => cd.Height)
-                : 30;
+                : CompactModeSize;
                 if (ItemHeightProperty is not null)
                 {
                     itemHeight = (double)GetValue(ItemHeightProperty);
@@ -1137,12 +1159,12 @@ namespace CustomComponents.ListBoxExtensions
                 // Create a new item template with a Grid
                 var gridFactory = new FrameworkElementFactory(typeof(Grid));
                 gridFactory.SetValue(FrameworkElement.MarginProperty, new Thickness(0, 0, 0, 0));
-                gridFactory.SetValue(FrameworkElement.HeightProperty, 25.0);
+
                 gridFactory.SetValue(Panel.BackgroundProperty, Brushes.White);
 
                 // Store reference to the grid factory for later use
                 _itemGrid = new Grid(); // Temporary grid just for column definitions
-
+                double MinValueT = 0;
                 // Add each column definition and control
                 int columnIndex = 0;
                 foreach (var colDef in ColumnDefinitions)
@@ -1214,7 +1236,30 @@ namespace CustomComponents.ListBoxExtensions
                                 if (colDef.Style != null && colDef.Style.TargetType == typeof(ToggleButton))
                                 {
                                     controlFactory.SetValue(FrameworkElement.StyleProperty, colDef.Style);
+                                    foreach (SetterBase style in (SetterBaseCollection)colDef.Style.Setters)
+                                    {
+                                        if (style is Setter setter)
+                                        {
+                                            var property = setter.Property;
+                                            if (property is not null &&
+                                              property.Name.ToLower() == "height")
+                                            {
+                                                if (setter.Value != null)
+                                                {
+                                                    if (setter.Value is double d)
+                                                    {
+                                                        MinValueT = d;
+                                                    }
+                                                }
+                                            }
+
+                                        }
+
+                                    }
+
                                 }
+
+
                                 break;
                             case "checkbox":
                                 controlFactory.SetBinding(CheckBox.IsCheckedProperty, new Binding(colDef.DataField));
@@ -1271,12 +1316,30 @@ namespace CustomComponents.ListBoxExtensions
                                 break;
                         }
 
+
+                        double _ItemHeight1 = ColumnDefinitions.Any(cd => cd.ToggleButtonHeight > 0)
+                                  ? ColumnDefinitions.Max(cd => cd.ToggleButtonHeight) : CompactModeSize;
+                        double _ItemHeight2 = ColumnDefinitions.Any(cd => cd.Height > 0)
+                                                          ? ColumnDefinitions.Max(cd => cd.Height) : 13;
+
+                        double _ItemHeight = Math.Max(_ItemHeight1, _ItemHeight2);
+
+                        if (MinValueT > 0 && MinValueT > _ItemHeight)
+                        {
+                            _ItemHeight = MinValueT;
+                        }
+
+
+                        gridFactory.SetValue(FrameworkElement.HeightProperty, _ItemHeight);
                         gridFactory.AppendChild(controlFactory);
                     }
 
                     columnIndex++;
                 }
+                foreach (var colDef in ColumnDefinitions)
+                {
 
+                }
                 // Create and set the item template
                 var itemTemplate = new DataTemplate { VisualTree = gridFactory };
                 lstBoxUploadItems.ItemTemplate = itemTemplate;
