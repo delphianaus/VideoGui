@@ -109,7 +109,7 @@ namespace VideoGui
                                    m.DataContext is AutoUploadLimits rp)// && !rp.IsActive)
                 {
                     Id = rp.Id;
-                    LimitDate.Value = rp.LimitDate.ToDateTime(new TimeOnly(0,0,0));
+                    LimitDate.Value = rp.LimitDate.ToDateTime(new TimeOnly(0, 0, 0));
                     txtLimit.Text = rp.Limit.ToString();
                 }
             }

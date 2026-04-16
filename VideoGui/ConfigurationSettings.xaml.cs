@@ -96,7 +96,7 @@ namespace VideoGui
                 dtEndAU.Value = (dateStartAU == "" || dateEndAU == "") ? null :
                     DateTime.Today.Add(TimeSpan.Parse(dateEndAU));
 
-                dtStartAS.Value = (dateStartAS == "" || dateEndAS== "") ? null :
+                dtStartAS.Value = (dateStartAS == "" || dateEndAS == "") ? null :
                    DateTime.Today.Add(TimeSpan.Parse(dateStartAS));
                 dtEndAU.Value = (dateStartAS == "" || dateEndAS == "") ? null :
                     DateTime.Today.Add(TimeSpan.Parse(dateEndAS));

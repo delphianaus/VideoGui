@@ -59,7 +59,7 @@
                     <MSU:MultiListbox.ColumnDefinitions>
                         <MSU:MultiListboxColumnDefinition DataField="Id" Width="0" ComponentType="TextBlock"/>
                         <MSU:MultiListboxColumnDefinition DataField="Title" WidthBinding="TitleWidth"
-                     ContentVerticalAlignment="Top" HeaderText="Title" ComponentType="TextBlock"/>
+                          HeaderText="Title" ComponentType="TextBlock"/>
                         <MSU:MultiListboxColumnDefinition HeaderText="    Title" Width="50" 
                            Style="{StaticResource ToggleSetEditStyle}" 
                            Click="Title_ToggleButtonClick" DataField="IsTitleAvailable" ComponentType="ToggleButton"/>

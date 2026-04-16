@@ -15,11 +15,10 @@
             <MSU:MultiListbox.ColumnDefinitions>
                 <MSU:MultiListboxColumnDefinition DataField="Id" Width="0" ComponentType="TextBlock"/>
                 <MSU:MultiListboxColumnDefinition HeaderText="Limit Date" 
-           WidthBinding="LimitDateWidth"
-           ContentVerticalAlignment="Center" DataField="LimitDate"
+           WidthBinding="LimitDateWidth" DataField="LimitDate"
             ComponentType="DatePicker"/>
                 <MSU:MultiListboxColumnDefinition HeaderText="ACTIVE" WidthBinding="ActiveLimitWidth" 
-            ContentVerticalAlignment="Center" DataField="LimitActive" ComponentType="Checkbox"/>
+DataField="LimitActive" ComponentType="Checkbox"/>
             </MSU:MultiListbox.ColumnDefinitions>
             <MSU:MultiListbox.ItemsContextMenu>
                 <ContextMenu>

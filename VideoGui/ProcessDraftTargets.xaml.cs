@@ -314,7 +314,7 @@ namespace VideoGui
                     if ((SelectedTitleId != _DoTitleSelectFrm.TitleId))
                     {
                         sql = "UPDATE SHORTSDIRECTORY SET TITLEID = @TITLEID WHERE ID = @ID";
-                        connectionStr.ExecuteNonQuery(sql, [("@ID", ShortsIndex), 
+                        connectionStr.ExecuteNonQuery(sql, [("@ID", ShortsIndex),
                             ("@TITLEID", _DoTitleSelectFrm.TitleId)]);
                     }
                     string linkedtitleid = "";
@@ -386,6 +386,6 @@ namespace VideoGui
             }
         }
 
-        
+
     }
 }

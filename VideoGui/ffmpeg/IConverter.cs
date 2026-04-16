@@ -22,7 +22,7 @@ namespace VideoGui.ffmpeg
         event ConverterOnStoppedEventHandler OnConverterDataUpdate;
         event ConverterOnDataEventHandler OnConverteringData;
         event ConverterOnSeekEventHandler OnConverterOnSeek;
-        
+
 
         public IConverter New(_AddConverterProgress data)
         {
@@ -44,7 +44,7 @@ namespace VideoGui.ffmpeg
         IConverter UseMultiThread(bool multiThread);
         IConverter SetOutput(string outputPath, bool IsTwitchStream = false);
 
-        
+
 
         IConverter SetConcat(bool concat, List<string> Files);
         IConverter SetCutList(List<string> cutList);

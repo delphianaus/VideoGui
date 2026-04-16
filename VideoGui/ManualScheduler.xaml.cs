@@ -24,7 +24,7 @@ namespace VideoGui
     public partial class ManualScheduler : Window
     {
         databasehook<Object> Invoker = null;
-        public bool IsClosed = false, IsClosing = false, IsCopy = false, 
+        public bool IsClosed = false, IsClosing = false, IsCopy = false,
             HasValues = false, TestMode = false, RunSchedule = false;
         public Nullable<DateTime> SelectedDate = null;
         public Nullable<TimeOnly> StartTime = null, EndTime = null;
@@ -53,18 +53,18 @@ namespace VideoGui
             try
             {
 
-                bool IsValidDate = (ReleaseDate.Value.HasValue && ReleaseDate.Value.Value.Date >= DateTime.Now.Date );
+                bool IsValidDate = (ReleaseDate.Value.HasValue && ReleaseDate.Value.Value.Date >= DateTime.Now.Date);
                 if (IsValidDate)
                 {
-                    DateOnly date =  DateOnly.FromDateTime(ReleaseDate.Value.Value.Date);
+                    DateOnly date = DateOnly.FromDateTime(ReleaseDate.Value.Value.Date);
                     TimeOnly start = TimeOnly.FromDateTime(ReleaseTimeStart.Value.Value);
-                    var NewDate = date.ToDateTime(start);   
+                    var NewDate = date.ToDateTime(start);
                     if (NewDate < DateTime.Now)
                     {
                         IsValidDate = false;
                     }
                 }
-                RunSchedule = true && IsValidDate; 
+                RunSchedule = true && IsValidDate;
                 Close();
             }
             catch (Exception ex)
@@ -110,11 +110,11 @@ namespace VideoGui
                 if (HasValues)
                 {
                     Invoker?.Invoke(this, new CustomParams_SaveSchedule(SelectedDate.Value,
-                        ReleaseTimeStart.Value.Value.TimeOfDay, 
-                        ReleaseTimeEnd.Value.Value.TimeOfDay, txtMaxSchedules.Text.ToInt(0), chkSchedule.IsChecked.Value)) ;
+                        ReleaseTimeStart.Value.Value.TimeOfDay,
+                        ReleaseTimeEnd.Value.Value.TimeOfDay, txtMaxSchedules.Text.ToInt(0), chkSchedule.IsChecked.Value));
                 }
-            
-            }            
+
+            }
             catch (Exception ex)
             {
                 ex.LogWrite($"GetValues {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");

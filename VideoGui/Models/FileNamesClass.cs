@@ -20,11 +20,11 @@ namespace VideoGui
             _ComboItems = new();
             _SimpleStringProperty = "";
             _IsEnabled = false;
-            _IsCorrect = false ;
+            _IsCorrect = false;
             _IdentifiedAs = false;
         }
 
-        private string _title, _correntName , _InitialPath, _SimpleStringProperty;
+        private string _title, _correntName, _InitialPath, _SimpleStringProperty;
         private List<string> _ComboItems;
         private bool _IsEnabled, _IsCorrect, _IdentifiedAs;
 
@@ -36,7 +36,7 @@ namespace VideoGui
         public string CorrentName { get => _correntName; set { _correntName = value; OnPropertyChanged(); } }
         public bool IdentifiedAs { get => _IdentifiedAs; set { _IdentifiedAs = value; OnPropertyChanged(); } }
         public string InitialPath { get => _InitialPath; set { _InitialPath = value; OnPropertyChanged(); } }
-        
+
         public List<string> ComboItems { get => _ComboItems; set { _ComboItems = value; OnPropertyChanged(); } }
 
         public event PropertyChangedEventHandler PropertyChanged;

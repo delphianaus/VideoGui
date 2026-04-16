@@ -1,4 +1,8 @@
-﻿using System;
+﻿using CliWrap;
+using CliWrap.EventStream;
+using Microsoft.Extensions.Logging;
+using Nancy.ViewEngines;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -13,10 +17,6 @@ using System.Threading.Tasks;
 using System.Transactions;
 using System.Windows;
 using System.Windows.Forms;
-using CliWrap;
-using CliWrap.EventStream;
-using Microsoft.Extensions.Logging;
-using Nancy.ViewEngines;
 using VideoGui.ffmpeg.Events;
 using VideoGui.ffmpeg.Streams;
 using VideoGui.ffmpeg.Streams.Audio;
@@ -182,7 +182,7 @@ namespace VideoGui.ffmpeg
                     if (mtscnt > 450)
                     {
                         int pr = args.LastIndexOf(":");
-                        string p = args.Substring(pr+1).Trim();
+                        string p = args.Substring(pr + 1).Trim();
                         if (p.Contains("=") && numberframes > 0)
                         {
                             var xp = p.IndexOf("=");
@@ -542,7 +542,7 @@ namespace VideoGui.ffmpeg
                     errn = 116;
                     args2x.AddRange(GetStreamsPostInputs());
                     errn = 117;
-                   
+
                     args2x.AddRange(GetFilters());
                     errn = 118;
 
@@ -1309,7 +1309,7 @@ namespace VideoGui.ffmpeg
                 }
                 foreach (IStream stream in _streams)
                 {
-                   
+
                     if (stream is VideoStream vs)
                     {
                         List<string> inputfilter = new List<string>();
@@ -1545,7 +1545,7 @@ namespace VideoGui.ffmpeg
             }
         }
 
-        public IConverter UseTextStream(int textStream = 0, bool UseTextStream=false)
+        public IConverter UseTextStream(int textStream = 0, bool UseTextStream = false)
         {
             try
             {

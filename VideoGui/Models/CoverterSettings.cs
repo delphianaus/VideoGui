@@ -40,7 +40,7 @@ namespace VideoGui.Models
 
         /* MinBitRate, MaxBitRate, BitRateBuffer, VideoWidth, VideoHeight. ArModulas, 
          * ResizeEnable, ArRoundEnable, ArScalingEnabled, VSyncEnable  */
-        public CoverterSettings(int _id, bool _IsDefault, string _MinBitRate, string _MaxBitRate, 
+        public CoverterSettings(int _id, bool _IsDefault, string _MinBitRate, string _MaxBitRate,
             string _BitRateBuffer, string _VideoWidth, string _VideoHeight, string _ArModulas,
             bool _ResizeEnable, bool _ArRoundEnable, bool _ArScalingEnabled, bool _VSyncEnable)
         {

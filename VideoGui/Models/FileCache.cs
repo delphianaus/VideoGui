@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 namespace VideoGui
 {
 
-   
+
     public class FileCache : INotifyPropertyChanged
     {
         private string _SourceFile;
@@ -13,9 +13,9 @@ namespace VideoGui
         private int _SourceFileLength;
         private DateTime _SouceFileDateTime;
         private double _SourceFileSize;
-    
 
-       
+
+
         public string SourceFile { get => _SourceFile; set { _SourceFile = value; OnPropertyChanged(); } }
         public string SourceFilePath { get => _SourceFilePath; set { _SourceFilePath = value; OnPropertyChanged(); } }
         public int SourceFileLength { get => _SourceFileLength; set { _SourceFileLength = value; OnPropertyChanged(); } }

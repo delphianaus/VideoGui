@@ -35,7 +35,7 @@ namespace VideoGui.ffmpeg.Streams.Text
         public StreamType StreamType => StreamType.Text;
         public ITextStream Initialize(string _Codec, TimeSpan _Duration,
             string _CodecInfo, string _Title, string _CodecId, string _Language,
-            int _CompressionMode,int _Default, int _Forced, int _id)
+            int _CompressionMode, int _Default, int _Forced, int _id)
         {
             try
             {
@@ -87,6 +87,6 @@ namespace VideoGui.ffmpeg.Streams.Text
         public bool PostInput => false;
 
         bool IStream.IsCopy => true;
-        public string Path { get ; set; }
+        public string Path { get; set; }
     }
 }

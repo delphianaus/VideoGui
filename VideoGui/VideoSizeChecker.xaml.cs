@@ -80,7 +80,7 @@ namespace VideoGui
             }
         }
 
-       
+
         private async Task DoFileProcessingAsync(string filename)
         {
             try
@@ -92,7 +92,7 @@ namespace VideoGui
                 string finished_dir = LoadedKey ? (string)key.GetValue("CompDirectory", defaultdrive) : string.Empty;
                 key.Close();
                 var FileConverter = new ffmpegbridge();
-                (ffmpeg.Streams.Video.IVideoStream videoStream, 
+                (ffmpeg.Streams.Video.IVideoStream videoStream,
                     ffmpeg.Streams.Audio.IAudioStream AudioStream,
                     List<TextStream> TextStreams,
 
@@ -119,14 +119,14 @@ namespace VideoGui
             try
             {
                 List<Task> MultiThreads = new();
-                int InCompletedTasks = 0, index = 0; 
+                int InCompletedTasks = 0, index = 0;
                 ProgressWindow pgs;
                 pgs = new ProgressWindow(OnCancel, "Scanning Files", SourceDirectory, SourceList.Count);
                 pgs.Show();
                 canclose = false;
                 bool Hidden = true;
                 Hide();
-                
+
                 foreach (string filename in SourceList)
                 {
                     if (cancellationTokenSource.IsCancellationRequested) break;

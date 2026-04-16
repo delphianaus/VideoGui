@@ -1,7 +1,9 @@
-﻿using System;
+﻿using Microsoft.Win32;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -11,15 +13,13 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
+using System.Windows.Markup;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 using VideoGui.Models;
-using System.Windows.Markup;
-using Microsoft.Win32;
 using VideoGui.Models.delegates;
-using FolderBrowserDialog = FolderBrowserEx.FolderBrowserDialog;
 using static VideoGui.ffmpeg.Probe.FormatModel;
-using System.IO;
+using FolderBrowserDialog = FolderBrowserEx.FolderBrowserDialog;
 using Path = System.IO.Path;
 
 namespace VideoGui
@@ -102,8 +102,8 @@ namespace VideoGui
             }
         }
 
-        
-        
+
+
         private void lstSchedules_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
 

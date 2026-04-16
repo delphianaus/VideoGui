@@ -299,7 +299,7 @@ namespace VideoGui
                     MainScroller.Height = height;
                     Canvas.SetTop(btnClose, height - 75);
                 }
-                
+
             }
             catch (Exception ex)
             {

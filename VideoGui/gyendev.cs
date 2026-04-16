@@ -62,9 +62,9 @@ namespace VideoGui
                             {
                                 string ffmpegdate = "";
                                 DateOnly RegFFMPEGDate;
-                                bool ValidKey=false,DateStored = false;
+                                bool ValidKey = false, DateStored = false;
                                 string WebVerDate = veri.Substring(0, 10);
-                                GitVersion = veri[WebVerDate.Length..].Replace("-git-","");
+                                GitVersion = veri[WebVerDate.Length..].Replace("-git-", "");
                                 Version = WebVerDate;
                                 RegistryKey key = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\VideoProcessor", true);
                                 if (key == null)
@@ -98,7 +98,7 @@ namespace VideoGui
                                             ffprobe = (sPath.Contains(ffp)) ? true : ffprobe;
                                         }
                                         downloadff = !(ffmpeg && ffprobe);
-                                        if (DateStored || downloadff )
+                                        if (DateStored || downloadff)
                                         {
                                             DateOnly SavedWebDate;
                                             if ((!downloadff) && (WebVerDate.ParseDate(out SavedWebDate)))
@@ -114,7 +114,7 @@ namespace VideoGui
                                                         (link, filename) = (LNK, FNAME);
                                                     }
                                                 }
-                                                
+
                                             }
                                             else
                                             {
@@ -139,7 +139,7 @@ namespace VideoGui
                 }
                 return (link, filename, Version, GitVersion);
             }
-            else return ("", "" , "", "");
+            else return ("", "", "", "");
         }
     }
 }

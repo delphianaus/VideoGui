@@ -56,14 +56,14 @@ namespace VideoGui
         public static readonly DependencyProperty FileNameWidthProperty =
             DependencyProperty.Register(nameof(FileNameWidth), typeof(double),
                 typeof(MediaImporter), new FrameworkPropertyMetadata(140.0));
-        
+
         public double FileNameWidth
         {
             get => (double)GetValue(FileNameWidthProperty);
             set => SetValue(FileNameWidthProperty, value);
         }
         public static readonly DependencyProperty SuggestedWidthProperty =
-             DependencyProperty.Register(nameof(SuggestedWidth), typeof(double), 
+             DependencyProperty.Register(nameof(SuggestedWidth), typeof(double),
         typeof(MediaImporter), new PropertyMetadata(140.0));
         public double SuggestedWidth
         {
@@ -117,7 +117,7 @@ namespace VideoGui
                 Top = (Top != _top && _top != 0) ? _top : Top;
                 Width = (ActualWidth != _width && _width != 0) ? _width : Width;
                 Height = (ActualHeight != _height && _height != 0) ? _height : Height;
-                HandleResize(Width, Height , true, true);
+                HandleResize(Width, Height, true, true);
 
 
                 LoadingPanel.Visibility = Visibility.Collapsed;
@@ -156,7 +156,7 @@ namespace VideoGui
                         Canvas.SetLeft(btnSelectSourceDir, _width - 55);
                         Canvas.SetLeft(btnClose, _width - 124);
                         txtsrcdir.Width = _width - 180;
-                        double myWidth = (_width - 200 -120) / 2;
+                        double myWidth = (_width - 200 - 120) / 2;
                         if (myWidth < 140) myWidth = 140;
                         GridLength gl = new GridLength(myWidth, GridUnitType.Pixel);
                         SuggestedWidth = myWidth;
@@ -183,7 +183,7 @@ namespace VideoGui
             }
 
         }
-       
+
         private void frmImport_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             try
@@ -321,7 +321,7 @@ namespace VideoGui
                     Thread.Sleep(15);
                 }
                 btnRename.IsEnabled = Invoker.InvokeWithReturn<bool>(this,
-                   new CustomParams_ClearCheck(ClearModes.CheckImports,Rs));//is bool b ? b : false;
+                   new CustomParams_ClearCheck(ClearModes.CheckImports, Rs));//is bool b ? b : false;
                 if (true)
                 {
                     if (msuSchedules.ItemsSource is not null)
@@ -329,7 +329,7 @@ namespace VideoGui
 
                     }
                 }
-            
+
             }
             catch (Exception ex)
             {
@@ -355,7 +355,7 @@ namespace VideoGui
                 {
                     folder = folderBrowserDialog.SelectedFolder;
                     txtsrcdir.Text = folder;
-                    
+
                     var Flist = folder.Split("\\").ToList();
                     int cnt = Flist.Count - 1;
                     if (cnt > 0)
@@ -369,7 +369,7 @@ namespace VideoGui
                             keyx?.Close();
                         }
                     }
-                    
+
                     GetFiles(folder).ConfigureAwait(false);
                 }
             }
@@ -659,7 +659,7 @@ namespace VideoGui
                 if (e.Key == Key.Enter)
                 {
                     var data = txtStart.Text.FromStrToTimeSpan();
-                    Invoker.Invoke(this, 
+                    Invoker.Invoke(this,
                         new CustomParams_SetTimeSpan(data, TimeSpanMode.FromTime));
                 }
             }
@@ -675,7 +675,7 @@ namespace VideoGui
             {
                 if (e.Key == Key.Enter)
                 {
-                    Invoker.Invoke(this, 
+                    Invoker.Invoke(this,
                         new CustomParams_SetTimeSpan(txtEnd.Text.FromStrToTimeSpan(), TimeSpanMode.ToTime));
                 }
             }
@@ -724,7 +724,7 @@ namespace VideoGui
                 {
                     var t = DoCalcs(txtStart.Text);
                     txtStart.Text = t.ToFFmpeg().Replace(".000", "");
-                    Invoker. Invoke(this,
+                    Invoker.Invoke(this,
                          new CustomParams_SetTimeSpan(t, TimeSpanMode.FromTime));
                 }
             }

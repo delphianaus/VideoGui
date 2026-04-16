@@ -1,7 +1,9 @@
-﻿using System;
+﻿using Microsoft.Win32;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -11,16 +13,14 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
+using System.Windows.Markup;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 using VideoGui.Models;
-using System.Windows.Markup;
-using Microsoft.Win32;
 using VideoGui.Models.delegates;
-using FolderBrowserDialog = FolderBrowserEx.FolderBrowserDialog;
 using static VideoGui.ffmpeg.Probe.FormatModel;
-using System.IO;
+using FolderBrowserDialog = FolderBrowserEx.FolderBrowserDialog;
 using Path = System.IO.Path;
 
 namespace VideoGui
@@ -119,7 +119,7 @@ namespace VideoGui
             {
                 chkDeleteMonitored.MouseLeave += MouseLeaveEventHander;
                 chkPersistantSource.MouseLeave += MouseLeaveEventHander;
-              ///  ComboShortType.MouseLeave += MouseLeaveEventHander;
+                ///  ComboShortType.MouseLeave += MouseLeaveEventHander;
                 ChkShorts.MouseLeave += MouseLeaveEventHander;
                 Chk720P.Click += OnMouseClick;
                 ChkCut.Click += OnMouseClick;
@@ -500,7 +500,7 @@ namespace VideoGui
                                     ChkShorts.IsChecked = false;
                                     ChkEnableTrim.IsChecked = false;
                                     ChkCut.IsChecked = false;
-                                  //  ComboShortType.Visibility = Visibility.Hidden;
+                                    //  ComboShortType.Visibility = Visibility.Hidden;
                                 }
                                 break;
                             }
@@ -529,7 +529,7 @@ namespace VideoGui
                                     Chk720P.IsChecked = false;
                                     ChkShorts.IsChecked = false;
                                     ChkCut.IsChecked = false;
-                                   // ComboShortType.Visibility = Visibility.Hidden;
+                                    // ComboShortType.Visibility = Visibility.Hidden;
                                 }
                                 break;
                             }
@@ -1121,13 +1121,13 @@ namespace VideoGui
                                 txtMuxExt.Visibility = (IsCheckedMux) ? Visibility.Visible : Visibility.Hidden;
                                 lblmux.Visibility = txtMuxExt.Visibility;
                                 btnAddMux.Visibility = txtMuxExt.Visibility;
-                               // ComboShortType.SelectedIndex = -1;
+                                // ComboShortType.SelectedIndex = -1;
                                 Chk720P.IsChecked = false;
                                 ChkEnableTrim.IsChecked = false;
                                 ChkCut.IsChecked = false;
                                 ChkShorts.IsChecked = false;
                                 ChkTwitch.IsChecked = false;
-                              // ComboShortType.Visibility = Visibility.Hidden;
+                                // ComboShortType.Visibility = Visibility.Hidden;
                                 break;
                             }
                         case "Chk720P":
@@ -1144,14 +1144,14 @@ namespace VideoGui
                                     ChkEnableTrim.IsChecked = false;
                                     ChkCut.IsChecked = false;
                                     txtdestdir.Text = destinationdir;
-                                   // ComboShortType.Visibility = Visibility.Hidden;
+                                    // ComboShortType.Visibility = Visibility.Hidden;
                                 }
                                 break;
                             }
                         case "ChkShorts":
                             {
                                 bool IsChecked = Chk720P.IsChecked.Value || CompChecked;
-                               // ComboShortType.SelectedIndex = (!IsChecked) ? -1 : ComboShortType.SelectedIndex;
+                                // ComboShortType.SelectedIndex = (!IsChecked) ? -1 : ComboShortType.SelectedIndex;
                                 SetEditboxes(IsChecked);
                                 if (CompChecked)
                                 {
@@ -1161,9 +1161,9 @@ namespace VideoGui
                                     Chk720P.IsChecked = false;
                                     ChkEnableTrim.IsChecked = false;
                                     ChkCut.IsChecked = false;
-                                   // ComboShortType.SelectedIndex = 1;
+                                    // ComboShortType.SelectedIndex = 1;
                                     txtdestdir.Text = destinationdir;
-                                   // ComboShortType.Visibility = Visibility.Visible;
+                                    // ComboShortType.Visibility = Visibility.Visible;
                                 }
                                 break;
                             }
@@ -1184,7 +1184,7 @@ namespace VideoGui
                                 {
                                     txtMuxExt.Visibility = (!CompChecked) ? Visibility.Visible : Visibility.Hidden;
                                     lblmux.Visibility = txtMuxExt.Visibility;
-                                  //  ComboShortType.SelectedIndex = -1;// IsChecked = false;
+                                    //  ComboShortType.SelectedIndex = -1;// IsChecked = false;
                                     Chk720P.IsChecked = false;
                                     ChkEnableTrim.IsChecked = false;
                                     ChkCut.IsChecked = false;
@@ -1209,7 +1209,7 @@ namespace VideoGui
                                     ChkShorts.IsChecked = false;
                                     ChkCut.IsChecked = false;
                                     txtdestdir.Text = adobedir;
-                                  //  ComboShortType.Visibility = Visibility.Hidden;
+                                    //  ComboShortType.Visibility = Visibility.Hidden;
                                 }
                                 break;
                             }

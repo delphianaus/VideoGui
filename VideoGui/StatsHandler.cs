@@ -446,7 +446,7 @@ namespace VideoGui
                 if ((RunningStats.Count > 0) && (percents > 0))
                 {
                     percents /= RunningStats.Count;
-                    ProgressValues?.Invoke(Math.Round(percents,1).ToString() +" %", percents);
+                    ProgressValues?.Invoke(Math.Round(percents, 1).ToString() + " %", percents);
                 }
             }
 

@@ -43,7 +43,7 @@ namespace VideoGui.Models
                 ex.LogWrite($"AppliedSchedules reader {this} {MethodBase.GetCurrentMethod().Name} {ex.Message}");
             }
         }
-        
+
         public event PropertyChangedEventHandler PropertyChanged;
         protected void OnPropertyChanged([CallerMemberName] string name = null)
         {

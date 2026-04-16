@@ -23,19 +23,18 @@
                 </Setter>
             </Style>
         </Grid.Resources>
-        
+
         <!-- Top resize thumb -->
         <Thumb x:Name="topThumb" Height="8" VerticalAlignment="Top" Margin="0,-4,0,0" 
                Cursor="SizeNS" DragDelta="TopThumb_DragDelta"/>
-               
+
         <!-- Bottom resize thumb -->
         <Thumb x:Name="bottomThumb" Height="8" VerticalAlignment="Bottom" Margin="0,0,0,-4" 
                Cursor="SizeNS" DragDelta="BottomThumb_DragDelta"/>
-               
+
         <GroupBox x:Name="brdmain" 
                   BorderBrush="{Binding BorderBrush, RelativeSource={RelativeSource AncestorType={x:Type local:MultiListbox}}}" 
                   BorderThickness="{Binding BorderThickness, RelativeSource={RelativeSource AncestorType={x:Type local:MultiListbox}}}" 
-                  Margin="{Binding BorderMargin, RelativeSource={RelativeSource AncestorType={x:Type local:MultiListbox}}}" 
                   Width="{Binding Width, RelativeSource={RelativeSource AncestorType={x:Type local:MultiListbox}}}" 
                   Height="{Binding Height, RelativeSource={RelativeSource AncestorType={x:Type local:MultiListbox}}}" 
                   HorizontalAlignment="Left" VerticalAlignment="Top"
@@ -73,7 +72,6 @@
                 </ListBox>
                 <ListBox x:Name="lstBoxUploadItems" 
                          DockPanel.Dock="Top"
-                         Height="Auto"
                          ScrollViewer.HorizontalScrollBarVisibility="Auto"
                          ScrollViewer.CanContentScroll="True"
                          ScrollViewer.VerticalScrollBarVisibility="Auto"
@@ -81,6 +79,7 @@
                          HorizontalAlignment="Stretch"
                          VerticalAlignment="Stretch"
                          MouseWheel="lstBoxUploadItems_MouseWheel"
+                         Margin="{Binding BorderItemMargin, RelativeSource={RelativeSource AncestorType={x:Type local:MultiListbox}}}"
                          SelectionMode="{Binding SelectionMode, RelativeSource={RelativeSource AncestorType={x:Type local:MultiListbox}}}"
                          ItemsSource="{Binding ItemsSource, RelativeSource={RelativeSource AncestorType={x:Type local:MultiListbox}}}"
                          SelectionChanged="lstBoxUploadItems_SelectionChanged"

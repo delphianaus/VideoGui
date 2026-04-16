@@ -67,7 +67,7 @@ namespace VideoGui.Models
         {
             VideoId = _VideoId;
             Title = _Title;
-         
+
             Description = _Description;
         }
     }
@@ -84,7 +84,7 @@ namespace VideoGui.Models
     {
         public CustomParams_ScheduleRestartCheck()
         {
-                
+
         }
     }
 
@@ -162,7 +162,7 @@ namespace VideoGui.Models
     {
         public bool Ascending = false;
         public int Id = -1, _CurrentPriority = -1;
-        public CustomParams_ChangePriority(int _id,int CurrentPriority,bool Asc = true)
+        public CustomParams_ChangePriority(int _id, int CurrentPriority, bool Asc = true)
         {
             Ascending = Asc;
             Id = _id;
@@ -748,7 +748,7 @@ namespace VideoGui.Models
         public DateOnly LimitDate { get; set; } = new DateOnly();
         public int Limit { get; set; } = 0;
         public bool IsActive { get; set; } = false;
-        public CustomParams_AddNewLimit(DateOnly _LD,int _Limit, bool _IsActive)
+        public CustomParams_AddNewLimit(DateOnly _LD, int _Limit, bool _IsActive)
         {
             LimitDate = _LD;
             Limit = _Limit;
@@ -768,7 +768,7 @@ namespace VideoGui.Models
     public class CustomParams_SetActiveFlagLimit
     {
         public int Id { get; set; } = 0;
-        public bool IsActive { get; set; } = false;        
+        public bool IsActive { get; set; } = false;
 
         public CustomParams_SetActiveFlagLimit(int _Id, bool _IsActive)
         {

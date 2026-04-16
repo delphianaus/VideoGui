@@ -33,7 +33,7 @@ namespace VideoGui.Models
         public void AddVideoId(string _videoId)
         {
             VideoId = _videoId;
-        }   
+        }
 
         public void AddFileName(string _filename)
         {

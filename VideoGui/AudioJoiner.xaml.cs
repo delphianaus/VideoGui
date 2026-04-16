@@ -340,7 +340,7 @@ namespace VideoGui
 
                     string srcBase = folder;
                     string destBase = Path.GetDirectoryName(Dest) ?? "";
-                    if ((destBase.EndsWith("dest")|| (!string.Equals(srcBase, destBase, StringComparison.OrdinalIgnoreCase))))
+                    if ((destBase.EndsWith("dest") || (!string.Equals(srcBase, destBase, StringComparison.OrdinalIgnoreCase))))
                     {
                         Dest = Path.Combine(srcBase, "dest");
                         if (!Directory.Exists(Dest))
@@ -353,7 +353,7 @@ namespace VideoGui
                         }
                     }
 
-                   
+
                     txtDestDir.Text = Dest;
                     txtsrcdir.Text = folder;
                     GetFiles(folder).ConfigureAwait(false);

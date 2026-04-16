@@ -21,7 +21,7 @@ namespace VideoGui.Models
         public string TitleTag { get => _TitleTag; set { _TitleTag = value; OnPropertyChanged(); } }
         public bool IsShortVideo { get => _IsShortVideo; set { _IsShortVideo = value; OnPropertyChanged(); } }
 
-        
+
 
         public Descriptions(FbDataReader reader)
         {

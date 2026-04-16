@@ -8,7 +8,7 @@ namespace VideoGui.Models
 {
     public class IdhasUpdated
     {
-        public int id { get; set; } =-1;
+        public int id { get; set; } = -1;
         public bool hasUpdated { get; set; } = false;
         public IdhasUpdated(int _id, bool _hasUpdated = false)
         {

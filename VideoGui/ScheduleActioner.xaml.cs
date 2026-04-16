@@ -39,7 +39,7 @@ namespace VideoGui
                 InitializeComponent();
                 Invoker = _Invoker;
                 Closing += (s, e) => { IsClosing = true; };
-                Closed += (s, e) => { IsClosed = true; DoOnFinish?.Invoke(this,-1); };
+                Closed += (s, e) => { IsClosed = true; DoOnFinish?.Invoke(this, -1); };
             }
             catch (Exception ex)
             {
@@ -94,7 +94,7 @@ namespace VideoGui
             }
         }
 
-       
+
 
         private void BtnSelectAction_Click(object sender, RoutedEventArgs e)
         {
@@ -194,8 +194,8 @@ namespace VideoGui
                     txtActionName.Text = (ast.PersistId != -1) ? ast.Title : "";
                     if (ast.IsClosing)
                     {
-                       Thread.Sleep(100);
-                       System.Windows.Forms.Application.DoEvents();
+                        Thread.Sleep(100);
+                        System.Windows.Forms.Application.DoEvents();
                     }
                     ast = null;
                 }

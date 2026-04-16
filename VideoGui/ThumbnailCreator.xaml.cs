@@ -443,7 +443,7 @@ namespace VideoGui
             {
                 var step = txtStep.Text.ToInt(1);
                 if (step < 0) step = 1;
-                step = (!Direction) ? step : -step; 
+                step = (!Direction) ? step : -step;
                 bool Proceed = false;
                 if (btnName.EndsWith("Margin"))
                 {

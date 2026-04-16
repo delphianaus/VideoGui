@@ -55,7 +55,7 @@ namespace VideoGui
         public static readonly DependencyProperty ShortsDirectoryNameWidthProperty =
             DependencyProperty.Register(nameof(ShortsDirectoryNameWidth), typeof(double),
                 typeof(MultiShortsUploader),
-                new FrameworkPropertyMetadata(375.0));
+                new FrameworkPropertyMetadata(275.0));
 
         public double ShortsDirectoryNameWidth
         {
@@ -66,7 +66,7 @@ namespace VideoGui
         public static readonly DependencyProperty MultiShortsDirectoryNameWidthProperty =
             DependencyProperty.Register(nameof(MultiShortsDirectoryNameWidth), typeof(double),
                 typeof(MultiShortsUploader),
-                new FrameworkPropertyMetadata(375.0));
+                new FrameworkPropertyMetadata(275.0));
 
         public double PriorityWidth
         {
@@ -77,7 +77,7 @@ namespace VideoGui
         public static readonly DependencyProperty PriorityWidthProperty =
             DependencyProperty.Register(nameof(PriorityWidth), typeof(double),
                 typeof(MultiShortsUploader),
-                new FrameworkPropertyMetadata(50.0));
+                new FrameworkPropertyMetadata(60.0));
 
         //ShortsDirectoryNameWidth & MultiShortsDirectoryNameWidth
         public double MultiShortsDirectoryNameWidth
@@ -87,7 +87,7 @@ namespace VideoGui
         }
 
 
-        public MultiShortsUploader(databasehook<object> _Invoker, OnFinishIdObj _DoOnFinished)    
+        public MultiShortsUploader(databasehook<object> _Invoker, OnFinishIdObj _DoOnFinished)
         {
             try
             {
@@ -160,11 +160,20 @@ namespace VideoGui
             {
                 connectionStr = Invoker.InvokeWithReturn<string>(this, new CustomParams_GetConnectionString());
                 RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                var _w = key?.GetValue("MSUWidth");
+                var _h = key?.GetValue("MSUHeight");
+                var mhh = key?.GetValue("MSUSHortsHeight");
+                
+                Width = (_w is not null) ? _w.ToDouble() : Width;
+                Height = (_h is not null) ? _h.ToDouble() : Height;
+
+
                 string rootfolder = FindUploadPath();
                 string uploadsnumber = key.GetValueStr("UploadNumber", "5");
                 string MaxUploads = key.GetValueStr("MaxUploads", "100");
                 txtMaxUpload.Text = uploadsnumber.NotNullOrEmpty() ? uploadsnumber : txtMaxUpload.Text;
                 txtTotalUploads.Text = MaxUploads.NotNullOrEmpty() ? MaxUploads : txtTotalUploads.Text;
+                
                 Invoker?.Invoke(this, new CustomParams_Initialize());
                 key?.Close();
                 Ready = false;
@@ -222,7 +231,7 @@ namespace VideoGui
             }
         }
 
-    private void LocationChanger_Tick(object? sender, EventArgs e)
+        private void LocationChanger_Tick(object? sender, EventArgs e)
         {
             try
             {
@@ -309,7 +318,7 @@ namespace VideoGui
         {
             try
             {
-                if (IsLoaded && Ready)
+                if (IsLoaded)
                 {
                     if (_isFirstResize)
                     {
@@ -710,7 +719,7 @@ namespace VideoGui
                             {
                                 int Id = -1;
                                 foreach (var rp in msuSchedules.ItemsSource.OfType<SelectedShortsDirectories>().Where(x => !x.IsActive && x.NumberOfShorts > 0).OrderBy(i => i.Priority))
-                                { 
+                                {
                                     LinkedId = rp.LinkedShortsDirectoryId;
                                     string _newpaths = Path.Combine(BaseDir, rp.DirectoryName);
                                     shortsleft = Directory.EnumerateFiles(_newpaths, "*.mp4", SearchOption.AllDirectories).ToList().Count();
@@ -1325,7 +1334,7 @@ namespace VideoGui
 
         private void tbAutoUpload_LostFocus(object sender, RoutedEventArgs e)
         {
-            
+
         }
 
         private void MenuItem_AddToPriority(object sender, RoutedEventArgs e)
@@ -1335,7 +1344,7 @@ namespace VideoGui
                 if (e.OriginalSource is MenuItem m &&
                     m.DataContext is SelectedShortsDirectories rp)// && !rp.IsActive)
                 {
-                    Invoker?.Invoke(this, new CustomParams_ChangePriority(rp.Id, rp.Priority,true));
+                    Invoker?.Invoke(this, new CustomParams_ChangePriority(rp.Id, rp.Priority, true));
                 }
             }
             catch (Exception ex)
@@ -1351,7 +1360,7 @@ namespace VideoGui
                 if (e.OriginalSource is MenuItem m &&
                     m.DataContext is SelectedShortsDirectories rp)// && !rp.IsActive)
                 {
-                    Invoker?.Invoke(this, new CustomParams_ChangePriority(rp.Id, rp.Priority,false));
+                    Invoker?.Invoke(this, new CustomParams_ChangePriority(rp.Id, rp.Priority, false));
                 }
             }
             catch (Exception ex)

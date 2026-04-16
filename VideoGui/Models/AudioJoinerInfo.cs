@@ -11,7 +11,7 @@ namespace VideoGui.Models
     public class AudioJoinerInfo : INotifyPropertyChanged
     {
         string _FileName = "";
-        string _Status= "";
+        string _Status = "";
 
         TimeSpan _TimeData = TimeSpan.Zero;
 

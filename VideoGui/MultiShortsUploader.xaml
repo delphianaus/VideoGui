@@ -3,12 +3,12 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:VideoGui" Loaded="Window_Loaded"
+        xmlns:toggle="clr-namespace:ToggleClass;assembly=ToggleClass"
         xmlns:MSU="clr-namespace:CustomComponents.ListBoxExtensions;assembly=CustomComponents"
         SizeChanged="Window_SizeChanged" 
         ResizeMode="CanResize" WindowStartupLocation="CenterScreen" 
         WindowStyle="ToolWindow" KeyDown="frmMultiShortsUploader_KeyDown"
-        mc:Ignorable="d" 
+        mc:Ignorable="d" Loaded="Window_Loaded"
         Title="Multi Shorts Uploader" Height="439" Width="559">
     <Window.Resources>
         <BitmapImage x:Key="SET" UriSource="icons/set.png"/>
@@ -17,12 +17,12 @@
         <BitmapImage x:Key="STEPOFF" UriSource="icons/stepoff.png"/>
         <BitmapImage x:Key="AUTOON" UriSource="icons/set.png"/>
         <BitmapImage x:Key="AUTOOFF" UriSource="icons/edit.png"/>
-        <Style x:Key="ToggleSetEditStyle" TargetType="{x:Type ToggleButton}">
-            <Setter Property="Height" Value="23"/>
-            <Setter Property="Width" Value="45"/>
+        <Style x:Key="ToggleSetEditStyle" TargetType="{x:Type toggle:ToggleButtonEx}">
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="Width" Value="50"/>
             <Setter Property="Template">
                 <Setter.Value>
-                    <ControlTemplate TargetType="{x:Type ToggleButton}">
+                    <ControlTemplate TargetType="{x:Type toggle:ToggleButtonEx}">
                         <Image x:Name="PART_Image"  />
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsChecked" Value="true">
@@ -37,8 +37,8 @@
             </Setter>
         </Style>
         <Style x:Key="ToggleStepStyle" TargetType="{x:Type ToggleButton}">
-            <Setter Property="Height" Value="23"/>
-            <Setter Property="Width" Value="45"/>
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="Width" Value="50"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="{x:Type ToggleButton}">
@@ -55,13 +55,13 @@
                 </Setter.Value>
             </Setter>
         </Style>
-        
-        <Style x:Key="ToggleSetAutoStyle" TargetType="{x:Type ToggleButton}">
+
+        <Style x:Key="ToggleSetAutoStyle" TargetType="{x:Type toggle:ToggleButtonEx}">
             <Setter Property="Height" Value="23"/>
             <Setter Property="Width" Value="45"/>
             <Setter Property="Template">
                 <Setter.Value>
-                    <ControlTemplate TargetType="{x:Type ToggleButton}">
+                    <ControlTemplate TargetType="{x:Type toggle:ToggleButtonEx}">
                         <Image x:Name="PART_Image"  />
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsChecked" Value="true">
@@ -99,15 +99,15 @@
             <!-- Main Content -->
             <Canvas x:Name="MainContent" Grid.Row="1" Height="420" 
                     HorizontalAlignment="Center" Width="558" VerticalAlignment="Center">
-                <MSU:MultiListbox x:Name="msuShorts" Header="Active Shorts Directory" ItemHeight="15"
-                   HorizontalAlignment="Left" VerticalAlignment="Center" Width="560" Height="162" 
-                     SizeChanged="msuShorts_SizeChanged" ResizeDirection="Bottom" Canvas.Top="0">
+                <MSU:MultiListbox x:Name="msuShorts" Header="Active Shorts Directory" Canvas.Top="0"
+                  ItemHeight="18" FontSize="11.8" HorizontalAlignment="Left" VerticalAlignment="Center" Width="560" Height="162" 
+                     SizeChanged="msuShorts_SizeChanged" ResizeDirection="Bottom" >
                     <MSU:MultiListbox.ColumnDefinitions>
                         <MSU:MultiListboxColumnDefinition HeaderText="Shorts Directory" 
                       DataField="DirectoryName" WidthBinding="ShortsDirectoryNameWidth"  
                          FontWeight="AutoFontWeight"  ComponentType="TextBlock"/>
                         <MSU:MultiListboxColumnDefinition HeaderText="Number Of Shorts" Width="105" 
-                        ContentHorizontalAlignment="Center" FontWeight="AutoFontWeight" 
+                        FontWeight="AutoFontWeight" 
                         DataField="NumberOfShorts" ComponentType="TextBlock"/>
                     </MSU:MultiListbox.ColumnDefinitions>
                     <MSU:MultiListbox.ItemsContextMenu>
@@ -119,31 +119,32 @@
                 </MSU:MultiListbox>
                 <MSU:MultiListbox x:Name="msuSchedules" Header="Active Schedules" 
                   Width="560" Canvas.Top="168" VerticalContentAlignment="Top" 
-                   Height="218" HorizontalAlignment="Center" ItemHeight="15" 
-                    VerticalAlignment="Top" 
+                   Height="218" HorizontalAlignment="Center"  
+                    VerticalAlignment="Top"  ItemHeight="25" FontSize="12"
+                    ItemsHorizontalAlignment="Left" ItemsVerticalAlignment="Center"
                     MouseDoubleClick="msuSchedules_MouseDoubleClick" >
                     <MSU:MultiListbox.ColumnDefinitions>
                         <MSU:MultiListboxColumnDefinition DataField="Id" Width="0" ComponentType="TextBlock"/>
                         <MSU:MultiListboxColumnDefinition HeaderText="Shorts Directory" 
-                           WidthBinding="MultiShortsDirectoryNameWidth"
-                           ContentVerticalAlignment="Center" DataField="DirectoryName"
-                            FontWeight="AutoFontWeight" Foreground="AutoFontColor"
-                            ComponentType="TextBlock"/>
-                        <MSU:MultiListboxColumnDefinition HeaderText="Priority" WidthBinding="PriorityWidth" 
-                            ContentVerticalAlignment="Center" DataField="Priority" ComponentType="TextBlock"
-                            FontWeight="AutoFontWeight" Foreground="AutoFontColor" />
-                        <MSU:MultiListboxColumnDefinition HeaderText="Number of Shorts" 
-                 ContentHorizontalAlignment="Center" FontWeight="AutoFontWeight" Foreground="AutoFontColor"
-                 DataField="NumberOfShorts" Width="105" ComponentType="TextBlock"/>
-                        <MSU:MultiListboxColumnDefinition HeaderText="    Title" Width="50" 
-                   Style="{StaticResource ToggleSetEditStyle}" 
-                   Click="Title_ToggleButtonClick" DataField="IsTitleAvailable" ComponentType="ToggleButton"/>
-                        <MSU:MultiListboxColumnDefinition HeaderText="    Desc" Width="50"
-                  Click="Desc_ToggleButtonClick" Style="{StaticResource ToggleSetEditStyle}"
-                  DataField="IsDescAvailable" ComponentType="ToggleButton"/>
-                        <MSU:MultiListboxColumnDefinition HeaderText="        Last Uploaded" FontWeight="AutoFontWeight"  Foreground="AutoFontColor"
-                   ContentVerticalAlignment="Center" ContentHorizontalAlignment="Center" 
-                   DataField="LastUploadedFile" Width="180" ComponentType="TextBlock"/>
+                           WidthBinding="MultiShortsDirectoryNameWidth" DataField="DirectoryName"
+                           FontWeight="AutoFontWeight" Foreground="AutoFontColor"
+                           ComponentType="TextBlock"/>
+                        <MSU:MultiListboxColumnDefinition HeaderText="Priority" 
+                           WidthBinding="PriorityWidth"  DataField="Priority" ComponentType="TextBlock"
+                           FontWeight="AutoFontWeight" Foreground="AutoFontColor" />
+                        <MSU:MultiListboxColumnDefinition HeaderText="# of Shorts" 
+                           FontWeight="AutoFontWeight" Foreground="AutoFontColor"
+                           DataField="NumberOfShorts" Width="65" ComponentType="TextBlock"/>
+                        <MSU:MultiListboxColumnDefinition HeaderText="Title" 
+                            HeaderWidth="50.0" DataField="IsTitleAvailable" HeaderHorizontalAlignment="Center"
+                            Click="Title_ToggleButtonClick" HeaderMargin="7,0,0,0" ItemIsManipulationEnabled="True"
+                            Style="{StaticResource ToggleSetEditStyle}"  ComponentType="ToggleButtonEx"/>
+                        <MSU:MultiListboxColumnDefinition HeaderText="Desc" HeaderWidth="50" 
+                             Click="Desc_ToggleButtonClick" Style="{StaticResource ToggleSetEditStyle}"
+                             DataField="IsDescAvailable" ComponentType="ToggleButtonEx"/>
+                        <MSU:MultiListboxColumnDefinition HeaderText=" Last Uploaded" 
+                             FontWeight="AutoFontWeight"  Foreground="AutoFontColor"
+                             DataField="LastUploadedFile" Width="180" ComponentType="TextBlock"/>
                     </MSU:MultiListbox.ColumnDefinitions>
                     <MSU:MultiListbox.ItemsContextMenu>
                         <ContextMenu>
@@ -165,7 +166,8 @@
                               Canvas.Top="379" HorizontalAlignment="Left" VerticalAlignment="Center" 
                               Style="{StaticResource ToggleStepStyle}" ToolTip="Debug Mode" Click="tbDebug_Click"/>
 
-                <ToggleButton x:Name="tbAutoUpload" Width="44" Height="44" Canvas.Left="819" LostFocus="tbAutoUpload_LostFocus"
+                <ToggleButton x:Name="tbAutoUpload" Width="44" Height="44" Canvas.Left="819" 
+                        LostFocus="tbAutoUpload_LostFocus"
                Canvas.Top="379" HorizontalAlignment="Left" VerticalAlignment="Center" 
                Style="{StaticResource ToggleStepStyle}" ToolTip="Debug Mode" Click="tbDebug_Click"/>
                 <Button Name="BtnClose" Content="Close" HorizontalAlignment="Left" VerticalAlignment="Center" Height="36" Width="58" Click="BtnClose_Click" Canvas.Left="487" Canvas.Top="386"/>

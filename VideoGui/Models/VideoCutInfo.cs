@@ -20,12 +20,12 @@ namespace VideoGui.Models
         public int CutTo { get => _CutNo; set { _CutNo = value; OnPropertyChanged(); } }
 
 
-        public VideoCutInfo(string __FileName,TimeSpan _FromTime, TimeSpan To_Time, int _Cutnum)
+        public VideoCutInfo(string __FileName, TimeSpan _FromTime, TimeSpan To_Time, int _Cutnum)
         {
             FileName = __FileName;
             _FromTime = _FromTime;
             TimeTo = To_Time;
-            TimeFrom = _FromTime;   
+            TimeFrom = _FromTime;
             CutTo = _Cutnum;
         }
 

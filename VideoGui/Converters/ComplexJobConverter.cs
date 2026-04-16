@@ -19,8 +19,8 @@ namespace VideoGui
     public class ComplexJobConverter : IMultiValueConverter
     {
         [SupportedOSPlatform("windows")]
-        
-        public (string,bool) FillList<T>(ObservableCollection<T> SourceFiles, int tag=0, string Idx = "") 
+
+        public (string, bool) FillList<T>(ObservableCollection<T> SourceFiles, int tag = 0, string Idx = "")
         {
             try
             {
@@ -67,7 +67,7 @@ namespace VideoGui
                             case 5:
                                 {
                                     returnvalue = "";
-                                   
+
                                     break;
                                 }
 
@@ -191,14 +191,14 @@ namespace VideoGui
                 return (returnvalue, ischecked);
 
             }
-            
+
             catch (Exception ex)
             {
                 ex.LogWrite(System.Reflection.MethodBase.GetCurrentMethod().Name);
                 return ("", false);
             }
         }
-        
+
         public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
         {
             // 0 Record Number - 1 DestFile, 2 Source Directory - 3 Dest Directory -  4 Start Time -  5 Duration

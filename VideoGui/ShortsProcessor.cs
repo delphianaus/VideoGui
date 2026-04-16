@@ -27,7 +27,7 @@ namespace VideoGui
             SourceFile = _SourceFile;
             DoOnFinish = _DoOnFinish;
             DoOnStats = _DoOnStats;
-            ShortType = (_ShortType == 1) ? true : (_ShortType == 2) ? false: false;
+            ShortType = (_ShortType == 1) ? true : (_ShortType == 2) ? false : false;
             Task.Run(() => { CreateShorts(_SourceFile); });
         }
         public async Task CreateShorts(string source)
@@ -39,7 +39,7 @@ namespace VideoGui
                 var fnamex = System.IO.Path.GetFileNameWithoutExtension(source);
                 var dir = System.IO.Path.GetDirectoryName(source);
                 var fnmp3 = System.IO.Path.Combine(dir, fname);
-                string pr = source.ToLower().Replace("(shorts_logo)","").Replace(".mp4","").Replace(".mkv","").Trim();
+                string pr = source.ToLower().Replace("(shorts_logo)", "").Replace(".mp4", "").Replace(".mkv", "").Trim();
                 string pr2 = source.Substring(0, pr.Length);
                 var sx = $"{qs}{source.Replace("\\", "/")}{qs}";
                 fnmp3 = $"{qs}{fnmp3.Replace("\\", "/")}{qs}";
@@ -53,9 +53,9 @@ namespace VideoGui
                     Directory.Delete(pr2, true);
                 }
 
-                TimeSpan  SegmentSize = (ShortType) ? TimeSpan.FromMinutes(2.0) :
+                TimeSpan SegmentSize = (ShortType) ? TimeSpan.FromMinutes(2.0) :
                                                       TimeSpan.FromSeconds(57);
-                TimeSpan SegSize1 = (ShortType) ? TimeSpan.FromMinutes(2.1):
+                TimeSpan SegSize1 = (ShortType) ? TimeSpan.FromMinutes(2.1) :
                                                   TimeSpan.FromSeconds(42);
                 TimeSpan SegSize2 = (ShortType) ? TimeSpan.FromMinutes(1.3) :
                                              TimeSpan.FromSeconds(32);
@@ -66,7 +66,7 @@ namespace VideoGui
                 TimeSpan SegSize5 = (ShortType) ? TimeSpan.FromSeconds(25) :
                                              TimeSpan.FromSeconds(38);
 
-                Directory.CreateDirectory(pr2); 
+                Directory.CreateDirectory(pr2);
                 var py = System.IO.Path.Combine(dir, fnamex) + ".py";
                 List<string> convert = new List<string>() {
                     "#--automatically built--",
@@ -175,7 +175,7 @@ namespace VideoGui
 
         }
 
-       
+
         public Task RunProces(string processname, string py)
         {
             try
@@ -191,7 +191,7 @@ namespace VideoGui
                 process.ErrorDataReceived += Process_ErrorDataReceived;
                 process.StartInfo.Arguments = args;
                 process.Start();
-                ProcessStarted=true;
+                ProcessStarted = true;
                 process.BeginErrorReadLine();
                 process.WaitForExit();
                 process.CancelErrorRead();
@@ -310,7 +310,7 @@ namespace VideoGui
                     string destDir = Path.Combine(subp, DirectoryToUse, $"{gp}");
                     File.Move(LastFile, destDir);
                 }
-                DoOnFinish?.Invoke(NumberShorts,Source);
+                DoOnFinish?.Invoke(NumberShorts, Source);
             }
             catch (Exception ex)
             {

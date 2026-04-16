@@ -13,10 +13,10 @@ namespace VideoGui.Models
     public class ShortsDirectory : INotifyPropertyChanged
     {
         private int _Id = -1, _TitleId = -1, _DescId = -1;
-        private string _Directory = "", _LinkedTitleIds = "" , _LinkedDescIds = "";
+        private string _Directory = "", _LinkedTitleIds = "", _LinkedDescIds = "";
         public int Id { get => _Id; set { _Id = value; OnPropertyChanged(); } }
         public string Directory { get => _Directory; set { _Directory = value; OnPropertyChanged(); } }
-        
+
         public string LinkedTitleIds { get => _LinkedTitleIds; set { _LinkedTitleIds = value; OnPropertyChanged(); } }
         public string LinkedDescIds { get => _LinkedDescIds; set { _LinkedDescIds = value; OnPropertyChanged(); } }
         public bool IsTitleAvailable { get => _TitleId != -1 && _LinkedTitleIds != ""; set { IsTitleAvailable = value; OnPropertyChanged(); } }
@@ -26,14 +26,14 @@ namespace VideoGui.Models
         public int DescId { get => _DescId; set { _DescId = value; OnPropertyChanged(); } }
 
 
-        public ShortsDirectory(int id, string directory="")
+        public ShortsDirectory(int id, string directory = "")
         {
             try
             {
                 Id = id;
                 Directory = directory;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 ex.LogWrite($"ShortsDirectory {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {ex.StackTrace}");
             }

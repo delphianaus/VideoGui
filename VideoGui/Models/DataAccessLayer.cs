@@ -1,11 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using Nancy.Routing.Constraints;
+using System.Collections.Generic;
 using System.Linq;
+using System.Security.AccessControl;
 using System.Text;
 using System.Threading.Tasks;
-using System.Xaml.Schema;
-using Nancy.Routing.Constraints;
 using System.Windows.Forms;
-using System.Security.AccessControl;
+using System.Xaml.Schema;
 
 namespace VideoGui
 {
@@ -142,7 +142,7 @@ namespace VideoGui
         public int weight { get; set; }
         public Network network { get; set; }
         public WebChannel webChannel { get; set; }
-        
+
         public Externals externals { get; set; }
         public Image image { get; set; }
         public string summary { get; set; }

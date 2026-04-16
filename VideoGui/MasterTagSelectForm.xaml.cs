@@ -2,8 +2,8 @@
 using System.Reflection;
 using System.Windows;
 using System.Windows.Input;
-using VideoGui.Models.delegates;
 using VideoGui.Models;
+using VideoGui.Models.delegates;
 
 namespace VideoGui
 {

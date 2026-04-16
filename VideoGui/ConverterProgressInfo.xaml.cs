@@ -21,8 +21,8 @@ using VideoGui.Models.delegates;
 
 namespace VideoGui
 {
-    
-  
+
+
     public partial class ConverterProgressInfo : Window
     {
         public string DestName = "";
@@ -38,8 +38,8 @@ namespace VideoGui
             DoOnFinish = _DoOnFinish;
             DoListBoxConnect = _DoListBoxConnect;
             DoGetDataCount = _DoGetDataCount;
-            Title += $" {_Name}";            
-          
+            Title += $" {_Name}";
+
         }
 
         public string GetDestNameNoExt()
@@ -56,7 +56,7 @@ namespace VideoGui
                     frm = null;
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 ex.LogWrite($"ConverterProgressInfo.DoAutoCancelClose {MethodBase.GetCurrentMethod().Name}");
             }
@@ -141,7 +141,7 @@ namespace VideoGui
                 wdwProgress.Width = (_Width != -1) ? _Height : wdwProgress.Width;
                 ItemProgress.ItemsSource = DoListBoxConnect?.Invoke(System.IO.Path.GetFileNameWithoutExtension(DestName));
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 ex.LogWrite($"ConverterProgressInfo.Window_Loaded {MethodBase.GetCurrentMethod().Name}");
             }

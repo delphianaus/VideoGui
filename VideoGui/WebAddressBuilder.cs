@@ -28,7 +28,7 @@ namespace VideoGui
                 channel_ID = Channel_ID;
                 DoOnAddressUpdate = doOnAddressUpdate;
                 DoOnExtWebAddressUpdate = doOnExtAddressUpdate;
-                
+
             }
             catch (Exception ex)
             {
@@ -333,7 +333,7 @@ namespace VideoGui
                 Address = $"https://studio.youtube.com/channel/{channel_ID}";
                 return this;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 ex.LogWrite($"");
                 return this;

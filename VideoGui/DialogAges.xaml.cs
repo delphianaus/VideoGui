@@ -25,20 +25,20 @@ namespace VideoGui
         string OldMinAge = "", OldMaxAge = "";
         OnFinish DoOnFinish = null;
         public bool IsClosed = false;
-        public DialogAges(string TitleToShow,int a,int b,SetFilterAge _SetFilterAges, 
+        public DialogAges(string TitleToShow, int a, int b, SetFilterAge _SetFilterAges,
             OnFinishIdObj _OnFinish)
         {
             InitializeComponent();
             txtMaxAge.Text = "";
             txtMinAge.Text = "";
-            if (a!= -1) txtMinAge.Text = a.ToString();
+            if (a != -1) txtMinAge.Text = a.ToString();
             if (b != -1) txtMaxAge.Text = b.ToString();
             Title = TitleToShow;
             DoSetFilterAge = _SetFilterAges;
             Closed += (s, e) => { IsClosed = true; _OnFinish?.Invoke(this, -1); };
         }
 
-      
+
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
@@ -46,7 +46,7 @@ namespace VideoGui
             {
                 Close();
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
             }
@@ -69,7 +69,7 @@ namespace VideoGui
                     DoSetFilterAge(txtMinAge.Text.ToInt(-1), txtMaxAge.Text.ToInt(-1));
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
             }
@@ -92,7 +92,7 @@ namespace VideoGui
                     }
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
             }
@@ -121,7 +121,7 @@ namespace VideoGui
             }
         }
 
-       
+
 
         private void txtMinAge_LostFocus(object sender, RoutedEventArgs e)
         {
@@ -137,7 +137,7 @@ namespace VideoGui
                 else
                 {
                     OldMinAge = txtMinAge.Text;
-                        DoSetFilterAge(txtMinAge.Text.ToInt(-1), txtMaxAge.Text.ToInt(-1));
+                    DoSetFilterAge(txtMinAge.Text.ToInt(-1), txtMaxAge.Text.ToInt(-1));
                 }
             }
             catch (Exception ex)

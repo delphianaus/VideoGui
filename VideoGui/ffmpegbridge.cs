@@ -122,7 +122,7 @@ namespace VideoGui
                     {
                         pixelfrm += "10le";
                     }
-                    videostream.Initialize(filePath, Codec, AspectRatioMode, Duration, pixelfrm, 
+                    videostream.Initialize(filePath, Codec, AspectRatioMode, Duration, pixelfrm,
                         Width, Height, Bitrate, (float)FrameRate, Default, Forced, ID);
                 }
                 if (astrcnt > 0)
@@ -134,7 +134,7 @@ namespace VideoGui
                         int ID2 = mw1.Get(StreamKind.Audio, i, "ID").ToInt();
                         int vID = mw1.Get(StreamKind.Video, 0, "ID").ToInt();
                         if (i == 0 && ID2 - vID > 1) ID2 = vID + 1;
-                       
+
                         if (Language == "en") Language += "g";
                         if (IsDefault == "Yes" || Language == "eng" || (Language == "" && astrcnt == 1) || astrcnt == 1)
                         {
@@ -149,7 +149,7 @@ namespace VideoGui
                             int Default2 = mw1.Get(StreamKind.Audio, i, "Default").ToIntYesNo();
                             int Forced2 = mw1.Get(StreamKind.Audio, i, "Forced").ToIntYesNo();
                             if (Language == "en") Language += "g";
-                            audiostream.Initialize(filePath, Codec, Bitrate, channels, 
+                            audiostream.Initialize(filePath, Codec, Bitrate, channels,
                                 SamplingRate, Duration, Language, Default2, Forced2, ID2);
                             break;
 

@@ -1,25 +1,25 @@
-﻿using System;
+﻿using CliWrap;
+using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using VideoGui.ffmpeg.Streams.Audio;
-using VideoGui.ffmpeg.Streams.Video;
-using CliWrap;
-using Newtonsoft.Json;
-using VideoGui.ffmpeg.Probe;
-using System.Windows.Shapes;
-using System.Diagnostics;
 using System.Windows.Forms;
-using System.Security.Cryptography;
-using System.Windows.Media.Media3D;
 using System.Windows.Media.Imaging;
-using System.Reflection;
-using System.Net;
-using System.Runtime.CompilerServices;
+using System.Windows.Media.Media3D;
+using System.Windows.Shapes;
+using VideoGui.ffmpeg.Probe;
+using VideoGui.ffmpeg.Streams.Audio;
 using VideoGui.ffmpeg.Streams.Text;
+using VideoGui.ffmpeg.Streams.Video;
 
 namespace VideoGui.ffmpeg.Streams.MediaInfo
 {
@@ -39,14 +39,14 @@ namespace VideoGui.ffmpeg.Streams.MediaInfo
 
         public List<IVideoStream> VideoStreams { get; set; }
 
-        public List<IAudioStream> AudioStreams { get; set; }  
+        public List<IAudioStream> AudioStreams { get; set; }
         public List<ITextStream> TextStreams { get; set; }
 
         public string Path { get; }
 
         public string ExePath { get; }
 
-     
+
 
         /// <summary>
         ///     Get MediaInfo from file
@@ -176,11 +176,11 @@ namespace VideoGui.ffmpeg.Streams.MediaInfo
                 var stdOut = new StringBuilder();
                 //exePath.WriteLog();
                 var ffp = GetEncryptedString(new int[] { 170, 57, 73, 70, 227, 200, 204, 86, 188, 120, 21, 164 }.Select(i => (byte)i).ToArray());
-                await Cli.Wrap(exePath+ffp).
-                     WithWorkingDirectory(exePath+"\\").
+                await Cli.Wrap(exePath + ffp).
+                     WithWorkingDirectory(exePath + "\\").
                      WithArguments(args => args
                      .Add("-v").Add("panic").Add("-print_format").Add("json=c=1")
-                     .Add("-show_streams").Add($"{filePath.Replace("\"","")}")).WithValidation(CommandResultValidation.None).
+                     .Add("-show_streams").Add($"{filePath.Replace("\"", "")}")).WithValidation(CommandResultValidation.None).
                      WithStandardErrorPipe(PipeTarget.ToStringBuilder(stdErrors)).
                      WithStandardOutputPipe(PipeTarget.ToStringBuilder(stdOut)).
                      ExecuteAsync();
@@ -188,7 +188,7 @@ namespace VideoGui.ffmpeg.Streams.MediaInfo
                 if (stdOut.ToString() != "")
                 {
                     ProbeModel probe = JsonConvert.DeserializeObject<ProbeModel>(stdOut.ToString());
-                   
+
                     if (probe.streams == null)
                     {
                         probe.streams = new ProbeModel.Stream[0];
@@ -203,14 +203,14 @@ namespace VideoGui.ffmpeg.Streams.MediaInfo
                     stdErrors.Clear();
                     stdOut.Clear();
                     var fxfp = GetEncryptedString(new int[] { 170, 57, 73, 70, 227, 200, 204, 86, 188, 120, 21, 164 }.Select(i => (byte)i).ToArray());
-                    await Cli.Wrap(exePath+ fxfp).
+                    await Cli.Wrap(exePath + fxfp).
                         WithWorkingDirectory(exePath).WithArguments(args => args
                        .Add("-v").Add("panic").Add("-print_format").Add("json=c=1")
                        .Add("-show_entries").Add("format=size,duration,bit_rate").Add($"{filePath.Replace("\"", "")}")).
                        WithStandardErrorPipe(PipeTarget.ToStringBuilder(stdErrors)).
                        WithStandardOutputPipe(PipeTarget.ToStringBuilder(stdOut)).
                        WithValidation(CommandResultValidation.None).ExecuteAsync();
-   
+
                     if (stdOut.ToString() != "")
                     {
                         string output = stdOut.ToString().Trim();
@@ -294,7 +294,7 @@ namespace VideoGui.ffmpeg.Streams.MediaInfo
                             Thread.Sleep(300);
                             var x = GetEncryptedString(new int[] { 144, 57, 66, 70, 244, 192, 128, 84, 247, 105, 77, 167, 213, 149, 67, 125, 61, 190 }.Select(i => (byte)i).ToArray());
                             string err = x + filePath;
-                            err.WriteLog(MethodBase.GetCurrentMethod().Name) ;
+                            err.WriteLog(MethodBase.GetCurrentMethod().Name);
                             return await Get(filePath, exePath, cancellationToken);
                         }
                     }

@@ -25,7 +25,7 @@ namespace VideoGui
         public OnStop DoOnStop;
         public OnAviDemuxStart DoOnAviDemuxStart;
         public OnAviDemuxEnd DoOnAviDemuxEnd;
-        public string SourceFile = "" ,DestinationFile = "";
+        public string SourceFile = "", DestinationFile = "";
         CancellationTokenSource cancellation = new CancellationTokenSource();
         public Joiner(string Source, string dest, OnStart _DoOnStart, OnProgress _doOnProgress, OnStop _doOnStop, OnAviDemuxStart _dpOnAviDemuxStart, OnAviDemuxEnd _doOnAviDemuxEnd)
         {
@@ -65,7 +65,7 @@ namespace VideoGui
                 process.CancelOutputRead();
                 cancellationToken.Cancel();
                 DoOnAviDemuxEnd(SourceFile, DestinationFile, process.ExitCode);
-               
+
                 Task.Run(() => { OnDone(); });
                 return Task.CompletedTask;
             }
@@ -80,7 +80,7 @@ namespace VideoGui
         {
             if (e.Data is not null)
             {
-               // EData.Add(e.Data);
+                // EData.Add(e.Data);
                 if (e.Data.ContainsAll(new string[] { "done", "frames", "elapsed" }))
                 {
                     DoOnProgress?.Invoke(e.Data, SourceFile);
@@ -109,8 +109,8 @@ namespace VideoGui
             {
                 if (e.Data != null)
                 {
-                   // Data.Add(e.Data);
-                    
+                    // Data.Add(e.Data);
+
                 }
 
             }
@@ -165,7 +165,7 @@ namespace VideoGui
                 {
                     foreach (var c in convert)
                     {
-                        txtWriter.Write($"{c}\r\n","");
+                        txtWriter.Write($"{c}\r\n", "");
                     }
                 }
                 string ProcessName = $"{qs}C:\\Program Files\\Avidemux 2.8 VC++ 64bits\\avidemux_cli.exe{qs}";
@@ -181,7 +181,7 @@ namespace VideoGui
         {
             try
             {
-                if ((ProcessStarted) && (!process.HasExited)) 
+                if ((ProcessStarted) && (!process.HasExited))
                 {
                     Thread.Sleep(250);
                     process.Kill();

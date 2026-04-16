@@ -1,11 +1,18 @@
-﻿using FolderBrowserEx;
+﻿using CliWrap;
+using CliWrap.EventStream;
+using FolderBrowserEx;
 using Microsoft.Win32;
+using MS.WindowsAPICodePack.Internal;
 using System;
-using System.IO;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Management;
 using System.Reflection;
+using System.Resources.Extensions;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -15,18 +22,11 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
-using Path = System.IO.Path;
-using CliWrap.EventStream;
-using CliWrap;
-using VideoGui.Models.delegates;
-using System.Threading;
-using System.Management;
-using System.Diagnostics;
-using MS.WindowsAPICodePack.Internal;
 using VideoGui.Models;
+using VideoGui.Models.delegates;
 using static System.Net.WebRequestMethods;
 using File = System.IO.File;
-using System.Resources.Extensions;
+using Path = System.IO.Path;
 
 namespace VideoGui
 {

@@ -29,16 +29,15 @@
             <MSU:MultiListbox.ColumnDefinitions>
                 <MSU:MultiListboxColumnDefinition DataField="FileName" 
                    WidthBinding="SrcFileNameWidth" HeaderText="File Name" 
-                  ContentVerticalAlignment="Top" 
                    ComponentType="TextBlock"/>
                 <MSU:MultiListboxColumnDefinition HeaderText="Cut From" 
-                  ContentVerticalAlignment="Top" DataField="TimeFrom" 
+                  DataField="TimeFrom" 
                   Width="63" ComponentType="TextBlock"/>
                 <MSU:MultiListboxColumnDefinition HeaderText="Cut To" 
-                  ContentVerticalAlignment="Top" DataField="TimeTo" 
+                  DataField="TimeTo" 
                   Width="63" ComponentType="TextBlock"/>
                 <MSU:MultiListboxColumnDefinition HeaderText="Cut No" 
-                  ContentVerticalAlignment="Top" DataField="CutTo" 
+                  DataField="CutTo" 
                   Width="50" ComponentType="TextBlock"/>
             </MSU:MultiListbox.ColumnDefinitions>
             <MSU:MultiListbox.ItemsContextMenu>

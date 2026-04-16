@@ -21,7 +21,7 @@ namespace VideoGui
     /// </summary>
     /// 
 
-   
+
     public partial class CustomStringEntry : Window
     {
         OnKeyPressEvent DoOnKeyPressEvent;
@@ -34,7 +34,7 @@ namespace VideoGui
             {
                 return txtData.Text;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
                 return "";
@@ -47,7 +47,7 @@ namespace VideoGui
             {
                 InitializeComponent();
                 Closing += (s, e) => { IsClosing = true; };
-                Closed += (s, e) => { IsClosed = true; _OnFinish?.Invoke(this,0); };
+                Closed += (s, e) => { IsClosed = true; _OnFinish?.Invoke(this, 0); };
                 Title = value;
                 txtData.Text = Filter;
                 DoOnKeyPressEvent = _KeyPress;

@@ -31,10 +31,10 @@ namespace VideoGui
         int dispatchcnt = 0;
         int TotalTime = 30;
         string DestName;
-        
+
 
         public AutoCancel(OnFinishIdObj _OnFinished, string destName,
-            int _totaltime = 30, string captiontitle = "", string LeftButton = "Open", 
+            int _totaltime = 30, string captiontitle = "", string LeftButton = "Open",
             String RightButton = "Close")
         {
             InitializeComponent();

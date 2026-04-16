@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using System.Windows.Data;
 
 namespace VideoGui
-{ 
+{
     public class CustomHeightConverter : IMultiValueConverter
     {
         public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)

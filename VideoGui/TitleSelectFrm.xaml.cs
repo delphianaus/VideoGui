@@ -1,12 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Windows;
 using System.Windows.Input;
-using VideoGui.Models.delegates;
 using VideoGui.Models;
-using System.Collections.Generic;
-using System.Linq;
+using VideoGui.Models.delegates;
 
 namespace VideoGui
 {
@@ -41,7 +41,7 @@ namespace VideoGui
                 TitleId = _TitleId;
                 LinkedId = _LinkedId;
                 Invoker?.Invoke(this, new CustomParams_SetFilterId(_LinkedId, _TitleId));
-                Invoker?.Invoke(this, new CustomParams_Initialize(IsUploadsBuilder));  
+                Invoker?.Invoke(this, new CustomParams_Initialize(IsUploadsBuilder));
                 /*txtTitle.Text = _Title; Handle this in onload?.Invoke.
                 BaseTitle = _Title;
                 txtBaseTitle.Content = $"({_Title})";*/
@@ -275,7 +275,7 @@ namespace VideoGui
                     CPS.ShowActivated = true;
                     CPS.Show();
                 }
-                else 
+                else
                 {
                     CPS = new("Select Base Title", BaseTitle, null, OnFinishBaseTitle);
                     CPS.ShowActivated = true;

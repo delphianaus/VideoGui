@@ -31,7 +31,7 @@ namespace VideoGui
         public bool Ready, Initizalized = false, IsClosing = false, IsClosed = false;
         string defaultUrl = "";
         OnFinish DoOnFinish = null;
-        public WebViewDebug(OnFinish _OnFinish ,string defaultUrl)
+        public WebViewDebug(OnFinish _OnFinish, string defaultUrl)
         {
             InitializeComponent();
             DoOnFinish = _OnFinish;

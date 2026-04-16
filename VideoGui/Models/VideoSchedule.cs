@@ -29,7 +29,7 @@ namespace VideoGui.Models
                 this.ScheduleId = SCHEDULEID;
                 this.Time = TIME;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 ex.LogWrite($"VideoShedule {this} {MethodBase.GetCurrentMethod().Name} {ex.Message}");
             }

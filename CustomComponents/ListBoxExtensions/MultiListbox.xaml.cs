@@ -1,24 +1,54 @@
+using Accessibility;
 using System;
+using System.CodeDom;
 using System.Collections;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Data.Common;
 using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using System.Globalization;
 using System.IO;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Windows;
+using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Input;
+using System.Windows.Markup;
 using System.Windows.Media;
 using System.Windows.Threading;
+using ToggleClass;
 using Xceed.Wpf.Toolkit;
+using static CustomComponents.delegates;
+using static CustomComponents.Extensions;
+
 
 namespace CustomComponents.ListBoxExtensions
 {
+
+
+    public class MultiListboxTemplateColumn
+    {
+        public string HeaderText { get; set; } = string.Empty;
+        public double Width { get; set; }
+        public bool DynamicWidth { get; set; } = false;
+        public string WidthBindingPath { get; set; } = string.Empty;
+        public string DataField { get; set; } = string.Empty;
+
+        public string FontWeight { get; set; } = string.Empty;
+        public string Foreground { get; set; } = string.Empty;
+
+        public string ComponentType { get; set; } = "TextBlock";
+        public VerticalAlignment ContentVerticalAlignment { get; set; } = VerticalAlignment.Center;
+        public Style? Style { get; set; }
+        public string ClickHandler { get; set; } = string.Empty;
+
+    }
+
     public enum MultiListboxResizeDirection
     {
         None,
@@ -30,8 +60,281 @@ namespace CustomComponents.ListBoxExtensions
 
     public partial class MultiListbox : UserControl, INotifyPropertyChanged
     {
+        [ContentProperty(nameof(Columns))]
+        public class MultiListboxTemplate
+        {
+            public string Key { get; set; } = string.Empty;
+
+            public ObservableCollection<MultiListboxTemplateColumn> Columns { get; set; }
+                = new ObservableCollection<MultiListboxTemplateColumn>();
+        }
+        public ObservableCollection<MultiListboxTemplate> Templates
+        {
+            get => (ObservableCollection<MultiListboxTemplate>)GetValue(TemplatesProperty);
+            set => SetValue(TemplatesProperty, value);
+        }
+        public VerticalAlignment ItemsVerticalAlignment
+        {
+            get => (VerticalAlignment)GetValue(ItemsVerticalAlignmentProperty);
+            set => SetValue(ItemsVerticalAlignmentProperty, value);
+        }
+
+        public static readonly DependencyProperty ItemsVerticalAlignmentProperty =
+            DependencyProperty.Register(nameof(ItemsVerticalAlignment),
+                typeof(VerticalAlignment), typeof(MultiListboxColumnDefinition),
+                new PropertyMetadata(VerticalAlignment.Center));
+
+
+        public HorizontalAlignment ItemsHorizontalAlignment
+        {
+            get => (HorizontalAlignment)GetValue(ItemsHorizontalAlignmentProperty);
+            set => SetValue(ItemsHorizontalAlignmentProperty, value);
+        }
+
+        public static readonly DependencyProperty ItemsHorizontalAlignmentProperty =
+            DependencyProperty.Register(nameof(ItemsHorizontalAlignment),
+                typeof(HorizontalAlignment), typeof(MultiListboxColumnDefinition),
+                new PropertyMetadata(HorizontalAlignment.Left));
+
+
+
+        public static readonly DependencyProperty TemplatesProperty =
+            DependencyProperty.Register(nameof(Templates),
+                typeof(ObservableCollection<MultiListboxTemplate>),
+                typeof(MultiListbox), new PropertyMetadata(null, OnTemplatesChanged));
+
+        private static void OnTemplatesChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is not MultiListbox control)
+                return;
+
+            try
+            {
+                if (e.OldValue is ObservableCollection<MultiListboxTemplate> oldTemplates)
+                    oldTemplates.CollectionChanged -= control.Templates_CollectionChanged;
+
+                if (e.NewValue is ObservableCollection<MultiListboxTemplate> newTemplates)
+                    newTemplates.CollectionChanged += control.Templates_CollectionChanged;
+
+                control.HookTemplateColumnCollections(e.OldValue as ObservableCollection<MultiListboxTemplate>, false);
+                control.HookTemplateColumnCollections(e.NewValue as ObservableCollection<MultiListboxTemplate>, true);
+
+                control.ApplySelectedTemplate();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error in OnTemplatesChanged: {ex}");
+            }
+        }
+
+        private void HookTemplateColumnCollections(ObservableCollection<MultiListboxTemplate>? templates, bool hook)
+        {
+            if (templates == null)
+                return;
+
+            foreach (var template in templates)
+            {
+                if (hook)
+                    template.Columns.CollectionChanged += TemplateColumns_CollectionChanged;
+                else
+                    template.Columns.CollectionChanged -= TemplateColumns_CollectionChanged;
+            }
+        }
+
+        private void Templates_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            try
+            {
+                if (e.OldItems != null)
+                {
+                    foreach (var item in e.OldItems.OfType<MultiListboxTemplate>())
+                    {
+                        item.Columns.CollectionChanged -= TemplateColumns_CollectionChanged;
+                    }
+                }
+
+                if (e.NewItems != null)
+                {
+                    foreach (var item in e.NewItems.OfType<MultiListboxTemplate>())
+                    {
+                        item.Columns.CollectionChanged += TemplateColumns_CollectionChanged;
+                    }
+                }
+
+                ApplySelectedTemplate();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error in Templates_CollectionChanged: {ex}");
+            }
+        }
+
+        private void TemplateColumns_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            try
+            {
+                ApplySelectedTemplate();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error in TemplateColumns_CollectionChanged: {ex}");
+            }
+        }
+
+        private static void OnActiveTemplateKeyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is not MultiListbox control)
+                return;
+
+            try
+            {
+                control.ApplySelectedTemplate();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error in OnActiveTemplateKeyChanged: {ex}");
+            }
+        }
+        public string ActiveTemplateKey
+        {
+            get => (string)GetValue(ActiveTemplateKeyProperty);
+            set => SetValue(ActiveTemplateKeyProperty, value);
+        }
+
+        public static readonly DependencyProperty ActiveTemplateKeyProperty =
+            DependencyProperty.Register(
+                nameof(ActiveTemplateKey),
+                typeof(string),
+                typeof(MultiListbox),
+                new PropertyMetadata(null, OnActiveTemplateKeyChanged));
+
+
+
+        private void ApplySelectedTemplate()
+        {
+            if (IsBuilding)
+                return;
+
+            try
+            {
+
+
+                if (Templates == null || Templates.Count == 0)
+                    return;
+
+                if (string.IsNullOrWhiteSpace(ActiveTemplateKey))
+                    return;
+
+                var template = Templates.FirstOrDefault(t =>
+                    string.Equals(t.Key, ActiveTemplateKey, StringComparison.OrdinalIgnoreCase));
+
+                if (template == null)
+                    return;
+                IsBuilding = true;
+                var newColumns = new ObservableCollection<MultiListboxColumnDefinition>();
+
+                foreach (var item in template.Columns)
+                {
+                    var newColumn = new MultiListboxColumnDefinition
+                    {
+                        HeaderText = item.HeaderText,
+                        DataField = item.DataField,
+                        FontWeight = item.FontWeight,
+
+                        Foreground = item.Foreground
+                        //ContentVerticalAlignment = item.ContentVerticalAlignment
+                    };
+                    if (item.Style is not null)
+                    {
+                        newColumn.Style = item.Style;
+                    }
+                    // adjust this if your real property is enum/type/etc
+
+                    if (item.DynamicWidth)
+                    {
+                        newColumn.WidthBinding = item.WidthBindingPath;
+                    }
+                    else
+                    {
+                        newColumn.Width = item.Width;
+                    }
+                    newColumn.ComponentType = item.ComponentType;
+                    var clickHandler = ResolveClickHandler(item.ClickHandler);
+                    if (clickHandler != null)
+                    {
+                        newColumn.Click += clickHandler;
+                    }
+                    newColumns.Add(newColumn);
+                }
+
+                ColumnDefinitions = newColumns;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error in ApplySelectedTemplate: {ex}");
+            }
+            finally
+            {
+                IsBuilding = false;
+            }
+        }
+
+        public bool IsBuilding = false;
+        private RoutedEventHandler? ResolveClickHandler(string handlerName)
+        {
+            if (string.IsNullOrWhiteSpace(handlerName))
+                return null;
+
+            var host = Window.GetWindow(this);
+            if (host == null)
+                return null;
+
+            var method = host.GetType().GetMethod(
+                handlerName,
+                BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+
+            if (method == null)
+                return null;
+
+            return (sender, e) => method.Invoke(host, new object[] { sender, e });
+        }
+        private void BuildColumnDefinitionsFromTemplate()
+        {
+            try
+            {
+                IsBuilding = true;
+                ColumnDefinitions.Clear();
+                foreach (var column in Templates)
+                {
+                    // build column definition based on template column
+                }
+            }
+            finally
+            {
+                IsBuilding = false;
+                _columnFactories = null; // Force rebuild of factories
+                _cachedItemTemplate = null; // Force rebuild of template
+                ApplyColumnDefinitions();
+            }
+        }
 
         public event PropertyChangedEventHandler PropertyChanged;
+
+
+        private ErrorHandler _ErrorHandler;
+        public event ErrorHandler ErrorHandler
+        {
+            add { _ErrorHandler += value; }
+            remove { _ErrorHandler -= value; }
+        }
+        protected virtual void OnError(Exception _exception, string _callingMethod, string message)
+        {
+            _ErrorHandler?.Invoke(_exception, _callingMethod, message);
+        }
+        internal void RaiseError(Exception _exception, string _callingMethod, string message)
+        {
+            OnError(_exception, _callingMethod, message);
+        }
 
         private double _originalHeight;
         private double _startPoint;
@@ -70,14 +373,8 @@ namespace CustomComponents.ListBoxExtensions
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
         #region Events
-        public event MouseButtonEventHandler ItemMouseDoubleClick;
-        public event RoutedEventHandler ItemLostFocus;
-        public event RoutedEventHandler ItemGotFocus;
-        public event SelectionChangedEventHandler ItemSelectionChanged;
-        public event RoutedEventHandler Click, LostFocus, GotFocus;
-        public event TextChangedEventHandler TextChanged;
-        public event SelectionChangedEventHandler SelectionChanged;
-        public event EventHandler Initialized;
+
+     
 
 
         /// <summary>
@@ -87,11 +384,7 @@ namespace CustomComponents.ListBoxExtensions
         {
             get { return lstBoxUploadItems.ItemContainerGenerator; }
         }
-        public event RoutedEventHandler DateTimePickerLostFocus;
-        public event RoutedEventHandler DateTimePickerGotFocus;
-        public event KeyEventHandler DateTimePickerKeyUp;
-        public event EventHandler ComboBoxInitialized;
-        public event SelectionChangedEventHandler ComboBoxSelectionChanged;
+  
 
 
 
@@ -100,62 +393,82 @@ namespace CustomComponents.ListBoxExtensions
             get { return lstBoxUploadItems.Items; }
         }
 
+        public int SelectedIndex
+        {
+            get { return lstBoxUploadItems.SelectedIndex; }
+            set
+            {
+                lstBoxUploadItems.SelectedIndex = value;
+            }
+        }
+
         public IList SelectedItems
         {
             get { return lstBoxUploadItems.SelectedItems; }
         }
         #endregion
 
+        public object SelectedItem
+        {
+            get { return lstBoxUploadItems.SelectedItem; }
+        }
+
+
         public static readonly DependencyProperty ColumnDefinitionsProperty =
-            DependencyProperty.Register(nameof(ColumnDefinitions), typeof(ObservableCollection<MultiListboxColumnDefinition>),
-                typeof(MultiListbox), new PropertyMetadata(null, OnColumnDefinitionsChanged));
+            DependencyProperty.Register(nameof(ColumnDefinitions),
+                typeof(ObservableCollection<MultiListboxColumnDefinition>),
+                typeof(MultiListbox),
+                new PropertyMetadata(null, OnColumnDefinitionsChanged));
 
         public static readonly DependencyProperty DebugOutputProperty =
             DependencyProperty.Register("DebugOutput", typeof(bool), typeof(MultiListbox),
                 new PropertyMetadata(false));
+
 
         public bool DebugOutput
         {
             get { return (bool)GetValue(DebugOutputProperty); }
             set { SetValue(DebugOutputProperty, value); }
         }
+        public double FontSize
+        {
+            get { return (double)GetValue(FontSizeProperty); }
+            set { SetValue(FontSizeProperty, value); }
+        }
+        public static readonly DependencyProperty FontSizeProperty =
+                   DependencyProperty.Register(nameof(FontSize),
+                       typeof(double), typeof(MultiListbox),
+                       new PropertyMetadata(9.0, OnFontSizeChanged));
 
-        public static readonly DependencyProperty ResizeDirectionProperty =
-            DependencyProperty.Register(nameof(ResizeDirection), typeof(MultiListboxResizeDirection),
-                typeof(MultiListbox), new PropertyMetadata(MultiListboxResizeDirection.None, OnResizeDirectionChanged));
 
+        private static void OnFontSizeChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is MultiListbox multiListbox && !multiListbox.IsBuilding)
+            {
+                multiListbox._columnFactories = null; // Force rebuild of factories
+                multiListbox._cachedItemTemplate = null; // Force rebuild of template
+                multiListbox.ApplyColumnDefinitions();
+            }
+        }
         public MultiListboxResizeDirection ResizeDirection
         {
             get { return (MultiListboxResizeDirection)GetValue(ResizeDirectionProperty); }
             set { SetValue(ResizeDirectionProperty, value); }
         }
-        public double CompactModeSize
-        {
-            get { return (double)GetValue(CompactModeProperty); }
-            set { SetValue(CompactModeProperty, value); }
-        }
-
-        public static readonly DependencyProperty CompactModeProperty =
-           DependencyProperty.Register("CompactModeSize", typeof(double), typeof(MultiListbox),
-           new PropertyMetadata(30.0, (d, e) => ((MultiListbox)d).OnCompactChange()));
-
-        private void OnCompactChange()
-        {
-            foreach (var coldef in ColumnDefinitions)
-            {
-                if (coldef.ComponentType.ToString().ToLower() != "togglebutton")
-                {
-                    coldef.MinHeight = CompactModeSize;
-                    coldef.Height = CompactModeSize;
-                }
-            }
-        }
+        public static readonly DependencyProperty ResizeDirectionProperty =
+            DependencyProperty.Register(nameof(ResizeDirection),
+                typeof(MultiListboxResizeDirection),
+                typeof(MultiListbox),
+                new PropertyMetadata(MultiListboxResizeDirection.None,
+                    OnResizeDirectionChanged));
 
         private static void OnResizeDirectionChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var control = (MultiListbox)d;
             control.UpdateResizeThumbsVisibility();
         }
+
+
 
         private void UpdateResizeThumbsVisibility()
         {
@@ -168,13 +481,21 @@ namespace CustomComponents.ListBoxExtensions
                     ? Visibility.Visible : Visibility.Collapsed;
         }
 
-        public static readonly DependencyProperty BorderMarginProperty =
-            DependencyProperty.Register(nameof(BorderMargin), typeof(Thickness), typeof(MultiListbox),
-                new PropertyMetadata(new Thickness(0), (d, e) => ((MultiListbox)d).OnBorderMarginChanged()));
-
-        private void OnBorderMarginChanged()
+        public Thickness BorderItemMargin
         {
-            UpdateAdjustedGroupBoxWidth();
+            get { return (Thickness)GetValue(BorderItemMarginProperty); }
+            set { SetValue(BorderItemMarginProperty, value); }
+        }
+
+        public static readonly DependencyProperty BorderItemMarginProperty =
+             DependencyProperty.Register(nameof(BorderItemMargin),
+                 typeof(Thickness), typeof(MultiListbox),
+                 new PropertyMetadata(new Thickness(0), (d, e) =>
+                 ((MultiListbox)d).OnBorderItemMarginChanged()));
+
+        private void OnBorderItemMarginChanged()
+        {
+            UpdateAdjustedGroupBoxItemWidth();
         }
 
         public Thickness BorderMargin
@@ -183,18 +504,32 @@ namespace CustomComponents.ListBoxExtensions
             set { SetValue(BorderMarginProperty, value); }
         }
 
-        public static readonly DependencyProperty SelectionModeProperty =
-            DependencyProperty.Register(nameof(SelectionMode), typeof(SelectionMode), typeof(MultiListbox),
-                new PropertyMetadata(SelectionMode.Single));
+        public static readonly DependencyProperty BorderMarginProperty =
+            DependencyProperty.Register(nameof(BorderMargin),
+                typeof(Thickness), typeof(MultiListbox),
+                new PropertyMetadata(new Thickness(0),
+                    (d, e) => ((MultiListbox)d).OnBorderMarginChanged()));
+
+        private void OnBorderMarginChanged()
+        {
+            UpdateAdjustedGroupBoxWidth();
+        }
 
         public SelectionMode SelectionMode
         {
             get { return (SelectionMode)GetValue(SelectionModeProperty); }
             set { SetValue(SelectionModeProperty, value); }
         }
+        public static readonly DependencyProperty SelectionModeProperty =
+            DependencyProperty.Register(nameof(SelectionMode),
+                typeof(SelectionMode), typeof(MultiListbox),
+                new PropertyMetadata(SelectionMode.Single));
+
+
 
         public static readonly DependencyProperty AdjustedWidthProperty =
-            DependencyProperty.Register("AdjustedWidth", typeof(double), typeof(MultiListbox),
+            DependencyProperty.Register("AdjustedWidth",
+                typeof(double), typeof(MultiListbox),
                 new PropertyMetadata(0.0));
 
         private double _AdjustedWidth;
@@ -212,7 +547,8 @@ namespace CustomComponents.ListBoxExtensions
         }
 
         public static readonly DependencyProperty AdjustedGroupBoxWidthProperty =
-            DependencyProperty.Register("AdjustedGroupBoxWidth", typeof(double), typeof(MultiListbox),
+            DependencyProperty.Register("AdjustedGroupBoxWidth",
+                typeof(double), typeof(MultiListbox),
                 new PropertyMetadata(0.0));
 
         private double _AdjustedGroupBoxWidth;
@@ -228,6 +564,232 @@ namespace CustomComponents.ListBoxExtensions
                 }
             }
         }
+
+        private double _AdjustedGroupBoxItemWidth;
+        public double AdjustedGroupBoxItemWidth
+        {
+            get => _AdjustedGroupBoxItemWidth;
+            private set
+            {
+                if (_AdjustedGroupBoxItemWidth != value)
+                {
+                    _AdjustedGroupBoxItemWidth = value;
+                    OnPropertyChanged(nameof(AdjustedGroupBoxItemWidth));
+                }
+            }
+        }
+        public IEnumerable ItemsSource
+        {
+            get => (IEnumerable)GetValue(ItemsSourceProperty);
+            set => SetValue(ItemsSourceProperty, value);
+        }
+
+        public static readonly DependencyProperty ItemsSourceProperty =
+            DependencyProperty.Register(nameof(ItemsSource),
+                typeof(IEnumerable), typeof(MultiListbox),
+                new PropertyMetadata(null, OnItemsSourceChanged));
+
+        private static void OnItemsSourceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            try
+            {
+                var control = d as MultiListbox;
+                if (control != null)
+                {
+                    bool Refresh = false;
+                    if (control._currentCollection != null)
+                    {
+                        control._currentCollection.CollectionChanged -= control.OnCollectionChanged;
+                    }
+                    control.lstBoxUploadItems.ItemsSource = e.NewValue as IEnumerable;
+                    if (e.NewValue != control._currentCollection)
+                    {
+                        Refresh = true;
+                    }
+                    control._currentCollection = e.NewValue as INotifyCollectionChanged;
+                    if (control._currentCollection != null)
+                    {
+                        control._currentCollection.CollectionChanged += control.OnCollectionChanged;
+                    }
+
+
+
+                    control.Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        control.lstBoxUploadItems.UpdateLayout();
+                        foreach (var item in control.lstBoxUploadItems.Items)
+                        {
+                            var container = control.lstBoxUploadItems.ItemContainerGenerator.ContainerFromItem(item) as ListBoxItem;
+                            if (container != null)
+                            {
+                                container.ApplyTemplate();
+                                var contentPresenter = control.FindVisualChild<ContentPresenter>(container);
+                                if (contentPresenter != null)
+                                {
+                                    contentPresenter.ApplyTemplate();
+                                    var grid = control.FindVisualChild<Grid>(contentPresenter);
+                                    if (grid != null)
+                                    {
+                                        control.InitializeGrid(grid);
+                                    }
+                                }
+                            }
+                        }
+                    }), DispatcherPriority.Loaded);
+                    // control.setTimer();
+
+                }
+
+
+
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error in OnItemsSourceChanged: {ex}");
+            }
+        }
+
+
+
+
+        public ContextMenu HeaderContextMenu
+        {
+            get => (ContextMenu)GetValue(HeaderContextMenuProperty);
+            set => SetValue(HeaderContextMenuProperty, value);
+        }
+
+        public static readonly DependencyProperty HeaderContextMenuProperty =
+            DependencyProperty.Register(nameof(HeaderContextMenu),
+                typeof(ContextMenu), typeof(MultiListbox),
+                new PropertyMetadata(null));
+
+        public double ItemMaxHeight
+        {
+            get { return (double)GetValue(ItemMaxHeightProperty); }
+            set { SetValue(ItemMaxHeightProperty, value); }
+        }
+
+        public static readonly DependencyProperty ItemMaxHeightProperty =
+           DependencyProperty.Register(nameof(ItemMaxHeight), typeof(double),
+               typeof(MultiListbox),
+               new PropertyMetadata(double.PositiveInfinity));
+
+        public double ItemMinHeight
+        {
+            get { return (double)GetValue(ItemMinHeightProperty); }
+            set { SetValue(ItemMinHeightProperty, value); }
+        }
+
+        public static readonly DependencyProperty ItemMinHeightProperty =
+          DependencyProperty.Register(nameof(ItemMinHeight),
+              typeof(double), typeof(MultiListbox),
+              new PropertyMetadata(5.0, OnItemMinHeightChanged));
+        private static void OnItemMinHeightChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            try
+            {
+                if (d is MultiListbox listbox && listbox.ColumnDefinitions != null)
+                {
+                    foreach (var colDef in listbox.ColumnDefinitions)
+                    {
+                        if (colDef.ComponentType.ToString().ToLower() != "textblock")
+                        {
+                            colDef.MinHeight = (double)e.NewValue;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error in OnItemMinHeightChanged: {ex}");
+            }
+        }
+        public double ItemHeight
+        {
+            get { return (double)GetValue(ItemHeightProperty); }
+            set { SetValue(ItemHeightProperty, value); }
+        }
+
+        public static readonly DependencyProperty ItemHeightProperty =
+            DependencyProperty.Register(nameof(ItemHeight), typeof(double),
+                typeof(MultiListbox),
+                new PropertyMetadata(13.0, OnHeightChanged));
+
+        private static void OnHeightChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            try
+            {
+                if (d is MultiListbox listbox && listbox.ColumnDefinitions != null)
+                {
+                    foreach (var colDef in listbox.ColumnDefinitions)
+                    {
+                        if (colDef.ComponentType.ToString().ToLower() != "textblock")
+                        {
+                            colDef.Height = (double)e.NewValue;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error in OnHeightChanged: {ex}");
+            }
+        }
+
+
+        public ContextMenu ItemsContextMenu
+        {
+            get => (ContextMenu)GetValue(ItemsContextMenuProperty);
+            set => SetValue(ItemsContextMenuProperty, value);
+        }
+
+        public static readonly DependencyProperty ItemsContextMenuProperty =
+        DependencyProperty.Register(nameof(ItemsContextMenu),
+            typeof(ContextMenu), typeof(MultiListbox),
+            new PropertyMetadata(null));
+        public Brush BorderBrush
+        {
+            get => (Brush)GetValue(BorderBrushProperty);
+            set => SetValue(BorderBrushProperty, value);
+        }
+
+        public static readonly DependencyProperty BorderBrushProperty =
+            DependencyProperty.Register(nameof(BorderBrush),
+                typeof(Brush), typeof(MultiListbox),
+                new PropertyMetadata(Brushes.Black));
+
+        public double BorderThickness
+        {
+            get => (double)GetValue(BorderThicknessProperty);
+            set => SetValue(BorderThicknessProperty, value);
+        }
+
+        public static readonly DependencyProperty BorderThicknessProperty =
+            DependencyProperty.Register(nameof(BorderThickness),
+                typeof(double), typeof(MultiListbox),
+                new PropertyMetadata(2.0));
+
+        public object Header
+        {
+            get => GetValue(HeaderProperty);
+            set => SetValue(HeaderProperty, value);
+        }
+        public static readonly DependencyProperty HeaderProperty =
+            DependencyProperty.Register(nameof(Header),
+                typeof(object), typeof(MultiListbox),
+                new PropertyMetadata(null));
+
+
+        public GridLength ColumnWidth
+        {
+            get => (GridLength)GetValue(ColumnWidthProperty);
+            set => SetValue(ColumnWidthProperty, value);
+        }
+
+        public static readonly DependencyProperty ColumnWidthProperty =
+            DependencyProperty.Register(nameof(ColumnWidth),
+                typeof(GridLength), typeof(MultiListbox),
+                new PropertyMetadata(new GridLength(0, GridUnitType.Pixel)));
 
         private void UpdateAdjustedWidth()
         {
@@ -250,6 +812,22 @@ namespace CustomComponents.ListBoxExtensions
             catch (Exception ex)
             {
                 Debug.WriteLine($"Error in UpdateAdjustedWidth: {ex}");
+            }
+        }
+
+        private void UpdateAdjustedGroupBoxItemWidth()
+        {
+            try
+            {
+                if (ActualWidth > 0)
+                {
+                    var margin = BorderItemMargin;
+                    AdjustedGroupBoxItemWidth = Math.Max(0, ActualWidth - margin.Left - margin.Right - 5);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error in UpdateAdjustedGroupBoxWidth: {ex}");
             }
         }
 
@@ -293,13 +871,15 @@ namespace CustomComponents.ListBoxExtensions
             {
                 if (lstBoxUploadItems != null)
                 {
-                    double headerHeight = 30; // Increased from 20 to 30
+                    double headerHeight = 25; // Increased from 20 to 30
                     double scrollbarHeight = SystemParameters.HorizontalScrollBarHeight;
-                    double extraPadding = 10; // Additional padding for better spacing
+                    double extraPadding = 0; // Additional padding for better spacing
                     double availableHeight = ActualHeight - headerHeight - scrollbarHeight - extraPadding;
                     if (BorderMargin != null)
                     {
-                        availableHeight -= (BorderMargin.Top + BorderMargin.Bottom + 5); // Added 5 pixels of extra margin
+                        availableHeight -= (+5 +
+                            BorderItemMargin.Top + BorderItemMargin.Bottom +
+                            BorderMargin.Top + BorderMargin.Bottom); // Added 5 pixels of extra margin
                     }
                     lstBoxUploadItems.Height = Math.Max(0, availableHeight);
                 }
@@ -310,135 +890,11 @@ namespace CustomComponents.ListBoxExtensions
             }
         }
 
-        public static readonly DependencyProperty ItemsSourceProperty =
-            DependencyProperty.Register(nameof(ItemsSource), typeof(IEnumerable), typeof(MultiListbox),
-                new PropertyMetadata(null, OnItemsSourceChanged));
-
-        public static readonly DependencyProperty HeaderContextMenuProperty =
-            DependencyProperty.Register(nameof(HeaderContextMenu), typeof(ContextMenu), typeof(MultiListbox),
-                new PropertyMetadata(null));
-
-        public static readonly DependencyProperty ItemMinHeightProperty =
-            DependencyProperty.Register(nameof(ItemMinHeight), typeof(double), typeof(MultiListbox),
-                new PropertyMetadata(25.0, OnItemMinHeightChanged));
-
-        private static void OnItemMinHeightChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            try
-            {
-                if (d is MultiListbox listbox && listbox.ColumnDefinitions != null)
-                {
-                    foreach (var colDef in listbox.ColumnDefinitions)
-                    {
-                        colDef.MinHeight = (double)e.NewValue;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Error in OnItemMinHeightChanged: {ex}");
-            }
-        }
-
-        public static readonly DependencyProperty ItemMaxHeightProperty =
-            DependencyProperty.Register(nameof(ItemMaxHeight), typeof(double),
-                typeof(MultiListbox),
-                new PropertyMetadata(35.0));
 
 
 
-        public double ItemMinHeight
-        {
-            get { return (double)GetValue(ItemMinHeightProperty); }
-            set { SetValue(ItemMinHeightProperty, value); }
-        }
 
 
-
-        public static readonly DependencyProperty ItemHeightProperty =
-            DependencyProperty.Register(nameof(ItemHeight), typeof(double),
-                typeof(MultiListbox),
-                new PropertyMetadata(13.0, OnHeightChanged));
-
-        private static void OnHeightChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            try
-            {
-                if (d is MultiListbox listbox && listbox.ColumnDefinitions != null)
-                {
-                    foreach (var colDef in listbox.ColumnDefinitions)
-                    {
-                        colDef.Height = (double)e.NewValue;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Error in OnHeightChanged: {ex}");
-            }
-        }
-
-        public double ItemHeight
-        {
-            get { return (double)GetValue(ItemHeightProperty); }
-            set { SetValue(ItemHeightProperty, value); }
-        }
-        public double ItemMaxHeight
-        {
-            get { return (double)GetValue(ItemMaxHeightProperty); }
-            set { SetValue(ItemMaxHeightProperty, value); }
-        }
-
-        public static readonly DependencyProperty ItemsContextMenuProperty =
-            DependencyProperty.Register(nameof(ItemsContextMenu),
-                typeof(ContextMenu), typeof(MultiListbox),
-                new PropertyMetadata(null));
-
-        public ContextMenu HeaderContextMenu
-        {
-            get => (ContextMenu)GetValue(HeaderContextMenuProperty);
-            set => SetValue(HeaderContextMenuProperty, value);
-        }
-
-        public ContextMenu ItemsContextMenu
-        {
-            get => (ContextMenu)GetValue(ItemsContextMenuProperty);
-            set => SetValue(ItemsContextMenuProperty, value);
-        }
-
-        public static readonly DependencyProperty BorderBrushProperty =
-            DependencyProperty.Register(nameof(BorderBrush), typeof(Brush), typeof(MultiListbox),
-                new PropertyMetadata(Brushes.Black));
-
-        public Brush BorderBrush
-        {
-            get => (Brush)GetValue(BorderBrushProperty);
-            set => SetValue(BorderBrushProperty, value);
-        }
-
-        public static readonly DependencyProperty BorderThicknessProperty =
-            DependencyProperty.Register(nameof(BorderThickness), typeof(double), typeof(MultiListbox),
-                new PropertyMetadata(2.0));
-
-        public double BorderThickness
-        {
-            get => (double)GetValue(BorderThicknessProperty);
-            set => SetValue(BorderThicknessProperty, value);
-        }
-
-        public static readonly DependencyProperty HeaderProperty =
-            DependencyProperty.Register(nameof(Header), typeof(object), typeof(MultiListbox),
-                new PropertyMetadata(null));
-
-        public object Header
-        {
-            get => GetValue(HeaderProperty);
-            set => SetValue(HeaderProperty, value);
-        }
-
-        public static readonly DependencyProperty ColumnWidthProperty =
-            DependencyProperty.Register(nameof(ColumnWidth), typeof(GridLength), typeof(MultiListbox),
-                new PropertyMetadata(new GridLength(0, GridUnitType.Pixel)));
 
         private Grid _headerGrid;
         private Grid _itemGrid;
@@ -447,11 +903,7 @@ namespace CustomComponents.ListBoxExtensions
         private ObservableCollection<MultiListboxColumnDefinition> _pendingColumnDefinitions;
         private Dictionary<int, EventHandler> _statusHandlers = new();
 
-        public GridLength ColumnWidth
-        {
-            get => (GridLength)GetValue(ColumnWidthProperty);
-            set => SetValue(ColumnWidthProperty, value);
-        }
+
 
         private ScrollViewer _headerScroller;
         private ScrollViewer _itemsScroller;
@@ -611,67 +1063,11 @@ namespace CustomComponents.ListBoxExtensions
             }
         }
 
-        public IEnumerable ItemsSource
-        {
-            get => (IEnumerable)GetValue(ItemsSourceProperty);
-            set => SetValue(ItemsSourceProperty, value);
-        }
+
 
         private INotifyCollectionChanged _currentCollection;
 
-        private static void OnItemsSourceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            try
-            {
-                var control = d as MultiListbox;
-                if (control != null)
-                {
-                    bool Refresh = false;
-                    if (control._currentCollection != null)
-                    {
-                        control._currentCollection.CollectionChanged -= control.OnCollectionChanged;
-                    }
-                    control.lstBoxUploadItems.ItemsSource = e.NewValue as IEnumerable;
-                    if (e.NewValue != control._currentCollection)
-                    {
-                        Refresh = true;
-                    }
-                    control._currentCollection = e.NewValue as INotifyCollectionChanged;
-                    if (control._currentCollection != null)
-                    {
-                        control._currentCollection.CollectionChanged += control.OnCollectionChanged;
-                    }
 
-
-
-                    control.Dispatcher.BeginInvoke(new Action(() =>
-                    {
-                        foreach (var item in control.lstBoxUploadItems.Items)
-                        {
-                            var container = control.lstBoxUploadItems.ItemContainerGenerator.ContainerFromItem(item) as ListBoxItem;
-                            if (container != null)
-                            {
-                                container.ApplyTemplate();
-                                var contentPresenter = control.FindVisualChild<ContentPresenter>(container);
-                                if (contentPresenter != null)
-                                {
-                                    contentPresenter.ApplyTemplate();
-                                    var grid = control.FindVisualChild<Grid>(contentPresenter);
-                                    if (grid != null)
-                                    {
-                                        control.InitializeGrid(grid);
-                                    }
-                                }
-                            }
-                        }
-                    }), DispatcherPriority.Loaded);
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Error in OnItemsSourceChanged: {ex}");
-            }
-        }
 
         private void OnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
@@ -762,7 +1158,7 @@ namespace CustomComponents.ListBoxExtensions
 
                         case NotifyCollectionChangedAction.Reset:
                             // Full refresh needed only for Reset
-                            RebuildItemTemplate();
+                         //  RebuildItemTemplate();
                             UpdateVisualTree();
                             break;
                     }
@@ -908,19 +1304,13 @@ namespace CustomComponents.ListBoxExtensions
                 var gridFactory = new FrameworkElementFactory(typeof(Grid));
                 gridFactory.SetValue(FrameworkElement.MarginProperty, new Thickness(0, 0, 0, 0));
                 // do height thingey here
-                var itemHeight = ColumnDefinitions.Any(cd => cd.Height > 0)
-                ? ColumnDefinitions.Max(cd => cd.Height)
-                : CompactModeSize;
-                if (ItemHeightProperty is not null)
-                {
-                    itemHeight = (double)GetValue(ItemHeightProperty);
-                }
-                gridFactory.SetValue(FrameworkElement.HeightProperty, itemHeight);
+
 
                 gridFactory.SetValue(Panel.BackgroundProperty, Brushes.White);
 
                 // Store reference to the grid factory for later use
                 _itemGrid = new Grid(); // Temporary grid just for column definitions
+                ;
 
                 // Add each column definition and control
                 int columnIndex = 0;
@@ -953,7 +1343,7 @@ namespace CustomComponents.ListBoxExtensions
                     {
                         var headerTextBlock = new TextBlock
                         {
-                            Text = colDef.HeaderText,
+                            Text = colDef.HeaderText+"*",
                             Margin = colDef.HeaderMargin,
                             Padding = colDef.HeaderPadding,
                             VerticalAlignment = colDef.HeaderVerticalAlignment,
@@ -964,22 +1354,23 @@ namespace CustomComponents.ListBoxExtensions
                     }
 
                     // Add control for this column if it has a data field
-                    if (!string.IsNullOrEmpty(colDef.DataField))
-                    {
-                        AddControlToTemplate(gridFactory, colDef, columnIndex);
-                    }
+
+                    AddControlToTemplate(gridFactory, colDef, columnIndex);
+
                     columnIndex++;
                 }
-
                 // Create and set the item template
                 var itemTemplate = new DataTemplate { VisualTree = gridFactory };
                 lstBoxUploadItems.ItemTemplate = itemTemplate;
+
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"Error building and applying template: {ex}");
             }
         }
+
+
 
         private Type GetControlType(Type requestedType)
         {
@@ -1011,8 +1402,8 @@ namespace CustomComponents.ListBoxExtensions
 
                 // Set the column for the control
                 controlFactory.SetValue(Grid.ColumnProperty, columnIndex);
-                controlFactory.SetValue(FrameworkElement.HorizontalAlignmentProperty, HorizontalAlignment.Stretch);
-                controlFactory.SetValue(FrameworkElement.VerticalAlignmentProperty, VerticalAlignment.Stretch);
+                //controlFactory.SetValue(FrameworkElement.HorizontalAlignmentProperty, HorizontalAlignment.Stretch);
+                // controlFactory.SetValue(FrameworkElement.VerticalAlignmentProperty, VerticalAlignment.Stretch);
                 controlFactory.SetValue(UIElement.VisibilityProperty, Visibility.Visible);
                 controlFactory.SetValue(UIElement.IsHitTestVisibleProperty, true);
                 controlFactory.SetValue(UIElement.OpacityProperty, 1.0);
@@ -1021,31 +1412,22 @@ namespace CustomComponents.ListBoxExtensions
                 controlFactory.SetValue(Control.BorderBrushProperty, Brushes.Black);
                 controlFactory.SetValue(Control.BorderThicknessProperty, new Thickness(1));
                 // For TextBlocks, use ItemHeight if available, otherwise fall back to column def height
-                if (controlType == typeof(TextBlock))
+                if (controlType != typeof(TextBlock))
                 {
-                    double height = ItemHeightProperty != null ? (double)GetValue(ItemHeightProperty) : 0;
-                    if (height <= 0)
-                    {
-                        height = colDef.Height;
-                    }
-                    controlFactory.SetValue(FrameworkElement.HeightProperty, height);
-                }
-                else
-                {
-                    controlFactory.SetValue(FrameworkElement.HeightProperty, colDef.Height);
+                   // controlFactory.SetValue(FrameworkElement.HeightProperty, colDef.Height);
                 }
                 // Apply common properties
-                controlFactory.SetValue(FrameworkElement.MarginProperty, colDef.ItemMargin);
+                //controlFactory.SetValue(FrameworkElement.MarginProperty, colDef.ItemMargin);
                 controlFactory.SetValue(Control.ForegroundProperty, Brushes.Black);
                 if (typeof(Control).IsAssignableFrom(controlType))
                 {
                     controlFactory.SetValue(Control.PaddingProperty, colDef.ItemPadding);
                     controlFactory.SetValue(FrameworkElement.MinHeightProperty, colDef.MinHeight);
                     controlFactory.SetValue(FrameworkElement.MinWidthProperty, colDef.MinWidth);
-                    controlFactory.SetValue(FrameworkElement.WidthProperty, colDef.Width);
+                    // controlFactory.SetValue(FrameworkElement.WidthProperty, colDef.Width);
                 }
-                controlFactory.SetValue(FrameworkElement.VerticalAlignmentProperty, colDef.ItemVerticalAlignment);
-                controlFactory.SetValue(FrameworkElement.HorizontalAlignmentProperty, colDef.ItemHorizontalAlignment);
+                //   controlFactory.SetValue(FrameworkElement.VerticalAlignmentProperty, colDef.ItemVerticalAlignment);
+                //   controlFactory.SetValue(FrameworkElement.HorizontalAlignmentProperty, colDef.ItemHorizontalAlignment);
 
                 // Set up the bindings
                 var bindingProperty = GetMainBindingProperty(controlType);
@@ -1097,7 +1479,7 @@ namespace CustomComponents.ListBoxExtensions
                 return TextBlock.TextProperty;
             }
         }
-        bool ready = false;
+        bool ready = true;
         private void ItemContainerGenerator_StatusChanged(object? sender, EventArgs e)
         {
             try
@@ -1119,7 +1501,7 @@ namespace CustomComponents.ListBoxExtensions
                                     if (contentPresenter != null && VisualTreeHelper.GetChildrenCount(contentPresenter) > 0)
                                     {
                                         var grid = VisualTreeHelper.GetChild(contentPresenter, 0) as Grid;
-                                        if (grid != null && !ready)
+                                        if (grid != null)
                                         {
                                             InitializeGrid(grid);
                                             ready = true;
@@ -1141,6 +1523,8 @@ namespace CustomComponents.ListBoxExtensions
 
         private void MultiListbox_Loaded(object sender, RoutedEventArgs e)
         {
+
+            int Line = 0;
             try
             {
                 lstBoxUploadItems.ItemContainerGenerator.StatusChanged += ItemContainerGenerator_StatusChanged;
@@ -1151,7 +1535,7 @@ namespace CustomComponents.ListBoxExtensions
                     Debug.WriteLine("Failed to find header grid");
                     return;
                 }
-
+               
                 // Clear existing header content
                 _headerGrid.ColumnDefinitions.Clear();
                 _headerGrid.Children.Clear();
@@ -1161,23 +1545,138 @@ namespace CustomComponents.ListBoxExtensions
                 gridFactory.SetValue(FrameworkElement.MarginProperty, new Thickness(0, 0, 0, 0));
 
                 gridFactory.SetValue(Panel.BackgroundProperty, Brushes.White);
-
+                int x = 0;
                 // Store reference to the grid factory for later use
                 _itemGrid = new Grid(); // Temporary grid just for column definitions
-                double MinValueT = 0;
+                double ValueHeight = 0.0, ValueWidth = 0.0;
                 // Add each column definition and control
                 int columnIndex = 0;
+                bool IsToggleInColumn = ColumnDefinitions.
+                    Where(s => GetControlType(s.ComponentType) == typeof(ToggleButtonEx)).Any();
+                bool IsCheckBoxInColumn= ColumnDefinitions.
+                Where(s => GetControlType(s.ComponentType) == typeof(CheckBox)).Any();
+                bool HasValidStyle = false;
+                var _ItemHeight = ItemHeight;
+                StyleHandler styleHandler = new();
+                if (IsToggleInColumn)
+                {
+                    int row = -1;
+                    foreach (var colDef in ColumnDefinitions)
+                    {
+
+                        row++;
+                        var _controlType = GetControlType(colDef.ComponentType);
+                        if (_controlType == null) continue;
+                        if (_controlType == typeof(ToggleButtonEx))
+                        {
+                            int _stylescnt = -1;
+                            if (colDef.Style != null && colDef.Style.TargetType == _controlType)
+                            {
+                                foreach (SetterBase style in (SetterBaseCollection)colDef.Style.Setters)
+                                {
+                                    if (style is Setter _style && !_style.Property.Name.ToLower().Contains("template"))
+                                    {
+                                        _stylescnt++;
+                                    }
+                                }
+                                if (_stylescnt > -1)
+                                {
+                                    List<Setter> styles = new List<Setter>();
+                                    foreach (SetterBase style in (SetterBaseCollection)colDef.Style.Setters)
+                                    {
+                                        if (style is Setter _style && !_style.Property.Name.ToLower().Contains("template"))
+                                        {
+                                            styles.Add(_style);
+                                        }
+                                    }
+                                    styleHandler = new(RaiseError, styles);
+                                    HasValidStyle = true;
+                                }
+                            }
+                            break;
+                        }
+                    }
+                    if (HasValidStyle)
+                    {
+                        _ItemHeight = styleHandler.Height;
+                    }
+                }
+                Line = 0;
+                int r = 0;
                 foreach (var colDef in ColumnDefinitions)
                 {
-                    // Add column definition
-                    var colDefFactory = new FrameworkElementFactory(typeof(ColumnDefinition));
-                    if (!string.IsNullOrEmpty(colDef.WidthBinding))
+                    r++;
+                    var controlType = GetControlType(colDef.ComponentType);
+                    if (controlType == null)
                     {
+                        continue;
+                    }
+                    var colDefFactory = new FrameworkElementFactory(typeof(ColumnDefinition));
+                    if (controlType != typeof(ToggleButtonEx) || colDef.Style is null)
+                    {
+                        if (!string.IsNullOrEmpty(colDef.WidthBinding))
+                        {
+                            var binding = new Binding(colDef.WidthBinding)
+                            {
+                                RelativeSource = new RelativeSource(RelativeSourceMode.FindAncestor, typeof(Window), 1)
+                            };
+                            colDefFactory.SetBinding(ColumnDefinition.WidthProperty, binding);
+
+                            // Add matching column definition to header grid
+                            var headerColDef = new ColumnDefinition();
+                            headerColDef.SetBinding(ColumnDefinition.WidthProperty, binding);
+                            _headerGrid.ColumnDefinitions.Add(headerColDef);
+                        }
+                        else
+                        {
+                            var headerColDef = new ColumnDefinition();
+                            /*if (colDef.HeaderWidth > colDef.Width)
+                            {
+                                var col_width = colDef.HeaderWidth + colDef.ItemMargin.Left + colDef.ItemMargin.Right;
+                                colDefFactory.SetValue(ColumnDefinition.WidthProperty, new GridLength(col_width));
+                                _headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(col_width) });
+                            }
+                            else
+                            {*/
+                            var col_width = colDef.Width + colDef.ItemMargin.Left + colDef.ItemMargin.Right;
+                            colDefFactory.SetValue(ColumnDefinition.WidthProperty, new GridLength(col_width));
+                            _headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(col_width) });
+                            // }
+                        }
+                    }
+                    Line = 1;
+                    gridFactory.AppendChild(colDefFactory);
+                    // Add header text
+                    bool HasBinding = !string.IsNullOrEmpty(colDef.WidthBinding);
+                    bool IsToggle = controlType == typeof(ToggleButtonEx);
+                    bool IsCheckBox = controlType == typeof(CheckBox);
+                    var va = (IsToggle) ? VerticalAlignment.Center :
+                        colDef.HeaderVerticalAlignment;
+                    var ha = (IsToggle) ? HorizontalAlignment.Center :
+                        colDef.HeaderHorizontalAlignment;
+                    var headerTextBlock = new TextBlock
+                    {
+                        Text = colDef.HeaderText,
+                        Margin = colDef.HeaderMargin,
+                        Padding = colDef.HeaderPadding,
+                        VerticalAlignment = va,
+                        HorizontalAlignment = ha
+                    };
+                    Line = 2;
+                    if (IsToggle)
+                    {
+                        var headerColDef = new ColumnDefinition();
+                        headerTextBlock.SetValue(FrameworkElement.WidthProperty, colDef.HeaderWidth);
+                        _headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(colDef.HeaderWidth) });
+                    }
+                    else if (HasBinding)
+                    {
+                        Line = 3;
                         var binding = new Binding(colDef.WidthBinding)
                         {
                             RelativeSource = new RelativeSource(RelativeSourceMode.FindAncestor, typeof(Window), 1)
                         };
-                        colDefFactory.SetBinding(ColumnDefinition.WidthProperty, binding);
+                        headerTextBlock.SetBinding(FrameworkElement.WidthProperty, binding);
 
                         // Add matching column definition to header grid
                         var headerColDef = new ColumnDefinition();
@@ -1186,176 +1685,200 @@ namespace CustomComponents.ListBoxExtensions
                     }
                     else
                     {
-                        colDefFactory.SetValue(ColumnDefinition.WidthProperty, new GridLength(colDef.Width));
-
-                        // Add matching column definition to header grid
-                        _headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(colDef.Width) });
+                        Line = 4;
+                        var headerColDef = new ColumnDefinition();
+                        double hdrwidth = (colDef.HeaderWidth > colDef.Width) ? colDef.HeaderWidth : colDef.Width;
+                        headerTextBlock.SetValue(FrameworkElement.WidthProperty, hdrwidth);
+                        _headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(hdrwidth) });
                     }
-                    gridFactory.AppendChild(colDefFactory);
 
-                    // Add header text
-                    var headerTextBlock = new TextBlock
-                    {
-                        Text = colDef.HeaderText,
-                        Margin = colDef.HeaderMargin,
-                        Padding = colDef.HeaderPadding,
-                        VerticalAlignment = colDef.HeaderVerticalAlignment,
-                        HorizontalAlignment = colDef.HeaderHorizontalAlignment
-                    };
                     Grid.SetColumn(headerTextBlock, columnIndex);
                     _headerGrid?.Children.Add(headerTextBlock);
+                    Line = 5;
+                    var controlFactory = new FrameworkElementFactory(controlType);
+                    controlFactory.SetValue(Grid.ColumnProperty, columnIndex);
 
-                    // Add control for this column if it has a data field
-                    if (!string.IsNullOrEmpty(colDef.DataField))
+                    Line = 100;
+                    if (controlType == typeof(DatePicker))
                     {
-                        var controlType = GetControlType(colDef.ComponentType.ToString());
-                        var controlFactory = new FrameworkElementFactory(controlType);
-                        controlFactory.SetValue(Grid.ColumnProperty, columnIndex);
-                        controlFactory.SetValue(FrameworkElement.MarginProperty, colDef.ContentMargin);
-                        if (controlType != typeof(TextBlock))
+                        Line = 6;
+                        SetDataBinding(controlType, controlFactory, colDef);
+                        SetFontBinding(controlType, controlFactory, colDef);
+                        SetItemHeight(controlType, controlFactory, colDef);
+                        controlFactory.SetValue(DatePicker.PaddingProperty, colDef.ItemPadding);
+                        controlFactory.SetValue(FrameworkElement.MarginProperty, colDef.ItemMargin);
+                        controlFactory.SetValue(FrameworkElement.FocusableProperty, colDef.ItemFocusable);
+                        controlFactory.SetValue(Control.VerticalAlignmentProperty, VerticalAlignment.Stretch);
+
+                        
+                    }
+                    else if (controlType == typeof(ToggleButtonEx))
+                    {
+                        Line = 7;
+                        if (!string.IsNullOrEmpty(colDef.DataField))
                         {
-                            controlFactory.SetValue(FrameworkElement.VerticalAlignmentProperty, colDef.ContentVerticalAlignment);
-                            controlFactory.SetValue(FrameworkElement.HorizontalAlignmentProperty, colDef.ContentHorizontalAlignment);
+                            var toggleBinding = new Binding(colDef.DataField)
+                            {
+                                UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
+                                Mode = BindingMode.OneWay
+                            };
+                            controlFactory.SetBinding(ToggleButtonEx.IsCheckedProperty, new Binding(colDef.DataField));
                         }
-
-
-                        // Handle specific control types
-                        switch (colDef.ComponentType.ToString().ToLower())
-                        {
-                            case "togglebutton":
-                                var toggleBinding = new Binding(colDef.DataField)
-                                {
-                                    UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
-                                    Mode = BindingMode.TwoWay
-                                };
-                                controlFactory.SetBinding(ToggleButton.IsCheckedProperty, toggleBinding);
-                                controlFactory.SetValue(FrameworkElement.WidthProperty, colDef.ToggleButtonWidth);
-                                controlFactory.SetValue(FrameworkElement.HeightProperty, colDef.ToggleButtonHeight);
-                                controlFactory.SetValue(FrameworkElement.HorizontalAlignmentProperty, colDef.ContentHorizontalAlignment);
-                                controlFactory.SetValue(FrameworkElement.VerticalAlignmentProperty, colDef.ContentVerticalAlignment);
-                                if (colDef.Style != null && colDef.Style.TargetType == typeof(ToggleButton))
-                                {
-                                    controlFactory.SetValue(FrameworkElement.StyleProperty, colDef.Style);
-                                    foreach (SetterBase style in (SetterBaseCollection)colDef.Style.Setters)
-                                    {
-                                        if (style is Setter setter)
-                                        {
-                                            var property = setter.Property;
-                                            if (property is not null &&
-                                              property.Name.ToLower() == "height")
-                                            {
-                                                if (setter.Value != null)
-                                                {
-                                                    if (setter.Value is double d)
-                                                    {
-                                                        MinValueT = d;
-                                                    }
-                                                }
-                                            }
-
-                                        }
-
-                                    }
-
-                                }
-
-
-                                break;
-                            case "checkbox":
-                                controlFactory.SetBinding(CheckBox.IsCheckedProperty, new Binding(colDef.DataField));
-                                break;
-                            default:
-                                var mainProperty = GetMainBindingProperty(colDef.ComponentType.ToString(), colDef.BoundTo);
-                                if (mainProperty != null)
-                                {
-                                    var binding = new Binding(colDef.DataField)
-                                    {
-                                        UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
-                                        Mode = BindingMode.TwoWay
-                                    };
-                                    controlFactory.SetBinding(mainProperty, binding);
-
-                                    // For TextBlocks, set TextAlignment based on ContentHorizontalAlignment
-                                    if (controlType == typeof(TextBlock))
-                                    {
-                                        // Handle width binding if specified
-                                        if (!string.IsNullOrEmpty(colDef.WidthBinding))
-                                        {
-                                            var widthBinding = new Binding(colDef.WidthBinding)
-                                            {
-                                                RelativeSource = new RelativeSource(RelativeSourceMode.FindAncestor, typeof(Window), 1)
-                                            };
-                                            controlFactory.SetBinding(FrameworkElement.WidthProperty, widthBinding);
-                                        }
-                                        if (ItemHeightProperty is not null)
-                                        {
-                                            var itemHeight = (double)GetValue(ItemHeightProperty);
-                                            controlFactory.SetValue(FrameworkElement.HeightProperty, itemHeight);
-                                        }
-                                        else controlFactory.SetValue(FrameworkElement.HeightProperty, colDef.Height);
-                                        // Set horizontal text alignment
-                                        var textAlignment = colDef.ContentHorizontalAlignment switch
-                                        {
-                                            HorizontalAlignment.Center => TextAlignment.Center,
-                                            HorizontalAlignment.Right => TextAlignment.Right,
-                                            _ => TextAlignment.Left
-                                        };
-                                        controlFactory.SetValue(TextBlock.TextAlignmentProperty, textAlignment);
-
-                                        // Set vertical text alignment
-                                        var verticalTextAlignment = colDef.ContentVerticalAlignment switch
-                                        {
-                                            VerticalAlignment.Top => VerticalAlignment.Top,
-                                            VerticalAlignment.Bottom => VerticalAlignment.Bottom,
-                                            _ => VerticalAlignment.Center
-                                        };
-                                        controlFactory.SetValue(TextBlock.LineStackingStrategyProperty, LineStackingStrategy.BlockLineHeight);
-                                        controlFactory.SetValue(TextBlock.VerticalAlignmentProperty, verticalTextAlignment);
-                                    }
-                                }
-                                break;
-                        }
-
-
-                        double _ItemHeight1 = ColumnDefinitions.Any(cd => cd.ToggleButtonHeight > 0)
-                                  ? ColumnDefinitions.Max(cd => cd.ToggleButtonHeight) : CompactModeSize;
-                        double _ItemHeight2 = ColumnDefinitions.Any(cd => cd.Height > 0)
-                                                          ? ColumnDefinitions.Max(cd => cd.Height) : 13;
-
-                        double _ItemHeight = Math.Max(_ItemHeight1, _ItemHeight2);
-
-                        if (MinValueT > 0 && MinValueT > _ItemHeight)
-                        {
-                            _ItemHeight = MinValueT;
-                        }
-
-
-                        gridFactory.SetValue(FrameworkElement.HeightProperty, _ItemHeight);
-                        gridFactory.AppendChild(controlFactory);
+                        Line = 8;
+                        controlFactory.SetValue(FrameworkElement.WidthProperty,
+                            HasValidStyle ? styleHandler.Width : colDef.Width);
+                        Line = 9;
+                        controlFactory.SetValue(FrameworkElement.HorizontalAlignmentProperty,
+                            HorizontalAlignment.Left);  //colDef.ItemHorizontalAlignment
+                        Line = 10;
+                        gridFactory.SetValue(FrameworkElement.HeightProperty, styleHandler.Height);
                     }
 
+                    else if (controlType == typeof(DateTimePicker))
+                    {
+                        controlFactory.SetValue(DateTimePicker.FormatProperty, colDef.Format);
+                        controlFactory.SetValue(DateTimePicker.KindProperty, colDef.Kind);
+                        controlFactory.SetValue(DateTimePicker.TimePickerVisibilityProperty, colDef.TimePickerVisibility);
+                        controlFactory.SetValue(DateTimePicker.AllowSpinProperty, colDef.AllowSpin);
+                        controlFactory.SetValue(DateTimePicker.AllowTextInputProperty, colDef.AllowTextInput);
+                        controlFactory.SetValue(DateTimePicker.AllowSpinProperty, colDef.AllowSpin);
+                        controlFactory.SetValue(DateTimePicker.FocusableProperty, colDef.DateTimeFocusable);
+                        controlFactory.SetValue(DateTimePicker.TimePickerShowButtonSpinnerProperty, colDef.TimePickerShowButtonSpinner);
+                        controlFactory.SetValue(DateTimePicker.CurrentDateTimePartProperty, colDef.CurrentDateTimePart);
+                        controlFactory.SetValue(DateTimePicker.MouseWheelActiveTriggerProperty, colDef.MouseWheelActiveTrigger);
+                        controlFactory.SetValue(DateTimePicker.IsManipulationEnabledProperty, colDef.ItemIsManipulationEnabled);
+                        if (!string.IsNullOrEmpty(colDef.FormatString))
+                        {
+                            controlFactory.SetValue(DateTimePicker.FormatStringProperty, colDef.FormatString);
+                        }
+                        if (!string.IsNullOrEmpty(colDef.TimeFormatString))
+                        {
+                            controlFactory.SetValue(DateTimePicker.TimeFormatStringProperty, colDef.TimeFormatString);
+                        }
+
+                        if (!double.IsNaN(colDef.DateTimeMinWidth))
+                        {
+                            controlFactory.SetValue(DateTimePicker.MinWidthProperty, colDef.DateTimeMinWidth);
+                        }
+
+                    }
+                    else if (controlType == typeof(CheckBox))
+                    {
+                        SetDataBinding(controlType, controlFactory, colDef);
+                        controlFactory.SetValue(CheckBox.PaddingProperty, colDef.ItemPadding);
+                        SetFontBinding(controlType, controlFactory, colDef);
+                        SetVerticalAlignmentBinding(controlType, controlFactory, colDef);
+                        SetHorizontalAlignmentBinding(controlType, controlFactory, colDef);
+                        SetWidthBinding(controlType, controlFactory, colDef);
+                       SetItemHeight(controlType, controlFactory, colDef);
+                        controlFactory.SetValue(FrameworkElement.MarginProperty, colDef.ItemMargin);
+                        controlFactory.SetValue(FrameworkElement.HeightProperty, colDef.ToggleButtonHeight);
+                        controlFactory.SetValue(FrameworkElement.FocusableProperty, colDef.ItemFocusable);
+                        controlFactory.SetBinding(CheckBox.IsCheckedProperty, new Binding(colDef.DataField));
+                        controlFactory.SetValue(FrameworkElement.IsManipulationEnabledProperty, 
+                            colDef.ItemIsManipulationEnabled);
+
+                        if (!IsToggle && IsCheckBoxInColumn)
+                        {
+                            gridFactory.SetValue(FrameworkElement.HeightProperty, double.NaN);
+                        }
+                    }   
+                    else if (controlType == typeof(Button))
+                    {
+                        controlFactory.SetValue(Button.PaddingProperty, colDef.ItemPadding);
+                        SetVerticalAlignmentBinding(controlType, controlFactory, colDef);
+                        SetHorizontalAlignmentBinding(controlType, controlFactory, colDef);
+                        controlFactory.SetValue(FrameworkElement.MarginProperty, colDef.ItemMargin);
+                        controlFactory.SetValue(FrameworkElement.FocusableProperty, colDef.ItemFocusable);
+                        SetItemHeight(controlType, controlFactory, colDef);
+                        controlFactory.SetValue(FrameworkElement.IsManipulationEnabledProperty, colDef.ItemIsManipulationEnabled);
+                        if (colDef.ItemImageSource is not null)
+                        {
+                            var imageFactory = new FrameworkElementFactory(typeof(System.Windows.Controls.Image));
+                            imageFactory.SetValue(Image.SourceProperty, colDef.ItemImageSource);
+                            imageFactory.SetValue(FrameworkElement.HorizontalAlignmentProperty, HorizontalAlignment.Center);
+                            imageFactory.SetValue(FrameworkElement.VerticalAlignmentProperty, VerticalAlignment.Center);
+                            controlFactory.AppendChild(imageFactory);
+                        }
+                        SetFontBinding(controlType, controlFactory, colDef);
+                    }
+                    else if (controlType == typeof(ComboBox))
+                    {
+                        controlFactory.SetValue(ComboBox.PaddingProperty, colDef.ItemPadding);
+                        controlFactory.SetValue(CheckBox.MarginProperty, colDef.ItemMargin);
+                        controlFactory.SetValue(ComboBox.PaddingProperty, colDef.ItemPadding);
+                        SetFontBinding(controlType, controlFactory, colDef);
+                        SetMinWidthBinding(controlType, controlFactory, colDef);
+                        controlFactory.SetValue(FrameworkElement.MarginProperty, colDef.ItemMargin);
+                        controlFactory.SetValue(FrameworkElement.FocusableProperty, colDef.ItemFocusable);
+                        SetItemHeight(controlType, controlFactory, colDef);
+                        SetDataBinding(controlType, controlFactory, colDef);
+                    }
+                    else if (controlType == typeof(TextBlock))
+                    {
+                        SetDataBinding(controlType, controlFactory, colDef);
+                        SetFontBinding(controlType, controlFactory, colDef);
+                        SetVerticalAlignmentBinding(controlType, controlFactory, colDef);
+                        SetHorizontalAlignmentBinding(controlType, controlFactory, colDef);
+                        SetWidthBinding(controlType, controlFactory, colDef);
+                        controlFactory.SetValue(TextBlock.PaddingProperty, colDef.ItemPadding);
+                        controlFactory.SetValue(FrameworkElement.MarginProperty, colDef.ItemMargin);
+                        controlFactory.SetValue(FrameworkElement.FocusableProperty, colDef.ItemFocusable);
+                        controlFactory.SetValue(TextOptions.TextFormattingModeProperty, TextFormattingMode.Display);
+                        controlFactory.SetValue(TextOptions.TextRenderingModeProperty, TextRenderingMode.ClearType);
+                        SetItemHeight(controlType,controlFactory,colDef);
+
+                        // Set horizontal text alignment
+                        //controlFactory.SetValue(TextBlock.TextAlignmentProperty, textAlignment);
+                        // Set vertical text alignment
+                        controlFactory.SetValue(TextBlock.LineStackingStrategyProperty, LineStackingStrategy.BlockLineHeight);
+                        //controlFactory.SetValue(TextBlock.TextAlignmentProperty, textAlignment);
+                    }
+                    else if (controlType == typeof(TextBox))
+                    {
+                        SetDataBinding(controlType, controlFactory, colDef);
+                        SetFontBinding(controlType, controlFactory, colDef);
+                        SetVerticalAlignmentBinding(controlType, controlFactory, colDef);
+                        SetHorizontalAlignmentBinding(controlType, controlFactory, colDef);
+                        SetWidthBinding(controlType, controlFactory, colDef);
+                        SetItemHeight(controlType, controlFactory, colDef);
+
+                    }
+
+                    // Handle specific control types
+
+                    if (ItemHeightProperty is not null && !IsCheckBoxInColumn)
+                    {
+                        gridFactory.SetValue(FrameworkElement.HeightProperty, (IsToggle) ? _ItemHeight : ItemHeight);
+                    }
+
+                    if (IsCheckBoxInColumn)
+                    {
+                        gridFactory.SetValue(FrameworkElement.HeightProperty, double.NaN);
+                    }
+
+                    gridFactory.AppendChild(controlFactory);
                     columnIndex++;
                 }
-                foreach (var colDef in ColumnDefinitions)
-                {
 
-                }
-                // Create and set the item template
                 var itemTemplate = new DataTemplate { VisualTree = gridFactory };
                 lstBoxUploadItems.ItemTemplate = itemTemplate;
-
                 // Apply any pending column definitions
                 if (_pendingColumnDefinitions != null)
                 {
                     ColumnDefinitions = _pendingColumnDefinitions;
                     _pendingColumnDefinitions = null;
                 }
-
                 ApplyColumnDefinitions();
+                ApplyVisualProperties();
 
+
+
+                
                 // Give the template a chance to apply
                 Dispatcher.BeginInvoke(new Action(() =>
                 {
+                    lstBoxUploadItems.UpdateLayout();
                     foreach (var item in lstBoxUploadItems.Items)
                     {
                         var container = lstBoxUploadItems.ItemContainerGenerator.ContainerFromItem(item) as ListBoxItem;
@@ -1380,76 +1903,59 @@ namespace CustomComponents.ListBoxExtensions
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Error in MultiListbox_Loaded: {ex}");
+                Debug.WriteLine($"Error in MultiListbox_Loaded: {ex} {Line}");
             }
-
-
         }
+
+        public DispatcherTimer _initializationTimer;
+
         private void InitializeGrid(Grid grid)
         {
             try
             {
+               
+                int i = -1;
                 foreach (var child in grid.Children)
                 {
-                    if (child is ToggleButton toggleButton)
+                    i++;
+                    var colDef = ColumnDefinitions[i];
+                    if (colDef == null) continue;
+                    if (child is ToggleButtonEx ToggleButtonEx)
                     {
-                        var column = Grid.GetColumn(toggleButton);
-                        var colDef = ColumnDefinitions[column];
-                        if (colDef != null)
-                        {
-                            // Set dimensions and style
-                            toggleButton.Width = colDef.ToggleButtonWidth;
-                            toggleButton.Height = colDef.ToggleButtonHeight;
-                            toggleButton.MinWidth = colDef.ToggleButtonMinWidth;
-                            toggleButton.MinHeight = colDef.ToggleButtonMinHeight;
-                            toggleButton.MaxWidth = colDef.ToggleButtonMaxWidth;
-                            toggleButton.MaxHeight = colDef.ToggleButtonMaxHeight;
-                            toggleButton.HorizontalAlignment = HorizontalAlignment.Center;
-                            toggleButton.VerticalAlignment = VerticalAlignment.Center;
-                            toggleButton.Visibility = Visibility.Visible;
-                            toggleButton.Style = (colDef?.Style is not null && colDef.Style.TargetType == typeof(ToggleButton)) ? colDef.Style : null;
-
-                            HandleClickEvents<ToggleButton>(toggleButton, colDef);
-
-                            // Set up binding
-                            var binding = new Binding(colDef.DataField)
-                            {
-                                UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
-                                Mode = BindingMode.TwoWay
-                            };
-                            BindingOperations.SetBinding(toggleButton, ToggleButton.IsCheckedProperty, binding);
-                        }
+                        ToggleButtonEx.HorizontalAlignment = HorizontalAlignment.Left;
+                        ToggleButtonEx.VerticalAlignment = VerticalAlignment.Center;
+                        ToggleButtonEx.Visibility = Visibility.Visible;
+                        ToggleButtonEx.Style = (colDef?.Style is not null && colDef.Style.TargetType == typeof(ToggleButtonEx)) ? colDef.Style : null;
+                        HandleClickEvents<ToggleButtonEx>(ToggleButtonEx, colDef);
                     }
                     else if (child is TextBox textBox)
                     {
-                        var column = Grid.GetColumn(textBox);
-                        var colDef = ColumnDefinitions[column];
-
                         HandleInitialized<TextBox>(textBox, colDef);
                         HandleFocusEvents<TextBox>(textBox, colDef);
                         SetCustomBindings<TextBox>(textBox, colDef);
                     }
                     else if (child is ComboBox comboBox)
                     {
-                        var column = Grid.GetColumn(comboBox);
-                        var colDef = ColumnDefinitions[column];
-
                         HandleInitialized<ComboBox>(comboBox, colDef);
                         HandleSelectionChangedEvent<ComboBox>(comboBox, colDef);
                         HandleFocusEvents<ComboBox>(comboBox, colDef);
                         SetCustomBindings<ComboBox>(comboBox, colDef);
+                        HandleSelectionEvents<ComboBox>(comboBox, colDef);
+
+
                     }
                     else if (child is CheckBox checkBox)
                     {
-                        var column = Grid.GetColumn(checkBox);
-                        var colDef = ColumnDefinitions[column];
+                        HandleInitialized<CheckBox>(checkBox, colDef);
                         HandleClickEvents<CheckBox>(checkBox, colDef);
                         SetCustomBindings<CheckBox>(checkBox, colDef);
+                        //checkBox.Height = 30.0;
+                        checkBox.VerticalContentAlignment = colDef.ItemVerticalAlignment;
+                        checkBox.Margin = colDef.ItemMargin;
+                        
                     }
                     else if (child is TextBlock textBlock)
                     {
-                        var column = Grid.GetColumn(textBlock);
-                        var colDef = ColumnDefinitions[column];
                         HandleFocusEvents<TextBlock>(textBlock, colDef);
                         SetCustomBindings<TextBlock>(textBlock, colDef);
                         if (!string.IsNullOrEmpty(colDef.FontWeight))
@@ -1477,93 +1983,72 @@ namespace CustomComponents.ListBoxExtensions
                     }
                     else if (child is Label label)
                     {
-                        var column = Grid.GetColumn(label);
-                        var colDef = ColumnDefinitions[column];
                         SetCustomBindings<Label>(label, colDef);
                     }
                     else if (child is Button button)
                     {
-                        var column = Grid.GetColumn(button);
-                        var colDef = ColumnDefinitions[column];
-                        button.HorizontalAlignment = colDef.ContentHorizontalAlignment;
-                        button.VerticalAlignment = colDef.ContentVerticalAlignment;
                         HandleClickEvents<Button>(button, colDef);
                         SetCustomBindings<Button>(button, colDef);
                     }
                     else if (child is System.Windows.Controls.Image image)
                     {
-                        var column = Grid.GetColumn(image);
-                        var colDef = ColumnDefinitions[column];
-                        if (colDef != null)
-                        {
-                            image.HorizontalAlignment = colDef.ContentHorizontalAlignment;
-                            image.VerticalAlignment = colDef.ContentVerticalAlignment;
-                            HandleInitialized<Image>(image, colDef);
-                            SetCustomBindings<Image>(image, colDef);
-                        }
+                        HandleInitialized<Image>(image, colDef);
+                        SetCustomBindings<Image>(image, colDef);
                     }
                     else if (child is ProgressBar progressBar)
                     {
-                        var column = Grid.GetColumn(progressBar);
-                        var colDef = ColumnDefinitions[column];
-                        if (colDef != null)
-                        {
-                            progressBar.HorizontalAlignment = colDef.ContentHorizontalAlignment;
-                            progressBar.VerticalAlignment = colDef.ContentVerticalAlignment;
-                            SetCustomBindings<ProgressBar>(progressBar, colDef);
-                        }
+                        SetCustomBindings<ProgressBar>(progressBar, colDef);
                     }
                     else if (child is Slider slider)
                     {
-                        var column = Grid.GetColumn(slider);
-                        var colDef = ColumnDefinitions[column];
-                        if (colDef != null)
-                        {
-                            slider.HorizontalAlignment = colDef.ContentHorizontalAlignment;
-                            slider.VerticalAlignment = colDef.ContentVerticalAlignment;
-                            SetCustomBindings<Slider>(slider, colDef);
-                        }
+                        SetCustomBindings<Slider>(slider, colDef);
                     }
                     else if (child is PasswordBox passwordBox)
                     {
-                        var column = Grid.GetColumn(passwordBox);
-                        var colDef = ColumnDefinitions[column];
                         HandleFocusEvents<PasswordBox>(passwordBox, colDef);
-                        if (colDef != null)
-                        {
-                            passwordBox.HorizontalAlignment = colDef.ContentHorizontalAlignment;
-                            passwordBox.VerticalAlignment = colDef.ContentVerticalAlignment;
-                            SetCustomBindings<PasswordBox>(passwordBox, colDef);
-                        }
+                        SetCustomBindings<PasswordBox>(passwordBox, colDef);
                     }
                     else if (child is TimePicker timePicker)
                     {
-                        var column = Grid.GetColumn(timePicker);
-                        var colDef = ColumnDefinitions[column];
-                        if (colDef != null)
-                        {
-                            timePicker.HorizontalAlignment = colDef.ContentHorizontalAlignment;
-                            timePicker.VerticalAlignment = colDef.ContentVerticalAlignment;
-                            SetCustomBindings<TimePicker>(timePicker, colDef);
-                        }
+                        SetCustomBindings<TimePicker>(timePicker, colDef);
                     }
                     else if (child is DatePicker datePicker)
                     {
-                        var column = Grid.GetColumn(datePicker);
-                        var colDef = ColumnDefinitions[column];
-                        if (colDef != null)
-                        {
-                            datePicker.HorizontalAlignment = colDef.ContentHorizontalAlignment;
-                            datePicker.VerticalAlignment = colDef.ContentVerticalAlignment;
-                            SetCustomBindings<DatePicker>(datePicker, colDef);
-                        }
+                        SetCustomBindings<DatePicker>(datePicker, colDef);
                     }
-                    else if (child is DateTimePicker dateTimePicker)
+                    else if (child is Xceed.Wpf.Toolkit.DateTimePicker dateTimePicker)
                     {
-                        var column = Grid.GetColumn(dateTimePicker);
-                        var colDef = ColumnDefinitions[column];
+                        HandleInitialized<DateTimePicker>(dateTimePicker, colDef);
                         HandleFocusEvents<DateTimePicker>(dateTimePicker, colDef);
                         SetCustomBindings<DateTimePicker>(dateTimePicker, colDef);
+
+                        // set
+                        dateTimePicker.Format = colDef.Format;
+                        dateTimePicker.TimePickerVisibility = colDef.TimePickerVisibility;
+                        dateTimePicker.Kind = colDef.Kind;
+                        dateTimePicker.TimeFormat = colDef.TimeFormat;
+                        dateTimePicker.AllowSpin = colDef.AllowSpin;
+                        dateTimePicker.AllowTextInput = colDef.AllowTextInput;
+                        dateTimePicker.TimePickerAllowSpin = colDef.AllowSpin;
+                        dateTimePicker.TimePickerShowButtonSpinner = colDef.TimePickerShowButtonSpinner;
+                        dateTimePicker.TimePickerVisibility = colDef.TimePickerVisibility;
+                        dateTimePicker.CurrentDateTimePart = colDef.CurrentDateTimePart;
+                        dateTimePicker.MouseWheelActiveTrigger = colDef.MouseWheelActiveTrigger;
+                        dateTimePicker.IsManipulationEnabled = colDef.ItemIsManipulationEnabled;
+                        dateTimePicker.Focusable = colDef.DateTimeFocusable;
+                        if (!string.IsNullOrEmpty(colDef.FormatString))
+                        {
+                            dateTimePicker.FormatString = colDef.FormatString;
+                        }
+                        if (!string.IsNullOrEmpty(colDef.TimeFormatString))
+                        {
+                            dateTimePicker.TimeFormatString = colDef.TimeFormatString;
+                        }
+
+                        if (!double.IsNaN(colDef.DateTimeMinWidth))
+                        {
+                            dateTimePicker.MinWidth = colDef.DateTimeMinWidth;
+                        }
                     }
                 }
             }
@@ -1572,59 +2057,67 @@ namespace CustomComponents.ListBoxExtensions
                 Debug.WriteLine($"Error in HandleChildEvents: {ex}");
             }
         }
+
+
         private void HandleSelectionChangedEvent<T>(T control, MultiListboxColumnDefinition colDef) where T : FrameworkElement
         {
             try
             {
                 if (control is ComboBox b)
                 {
-                    b.SelectionChanged -= (s, e) => SelectionChanged?.Invoke(s, e);
-                    b.SelectionChanged -= (s, e) => colDef.RaiseSelectionChanged(s, e);
                     b.SelectionChanged += (s, e) =>
                     {
                         colDef.RaiseSelectionChanged(s, e);
-                        SelectionChanged?.Invoke(s, e);
+                       // SelectionChanged?.Invoke(s, e);
                     };
                 }
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Error in HandleSelectionChangedEvent: {ex}");
+                ex.LogWrite($"Error in HandleSelectionChangedEvent", RaiseError);
             }
         }
+
+
+
         private void HandleClickEvents<T>(T control, MultiListboxColumnDefinition colDef) where T : FrameworkElement
         {
             try
             {
                 if (control is Button b)
                 {
-                    b.Click += (s, e) => colDef.RaiseClick(s, e);
-                    b.Click -= (s, e) => Click?.Invoke(s, e);
                     b.Click += (s, e) =>
                     {
                         colDef.RaiseClick(s, e);
-                        Click?.Invoke(s, e);
+                        
                     };
                 }
                 else if (control is CheckBox c)
                 {
-                    c.Click += (s, e) => colDef.RaiseClick(s, e);
-                    c.Click -= (s, e) => Click?.Invoke(s, e);
                     c.Click += (s, e) =>
                     {
                         colDef.RaiseClick(s, e);
-                        Click?.Invoke(s, e);
+                        
                     };
                 }
-                else if (control is ToggleButton r)
+                else if (control is ToggleButtonEx r)
                 {
-                    r.Click += (s, e) => colDef.RaiseClick(s, e);
-                    r.Click -= (s, e) => Click?.Invoke(s, e);
                     r.Click += (s, e) =>
                     {
                         colDef.RaiseClick(s, e);
-                        Click?.Invoke(s, e);
+                        
                     };
+
+
+                }
+                else if (control is Xceed.Wpf.Toolkit.DateTimePicker dtp)
+                {
+                    dtp.KeyUp += (s, e) =>
+                    {
+                        colDef.RaiseKeyUpEvent(s, e);
+                    };
+
+
                 }
             }
             catch (Exception ex)
@@ -1633,17 +2126,102 @@ namespace CustomComponents.ListBoxExtensions
             }
         }
 
+        private void HandleSelectionEvents<T>(T control, MultiListboxColumnDefinition colDef) where T : FrameworkElement
+        {
+            try
+            {
+                if (control is Button b)
+                {
+                    
+                }
+                else if (control is ComboBox cmb)
+                {
+                    cmb.SelectionChanged += (s, e) =>
+                    {
+                        colDef.RaiseSelectionChanged(s, e);
+                    };
+                    cmb.DropDownClosed += (s, ef) =>
+                    {
+                        colDef.RaiseDropDownClosed(s, ef);
+                    };
+
+                    
+                }
+                else if (control is CheckBox c)
+                {
+                   
+                }
+                else if (control is ToggleButtonEx r)
+                {
+                   
+
+
+                }
+                else if (control is Xceed.Wpf.Toolkit.DateTimePicker dtp)
+                {
+                    
+
+
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error in HandleSelectionEvents: {ex}");
+            }
+        }
+
+      
+
+        public void unlockToggleBox(int id, int toggletype, bool state, int row)
+        {
+            try
+            {
+                foreach (var item in lstBoxUploadItems.Items)
+                {
+                    var container = lstBoxUploadItems.ItemContainerGenerator.ContainerFromItem(item) as ListBoxItem;
+                    if (container != null)
+                    {
+                        var border = VisualTreeHelper.GetChild(container, 0) as Border;
+                        if (border != null)
+                        {
+                            var contentPresenter = VisualTreeHelper.GetChild(border, 0) as ContentPresenter;
+                            if (contentPresenter != null)
+                            {
+                                var grid = VisualTreeHelper.GetChild(contentPresenter, 0) as Grid;
+                                if (grid != null && grid.Children.Count > 0)
+                                {
+                                    if (grid.Children[0] is TextBlock txt && txt.Text != id.ToString())
+                                    {
+                                        continue;
+                                    }
+                                    var toggle = grid.Children.OfType<ToggleButtonEx>().ElementAtOrDefault(row);
+
+                                    if (toggle != null)
+                                    {
+                                        toggle.LockToggle = false;
+                                        toggle.IsChecked = state;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error in unlockToggleBox: {ex}");
+            }
+        }
+
         private void HandleInitialized<T>(T control, MultiListboxColumnDefinition colDef) where T : FrameworkElement
         {
             try
             {
-                // Remove any existing handlers
-                control.Initialized -= (s, e) => Initialized?.Invoke(s, e);
-                control.Initialized -= (s, e) => colDef.RaiseInitializedEvent(s, e);
-                control.Initialized += (s, e) =>
+
+
+                control.Loaded += (s, e) =>
                 {
-                    colDef.RaiseInitializedEvent(s, e);
-                    Initialized?.Invoke(s, e);
+                    colDef.InitializedEvent(s, e);
                 };
             }
             catch (Exception ex)
@@ -1656,25 +2234,214 @@ namespace CustomComponents.ListBoxExtensions
         {
             try
             {
+
                 // Remove any existing handlers
-                control.LostFocus -= (s, e) => LostFocus?.Invoke(s, e);
-                control.LostFocus -= (s, e) => colDef.RaiseLostFocusEvent(s, e);
-                control.GotFocus -= (s, e) => GotFocus?.Invoke(s, e);
-                control.GotFocus -= (s, e) => colDef.RaiseGotFocusEvent(s, e);
                 control.LostFocus += (s, e) =>
                 {
-                    colDef.RaiseLostFocusEvent(s, e);
-                    LostFocus?.Invoke(s, e);
+                    colDef.LostFocusEvent(s, e);
                 };
+
                 control.GotFocus += (s, e) =>
                 {
-                    colDef.RaiseGotFocusEvent(s, e);
-                    GotFocus?.Invoke(s, e);
+                    colDef.GotFocusEvent(s, e);
                 };
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"Error in HandleFocusEvents: {ex}");
+            }
+        }
+        private void SetDataBinding(Type? control, FrameworkElementFactory controlFactory,
+          MultiListboxColumnDefinition? colDef)
+        {
+            try
+            {
+                if (colDef is null || controlFactory is null || control is null) return;
+                var dp = (control == typeof(TextBox)) ? TextBox.TextProperty :
+                         (control == typeof(Label)) ? Label.ContentProperty :
+                         (control == typeof(DatePicker)) ? DatePicker.SelectedDateProperty :
+                         (control == typeof(TimePicker)) ? TimePicker.TextProperty :
+                          (control == typeof(ComboBox)) ? ComboBox.TagProperty :
+                         (control == typeof(TextBlock)) ? TextBlock.TextProperty : null;
+                if (dp is null || string.IsNullOrEmpty(colDef.DataField)) return;
+                controlFactory.SetBinding(dp, new Binding(colDef.DataField));
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"SetDataBinding {MethodBase.GetCurrentMethod()?.Name} {this}");
+            }
+        }
+
+        private void SetItemHeight(Type? control, FrameworkElementFactory controlFactory,
+          MultiListboxColumnDefinition? colDef)
+        {
+            try
+            {
+                if (colDef is null || controlFactory is null || control is null) return;
+                var dp = (control == typeof(TextBox)) ? TextBox.HeightProperty :
+                         (control == typeof(Label)) ? Label.HeightProperty :
+                         (control == typeof(DatePicker)) ? DatePicker.HeightProperty :
+                         (control == typeof(TimePicker)) ? TimePicker.HeightProperty :
+                         (control == typeof(CheckBox)) ? CheckBox.HeightProperty :
+                         (control == typeof(TextBlock)) ? TextBlock.HeightProperty : null;
+                if (dp is null) return;
+                if (ItemHeightProperty is not null)
+                {
+                    controlFactory.SetValue(dp, (double)GetValue(ItemHeightProperty));
+                }
+                else controlFactory.SetValue(dp, colDef.Height);
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"SetDataBinding {MethodBase.GetCurrentMethod()?.Name} {this}");
+            }
+        }
+
+        private void SetMinWidthBinding(Type? control, FrameworkElementFactory controlFactory,
+          MultiListboxColumnDefinition? colDef)
+        {
+            try
+            {
+                if (colDef is null || controlFactory is null || control is null) return;
+                var dp = (control == typeof(TextBox)) ? TextBox.MinHeightProperty :
+                         (control == typeof(Label)) ? Label.MinHeightProperty :
+                         (control == typeof(DatePicker)) ? DatePicker.MinHeightProperty :
+                         (control == typeof(TimePicker)) ? TimePicker.MinHeightProperty :
+                         (control == typeof(CheckBox)) ? CheckBox.MinHeightProperty :
+                          (control == typeof(ComboBox)) ? CheckBox.MinHeightProperty :
+                         (control == typeof(TextBlock)) ? TextBlock.MinHeightProperty : null;
+                if (dp is null) return;
+                if (!string.IsNullOrEmpty(colDef.MinHeightBinding))
+                {
+                    controlFactory.SetValue(ComboBox.MinHeightProperty,
+                      new Binding(colDef.MinHeightBinding));
+                }
+                else controlFactory.SetValue(dp, colDef.MinHeight);
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"SetMinWidthBinding {MethodBase.GetCurrentMethod()?.Name} {this}");
+            }
+        }
+        private void SetHorizontalAlignmentBinding(Type? control, FrameworkElementFactory controlFactory,
+          MultiListboxColumnDefinition? colDef)
+        {
+            try
+            {
+                if (colDef is null || controlFactory is null || control is null) return;
+                var dp = (control == typeof(TextBox)) ? TextBox.HorizontalAlignmentProperty :
+                         (control == typeof(Label)) ? Label.HorizontalAlignmentProperty :
+                         (control == typeof(DatePicker)) ? DatePicker.HorizontalAlignmentProperty :
+                         (control == typeof(TimePicker)) ? TimePicker.HorizontalAlignmentProperty :
+                         (control == typeof(CheckBox)) ? CheckBox.HorizontalAlignmentProperty :
+                          (control == typeof(ComboBox)) ? CheckBox.HorizontalAlignmentProperty :
+                         (control == typeof(TextBlock)) ? TextBlock.HorizontalAlignmentProperty : null;
+                if (dp is null) return;
+                if (!string.IsNullOrEmpty(colDef.ContentHorizontalAlignmentBinding))
+                {
+                    controlFactory.SetBinding(dp, new Binding(colDef.ContentHorizontalAlignmentBinding));
+                }
+                else if (ItemsHorizontalAlignmentProperty is not null)
+                {
+                    controlFactory.SetValue(dp, (HorizontalAlignment)GetValue(ItemsHorizontalAlignmentProperty));
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"SetHorizontalAlignmentBinding {MethodBase.GetCurrentMethod()?.Name} {this}");
+            }
+        }
+
+        private void SetVerticalAlignmentBinding(Type? control, FrameworkElementFactory controlFactory,
+          MultiListboxColumnDefinition? colDef)
+        {
+            try
+            {
+                if (colDef is null || controlFactory is null || control is null) return;
+                var dp = (control == typeof(TextBox)) ? TextBox.VerticalAlignmentProperty :
+                         (control == typeof(Label)) ? Label.VerticalAlignmentProperty :
+                         (control == typeof(DatePicker)) ? DatePicker.VerticalAlignmentProperty :
+                         (control == typeof(TimePicker)) ? TimePicker.VerticalAlignmentProperty :
+                         (control == typeof(CheckBox)) ? CheckBox.VerticalAlignmentProperty :
+                          (control == typeof(ComboBox)) ? CheckBox.VerticalAlignmentProperty :
+                         (control == typeof(TextBlock)) ? TextBlock.VerticalAlignmentProperty : null;
+                if (dp is null) return;
+                if (!string.IsNullOrEmpty(colDef.ContentVerticalAlignmentBinding))
+                {
+                    controlFactory.SetBinding(dp, new Binding(colDef.ContentVerticalAlignmentBinding));
+                }
+                else if (ItemsVerticalAlignmentProperty is not null)
+                {
+                    controlFactory.SetValue(dp, (VerticalAlignment)GetValue(ItemsVerticalAlignmentProperty));
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"SetVerticalAlignmentBinding {MethodBase.GetCurrentMethod()?.Name} {this}");
+            }
+        }
+
+        private void SetWidthBinding(Type? control, FrameworkElementFactory controlFactory,
+         MultiListboxColumnDefinition? colDef)
+        {
+            try
+            {
+                if (colDef is null || controlFactory is null || control is null) return;
+                var dp = (control == typeof(TextBox)) ? TextBox.WidthProperty :
+                         (control == typeof(Label)) ? Label.WidthProperty :
+                         (control == typeof(DatePicker)) ? DatePicker.WidthProperty :
+                         (control == typeof(TimePicker)) ? TimePicker.WidthProperty :
+                         (control == typeof(CheckBox)) ? CheckBox.WidthProperty :
+                          (control == typeof(ComboBox)) ? CheckBox.WidthProperty :
+                         (control == typeof(TextBlock)) ? TextBlock.WidthProperty : null;
+                if (dp is null) return;
+                if (!string.IsNullOrEmpty(colDef.WidthBinding))
+                {
+                    var widthBinding = new Binding(colDef.WidthBinding)
+                    {
+                        RelativeSource = new RelativeSource(RelativeSourceMode.FindAncestor, typeof(Window), 1)
+                    };
+                    controlFactory.SetBinding(dp, widthBinding);
+                }
+                else
+                {
+                    controlFactory.SetValue(dp, colDef.Width);
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"SetWidthBinding {MethodBase.GetCurrentMethod()?.Name} {this}");
+            }
+        }
+        private void SetFontBinding(Type? control, FrameworkElementFactory controlFactory,
+            MultiListboxColumnDefinition? colDef)
+        {
+            try
+            {
+                if (colDef is null || controlFactory is null || control is null) return;
+                var dp = (control == typeof(ComboBox)) ? ComboBox.FontSizeProperty :
+                         (control == typeof(TextBox)) ? TextBox.FontSizeProperty :
+                         (control == typeof(DateTimePicker)) ? DateTimePicker.FontSizeProperty :
+                         (control == typeof(Label)) ? Label.FontSizeProperty :
+                         (control == typeof(ProgressBar)) ? ProgressBar.FontSizeProperty :
+                         (control == typeof(DatePicker)) ? DatePicker.FontSizeProperty :
+                         (control == typeof(TimePicker)) ? TimePicker.FontSizeProperty :
+                         (control == typeof(PasswordBox)) ? PasswordBox.FontSizeProperty :
+                         (control == typeof(CheckBox)) ? CheckBox.FontSizeProperty :
+                         (control == typeof(TextBlock)) ? TextBlock.FontSizeProperty : null;
+                if (dp is null) return;
+                if (!string.IsNullOrEmpty(colDef.TextualFontSizeBinding))
+                {
+                    controlFactory.SetBinding(dp, new Binding(colDef.TextualFontSizeBinding));
+                }
+                else if (FontSizeProperty is not null)
+                {
+                    controlFactory.SetValue(dp, (double)GetValue(FontSizeProperty));
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"SetFontBinding {MethodBase.GetCurrentMethod()?.Name} {this}");
             }
         }
 
@@ -1683,105 +2450,99 @@ namespace CustomComponents.ListBoxExtensions
             try
             {
                 if (colDef == null) return;
-
-                // Handle font weight and color bindings if specified
-
-                if (control is ToggleButton toggleButton1)
+                if (control is Button btn)
+                {
+                    control.KeyUp += (s, e) =>
+                    {
+                        colDef.RaiseKeyUpEvent(s, e);
+                    };
+                }
+                else if (control is Xceed.Wpf.Toolkit.DateTimePicker dtp)
+                {
+                    control.KeyUp += (s, e) =>
+                    {
+                        colDef.RaiseKeyUpEvent(s, e);
+                    };
+                    if (!string.IsNullOrEmpty(colDef.ContentVerticalAlignmentBinding))
+                    {
+                        control.SetBinding(Control.VerticalAlignmentProperty,
+                            new Binding(colDef.ContentVerticalAlignmentBinding));
+                    }
+                    else if (ItemsVerticalAlignmentProperty is not null)
+                    {
+                        control.VerticalAlignment = (VerticalAlignment)GetValue(ItemsVerticalAlignmentProperty);
+                    }
+                }
+                else if (control is ToggleButtonEx ToggleButtonEx1)
                 {
                     control.Width = colDef.ToggleButtonWidth;
                     control.Height = colDef.ToggleButtonHeight;
-                    control.HorizontalAlignment = colDef.ContentHorizontalAlignment;
-                    control.VerticalAlignment = colDef.ContentVerticalAlignment;
-                    if (colDef.Style != null && colDef.Style.TargetType == typeof(ToggleButton))
+                    var binding = new Binding(colDef.DataField)
                     {
-                        control.Style = colDef.Style;
+                        UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
+                        Mode = BindingMode.OneWay
+                    };
+                    BindingOperations.SetBinding(control, ToggleButtonEx.IsCheckedProperty, binding);
+                }
+                else if (control is CheckBox chkb)
+                {
+                    control.SetValue(CheckBox.HeightProperty, double.NaN);
+                }
+                else if (control is ComboBox cmb)
+                {
+                    control.Initialized += (s, e) =>
+                    {
+                        colDef.InitializedEvent(s, e);
+                    };
+
+                   
+                    cmb.FontSize = 14.0;
+                    cmb.Width = colDef.Width;
+                }
+                else if (control is TextBlock textBlock)
+                {
+                    if (!string.IsNullOrEmpty(colDef.ContentVerticalAlignmentBinding))
+                    {
+                        control.SetBinding(Control.VerticalAlignmentProperty,
+                            new Binding(colDef.ContentVerticalAlignmentBinding));
                     }
+                    else if (ItemsVerticalAlignmentProperty is not null)
+                    {
+                        control.VerticalAlignment = (VerticalAlignment)GetValue(ItemsVerticalAlignmentProperty);
+                    }
+                    if (!string.IsNullOrEmpty(colDef.WidthBinding))
+                    {
+                        var binding = new Binding(colDef.WidthBinding)
+                        {
+                            RelativeSource = new RelativeSource(RelativeSourceMode.FindAncestor, typeof(Window), 1),
+                            UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
+                            Mode = BindingMode.TwoWay
+                        };
+                        BindingOperations.SetBinding(textBlock, FrameworkElement.WidthProperty, binding);
+                    }
+                    else control.Width = colDef.Width;
                 }
                 else
                 {
-                    if (control is TextBlock textBlock)
-                    {
-                        if (!string.IsNullOrEmpty(colDef.WidthBinding))
-                        {
+                    control.Width = colDef.Width;
+                    control.Height = colDef.Height;
+                    control.MinWidth = colDef.MinWidth;
+                    control.MaxWidth = colDef.MaxWidth;
+                    control.MaxHeight = colDef.MaxHeight;
+                }
 
-                            var binding = new Binding(colDef.WidthBinding)
-                            {
-                                RelativeSource = new RelativeSource(RelativeSourceMode.FindAncestor, typeof(Window), 1),
-                                UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
-                                Mode = BindingMode.TwoWay
-                            };
-                            BindingOperations.SetBinding(textBlock, FrameworkElement.WidthProperty, binding);
-                        }
-
-                        if (!string.IsNullOrEmpty(colDef.Foreground) || !string.IsNullOrEmpty(colDef.FontWeight))
-                        {
-                            if (textBlock.FontWeight == FontWeights.Normal)
-                            {
-
-                            }
-                        }
-                        FormattedText ft = new FormattedText("WOOW",
-                    CultureInfo.CurrentCulture, CultureInfo.CurrentCulture.TextInfo.IsRightToLeft ? FlowDirection.RightToLeft : FlowDirection.LeftToRight,
-                    new Typeface(textBlock.FontFamily, textBlock.FontStyle, textBlock.FontWeight,
-                    textBlock.FontStretch),
-                    textBlock.FontSize > 0 ? textBlock.FontSize : 9,
-                    textBlock.Foreground ?? new SolidColorBrush(Colors.Black),
-                    VisualTreeHelper.GetDpi(this).PixelsPerDip);
-                        var maxheightoff = (control.Height - ft.Height) / 2;
-                        if (maxheightoff < 0) maxheightoff = 0;
-
-                        textBlock.Padding = new Thickness(0, maxheightoff, 0, 0);
-                        if (ItemHeightProperty is not null)
-                        {
-                            var itemHeight = (double)GetValue(ItemHeightProperty);
-                            control.Height = itemHeight;
-                        }
-                        else control.Height = colDef.Height;
-                        control.Width = colDef.Width;
-                        control.MinWidth = colDef.MinWidth;
-                        control.MinWidth = colDef.MinWidth;
-                        control.MaxWidth = colDef.MaxWidth;
-                        control.MinHeight = colDef.MinHeight;
-                        control.MaxHeight = colDef.MaxHeight;
-                    }
-                    else
+                if (colDef.Style != null && colDef.Style.TargetType == control.GetType())
+                {
+                    control.Style = colDef.Style;
+                }
+                if (!string.IsNullOrEmpty(colDef.DataField))
+                {
+                    var binding = new Binding(colDef.DataField)
                     {
-                        control.Width = colDef.Width;
-                        control.Height = colDef.Height;
-                        control.MinWidth = colDef.MinWidth;
-                        control.MinWidth = colDef.MinWidth;
-                        control.MaxWidth = colDef.MaxWidth;
-                        control.MinHeight = colDef.MinHeight;
-                        control.MaxHeight = colDef.MaxHeight;
-                    }
-                    // Apply alignment and margin
-                    control.HorizontalAlignment = colDef.ContentHorizontalAlignment;
-                    control.VerticalAlignment = colDef.ContentVerticalAlignment;
-                    control.Margin = colDef.ContentMargin;
-
-                    if (colDef.Style != null && colDef.Style.TargetType == control.GetType())
-                    {
-                        control.Style = colDef.Style;
-                    }
-                    if (!string.IsNullOrEmpty(colDef.DataField))
-                    {
-                        var binding = new Binding(colDef.DataField)
-                        {
-                            UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
-                            Mode = BindingMode.TwoWay
-                        };
-                        BindingOperations.SetBinding(control, GetMainBindingProperty(colDef.ComponentType.ToString(), colDef.BoundTo), binding);
-                    }
-                    // For ToggleButton, ensure binding is set up correctly
-                    if (control is ToggleButton toggleButton)
-                    {
-                        var binding = new Binding(colDef.DataField)
-                        {
-                            UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
-                            Mode = BindingMode.TwoWay
-                        };
-                        BindingOperations.SetBinding(toggleButton, ToggleButton.IsCheckedProperty, binding);
-                    }
+                        UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
+                        Mode = BindingMode.TwoWay
+                    };
+                    BindingOperations.SetBinding(control, GetMainBindingProperty(colDef.ComponentType.ToString(), colDef.BoundTo), binding);
                 }
             }
             catch (Exception ex)
@@ -1790,11 +2551,13 @@ namespace CustomComponents.ListBoxExtensions
             }
         }
 
+
+
         private static void OnColumnDefinitionsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             try
             {
-                if (d is MultiListbox multiListbox)
+                if (d is MultiListbox multiListbox && !multiListbox.IsBuilding)
                 {
                     multiListbox._columnFactories = null; // Force rebuild of factories
                     multiListbox._cachedItemTemplate = null; // Force rebuild of template
@@ -1836,9 +2599,9 @@ namespace CustomComponents.ListBoxExtensions
                     case "datepicker":
                         return typeof(DatePicker);
                     case "datetimepicker":
-                        return typeof(DateTimePicker);
-                    case "togglebutton":
-                        return typeof(ToggleButton);
+                        return typeof(Xceed.Wpf.Toolkit.DateTimePicker);
+                    case "togglebuttonex":
+                        return typeof(ToggleButtonEx);
                     case "slider":
                         return typeof(Slider);
                     default:
@@ -1872,8 +2635,8 @@ namespace CustomComponents.ListBoxExtensions
                 typeof(PasswordBox),
                 typeof(TimePicker),
                 typeof(DatePicker),
-                typeof(DateTimePicker),
-                typeof(ToggleButton),
+                typeof(Xceed.Wpf.Toolkit.DateTimePicker),
+                typeof(ToggleButtonEx),
                 typeof(Slider),
                 typeof(FrameworkElement) // Common base properties
                 };
@@ -1917,8 +2680,8 @@ namespace CustomComponents.ListBoxExtensions
                         "image" => typeof(System.Windows.Controls.Image),
                         "timepicker" => typeof(TimePicker),
                         "datepicker" => typeof(DatePicker),
-                        "datetimepicker" => typeof(DateTimePicker),
-                        "togglebutton" => typeof(ToggleButton),
+                        "datetimepicker" => typeof(Xceed.Wpf.Toolkit.DateTimePicker),
+                        "ToggleButtonEx" => typeof(ToggleButtonEx),
                         "slider" => typeof(Slider),
                         _ => null
                     };
@@ -1957,9 +2720,9 @@ namespace CustomComponents.ListBoxExtensions
                     case "datepicker":
                         return DatePicker.SelectedDateProperty;
                     case "datetimepicker":
-                        return DateTimePicker.ValueProperty;
-                    case "togglebutton":
-                        return ToggleButton.IsCheckedProperty;
+                        return Xceed.Wpf.Toolkit.DateTimePicker.ValueProperty;
+                    case "ToggleButtonEx":
+                        return ToggleButtonEx.IsCheckedProperty;
                     case "slider":
                         return Slider.ValueProperty;
                     default:
@@ -1977,9 +2740,73 @@ namespace CustomComponents.ListBoxExtensions
             try
             {
                 if (_headerGrid == null) return;
+                int i = 1;
+                // Apply visual properties to header text blocks
+                foreach (var child in _headerGrid.Children)
+                {
+                    var colDef = ColumnDefinitions[i];
+                    if (child is TextBlock ttxb)
+                    {
+                        Dispatcher.BeginInvoke(new Action(() =>
+                        {
+                            ttxb.Margin = colDef.HeaderMargin;
+                            ttxb.Padding = colDef.HeaderPadding;
+                            ttxb.HorizontalAlignment = colDef.HeaderHorizontalAlignment;
+                            ttxb.VerticalAlignment = colDef.HeaderVerticalAlignment;
+                        }));
+
+                    }
+                    else if (child is Xceed.Wpf.Toolkit.DateTimePicker dtp)
+                    {
+                        Dispatcher.BeginInvoke(new Action(() =>
+                        {
+                            dtp.Margin = colDef.HeaderMargin;
+                            dtp.Padding = colDef.HeaderPadding;
+                            dtp.HorizontalAlignment = colDef.HeaderHorizontalAlignment;
+                            dtp.VerticalAlignment = colDef.HeaderVerticalAlignment;
+                        }));
+                    }
+                    else if (child is ComboBox cmb)
+                    {
+                        Dispatcher.BeginInvoke(new Action(() =>
+                        {
+                            cmb.Margin = colDef.HeaderMargin;
+                            cmb.Padding = colDef.HeaderPadding;
+                            cmb.HorizontalAlignment = colDef.HeaderHorizontalAlignment;
+                            cmb.VerticalAlignment = colDef.HeaderVerticalAlignment;
+                        }));
+                    }
+                    else if (child is Button btn)
+                    {
+                        Dispatcher.BeginInvoke(new Action(() =>
+                        {
+                            btn.Margin = colDef.HeaderMargin;
+                            btn.Padding = colDef.HeaderPadding;
+                            btn.Width = colDef.Width;
+                            btn.MinWidth = colDef.MinWidth;
+                            btn.HorizontalAlignment = colDef.HeaderHorizontalAlignment;
+                            btn.VerticalAlignment = colDef.HeaderVerticalAlignment;
+                        }));
+                    }
+                    i++;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error in ApplyVisualProperties: {ex}");
+            }
+        }
+
+        private void ApplyVisualProperties2()
+        {
+            try
+            {
+                if (_itemGrid == null) return;
 
                 // Apply visual properties to header text blocks
-                foreach (var child in _headerGrid.Children.OfType<TextBlock>())
+
+                foreach (var child in _itemGrid.Children.OfType<Xceed.Wpf.Toolkit.DateTimePicker>())
                 {
                     var columnIndex = Grid.GetColumn(child);
                     if (columnIndex >= 0 && columnIndex < ColumnDefinitions.Count)
@@ -1991,7 +2818,7 @@ namespace CustomComponents.ListBoxExtensions
                             child.Padding = colDef.HeaderPadding;
                             child.HorizontalAlignment = colDef.HeaderHorizontalAlignment;
                             child.VerticalAlignment = colDef.HeaderVerticalAlignment;
-                            child.Style = (colDef?.Style is not null && colDef.Style.TargetType == typeof(TextBlock)) ? colDef.Style : null;
+                            child.MinHeight = 20.0;
                         }));
                     }
                 }
@@ -2002,6 +2829,28 @@ namespace CustomComponents.ListBoxExtensions
             }
         }
 
+        public void ResetColumnDefinitions()
+        {
+            try
+            {
+                IsBuilding = true;
+                try
+                {
+                    _columnFactories = null; // Force rebuild of factories
+                    _cachedItemTemplate = null; // 
+                    ApplyColumnDefinitions();
+
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"Error in ResetColumnDefinitions: {ex}");
+                }
+            }
+            finally
+            {
+                IsBuilding = false;
+            }
+        }
         private void ApplyColumnDefinitions()
         {
             try
@@ -2011,14 +2860,57 @@ namespace CustomComponents.ListBoxExtensions
                 _headerGrid.ColumnDefinitions.Clear();
                 _headerGrid.Children.Clear();
                 _itemGrid.ColumnDefinitions.Clear();
-
+                StyleHandler styleHandler = new StyleHandler();
+                bool HasValidStyle = false;
                 foreach (var colDef in ColumnDefinitions)
                 {
+                    var __controlType = GetControlType(colDef.ComponentType.ToString());
                     // Only add to header grid if there's a header text
                     if (!string.IsNullOrEmpty(colDef.HeaderText))
                     {
+                        int stylescnt = -1;
+                        bool IsToggle = false;
+                        double headerWidth = (colDef.HeaderWidth > colDef.Width) ? colDef.HeaderWidth : colDef.Width;
+                        if (__controlType == typeof(ToggleButtonEx)
+                            && colDef.Style is not null)
+                        {
+
+                            IsToggle = true;
+                            //   var ha = HorizontalAlignment.Center :
+                            //      colDef.HeaderHorizontalAlignment;
+                            if (colDef.Style != null && colDef.Style.TargetType == typeof(ToggleButtonEx))
+                            {
+                                foreach (SetterBase style in (SetterBaseCollection)colDef.Style.Setters)
+                                {
+                                    if (style is Setter _style && !_style.Property.Name.ToLower().Contains("template"))
+                                    {
+                                        stylescnt++;
+                                    }
+                                }
+
+                                if (stylescnt > -1)
+                                {
+                                    List<Setter> styles = new List<Setter>();
+
+                                    foreach (SetterBase style in (SetterBaseCollection)colDef.Style.Setters)
+                                    {
+                                        if (style is Setter _style && !_style.Property.Name.ToLower().Contains("template"))
+                                        {
+                                            styles.Add(_style);
+                                        }
+                                    }
+                                    styleHandler = new(RaiseError, styles);
+                                    headerWidth = colDef.HeaderWidth;
+
+                                    HasValidStyle = styleHandler.Width > 0;
+                                }
+                            }
+                        }
+
+
+                        ////
                         var headerColumn = new System.Windows.Controls.ColumnDefinition();
-                        if (!string.IsNullOrEmpty(colDef.WidthBinding))
+                        if (!string.IsNullOrEmpty(colDef.WidthBinding) && !HasValidStyle)
                         {
                             var binding = new Binding(colDef.WidthBinding)
                             {
@@ -2028,11 +2920,25 @@ namespace CustomComponents.ListBoxExtensions
                         }
                         else
                         {
-                            headerColumn.Width = new GridLength(colDef.Width);
+                            headerColumn.Width = new GridLength(headerWidth);
                         }
+
+
+
+
                         _headerGrid.ColumnDefinitions.Add(headerColumn);
 
-                        var headerTextBlock = new TextBlock { Text = colDef.HeaderText };
+
+                        var headerTextBlock = new TextBlock
+                        {
+                            Text = colDef.HeaderText
+
+                            //Padding = new Thickness(120,0,0,0)
+                        };
+                        headerTextBlock.HorizontalAlignment = colDef.HeaderHorizontalAlignment;
+
+
+
                         Grid.SetColumn(headerTextBlock, _headerGrid.ColumnDefinitions.Count - 1);
                         _headerGrid.Children.Add(headerTextBlock);
                     }
@@ -2050,175 +2956,219 @@ namespace CustomComponents.ListBoxExtensions
                     }
                     else
                     {
-                        // For ToggleButton, ensure column is at least as wide as the button
-                        if (colDef.ComponentType.ToString().ToLower() == "togglebutton" && !double.IsNaN(colDef.ToggleButtonWidth))
+                       
+                            // For ToggleButtonEx, ensure column is at least as wide as the button
+                        if (__controlType == typeof(ToggleButtonEx))
                         {
-                            itemColumn.Width = new GridLength(Math.Max(colDef.Width, colDef.ToggleButtonWidth));
-                            itemColumn.MinWidth = colDef.ToggleButtonWidth;
+                            if (!double.IsNaN(colDef.ToggleButtonWidth))
+                            {
+                                itemColumn.Width = new GridLength(Math.Max(colDef.Width, colDef.ToggleButtonWidth));
+                                itemColumn.MinWidth = colDef.ToggleButtonWidth;
+                            }
+                            else
+                            {
+                                itemColumn.Width = new GridLength(HasValidStyle ? styleHandler.Width : colDef.Width);
+
+                            }
                         }
                         else
                         {
-                            itemColumn.Width = new GridLength(colDef.Width);
+                            double hdrwidth = colDef.Width;
+                            itemColumn.Width = new GridLength(hdrwidth);
+
                         }
                     }
+
                     _itemGrid.ColumnDefinitions.Add(itemColumn);
 
-                    if (!string.IsNullOrEmpty(colDef.DataField))
+
+                    var controlType = GetControlType(colDef.ComponentType.ToString());
+                    var factory = new FrameworkElementFactory(controlType);
+                    factory.SetValue(Grid.ColumnProperty, _itemGrid.ColumnDefinitions.Count - 1);
+                    if (controlType == typeof(ToggleButtonEx))
                     {
-                        var controlType = GetControlType(colDef.ComponentType.ToString());
-                        var factory = new FrameworkElementFactory(controlType);
+                        factory = new FrameworkElementFactory(typeof(ToggleButtonEx));
+                        factory.SetValue(FrameworkElement.NameProperty, "PART_ToggleButtonEx");
                         factory.SetValue(Grid.ColumnProperty, _itemGrid.ColumnDefinitions.Count - 1);
-                        if (controlType == typeof(ToggleButton))
+
+                        // Add Loaded handler to ensure style and visibility
+                        factory.AddHandler(FrameworkElement.LoadedEvent, new RoutedEventHandler((s, e) =>
                         {
-                            factory = new FrameworkElementFactory(typeof(ToggleButton));
-                            factory.SetValue(FrameworkElement.NameProperty, "PART_ToggleButton");
-                            factory.SetValue(Grid.ColumnProperty, _itemGrid.ColumnDefinitions.Count - 1);
-
-                            // Add Loaded handler to ensure style and visibility
-                            factory.AddHandler(FrameworkElement.LoadedEvent, new RoutedEventHandler((s, e) =>
+                            var ToggleButtonEx = s as ToggleButtonEx;
+                            if (ToggleButtonEx != null)
                             {
-                                var toggleButton = s as ToggleButton;
-                                if (toggleButton != null)
+                                // Apply all visual properties and style after template is applied
+                                Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() =>
                                 {
-                                    // Apply all visual properties and style after template is applied
-                                    Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() =>
-                                    {
-                                        toggleButton.Width = colDef.ToggleButtonWidth;
-                                        toggleButton.Height = colDef.ToggleButtonHeight;
-                                        toggleButton.MinWidth = colDef.ToggleButtonWidth;
-                                        toggleButton.MinHeight = colDef.ToggleButtonHeight;
-                                        toggleButton.MaxWidth = colDef.ToggleButtonWidth;
-                                        toggleButton.MaxHeight = colDef.ToggleButtonHeight;
-                                        toggleButton.HorizontalAlignment = HorizontalAlignment.Center;
-                                        toggleButton.VerticalAlignment = VerticalAlignment.Center;
-                                        toggleButton.Visibility = Visibility.Visible;
-                                        toggleButton.Style = (colDef?.Style is not null && colDef.Style.TargetType == typeof(ToggleButton)) ? colDef.Style : null;
+                                    ToggleButtonEx.Width = (HasValidStyle) ? styleHandler.Width : colDef.ToggleButtonWidth;
+                                    ToggleButtonEx.Height = (HasValidStyle) ? styleHandler.Height : colDef.ToggleButtonHeight;
+                                    ToggleButtonEx.MinWidth = colDef.ToggleButtonWidth;
+                                    ToggleButtonEx.MinHeight = colDef.ToggleButtonHeight;
+                                    ToggleButtonEx.MaxWidth = colDef.ToggleButtonWidth;
+                                    ToggleButtonEx.MaxHeight = colDef.ToggleButtonHeight;
+                                    ToggleButtonEx.HorizontalAlignment = HorizontalAlignment.Left;
+                                    ToggleButtonEx.VerticalAlignment = VerticalAlignment.Center;
+                                    ToggleButtonEx.Visibility = Visibility.Visible;
+                                    ToggleButtonEx.Style = (colDef?.Style is not null && colDef.Style.TargetType == typeof(ToggleButtonEx)) ? colDef.Style : null;
 
-                                        if (toggleButton.Template != null)
+                                    if (ToggleButtonEx.Template != null)
+                                    {
+                                        ToggleButtonEx.ApplyTemplate();
+                                        var image = ToggleButtonEx.Template.FindName("PART_Image", ToggleButtonEx) as Image;
+                                        ToggleButtonEx.Checked += (s2, e2) =>
                                         {
-                                            toggleButton.ApplyTemplate();
-                                            var image = toggleButton.Template.FindName("PART_Image", toggleButton) as Image;
-                                            toggleButton.Checked += (s2, e2) =>
+                                            var img = ToggleButtonEx.Template.FindName("PART_Image", ToggleButtonEx) as Image;
+                                        };
+                                        ToggleButtonEx.Unchecked += (s2, e2) =>
+                                        {
+                                            var img = ToggleButtonEx.Template.FindName("PART_Image", ToggleButtonEx) as Image;
+                                            if (img != null)
                                             {
-                                                var img = toggleButton.Template.FindName("PART_Image", toggleButton) as Image;
-                                            };
-                                            toggleButton.Unchecked += (s2, e2) =>
-                                            {
-                                                var img = toggleButton.Template.FindName("PART_Image", toggleButton) as Image;
-                                                if (img != null)
-                                                {
-                                                    img.Source = null;
-                                                }
-                                            };
-                                        }
-                                    }));
-                                }
-                            }));
+                                                img.Source = null;
+                                            }
+                                        };
+                                    }
+                                }));
+                            }
+                        }));
 
-                            factory.AddHandler(ToggleButton.ClickEvent, new RoutedEventHandler((s, e) =>
-                            {
-                                var toggle = s as ToggleButton;
-                                colDef.RaiseClick(s, e);
-                                Click?.Invoke(s, e);
-                            }));
-                        }
-                        else if (controlType == typeof(CheckBox))
+                        factory.AddHandler(ToggleButtonEx.ClickEvent, new RoutedEventHandler((s, e) =>
                         {
-                            factory.AddHandler(FrameworkElement.LoadedEvent, new RoutedEventHandler((s, e) =>
-                            {
-                                var checkBox = s as CheckBox;
-                                if (checkBox != null)
-                                {
-                                    // Visual properties will be set in MultiListbox_Loaded
-                                }
-                            }));
-                        }
-                        else if (controlType == typeof(Button))
+                            var toggle = s as ToggleButtonEx;
+                            //colDef.RaiseClick(s, e);
+                            /// Click?.Invoke(s, e);
+                        }));
+                    }
+                    else if (controlType == typeof(TextBlock))
+                    {
+                        factory.AddHandler(FrameworkElement.LoadedEvent, new RoutedEventHandler((s, e) =>
                         {
-                            factory.AddHandler(FrameworkElement.LoadedEvent, new RoutedEventHandler((s, e) =>
+                            var textBlock = s as TextBlock;
+                            if (textBlock != null)
                             {
-                                var button = s as Button;
-                                if (button != null)
+                                if (!string.IsNullOrEmpty(colDef.TextualFontSizeBinding))
                                 {
-                                    if (colDef.ButtonImageSource != null)
-                                    {
-                                        var image = new Image { Source = colDef.ButtonImageSource };
-                                        button.Content = image;
-                                    }
+                                    textBlock.SetBinding(TextBlock.FontSizeProperty,
+                                        new Binding(colDef.TextualFontSizeBinding));
                                 }
-                            }));
-                        }
-                        else if (controlType == typeof(ComboBox))
+                                else if (FontSizeProperty is not null)
+                                {
+                                    textBlock.SetValue(Control.FontSizeProperty,
+                                        (double)GetValue(FontSizeProperty));
+                                }
+                                textBlock.SetValue(TextOptions.TextFormattingModeProperty, TextFormattingMode.Display);
+                                textBlock.SetValue(TextOptions.TextRenderingModeProperty, TextRenderingMode.ClearType);
+                            }
+                        }));
+                    }
+                    else if (controlType == typeof(CheckBox))
+                    {
+                        factory.AddHandler(FrameworkElement.LoadedEvent, new RoutedEventHandler((s, e) =>
                         {
-                            factory.AddHandler(FrameworkElement.LoadedEvent, new RoutedEventHandler((s, e) =>
+                            var checkBox = s as CheckBox;
+                            if (checkBox != null)
                             {
-                                var comboBox = s as ComboBox;
-                                if (comboBox != null)
+                                if (!string.IsNullOrEmpty(colDef.DataField))
                                 {
-                                    ComboBoxInitialized?.Invoke(s, e);
+                                    checkBox.SetBinding(CheckBox.FontSizeProperty,
+                                        new Binding(colDef.DataField));
                                 }
-                            }));
-                            factory.AddHandler(ComboBox.SelectionChangedEvent, new SelectionChangedEventHandler((s, e) =>
-                            {
-                                var comboBox = s as ComboBox;
-                                SelectionChanged?.Invoke(s, e);
-                                colDef.RaiseSelectionChanged(s, e);
-                            }));
-                            factory.AddHandler(ComboBox.LostFocusEvent, new RoutedEventHandler((s, e) =>
-                            {
-                                var comboBox = s as ComboBox;
-                                LostFocus?.Invoke(s, e);
-                                colDef.RaiseLostFocusEvent(s, e);
-                            }));
-                            factory.AddHandler(ComboBox.GotFocusEvent, new RoutedEventHandler((s, e) =>
-                            {
-                                var comboBox = s as ComboBox;
-                                GotFocus?.Invoke(s, e);
-                                colDef.RaiseGotFocusEvent(s, e);
-                            }));
-                        }
-                        else if (controlType == typeof(DateTimePicker))
+
+                                // Visual properties will be set in MultiListbox_Loaded
+                            }
+                        }));
+                    }
+                    else if (controlType == typeof(Button))
+                    {
+
+                        if (colDef.ItemImageSource != null)
                         {
-                            factory.AddHandler(FrameworkElement.LoadedEvent, new RoutedEventHandler((s, e) =>
-                            {
-                                var datePicker = s as DateTimePicker;
-                                if (datePicker != null)
-                                {
-                                    if (!string.IsNullOrEmpty(colDef.DateTimeFormat))
-                                    {
-                                        if (Enum.TryParse<Xceed.Wpf.Toolkit.DateTimeFormat>(colDef.DateTimeFormat, true, out var format))
-                                        {
-                                            datePicker.Format = format;
-                                        }
-                                    }
-                                    if (!string.IsNullOrEmpty(colDef.DateTimeFormatString))
-                                    {
-                                        datePicker.FormatString = colDef.DateTimeFormatString;
-                                    }
-                                    if (!string.IsNullOrEmpty(colDef.DateTimeTimeFormat))
-                                    {
-                                        if (Enum.TryParse<Xceed.Wpf.Toolkit.DateTimeFormat>(colDef.DateTimeTimeFormat, true, out var timeFormat))
-                                        {
-                                            datePicker.TimeFormat = timeFormat;
-                                        }
-                                    }
-                                    if (!string.IsNullOrEmpty(colDef.DateTimeTimeFormatString))
-                                    {
-                                        datePicker.TimeFormatString = colDef.DateTimeTimeFormatString;
-                                    }
-                                    if (!double.IsNaN(colDef.DateTimeMinWidth))
-                                    {
-                                        datePicker.MinWidth = colDef.DateTimeMinWidth;
-                                    }
-                                    datePicker.Focusable = colDef.DateTimeFocusable;
-                                }
-                            }));
-                            factory.AddHandler(DateTimePicker.LostFocusEvent, new RoutedEventHandler((s, e) => DateTimePickerLostFocus?.Invoke(s, e)));
-                            factory.AddHandler(DateTimePicker.GotFocusEvent, new RoutedEventHandler((s, e) => DateTimePickerGotFocus?.Invoke(s, e)));
-                            factory.AddHandler(DateTimePicker.KeyUpEvent, new KeyEventHandler((s, e) => DateTimePickerKeyUp?.Invoke(s, e)));
+                            var ifactory = new FrameworkElementFactory(typeof(Image));
+                            ifactory.SetValue(Image.SourceProperty, colDef.ItemImageSource);
+                            ifactory.SetValue(Image.WidthProperty, 16.0);
+                            ifactory.SetValue(Image.HeightProperty, 16.0);
+                            ///factory.AppendChild(ifactory);
+
                         }
+                        factory.AddHandler(FrameworkElement.LoadedEvent, new RoutedEventHandler((s, e) =>
+                        {
+                            var button = s as Button;
+                            if (button != null)
+                            {
+                                button.Width = 50.0;
+                            }
+                        }));
+                    }
+                    else if (controlType == typeof(ComboBox))
+                    {
+
+
+
+                        factory.AddHandler(FrameworkElement.LoadedEvent, new RoutedEventHandler((s, e) =>
+                        {
+                            var comboBox = s as ComboBox;
+                            colDef.InitializedEvent(s, e);
+                        }));
+                        factory.AddHandler(ComboBox.SelectionChangedEvent, new SelectionChangedEventHandler((s, e) =>
+                        {
+                            var comboBox = s as ComboBox;
+                            colDef.RaiseSelectionChanged(s, e);
+                        }));
+                        factory.AddHandler(ComboBox.LostFocusEvent, new RoutedEventHandler((s, e) =>
+                        {
+                            var comboBox = s as ComboBox;
+                            colDef.LostFocusEvent(s, e);
+                        }));
+                        factory.AddHandler(ComboBox.GotFocusEvent, new RoutedEventHandler((s, e) =>
+                        {
+                            var comboBox = s as ComboBox;
+                            colDef.GotFocusEvent(s, e);
+                        }));
+                    }
+                    else if (controlType == typeof(Xceed.Wpf.Toolkit.DateTimePicker))
+                    {
+                        factory.AddHandler(FrameworkElement.LoadedEvent, new RoutedEventHandler((s, e) =>
+                        {
+                            var datePicker = s as Xceed.Wpf.Toolkit.DateTimePicker;
+                            if (datePicker != null)
+                            {
+                                datePicker.Format = colDef.Format;
+                                datePicker.TimePickerVisibility = colDef.TimePickerVisibility;
+                                datePicker.Kind = colDef.Kind;
+                                datePicker.TimeFormat = colDef.TimeFormat;
+                                datePicker.AllowSpin = colDef.AllowSpin;
+                                datePicker.AllowTextInput = colDef.AllowTextInput;
+                                datePicker.TimePickerAllowSpin = colDef.AllowSpin;
+                                datePicker.TimePickerShowButtonSpinner = colDef.TimePickerShowButtonSpinner;
+                                datePicker.TimePickerVisibility = colDef.TimePickerVisibility;
+                                datePicker.CurrentDateTimePart = colDef.CurrentDateTimePart;
+                                datePicker.MouseWheelActiveTrigger = colDef.MouseWheelActiveTrigger;
+                                datePicker.IsManipulationEnabled = colDef.ItemIsManipulationEnabled;
+                                datePicker.Focusable = colDef.DateTimeFocusable;
+                                if (!string.IsNullOrEmpty(colDef.FormatString))
+                                {
+                                    datePicker.FormatString = colDef.FormatString;
+                                }
+                                if (!string.IsNullOrEmpty(colDef.TimeFormatString))
+                                {
+                                    datePicker.TimeFormatString = colDef.TimeFormatString;
+                                }
+
+                                if (!double.IsNaN(colDef.DateTimeMinWidth))
+                                {
+                                    datePicker.MinWidth = colDef.DateTimeMinWidth;
+                                }
+                               
+                            }
+                        }));
+                        //factory.AddHandler(Xceed.Wpf.Toolkit.DateTimePicker.LostFocusEvent, new RoutedEventHandler((s, e) => colDef.LostFocus?.Invoke(s, e)));
+                       // factory.AddHandler(Xceed.Wpf.Toolkit.DateTimePicker.GotFocusEvent, new RoutedEventHandler((s, e) => DateTimePickerGotFocus?.Invoke(s, e)));
+                      //  factory.AddHandler(Xceed.Wpf.Toolkit.DateTimePicker.KeyUpEvent, new KeyEventHandler((s, e) => DateTimePickerKeyUp?.Invoke(s, e)));
                     }
                 }
+
+
+
             }
             catch (Exception ex)
             {
@@ -2226,10 +3176,19 @@ namespace CustomComponents.ListBoxExtensions
             }
 
             // Apply visual properties after column definitions are set up
-            ApplyVisualProperties();
+
         }
 
+
         #region Event Handlers
+
+        public event MouseButtonEventHandler ItemMouseDoubleClick;
+        public event RoutedEventHandler ItemLostFocus;
+        public event RoutedEventHandler ItemGotFocus;
+        public event SelectionChangedEventHandler ItemSelectionChanged;
+        //public event SelectionChangedEventHandler SelectionChanged;
+
+
         private void lstBoxUploadItems_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             ItemMouseDoubleClick?.Invoke(sender, e);

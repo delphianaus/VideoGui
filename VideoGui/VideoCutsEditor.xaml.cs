@@ -37,7 +37,7 @@ namespace VideoGui
     /// </summary>
     public partial class VideoCutsEditor : Window
     {
-        
+
         string Filename = "";
         int _TotalSecs = 0;
         string ConnectionString = "";
@@ -46,7 +46,7 @@ namespace VideoGui
 
         public static readonly DependencyProperty SrcFileNameWidthProperty =
             DependencyProperty.Register(nameof(SrcFileNameWidth), typeof(double),
-                typeof(VideoCutsEditor), 
+                typeof(VideoCutsEditor),
                 new FrameworkPropertyMetadata(255.0));
 
         public double SrcFileNameWidth
@@ -96,7 +96,7 @@ namespace VideoGui
                     bool Loaded = false;
                     if (idx != -1)
                     {
-                        CancellationTokenSource cts = new ();
+                        CancellationTokenSource cts = new();
                         ConnectionString.ExecuteReader($"SELECT * FROM AUTOEDITS WHERE ID = @ID", [("@ID", idx)], cts, (FbDataReader reader) =>
                         {
                             string DestDir = (reader["DESTINATION"] is string des) ? des : "";
@@ -333,7 +333,7 @@ namespace VideoGui
                 ex.LogWrite($"LocationChanger_Tick {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-        public void ResizeWindows(double _w, double _h, bool WidthChanged = false,bool HeightChanged = false)
+        public void ResizeWindows(double _w, double _h, bool WidthChanged = false, bool HeightChanged = false)
         {
             try
             {
@@ -372,7 +372,7 @@ namespace VideoGui
                 ex.LogWrite($"ReiszeWindows {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
         }
-      
+
 
         private void frmVideoCutsEditor_SizeChanged(object sender, SizeChangedEventArgs e)
         {

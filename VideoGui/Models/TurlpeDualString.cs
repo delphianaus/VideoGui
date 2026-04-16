@@ -12,7 +12,7 @@ namespace VideoGui.Models
         public string turlpe2 { get; set; }
 
         public int Id { get; set; }
-        public TurlpeDualString(string turlpe1, string turlpe2, int id=-1)
+        public TurlpeDualString(string turlpe1, string turlpe2, int id = -1)
         {
             this.turlpe1 = turlpe1;
             this.turlpe2 = turlpe2;

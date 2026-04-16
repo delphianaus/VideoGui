@@ -19,12 +19,12 @@ namespace VideoGui
             int Access = 0, LEK = 0;
             KeySize = _KeySize;
             LongEncryptionKey = new byte[BaseEncryptionKey.Length];
-            for (int i=0;i< LongEncryptionKey.Length;i++)
+            for (int i = 0; i < LongEncryptionKey.Length; i++)
             {
                 AccessCnt = (AccessCnt < AccessKey.Length) ? AccessCnt++ : 0;
                 Access = AccessKey[AccessCnt];
-                LongEncryptionKey[LEK] = (Access >= 0) ? (byte)(BaseEncryptionKey[LEK] >> Access) : (byte) (BaseEncryptionKey[LEK] << Access);
-                LEK = (LEK < BaseEncryptionKey.Length) ? LEK+1:  0;
+                LongEncryptionKey[LEK] = (Access >= 0) ? (byte)(BaseEncryptionKey[LEK] >> Access) : (byte)(BaseEncryptionKey[LEK] << Access);
+                LEK = (LEK < BaseEncryptionKey.Length) ? LEK + 1 : 0;
             }
         }
         public byte[] RC4(byte[] bytes, byte[] key)
@@ -72,7 +72,7 @@ namespace VideoGui
             for (int i = 0; i < KeySize; i++)
             {
                 longkey[i] = (i < startingpoint) ? newenc[i] : Encoding.ASCII.GetBytes(PaddingBase)[LayrdC];
-                if (!(i < startingpoint)) LayrdC = (LayrdC > PaddingBase.Length-2) ? 0 : LayrdC= LayrdC  +1;
+                if (!(i < startingpoint)) LayrdC = (LayrdC > PaddingBase.Length - 2) ? 0 : LayrdC = LayrdC + 1;
             }
             // now padded to 512 . now lets fuck any who tries to crack this by 
             // redoing  it a rc4 pw generated from the orginal one
@@ -81,16 +81,16 @@ namespace VideoGui
         }
         public string decryptrc4(byte[] input)
         {
-         
+
             bool KeyFound = false, KeyStateFound = false;
             byte[] longkey = RC4(input, LongEncryptionKey);
             byte[] newlongkey;
-           
+
             int xx = 0;
             for (int i = 0; i < KeySize; i++)
             {
                 KeyFound = true;
-                for (int x = 0; x < PaddingBase.Length-1; x++)
+                for (int x = 0; x < PaddingBase.Length - 1; x++)
                 {
                     if ((i + x) < KeySize)
                     {
@@ -100,10 +100,10 @@ namespace VideoGui
                 }
                 if (KeyFound)
                 {
-                    xx = i ;
-          
+                    xx = i;
+
                     newlongkey = new byte[xx];
-                    
+
                     for (int xy = 0; xy < xx; xy++)
                     {
                         newlongkey[xy] = longkey[xy];

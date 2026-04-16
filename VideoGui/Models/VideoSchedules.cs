@@ -12,7 +12,7 @@ namespace VideoGui.Models
 {
     public class VideoSchedules : INotifyPropertyChanged
     {
-        private int _id = -1; 
+        private int _id = -1;
         private string _Name = "";
         public int Id { get => _id; set { _id = value; OnPropertyChanged(); } }
         public string Name { get => _Name; set { _Name = value; OnPropertyChanged(); } }
@@ -28,7 +28,7 @@ namespace VideoGui.Models
                 ex.LogWrite($"VideoSchedules {this} {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
             }
         }
-       
+
         public VideoSchedules(FbDataReader reader)
         {
             try

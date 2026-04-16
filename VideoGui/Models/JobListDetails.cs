@@ -18,18 +18,18 @@ namespace VideoGui
 {
     public class JobListDetails : INotifyPropertyChanged
     {
-        private string _RTMP, _ScriptFile, _title, _MultiFile, _fileinfo, _sourcePath, _handle, 
+        private string _RTMP, _ScriptFile, _title, _MultiFile, _fileinfo, _sourcePath, _handle,
             _VideoInfo, _MultiSourceDir,
             _SourceFile, _FileNoExt, _FileExt, _DestMFile, _StartPos, _EndPos, _PosMode, _MuxData;
         private int _progress, _OwnedByID, _SourceFileIndex, _DeletionFileHandle;
         private double _TotalSeconds;
         //CET MOD
-        private bool _IsTwitchStream, _Is5K, _Is4kAdobe, _IsMSJ, _IsNVM, _Complete, 
+        private bool _IsTwitchStream, _Is5K, _Is4kAdobe, _IsMSJ, _IsNVM, _Complete,
             _ConversionStarted, _ProbePassed, _KeepSource, _IsMulti, _IsDownloads,
             _fisheye, _processed, _X264Override, _ComplexMode, _Is720p,
             _Is48K, _IsComplex, _ProbeLock, _IsAc3_2Channel, _IsAc3_6Channel,
-            _InProcess, _IsSkipped, _IsShorts,_Mpeg4ASP, _Mpeg4AVC, _Is1440p, 
-            _Is4K, _IsInterlaced, _ProbeStarted,    _IsMuxed;
+            _InProcess, _IsSkipped, _IsShorts, _Mpeg4ASP, _Mpeg4AVC, _Is1440p,
+            _Is4K, _IsInterlaced, _ProbeStarted, _IsMuxed;
         private FontStyle _ItemFontStyle;
         private Color _ForegroundColor;
         private int _IsCreateShorts = -1;
@@ -214,7 +214,7 @@ namespace VideoGui
                 (ProbePassed, Complete, ProbeLock, _ProbeStarted, _ConversionStarted, Processed, JobDate, MultiFile, _IsNVM) =
                     (true, false, false, false, false, false, DateTime.Now, Title, true);
                 DeletionFileHandle = reader["ID"].ToInt();
-                
+
 
                 IsTwitchStream = ScriptType == 5;
                 Is4K = (Is4KAdobe) ? true : Is4K;
@@ -255,7 +255,7 @@ namespace VideoGui
                 ex.LogWrite($"{this} {MethodBase.GetCurrentMethod().Name}");
             }
         }
-        public JobListDetails(bool _IsDownloads,string _Title, int _SourceFileIndex, 
+        public JobListDetails(bool _IsDownloads, string _Title, int _SourceFileIndex,
             int _Autoinssertid, string _ScriptFile,
             int _ScriptType, bool _Is1440p = false, bool _Is4Kp = false, bool _ISMJS = false,
             bool __Is4KAdobe = false, bool __IsShorts = false, int __IsCreateShorts = 0,
@@ -275,7 +275,7 @@ namespace VideoGui
             Is4KAdobe = __Is4KAdobe;
             _IsMSJ = _ISMJS;
             DeletionFileHandle = _Autoinssertid;
-            
+
             IsShorts = __IsShorts | _ScriptType == 0 || _ScriptType == 4;
             IsCreateShorts = _IsCreateShorts;
             Is4K = (Is4KAdobe || IsShorts) ? true : Is4KAdobe;
@@ -297,7 +297,7 @@ namespace VideoGui
             Commands.RemoveAt(0);
             string ext = Commands.FirstOrDefault();
             Commands.RemoveAt(0);
-            if ((Commands.Count >= 2) && ( IsTwitchOut))
+            if ((Commands.Count >= 2) && (IsTwitchOut))
             {
                 StartPos = Commands.FirstOrDefault();
                 EndPos = Commands[1].ToString();
@@ -328,7 +328,7 @@ namespace VideoGui
             }
         }
 
-        public JobListDetails(bool _IsDownloads,string _Title, int _SourceFileIndex, string _SourceDir = "",
+        public JobListDetails(bool _IsDownloads, string _Title, int _SourceFileIndex, string _SourceDir = "",
             int _Progress = 0, bool x265Override = false, bool _IsMpeg4ASP = false,
             bool _IsMpeg4AVC = false)
         {
@@ -341,7 +341,7 @@ namespace VideoGui
             DeletionFileHandle = -1;
             Is4KAdobe = _SourceDir.SourceIs4KAdobe();
             Is1440p = _SourceDir.SourceIs1440p();
-            Is4K = _SourceDir.SourceIs4K(); 
+            Is4K = _SourceDir.SourceIs4K();
             _IsDownloads = _IsDownloads;
             Handle = "";
             if (Is4KAdobe)
@@ -362,7 +362,7 @@ namespace VideoGui
             {
                 Is720P = true;
             }
-            
+
             string myext = Path.GetExtension(_Title).ToLower();
 
             var fnx = Path.GetFileNameWithoutExtension(_Title).ToLower();

@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:VideoGui" WindowStyle="ToolWindow"
         mc:Ignorable="d" SizeChanged="Window_SizeChanged"
-        ResizeMode="CanResize" WindowStartupLocation="CenterScreen" 
+        ResizeMode="CanResize" WindowStartupLocation="CenterScreen"
         Title="Debugger Trace Info" Height="450" Width="800">
     <Grid>
         <Border x:Name="brd1" BorderBrush="Black" BorderThickness="2" HorizontalAlignment="Left"
@@ -20,7 +20,10 @@
                 HorizontalAlignment="Right" Margin="0,0,12,13" 
                 VerticalAlignment="Bottom" 
                 Click="btnclose_Click"/>
-        <Button x:Name="btnclear" Content="Clear" Height="33" Width="100" Margin="125,392,575,10" Click="btnclear_Click"/>
-        <Button x:Name="btnOpen" Content="Open" Height="33" Width="100" Margin="242,392,458,10" Click="btnOpen_Click"/>
+        <Button x:Name="btnclear" Content="Clear" Height="33" Width="100"
+           Margin="125,392,575,10" Click="btnclear_Click"/>
+        <Button x:Name="btnOpen" Content="Open" Height="33" Width="100" 
+           Margin="242,392,458,10" Click="btnOpen_Click"/>
+         
     </Grid>
 </Window>

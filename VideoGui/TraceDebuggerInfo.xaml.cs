@@ -25,8 +25,8 @@ namespace VideoGui
         public TraceDebuggerInfo(Action<object> onfinish)
         {
             InitializeComponent();
-            Closed += (s, e) => 
-            { 
+            Closed += (s, e) =>
+            {
                 IsClosed = true;
                 onfinish?.Invoke(this);
             };
@@ -100,7 +100,7 @@ namespace VideoGui
             {
                 if (File.Exists(@"c:\videogui\DebuggerInfo_log.txt"))
                 {
-                    File.AppendAllText(@"c:\videogui\DebuggerInfo_log.txt", txttrace.Items.ToString());    
+                    File.AppendAllText(@"c:\videogui\DebuggerInfo_log.txt", txttrace.Items.ToString());
                 }
                 else
                 {

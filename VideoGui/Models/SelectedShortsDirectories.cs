@@ -20,14 +20,14 @@ namespace VideoGui.Models
 {
     public class SelectedShortsDirectories : INotifyPropertyChanged
     {
-        private int _Id = -1, _Priority = 1, _LinkedShortsDirectoryId = -1, _NumberOfShorts = 0, 
+        private int _Id = -1, _Priority = 1, _LinkedShortsDirectoryId = -1, _NumberOfShorts = 0,
             _TitleId = -1, _DescId = -1;
         private string _DirectoryName = "", _LinkedDescId = "", _LinkedTitleId = "";
         private DateTime _LastUploadedDate = DateTime.Now.Date.AddYears(-100);
         private bool _IsActive = false;
         private FontWeight _FontWeight = FontWeights.Normal;
         private SolidColorBrush _Color = new SolidColorBrush(Colors.Black);
-       
+
         public bool IsActive
         {
             get => _IsActive;
@@ -47,7 +47,7 @@ namespace VideoGui.Models
                 _Priority = value;
                 OnPropertyChanged();
             }
-        }   
+        }
         public FontWeight AutoFontWeight
         {
             get => _FontWeight;
@@ -68,7 +68,7 @@ namespace VideoGui.Models
                 }
                 else if (value != null)
                 {
-                    _Color = (IsActive) ? new SolidColorBrush((value as SolidColorBrush)?.Color ?? Colors.Red): 
+                    _Color = (IsActive) ? new SolidColorBrush((value as SolidColorBrush)?.Color ?? Colors.Red) :
                         new SolidColorBrush((value as SolidColorBrush)?.Color ?? Colors.Black);
                 }
                 OnPropertyChanged();
@@ -86,7 +86,7 @@ namespace VideoGui.Models
         public string LastUploadedFile { get => LastUploadedDateFile.ToDisplayString(); set { OnPropertyChanged(); } }
         public DateTime LastUploadedDateFile { get => _LastUploadedDate; set { _LastUploadedDate = value; OnPropertyChanged(); } }
         public bool IsTitleAvailable { get => LinkedTitleId.Length > 0; set {; OnPropertyChanged(); } }
-        public bool IsDescAvailable { get => DescId !=-1; set {; OnPropertyChanged(); } }
+        public bool IsDescAvailable { get => DescId != -1; set {; OnPropertyChanged(); } }
         public bool IsShortActive { get => IsActive; set { IsActive = value; } }
         public event PropertyChangedEventHandler PropertyChanged;
         protected void OnPropertyChanged([CallerMemberName] string name = null)
@@ -118,7 +118,7 @@ namespace VideoGui.Models
             }
         }
         public SelectedShortsDirectories(int _Id, string _DirectoryName, bool _IsActive,
-            int _LinkedShortsDirectoryId, int _NumberOfShorts, 
+            int _LinkedShortsDirectoryId, int _NumberOfShorts,
             DateTime _LastUploadedDate, int _DescId = -1, int _TitleId = -1,
             string _LinkedTitleIds = "")
         {
@@ -147,7 +147,7 @@ namespace VideoGui.Models
                     IsTitleAvailable = LinkedTitleId.Length > 0;
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 ex.LogWrite($"GetLinkedTitle {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
@@ -162,7 +162,7 @@ namespace VideoGui.Models
                     new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.Black);
                 OnPropertyChanged();
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 ex.LogWrite($"SetActive {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
@@ -172,7 +172,7 @@ namespace VideoGui.Models
         {
             try
             {
-                            if (LinkedDescId is not null)
+                if (LinkedDescId is not null)
                 {
                     IsDescAvailable = LinkedDescId.Length > 0;
                 }

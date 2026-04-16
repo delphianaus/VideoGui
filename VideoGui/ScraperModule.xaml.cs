@@ -537,7 +537,7 @@ namespace VideoGui
         }
 
         public ScraperModule(databasehook<object> _Invoker, OnFinishIdObj _OnFinish,
-            string _Default_url,  bool IsAutoUpload, bool IsAutoSchedule,int maxuploads = 100, int slotsperupload = 5)
+            string _Default_url, bool IsAutoUpload, bool IsAutoSchedule, int maxuploads = 100, int slotsperupload = 5)
         {
             try
             {
@@ -1259,7 +1259,7 @@ namespace VideoGui
                         Thread.Sleep(50);
                         //SetMargin(StatusBar);
                         StatusBar.ApplyMargin();
-                        bool flowControl = await ProcessUploadsBody(Span_Name, Script_Close, connectStr);
+                        bool flowControl = await ProcessBody(Span_Name, Script_Close, connectStr);
                         if (!flowControl)
                         {
                             finished = true;
@@ -1657,7 +1657,7 @@ namespace VideoGui
                         timer.Stop();
                         Dispatcher.BeginInvoke(new Action(() =>
                         {
-                           // SimulateWheelUpDown(wv2);
+                            // SimulateWheelUpDown(wv2);
                         }));
                         timeractive = false;
                     };
@@ -2514,7 +2514,7 @@ namespace VideoGui
             {
                 string connectionStr = Invoker.InvokeWithReturn<string>(this, new CustomParams_GetConnectionString());
                 string sqlb = "SELECT DISTINCT U.DIRECTORYNAME,SHORTSDIRECTORY.ID FROM UPLOADSRECORD U " +
-                              "INNER JOIN SHORTSDIRECTORY ON U.DIRECTORYNAME = SHORTSDIRECTORY.DIRECTORYNAME " + 
+                              "INNER JOIN SHORTSDIRECTORY ON U.DIRECTORYNAME = SHORTSDIRECTORY.DIRECTORYNAME " +
                               "WHERE UPLOADFILE LIKE @IDX ORDER BY U.ID DESC ROWS 100000";
                 var cts = new CancellationTokenSource();
                 int my_id = -1;
@@ -3681,6 +3681,140 @@ namespace VideoGui
             public int X;
             public int Y;
         }
+
+        private async Task<bool> ProcessBody(string Span_Name, string Script_Close, string connectStr)
+        {
+            try
+            {
+
+                var ProcessingLoopWait = new CancellationTokenSource();
+                ProcessingLoopWait.CancelAfter(TimeSpan.FromSeconds(5));
+                while (!ProcessingLoopWait.IsCancellationRequested)
+                {
+                    Thread.Sleep(15);
+                }
+
+                var ProcessingLoop = new CancellationTokenSource();
+                ProcessingLoop.CancelAfter(TimeSpan.FromMinutes(15));
+                while (!ProcessingLoop.IsCancellationRequested)
+                {
+                    var html = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
+                    if (html is not null && html.Contains("Daily upload limit reached"))
+                    {
+                        Exceeded = true;
+                        finished = true;
+                        ExitDialog = true;
+                        Close();
+                    }
+                    List<HtmlNode> Nodes = GetNodes(html, Span_Name);
+                    if (Nodes.Count == 0) continue;
+
+                    if (html is not null && html.ToLower().Contains("uploads complete"))
+                    {
+                        for (int NodeIndex = Nodes.Count - 1; NodeIndex >= 0; NodeIndex--)
+                        {
+                            HtmlNode Node = Nodes[NodeIndex];
+                            if (Node.InnerText.Contains('\n'))
+                            {
+                                List<string> nodeInformation = Node.InnerText.Split('\n', StringSplitOptions.TrimEntries).ToList();
+                                if (nodeInformation.Count > 0)
+                                {
+                                    string FileName = nodeInformation[0];
+                                    string Status = nodeInformation[1].ToLower().Replace(".", "").Trim();
+                                    if (Status == "complete" || Status == "100% uploaded")
+                                    {
+                                        System.Windows.Forms.Application.DoEvents();
+                                        DeleteFiles(new List<string> { FileName }, "Z:\\");
+                                    }
+                                    if (Status.ContainsAll(new string[] { "daily", "limit" }))
+                                    {
+                                        Exceeded = true;
+                                        finished = true;
+                                        ExitDialog = true;
+                                        Close();
+                                    }
+                                }
+                            }
+                        }
+                        Close();
+                    }
+                    for (int NodeIndex = Nodes.Count - 1; NodeIndex >= 0; NodeIndex--)
+                    {
+                        System.Windows.Forms.Application.DoEvents();
+                        string FileName = "", Status = "";
+                        HtmlNode Node = Nodes[NodeIndex];
+
+
+                        if (Node.InnerText.Contains('\n'))
+                        {
+                            System.Windows.Forms.Application.DoEvents();
+                            List<string> nodeInformation = Node.InnerText.Split('\n', StringSplitOptions.TrimEntries).ToList();
+                            if (nodeInformation.Count > 0)
+                            {
+                                FileName = nodeInformation[0];
+                                Status = nodeInformation[1].ToLower().Replace(".", "").Trim();
+                                if (Status == "complete" || Status == "|100% uploaded")
+                                {
+                                    DeleteFiles(new List<string> { FileName }, "Z:\\");
+                                }
+                                else if (Status.ContainsAll(new string[] { "daily", "limit" }))
+                                {
+                                    Exceeded = true;
+                                    finished = true;
+                                    ExitDialog = true;
+                                    Close();
+                                }
+                            }
+                            System.Windows.Forms.Application.DoEvents();
+                            if (Status != "waiting") continue;
+                            html = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
+                            if (html is not null)
+                            {
+                                if (html.ContainsAll(new string[] { "daily", "limit" }))
+                                {
+                                    Exceeded = true;
+                                    finished = true;
+                                    ExitDialog = true;
+                                    Close();
+                                }
+                            }
+
+                            var buttonLabel = $"Edit video {FileName}";
+                            await wv2.ExecuteScriptAsync($"document.querySelector('button[aria-label=\"{buttonLabel}\"]').click()");
+                            var EditProcessingLoop = new CancellationTokenSource();
+                            EditProcessingLoop.CancelAfter(TimeSpan.FromSeconds(10));
+                            bool Valid = false;
+                            while (!EditProcessingLoop.IsCancellationRequested)
+                            {
+                                System.Windows.Forms.Application.DoEvents();
+                                var ehtml = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
+                                string match_0 = "class=\"draft-badge style-scope ytcp-uploads-dialog\"";
+                                if (ehtml != null && ehtml.ContainsAll(new string[] { match_0 }))
+                                {
+                                    Valid = true;
+                                    break;
+                                }
+                            }
+                            if (Valid)
+                            {
+                                System.Windows.Forms.Application.DoEvents();
+                                string CloseId = "ytcp-uploads-dialog-close-button";
+                                await ActiveWebView[1].CoreWebView2.ExecuteScriptAsync($"document.getElementById('{CloseId}').click();");
+                            }
+
+                        }
+                    }
+
+
+                }
+                return false;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"ProcessBody {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+                return false;
+            }
+        }
         private async Task<bool> ProcessUploadsBody(string Span_Name, string Script_Close, string connectStr)
         {
             int ExitCode = -1;
@@ -3709,6 +3843,25 @@ namespace VideoGui
                         }
                         timeractive = false;
                     };
+                    var ctsxr = new CancellationTokenSource();
+                    ctsxr.CancelAfter(TimeSpan.FromSeconds(30));
+                    while (true && !ctsxr.IsCancellationRequested)
+                    {
+                        var htmlx2 = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
+                        var classprogress = "remove-default-style style-scope ytcp-multi-progress-monitor";
+                        if (htmlx2 is not null && htmlx2.Contains(classprogress) && htmlx2.Contains("Uploading"))
+                        {
+                            var _cts1 = new CancellationTokenSource();
+                            _cts1.CancelAfter(TimeSpan.FromSeconds(4));
+                            while (!_cts1.IsCancellationRequested)
+                            {
+                                System.Windows.Forms.Application.DoEvents();
+                                Thread.Sleep(15);
+                            }
+                            break;
+                        }
+                    }
+
                     while (true && !canceltoken.IsCancellationRequested)
                     {
                         if (ExitDialog) return false;
@@ -3793,7 +3946,7 @@ namespace VideoGui
                             {
                                 Debug.Print($"node being processed {i}");
                                 int start = Nodes[i].InnerText.IndexOf("\n") + 1;
-                                string filename1 = Nodes[i].InnerText.Substring(start).Split('\n').FirstOrDefault().Trim();
+                                string filename1 = Nodes[i].InnerText.Substring(0, start - 1).Trim();
                                 if (ExitDialog)
                                 {
                                     return false;
@@ -3809,13 +3962,7 @@ namespace VideoGui
                                 if (Regex.IsMatch(Nodes[i].InnerText, @"Waiting"))
                                 {
                                     Debug.Print($"Waiting detect on node {i}");
-                                    var cyss = new CancellationTokenSource();
-                                    cyss.CancelAfter(TimeSpan.FromSeconds(2));
-                                    while (!cyss.IsCancellationRequested)
-                                    {
-                                        System.Windows.Forms.Application.DoEvents();
-                                        Thread.Sleep(15);
-                                    }
+
                                     if (html.ToLower().Contains("uploads complete"))
                                     {
                                         Debug.Print("uploads complete detected");
@@ -3839,31 +3986,39 @@ namespace VideoGui
                                         }
                                         Debug.Print($"Attempting click event on ${filename1}");
                                         var buttonLabel = $"Edit video {filename1}";
-                                        SendTraceInfo?.Invoke(this, $"Getting Edit Window For {newfile}");
-                                        lstMain.Items.Insert(0, $"Getting Edit Window For {newfile}");
-                                        await ActiveWebView[1].ExecuteScriptAsync($"document.querySelector('button[aria-label=\"{buttonLabel}\"]').click()");
-                                        SendTraceInfo?.Invoke(this, $"Got Edit Window For {newfile}");
+                                        //lstMain.Items.Insert(0, $"Getting Edit Window For {newfile}");
+                                        await wv2.ExecuteScriptAsync($"document.querySelector('button[aria-label=\"{buttonLabel}\"]').click()");
                                         var ctsx = new CancellationTokenSource();
-                                        ctsx.CancelAfter(TimeSpan.FromSeconds(5));
+                                        ctsx.CancelAfter(TimeSpan.FromSeconds(25));
                                         bool fnd = false;
                                         while (!ctsx.IsCancellationRequested)
                                         {
+                                            var ehtmlx = Regex.Unescape(await wv2.ExecuteScriptAsync("document.body.innerHTML"));
 
-                                            SendTraceInfo?.Invoke(this, $"Waiting For Edit Window For {newfile}");
-                                            var htmlx = await wv2.CoreWebView2.ExecuteScriptAsync("document.body.innerHTML");
-                                            var ehtmlx = Regex.Unescape(htmlx);
-                                            if (!Regex.IsMatch(ehtmlx.ToLower(), @"youtube.be") || Regex.IsMatch(ehtmlx.ToLower(), @"youtube.com/shorts"))
+                                            if (ehtmlx.ToLower().Contains(@"https://youtube.com/shorts/"))
                                             {
                                                 fnd = true;
                                                 SendTraceInfo?.Invoke(this, $"Found Edit Window For {newfile}");
                                                 ctsx.Cancel();
+                                                System.Windows.Forms.Application.DoEvents();
+                                                // await ActiveWebView[1].ExecuteScriptAsync($"document.querySelector('button[aria-label=\"{buttonLabel}\"]').click()");
 
                                                 break;
+
                                             }
+
                                             SendTraceInfo?.Invoke(this, $"Finished Waiting For Edit Window For {newfile}");
                                             Thread.Sleep(100);
                                             Debug.Print($"Finished Waiting For Edit Window For {newfile}");
                                         }
+
+                                        while (true)
+                                        {
+                                            buttonLabel = "Save and close";
+                                            System.Windows.Forms.Application.DoEvents();
+                                            await ActiveWebView[1].ExecuteScriptAsync($"document.querySelector('button[aria-label=\"{buttonLabel}\"]').click()");
+                                        }
+
                                         var htmlx1 = await wv2.CoreWebView2.ExecuteScriptAsync("document.body.innerHTML");
                                         var ehtmlx1 = Regex.Unescape(htmlx1);
                                         TimerSimulate.Start();
@@ -4026,7 +4181,7 @@ namespace VideoGui
                     var connectionString = Invoker.InvokeWithReturn<string>(this, new CustomParams_GetConnectionString());
                     string sql = "INSERT INTO EXCEEDED (EXCEEDED_DATE, EXCEEDED_TIME) VALUES (@EDATE,@ETIME);";
                     connectionString.ExecuteScalar(sql, [("@EDATE", DateTime.Now.Date),
-                        ("@ETIME", DateTime.Now.TimeOfDay)]);
+            ("@ETIME", DateTime.Now.TimeOfDay)]);
                 }
             }
         }
@@ -4224,7 +4379,7 @@ namespace VideoGui
                                 AutoClosedReboot = true;
                                 var _DoAutoCancel = new AutoCancel(DoAutoCancelCloseScraper, $"Scraped {files} Files", 5, "Scraper Finished");
                                 _DoAutoCancel.ShowActivated = true;
-                                
+
                                 _DoAutoCancel.Show();
                             }
                         }

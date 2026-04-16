@@ -25,7 +25,7 @@ namespace VideoGui.Models
                     }
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 ex.LogWrite($"ConverterProgress.RemoveName {MethodBase.GetCurrentMethod().Name}");
             }
@@ -51,8 +51,8 @@ namespace VideoGui.Models
                 return -1;
             }
         }
-       
-        
+
+
         public _AddConverterProgress AddNewProgressEventHandler(string _Name)
         {
             try
@@ -73,7 +73,7 @@ namespace VideoGui.Models
                 }
                 return null;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 ex.LogWrite($"AddNewProgressEventHandler {MethodBase.GetCurrentMethod().Name}");
                 return null;
@@ -127,12 +127,12 @@ namespace VideoGui.Models
             }
         }
 
-        public void ConverterListAdd(string _name,string _data)
+        public void ConverterListAdd(string _name, string _data)
         {
             try
             {
                 ProgressList.Add(_data);
-                DoOnInsert?.Invoke(ProgressList.Count-1);
+                DoOnInsert?.Invoke(ProgressList.Count - 1);
             }
             catch (Exception ex)
             {
@@ -140,5 +140,5 @@ namespace VideoGui.Models
             }
         }
     }
-   
+
 }

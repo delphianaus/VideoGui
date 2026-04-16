@@ -21,12 +21,12 @@ namespace VideoGui.Models
         public string Description { get { return _Description; } set { _Description = value; OnPropertyChanged(); } }
         public bool IsTitleAvailable { get { return Title.Length > 0; } set { _IsTitleAvailable = value; OnPropertyChanged(); } }
         public bool IsDescriptionAvailable { get { return Description.Length > 0; } set { _IsDescriptionAvailable = value; OnPropertyChanged(); } }
-                
+
         public ProcessTargets()
         {
 
         }
-        public ProcessTargets(int id,string _VideoId, int _Linkedid, string _Title, int _TitleId, 
+        public ProcessTargets(int id, string _VideoId, int _Linkedid, string _Title, int _TitleId,
             string _Description, int _DescId)
         {
             LinkedId = _Linkedid;

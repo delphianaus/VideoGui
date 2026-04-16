@@ -41,12 +41,12 @@
            HorizontalAlignment="Left" Canvas.Left="0" Margin="0,49,0,0" SelectionMode="Multiple">
                     <MSU:MultiListbox.ColumnDefinitions>
                         <MSU:MultiListboxColumnDefinition DataField="FileName" WidthBinding="FileNameWidth"
-                         ContentVerticalAlignment="Top" HeaderText="FileName" ComponentType="TextBlock"/>
-                     <MSU:MultiListboxColumnDefinition HeaderText="First FrameTime" ContentVerticalAlignment="Top" 
+                         HeaderText="FileName" ComponentType="TextBlock"/>
+                     <MSU:MultiListboxColumnDefinition HeaderText="First FrameTime" 
                          DataField="TimeData" Width="105" ComponentType="TextBlock"/>
                      <MSU:MultiListboxColumnDefinition HeaderText="Suggested Filename"  
-                       WidthBinding="SuggestedWidth" ContentHorizontalAlignment="Center"
-                       DataField="NewFile" ContentVerticalAlignment="Top" ComponentType="TextBlock"/>
+                       WidthBinding="SuggestedWidth" 
+                       DataField="NewFile" ComponentType="TextBlock"/>
                     </MSU:MultiListbox.ColumnDefinitions>
                     <MSU:MultiListbox.ItemsContextMenu>
                         <ContextMenu>

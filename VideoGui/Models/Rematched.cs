@@ -39,12 +39,12 @@ namespace VideoGui.Models
                 NewId = (r["NEWID"] is int newId) ? newId : -1;
                 Title = (r["DIRECTORY"] is string title) ? title : "";
             }
-            catch(Exception ex) 
+            catch (Exception ex)
             {
                 ex.LogWrite($"Rematched {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {ex.StackTrace}");
             }
         }
-        
+
         public event PropertyChangedEventHandler PropertyChanged;
         protected void OnPropertyChanged([CallerMemberName] string name = null)
         {

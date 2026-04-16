@@ -809,32 +809,23 @@ namespace VideoGui
         {
             try
             {
-                string sql = "";
-                string sqlb = $"SELECT RDB$FIELD_NAME AS FIELD_NAME FROM RDB$RELATION_FIELDS WHERE " +
-                   $"RDB$RELATION_NAME=@P1 AND RDB$FIELD_NAME = @P0;";
-                var resx = connectionStr.ExecuteScalar(sqlb, [("@P0", Field.ToUpper()), ("@P1", Table.ToUpper())]);
-                if (resx is not null) return;
-                if (FieldType == "BLOB")
+                string nsql = "SELECT * FROM RDB$RELATION_FIELDS WHERE " +
+                     "RDB$RELATION_NAME=@TABLE AND RDB$FIELD_NAME = @FIELD;";
+                bool exists = false;
+                connectionStr.ExecuteReader([("@TABLE", Table), ("@FIELD", Field)], nsql, (FbDataReader r) =>
                 {
-                    var sq = "ALTER TABLE @P0 ADD @P1 BLOB SUB_TYPE BINARY SEGMENT SIZE 2048 DEFAULT NULL;";
-                    connectionStr.ExecuteScalar(sq, [("@P0", Table.ToUpper()), ("@P1", Field.ToUpper())]);
-                }
-                else if (defaultvalue is null)
+                    exists = true;
+                });
+                if (exists) return;
+                if (defaultvalue is null)
                 {
-                    sql = $"ALTER TABLE @P1 ADD @P0 @P2 NOT NULL;";
-                    connectionStr.ExecuteScalar(sql, [("@P0", Field.ToUpper()), ("@P1", Table.ToUpper()),
-                        ("@P2", FieldType.ToUpper())]);
+                    nsql = $"ALTER TABLE {Table} ADD {Field} {FieldType};";
+                    connectionStr.ExecuteScalar(nsql);
                 }
                 else
                 {
-                    sql = $"ALTER TABLE @P1 ADD @P0 @P2 DEFAULT @DF NOT NULL;";
-                    var r = connectionStr.ExecuteScalar(sql, [("@P0", Field.ToUpper()), ("@P1", Table.ToUpper()),
-                        ("@P2", FieldType.ToUpper()), ("@DF", defaultvalue)]);
-
-                    if (r is null)
-                    {
-
-                    }
+                    nsql = $"ALTER TABLE {Table} ADD {Field} {FieldType} DEfAULT {defaultvalue} NOT NULL;";
+                    connectionStr.ExecuteScalar(nsql);
                 }
             }
             catch (Exception ex)
@@ -849,20 +840,13 @@ namespace VideoGui
                 using (var connection = new FbConnection(connectionStr))
                 {
                     connection.Open();
-                    string tableName = sql.Substring(12, sql.IndexOf("(") - 12);
-                    var sqlx = $"select * from {tableName};";
-                    bool created = true;
-                    using (var command = new FbCommand(sqlx, connection))
+                    string tableName = sql.Substring(12, sql.IndexOf("(") - 12).Trim();
+                    string sqlaa = $"SELECT * FROM RDB$RELATIONS WHERE RDB$RELATION_NAME = @TABLENAME;";
+                    bool created = false;
+                    connectionStr.ExecuteReader(sqlaa, [("TABLENAME", tableName.Trim())], (FbDataReader r) =>
                     {
-                        try
-                        {
-                            command.ExecuteScalar();
-                        }
-                        catch (Exception exx)
-                        {
-                            created = false;
-                        }
-                    }
+                        created = true;
+                    });
                     if (!created)
                     {
                         using (var command = new FbCommand(sql, connection))
@@ -870,7 +854,6 @@ namespace VideoGui
                             command.ExecuteScalar();
                         }
                     }
-
                     connection.Close();
                 }
             }
@@ -885,6 +868,34 @@ namespace VideoGui
             if (!Directory.Exists(path) && path.NotNullOrEmpty())
             {
                 Directory.CreateDirectory(path);
+            }
+        }
+        public static void ExecuteReader(this string connectionStr, List<(string, object)>? parameters, string sql, OnFirebirdReader Reader)
+        {
+            try
+            {
+                using (var connection = new FbConnection(connectionStr))
+                {
+                    connection.Open();
+                    using (var command = new FbCommand(sql, connection))
+                    {
+                        parameters?.ForEach(x => command.Parameters.AddWithValue(x.Item1, x.Item2));
+                        using (var cmd = command.ExecuteReader())
+
+                        {
+                            while (cmd.Read())
+                            {
+                                Reader?.Invoke(cmd);
+                            }
+                        }
+                    }
+                    connection.Close();
+                }
+
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"ExecuteReader {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
             }
         }
         public static void ExecuteReader(this string connectionStr, string sql, List<(string, object)>? parameters, OnFirebirdReader Reader)

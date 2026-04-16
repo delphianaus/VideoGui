@@ -31,7 +31,7 @@ namespace VideoGui
             {
                 InitializeComponent();
                 Closing += (s, e) => { IsClosing = true; };
-                Closed += (s, e) => { IsClosed = true; _OnFinish?.Invoke(this,-1); };
+                Closed += (s, e) => { IsClosed = true; _OnFinish?.Invoke(this, -1); };
                 Invoker = _Invoker;
             }
             catch (Exception ex)
@@ -157,7 +157,7 @@ namespace VideoGui
             {
                 Hide();
                 var _SRS = new SelectReleaseSchedule(DoShow, Invoker);
-                _SRS.ShowActivated = true;  
+                _SRS.ShowActivated = true;
                 _SRS.Show();
             }
             catch (Exception ex)

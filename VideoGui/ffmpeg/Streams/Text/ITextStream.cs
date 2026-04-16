@@ -18,12 +18,12 @@ namespace VideoGui.ffmpeg.Streams.Text
         string Title { get; }
         int? Default { get; }
         int? Forced { get; }
-        int? Id { get;  }
+        int? Id { get; }
         int? CompressionMode { get; }
-       
-        ITextStream Initialize(string _Codec, TimeSpan _Duration, 
-            string _CodecInfo, string _Title, string _CodecId, string _Language, 
-            int _CompressionMode ,int _Default, int _Forced, int _id);
+
+        ITextStream Initialize(string _Codec, TimeSpan _Duration,
+            string _CodecInfo, string _Title, string _CodecId, string _Language,
+            int _CompressionMode, int _Default, int _Forced, int _id);
 
 
     }

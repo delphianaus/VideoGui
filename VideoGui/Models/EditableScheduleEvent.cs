@@ -26,7 +26,7 @@ namespace VideoGui.Models
                 ScheduleStartTime = (reader["SD.STARTTIME"] is TimeOnly sst ? sst : new TimeOnly());
                 ScheduleEndDate = (reader["SD.END"] is DateOnly SSE ? SSE : new DateOnly());
                 ScheduleEndTime = (reader["SD.ENDTIME"] is TimeOnly sse ? sse : new TimeOnly());
-                Source = (reader["SP.SOURCE"] is Int16 src ? src  : -1);
+                Source = (reader["SP.SOURCE"] is Int16 src ? src : -1);
                 MaxDaily = (reader["SP.MAXDAILY"] is Int16 MD ? MD : -1);
                 MaxEvent = (reader["SP.MAXEVENT"] is Int16 ME ? ME : -1);
             }
@@ -39,7 +39,7 @@ namespace VideoGui.Models
         private int _Source = -1, _MaxDaily = -1, _MaxEvent = -1, _EventId = -1;
         private DateOnly EventStartDate, EventEndDate, ScheduleStartDate, ScheduleEndDate;
         private TimeOnly EventStartTime, EventEndTime, ScheduleStartTime, ScheduleEndTime;
-        public DateTime EventStart { get => EventStartDate.ToDateTime(EventStartTime); set { (EventStartDate,EventStartTime) = ConvertDT(value); OnPropertyChanged(); } }
+        public DateTime EventStart { get => EventStartDate.ToDateTime(EventStartTime); set { (EventStartDate, EventStartTime) = ConvertDT(value); OnPropertyChanged(); } }
         public DateTime EventEnd { get => EventEndDate.ToDateTime(EventEndTime); set { (EventEndDate, EventEndTime) = ConvertDT(value); OnPropertyChanged(); } }
         public DateTime ScheduleStart { get => ScheduleStartDate.ToDateTime(ScheduleStartTime); set { (ScheduleStartDate, ScheduleStartTime) = ConvertDT(value); OnPropertyChanged(); } }
         public DateTime ScheduleEnd { get => ScheduleEndDate.ToDateTime(ScheduleEndTime); set { (ScheduleEndDate, ScheduleEndTime) = ConvertDT(value); OnPropertyChanged(); } }
@@ -65,7 +65,7 @@ namespace VideoGui.Models
             catch (Exception ex)
             {
                 ex.LogWrite($"ConvertDT {MethodBase.GetCurrentMethod()?.Name} {this} {ex.Message}");
-                return (new DateOnly(),new TimeOnly());
+                return (new DateOnly(), new TimeOnly());
             }
         }
     }

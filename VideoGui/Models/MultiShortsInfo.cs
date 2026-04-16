@@ -39,7 +39,7 @@ namespace VideoGui.Models
                 OnPropertyChanged();
             }
         }
-        
+
         public string DirectoryName { get => _DirectoryName; set { _DirectoryName = value; OnPropertyChanged(); } }
         public int NumberOfShorts { get => _NumberOfShorts; set { _NumberOfShorts = value; OnPropertyChanged(); } }
 

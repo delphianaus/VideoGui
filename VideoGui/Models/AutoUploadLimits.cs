@@ -42,7 +42,7 @@ namespace VideoGui.Models
             }
         }
 
-        public AutoUploadLimits(int _Id, int _Limit, DateOnly _LimitDate,bool _IsActive)
+        public AutoUploadLimits(int _Id, int _Limit, DateOnly _LimitDate, bool _IsActive)
         {
             Id = _Id;
             Limit = _Limit;

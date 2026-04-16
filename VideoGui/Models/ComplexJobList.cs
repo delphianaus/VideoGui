@@ -18,7 +18,7 @@ namespace VideoGui.Models
         private TimeSpan _Start, _Duration;
         private string _RTMP, _SourceDirectory, _DestinationDirectory, _Filename;
         private bool _IsTwitchStream, _Is720p, _IsShorts, _IsCutTrim, _IsEncodeTrim,
-              _IsDeleteMonitoredSource, _IsDownloads,_IsPersistentJob, _IsLocked, _IsMuxed;
+              _IsDeleteMonitoredSource, _IsDownloads, _IsPersistentJob, _IsLocked, _IsMuxed;
         private string _Id, _MuxData;
         private Nullable<DateTime> _TwitchSchedule;
         private int _IsCreateShorts = -1;

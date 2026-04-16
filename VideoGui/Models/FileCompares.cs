@@ -37,7 +37,7 @@ namespace VideoGui
             DestFileLength = -1;
             DestFileFound = false;
             TimesMatch = false;
-            SourceFilePath= System.IO.Path.GetDirectoryName(_SourceFile);
+            SourceFilePath = System.IO.Path.GetDirectoryName(_SourceFile);
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

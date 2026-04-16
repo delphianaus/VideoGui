@@ -48,7 +48,7 @@ namespace VideoGui.Models
                     var end = ActionScheduleEnd.Value;
                     if (start.Minutes == 00)
                     {
-                        data += (start.Hours > 12) ? $" {start.Hours-12}PM-" : $" {start.Hours}AM-";
+                        data += (start.Hours > 12) ? $" {start.Hours - 12}PM-" : $" {start.Hours}AM-";
                     }
                     else
                     {
@@ -85,8 +85,8 @@ namespace VideoGui.Models
         }
 
 
-        public ScheduledActions() 
-        { 
+        public ScheduledActions()
+        {
         }
         public ScheduledActions(int _Id, int _ScheduleId, string _ScheduleName, string _ActionName, int Max,
             ActionType _ActionType, Nullable<DateOnly> _AppliedSchedule,
@@ -125,9 +125,9 @@ namespace VideoGui.Models
                 Max = (reader["MAXSCHEDULES"] is int MX) ? MX : -1;
                 VideoActionType = (reader["VIDEOTYPE"] is int VT) ? (ActionType)VT : ActionType.VideoUpload;
                 if (reader["scheduled_date"] is DateTime scheduledDatex)
-                { 
-                   DateOnly r = new DateOnly(scheduledDatex.Date.Date.Year, scheduledDatex.Date.Date.Month, scheduledDatex.Date.Date.Day);
-                   ActionSchedule = r;
+                {
+                    DateOnly r = new DateOnly(scheduledDatex.Date.Date.Year, scheduledDatex.Date.Date.Month, scheduledDatex.Date.Date.Day);
+                    ActionSchedule = r;
                 }
 
                 //ActionSchedule = (reader["SCHEDULED_DATE"] is DateTime scheduledDateStart) ? scheduledDateStart.Date : new DateOnly();

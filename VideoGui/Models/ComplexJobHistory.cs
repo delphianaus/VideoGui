@@ -19,7 +19,7 @@ namespace VideoGui.Models
         private TimeSpan _Start, _Duration;
         private DateOnly _DateOfRecord;
         private string _RTMP, _SourceDirectory, _DestinationDirectory, _Filename;
-        private bool _IsTwitchStream, _Is720p, _IsShorts, _IsCutTrim, _IsEncodeTrim, _IsDeleteMonitoredSource, 
+        private bool _IsTwitchStream, _Is720p, _IsShorts, _IsCutTrim, _IsEncodeTrim, _IsDeleteMonitoredSource,
             _IsPersistentJob, _IsLocked, _IsMuxed;
         private string _Id, _MuxData;
         private Nullable<DateTime> _TwitchSchedule;
@@ -78,7 +78,7 @@ namespace VideoGui.Models
                 IsCutTrim = (reader["BCUTTRIM"] is Int16 isCutTrim) ? isCutTrim == 1 : false;
                 IsDeleteMonitoredSource = (reader["BMONITOREDSOURCE"] is Int16 isMonitoredSource) ? (Int16)isMonitoredSource == 1 : false;
                 IsPersistentJob = (reader["BPERSISTENTJOB"] is Int16 isPersistentJob) ? (Int16)isPersistentJob == 1 : false;
-                IsMuxed = (reader["IsMuxed"]) is Int16 _IsMuxed ? _IsMuxed==1 : false;
+                IsMuxed = (reader["IsMuxed"]) is Int16 _IsMuxed ? _IsMuxed == 1 : false;
                 MuxData = (reader["MuxData"]) is string _MuxData ? _MuxData : "";
                 long start = reader["STARTPOS"].ToString().ToInt();
                 long end = reader["DURATION"].ToString().ToInt();
@@ -111,7 +111,7 @@ namespace VideoGui.Models
                 var destfname = (reader["DESTFNAME"] is string dfname) ? dfname : "";
                 _Is720p = (reader["B720P"] is Int16 _is720p) ? (Int16)_is720p == 1 : false;
                 IsShorts = (reader["BSHORTS"] is Int16 _isShorts) ? (Int16)_isShorts == 1 : false;
-                IsCreateShorts = (reader["BCREATESHORTS"] is Int16 _isCreateShorts) ? (Int16)_isCreateShorts  : -1;
+                IsCreateShorts = (reader["BCREATESHORTS"] is Int16 _isCreateShorts) ? (Int16)_isCreateShorts : -1;
                 IsLocked = false;
                 DateOfRecord = DTS;
                 DestinationDirectory = Path.GetDirectoryName(destfname);
@@ -124,10 +124,10 @@ namespace VideoGui.Models
                 EndTime = (Duration != TimeSpan.Zero && !Is720p && !IsShorts) ? Duration.ToFFmpeg().Replace(".000", "") : "";
                 Times = (!Is720p && !IsShorts) ? $"{StartTime}-{EndTime}" : "";
                 ProceessingType = (Is720p) ? "720p Edit File" : (IsShorts) ? "Shorts Master File" :
-                    (IsCutTrim) ? "Non Encoded Trim" : (IsEncodeTrim) ? "Encoded Trim" : (IsMuxed) ? "Muxing Job" :"";
+                    (IsCutTrim) ? "Non Encoded Trim" : (IsEncodeTrim) ? "Encoded Trim" : (IsMuxed) ? "Muxing Job" : "";
                 ProcessingActions = (IsCreateShorts > -1) ? $"Creating {stype}Shorts" : (IsShorts && IsCreateShorts == 0) ? "Creating Shorts Master" :
                    (IsPersistentJob && IsDeleteMonitoredSource) ? "Monitored Persistent Job" :
-                  (IsPersistentJob) ? "Persistent Job" : (IsDeleteMonitoredSource) ? "Monitored Source" : 
+                  (IsPersistentJob) ? "Persistent Job" : (IsDeleteMonitoredSource) ? "Monitored Source" :
                   (IsMuxed) ? "Muxing Action" : "Standard Actions";
                 RecordAge = (DateOnly.FromDateTime(DateTime.Now).DayNumber - DateOfRecord.DayNumber).ToString();
                 SRC = SourceDirectory.Split("\\").ToList().LastOrDefault();
@@ -141,7 +141,7 @@ namespace VideoGui.Models
         }
         public ComplexJobHistory(string srcdir, string destfname, TimeSpan StartPos, TimeSpan Durationcut, DateOnly RecordDate, bool b720p,
             bool bShorts, int bCreateShorts, bool bEncodeTrim, bool bCutTrim, bool bMonitoredSource, bool bPersistentJob, int id,
-            bool isMuxed , string muxData)
+            bool isMuxed, string muxData)
         {
             try
             {

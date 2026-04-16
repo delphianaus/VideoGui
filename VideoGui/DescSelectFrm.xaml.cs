@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Reflection;
 using System.Windows;
-using System.Windows.Input;
-using VideoGui.Models.delegates;
-using VideoGui.Models;
 using System.Windows.Controls;
+using System.Windows.Input;
+using VideoGui.Models;
+using VideoGui.Models.delegates;
 
 
 namespace VideoGui
@@ -17,11 +17,11 @@ namespace VideoGui
         bool IsUploadsBuilder = false;
         databasehook<object> Invoker;
         public string Desc = "";
-        public bool IsShortVideo = false, IsDescChanged = false, IsClosed = false, 
+        public bool IsShortVideo = false, IsDescChanged = false, IsClosed = false,
             IsClosing = false;
         public int Id = -1, LinkedId = -1, TitleTagId = -1;
         public DescSelectFrm(OnFinishIdObj _DoOnFinish, databasehook<Object> _Invoker,
-            bool _IsUploadsBuilder = false, int _id = -1,int _Linkedid = -1)
+            bool _IsUploadsBuilder = false, int _id = -1, int _Linkedid = -1)
         {
             try
             {
@@ -96,7 +96,7 @@ namespace VideoGui
             }
         }
 
-       
+
 
 
 
@@ -104,7 +104,7 @@ namespace VideoGui
         {
             try
             {
-                
+
                 if (e.OriginalSource is MenuItem mnu && mnu.DataContext is Descriptions DS)
                 {
                     Invoker?.Invoke(this, new CustomParams_Remove(DS.Id));

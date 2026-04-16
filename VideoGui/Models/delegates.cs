@@ -1,16 +1,16 @@
-﻿using System;
+﻿using FirebirdSql.Data.FirebirdClient;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
-using System.Windows.Input;
 using System.Threading.Tasks;
-using FirebirdSql.Data.FirebirdClient;
+using System.Windows.Input;
 
 namespace VideoGui.Models.delegates
 {
-    public enum FinishType { Finished, Scheduled, Error, InTest, GapTimeZero, LookUpError,TaskCancelled };
+    public enum FinishType { Finished, Scheduled, Error, InTest, GapTimeZero, LookUpError, TaskCancelled };
     public enum ButtonReturnType { NotPresent, Disabled, Enabled };
     public enum FilterTypes { DestinationDirectory, DestinationFileName, SourceDirectory };
     public enum FilterClass { Current, Historic };
@@ -27,8 +27,11 @@ namespace VideoGui.Models.delegates
     //
     // Summary:
     //     Specifies the day of the week.
-    public enum EventTypes { VideoUpload = 0, ShortsSchedule = 1, FullSchedule = 2, 
-        ScapeSchedule = 3, UploadTest = 4, VideoLookup = 5, ScrapeDraftSchedules = 6, AutomatedUploadSchedule = 7};
+    public enum EventTypes
+    {
+        VideoUpload = 0, ShortsSchedule = 1, FullSchedule = 2,
+        ScapeSchedule = 3, UploadTest = 4, VideoLookup = 5, ScrapeDraftSchedules = 6, AutomatedUploadSchedule = 7
+    };
     public enum MadeForKids { MFK_SET_BY_YOU, MFK_SET_BY_YOUTUBE, NOT_MADE_FOR_KIDS, NO_SELECTION };
     public delegate void _StatsHandlerDateTimeSetter(string filename, DateTime start);
     public delegate DateTime _StatsHandlerDateTimeGetter(string filename);
