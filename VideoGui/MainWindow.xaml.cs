@@ -40,6 +40,7 @@ using System.IO;
 using System.IO.Compression;
 using System.IO.Packaging;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Management;
 using System.Net;
 using System.Net.Http;
@@ -649,7 +650,18 @@ namespace VideoGui
             try
             {
                 string loginfo = "formObjectHandler_MultiShortsUploader";
-                if (tld is CustomParams_ChangePriority cpcp)
+                if (tld is CustomParams_FlipPrioritySort cpfps)
+                {
+                    if (SelectedShortsDirectoriesListView is not null)
+                    {
+                        SortDirection = cpfps.flippriority;
+                        SelectedShortsDirectoriesListView.SortDescriptions.Clear();
+                        SelectedShortsDirectoriesListView.SortDescriptions.Add(new SortDescription("Priority",
+                           (SortDirection) ? ListSortDirection.Ascending : ListSortDirection.Descending));
+                        SelectedShortsDirectoriesListView.View.Refresh();
+                    }
+                }
+                else if (tld is CustomParams_ChangePriority cpcp)
                 {
                     int MaxPriority, idx = -1, newpriority = (cpcp.Ascending ? cpcp._CurrentPriority + 1 : cpcp._CurrentPriority - 1);
                     if (newpriority < 1) newpriority = 1;
@@ -1166,7 +1178,13 @@ namespace VideoGui
                     }
 
                     frmMultiShortsUploader.msuShorts.ItemsSource = ShortsDirectoryList;
-                    frmMultiShortsUploader.msuSchedules.ItemsSource = SelectedShortsDirectoriesList;
+                    SelectedShortsDirectoriesListView = new();
+                    SelectedShortsDirectoriesListView.SortDescriptions.Clear();
+                    SelectedShortsDirectoriesListView.SortDescriptions.Add(new SortDescription("Priority",
+                       (SortDirection) ? ListSortDirection.Ascending : ListSortDirection.Descending));
+                    SelectedShortsDirectoriesListView.Source = SelectedShortsDirectoriesList;
+
+                    frmMultiShortsUploader.msuSchedules.ItemsSource = SelectedShortsDirectoriesListView.View;
                 }
                 return default(TResult);
             }
@@ -1176,7 +1194,8 @@ namespace VideoGui
                 return default(TResult);
             }
         }
-
+        CollectionViewSource SelectedShortsDirectoriesListView = null;
+        bool SortDirection = true;
         public string FindUploadPath()
         {
             try
@@ -4075,6 +4094,44 @@ namespace VideoGui
             {
                 // Add restart Modules.
                 string logfile = "scraperModule_Handler";
+                if (tld is CustomParams_GetEncypt cpgd)
+                {
+                    string sql = "SELECT * FROM SETTINGS WHERE SETTINGNAME = @KY;";
+                    byte[] encrypted = null;
+                    connectionString.ExecuteReader(sql, [("@KY", cpgd.name)], (FbDataReader r) =>
+                    {
+                        encrypted = r["SETTINGBLOB"] as byte[];
+                    });
+                    if (encrypted != null)
+                    {
+                        string decrypted = DecryptPassword(encrypted);
+                        return (TResult)Convert.ChangeType(decrypted, typeof(TResult));
+                    }
+                }
+                else if (tld is CustomParams_Encypt cpe)
+                {
+                    bool found = false;
+                    byte[] encrypted = EncryptPasswordByte(cpe.name);
+
+                    //string decrypted = DecryptPassword(encrypted);
+                    connectionString.ExecuteReader("SELECT * FROM SETTINGS WHERE SETTINGNAME = @KY",
+                            [("@KY", cpe.key)], (FbDataReader r) =>
+                            {
+                                found = true;
+                            });
+
+                    if (!found)
+                    {
+                        string sql = "INSERT INTO SETTINGS(SETTINGNAME, SETTINGBLOB) VALUES(@KY, @VAL);";
+                        connectionString.ExecuteScalar(sql, [("@KY", cpe.key), ("@VAL", encrypted)]);
+                    }
+                    else
+                    {
+                        string sql = "UPDATE SETTINGS SET SETTINGBLOB = @VAL WHERE SETTINGNAME = @KY;";
+                        connectionString.ExecuteScalar(sql, [("@VAL", encrypted), ("@KY", cpe.key)]);
+                    }
+
+                }
                 if (tld is CustomParams_ScheduleRestartCheck sid)
                 {
                     logfile.WriteLog("restart.log", $"CustomParams_ScheduleRestartCheck {IsRestart}");
@@ -4636,21 +4693,7 @@ namespace VideoGui
         }
 
 
-
-
-        public string GetEncryptedString(byte[] encriptedString)
-        {
-            try
-            {
-                return DecryptPassword(encriptedString);
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
-                return "";
-            }
-            return "";
-        }
+       
         public int GetFileCount(string Folder)
         {
             try
@@ -6242,20 +6285,7 @@ namespace VideoGui
                 ex.LogWrite($"ClearLogs {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
             }
         }
-        public byte[] CryptData(byte[] _password)
-        {
-            int[] AccessKey = { 32, 16, 22, 157, 214, 12, 138, 249, 133, 244, 116, 28, 99, 00, 111, 131, 17, 174, 21,
-                88, 99, 33, 44, 166, 88, 99, 100, 11, 232, 157, 74, 1, 28, 39, 33, 244, 166, 88, 99, 100,
-                14, 132, 157, 74, 123, 28, 49, 233, 144, 166, 188, 99 };
-            EncryptionModule EMP = new EncryptionModule(AccessKey, AccessKey.Length);
-            byte[] EncKey = { 122, 244, 162, 232, 133, 222, 127, 141, 244, 136, 172, 223, 132, 233, 125, 126 };
-            byte[] encvar = EMP.RC4(_password, EncKey);
-            return encvar;
-        }
-
-
-
-
+        
 
         private void Window_KeyDown_EventHandler(object sender, System.Windows.Input.KeyEventArgs e)
         {
@@ -10734,23 +10764,85 @@ namespace VideoGui
                 return false;
             }
         }
+
+        public byte[] CryptData(byte[] _password)
+        {
+            int[] AccessKey = { 30, 11, 32, 157, 14, 22, 138, 249, 133, 44, 16, 228, 199, 00, 111, 31, 17,
+                74, 1, 8, 9, 33, 44, 66, 88, 99, 00, 11, 132, 157, 174, 21, 18, 93,
+                233, 244, 66, 88, 199, 00, 11, 232, 157, 174, 31, 8, 19, 33, 44, 66, 88, 99 };
+
+            EncryptionModule EMP = new EncryptionModule(AccessKey, AccessKey.Length);
+            byte[] EncKey = { 22, 44, 62, 132, 233, 122, 27, 41, 44, 136, 172, 223, 132, 33, 25, 16 };
+            byte[] encvar = EMP.RC4(_password, EncKey);
+            return encvar;
+        }
+
+      
+
+
+        public string DecryptPassword(byte[] _password)
+        {
+            int[] AccessKey = { 30, 11, 32, 157, 14, 22, 138, 249, 133, 44, 16, 228, 199, 00, 111, 31, 17,
+                74, 1, 8, 9, 33, 44, 66, 88, 99, 00, 11, 132, 157, 174, 21, 18, 93, 
+                233, 244, 66, 88, 199, 00, 11, 232, 157, 174, 31, 8, 19, 33, 44, 66, 88, 99 };
+            EncryptionModule EMP = new EncryptionModule(AccessKey, AccessKey.Length);
+            byte[] EncKey = { 22, 44, 62, 132, 233, 122, 27, 41, 44, 136, 172, 223, 132, 33, 25, 16 };
+            byte[] encvar = EMP.RC4(_password, EncKey);
+            return Encoding.ASCII.GetString(encvar);
+        }
+
+
+
+        public string GetEncryptedString(byte[] encriptedString)
+        {
+            try
+            {
+                return DecryptPassword(encriptedString);
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+                return "";
+            }
+            return "";
+        }
+    
         public byte[] _EncryptPassword(byte[] _password)
         {
-            int[] AccessKey = { 30, 11, 32, 57, 14, 2, 38, 49, 33, 44, 16, 28, 99, 00, 11, 31, 17, 74, 1, 8, 9, 33, 44, 66, 88, 99, 00, 11, 32, 57, 74, 1, 8, 9, 33, 44, 66, 88, 99, 00, 11, 32, 57, 74, 1, 8, 9, 33, 44, 66, 88, 99 };
+            int[] AccessKey = { 30, 11, 32, 157, 14, 22, 138, 249, 133, 44, 16, 228, 199, 00, 111, 31, 17,
+                74, 1, 8, 9, 33, 44, 66, 88, 99, 00, 11, 132, 157, 174, 21, 18, 93,
+                233, 244, 66, 88, 199, 00, 11, 232, 157, 174, 31, 8, 19, 33, 44, 66, 88, 99 };
+
             EncryptionModule EMP = new EncryptionModule(AccessKey, AccessKey.Length);
-            byte[] EncKey = { 22, 44, 62, 32, 33, 22, 27, 41, 44, 36, 72, 23, 32, 33, 25, 16 };
+            byte[] EncKey = { 22, 44, 62, 132, 233, 122, 27, 41, 44, 136, 172, 223, 132, 33, 25, 16 };
             byte[] encvar = EMP.RC4(_password, EncKey);
             return encvar;
         }
         public string EncryptPassword(string password)
         {
             byte[] _Password = Encoding.ASCII.GetBytes(password);
-            int[] AccessKey = { 30, 11, 32, 57, 14, 2, 38, 49, 33, 44, 16, 28, 99, 00, 11, 31, 17, 74, 1, 8, 9, 33, 44, 66, 88, 99, 00, 11, 32, 57, 74, 1, 8, 9, 33, 44, 66, 88, 99, 00, 11, 32, 57, 74, 1, 8, 9, 33, 44, 66, 88, 99 };
+            int[] AccessKey = { 30, 11, 32, 157, 14, 22, 138, 249, 133, 44, 16, 228, 199, 00, 111, 31, 17,
+                74, 1, 8, 9, 33, 44, 66, 88, 99, 00, 11, 132, 157, 174, 21, 18, 93,
+                233, 244, 66, 88, 199, 00, 11, 232, 157, 174, 31, 8, 19, 33, 44, 66, 88, 99 };
             EncryptionModule EMP = new EncryptionModule(AccessKey, AccessKey.Length);
-            byte[] EncKey = { 22, 44, 62, 32, 33, 22, 27, 41, 44, 36, 72, 23, 32, 33, 25, 16 };
+            byte[] EncKey = { 22, 44, 62, 132, 233, 122, 27, 41, 44, 136, 172, 223, 132, 33, 25, 16 };
             byte[] encvar = EMP.RC4(_Password, EncKey);
             return Encoding.ASCII.GetString(encvar);
         }
+
+        public byte[] EncryptPasswordByte(string password)
+        {
+            byte[] _Password = Encoding.ASCII.GetBytes(password);
+            int[] AccessKey = { 30, 11, 32, 157, 14, 22, 138, 249, 133, 44, 16, 228, 199, 00, 111, 31, 17,
+                74, 1, 8, 9, 33, 44, 66, 88, 99, 00, 11, 132, 157, 174, 21, 18, 93,
+                233, 244, 66, 88, 199, 00, 11, 232, 157, 174, 31, 8, 19, 33, 44, 66, 88, 99 };
+
+            EncryptionModule EMP = new EncryptionModule(AccessKey, AccessKey.Length);
+            byte[] EncKey = { 22, 44, 62, 132, 233, 122, 27, 41, 44, 136, 172, 223, 132, 33, 25, 16 };
+            byte[] encvar = EMP.RC4(_Password, EncKey);
+            return encvar;
+        }
+
         public async Task SetupHandlers()
         {
             try
@@ -12641,17 +12733,7 @@ namespace VideoGui
 
 
 
-        public string DecryptPassword(byte[] _password)
-        {
-            int[] AccessKey = { 30, 11, 32, 157, 14, 22, 138, 249, 133, 44, 16, 228, 199, 00, 111, 31, 17, 74, 1, 8, 9, 33,
-                44, 66, 88, 99, 00, 11, 132, 157, 174, 21, 18, 93, 233, 244, 66, 88, 199, 00, 11, 232, 157, 174, 31, 8, 19, 33, 44, 66, 88, 99 };
-            EncryptionModule EMP = new EncryptionModule(AccessKey, AccessKey.Length);
-            byte[] EncKey = { 22, 44, 62, 132, 233, 122, 27, 41, 44, 136, 172, 223, 132, 33, 25, 16 };
-            byte[] encvar = EMP.RC4(_password, EncKey);
-            return Encoding.ASCII.GetString(encvar);
-        }
-
-
+      
 
 
 

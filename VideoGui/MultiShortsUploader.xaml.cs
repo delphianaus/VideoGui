@@ -28,7 +28,9 @@ using Windows.Devices.Geolocation;
 using Windows.Graphics.DirectX.Direct3D11;
 using Windows.Media.Core;
 using Windows.UI.Composition;
+using Xceed.Wpf.Toolkit.PropertyGrid.Attributes;
 using static Microsoft.WindowsAPICodePack.Shell.PropertySystem.SystemProperties.System;
+using HorizontalAlignment = System.Windows.HorizontalAlignment;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 using Path = System.IO.Path;
 
@@ -52,6 +54,10 @@ namespace VideoGui
             RestartTimer = new DispatcherTimer();
         bool DebugStep = false;
         public TraceDebuggerInfo tbi = null;
+
+
+
+
         public static readonly DependencyProperty ShortsDirectoryNameWidthProperty =
             DependencyProperty.Register(nameof(ShortsDirectoryNameWidth), typeof(double),
                 typeof(MultiShortsUploader),
@@ -77,7 +83,7 @@ namespace VideoGui
         public static readonly DependencyProperty PriorityWidthProperty =
             DependencyProperty.Register(nameof(PriorityWidth), typeof(double),
                 typeof(MultiShortsUploader),
-                new FrameworkPropertyMetadata(60.0));
+                new FrameworkPropertyMetadata(57.0));
 
         //ShortsDirectoryNameWidth & MultiShortsDirectoryNameWidth
         public double MultiShortsDirectoryNameWidth
@@ -163,7 +169,7 @@ namespace VideoGui
                 var _w = key?.GetValue("MSUWidth");
                 var _h = key?.GetValue("MSUHeight");
                 var mhh = key?.GetValue("MSUSHortsHeight");
-                
+
                 Width = (_w is not null) ? _w.ToDouble() : Width;
                 Height = (_h is not null) ? _h.ToDouble() : Height;
 
@@ -173,7 +179,7 @@ namespace VideoGui
                 string MaxUploads = key.GetValueStr("MaxUploads", "100");
                 txtMaxUpload.Text = uploadsnumber.NotNullOrEmpty() ? uploadsnumber : txtMaxUpload.Text;
                 txtTotalUploads.Text = MaxUploads.NotNullOrEmpty() ? MaxUploads : txtTotalUploads.Text;
-                
+
                 Invoker?.Invoke(this, new CustomParams_Initialize());
                 key?.Close();
                 Ready = false;
@@ -692,6 +698,32 @@ namespace VideoGui
                         bool Exc = sa.Exceeded;
                         if (sa.HasUploaded)
                         {
+                            bool scanned = false;
+                            var idx = -1;
+                            foreach (var rp in msuSchedules.ItemsSource.OfType<SelectedShortsDirectories>().
+                                 Where(s => s.DirectoryName == rootfolder))
+                            {
+                                scanned = true;
+                                idx = rp.Id;
+                                rp.IsActive = false;
+                                shortsleft = Directory.EnumerateFiles(rootfolder, "*.mp4", SearchOption.AllDirectories).ToList().Count();
+                                break;
+                            }
+                            if (shortsleft == 0 && scanned)
+                            {
+                                int r = msuSchedules.ItemsSource.OfType<SelectedShortsDirectories>().
+                                Where(s => s.Id != id).Min(x => x.Priority);
+                                foreach (var _it in msuSchedules.ItemsSource.OfType<SelectedShortsDirectories>().
+                                  Where(s => s.Priority == r))
+                                {
+                                    _it.IsActive = true;
+                                    key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                                    key.SetValue("shortsdirectory", _it.DirectoryName);
+                                    key?.Close();
+                                    break;
+                                }
+                            }
+
                             bool FindNextRec = false;
                             filesdone.AddRange(sa.ScheduledOk);
                             shortsleft = Directory.EnumerateFiles(rootfolder, "*.mp4", SearchOption.AllDirectories).ToList().Count();
@@ -1366,6 +1398,20 @@ namespace VideoGui
             catch (Exception ex)
             {
                 ex.LogWrite($"MenuItem_DeleteFromPriority {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
+            }
+        }
+
+
+
+        private void Priority_SortChange(object sender, bool state)
+        {
+            try
+            {
+                Invoker?.Invoke(this, new CustomParams_FlipPrioritySort(state));
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"Priority_SortChange {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
         }
 

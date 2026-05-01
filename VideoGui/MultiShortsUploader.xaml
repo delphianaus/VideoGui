@@ -127,13 +127,14 @@
                         <MSU:MultiListboxColumnDefinition DataField="Id" Width="0" ComponentType="TextBlock"/>
                         <MSU:MultiListboxColumnDefinition HeaderText="Shorts Directory" 
                            WidthBinding="MultiShortsDirectoryNameWidth" DataField="DirectoryName"
-                           FontWeight="AutoFontWeight" Foreground="AutoFontColor"
+                           FontWeight="AutoFontWeight" Foreground="AutoFontColor" 
                            ComponentType="TextBlock"/>
-                        <MSU:MultiListboxColumnDefinition HeaderText="Priority" 
-                           WidthBinding="PriorityWidth"  DataField="Priority" ComponentType="TextBlock"
-                           FontWeight="AutoFontWeight" Foreground="AutoFontColor" />
-                        <MSU:MultiListboxColumnDefinition HeaderText="# of Shorts" 
-                           FontWeight="AutoFontWeight" Foreground="AutoFontColor"
+                        <MSU:MultiListboxColumnDefinition HeaderText="Priority" SortChange="Priority_SortChange"
+                           Width="56"  DataField="Priority" ComponentType="TextBlock" Sortable="True"
+                           FontWeight="AutoFontWeight" Foreground="AutoFontColor" IsSortActive="True"
+                           ItemTextAlignment="Center" />
+                        <MSU:MultiListboxColumnDefinition HeaderText="# of Shorts" ItemTextAlignment="Center"
+                           FontWeight="AutoFontWeight" Foreground="AutoFontColor" 
                            DataField="NumberOfShorts" Width="65" ComponentType="TextBlock"/>
                         <MSU:MultiListboxColumnDefinition HeaderText="Title" 
                             HeaderWidth="50.0" DataField="IsTitleAvailable" HeaderHorizontalAlignment="Center"

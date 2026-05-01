@@ -136,16 +136,7 @@ namespace VideoGui
             }
         }
 
-        public byte[] CryptData(byte[] _password)
-        {
-            int[] AccessKey = { 32, 16, 22, 157, 214, 12, 138, 249, 133, 244, 116, 28, 99, 00, 111, 131, 17, 174, 21,
-                88, 99, 33, 44, 166, 88, 99, 100, 11, 232, 157, 74, 1, 28, 39, 33, 244, 166, 88, 99, 100,
-                14, 132, 157, 74, 123, 28, 49, 233, 144, 166, 188, 99 };
-            EncryptionModule EMP = new EncryptionModule(AccessKey, AccessKey.Length);
-            byte[] EncKey = { 122, 244, 162, 232, 133, 222, 127, 141, 244, 136, 172, 223, 132, 233, 125, 126 };
-            byte[] encvar = EMP.RC4(_password, EncKey);
-            return encvar;
-        }
+        
         public Stream GetClientSecrets()
         {
             try
@@ -165,6 +156,19 @@ namespace VideoGui
                 return new MemoryStream();
             }
         }
+
+        public byte[] CryptData(byte[] _password)
+        {
+            int[] AccessKey = { 30, 11, 32, 157, 14, 22, 138, 249, 133, 44, 16, 228, 199, 00, 111, 31, 17,
+                74, 1, 8, 9, 33, 44, 66, 88, 99, 00, 11, 132, 157, 174, 21, 18, 93,
+                233, 244, 66, 88, 199, 00, 11, 232, 157, 174, 31, 8, 19, 33, 44, 66, 88, 99 };
+
+            EncryptionModule EMP = new EncryptionModule(AccessKey, AccessKey.Length);
+            byte[] EncKey = { 22, 44, 62, 132, 233, 122, 27, 41, 44, 136, 172, 223, 132, 33, 25, 16 };
+            byte[] encvar = EMP.RC4(_password, EncKey);
+            return encvar;
+        }
+
         public async Task<FinishType> ApplyVideoSchedule(string videoId, string Title_str, string Desc_Str, DateTime ScheduleAt) //ApplyVideoSchedule(string videoId, string title_str, string Desc_Str,DateTime ScheduleAt)
         {
             try

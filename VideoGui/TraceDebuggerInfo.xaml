@@ -22,8 +22,8 @@
                 Click="btnclose_Click"/>
         <Button x:Name="btnclear" Content="Clear" Height="33" Width="100"
            Margin="125,392,575,10" Click="btnclear_Click"/>
-        <Button x:Name="btnOpen" Content="Open" Height="33" Width="100" 
-           Margin="242,392,458,10" Click="btnOpen_Click"/>
-         
+        <TextBlock HorizontalAlignment="Left" Margin="462,396,0,0" TextWrapping="Wrap" 
+           Text="TextBlock" VerticalAlignment="Top" Width="120"/>
+
     </Grid>
 </Window>

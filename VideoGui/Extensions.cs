@@ -86,12 +86,15 @@ namespace VideoGui
                 return false;
             }
         }
+        public static bool ContainsAll(this string data, List<string> containsall)
+        {
+            bool res = false;
+            res = containsall.All(s => data.ToLower().Contains(s.ToLower()));
+            return res;
+        }
         public static bool ContainsAll(this string data, string[] containsall)
         {
             bool res = false;
-
-
-
             res = containsall.All(s => data.ToLower().Contains(s.ToLower()));
             return res;
         }

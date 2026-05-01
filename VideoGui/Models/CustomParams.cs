@@ -158,6 +158,32 @@ namespace VideoGui.Models
         }
     }
 
+    public class CustomParams_FlipPrioritySort
+    {
+        public bool flippriority = false;
+        public CustomParams_FlipPrioritySort(bool flippriority)
+        {
+            this.flippriority = flippriority;
+        }
+    }
+    public class CustomParams_Encypt
+    {
+        public string name { get; set; } = "";
+        public string key { get; set; } = "";
+        public CustomParams_Encypt(string _id, string _key)
+        {
+            name = _id;
+            key = _key;
+        }
+    }
+    public class CustomParams_GetEncypt
+    {
+        public string name { get; set; } = "";
+        public CustomParams_GetEncypt(string _id)
+        {
+            name = _id;
+        }
+    }
     public class CustomParams_ChangePriority
     {
         public bool Ascending = false;

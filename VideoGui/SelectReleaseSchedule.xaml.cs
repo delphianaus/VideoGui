@@ -151,6 +151,11 @@ namespace VideoGui
             }
         }
 
+        private void CheckBox_Checked(object sender, RoutedEventArgs e)
+        {
+
+        }
+
         private void btnSave_Click(object sender, RoutedEventArgs e)
         {
             try

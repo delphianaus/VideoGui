@@ -137,6 +137,8 @@ namespace VideoGui
             }
         }
 
+       
+
         private void btnclose_Click(object sender, RoutedEventArgs e)
         {
             Close();

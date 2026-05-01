@@ -9,6 +9,7 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using Xceed.Wpf.Toolkit;
 using Xceed.Wpf.Toolkit.Primitives;
+using static CustomComponents.delegates;
 
 namespace CustomComponents.ListBoxExtensions
 {
@@ -238,6 +239,19 @@ namespace CustomComponents.ListBoxExtensions
             DependencyProperty.Register(nameof(TextualFontSizeBindingProperty), typeof(string),
                 typeof(MultiListboxColumnDefinition),
                 new PropertyMetadata(string.Empty));
+        
+
+        public TextAlignment ItemTextAlignment
+        {
+            get => (TextAlignment)GetValue(ItemTextAlignmentProperty);
+            set => SetValue(ItemTextAlignmentProperty, value);
+        }
+        public static readonly DependencyProperty ItemTextAlignmentProperty =
+            DependencyProperty.Register(nameof(ItemTextAlignmentProperty), typeof(TextAlignment),
+                typeof(MultiListboxColumnDefinition),
+                new PropertyMetadata(TextAlignment.Left));
+
+
 
 
         public string ContentHorizontalAlignmentBinding
@@ -370,13 +384,43 @@ namespace CustomComponents.ListBoxExtensions
             set => SetValue(HeaderPaddingProperty, value);
         }
 
-
-
         public static readonly DependencyProperty UseStyleDimensionsProperty =
-            DependencyProperty.Register(nameof(UseStyleDimensions),
+                    DependencyProperty.Register(nameof(UseStyleDimensions),
+                        typeof(bool), typeof(MultiListboxColumnDefinition),
+                        new PropertyMetadata(true));
+
+        public bool Sortable
+        {
+            get => (bool)GetValue(SortableProperty);
+            set => SetValue(SortableProperty, value);
+        }
+
+        public static readonly DependencyProperty SortableProperty =
+            DependencyProperty.Register(nameof(Sortable),
+                typeof(bool), typeof(MultiListboxColumnDefinition),
+                new PropertyMetadata(false));
+
+        public bool SortDirection
+        {
+            get => (bool)GetValue(SortDirectionProperty);
+            set => SetValue(SortDirectionProperty, value);
+        }
+
+        public static readonly DependencyProperty SortDirectionProperty =
+            DependencyProperty.Register(nameof(SortDirection),
                 typeof(bool), typeof(MultiListboxColumnDefinition),
                 new PropertyMetadata(true));
 
+        public bool IsSortActive
+        {
+            get => (bool)GetValue(IsSortActiveProperty);
+            set => SetValue(IsSortActiveProperty, value);
+        }
+
+        public static readonly DependencyProperty IsSortActiveProperty =
+            DependencyProperty.Register(nameof(IsSortActive),
+                typeof(bool), typeof(MultiListboxColumnDefinition),
+                new PropertyMetadata(true));
         public bool UseStyleDimensions
         {
             get => (bool)GetValue(UseStyleDimensionsProperty);
@@ -629,6 +673,21 @@ namespace CustomComponents.ListBoxExtensions
             OnClick(sender, e);
         }
 
+        private SortChangedHandler _SortChange;
+        public event SortChangedHandler SortChange
+        {
+            add { _SortChange += value; }
+            remove { _SortChange-= value; }
+        }
+        protected virtual void OnSortChange(object sender, bool e)
+        {
+            _SortChange?.Invoke(sender, e);
+        }   
+        internal void RaiseSortChange(object sender, bool e)
+        {
+            OnSortChange(sender, e);
+        }
+
 
         // DropDownClosed
         private EventHandler _DropDownClosed;
@@ -741,7 +800,7 @@ namespace CustomComponents.ListBoxExtensions
         {
             _Initialized?.Invoke(sender, e);
         }
-        internal void InitializedEvent(object sender, EventArgs e)
+        internal void       InitializedEvent(object sender, EventArgs e)
         {
             OnInitialized(sender, e);
         }

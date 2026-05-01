@@ -8,6 +8,7 @@ using System.ComponentModel;
 using System.Data.Common;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
+using System.DirectoryServices;
 using System.Globalization;
 using System.IO;
 using System.Reflection;
@@ -25,6 +26,8 @@ using ToggleClass;
 using Xceed.Wpf.Toolkit;
 using static CustomComponents.delegates;
 using static CustomComponents.Extensions;
+using static System.Net.Mime.MediaTypeNames;
+using Image = System.Windows.Controls.Image;
 
 
 namespace CustomComponents.ListBoxExtensions
@@ -374,7 +377,7 @@ namespace CustomComponents.ListBoxExtensions
         }
         #region Events
 
-     
+
 
 
         /// <summary>
@@ -384,7 +387,7 @@ namespace CustomComponents.ListBoxExtensions
         {
             get { return lstBoxUploadItems.ItemContainerGenerator; }
         }
-  
+
 
 
 
@@ -1158,7 +1161,7 @@ namespace CustomComponents.ListBoxExtensions
 
                         case NotifyCollectionChangedAction.Reset:
                             // Full refresh needed only for Reset
-                         //  RebuildItemTemplate();
+                            //  RebuildItemTemplate();
                             UpdateVisualTree();
                             break;
                     }
@@ -1174,50 +1177,6 @@ namespace CustomComponents.ListBoxExtensions
         {
             get => (ObservableCollection<MultiListboxColumnDefinition>)GetValue(ColumnDefinitionsProperty);
             set => SetValue(ColumnDefinitionsProperty, value);
-        }
-
-        private void RebuildItemTemplate()
-        {
-
-            if (!IsLoaded) return;
-
-            try
-            {
-                InitializeScrollViewers();
-                _headerGrid = ((ControlTemplate)lstTitles.Template).FindName("griddpl", lstTitles) as Grid;
-                if (_headerGrid == null)
-                {
-                    Debug.WriteLine("Failed to find header grid");
-                    return;
-                }
-
-                // Clear existing header content
-                _headerGrid.ColumnDefinitions.Clear();
-                _headerGrid.Children.Clear();
-
-                BuildAndApplyTemplate();
-
-                // Apply any pending column definitions
-                if (_pendingColumnDefinitions != null)
-                {
-                    ColumnDefinitions = _pendingColumnDefinitions;
-                    _pendingColumnDefinitions = null;
-                }
-
-                ApplyColumnDefinitions();
-
-                // Update visual tree
-                UpdateVisualTree();
-                UpdateVisualTree();
-                if (true)
-                {
-
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Error rebuilding template: {ex}");
-            }
         }
 
         private T FindVisualChild<T>(DependencyObject parent) where T : DependencyObject
@@ -1296,81 +1255,89 @@ namespace CustomComponents.ListBoxExtensions
         }
 
 
-        private void BuildAndApplyTemplate()
+
+
+        //private void SetCustomBindings<T>(T control, MultiListboxColumnDefinition? colDef) where T : FrameworkElement
+        private Border GetSortableBorder(MultiListboxColumnDefinition colDef, TextBlock headerTextBlock)
         {
             try
             {
-                // Create a new item template with a Grid
-                var gridFactory = new FrameworkElementFactory(typeof(Grid));
-                gridFactory.SetValue(FrameworkElement.MarginProperty, new Thickness(0, 0, 0, 0));
-                // do height thingey here
-
-
-                gridFactory.SetValue(Panel.BackgroundProperty, Brushes.White);
-
-                // Store reference to the grid factory for later use
-                _itemGrid = new Grid(); // Temporary grid just for column definitions
-                ;
-
-                // Add each column definition and control
-                int columnIndex = 0;
-                foreach (var colDef in ColumnDefinitions)
+                var innerGrid = new Grid();
+                innerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+                innerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(14, GridUnitType.Pixel) });
+                var SortableBorder = new Border
                 {
-                    // Add column definition to the grid factory
-                    var colDefFactory = new FrameworkElementFactory(typeof(ColumnDefinition));
-                    if (!string.IsNullOrEmpty(colDef.WidthBinding))
+                    BorderThickness = new Thickness(0),
+                    Margin = colDef.HeaderMargin,
+                    Padding = colDef.HeaderPadding,
+                    Cursor = Cursors.Hand
+                };
+
+                if (!string.IsNullOrEmpty(colDef.WidthBinding))
+                {
+                    var binding = new Binding(colDef.WidthBinding)
                     {
-                        var binding = new Binding(colDef.WidthBinding)
-                        {
-                            RelativeSource = new RelativeSource(RelativeSourceMode.FindAncestor, typeof(Window), 1)
-                        };
-                        colDefFactory.SetBinding(ColumnDefinition.WidthProperty, binding);
-
-                        // Add matching column definition to header grid
-                        var headerColDef = new ColumnDefinition();
-                        headerColDef.SetBinding(ColumnDefinition.WidthProperty, binding);
-                        _headerGrid.ColumnDefinitions.Add(headerColDef);
-                    }
-                    else
-                    {
-                        colDefFactory.SetValue(ColumnDefinition.WidthProperty, new GridLength(colDef.Width));
-                        _headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(colDef.Width) });
-                    }
-                    gridFactory.AppendChild(colDefFactory);
-
-                    // Add header text to the header grid
-                    if (_headerGrid != null)
-                    {
-                        var headerTextBlock = new TextBlock
-                        {
-                            Text = colDef.HeaderText+"*",
-                            Margin = colDef.HeaderMargin,
-                            Padding = colDef.HeaderPadding,
-                            VerticalAlignment = colDef.HeaderVerticalAlignment,
-                            HorizontalAlignment = colDef.HeaderHorizontalAlignment
-                        };
-                        Grid.SetColumn(headerTextBlock, columnIndex);
-                        _headerGrid.Children.Add(headerTextBlock);
-                    }
-
-                    // Add control for this column if it has a data field
-
-                    AddControlToTemplate(gridFactory, colDef, columnIndex);
-
-                    columnIndex++;
+                        RelativeSource = new RelativeSource(RelativeSourceMode.FindAncestor, typeof(Window), 1)
+                    };
+                    SortableBorder.SetBinding(FrameworkElement.WidthProperty, binding);
                 }
-                // Create and set the item template
-                var itemTemplate = new DataTemplate { VisualTree = gridFactory };
-                lstBoxUploadItems.ItemTemplate = itemTemplate;
+                else SortableBorder.Width = colDef.HeaderWidth;
 
+                var TextBlockSortIndicator = new TextBlock
+                {
+                    Width = 14,
+                    Text = !colDef.SortDirection ? "▲" : "▼",
+                    Opacity = colDef.Sortable ? 1.0 : 0.2,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    HorizontalAlignment = HorizontalAlignment.Left,
+                    TextAlignment = TextAlignment.Center
+                };
+
+                bool ReverseTheOrder = false;
+                TextBlockSortIndicator.MouseLeftButtonDown += (s, e) =>
+                {
+                    if (e.ClickCount == 2)
+                    {
+                        TextBlockSortIndicator.Text = colDef.SortDirection ? "▲" : "▼";
+                        int idx = ColumnDefinitions.IndexOf(colDef);
+                        ColumnDefinitions[idx].SortDirection = !colDef.SortDirection;
+                        ColumnDefinitions[idx].RaiseSortChange(s, colDef.SortDirection);
+                        e.Handled = true;
+                    }
+                };
+                headerTextBlock.TextTrimming = TextTrimming.CharacterEllipsis;
+                headerTextBlock.Tag = "Sortable";
+                Grid.SetColumn(headerTextBlock, 0);
+                Grid.SetColumn(TextBlockSortIndicator, 1);
+                innerGrid.Children.Add(headerTextBlock);
+                innerGrid.Children.Add(TextBlockSortIndicator);
+                SortableBorder.Child = innerGrid;
+                return SortableBorder;
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"Error building and applying template: {ex}");
+                return new Border();
             }
         }
 
+        private void TextBlockSortIndicator_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            try
+            {
+                if (e.ClickCount == 2)
+                {
 
+
+                }
+
+                e.Handled = true;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"TextBlockSortIndicator_MouseLeftButtonUp {ex}");
+            }
+        }
 
         private Type GetControlType(Type requestedType)
         {
@@ -1393,62 +1360,6 @@ namespace CustomComponents.ListBoxExtensions
             }
         }
 
-        private void AddControlToTemplate(FrameworkElementFactory gridFactory, MultiListboxColumnDefinition colDef, int columnIndex)
-        {
-            try
-            {
-                var controlType = GetControlType(colDef.ControlType);
-                var controlFactory = new FrameworkElementFactory(controlType);
-
-                // Set the column for the control
-                controlFactory.SetValue(Grid.ColumnProperty, columnIndex);
-                //controlFactory.SetValue(FrameworkElement.HorizontalAlignmentProperty, HorizontalAlignment.Stretch);
-                // controlFactory.SetValue(FrameworkElement.VerticalAlignmentProperty, VerticalAlignment.Stretch);
-                controlFactory.SetValue(UIElement.VisibilityProperty, Visibility.Visible);
-                controlFactory.SetValue(UIElement.IsHitTestVisibleProperty, true);
-                controlFactory.SetValue(UIElement.OpacityProperty, 1.0);
-                controlFactory.SetValue(Control.IsEnabledProperty, true);
-                controlFactory.SetValue(Control.BackgroundProperty, Brushes.White);
-                controlFactory.SetValue(Control.BorderBrushProperty, Brushes.Black);
-                controlFactory.SetValue(Control.BorderThicknessProperty, new Thickness(1));
-                // For TextBlocks, use ItemHeight if available, otherwise fall back to column def height
-                if (controlType != typeof(TextBlock))
-                {
-                   // controlFactory.SetValue(FrameworkElement.HeightProperty, colDef.Height);
-                }
-                // Apply common properties
-                //controlFactory.SetValue(FrameworkElement.MarginProperty, colDef.ItemMargin);
-                controlFactory.SetValue(Control.ForegroundProperty, Brushes.Black);
-                if (typeof(Control).IsAssignableFrom(controlType))
-                {
-                    controlFactory.SetValue(Control.PaddingProperty, colDef.ItemPadding);
-                    controlFactory.SetValue(FrameworkElement.MinHeightProperty, colDef.MinHeight);
-                    controlFactory.SetValue(FrameworkElement.MinWidthProperty, colDef.MinWidth);
-                    // controlFactory.SetValue(FrameworkElement.WidthProperty, colDef.Width);
-                }
-                //   controlFactory.SetValue(FrameworkElement.VerticalAlignmentProperty, colDef.ItemVerticalAlignment);
-                //   controlFactory.SetValue(FrameworkElement.HorizontalAlignmentProperty, colDef.ItemHorizontalAlignment);
-
-                // Set up the bindings
-                var bindingProperty = GetMainBindingProperty(controlType);
-                if (bindingProperty != null)
-                {
-                    var binding = new Binding(colDef.DataField);
-                    controlFactory.SetBinding(bindingProperty, binding);
-                }
-
-
-                // Set z-index to ensure control is visible
-                controlFactory.SetValue(Panel.ZIndexProperty, columnIndex);
-
-                // Add the control to the grid
-                gridFactory.AppendChild(controlFactory);
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Error adding control to template: {ex}");
-            }
-        }
 
         private DependencyProperty GetMainBindingProperty(Type controlType)
         {
@@ -1535,7 +1446,7 @@ namespace CustomComponents.ListBoxExtensions
                     Debug.WriteLine("Failed to find header grid");
                     return;
                 }
-               
+
                 // Clear existing header content
                 _headerGrid.ColumnDefinitions.Clear();
                 _headerGrid.Children.Clear();
@@ -1553,7 +1464,7 @@ namespace CustomComponents.ListBoxExtensions
                 int columnIndex = 0;
                 bool IsToggleInColumn = ColumnDefinitions.
                     Where(s => GetControlType(s.ComponentType) == typeof(ToggleButtonEx)).Any();
-                bool IsCheckBoxInColumn= ColumnDefinitions.
+                bool IsCheckBoxInColumn = ColumnDefinitions.
                 Where(s => GetControlType(s.ComponentType) == typeof(CheckBox)).Any();
                 bool HasValidStyle = false;
                 var _ItemHeight = ItemHeight;
@@ -1630,14 +1541,7 @@ namespace CustomComponents.ListBoxExtensions
                         else
                         {
                             var headerColDef = new ColumnDefinition();
-                            /*if (colDef.HeaderWidth > colDef.Width)
-                            {
-                                var col_width = colDef.HeaderWidth + colDef.ItemMargin.Left + colDef.ItemMargin.Right;
-                                colDefFactory.SetValue(ColumnDefinition.WidthProperty, new GridLength(col_width));
-                                _headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(col_width) });
-                            }
-                            else
-                            {*/
+
                             var col_width = colDef.Width + colDef.ItemMargin.Left + colDef.ItemMargin.Right;
                             colDefFactory.SetValue(ColumnDefinition.WidthProperty, new GridLength(col_width));
                             _headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(col_width) });
@@ -1692,8 +1596,19 @@ namespace CustomComponents.ListBoxExtensions
                         _headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(hdrwidth) });
                     }
 
-                    Grid.SetColumn(headerTextBlock, columnIndex);
-                    _headerGrid?.Children.Add(headerTextBlock);
+                    if (colDef.Sortable)
+                    {
+                        var SortableBorder = GetSortableBorder(colDef, headerTextBlock);
+                        Grid.SetColumn(SortableBorder, columnIndex);
+                        _headerGrid.Children.Add(SortableBorder);
+                    }
+                    else
+                    {
+                        Grid.SetColumn(headerTextBlock, columnIndex);
+                        _headerGrid?.Children.Add(headerTextBlock);
+                    }
+
+
                     Line = 5;
                     var controlFactory = new FrameworkElementFactory(controlType);
                     controlFactory.SetValue(Grid.ColumnProperty, columnIndex);
@@ -1709,8 +1624,6 @@ namespace CustomComponents.ListBoxExtensions
                         controlFactory.SetValue(FrameworkElement.MarginProperty, colDef.ItemMargin);
                         controlFactory.SetValue(FrameworkElement.FocusableProperty, colDef.ItemFocusable);
                         controlFactory.SetValue(Control.VerticalAlignmentProperty, VerticalAlignment.Stretch);
-
-                        
                     }
                     else if (controlType == typeof(ToggleButtonEx))
                     {
@@ -1770,19 +1683,19 @@ namespace CustomComponents.ListBoxExtensions
                         SetVerticalAlignmentBinding(controlType, controlFactory, colDef);
                         SetHorizontalAlignmentBinding(controlType, controlFactory, colDef);
                         SetWidthBinding(controlType, controlFactory, colDef);
-                       SetItemHeight(controlType, controlFactory, colDef);
+                        SetItemHeight(controlType, controlFactory, colDef);
                         controlFactory.SetValue(FrameworkElement.MarginProperty, colDef.ItemMargin);
                         controlFactory.SetValue(FrameworkElement.HeightProperty, colDef.ToggleButtonHeight);
                         controlFactory.SetValue(FrameworkElement.FocusableProperty, colDef.ItemFocusable);
                         controlFactory.SetBinding(CheckBox.IsCheckedProperty, new Binding(colDef.DataField));
-                        controlFactory.SetValue(FrameworkElement.IsManipulationEnabledProperty, 
+                        controlFactory.SetValue(FrameworkElement.IsManipulationEnabledProperty,
                             colDef.ItemIsManipulationEnabled);
 
                         if (!IsToggle && IsCheckBoxInColumn)
                         {
                             gridFactory.SetValue(FrameworkElement.HeightProperty, double.NaN);
                         }
-                    }   
+                    }
                     else if (controlType == typeof(Button))
                     {
                         controlFactory.SetValue(Button.PaddingProperty, colDef.ItemPadding);
@@ -1818,21 +1731,24 @@ namespace CustomComponents.ListBoxExtensions
                     {
                         SetDataBinding(controlType, controlFactory, colDef);
                         SetFontBinding(controlType, controlFactory, colDef);
-                        SetVerticalAlignmentBinding(controlType, controlFactory, colDef);
-                        SetHorizontalAlignmentBinding(controlType, controlFactory, colDef);
+                        //   SetVerticalAlignmentBinding(controlType, controlFactory, colDef);
+                        // SetHorizontalAlignmentBinding(controlType, controlFactory, colDef);
                         SetWidthBinding(controlType, controlFactory, colDef);
                         controlFactory.SetValue(TextBlock.PaddingProperty, colDef.ItemPadding);
+                        //  controlFactory.SetValue(TextBlock.HorizontalAlignmentProperty, colDef.ItemHorizontalAlignment);
                         controlFactory.SetValue(FrameworkElement.MarginProperty, colDef.ItemMargin);
                         controlFactory.SetValue(FrameworkElement.FocusableProperty, colDef.ItemFocusable);
                         controlFactory.SetValue(TextOptions.TextFormattingModeProperty, TextFormattingMode.Display);
                         controlFactory.SetValue(TextOptions.TextRenderingModeProperty, TextRenderingMode.ClearType);
-                        SetItemHeight(controlType,controlFactory,colDef);
+                        SetItemHeight(controlType, controlFactory, colDef);
 
                         // Set horizontal text alignment
                         //controlFactory.SetValue(TextBlock.TextAlignmentProperty, textAlignment);
                         // Set vertical text alignment
                         controlFactory.SetValue(TextBlock.LineStackingStrategyProperty, LineStackingStrategy.BlockLineHeight);
+                        controlFactory.SetValue(TextBlock.TextAlignmentProperty, colDef.ItemTextAlignment);
                         //controlFactory.SetValue(TextBlock.TextAlignmentProperty, textAlignment);
+                        gridFactory.SetValue(TextBlock.TextAlignmentProperty, colDef.ItemTextAlignment);
                     }
                     else if (controlType == typeof(TextBox))
                     {
@@ -1874,7 +1790,7 @@ namespace CustomComponents.ListBoxExtensions
 
 
 
-                
+
                 // Give the template a chance to apply
                 Dispatcher.BeginInvoke(new Action(() =>
                 {
@@ -1913,7 +1829,7 @@ namespace CustomComponents.ListBoxExtensions
         {
             try
             {
-               
+
                 int i = -1;
                 foreach (var child in grid.Children)
                 {
@@ -1928,6 +1844,7 @@ namespace CustomComponents.ListBoxExtensions
                         ToggleButtonEx.Style = (colDef?.Style is not null && colDef.Style.TargetType == typeof(ToggleButtonEx)) ? colDef.Style : null;
                         HandleClickEvents<ToggleButtonEx>(ToggleButtonEx, colDef);
                     }
+
                     else if (child is TextBox textBox)
                     {
                         HandleInitialized<TextBox>(textBox, colDef);
@@ -1941,8 +1858,6 @@ namespace CustomComponents.ListBoxExtensions
                         HandleFocusEvents<ComboBox>(comboBox, colDef);
                         SetCustomBindings<ComboBox>(comboBox, colDef);
                         HandleSelectionEvents<ComboBox>(comboBox, colDef);
-
-
                     }
                     else if (child is CheckBox checkBox)
                     {
@@ -1952,12 +1867,13 @@ namespace CustomComponents.ListBoxExtensions
                         //checkBox.Height = 30.0;
                         checkBox.VerticalContentAlignment = colDef.ItemVerticalAlignment;
                         checkBox.Margin = colDef.ItemMargin;
-                        
+
                     }
                     else if (child is TextBlock textBlock)
                     {
                         HandleFocusEvents<TextBlock>(textBlock, colDef);
                         SetCustomBindings<TextBlock>(textBlock, colDef);
+                        //HandleClickEvents<TextBlock>(textBlock, colDef);
                         if (!string.IsNullOrEmpty(colDef.FontWeight))
                         {
                             // Binding must be like with as model might change
@@ -1979,6 +1895,7 @@ namespace CustomComponents.ListBoxExtensions
                             };
                             BindingOperations.SetBinding(textBlock, TextBlock.ForegroundProperty, binding);
                         }
+
 
                     }
                     else if (child is Label label)
@@ -2068,7 +1985,7 @@ namespace CustomComponents.ListBoxExtensions
                     b.SelectionChanged += (s, e) =>
                     {
                         colDef.RaiseSelectionChanged(s, e);
-                       // SelectionChanged?.Invoke(s, e);
+                        // SelectionChanged?.Invoke(s, e);
                     };
                 }
             }
@@ -2084,12 +2001,16 @@ namespace CustomComponents.ListBoxExtensions
         {
             try
             {
-                if (control is Button b)
+                if (control is TextBlock tb)
+                {
+
+                }
+                else if (control is Button b)
                 {
                     b.Click += (s, e) =>
                     {
                         colDef.RaiseClick(s, e);
-                        
+
                     };
                 }
                 else if (control is CheckBox c)
@@ -2097,7 +2018,7 @@ namespace CustomComponents.ListBoxExtensions
                     c.Click += (s, e) =>
                     {
                         colDef.RaiseClick(s, e);
-                        
+
                     };
                 }
                 else if (control is ToggleButtonEx r)
@@ -2105,7 +2026,7 @@ namespace CustomComponents.ListBoxExtensions
                     r.Click += (s, e) =>
                     {
                         colDef.RaiseClick(s, e);
-                        
+
                     };
 
 
@@ -2132,7 +2053,7 @@ namespace CustomComponents.ListBoxExtensions
             {
                 if (control is Button b)
                 {
-                    
+
                 }
                 else if (control is ComboBox cmb)
                 {
@@ -2145,21 +2066,21 @@ namespace CustomComponents.ListBoxExtensions
                         colDef.RaiseDropDownClosed(s, ef);
                     };
 
-                    
+
                 }
                 else if (control is CheckBox c)
                 {
-                   
+
                 }
                 else if (control is ToggleButtonEx r)
                 {
-                   
+
 
 
                 }
                 else if (control is Xceed.Wpf.Toolkit.DateTimePicker dtp)
                 {
-                    
+
 
 
                 }
@@ -2170,7 +2091,7 @@ namespace CustomComponents.ListBoxExtensions
             }
         }
 
-      
+
 
         public void unlockToggleBox(int id, int toggletype, bool state, int row)
         {
@@ -2335,16 +2256,19 @@ namespace CustomComponents.ListBoxExtensions
                          (control == typeof(TimePicker)) ? TimePicker.HorizontalAlignmentProperty :
                          (control == typeof(CheckBox)) ? CheckBox.HorizontalAlignmentProperty :
                           (control == typeof(ComboBox)) ? CheckBox.HorizontalAlignmentProperty :
-                         (control == typeof(TextBlock)) ? TextBlock.HorizontalAlignmentProperty : null;
+                         (control == typeof(TextBlock)) ? TextBlock.TextAlignmentProperty : null;
                 if (dp is null) return;
+
+                if (colDef.Sortable)
+                {
+                    controlFactory.SetValue(dp, colDef.ItemHorizontalAlignment);
+                }
                 if (!string.IsNullOrEmpty(colDef.ContentHorizontalAlignmentBinding))
                 {
                     controlFactory.SetBinding(dp, new Binding(colDef.ContentHorizontalAlignmentBinding));
                 }
-                else if (ItemsHorizontalAlignmentProperty is not null)
-                {
-                    controlFactory.SetValue(dp, (HorizontalAlignment)GetValue(ItemsHorizontalAlignmentProperty));
-                }
+                else controlFactory.SetValue(dp, colDef.ItemHorizontalAlignment);
+
             }
             catch (Exception ex)
             {
@@ -2372,7 +2296,7 @@ namespace CustomComponents.ListBoxExtensions
                 }
                 else if (ItemsVerticalAlignmentProperty is not null)
                 {
-                    controlFactory.SetValue(dp, (VerticalAlignment)GetValue(ItemsVerticalAlignmentProperty));
+                    controlFactory.SetValue(dp, colDef.ItemVerticalAlignment);
                 }
             }
             catch (Exception ex)
@@ -2436,7 +2360,7 @@ namespace CustomComponents.ListBoxExtensions
                 }
                 else if (FontSizeProperty is not null)
                 {
-                    controlFactory.SetValue(dp, (double)GetValue(FontSizeProperty));
+                    controlFactory.SetValue(dp, FontSize);
                 }
             }
             catch (Exception ex)
@@ -2470,7 +2394,7 @@ namespace CustomComponents.ListBoxExtensions
                     }
                     else if (ItemsVerticalAlignmentProperty is not null)
                     {
-                        control.VerticalAlignment = (VerticalAlignment)GetValue(ItemsVerticalAlignmentProperty);
+                        control.VerticalAlignment = ItemsVerticalAlignment;
                     }
                 }
                 else if (control is ToggleButtonEx ToggleButtonEx1)
@@ -2495,21 +2419,17 @@ namespace CustomComponents.ListBoxExtensions
                         colDef.InitializedEvent(s, e);
                     };
 
-                   
+
                     cmb.FontSize = 14.0;
                     cmb.Width = colDef.Width;
                 }
                 else if (control is TextBlock textBlock)
                 {
-                    if (!string.IsNullOrEmpty(colDef.ContentVerticalAlignmentBinding))
-                    {
-                        control.SetBinding(Control.VerticalAlignmentProperty,
-                            new Binding(colDef.ContentVerticalAlignmentBinding));
-                    }
-                    else if (ItemsVerticalAlignmentProperty is not null)
-                    {
-                        control.VerticalAlignment = (VerticalAlignment)GetValue(ItemsVerticalAlignmentProperty);
-                    }
+                    
+
+
+                    textBlock.TextAlignment = colDef.ItemTextAlignment;
+
                     if (!string.IsNullOrEmpty(colDef.WidthBinding))
                     {
                         var binding = new Binding(colDef.WidthBinding)
@@ -2520,7 +2440,7 @@ namespace CustomComponents.ListBoxExtensions
                         };
                         BindingOperations.SetBinding(textBlock, FrameworkElement.WidthProperty, binding);
                     }
-                    else control.Width = colDef.Width;
+                    else textBlock.Width = colDef.Width;
                 }
                 else
                 {
@@ -2798,59 +2718,9 @@ namespace CustomComponents.ListBoxExtensions
             }
         }
 
-        private void ApplyVisualProperties2()
-        {
-            try
-            {
-                if (_itemGrid == null) return;
 
-                // Apply visual properties to header text blocks
 
-                foreach (var child in _itemGrid.Children.OfType<Xceed.Wpf.Toolkit.DateTimePicker>())
-                {
-                    var columnIndex = Grid.GetColumn(child);
-                    if (columnIndex >= 0 && columnIndex < ColumnDefinitions.Count)
-                    {
-                        var colDef = ColumnDefinitions[columnIndex];
-                        Dispatcher.BeginInvoke(new Action(() =>
-                        {
-                            child.Margin = colDef.HeaderMargin;
-                            child.Padding = colDef.HeaderPadding;
-                            child.HorizontalAlignment = colDef.HeaderHorizontalAlignment;
-                            child.VerticalAlignment = colDef.HeaderVerticalAlignment;
-                            child.MinHeight = 20.0;
-                        }));
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Error in ApplyVisualProperties: {ex}");
-            }
-        }
 
-        public void ResetColumnDefinitions()
-        {
-            try
-            {
-                IsBuilding = true;
-                try
-                {
-                    _columnFactories = null; // Force rebuild of factories
-                    _cachedItemTemplate = null; // 
-                    ApplyColumnDefinitions();
-
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine($"Error in ResetColumnDefinitions: {ex}");
-                }
-            }
-            finally
-            {
-                IsBuilding = false;
-            }
-        }
         private void ApplyColumnDefinitions()
         {
             try
@@ -2931,16 +2801,28 @@ namespace CustomComponents.ListBoxExtensions
 
                         var headerTextBlock = new TextBlock
                         {
-                            Text = colDef.HeaderText
-
-                            //Padding = new Thickness(120,0,0,0)
+                            Text = colDef.HeaderText,
+                            Margin = colDef.HeaderMargin,
+                            Padding = colDef.HeaderPadding,
+                            VerticalAlignment = colDef.HeaderVerticalAlignment,
+                            HorizontalAlignment = colDef.HeaderHorizontalAlignment
                         };
                         headerTextBlock.HorizontalAlignment = colDef.HeaderHorizontalAlignment;
 
+                        int columnIndex = _headerGrid.ColumnDefinitions.Count - 1;
+                        if (colDef.Sortable)
+                        {
+                            var SortableBorder = GetSortableBorder(colDef, headerTextBlock);
+                            Grid.SetColumn(SortableBorder, columnIndex);
+                            _headerGrid.Children.Add(SortableBorder);
+                        }
+                        else
+                        {
+                            Grid.SetColumn(headerTextBlock, columnIndex);
+                            _headerGrid.Children.Add(headerTextBlock);
+                        }
 
 
-                        Grid.SetColumn(headerTextBlock, _headerGrid.ColumnDefinitions.Count - 1);
-                        _headerGrid.Children.Add(headerTextBlock);
                     }
 
                     // Add column to item template grid
@@ -2956,8 +2838,8 @@ namespace CustomComponents.ListBoxExtensions
                     }
                     else
                     {
-                       
-                            // For ToggleButtonEx, ensure column is at least as wide as the button
+
+                        // For ToggleButtonEx, ensure column is at least as wide as the button
                         if (__controlType == typeof(ToggleButtonEx))
                         {
                             if (!double.IsNaN(colDef.ToggleButtonWidth))
@@ -2968,7 +2850,6 @@ namespace CustomComponents.ListBoxExtensions
                             else
                             {
                                 itemColumn.Width = new GridLength(HasValidStyle ? styleHandler.Width : colDef.Width);
-
                             }
                         }
                         else
@@ -3041,11 +2922,14 @@ namespace CustomComponents.ListBoxExtensions
                     }
                     else if (controlType == typeof(TextBlock))
                     {
+                        SetVerticalAlignmentBinding(controlType, factory, colDef);
+                        SetHorizontalAlignmentBinding(controlType, factory, colDef);
                         factory.AddHandler(FrameworkElement.LoadedEvent, new RoutedEventHandler((s, e) =>
                         {
                             var textBlock = s as TextBlock;
                             if (textBlock != null)
                             {
+                                textBlock.HorizontalAlignment = colDef.ItemHorizontalAlignment;
                                 if (!string.IsNullOrEmpty(colDef.TextualFontSizeBinding))
                                 {
                                     textBlock.SetBinding(TextBlock.FontSizeProperty,
@@ -3053,8 +2937,7 @@ namespace CustomComponents.ListBoxExtensions
                                 }
                                 else if (FontSizeProperty is not null)
                                 {
-                                    textBlock.SetValue(Control.FontSizeProperty,
-                                        (double)GetValue(FontSizeProperty));
+                                    textBlock.SetValue(Control.FontSizeProperty, FontSize);
                                 }
                                 textBlock.SetValue(TextOptions.TextFormattingModeProperty, TextFormattingMode.Display);
                                 textBlock.SetValue(TextOptions.TextRenderingModeProperty, TextRenderingMode.ClearType);
@@ -3158,12 +3041,12 @@ namespace CustomComponents.ListBoxExtensions
                                 {
                                     datePicker.MinWidth = colDef.DateTimeMinWidth;
                                 }
-                               
+
                             }
                         }));
                         //factory.AddHandler(Xceed.Wpf.Toolkit.DateTimePicker.LostFocusEvent, new RoutedEventHandler((s, e) => colDef.LostFocus?.Invoke(s, e)));
-                       // factory.AddHandler(Xceed.Wpf.Toolkit.DateTimePicker.GotFocusEvent, new RoutedEventHandler((s, e) => DateTimePickerGotFocus?.Invoke(s, e)));
-                      //  factory.AddHandler(Xceed.Wpf.Toolkit.DateTimePicker.KeyUpEvent, new KeyEventHandler((s, e) => DateTimePickerKeyUp?.Invoke(s, e)));
+                        // factory.AddHandler(Xceed.Wpf.Toolkit.DateTimePicker.GotFocusEvent, new RoutedEventHandler((s, e) => DateTimePickerGotFocus?.Invoke(s, e)));
+                        //  factory.AddHandler(Xceed.Wpf.Toolkit.DateTimePicker.KeyUpEvent, new KeyEventHandler((s, e) => DateTimePickerKeyUp?.Invoke(s, e)));
                     }
                 }
 

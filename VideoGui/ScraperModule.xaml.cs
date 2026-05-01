@@ -1,5 +1,4 @@
 using CliWrap;
-using CliWrap;
 using CliWrap.EventStream;
 using FirebirdSql.Data.FirebirdClient;
 using FirebirdSql.Data.Isql;
@@ -116,11 +115,11 @@ namespace VideoGui
             ScheduleMax = 0, ts = 0, LastKey = -1, Days = 1, CurrentDay = 1, inserted = 0, WheelMove = 0;
         bool EditDone = false, btndone = false, ExitDialog = false, Waiting = false, IsVideoLookup = false, WaitingFileName = false;
         bool Valid = false, IsVideoLookupShort = false, IsValid = false, IsUnlisted = false, IsDashboardMode = false, CanSpool = false, FirstRun = true, done = false, HasExited = false;
-        bool DoNextNode = true, finished = false, TimedOut = false, Uploading = false, NextRecord = false, Processing = false, clickupload = true;
+        bool logginin = false, DoNextNode = true, finished = false, TimedOut = false, Uploading = false, NextRecord = false, Processing = false, clickupload = true;
         public bool IsClosing = false, IsClosed = false, Exceeded = false, KilledUploads = false, SwapEnabled = false, IsTitleEditor = false;
         public bool TaskHasCancelled = false, NewSession = false, QuotaExceeded = false, Errored = false;
 
-        string SendKeysString = "", UploadPath = "", LastNode = "", DefaultUrl = "", LastValidFileName = "", TableDestination = "";
+        string automation = "", user = "", SendKeysString = "", UploadPath = "", LastNode = "", DefaultUrl = "", LastValidFileName = "", TableDestination = "";
         List<ScraperUploads> Scraper_uploaded = new();
         List<string> IdNodes = new(), titles = new List<string>(), nextaddress = new(), Ids = new(), Idx = new(), ufiles = new(), Files = new();// DoneFiles = new();
         public List<string> ScheduledOk = new List<string>(), VideoFiles = new List<string>(), nodeslist = new List<string>();
@@ -152,8 +151,8 @@ namespace VideoGui
         public Action<object> ShowMultiForm = null;
         public Action<object, string> SendTraceInfo = null;
         List<DirectoriesProbe> Directories = new(); //Directories
-        Dictionary<int, WebView2CompositionControl> wv2Dictionary = new Dictionary<int, WebView2CompositionControl>();
-        Dictionary<int, WebView2CompositionControl> ActiveWebView = new Dictionary<int, WebView2CompositionControl>();
+        Dictionary<int, WebView2> wv2Dictionary = new Dictionary<int, WebView2>();
+        Dictionary<int, WebView2> ActiveWebView = new Dictionary<int, WebView2>();
         DispatcherTimer InternalTimer = new DispatcherTimer();
         TaskCompletionSource<bool> tcs = new TaskCompletionSource<bool>();
         public Nullable<DateTime> ReleaseDate = null, ReleaseEndDate = null;
@@ -293,7 +292,7 @@ namespace VideoGui
         {
             try
             {
-                if (sender is WebView2CompositionControl wv)
+                if (sender is WebView2 wv)
                 {
                     //wv2.IsInitialized = true;
                 }
@@ -608,7 +607,7 @@ namespace VideoGui
         }
 
         public ScraperModule(databasehook<object> _Invoker, OnFinishIdObj _OnFinish,
-            string _Default_url, WebView2CompositionControl wb2)
+            string _Default_url, WebView2 wb2)
         {
             try
             {
@@ -694,14 +693,14 @@ namespace VideoGui
             {
                 if (e.IsSuccess && sender is not null)
                 {
-                    int Id = (sender as WebView2CompositionControl).Name.Replace("wv2A", "").ToInt(-1);
-                    string source = (sender as WebView2CompositionControl).Source.AbsoluteUri.ToString(), IntId = "";
+                    int Id = (sender as WebView2).Name.Replace("wv2A", "").ToInt(-1);
+                    string source = (sender as WebView2).Source.AbsoluteUri.ToString(), IntId = "";
                     int p1 = source.IndexOf("video/"), p2 = source.IndexOf("/edit");
                     if (p1 != -1 && p2 != -1)
                     {
                         IntId = source.Substring(p1 + 6, p2 - p1 - 6);
                     }
-                    var task = (sender as WebView2CompositionControl).ExecuteScriptAsync("document.body.innerHTML");
+                    var task = (sender as WebView2).ExecuteScriptAsync("document.body.innerHTML");
                     task.ContinueWith(x => { ProcessHTML(x.Result, Id, IntId, sender); },
                         TaskScheduler.FromCurrentSynchronizationContext());
                 }
@@ -781,47 +780,47 @@ namespace VideoGui
                 }
                 wv2A1.CoreWebView2InitializationCompleted += (s, e) =>
                 {
-                    (s as WebView2CompositionControl).Tag = 1;
+                    (s as WebView2).Tag = 1;
                 };
                 wv2A2.CoreWebView2InitializationCompleted += (s, e) =>
                 {
-                    (s as WebView2CompositionControl).Tag = 1;
+                    (s as WebView2).Tag = 1;
                 };
                 wv2A3.CoreWebView2InitializationCompleted += (s, e) =>
                 {
-                    (s as WebView2CompositionControl).Tag = 1;
+                    (s as WebView2).Tag = 1;
                 };
                 wv2A4.CoreWebView2InitializationCompleted += (s, e) =>
                 {
-                    (s as WebView2CompositionControl).Tag = 1;
+                    (s as WebView2).Tag = 1;
                 };
                 wv2A5.CoreWebView2InitializationCompleted += (s, e) =>
                 {
-                    (s as WebView2CompositionControl).Tag = 1;
+                    (s as WebView2).Tag = 1;
                 };
                 wv2A6.CoreWebView2InitializationCompleted += (s, e) =>
                 {
-                    (s as WebView2CompositionControl).Tag = 1;
+                    (s as WebView2).Tag = 1;
                 };
                 wv2A7.CoreWebView2InitializationCompleted += (s, e) =>
                 {
-                    (s as WebView2CompositionControl).Tag = 1;
+                    (s as WebView2).Tag = 1;
                 };
                 wv2A8.CoreWebView2InitializationCompleted += (s, e) =>
                 {
-                    (s as WebView2CompositionControl).Tag = 1;
+                    (s as WebView2).Tag = 1;
                 };
                 wv2A9.CoreWebView2InitializationCompleted += (s, e) =>
                 {
-                    (s as WebView2CompositionControl).Tag = 1;
+                    (s as WebView2).Tag = 1;
                 };
                 wv2A10.CoreWebView2InitializationCompleted += (s, e) =>
                 {
-                    (s as WebView2CompositionControl).Tag = 1;
+                    (s as WebView2).Tag = 1;
                 };
                 wv2A6.CoreWebView2InitializationCompleted += (s, e) =>
                 {
-                    (s as WebView2CompositionControl).Tag = 1;
+                    (s as WebView2).Tag = 1;
                 };
                 await wv2.EnsureCoreWebView2Async(env);
                 await wv2A1.EnsureCoreWebView2Async(env);
@@ -1236,8 +1235,9 @@ namespace VideoGui
                             r = r + newfile + " ";
                         }
                         lstMain.Items.Insert(0, $"Inserting {max} Files {r}");
-                        await ActiveWebView[1].CoreWebView2.ExecuteScriptAsync("document.getElementById('upload-icon').click();");
-                        await ActiveWebView[1].CoreWebView2.ExecuteScriptAsync("document.getElementById('stroke').click();");
+                        await wv2.ExecuteScriptAsync("document.getElementById('upload-icon').click();");
+                        Task.Delay(1000).Wait();    
+                        await wv2.ExecuteScriptAsync("document.getElementById('select-files-button').click();");
                         HasExited = true;
                         Dispatcher.Invoke(() => InternalTimer.Start());
                     }
@@ -1256,7 +1256,7 @@ namespace VideoGui
                             await ActiveWebView[1].ExecuteScriptAsync(Script_Close);
                             break;
                         }
-                        Thread.Sleep(50);
+                        await Task.Delay(50);
                         //SetMargin(StatusBar);
                         StatusBar.ApplyMargin();
                         bool flowControl = await ProcessBody(Span_Name, Script_Close, connectStr);
@@ -1328,7 +1328,7 @@ namespace VideoGui
                                     InsertIntoUploadFiles(VideoFiles, connectStr);
                                     break;
                                 }
-                                Thread.Sleep(100);
+                                await Task.Delay(100);
                             }
                             Close();
                         }
@@ -1491,10 +1491,21 @@ namespace VideoGui
                     var r = new CustomParams_SetTimeSpans(null, null);
                     Invoker?.Invoke(this, r);
                 }
+
+                /*
+                               Invoker?.Invoke(this, new CustomParams_Encypt("justin@smythconsulting.net","automation02"));
+                               Invoker?.Invoke(this, new CustomParams_Encypt("%#A276aNiN#L7U@r","automation01"));
+
+                                string user = Invoker?.InvokeWithReturn<string>(this,
+                                  new CustomParams_GetEncypt("automation02")) ?? "";
+                                string pwd=Invoker?.InvokeWithReturn<string>(this,
+                                  new CustomParams_GetEncypt("automation01")) ?? "";
+                */
+
                 wv2.CoreWebView2InitializationCompleted += (sender, args) =>
-                {
-                    ActiveWebView[1].Source = new Uri(webAddressBuilder.GetChannelURL().Address);
-                };
+            {
+                ActiveWebView[1].Source = new Uri(webAddressBuilder.GetChannelURL().Address);
+            };
                 string connectionString = Invoker.InvokeWithReturn<string>(this, new CustomParams_GetConnectionString());
                 int TitleId = -1, DescId = -1, idr = -1;
                 connectionString.ExecuteReader("SELECT * FROM REMATCHED", (FbDataReader r) =>
@@ -1573,9 +1584,9 @@ namespace VideoGui
                             while (!cts.IsCancellationRequested && !canceltoken.IsCancellationRequested)
                             {
                                 System.Windows.Forms.Application.DoEvents();
-                                Thread.Sleep(100);
+                                await Task.Delay(100);
                             }
-                            html = Regex.Unescape(await (sender as WebView2CompositionControl).ExecuteScriptAsync("document.body.innerHTML"));
+                            html = Regex.Unescape(await (sender as WebView2).ExecuteScriptAsync("document.body.innerHTML"));
                             if (html is not null)
                             {
                                 if (html.Contains("No matching videos"))
@@ -2013,7 +2024,7 @@ namespace VideoGui
                                     if (!ehtml.Contains(LastNode) && ehtml != "" || canceltoken.IsCancellationRequested) break;
                                 }
                                 NextRecord = false;
-                                var webView = sender as WebView2CompositionControl;
+                                var webView = sender as WebView2;
                                 if (webView.CoreWebView2 != null && !canceltoken.IsCancellationRequested)
                                 {
                                     var task1 = webView.CoreWebView2.ExecuteScriptAsync("document.body.innerHTML");
@@ -2121,7 +2132,7 @@ namespace VideoGui
         }
     ";
 
-                var webView2 = sender as WebView2CompositionControl;
+                var webView2 = sender as WebView2;
 
 
                 if (webView2 is null || canceltoken.IsCancellationRequested) return;
@@ -2155,14 +2166,14 @@ namespace VideoGui
                             cts1.CancelAfter(TimeSpan.FromMilliseconds(500));
                             while (!cts1.IsCancellationRequested && !canceltoken.IsCancellationRequested)
                             {
-                                Thread.Sleep(100);
+                                await Task.Delay(100);
                             }
                             SendTraceInfo?.Invoke(this, $"ProcessWV2Completed step3");
                             Click_Finish();
                             cts1.CancelAfter(TimeSpan.FromMilliseconds(500));
                             while (!cts1.IsCancellationRequested && !canceltoken.IsCancellationRequested)
                             {
-                                Thread.Sleep(100);
+                                await Task.Delay(100);
                             }
                             //                     Click_Upload();
                             SendTraceInfo?.Invoke(this, $"ProcessWV2Completed step4 Exiting");
@@ -2171,7 +2182,7 @@ namespace VideoGui
                             cts.CancelAfter(TimeSpan.FromMilliseconds(500));
                             while (!cts.IsCancellationRequested && !canceltoken.IsCancellationRequested)
                             {
-                                Thread.Sleep(100);
+                                await Task.Delay(100);
                             }
                             ProcessWebViewComplete(sender);
                             return;
@@ -2226,7 +2237,7 @@ namespace VideoGui
                         cts.CancelAfter(TimeSpan.FromMilliseconds(1500));
                         while (!cts.IsCancellationRequested && !canceltoken.IsCancellationRequested)
                         {
-                            Thread.Sleep(100);
+                            await Task.Delay(100);
                         }
                         ProcessWebViewComplete(sender);
                     }
@@ -2237,7 +2248,7 @@ namespace VideoGui
                 ex.LogWrite($"ProcessWV2 {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-        bool InsertAtZero = false;
+        bool InsertAtZero = false, auth = false;
         private async void ProcessWV2(string html, object sender)
         {
             try
@@ -2245,10 +2256,50 @@ namespace VideoGui
                 if (html is not null)
                 {
                     var ehtml = Regex.Unescape(html);
+
+                    if (wv2.Source.ToString().IndexOf("https://accounts.google.com/v3/signin/") == -1)
+                    {
+                        auth = true;
+                    }
+                    while (true)
+                    {
+                        html = Regex.Unescape(await wv2.ExecuteScriptAsync("document.body.innerHTML"));
+                        if (html.Contains("aria-label=\"Sign in\""))
+                        {
+                            string nodename = "style-scope ytd-masthead";
+                            HtmlDocument htmldoc = new();
+                            htmldoc.LoadHtml(html);
+                            HtmlNode loginNode = htmldoc.DocumentNode.SelectSingleNode($"//ytd-button-renderer[@class='{nodename}']//a");
+                            if (loginNode != null)
+                            {
+                                string href = loginNode.GetAttributeValue("href", "");
+                                wv2.Source = new Uri($"{href}");
+                                break;
+                            }
+                        }
+                        else if (wv2.Source.ToString().Contains("https://accounts.google.com/v3/signin/"))
+                        {
+                            html = Regex.Unescape(await wv2.ExecuteScriptAsync("document.body.innerHTML"));
+                            while (html == "null" || html is null)
+                            {
+                                await Task.Delay(50);
+                                html = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
+                            }
+                            if (html.ContainsAll(new List<string>() { "Email", "or", "phone" }))
+                            {
+                                bool flowControl = await HandleGoogleLogin(html, wv2);
+                                if (flowControl) continue;
+                            }
+                            else await GoogleLoginSelectionHandler(wv2);
+                            continue;
+                        }
+                        else break;
+                    }
                     if (html is not null && ehtml.Contains("Customize channel"))
                     {
                         Processing = !YouTubeLoaded();  // Load Default URL.(DefaultUrl)
                     }
+
                     else if (ehtml is not null && ehtml.Contains("Channel dashboard"))
                     {
                         if (ScraperType == EventTypes.ShortsSchedule ||
@@ -2287,7 +2338,7 @@ namespace VideoGui
                             while (!cts.IsCancellationRequested && !canceltoken.IsCancellationRequested)
                             {
                                 //class="style-scope ytcp-settings-dialog">Settings<
-                                Thread.Sleep(100);
+                                await Task.Delay(100);
                                 var htmlx = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
                                 if (htmlx.Contains("class=\"style-scope ytcp-settings-dialog\">Settings<"))
                                 {
@@ -2297,9 +2348,9 @@ namespace VideoGui
                             CloseTimer.Interval = TimeSpan.FromSeconds(3);
                             CloseTimer.Tick += CloseTimer_Tick;
                             CloseTimer.Start();
+
                         }
                     }
-
                 }
             }
             catch (Exception ex)
@@ -2313,8 +2364,213 @@ namespace VideoGui
             CloseTimer.Stop();
             CloseTimer_TickAsync(sender, e).ConfigureAwait(false);
         }
+        private async Task GoogleLoginSelectionHandler(WebView2 _webView)
+        {
+            try
+            {
+                if (!logginin)
+                {
+                    logginin = true;
+                    user = (user == "") ? Invoker?.InvokeWithReturn<string>(this,
+                        new CustomParams_GetEncypt("automation02")) ?? "" : user;
+                    await Login(_webView, user);
+                    await Task.Delay(3000);
+                    return;
+                }
+                else
+                {
+                    automation = (automation == "") ? Invoker?.InvokeWithReturn<string>(this,
+                        new CustomParams_GetEncypt("automation01")) ?? "" : automation;
+                    await SendPwd(_webView, automation);
+                    await Task.Delay(1000);
+                    await ClickNext(_webView);
+                    auth = true;
+                    return;
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"GoogleLoginSelectionHandler {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+                return;
+            }
+        }
+        private async Task<bool> Login(WebView2 _wv2, string useremail)
+        {
+            try
+            {
 
 
+                string js = $@"
+(() => {{
+    const el = document.querySelector('[data-identifier=""{useremail}""]');
+    if (!el) return 'not found';
+
+    el.click();
+    return 'clicked';
+}})();
+";
+
+                await _wv2.CoreWebView2.ExecuteScriptAsync(js);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
+
+        private async Task<bool> HandleGoogleLogin(string html, WebView2 _webView)
+        {
+            try
+            {
+                brdmain.Height = 350;
+                wv2.ZoomFactor = 0.5;
+                user = (user == "") ? Invoker?.InvokeWithReturn<string>(this,
+                    new CustomParams_GetEncypt("automation02")) ?? "" : user;
+                await Senduser(_webView, user);
+                await Task.Delay(1500);
+                bool f = false;
+                while (!html.Contains("Welcome"))
+                {
+                    await Task.Delay(150);
+                    html = Regex.Unescape(await _webView.ExecuteScriptAsync("document.body.innerHTML"));
+                    if (!f)
+                    {
+                        f = true;
+                        await ClickNext(_webView);
+                    }
+                    await Task.Delay(50);
+                    html = Regex.Unescape(await _webView.ExecuteScriptAsync("document.body.innerHTML"));
+                }
+                logginin = true;
+                html = Regex.Unescape(await _webView.ExecuteScriptAsync("document.body.innerHTML"));
+                await Task.Delay(250);
+                while (!html.Contains("Welcome"))
+                {
+                    await Task.Delay(250);
+                    html = Regex.Unescape(await _webView.ExecuteScriptAsync("document.body.innerHTML"));
+                }
+                automation = (automation == "") ? Invoker?.InvokeWithReturn<string>(this,
+                  new CustomParams_GetEncypt("automation01")) ?? "" : automation;
+                await SendPwd(_webView, automation);
+                await Task.Delay(500);
+                await ClickNext(_webView);
+                while (!html.ToLower().Contains("passkey"))
+                {
+                    await Task.Delay(500);
+                    html = Regex.Unescape(await _webView.ExecuteScriptAsync("document.body.innerHTML"));
+                }
+
+                ProessPasskey(html, _webView);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"HandleGoogleLogin {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+                return false;
+            }
+        }
+        private async Task<bool> Senduser(WebView2 _webview2, string user)
+        {
+            try
+            {
+                string js = $@"
+(() => {{
+    const input = document.querySelector('input[name=""identifier""]');
+    if (!input) return 'username input not found';
+
+    input.focus();
+
+    const nativeSetter = Object.getOwnPropertyDescriptor(
+        HTMLInputElement.prototype,
+        'value'
+    ).set;
+
+    nativeSetter.call(input, {System.Text.Json.JsonSerializer.Serialize(user)});
+
+    input.dispatchEvent(new Event('input', {{ bubbles: true }}));
+    input.dispatchEvent(new Event('change', {{ bubbles: true }}));
+
+    return 'ok';
+}})();
+";
+
+                string result = await _webview2.CoreWebView2.ExecuteScriptAsync(js);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"SendPwd {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+                return false;
+            }
+        }
+        private async void ProessPasskey(string html, WebView2 _webView)
+        {
+            try
+            {
+                HtmlDocument doc = new();
+                doc.LoadHtml(html);
+                const string targetText = "Try another way";
+
+                var button = doc.DocumentNode
+                    .SelectSingleNode(
+                        $"//button[.//span[normalize-space()='{targetText}'] or contains(normalize-space(.), '{targetText}')]");
+                if (button is not null)
+                {
+                    await _webView.CoreWebView2.ExecuteScriptAsync(@"
+        (() => {
+            const btn = [...document.querySelectorAll('button')]
+                .find(b => b.innerText.trim().includes('Try another way'));
+
+            if (btn) {
+                btn.click();
+                return true;
+            }
+
+            return false;
+        })();
+    ");
+                    while (!html.ToLower().Contains("on your phone"))
+                    {
+                        Task.Delay(250).Wait();
+                        html = Regex.Unescape(await _webView.ExecuteScriptAsync("document.body.innerHTML"));
+                    }
+                    await ClickTapYesAsync(_webView);
+                    return;
+                }
+
+                return;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"ProessPasskey {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+                return;
+            }
+        }
+        private async Task<bool> ClickTapYesAsync(WebView2 webView)
+        {
+            try
+            {
+                var result = await webView.CoreWebView2.ExecuteScriptAsync(@"
+        (() => {
+            const el = [...document.querySelectorAll('div[role=""link""]')]
+                .find(d => d.textContent.includes('Tap') && d.textContent.includes('Yes'));
+
+            if (!el) return false;
+
+            el.click();
+            return true;
+        })();
+    ");
+
+                return result.Contains("true");
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"ClickTapYesAsync {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+                return false;
+            }
+        }
         public int DoUploadsCnt()
         {
             try
@@ -2344,6 +2600,64 @@ namespace VideoGui
                 return -1;
             }
         }
+
+        private async Task<bool> ClickNext(WebView2 _webview2)
+        {
+            try
+            {
+                await _webview2.CoreWebView2.ExecuteScriptAsync(@"
+(() => {
+    const btn = [...document.querySelectorAll('button')]
+        .find(b => b.innerText.trim().toLowerCase() === 'next');
+    if (btn) {
+        btn.click();
+        return 'clicked';
+    }
+    return 'next button not found';
+})();
+");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"ClickNext {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+                return false;
+            }
+        }
+        private async Task<bool> SendPwd(WebView2 _webview2, string password)
+        {
+            try
+            {
+                string js = $@"
+(() => {{
+    const input = document.querySelector('input[name=""Passwd""]');
+    if (!input) return 'password input not found';
+
+    input.focus();
+
+    const nativeSetter = Object.getOwnPropertyDescriptor(
+        HTMLInputElement.prototype,
+        'value'
+    ).set;
+
+    nativeSetter.call(input, {System.Text.Json.JsonSerializer.Serialize(password)});
+
+    input.dispatchEvent(new Event('input', {{ bubbles: true }}));
+    input.dispatchEvent(new Event('change', {{ bubbles: true }}));
+
+    return 'ok';
+}})();
+";
+
+                string result = await _webview2.CoreWebView2.ExecuteScriptAsync(js);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"SendPwd {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+                return false;
+            }
+        }
         private async Task CloseTimer_TickAsync(object? sender, EventArgs e)
         {
             SendKeys.SendWait("{TAB}");
@@ -2358,7 +2672,7 @@ namespace VideoGui
                     ProcessWebViewComplete(sender);
                     return;
                 }
-                if (sender is WebView2CompositionControl webView2Instance)
+                if (sender is WebView2 webView2Instance)
                 {
                     var task = webView2Instance.ExecuteScriptAsync("document.body.innerHTML");
                     if (ScraperType != EventTypes.ShortsSchedule && ScraperType != EventTypes.ScapeSchedule)
@@ -2385,7 +2699,7 @@ namespace VideoGui
                     ProcessWebView(sender);
                     return;
                 }
-                if (sender is WebView2CompositionControl webView2Instance)
+                if (sender is WebView2 webView2Instance)
                 {
                     var task = webView2Instance.ExecuteScriptAsync("document.body.innerHTML");
                     task.ContinueWith(x => { ProcessWV2(x.Result, sender); }, TaskScheduler.FromCurrentSynchronizationContext());
@@ -2405,11 +2719,11 @@ namespace VideoGui
                     ProcessWebView_Filename(sender);
                     return;
                 }
-                int Id = (sender as WebView2CompositionControl).Name.Replace("wv2A", "").ToInt(-1);
-                string source = (sender as WebView2CompositionControl).Source.AbsoluteUri.ToString(), IntId = "";
+                int Id = (sender as WebView2).Name.Replace("wv2A", "").ToInt(-1);
+                string source = (sender as WebView2).Source.AbsoluteUri.ToString(), IntId = "";
                 int p1 = source.IndexOf("video/"), p2 = source.IndexOf("/edit");
                 IntId = (p1 != -1 && p2 != -1) ? source.Substring(p1 + 6, p2 - p1 - 6) : IntId;
-                var task = (sender as WebView2CompositionControl).ExecuteScriptAsync("document.body.innerHTML");
+                var task = (sender as WebView2).ExecuteScriptAsync("document.body.innerHTML");
                 task.ContinueWith(x => { ProcessHTML_Filename(x.Result, Id, IntId, sender); },
                     TaskScheduler.FromCurrentSynchronizationContext());
             }
@@ -2648,7 +2962,7 @@ namespace VideoGui
                 {
                     NextRecord = false;
 
-                    if (sender is WebView2CompositionControl webView2Instance)
+                    if (sender is WebView2 webView2Instance)
                     {
                         string Urlx = webView2Instance.Source.ToString();
                         if (Urlx is not null)
@@ -2656,7 +2970,7 @@ namespace VideoGui
 
                         }
                     }
-                    var task = (sender as WebView2CompositionControl).CoreWebView2.ExecuteScriptAsync("document.body.innerHTML");
+                    var task = (sender as WebView2).CoreWebView2.ExecuteScriptAsync("document.body.innerHTML");
 
                     task.ContinueWith(x => { ProcessWV2Completed_ShortsScheduler(x.Result, sender); }, TaskScheduler.FromCurrentSynchronizationContext());
 
@@ -2789,10 +3103,10 @@ namespace VideoGui
 
                 if (SwapEnabled)
                 {
-                    WebView2CompositionControl temp = brdmain.Child as WebView2CompositionControl;
+                    WebView2 temp = brdmain.Child as WebView2;
                     temp.NavigationCompleted += Wv2s_NavigationCompleted;
                     wv2Dictionary[swap].NavigationCompleted += wv2_NavigationCompleted;
-                    brdmain.Child = wv2Dictionary[swap] as WebView2CompositionControl;
+                    brdmain.Child = wv2Dictionary[swap] as WebView2;
                     wv2Dictionary[swap] = temp;
                     if (swap < wv2Dictionary.Count)
                     {
@@ -2856,7 +3170,7 @@ namespace VideoGui
                     }
                     while (Waiting && IsVideoLookup)
                     {
-                        Thread.Sleep(100);
+                        await Task.Delay(100);
                         System.Windows.Forms.Application.DoEvents();
                         if (canceltoken.IsCancellationRequested) break;
                     }
@@ -2968,7 +3282,7 @@ namespace VideoGui
                 ex.LogWrite($"Click_Upload {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-        public async void Close_Upload(WebView2CompositionControl wv2)
+        public async void Close_Upload(WebView2 wv2)
         {
             try
             {
@@ -3133,7 +3447,7 @@ namespace VideoGui
             if ((e is not null && e.IsSuccess) || e is null)
             {
                 NextRecord = false;
-                var task = (sender as WebView2CompositionControl).CoreWebView2.ExecuteScriptAsync("document.body.innerHTML");
+                var task = (sender as WebView2).CoreWebView2.ExecuteScriptAsync("document.body.innerHTML");
                 task.ContinueWith(x => { ProcessWV2Completed_VideoLookup(x.Result, sender); }, TaskScheduler.FromCurrentSynchronizationContext());
             }
         }
@@ -3419,7 +3733,7 @@ namespace VideoGui
             uint currentProcId = (uint)Process.GetCurrentProcess().Id;
             return foregroundProcId == currentProcId;
         }
-        private void MenuClicker(WebView2CompositionControl webView)
+        private void MenuClicker(WebView2 webView)
         {
             if (!Dispatcher.CheckAccess())
             {
@@ -3534,7 +3848,7 @@ namespace VideoGui
                 ex.LogWrite($"cancelds {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-        public async Task<ButtonReturnType> IsButtonEnabled(WebView2CompositionControl webView2)
+        public async Task<ButtonReturnType> IsButtonEnabled(WebView2 webView2)
         {
             try
             {
@@ -3565,7 +3879,7 @@ namespace VideoGui
         {
             return (IntPtr)((delta << 16) | keys);
         }
-        public void SimulateMouseWheel(WebView2CompositionControl webView, bool isUp, int repeatCount = 10)
+        public void SimulateMouseWheel(WebView2 webView, bool isUp, int repeatCount = 10)
         {
             try
             {
@@ -3600,7 +3914,7 @@ namespace VideoGui
                 ex.LogWrite($"SimulateMouseWheel {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-        private async Task SimulateWheelUpDownAsync(WebView2CompositionControl webView, Point? elementPoint = null)
+        private async Task SimulateWheelUpDownAsync(WebView2 webView, Point? elementPoint = null)
         {
             try
             {
@@ -3643,7 +3957,7 @@ namespace VideoGui
                     }
                     Point position = webView.PointToScreen(targetPoint);
                     //SetCursorPos((int)position.X, (int)position.Y);
-                    Thread.Sleep(50); // Wait for cursor to settle
+                    await Task.Delay(50); // Wait for cursor to settle
                     //SimulateMouseWheel(webView, true, 10);
                     System.Threading.Thread.Sleep(100);
                     ////SimulateMouseWheel(webView, false, 10);
@@ -3655,7 +3969,7 @@ namespace VideoGui
             }
         }
 
-        public void SimulateWheelUpDown(WebView2CompositionControl webView, Point? elementPoint = null)
+        public void SimulateWheelUpDown(WebView2 webView, Point? elementPoint = null)
         {
             try
             {
@@ -3686,31 +4000,42 @@ namespace VideoGui
         {
             try
             {
-
+                string EditDialog = "class=\"draft-badge style-scope ytcp-uploads-dialog\"";
+                string CloseId = "ytcp-uploads-dialog-close-button";
                 var ProcessingLoopWait = new CancellationTokenSource();
                 ProcessingLoopWait.CancelAfter(TimeSpan.FromSeconds(5));
                 while (!ProcessingLoopWait.IsCancellationRequested)
                 {
-                    Thread.Sleep(15);
+                    await Task.Delay(15);
                 }
-
                 var ProcessingLoop = new CancellationTokenSource();
                 ProcessingLoop.CancelAfter(TimeSpan.FromMinutes(15));
                 while (!ProcessingLoop.IsCancellationRequested)
                 {
+                    await Task.Delay(50);
                     var html = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
+                    Valid = false;
+                    if (html != null && html.ContainsAll(new string[] { EditDialog }))
+                    {
+                        await ActiveWebView[1].CoreWebView2.ExecuteScriptAsync($"document.getElementById('{CloseId}').click();");
+                        await Task.Delay(50);
+                    }
                     if (html is not null && html.Contains("Daily upload limit reached"))
                     {
                         Exceeded = true;
                         finished = true;
                         ExitDialog = true;
-                        Close();
+                        return false;
                     }
                     List<HtmlNode> Nodes = GetNodes(html, Span_Name);
-                    if (Nodes.Count == 0) continue;
-
+                    if (Nodes.Count == 0)
+                    {
+                        await Task.Delay(250);
+                        continue;
+                    }
                     if (html is not null && html.ToLower().Contains("uploads complete"))
                     {
+                        InsertIntoUploadFiles(VideoFiles, connectStr);
                         for (int NodeIndex = Nodes.Count - 1; NodeIndex >= 0; NodeIndex--)
                         {
                             HtmlNode Node = Nodes[NodeIndex];
@@ -3721,18 +4046,15 @@ namespace VideoGui
                                 {
                                     string FileName = nodeInformation[0];
                                     string Status = nodeInformation[1].ToLower().Replace(".", "").Trim();
-                                    if (Status == "complete" || Status == "100% uploaded")
-                                    {
-                                        System.Windows.Forms.Application.DoEvents();
-                                        DeleteFiles(new List<string> { FileName }, "Z:\\");
-                                    }
+
                                     if (Status.ContainsAll(new string[] { "daily", "limit" }))
                                     {
                                         Exceeded = true;
                                         finished = true;
                                         ExitDialog = true;
-                                        Close();
+                                        return false;
                                     }
+                                    DeleteFiles(VideoFiles, "Z:\\");
                                 }
                             }
                         }
@@ -3740,11 +4062,10 @@ namespace VideoGui
                     }
                     for (int NodeIndex = Nodes.Count - 1; NodeIndex >= 0; NodeIndex--)
                     {
-                        System.Windows.Forms.Application.DoEvents();
+                        await Task.Delay(50);
                         string FileName = "", Status = "";
                         HtmlNode Node = Nodes[NodeIndex];
-
-
+                        NodeUpdate(Span_Name, ScheduledGet);
                         if (Node.InnerText.Contains('\n'))
                         {
                             System.Windows.Forms.Application.DoEvents();
@@ -3753,7 +4074,7 @@ namespace VideoGui
                             {
                                 FileName = nodeInformation[0];
                                 Status = nodeInformation[1].ToLower().Replace(".", "").Trim();
-                                if (Status == "complete" || Status == "|100% uploaded")
+                                if (Status == "complete" || Status == "100% uploaded")
                                 {
                                     DeleteFiles(new List<string> { FileName }, "Z:\\");
                                 }
@@ -3762,21 +4083,17 @@ namespace VideoGui
                                     Exceeded = true;
                                     finished = true;
                                     ExitDialog = true;
-                                    Close();
+                                    return false;
                                 }
                             }
-                            System.Windows.Forms.Application.DoEvents();
                             if (Status != "waiting") continue;
                             html = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
-                            if (html is not null)
+                            if (html is not null && html.ContainsAll(new string[] { "daily", "limit" }))
                             {
-                                if (html.ContainsAll(new string[] { "daily", "limit" }))
-                                {
-                                    Exceeded = true;
-                                    finished = true;
-                                    ExitDialog = true;
-                                    Close();
-                                }
+                                Exceeded = true;
+                                finished = true;
+                                ExitDialog = true;
+                                return false;
                             }
 
                             var buttonLabel = $"Edit video {FileName}";
@@ -3786,10 +4103,9 @@ namespace VideoGui
                             bool Valid = false;
                             while (!EditProcessingLoop.IsCancellationRequested)
                             {
-                                System.Windows.Forms.Application.DoEvents();
+                                await Task.Delay(250);
                                 var ehtml = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
-                                string match_0 = "class=\"draft-badge style-scope ytcp-uploads-dialog\"";
-                                if (ehtml != null && ehtml.ContainsAll(new string[] { match_0 }))
+                                if (ehtml != null && ehtml.ContainsAll(new string[] { EditDialog }))
                                 {
                                     Valid = true;
                                     break;
@@ -3797,17 +4113,17 @@ namespace VideoGui
                             }
                             if (Valid)
                             {
-                                System.Windows.Forms.Application.DoEvents();
-                                string CloseId = "ytcp-uploads-dialog-close-button";
+                                await Task.Delay(100);
                                 await ActiveWebView[1].CoreWebView2.ExecuteScriptAsync($"document.getElementById('{CloseId}').click();");
                             }
 
                         }
+                        NodeUpdate(Span_Name, ScheduledGet);
                     }
 
 
                 }
-                return false;
+                return true;
             }
             catch (Exception ex)
             {
@@ -3856,7 +4172,7 @@ namespace VideoGui
                             while (!_cts1.IsCancellationRequested)
                             {
                                 System.Windows.Forms.Application.DoEvents();
-                                Thread.Sleep(15);
+                                await Task.Delay(15);
                             }
                             break;
                         }
@@ -4270,14 +4586,14 @@ namespace VideoGui
                                             }
                                             if (TitleStr != "")
                                             {
-                                                if ((sender as WebView2CompositionControl).CoreWebView2 != null)
+                                                if ((sender as WebView2).CoreWebView2 != null)
                                                 {
                                                     string script = "var divElements = document.querySelectorAll('[aria-label=\"Tell viewers about your video (type @ to mention a channel)\"]');" +
                                                        "divElements.forEach(function(divElement) {" +
                                                       $"   divElement.textContent = '{TitleStr}';" +
                                                        "});";
 
-                                                    (sender as WebView2CompositionControl).CoreWebView2.ExecuteScriptAsync(script);
+                                                    (sender as WebView2).CoreWebView2.ExecuteScriptAsync(script);
                                                 }
                                             }
                                             if (DescStr != "")
@@ -4286,15 +4602,15 @@ namespace VideoGui
                                                        "divElements.forEach(function(divElement) {" +
                                                       $"   divElement.textContent = '{DescStr}';" +
                                                        "});";
-                                                (sender as WebView2CompositionControl).CoreWebView2.ExecuteScriptAsync(script2);
+                                                (sender as WebView2).CoreWebView2.ExecuteScriptAsync(script2);
                                             }
                                             if (TitleStr != "" || DescStr != "")
                                             {
-                                                if ((sender as WebView2CompositionControl).CoreWebView2 != null)
+                                                if ((sender as WebView2).CoreWebView2 != null)
                                                 {
                                                     while (true)
                                                     {
-                                                        var p = IsButtonEnabled((sender as WebView2CompositionControl)).GetAwaiter().GetResult();
+                                                        var p = IsButtonEnabled((sender as WebView2)).GetAwaiter().GetResult();
                                                         if (p == ButtonReturnType.Enabled)
                                                         {
                                                             break;
@@ -4305,10 +4621,10 @@ namespace VideoGui
                                                                    "if (saveButton) {" +
                                                                    "   saveButton.click();" +
                                                                    "}";
-                                                    (sender as WebView2CompositionControl).CoreWebView2.ExecuteScriptAsync(script1);
+                                                    (sender as WebView2).CoreWebView2.ExecuteScriptAsync(script1);
                                                     while (true)
                                                     {
-                                                        var p = IsButtonEnabled((sender as WebView2CompositionControl)).GetAwaiter().GetResult();
+                                                        var p = IsButtonEnabled((sender as WebView2)).GetAwaiter().GetResult();
                                                         if (p == ButtonReturnType.Disabled)
                                                         {
                                                             break;

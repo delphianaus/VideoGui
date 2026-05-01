@@ -41,6 +41,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
+using System.Windows.Media.TextFormatting;
 using System.Windows.Shapes;
 using VideoGui.ffmpeg.Streams.MediaInfo;
 using VideoGui.Models.delegates;
@@ -333,6 +334,11 @@ namespace VideoGui
                         {
                             lblStatus.Content = "Downloading Firebird...";
                         });
+                        int index_f = DownloadUrl.IndexOf("https:");
+                        if (index_f != -1) 
+                        {
+                            DownloadUrl = DownloadUrl.Substring(index_f, DownloadUrl.Length - index_f);
+                        }
                         var data = await DownloadFileAsync(DownloadUrl,
                             104857, 12, UpdateDownloadProgress_Firebird);
                         List<string> vgfiles = new List<string>() {
