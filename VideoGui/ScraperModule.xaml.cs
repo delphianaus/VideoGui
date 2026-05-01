@@ -2261,7 +2261,7 @@ namespace VideoGui
                     {
                         auth = true;
                     }
-                    while (true)
+                    while (true && !auth)
                     {
                         html = Regex.Unescape(await wv2.ExecuteScriptAsync("document.body.innerHTML"));
                         if (html.Contains("aria-label=\"Sign in\""))

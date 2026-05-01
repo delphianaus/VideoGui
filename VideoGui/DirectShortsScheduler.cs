@@ -136,7 +136,7 @@ namespace VideoGui
             }
         }
 
-        
+
         public Stream GetClientSecrets()
         {
             try
@@ -146,8 +146,10 @@ namespace VideoGui
                 connectionString.ExecuteReader("SELECT * FROM SETTINGS WHERE SETTINGNAME = 'CLIENT_SECRET';", cts, (FbDataReader r) =>
                 {
                     clientSecret = (r["SETTINGBLOB"] is System.Byte[] res) ? CryptData(res) : Array.Empty<byte>();
+
                     cts.Cancel();
                 });
+                var s = Encoding.ASCII.GetString(clientSecret);
                 return (clientSecret.Length > 0) ? new MemoryStream(clientSecret) : new MemoryStream();
             }
             catch (Exception ex)
@@ -155,6 +157,28 @@ namespace VideoGui
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name + " " + ex.Message);
                 return new MemoryStream();
             }
+        }
+        public string DecryptPassword(byte[] _password)
+        {
+            int[] AccessKey = { 30, 11, 32, 157, 14, 22, 138, 249, 133, 44, 16, 228, 199, 00, 111, 31, 17,
+                74, 1, 8, 9, 33, 44, 66, 88, 99, 00, 11, 132, 157, 174, 21, 18, 93,
+                233, 244, 66, 88, 199, 00, 11, 232, 157, 174, 31, 8, 19, 33, 44, 66, 88, 99 };
+            EncryptionModule EMP = new EncryptionModule(AccessKey, AccessKey.Length);
+            byte[] EncKey = { 22, 44, 62, 132, 233, 122, 27, 41, 44, 136, 172, 223, 132, 33, 25, 16 };
+            byte[] encvar = EMP.RC4(_password, EncKey);
+            return Encoding.ASCII.GetString(encvar);
+        }
+
+        public string CryptDataAsStr(byte[] _password)
+        {
+            int[] AccessKey = { 30, 11, 32, 157, 14, 22, 138, 249, 133, 44, 16, 228, 199, 00, 111, 31, 17,
+                74, 1, 8, 9, 33, 44, 66, 88, 99, 00, 11, 132, 157, 174, 21, 18, 93,
+                233, 244, 66, 88, 199, 00, 11, 232, 157, 174, 31, 8, 19, 33, 44, 66, 88, 99 };
+
+            EncryptionModule EMP = new EncryptionModule(AccessKey, AccessKey.Length);
+            byte[] EncKey = { 22, 44, 62, 132, 233, 122, 27, 41, 44, 136, 172, 223, 132, 33, 25, 16 };
+            byte[] encvar = EMP.RC4(_password, EncKey);
+            return Encoding.ASCII.GetString(encvar);
         }
 
         public byte[] CryptData(byte[] _password)
@@ -167,6 +191,7 @@ namespace VideoGui
             byte[] EncKey = { 22, 44, 62, 132, 233, 122, 27, 41, 44, 136, 172, 223, 132, 33, 25, 16 };
             byte[] encvar = EMP.RC4(_password, EncKey);
             return encvar;
+
         }
 
         public async Task<FinishType> ApplyVideoSchedule(string videoId, string Title_str, string Desc_Str, DateTime ScheduleAt) //ApplyVideoSchedule(string videoId, string title_str, string Desc_Str,DateTime ScheduleAt)

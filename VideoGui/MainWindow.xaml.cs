@@ -6168,6 +6168,8 @@ namespace VideoGui
                 {
                     var lines = File.ReadAllText(GetExePath() + "\\client_secrets.json");
                     byte[] details = CryptData(Encoding.ASCII.GetBytes(lines));
+
+                    var decr = DecryptPassword(details);
                     string sql = $"INSERT INTO SETTINGS (SETTINGNAME, SETTINGBLOB) VALUES (@FIELD, @DATA) RETURNING ID;";
                     int id = connectionString.ExecuteScalar(sql, [("@FIELD", "CLIENT_SECRET"), ("@DATA", details)]).ToInt(-1);
                 }
