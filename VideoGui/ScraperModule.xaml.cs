@@ -1236,7 +1236,7 @@ namespace VideoGui
                         }
                         lstMain.Items.Insert(0, $"Inserting {max} Files {r}");
                         await wv2.ExecuteScriptAsync("document.getElementById('upload-icon').click();");
-                        Task.Delay(1000).Wait();    
+                        Task.Delay(1000).Wait();
                         await wv2.ExecuteScriptAsync("document.getElementById('select-files-button').click();");
                         HasExited = true;
                         Dispatcher.Invoke(() => InternalTimer.Start());
@@ -2257,9 +2257,19 @@ namespace VideoGui
                 {
                     var ehtml = Regex.Unescape(html);
 
-                    if (wv2.Source.ToString().IndexOf("https://accounts.google.com/v3/signin/") == -1)
+                    if (wv2.Source.ToString().IndexOf("https://accounts.google.com/v3/signin/") == -1 &&
+                      !ehtml.ContainsAll(new string[] { "Sign", "in" }))
                     {
-                        auth = true;
+                        html = Regex.Unescape(await wv2.ExecuteScriptAsync("document.body.innerHTML"));
+                        if (ehtml.Contains("aria-label=\"Sign in\""))
+                        {
+                            auth = false;
+
+                        }
+                        else
+                        {
+                            auth = true;
+                        }
                     }
                     while (true && !auth)
                     {
@@ -2290,8 +2300,13 @@ namespace VideoGui
                                 bool flowControl = await HandleGoogleLogin(html, wv2);
                                 if (flowControl) continue;
                             }
-                            else await GoogleLoginSelectionHandler(wv2);
-                            continue;
+                            else
+                            {
+                                await GoogleLoginSelectionHandler(wv2).ConfigureAwait(true);
+                                // wv2.Source = new Uri(DefaultUrl);
+                               
+                                continue;
+                            }
                         }
                         else break;
                     }
@@ -2384,6 +2399,22 @@ namespace VideoGui
                     await SendPwd(_webView, automation);
                     await Task.Delay(1000);
                     await ClickNext(_webView);
+                    await Task.Delay(1000);
+                    string ehtml = "";
+                    while (true)
+                    {
+                        ehtml = Regex.Unescape(await _webView.ExecuteScriptAsync("document.body.innerHTML"));
+                        if (ehtml.Contains("Your channel"))
+                        {
+                            _webView.Source = new Uri(DefaultUrl);
+                            break;
+                        }
+                        else
+                        {
+                            Task.Delay(200);
+                        }
+                    }
+
                     auth = true;
                     return;
                 }
