@@ -1080,7 +1080,8 @@ namespace VideoGui
                     {
                         ShortsDirectoryList.Clear();
                         List<string> DirectoryList = Directory.EnumerateDirectories(shortsdir).ToList();
-                        foreach (var dir in DirectoryList.Where(dir => !dir.ToLower().EndsWith("done")))
+                        foreach (var dir in DirectoryList.Where(dir => !dir.ToLower().EndsWith("done")
+                             && !dir.Contains("sourcefiles")))
                         {
                             var files = Directory.EnumerateFiles(dir, "*.*", SearchOption.AllDirectories)
                                .Where(f => f.EndsWith(".mp4", StringComparison.OrdinalIgnoreCase) ||
@@ -2449,7 +2450,7 @@ namespace VideoGui
             }
         }
 
-        private TResult formObjectHandler_DescSelect<TResult>(object tld, DescSelectFrm frmDescSelectFrm, bool IsShort = false)
+        private TResult formObjectHandler_DescSelect<TResult>(object tld, DescSelectFrm frmDescSelectFrm)
         {
             try
             {
@@ -2513,6 +2514,7 @@ namespace VideoGui
                         }
                     case CustomParams_Initialize cpInit:
                         {
+                            var IsShort = ((CustomParams_Initialize)tld).IsUploads;
                             frmDescSelectFrm.lstAllDescriptions.ItemsSource = DescriptionsList;
                             frmDescSelectFrm.chkIsShortVideo.IsChecked = IsShort;
                             frmDescSelectFrm.IsShortVideo = IsShort;
@@ -4693,7 +4695,7 @@ namespace VideoGui
         }
 
 
-       
+
         public int GetFileCount(string Folder)
         {
             try
@@ -6287,7 +6289,7 @@ namespace VideoGui
                 ex.LogWrite($"ClearLogs {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
             }
         }
-        
+
 
         private void Window_KeyDown_EventHandler(object sender, System.Windows.Input.KeyEventArgs e)
         {
@@ -10779,13 +10781,13 @@ namespace VideoGui
             return encvar;
         }
 
-      
+
 
 
         public string DecryptPassword(byte[] _password)
         {
             int[] AccessKey = { 30, 11, 32, 157, 14, 22, 138, 249, 133, 44, 16, 228, 199, 00, 111, 31, 17,
-                74, 1, 8, 9, 33, 44, 66, 88, 99, 00, 11, 132, 157, 174, 21, 18, 93, 
+                74, 1, 8, 9, 33, 44, 66, 88, 99, 00, 11, 132, 157, 174, 21, 18, 93,
                 233, 244, 66, 88, 199, 00, 11, 232, 157, 174, 31, 8, 19, 33, 44, 66, 88, 99 };
             EncryptionModule EMP = new EncryptionModule(AccessKey, AccessKey.Length);
             byte[] EncKey = { 22, 44, 62, 132, 233, 122, 27, 41, 44, 136, 172, 223, 132, 33, 25, 16 };
@@ -10808,7 +10810,7 @@ namespace VideoGui
             }
             return "";
         }
-    
+
         public byte[] _EncryptPassword(byte[] _password)
         {
             int[] AccessKey = { 30, 11, 32, 157, 14, 22, 138, 249, 133, 44, 16, 228, 199, 00, 111, 31, 17,
@@ -12735,7 +12737,7 @@ namespace VideoGui
 
 
 
-      
+
 
 
 

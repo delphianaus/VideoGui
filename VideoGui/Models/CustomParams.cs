@@ -575,7 +575,7 @@ namespace VideoGui.Models
 
     public class CustomParams_Initialize
     {
-        bool IsUploads { get; set; } = false;
+        public bool IsUploads { get; set; } = false;
         public int Id { get; set; } = -1;
 
         public CustomParams_Initialize(int _id)
