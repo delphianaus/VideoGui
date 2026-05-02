@@ -387,11 +387,15 @@ namespace VideoGui
                     lblShortNo.Content = "Finished";
                     btnSelectSourceDir.IsEnabled = true;
                     var Shortsbase = Path.GetDirectoryName(shortsfile);
-                    var ShortsDirectory = Path.GetFileName(shortsfile);
-                    var newfile = Path.Combine(Shortsbase, "done", ShortsDirectory);
+                    var ext = Path.GetExtension(shortsfile);
+
+                     
+                    var dest = shortsfile.Split(@"\").ToList().LastOrDefault();    
+                    var newfile = Path.Combine(ShortsDirectory, "sourcefiles", dest);
+                   
                     File.Move(shortsfile, newfile);
 
-                });
+                    });
                 var logof = shortsfile.Replace("(shorts)", "(shorts_logo)");
                 //"D:\\filter\\120525\\dest\\VLINE Ararat To Southern Cross 060525 (shorts).mp4"
                 if (File.Exists(logof))

@@ -592,7 +592,10 @@ namespace VideoGui
                 int r = DoUploadsCnt();
                 if (!NewSession || r < 100)
                 {
-                    var UploadTask = UploadV2Files(false);
+                    Width++;
+                    Task.Delay(100);
+                    Width--;
+                        var UploadTask = UploadV2Files(false);
                 }
                 else
                 {
@@ -2261,15 +2264,7 @@ namespace VideoGui
                       !ehtml.ContainsAll(new string[] { "Sign", "in" }))
                     {
                         html = Regex.Unescape(await wv2.ExecuteScriptAsync("document.body.innerHTML"));
-                        if (ehtml.Contains("aria-label=\"Sign in\""))
-                        {
-                            auth = false;
-
-                        }
-                        else
-                        {
-                            auth = true;
-                        }
+                        auth = (ehtml.Contains("aria-label=\"Sign in\"")) ? false : true;
                     }
                     while (true && !auth)
                     {
@@ -2297,15 +2292,13 @@ namespace VideoGui
                             }
                             if (html.ContainsAll(new List<string>() { "Email", "or", "phone" }))
                             {
-                                bool flowControl = await HandleGoogleLogin(html, wv2);
-                                if (flowControl) continue;
+                                var TaskLogin = HandleGoogleLogin(html, wv2);
+                                TaskLogin.Wait();
+                                if (TaskLogin.Result) continue;
                             }
                             else
                             {
-                                await GoogleLoginSelectionHandler(wv2).ConfigureAwait(true);
-                                // wv2.Source = new Uri(DefaultUrl);
-                               
-                                continue;
+                                GoogleLoginSelectionHandler(wv2).Wait();
                             }
                         }
                         else break;
@@ -2401,20 +2394,9 @@ namespace VideoGui
                     await ClickNext(_webView);
                     await Task.Delay(1000);
                     string ehtml = "";
-                    while (true)
-                    {
-                        ehtml = Regex.Unescape(await _webView.ExecuteScriptAsync("document.body.innerHTML"));
-                        if (ehtml.Contains("Your channel"))
-                        {
-                            _webView.Source = new Uri(DefaultUrl);
-                            break;
-                        }
-                        else
-                        {
-                            Task.Delay(200);
-                        }
-                    }
-
+                    var MyTask = WaitForAuthDone(_webView, ehtml);
+                    MyTask.Wait();
+                    ehtml = MyTask.Result.ToString();
                     auth = true;
                     return;
                 }
@@ -2425,6 +2407,26 @@ namespace VideoGui
                 return;
             }
         }
+
+        private async Task<string> WaitForAuthDone(WebView2 _webView, string ehtml)
+        {
+            while (true)
+            {
+                ehtml = Regex.Unescape(await _webView.ExecuteScriptAsync("document.body.innerHTML"));
+                if (ehtml.Contains("Your channel"))
+                {
+                    _webView.Source = new Uri(DefaultUrl);
+                    break;
+                }
+                else
+                {
+                    Task.Delay(200);
+                }
+            }
+
+            return ehtml;
+        }
+
         private async Task<bool> Login(WebView2 _wv2, string useremail)
         {
             try
@@ -2493,6 +2495,10 @@ namespace VideoGui
                 }
 
                 ProessPasskey(html, _webView);
+
+                var MyTask = WaitForAuthDone(_webView, html);
+                MyTask.Wait();
+                MyTask.Result.ToString();
                 return true;
             }
             catch (Exception ex)
