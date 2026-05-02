@@ -491,7 +491,7 @@ namespace VideoGui
                 NewSession = _NewSession;
                 EventId = _EventId;
                 ScraperType = EventTypes.VideoUpload;
-                UploadsTimer = new System.Threading.Timer(Uploads_TimerEvent_Handler, null, -1, Timeout.Infinite);
+                UploadsTimer = new System.Threading.Timer(Uploads_TimerEvent_HandlerAsync, null, -1, Timeout.Infinite);
                 MaxUploads = maxuploads;
                 DoOnFinish = _OnFinish;
                 DefaultUrl = _Default_url;
@@ -542,7 +542,7 @@ namespace VideoGui
             {
                 SwapEnabled = false;
                 ScraperType = EventTypes.AutomatedUploadSchedule;
-                UploadsTimer = new System.Threading.Timer(Uploads_TimerEvent_Handler, null, -1, Timeout.Infinite);
+                UploadsTimer = new System.Threading.Timer(Uploads_TimerEvent_HandlerAsync, null, -1, Timeout.Infinite);
                 MaxUploads = maxuploads;
                 DoOnFinish = _OnFinish;
                 DefaultUrl = _Default_url;
@@ -585,7 +585,7 @@ namespace VideoGui
                 ex.LogWrite($"Constructor VideoUploader {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-        private void Uploads_TimerEvent_Handler(object? state)
+        private async void Uploads_TimerEvent_HandlerAsync(object? state)
         {
             try
             {
@@ -593,9 +593,9 @@ namespace VideoGui
                 if (!NewSession || r < 100)
                 {
                     Width++;
-                    Task.Delay(100);
+                    await Task.Delay(100);
                     Width--;
-                        var UploadTask = UploadV2Files(false);
+                    var UploadTask = UploadV2Files(false);
                 }
                 else
                 {
@@ -1239,7 +1239,7 @@ namespace VideoGui
                         }
                         lstMain.Items.Insert(0, $"Inserting {max} Files {r}");
                         await wv2.ExecuteScriptAsync("document.getElementById('upload-icon').click();");
-                        Task.Delay(1000).Wait();
+                        await Task.Delay(1000);
                         await wv2.ExecuteScriptAsync("document.getElementById('select-files-button').click();");
                         HasExited = true;
                         Dispatcher.Invoke(() => InternalTimer.Start());
@@ -2292,13 +2292,12 @@ namespace VideoGui
                             }
                             if (html.ContainsAll(new List<string>() { "Email", "or", "phone" }))
                             {
-                                var TaskLogin = HandleGoogleLogin(html, wv2);
-                                TaskLogin.Wait();
-                                if (TaskLogin.Result) continue;
+                                bool res = await HandleGoogleLogin(html, wv2);
+                                if (res) continue;
                             }
                             else
                             {
-                                GoogleLoginSelectionHandler(wv2).Wait();
+                                await GoogleLoginSelectionHandler(wv2);
                             }
                         }
                         else break;
@@ -2393,10 +2392,7 @@ namespace VideoGui
                     await Task.Delay(1000);
                     await ClickNext(_webView);
                     await Task.Delay(1000);
-                    string ehtml = "";
-                    var MyTask = WaitForAuthDone(_webView, ehtml);
-                    MyTask.Wait();
-                    ehtml = MyTask.Result.ToString();
+                    await WaitForAuthDone(_webView);
                     auth = true;
                     return;
                 }
@@ -2408,8 +2404,9 @@ namespace VideoGui
             }
         }
 
-        private async Task<string> WaitForAuthDone(WebView2 _webView, string ehtml)
+        private async Task WaitForAuthDone(WebView2 _webView)
         {
+            string ehtml = "";
             while (true)
             {
                 ehtml = Regex.Unescape(await _webView.ExecuteScriptAsync("document.body.innerHTML"));
@@ -2420,11 +2417,11 @@ namespace VideoGui
                 }
                 else
                 {
-                    Task.Delay(200);
+                    await Task.Delay(200);
                 }
             }
 
-            return ehtml;
+           
         }
 
         private async Task<bool> Login(WebView2 _wv2, string useremail)
@@ -2496,9 +2493,8 @@ namespace VideoGui
 
                 ProessPasskey(html, _webView);
 
-                var MyTask = WaitForAuthDone(_webView, html);
-                MyTask.Wait();
-                MyTask.Result.ToString();
+                await WaitForAuthDone(_webView);
+            
                 return true;
             }
             catch (Exception ex)
@@ -2569,7 +2565,7 @@ namespace VideoGui
     ");
                     while (!html.ToLower().Contains("on your phone"))
                     {
-                        Task.Delay(250).Wait();
+                        await Task.Delay(250);
                         html = Regex.Unescape(await _webView.ExecuteScriptAsync("document.body.innerHTML"));
                     }
                     await ClickTapYesAsync(_webView);
