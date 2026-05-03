@@ -3025,24 +3025,13 @@ namespace VideoGui
                     case CustomParams_Initialize:
                         {
                             string _title = "", BaseTitle = "", xx = "", part = "";
-
-                            if (ShortsDirectoryIndex == -1)
-                            {
-                                var itempx = EditableshortsDirectoryList.LastOrDefault();
-                                if (itempx is not null)
-                                {
-                                    ShortsDirectoryIndex = itempx.Id;
-                                    break;
-                                }
-                            }
-                            int index = -1;// UploadReleasesBuilderIndex;
-                            //frmTitleSelect.lstTitles.ItemsSource = EditableshortsDirectoryList;
-
-                            //90 IDX TID = 150 DID = 58
-                            foreach (var item in EditableshortsDirectoryList.Where(item => item.Id == ShortsDirectoryIndex))
+                            var index = ((CustomParams_Initialize)tld).Id;
+                            foreach (var item in EditableshortsDirectoryList.Where(x => x.TitleId == index && index != -1))
                             {
                                 BaseTitle = item.Directory;
                                 var _tid = item.TitleId;
+                                TitleId = _tid;
+                                ShortsDirectoryIndex = item.Id;
                                 if (item.TitleId == -1)
                                 {
                                     foreach (var t in TitlesList.Where(i => i.GroupId == ShortsDirectoryIndex && !i.IsTag))
@@ -3104,7 +3093,7 @@ namespace VideoGui
                                 break;
                             }
 
-                            if (index == -1)
+                            if (index != -1)
                             {
                                 int id = -1;
                                 string BaseStrX = frmTitleSelect.BaseTitle.ToPascalCase();
@@ -3131,7 +3120,7 @@ namespace VideoGui
                                 string SQL = "UPDATE SHORTSDIRECTORY SET TITLEID = @TID WHERE ID = @ID;";
                                 connectionString.ExecuteScalar(SQL, [("@ID", ShortsDirectoryIndex), ("@TID", id)]);
                             }
-                            else TitleId = index;
+                            //else TitleId = index;
 
                             frmTitleSelect.TitleId = TitleId;
                             string BaseStr = frmTitleSelect.BaseTitle + " ";
@@ -3159,7 +3148,18 @@ namespace VideoGui
                                 frmTitleSelect.lstTitles.ItemsSource = null;
                                 frmTitleSelect.lstTitles.ItemsSource = groupTitleTagsList;
                             }
-                            BaseStr = BaseStr.Trim().ToPascalCase();
+
+                            int inxp = BaseStr.IndexOf("#");
+                            if (inxp > -1)
+                            {
+                                string _titleStr2 = BaseStr.Substring(0, inxp - 1).Trim();
+                                _titleStr2 = _titleStr2.ToPascalCase();
+                                string hashstr = BaseStr.Substring(inxp, BaseStr.Length-inxp).Trim();
+                                BaseStr = _titleStr2+" "+    hashstr;
+
+                            }
+
+                            else BaseStr = BaseStr.Trim().ToPascalCase();
                             frmTitleSelect.txtTitle.Text = BaseStr.Trim();
                             frmTitleSelect.lblTitleLength.Content = BaseStr.Trim().Length;
 
@@ -5600,6 +5600,32 @@ namespace VideoGui
                 {
                     EditableshortsDirectoryList.Add(new ShortsDirectory(r));
                 });
+
+                foreach (var ut in EditableshortsDirectoryList.Where(s => s.TitleId == -1))
+                {
+                    bool found = false;
+                    foreach (var it in TitlesList.Where(d => d.GroupId == ut.Id))
+                    {
+                        ut.TitleId = it.Id;
+                        found = true;
+                    }
+                    if (!found)
+                    {
+                        foreach (var tt in TitlesList.Where(d => d.Description == ut.Directory))
+                        {
+                            tt.GroupId = ut.Id;
+                            string sqla = "UPDATE TITLES SET GROUPID = @GID WHEREID =@ID";
+                            connectionString.ExecuteScalar(sqla, [("GID", ut.Id), ("@ID", tt.Id)]);
+                            ut.TitleId = tt.Id;
+                            sqla = "UPDATE SHORTSDIRECTORY SET TITLEID = @TID WHERE ID = @ID";
+                            connectionString.ExecuteScalar(sqla, [("TID", ut.Id), ("@ID", tt.Id)]);
+                        }
+
+                    }
+
+                }
+
+
 
                 connectionString.ExecuteReader("SELECT * FROM YTACTIONS", (FbDataReader r) =>
                     {
@@ -11540,6 +11566,32 @@ namespace VideoGui
                 {
                     SelectedShortsDirectoriesList.Add(new SelectedShortsDirectories(r));
                 });
+
+
+
+                foreach (var ut in SelectedShortsDirectoriesList.Where(s => s.TitleId == -1))
+                {
+                    bool found = false;
+                    foreach (var it in TitlesList.Where(d => d.GroupId == ut.Id))
+                    {
+                        ut.TitleId = it.Id;
+                        found = true;
+                    }
+                    if (!found)
+                    {
+                        foreach (var tt in TitlesList.Where(d => d.Description == ut.DirectoryName))
+                        {
+                            tt.GroupId = ut.Id;
+                            ut.TitleId = tt.Id;
+                            // 
+                            found = true;
+                        }
+
+                    }
+
+                }
+
+
 
                 bool _Active = false;
                 var activeItems = SelectedShortsDirectoriesList.Where(item => item.IsActive).ToList();

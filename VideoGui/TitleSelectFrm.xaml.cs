@@ -40,8 +40,8 @@ namespace VideoGui
                 InitializeComponent();
                 TitleId = _TitleId;
                 LinkedId = _LinkedId;
-                Invoker?.Invoke(this, new CustomParams_SetFilterId(_LinkedId, _TitleId));
-                Invoker?.Invoke(this, new CustomParams_Initialize(IsUploadsBuilder));
+                
+                
                 /*txtTitle.Text = _Title; Handle this in onload?.Invoke.
                 BaseTitle = _Title;
                 txtBaseTitle.Content = $"({_Title})";*/
@@ -155,7 +155,7 @@ namespace VideoGui
         {
             try
             {
-                Invoker?.Invoke(this, new CustomParams_Initialize(IsUploadsBuilder));
+                Invoker?.Invoke(this, new CustomParams_Initialize(IsUploadsBuilder,TitleId));
             }
             catch (Exception ex)
             {
