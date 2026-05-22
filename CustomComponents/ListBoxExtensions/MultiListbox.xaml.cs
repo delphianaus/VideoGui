@@ -1104,8 +1104,8 @@ namespace CustomComponents.ListBoxExtensions
                                             if (container == null)
                                             {
                                                 lstBoxUploadItems.UpdateLayout();
-                                                lstBoxUploadItems.Visibility = Visibility.Collapsed;
-                                                lstBoxUploadItems.ScrollIntoView(lstBoxUploadItems.Items[currentIndex]);
+                                                //lstBoxUploadItems.Visibility = Visibility.Collapsed;
+                                                //lstBoxUploadItems.ScrollIntoView(lstBoxUploadItems.Items[currentIndex]);
                                                 container = lstBoxUploadItems.ItemContainerGenerator.ContainerFromIndex(currentIndex) as ListBoxItem;
                                             }
                                             if (container != null)

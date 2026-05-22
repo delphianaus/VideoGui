@@ -256,15 +256,15 @@ namespace VideoGui
                 files = Directory.EnumerateFiles(SourceDir, "*.mp4", SearchOption.AllDirectories).ToList();
                 foreach (string file in files)
                 {
-                    while (MaxFile > 16)
+                    while (MaxFile > 4)
                     {
-                        Thread.Sleep(25);
+                        await Task.Delay(100);
                     }
                     ReadFile(file).ConfigureAwait(false);
                 }
                 while (MaxFile > 0)
                 {
-                    Thread.Sleep(100);
+                    await Task.Delay(100);      
                 }
                 MediaInfoTimesSort.Sort();
                 string Pad = "";
@@ -318,7 +318,7 @@ namespace VideoGui
                 foreach (var f in MediaInfoTimes)
                 {
                     Invoker.Invoke(this, new CustomParams_ImportRecord(f.Item3, f.Item4, f.Item2));
-                    Thread.Sleep(15);
+                    await Task.Delay(100);
                 }
                 btnRename.IsEnabled = Invoker.InvokeWithReturn<bool>(this,
                    new CustomParams_ClearCheck(ClearModes.CheckImports, Rs));//is bool b ? b : false;

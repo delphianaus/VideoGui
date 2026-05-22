@@ -17,9 +17,12 @@ using System.Windows.Markup;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Windows.Threading;
+using System.Xml.Linq;
 using VideoGui.Models;
 using VideoGui.Models.delegates;
+using static System.Net.WebRequestMethods;
 using static VideoGui.ffmpeg.Probe.FormatModel;
+using File = System.IO.File;
 using FolderBrowserDialog = FolderBrowserEx.FolderBrowserDialog;
 using Path = System.IO.Path;
 
@@ -246,7 +249,7 @@ namespace VideoGui
                             List<string> timespans = time.Split("-").ToList();
                             TimeSpan Start = timespans.FirstOrDefault().FromStrToTimeSpan();
                             TimeSpan End = timespans.LastOrDefault().FromStrToTimeSpan() - Start;
-                            DoAddRecord?.Invoke(true, false, false, 0, true, false, false, false,
+                            DoAddRecord?.Invoke(false,true, false, false, 0, true, false, false, false,
                                  true, Start.ToFFmpeg(), End.ToFFmpeg(), txtsrcdir.Text,
                                  txtdestdir.Text + "\\" + txtFilename.Text + $" {RecNum++}");
                         }
@@ -330,6 +333,7 @@ namespace VideoGui
                     txtdestdir.Width = _w - 220;
                     txtsrcdir.Width = _w - 220;
                     Canvas.SetLeft(tglflip, _w - 112);
+                    Canvas.SetLeft(tbSource, _w - 682);
                     Canvas.SetLeft(btnInject, _w - 182);
                     Canvas.SetLeft(btnNew, _w - 262);
                 }
@@ -373,6 +377,22 @@ namespace VideoGui
                     key2.SetValue("DestinationDir", txtdestdir.Text);
                     key2?.Close();
                 }
+                if (tbSource.IsChecked.Value)
+                {
+                    string fname = "";
+                    if (Chk720P.IsChecked == true)
+                    {
+                        fname = " (Edt720)";
+                    }
+                    else if (ChkShorts.IsChecked == true)
+                    {
+                        fname = " (shorts)";
+                    }
+                    string fn = Path.GetFileNameWithoutExtension(txtsrcdir.Text);
+                    string ext = Path.GetExtension(txtsrcdir.Text);
+                    string outfile = fn + fname + ext;
+                    txtFilename.Text = outfile;
+                }
             }
             catch (Exception ex)
             {
@@ -389,37 +409,73 @@ namespace VideoGui
                 string root = key.GetValueStr("SourceAdobe", @"c:\");
                 key?.Close();
                 //txtdestdir.Text = rootfolder;
-                if (!ChkMuxer.IsChecked.Value)
+
+                if (tbSource.IsChecked.Value)
                 {
-                    FolderBrowserDialog ofg = new FolderBrowserDialog();
-                    ofg.AllowMultiSelect = false;
-                    ofg.InitialFolder = rootfolder;
-                    ofg.Title = "Select Source Directory";
-
-                    if (ofg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                    if (!ChkMuxer.IsChecked.Value)
                     {
-                        txtsrcdir.Text = ofg.SelectedFolder;
-                        List<string> files = txtsrcdir.Text.Split('\\').ToList();
-                        string p = files.LastOrDefault();
-                        string r = ofg.SelectedFolder.Replace(p, "");
-                        if (r.EndsWith("\\"))
-                        {
-                            r = r.Substring(0, r.Length - 1);
-                        }
-                        RegistryKey key2 = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
-                        key2.SetValue("SourceDirFiles", r);
-                        key2?.Close();
+                        FolderBrowserDialog ofg = new FolderBrowserDialog();
+                        ofg.AllowMultiSelect = false;
+                        ofg.InitialFolder = rootfolder;
+                        ofg.Title = "Select Source Directory";
 
-                        string fname = "";
-                        if (Chk720P.IsChecked == true)
+                        if (ofg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                         {
-                            fname = " (Edt720)";
+                            txtsrcdir.Text = ofg.SelectedFolder;
+                            List<string> files = txtsrcdir.Text.Split('\\').ToList();
+                            string p = files.LastOrDefault();
+                            string r = ofg.SelectedFolder.Replace(p, "");
+                            if (r.EndsWith("\\"))
+                            {
+                                r = r.Substring(0, r.Length - 1);
+                            }
+                            RegistryKey key2 = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                            key2.SetValue("SourceDirFiles", r);
+                            key2?.Close();
+
+                            string fname = "";
+                            if (Chk720P.IsChecked == true)
+                            {
+                                fname = " (Edt720)";
+                            }
+                            else if (ChkShorts.IsChecked == true)
+                            {
+                                fname = " (shorts)";
+                            }
+                            txtFilename.Text = files.LastOrDefault() + fname;
                         }
-                        else if (ChkShorts.IsChecked == true)
+                    }
+                    else
+                    {
+                        var fld = new OpenFileDialog();
+                        fld.Filter = "mp4|*.mp4|mkv|*.mkv";
+                        fld.DefaultExt = "*.mp4";
+                        fld.DefaultDirectory = root;
+                        fld.Multiselect = false;
+                        var fd = fld.ShowDialog();
+                        if ((fd != null) && (fd.Value == true))
                         {
-                            fname = " (shorts)";
+                            string src = fld.FileName;
+                            string SelectedDir = System.IO.Path.GetDirectoryName(src);
+                            key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                            key.SetValue("SourceAdobe", SelectedDir);
+                            key?.Close();
+                            txtsrcdir.Text = src;
+                            string fname = "";
+                            if (Chk720P.IsChecked == true)
+                            {
+                                fname = " (Edt720)";
+                            }
+                            else if (ChkShorts.IsChecked == true)
+                            {
+                                fname = " (shorts)";
+                            }
+                            string fn = Path.GetFileNameWithoutExtension(txtsrcdir.Text);
+                            string ext = Path.GetExtension(txtsrcdir.Text);
+                            string outfile = fn + fname + ext;
+                            string destdir = Path.Combine(txtdestdir.Text, outfile);
+                            txtFilename.Text = destdir;
                         }
-                        txtFilename.Text = files.LastOrDefault() + fname;
                     }
                 }
                 else
@@ -438,6 +494,19 @@ namespace VideoGui
                         key.SetValue("SourceAdobe", SelectedDir);
                         key?.Close();
                         txtsrcdir.Text = src;
+                        string fname = "";
+                        if (Chk720P.IsChecked == true)
+                        {
+                            fname = " (Edt720)";
+                        }
+                        else if (ChkShorts.IsChecked == true)
+                        {
+                            fname = " (shorts)";
+                        }
+                        string fn = Path.GetFileNameWithoutExtension(txtsrcdir.Text);
+                        string ext = Path.GetExtension(txtsrcdir.Text);
+                        string outfile = fn + fname + ext;
+                        txtFilename.Text = outfile;
                     }
                 }
             }
@@ -803,7 +872,8 @@ namespace VideoGui
                 bool IsAdobe = txtdestdir.Text.ToLower() == adobedir.ToLower();
                 Nullable<DateTime> twitchdata = null;
                 twitchdata = (ReleaseDate.Value.HasValue) ? ReleaseDate.Value.Value : null;
-                DoAddRecord?.Invoke(ChkElapsed.IsChecked.Value, Chk720P.IsChecked.Value,
+                DoAddRecord?.Invoke(!tbSource.IsChecked.Value,
+                    ChkElapsed.IsChecked.Value, Chk720P.IsChecked.Value,
                     ChkShorts.IsChecked.Value, 0,  // number 4
                     ChkEnableTrim.IsChecked.Value, ChkCut.IsChecked.Value,
                     chkDeleteMonitored.IsChecked.Value,
@@ -1047,6 +1117,17 @@ namespace VideoGui
 
         }
 
+        private void tbSource_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                lblSourceInfo.Content = (tbSource.IsChecked.Value) ? "Source Directory" : "Source File";
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"tbSource_Click {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
+            }
+        }
         private void mnuChangeFilenameHeaderHistoric_Click(object sender, RoutedEventArgs e)
         {
 
@@ -1081,7 +1162,7 @@ namespace VideoGui
                     }
                     foreach (var tbpfile in tobeprocessed)
                     {
-                        DoAddRecord?.Invoke(ChkElapsed.IsChecked.Value, Chk720P.IsChecked.Value,
+                        DoAddRecord?.Invoke(tbSource.IsChecked.Value, ChkElapsed.IsChecked.Value, Chk720P.IsChecked.Value,
                             ChkShorts.IsChecked.Value, 0,
                             ChkEnableTrim.IsChecked.Value, ChkCut.IsChecked.Value,
                             chkDeleteMonitored.IsChecked.Value, chkPersistantSource.IsChecked.Value,

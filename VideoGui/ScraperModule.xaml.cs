@@ -1012,6 +1012,8 @@ namespace VideoGui
         {
             try
             {
+                Width--;
+                Width++;
                 StringBuilder className = new StringBuilder(256);
                 GetClassName(hWnd, className, className.Capacity);
                 int controlId = GetDlgCtrlID(hWnd);
@@ -1390,6 +1392,19 @@ namespace VideoGui
                 ex.LogWrite($"UploadedHandler {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
+
+        private void brdmain_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            try
+            {
+
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"UploadedHandler {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+        }
+
         private int ScheduledGet()
         {
             return TotalScheduled;
@@ -1640,6 +1655,8 @@ namespace VideoGui
             try
             {
                 IdNodes.Clear();
+                Width--;
+                Width++;
                 if (targetSpan is not null && targetSpan.InnerText != null && targetSpan.InnerText != "")
                 {
                     bool fnd2 = false;
@@ -2256,6 +2273,8 @@ namespace VideoGui
         {
             try
             {
+                Width--;
+                Width++;
                 if (html is not null)
                 {
                     var ehtml = Regex.Unescape(html);
@@ -2421,7 +2440,7 @@ namespace VideoGui
                 }
             }
 
-           
+
         }
 
         private async Task<bool> Login(WebView2 _wv2, string useremail)
@@ -2494,7 +2513,7 @@ namespace VideoGui
                 ProessPasskey(html, _webView);
 
                 await WaitForAuthDone(_webView);
-            
+
                 return true;
             }
             catch (Exception ex)

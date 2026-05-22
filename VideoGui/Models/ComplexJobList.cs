@@ -17,7 +17,7 @@ namespace VideoGui.Models
     {
         private TimeSpan _Start, _Duration;
         private string _RTMP, _SourceDirectory, _DestinationDirectory, _Filename;
-        private bool _IsTwitchStream, _Is720p, _IsShorts, _IsCutTrim, _IsEncodeTrim,
+        private bool _IsTwitchStream, _Is720p, _IsShorts, _IsCutTrim, _IsEncodeTrim, _IsFileSource,
               _IsDeleteMonitoredSource, _IsDownloads, _IsPersistentJob, _IsLocked, _IsMuxed;
         private string _Id, _MuxData;
         private Nullable<DateTime> _TwitchSchedule;
@@ -56,6 +56,7 @@ namespace VideoGui.Models
         public bool IsLocked { get => _IsLocked; set { _IsLocked = value; OnPropertyChanged(); } }
         public bool Is720p { get => _Is720p; set { _Is720p = value; OnPropertyChanged(); } }
         public bool IsShorts { get => _IsShorts; set { _IsShorts = value; OnPropertyChanged(); } }
+        public bool IsFileSource { get => _IsFileSource; set { _IsFileSource = value; OnPropertyChanged(); } }
         public bool IsDownloads { get => _IsDownloads; set { _IsDownloads = value; OnPropertyChanged(); } }
 
         public int IsCreateShorts { get => _IsCreateShorts; set { _IsCreateShorts = value; OnPropertyChanged(); } }
@@ -87,6 +88,7 @@ namespace VideoGui.Models
                 IsMuxed = (reader["IsMuxed"] is Int16 _ismuxed) ? _ismuxed == 1 : false;
                 MuxData = (reader["MuxData"] is string _MuxData) ? _MuxData : "";
                 Is720p = (reader["B720P"] is Int16 _is720p) ? _is720p == 1 : false;
+                IsFileSource = (reader["ISFILESOURCE"] is Int16 _ISF) ? _ISF == 1 : false;
                 IsDownloads = false;
                 IsShorts = (reader["BSHORTS"] is Int16 _isShorts) ? (Int16)_isShorts == 1 : false;
                 IsCreateShorts = (reader["BCREATESHORTS"] is Int16 _isCreateShorts) ? (Int16)_isCreateShorts : -1;
@@ -138,7 +140,7 @@ namespace VideoGui.Models
                 ex.LogWrite($"{this} {MethodBase.GetCurrentMethod().Name}");
             }
         }
-        public ComplexJobList(string srcdir, string destfname, TimeSpan StartPos, TimeSpan Durationcut,
+        public ComplexJobList(bool isFileSource,string srcdir, string destfname, TimeSpan StartPos, TimeSpan Durationcut,
             bool b720p, bool bShorts, int bCreateShorts, bool bEncodeTrim, bool bCutTrim, bool bMonitoredSource,
             bool bPersistentJob, int id, bool _IsMuxed, string _MuxData, bool _IsDownloads)
         {
@@ -146,6 +148,7 @@ namespace VideoGui.Models
             {
                 SourceDirectory = srcdir;
                 IsLocked = false;
+                IsFileSource = isFileSource;
                 DestinationDirectory = Path.GetDirectoryName(destfname);
                 Filename = Path.GetFileName(destfname);
                 Start = StartPos != TimeSpan.Zero ? StartPos : TimeSpan.Zero;

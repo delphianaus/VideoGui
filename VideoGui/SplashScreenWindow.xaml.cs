@@ -95,7 +95,7 @@ namespace VideoGui
 
                 ssid = GetEncryptedString(new int[] { 180, 19, 100, 123, 208, 243, 252, 122,
                     202, 47, 88, 134 }.Select(i => (byte)i).ToArray());
-                KillFFMPEG().ConfigureAwait(true);
+               // KillFFMPEG().ConfigureAwait(true);
 
                 DbLayerInitiateTimer = new System.Windows.Forms.Timer();
                 DbLayerInitiateTimer.Tick += new EventHandler(DbLayerInitiateTimer_Tick);
@@ -510,6 +510,7 @@ namespace VideoGui
         {
             try
             {
+              
                 string myStrQuote = "\"";
                 var x = GetEncryptedString(new int[] { 166, 45, 64, 85, 244, 212, 221, 122, 214 }.Select(i => (byte)i).ToArray());
                 var pp = GetEncryptedString(new int[] { 166, 62, 93, 83, 255, 211, 254, 65, 253, 126, 8, 178, 199, 181, 107 }.Select(i => (byte)i).ToArray());
@@ -551,7 +552,7 @@ namespace VideoGui
 
                 if (pt != null)
                 {
-                    if (pt.Count() > 0) KillFFMPEG().ConfigureAwait(true);
+                   // if (pt.Count() > 0) KillFFMPEG().ConfigureAwait(true);
                 }
                 return true;
             }

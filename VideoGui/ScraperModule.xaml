@@ -13,9 +13,9 @@
         Icon="/Icons/computer.ico" ShowInTaskbar="False">
     <Grid UseLayoutRounding="True" x:Name="gridmain">
         <Border x:Name="brdmain" BorderBrush="Black" BorderThickness="3" Margin="2,1,3,40" AllowDrop="True"
-                VerticalAlignment="Top" Height="290">
+                VerticalAlignment="Top" Height="290" SizeChanged="brdmain_SizeChanged">
             <wv2:WebView2 x:Name="wv2" Margin="3,3,3,3" ZoomFactor="0.5" MouseMove="wv2_MouseMove" 
-              NavigationCompleted="wv2_NavigationCompleted" />
+              NavigationCompleted="wv2_NavigationCompleted" IsManipulationEnabled="True" />
         </Border>
         <Border x:Name="brdmainA1" VerticalAlignment="Bottom" Margin="2,2,2,121">
             <wv2:WebView2 x:Name="wv2A1" Height="0" NavigationCompleted="Wv2s_NavigationCompleted"/>

@@ -24,10 +24,13 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Windows.Threading;
+using System.Xml.Linq;
 using VideoGui.Models;
 using VideoGui.Models.delegates;
 using static System.Net.WebRequestMethods;
+using static VideoGui.ffmpeg.Probe.FormatModel;
 using FolderBrowserDialog = FolderBrowserEx.FolderBrowserDialog;
+using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
 using Path = System.IO.Path;
 
 namespace VideoGui
@@ -38,7 +41,7 @@ namespace VideoGui
     public partial class VideoCutsEditor : Window
     {
 
-        string Filename = "";
+        string Filename = "", XML_Filename = "";
         int _TotalSecs = 0;
         string ConnectionString = "";
         public AddRecordDelegate DoAddRecord;
@@ -47,7 +50,7 @@ namespace VideoGui
         public static readonly DependencyProperty SrcFileNameWidthProperty =
             DependencyProperty.Register(nameof(SrcFileNameWidth), typeof(double),
                 typeof(VideoCutsEditor),
-                new FrameworkPropertyMetadata(255.0));
+                new FrameworkPropertyMetadata(200.0));
 
         public double SrcFileNameWidth
         {
@@ -78,51 +81,30 @@ namespace VideoGui
                 key?.Close();
 
 
-                FolderBrowserDialog folderBrowserDialog = new FolderBrowserDialog();
-                folderBrowserDialog.Title = "Select a folder";
-                folderBrowserDialog.InitialFolder = Root;
-                folderBrowserDialog.AllowMultiSelect = false;
-                folderBrowserDialog.DefaultFolder = Root;
-                if (folderBrowserDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+
+                if (tbSource.IsChecked.Value)
                 {
-                    txtsrcdir.Text = folderBrowserDialog.SelectedFolder;
-                    key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
-                    key.SetValue("CutSourceDirectory", txtsrcdir.Text);
-                    key?.Close();
-                    int threash = 70;
-                    string id = "";
-                    string sql = $"SELECT ID FROM AUTOEDITS WHERE SOURCE = @P0";
-                    int idx = ConnectionString.ExecuteScalar(sql, [("@P0", txtsrcdir.Text)]).ToInt(-1);
-                    bool Loaded = false;
-                    if (idx != -1)
+                    cnvControls.Visibility = Visibility.Visible;
+                    FolderBrowserDialog folderBrowserDialog = new FolderBrowserDialog();
+                    folderBrowserDialog.Title = "Select a folder";
+                    folderBrowserDialog.InitialFolder = Root;
+                    folderBrowserDialog.AllowMultiSelect = false;
+                    folderBrowserDialog.DefaultFolder = Root;
+                    if (folderBrowserDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                     {
-                        CancellationTokenSource cts = new();
-                        ConnectionString.ExecuteReader($"SELECT * FROM AUTOEDITS WHERE ID = @ID", [("@ID", idx)], cts, (FbDataReader reader) =>
+                        txtsrcdir.Text = folderBrowserDialog.SelectedFolder;
+                        key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                        key.SetValue("CutSourceDirectory", txtsrcdir.Text);
+                        key?.Close();
+                        int threash = 70;
+                        string id = "";
+                        string sql = $"SELECT ID FROM AUTOEDITS WHERE SOURCE = @P0";
+                        int idx = ConnectionString.ExecuteScalar(sql, [("@P0", txtsrcdir.Text)]).ToInt(-1);
+                        bool Loaded = false;
+                        if (idx != -1)
                         {
-                            string DestDir = (reader["DESTINATION"] is string des) ? des : "";
-                            string Target = (reader["TARGET"] is string target) ? target : "";
-                            string Segment = (reader["SEGMENT"] is string segment) ? segment : "";
-                            string Threashhold = (reader["THRESHHOLD"] is string theashhold) ? theashhold : "";
-                            txxtEditDirectory.Text = (DestDir != "") ? DestDir : txxtEditDirectory.Text;
-                            txtSegment.Text = (Segment != "") ? Segment : txtSegment.Text;
-                            txtThreash.Text = (Threashhold != "") ? Threashhold : txtThreash.Text;
-                            txtTarget.Text = (Target != "") ? Target : txtTarget.Text;
-                            Loaded = true;
-                            txtTarget.IsEnabled = true;
-                            txtSegment.IsEnabled = true;
-                            txtThreash.IsEnabled = true;
-                            BtnCalc.IsEnabled = true;
-                            cts.Cancel();
-                        });
-                    }
-                    else
-                    {
-                        string r, Last = txtsrcdir.Text.Split("\\").ToList().LastOrDefault();
-                        if (Last.Length >= 6)
-                        {
-                            r = Last.Substring(Last.Length - 6, 6);
-                            CancellationTokenSource cts = new CancellationTokenSource();
-                            ConnectionString.ExecuteReader("select * from autoedits WHERE source CONTAINING @P0", [("@P0", r)], cts, (FbDataReader reader) =>
+                            CancellationTokenSource cts = new();
+                            ConnectionString.ExecuteReader($"SELECT * FROM AUTOEDITS WHERE ID = @ID", [("@ID", idx)], cts, (FbDataReader reader) =>
                             {
                                 string DestDir = (reader["DESTINATION"] is string des) ? des : "";
                                 string Target = (reader["TARGET"] is string target) ? target : "";
@@ -133,51 +115,218 @@ namespace VideoGui
                                 txtThreash.Text = (Threashhold != "") ? Threashhold : txtThreash.Text;
                                 txtTarget.Text = (Target != "") ? Target : txtTarget.Text;
                                 Loaded = true;
+                                txtTarget.IsEnabled = true;
+                                txtSegment.IsEnabled = true;
+                                txtThreash.IsEnabled = true;
+                                BtnCalc.IsEnabled = true;
                                 cts.Cancel();
                             });
                         }
-
-
-                    }
-                    Filename = txtsrcdir.Text.Split("\\").ToList().LastOrDefault();
-                    var FileIndexer = new ffmpegbridge();
-                    List<string> files = Directory.EnumerateFiles(txtsrcdir.Text, "*.mp4", SearchOption.TopDirectoryOnly).ToList();
-                    FileIndexer.ReadDuration(files);
-                    while (!FileIndexer.Finished)
-                    {
-                        Thread.Sleep(100);
-                    }
-                    var TotalSecs = FileIndexer.GetDuration();
-                    lblTotalTime.Content = TotalSecs.ToFFmpeg();
-                    FileIndexer = null;
-                    _TotalSecs = Math.Truncate(TotalSecs.TotalSeconds).ToInt();
-                    TimeSpan Target = TimeSpan.Zero;
-                    txtTarget.IsEnabled = true;
-                    if (!Loaded)
-                    {
-                        if (txtTarget.Text != "")
+                        else
                         {
-                            string time = "00:" + txtTarget;
-                            Target = time.FromStrToTimeSpan();
-                        }
-                        else Target = TimeSpan.FromMinutes(22);
-                    }
-                    else
-                    {
-                        Target = txtTarget.Text.FromStrToTimeSpan();
+                            string r, Last = txtsrcdir.Text.Split("\\").ToList().LastOrDefault();
+                            if (Last.Length >= 6)
+                            {
+                                r = Last.Substring(Last.Length - 6, 6);
+                                CancellationTokenSource cts = new CancellationTokenSource();
+                                ConnectionString.ExecuteReader("select * from autoedits WHERE source CONTAINING @P0", [("@P0", r)], cts, (FbDataReader reader) =>
+                                {
+                                    string DestDir = (reader["DESTINATION"] is string des) ? des : "";
+                                    string Target = (reader["TARGET"] is string target) ? target : "";
+                                    string Segment = (reader["SEGMENT"] is string segment) ? segment : "";
+                                    string Threashhold = (reader["THRESHHOLD"] is string theashhold) ? theashhold : "";
+                                    txxtEditDirectory.Text = (DestDir != "") ? DestDir : txxtEditDirectory.Text;
+                                    txtSegment.Text = (Segment != "") ? Segment : txtSegment.Text;
+                                    txtThreash.Text = (Threashhold != "") ? Threashhold : txtThreash.Text;
+                                    txtTarget.Text = (Target != "") ? Target : txtTarget.Text;
+                                    Loaded = true;
+                                    cts.Cancel();
+                                });
+                            }
 
+
+                        }
+                        Filename = txtsrcdir.Text.Split("\\").ToList().LastOrDefault();
+                        var FileIndexer = new ffmpegbridge();
+                        List<string> files = Directory.EnumerateFiles(txtsrcdir.Text, "*.mp4", SearchOption.TopDirectoryOnly).ToList();
+                        FileIndexer.ReadDuration(files);
+                        while (!FileIndexer.Finished)
+                        {
+                            Thread.Sleep(100);
+                        }
+                        var TotalSecs = FileIndexer.GetDuration();
+                        lblTotalTime.Content = TotalSecs.ToFFmpeg();
+                        FileIndexer = null;
+                        _TotalSecs = Math.Truncate(TotalSecs.TotalSeconds).ToInt();
+                        TimeSpan Target = TimeSpan.Zero;
+                        txtTarget.IsEnabled = true;
+                        if (!Loaded)
+                        {
+                            if (txtTarget.Text != "")
+                            {
+                                string time = "00:" + txtTarget;
+                                Target = time.FromStrToTimeSpan();
+                            }
+                            else Target = TimeSpan.FromMinutes(22);
+                        }
+                        else
+                        {
+                            Target = txtTarget.Text.FromStrToTimeSpan();
+
+                        }
+                        int Threash = txtThreash.Text.ToInt(-1);
+                        if (Threash == -1) Threash = 70;
+                        int Segment = txtSegment.Text.ToInt(-1);
+                        if (Segment == -1) Segment = 5;
+                        if (txxtEditDirectory.Text != "" || txtsrcdir.Text != "")
+                        {
+                            DoCalcs(Filename, _TotalSecs, Target, Threash, Segment);
+                        }
+                        else
+                        {
+                            System.Windows.Forms.MessageBox.Show("Please Select Input And Output Directory");
+                        }
                     }
-                    int Threash = txtThreash.Text.ToInt(-1);
-                    if (Threash == -1) Threash = 70;
-                    int Segment = txtSegment.Text.ToInt(-1);
-                    if (Segment == -1) Segment = 5;
-                    if (txxtEditDirectory.Text != "" || txtsrcdir.Text != "")
+                }
+                else
+                {
+
+                    cnvControls.Visibility = Visibility.Hidden;
+                    var fld = new OpenFileDialog();
+                    fld.Filter = "xml|*.xml";
+                    // fld.DefaultExt = "*.xml";
+                    // fld.DefaultDirectory = Root;
+                    //fld.Multiselect = false;
+                    fld.Title = "Select Final Pro XML Source";
+                    var fd = fld.ShowDialog();
+                    if ((fd != null) && (fd.Value == true))
                     {
-                        DoCalcs(Filename, _TotalSecs, Target, Threash, Segment);
-                    }
-                    else
-                    {
-                        System.Windows.Forms.MessageBox.Show("Please Select Input And Output Directory");
+                        txtsrcdir.Text = fld.FileName;
+                        XDocument doc = XDocument.Load(fld.FileName);
+                        var _fps = doc
+                            .Descendants("clipitem")
+                            .Select(c => new
+                            {
+                                PathUrl = (string)c.Element("file")?.Element("timebase")
+                                  ?? (string)c.Descendants("timebase").FirstOrDefault(),
+                            }).FirstOrDefault().ToString();
+                        var urlLocation = doc
+                            .Descendants("clipitem")
+                            .Select(c => new
+                            {
+                                PathUrl = (string)c.Element("file")?.Element("pathurl")
+                                  ?? (string)c.Descendants("pathurl").FirstOrDefault(),
+                            }).FirstOrDefault().ToString();
+
+                        var clipItems = doc
+                            .Descendants("clipitem")
+                            .Select(c => new
+                            {
+                                Id = (string)c.Attribute("id"),
+                                Name = (string)c.Element("name"),
+                                Start = (int?)c.Element("start"),
+                                End = (int?)c.Element("end"),
+                                In = (int?)c.Element("in"),
+                                Out = (int?)c.Element("out"),
+                            })
+                            .ToList();
+                        if (clipItems != null)
+                        {
+                            int clipno = 0;
+                            bool newclip = false;
+                            int prevend = 0;
+                            List<AdobeClipData> adobeclips = new List<AdobeClipData>();
+
+                            /*List<string> times = new List<string>();
+                            foreach (var clip in clipItems)
+                            {
+                                int start = clip.Start.Value;
+                                int end = clip.End.Value;
+                                int In = clip.In.Value;
+                                int Out = clip.Out.Value;
+
+                                times.Add($"{start},{end},{In},{Out}");
+                            }*/
+                            // System.IO.File.AppendAllLines(@"c:\videogui\times.csv",times.ToArray());
+
+
+                            List<string> names = new();
+                            foreach (var clip in clipItems)
+                            {
+
+                                string nameid = clip.Name.ToString();
+                                if (names.IndexOf(nameid) != -1)
+                                {
+                                    continue;
+                                }
+                                names.Add(nameid);
+                                int start = clip.Start.Value;
+                                int end = clip.End.Value;
+                                int In = clip.In.Value;
+                                int Out = clip.Out.Value;
+                                int Startframe = start + In;
+                                int Endframe = start + Out;
+
+                                if (adobeclips.Count == 0)
+                                {
+                                    adobeclips.Add(new AdobeClipData(clipno++, Startframe, Endframe));
+                                }
+                                else if (newclip || In > 0)
+                                {
+                                    adobeclips.Add(new AdobeClipData(clipno++, start, end));
+                                }
+                                else adobeclips.LastOrDefault().end = Endframe;
+                                newclip = Startframe != prevend;
+                                prevend = Endframe;
+                            }
+
+                            int totalframes = 0;
+                            List<TimeSpan> frames = new List<TimeSpan>();
+                            double tts = 0;
+                            foreach (var aclips in adobeclips)
+                            {
+                                int fm = aclips.end - aclips.start;
+                                double totalsecs = fm / 50;
+                                TimeSpan tfs = TimeSpan.FromSeconds(totalsecs);
+                                TimeSpan tfs1 = TimeSpan.FromSeconds(aclips.start / 50);
+                                TimeSpan tfs2 = TimeSpan.FromSeconds(aclips.end / 50);
+                                frames.Add(tfs);
+                                tts += totalsecs;
+                            }
+
+
+
+
+                            var filenamelist = urlLocation.Replace("%20", " ").Replace("%3a", ":").
+                              Replace("file://localhost/", "").Replace(@"/", @"\").ToString();
+                            XML_Filename = filenamelist.ToString().Replace("{ PathUrl = ", "").Trim();
+
+
+                            int idx = XML_Filename.IndexOf(@"\GX_");
+                            if (idx != -1)
+                            {
+                                XML_Filename = XML_Filename.Substring(0, idx);
+                            }
+
+                            string fn = XML_Filename.Split(@"\").ToList().LastOrDefault() as string;
+                            double fps = _fps.ToDouble(50);
+                            clipno = 1;
+                            foreach (var _aclip in adobeclips)
+                            {
+                                // filename is the source dir, last part of //
+                                TimeSpan _Start = TimeSpan.FromSeconds(_aclip.start / fps);
+                                TimeSpan _End = TimeSpan.FromSeconds(_aclip.end / fps);
+                                var vcut = new VideoCutInfo(fn.Trim(), _Start, _End, clipno++);
+                                ListOfCuts.Add(vcut);
+                            }
+
+                            TimeSpan TotalD = TimeSpan.FromSeconds(tts);
+                            lblTotalTime.Content = TotalD.ToFFmpeg().Substring(0, 8);
+                            msuVideoCuts.ItemsSource = ListOfCuts;
+                            btnAccept.IsEnabled = true;
+                            btnAcceptSelected.IsEnabled = true;
+                        }
+
                     }
                 }
             }
@@ -186,6 +335,7 @@ namespace VideoGui
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
             }
         }
+
 
         private void txtEditFileSelect_Click(object sender, RoutedEventArgs e)
         {
@@ -339,11 +489,12 @@ namespace VideoGui
             {
                 if (WidthChanged && Ready && IsLoaded)
                 {
-                    msuVideoCuts.Width = _w - 245;
+                    msuVideoCuts.Width =  (tbSource.IsChecked.Value) ? _w-245 : _w-16;
                     brdControls.Width = _w - 20;
                     stsBar1.Width = _w - 19;
                     lblStatus.Width = _w - 19;
                     Canvas.SetLeft(btnClose, _w - 133);
+                    Canvas.SetLeft(tbSource, _w - 235);
                     Canvas.SetLeft(btnSelectSourceDir, _w - 63);
                     txtsrcdir.Width = _w - 186;
                     Canvas.SetLeft(lblTotalTime, _w - 95);
@@ -451,10 +602,10 @@ namespace VideoGui
                 string TwitchDir = key.GetValueStr("DestDirectoryTwitch");
                 string destdir = (chkExportForTwitch.IsChecked.Value) ? TwitchDir : txxtEditDirectory.Text;
                 key?.Close();
-                DoAddRecord?.Invoke(true, false, false, -1, true, false, false, false,
-                                        true, ctv.TimeFrom.ToFFmpeg(), (ctv.TimeTo - ctv.TimeFrom).ToFFmpeg()
-                                        , txtsrcdir.Text,
-                                        destdir + "\\" + ctv.FileName + $"part {ctv._CutNo}.mp4",
+                DoAddRecord?.Invoke(false, true, false, false, -1, true, false, false, false,
+                                        true, ctv.TimeFrom.ToFFmpeg(), ctv.TimeTo.ToFFmpeg()
+                                        , (tbSource.IsChecked.Value) ? txtsrcdir.Text : XML_Filename,
+                                        destdir + "\\" + ctv.FileName.Trim() + $" Part {ctv._CutNo}.mp4",
                                         null, null, chkExportForTwitch.IsChecked.Value);
                 lblStatus.Content = $"Injecting {ctv.FileName} part {ctv._CutNo}";
             }
@@ -562,6 +713,31 @@ namespace VideoGui
             catch (Exception ex)
             {
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+            }
+        }
+
+        private void tbSource_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                lblSourceInfo.Content = (tbSource.IsChecked.Value) ? "Source Directory" : "Source File";
+                cnvControls.Visibility = (tbSource.IsChecked.Value) ? Visibility.Visible : Visibility.Hidden;
+                if (tbSource.IsChecked.Value)
+                {
+                    brdControls1.Visibility = Visibility.Visible;
+                }
+                else
+                {
+                    brdControls1.Visibility = Visibility.Hidden;
+                }
+
+                Width++;
+                Width--;
+
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"tbSource_Click {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
         }
 

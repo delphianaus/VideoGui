@@ -17,7 +17,7 @@
                 </Canvas>
             </Border>
             <MSU:MultiListbox x:Name="msuAudioJoiner" ItemHeight="15"
-        Header="Source Files" Width="722" 
+        Header="Source Files" Width="722" FontSize="13"
         VerticalAlignment="Top" VerticalContentAlignment="Bottom" 
         Height="207" HorizontalAlignment="Left" Margin="4,50,0,0">
                 <MSU:MultiListbox.ColumnDefinitions>

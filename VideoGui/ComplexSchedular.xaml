@@ -1,4 +1,4 @@
-﻿    <Window x:Class="VideoGui.ComplexSchedular"
+﻿<Window x:Class="VideoGui.ComplexSchedular"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -13,6 +13,8 @@
     <Window.Resources>
         <BitmapImage x:Key="HISTORIC" UriSource="icons/historic.png"/>
         <BitmapImage x:Key="CURRENT" UriSource="icons/Current.png"/>
+        <BitmapImage x:Key="FILESOURCE" UriSource="icons/FileSource.png"/>
+        <BitmapImage x:Key="DIRECTORYSOURCE" UriSource="icons/DirectorySource.png"/>
         <Style x:Key="ToggleSetEditStyle" TargetType="{x:Type ToggleButton}">
             <Setter Property="MinHeight" Value="28"/>
             <Setter Property="MinWidth" Value="50"/>
@@ -26,6 +28,25 @@
                             </Trigger>
                             <Trigger Property="IsChecked" Value="False">
                                 <Setter TargetName="PART_Image" Property="Source" Value="{StaticResource HISTORIC}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="ToggleButtonSourceStyle" TargetType="{x:Type ToggleButton}">
+            <Setter Property="MinHeight" Value="20"/>
+            <Setter Property="MinWidth" Value="40"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ToggleButton}">
+                        <Image x:Name="PART_Image"  />
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="true">
+                                <Setter TargetName="PART_Image" Property="Source" Value="{StaticResource DIRECTORYSOURCE}"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="False">
+                                <Setter TargetName="PART_Image" Property="Source" Value="{StaticResource FILESOURCE}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -55,7 +76,7 @@
         </Border>
         <Border x:Name="brdFileInfo" BorderThickness="2" BorderBrush="Black" Height="136" Margin="0,43,4,0" Width="909" HorizontalAlignment="Left" VerticalAlignment="Top">
             <Canvas x:Name="CnvMedialElements" Margin="0,6,0,0" Focusable="True">
-                <Label Content="Source Directory" HorizontalAlignment="Center" VerticalAlignment="Center" Height="26" Canvas.Left="9" Canvas.Top="5"/>
+                <Label x:Name="lblSourceInfo" Content="Source Directory" HorizontalAlignment="Left" VerticalAlignment="Center" Height="26" Canvas.Left="8" Canvas.Top="5"/>
                 <TextBox x:Name="txtsrcdir" HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Center" Width="710" Canvas.Left="145" Canvas.Top="9"/>
                 <Label Content="Destination Directory" HorizontalAlignment="Center" VerticalAlignment="Center" Height="26" Canvas.Left="9" Canvas.Top="29"/>
                 <Button x:Name="btnSelectDestDir" HorizontalAlignment="Right" VerticalAlignment="Center" Width="19" Height="20" Canvas.Left="865" Canvas.Top="32" Click="btnSelectDestDir_Click"/>
@@ -64,6 +85,10 @@
                 <TextBox x:Name="txtdestdir" HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Center" Width="710" Canvas.Left="145" Canvas.Top="33" />
                 <Button x:Name="btnSelectSourceDir" HorizontalAlignment="Right" VerticalAlignment="Center" Width="20" Height="20" Canvas.Left="865" Canvas.Top="8" Click="btnSelectSourceDir_Click" />
                 <CheckBox x:Name="chkDeleteMonitored" Content="Delete Monitored Source" HorizontalAlignment="Center" VerticalAlignment="Top" Canvas.Left="13" Canvas.Top="94"/>
+                <ToggleButton x:Name="tbSource" Style="{DynamicResource ToggleButtonSourceStyle}"
+                  IsChecked="True" VerticalAlignment="Top" 
+                  Canvas.Top="91" Canvas.Left="283" Width="90" Height="26"
+                  Click="tbSource_Click" HorizontalAlignment="Center" />
                 <CheckBox x:Name="chkPersistantSource" Content="Persistant Job" HorizontalAlignment="Center" VerticalAlignment="Top" Canvas.Left="181" Canvas.Top="94"/>
                 <Button x:Name="btnInject" Width="56" Height="41" HorizontalAlignment="Left" VerticalAlignment="Center" Content="Inject" Canvas.Top="80" Canvas.Left="746" Click="btnInject_Click"/>
                 <Button x:Name="btnNew" Width="68" HorizontalAlignment="Center" VerticalAlignment="Center" Content="New" Canvas.Top="80" Canvas.Left="665" Height="41" Click="btnNew_Click"/>
@@ -95,7 +120,7 @@
             </Canvas>
         </Border>
         <MSU:MultiListbox x:Name="msuComplexSchedules" Header="Complex Schedules"
-                          Width="913" ItemHeight="15" Canvas.Top="2" 
+                          Width="913" ItemHeight="15" Canvas.Top="2" FontSize="13"
                           Margin="0,177,0,0" Height="199" VerticalAlignment="Top" 
                          HorizontalAlignment="Left" >
             <MSU:MultiListbox.ColumnDefinitions>

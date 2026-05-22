@@ -132,7 +132,7 @@ namespace VideoGui
             int milliseconds = ts.Milliseconds;
             int seconds = ts.Seconds;
             int minutes = ts.Minutes;
-            var hours = (int)ts.TotalHours;
+                var hours = (int)ts.TotalHours;
             // test
             string hr = $"{hours:D}";
             string res = $"{hours:D}:{minutes:D2}:{seconds:D2}.{milliseconds:D3}";

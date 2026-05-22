@@ -10,7 +10,7 @@ namespace VideoGui.Models
 {
     public class VideoCutInfo : INotifyPropertyChanged
     {
-        public string _FileName = "";
+        public string _FileName = "", _FormatedTimeFrom = "", _FormatedTimeTo = "";
         public TimeSpan _TimeFrom = TimeSpan.Zero, _TimeTo = TimeSpan.Zero;
         public int _CutNo = 0;
 
@@ -19,6 +19,10 @@ namespace VideoGui.Models
         public TimeSpan TimeTo { get => _TimeTo; set { _TimeTo = value; OnPropertyChanged(); } }
         public int CutTo { get => _CutNo; set { _CutNo = value; OnPropertyChanged(); } }
 
+        public string FormatedTimeFrom { get => _FormatedTimeFrom; set { _FormatedTimeFrom = value; OnPropertyChanged(); } }
+        public string FormatedTimeTo { get => _FormatedTimeTo; set { _FormatedTimeTo = value; OnPropertyChanged(); } }
+
+    
 
         public VideoCutInfo(string __FileName, TimeSpan _FromTime, TimeSpan To_Time, int _Cutnum)
         {
@@ -27,6 +31,8 @@ namespace VideoGui.Models
             TimeTo = To_Time;
             TimeFrom = _FromTime;
             CutTo = _Cutnum;
+            FormatedTimeFrom = TimeFrom.ToFFmpeg().Substring(0,8);
+            FormatedTimeTo = TimeTo.ToFFmpeg().Substring(0, 8);
         }
 
 

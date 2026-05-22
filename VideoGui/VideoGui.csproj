@@ -12,8 +12,8 @@
     <StartupObject>VideoGui.App</StartupObject>
     <ApplicationIcon>Properties\computer.ico</ApplicationIcon>
     <Platforms>x64</Platforms>
-    <AssemblyVersion>1.0.0.441</AssemblyVersion>
-    <FileVersion>1.0.0.441</FileVersion>
+    <AssemblyVersion>1.0.0.444</AssemblyVersion>
+    <FileVersion>1.0.0.444</FileVersion>
     <Nullable>annotations</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <UseWindowsForms>True</UseWindowsForms>
@@ -60,8 +60,10 @@
     <None Remove="Icons\computer5.ico" />
     <None Remove="Icons\CPUEncode.png" />
     <None Remove="Icons\Current.png" />
+    <None Remove="Icons\directorysource.png" />
     <None Remove="Icons\downArrow.png" />
     <None Remove="Icons\edit.png" />
+    <None Remove="Icons\filesource.png" />
     <None Remove="Icons\FisheyeKeep.png" />
     <None Remove="Icons\FisheyeRemoval.png" />
     <None Remove="Icons\GPUEncode.png" />
@@ -134,10 +136,12 @@
     </Resource>
     <Resource Include="Icons\CPUEncode.png" />
     <Resource Include="Icons\Current.png" />
+    <Resource Include="Icons\directorysource.png" />
     <Resource Include="Icons\downArrow.png" />
     <Resource Include="Icons\edit.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
+    <Resource Include="Icons\filesource.png" />
     <Resource Include="Icons\FisheyeKeep.png" />
     <Resource Include="Icons\FisheyeRemoval.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
