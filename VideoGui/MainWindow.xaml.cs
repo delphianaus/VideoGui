@@ -53,6 +53,7 @@ using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.Marshalling;
 using System.Runtime.Intrinsics.Arm;
 using System.Runtime.Versioning;
+using System.Security.Cryptography;
 using System.Security.Cryptography.Pkcs;
 using System.Security.Permissions;
 using System.Security.Policy;
@@ -83,9 +84,6 @@ using VideoGui.ffmpeg.Streams.Text;
 using VideoGui.ffmpeg.Streams.Video;
 using VideoGui.Models;
 using VideoGui.Models.delegates;
-using Windows.AI.MachineLearning;
-using Windows.Storage;
-using WinRT.Interop;
 using Xceed.Wpf.Toolkit;
 using Xceed.Wpf.Toolkit.PropertyGrid.Converters;
 using Xceed.Wpf.Toolkit.PropertyGrid.Editors;
@@ -4993,19 +4991,19 @@ namespace VideoGui
                 for (int i = 0; i < Fields.Count; i++)
                 {
 
-                    sqlstring = $"SELECT RDB$FIELD_NAME AS FIELD_NAME FROM RDB$RELATION_FIELDS "+
+                    sqlstring = $"SELECT RDB$FIELD_NAME AS FIELD_NAME FROM RDB$RELATION_FIELDS " +
                    "WHERE RDB$RELATION_NAME=@TABLE AND RDB$FIELD_NAME = @FIELD';";
-                    var tablename = connectionString.ExecuteScalar(sqlstring,[("@TABLE", "AUTOINSERT"),("@FIELD",Fields[i])]);
+                    var tablename = connectionString.ExecuteScalar(sqlstring, [("@TABLE", "AUTOINSERT"), ("@FIELD", Fields[i])]);
                     if (tablename is null)
                     {
                         sqlstring = $"ALTER TABLE @TABLE ADD @FIELD @FIELDTYPE;";
-                        connectionString.ExecuteScalar(sqlstring,[("@TABLE", "AUTOINSERT"),("@FIELD",Fields[i]),("@FIELDTYPE",FieldType[i])]);
+                        connectionString.ExecuteScalar(sqlstring, [("@TABLE", "AUTOINSERT"), ("@FIELD", Fields[i]), ("@FIELDTYPE", FieldType[i])]);
                     }
 
-                    sqlstring = $"SELECT RDB$FIELD_NAME AS FIELD_NAME FROM RDB$RELATION_FIELDS WHERE "+
+                    sqlstring = $"SELECT RDB$FIELD_NAME AS FIELD_NAME FROM RDB$RELATION_FIELDS WHERE " +
                         $"RDB$RELATION_NAME=@TABLE AND RDB$FIELD_NAME = @FIELD;";
                     var xtablename = connectionString.ExecuteScalar(sqlstring,
-                      [("@TABLE", "AUTOINSERTHISTORY"),("@FIELD",Fields[i])]);
+                      [("@TABLE", "AUTOINSERTHISTORY"), ("@FIELD", Fields[i])]);
                     if (xtablename is null)
                     {
                         sqlstring = $"ALTER TABLE AUTOINSERTHISTORY ADD {Fields[i]} {FieldType[i]};";
@@ -5935,7 +5933,7 @@ namespace VideoGui
                             false, true,
                             IsPersistantSource, IsAdobe, IsShorts, IsCreateShorts, "", ismuxed, muxdata);
 
-                        if (Final != TimeSpan.Zero|| IsFileSource)
+                        if (Final != TimeSpan.Zero || IsFileSource)
                         {
                             InMemoryJob.EndPos = textduration;
                             InMemoryJob.StartPos = textstart;
@@ -11420,6 +11418,97 @@ namespace VideoGui
             catch (Exception ex)
             {
                 ex.LogWrite($"btnEditActions_Click {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
+            }
+        }
+
+        private void X265Output_Checked_1(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+
+        private string SplitString(string split, string Data)
+        {
+            try
+            {
+                string show = "";
+                List<string> MySplits = Data.Split(split).ToList();
+                foreach (var splits in MySplits)
+                {
+                    if (splits.ToLower().StartsWith("s") && splits.ToLower().Contains("e"))
+                    {
+                        bool IsNumeric = splits.ContainsAny(["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]);
+                        if (!IsNumeric) continue;
+                        var index = Data.IndexOf(splits);
+                        show = Data.Substring(0, index - 1);
+                        break;
+                    }
+                }
+
+                return show;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"BtnScan_Click {this} {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+                return "";
+            }
+
+
+        }
+        private void BtnScan_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                List<string> files = Directory.EnumerateFiles(@"C:\tv\done720p", "*.*").ToList();
+                int cntValid = 0;
+                List<string> ShowNames = new();
+                string show;
+                foreach (var _file in files)
+                {
+                    show = SplitString(".", _file);
+                    if (show == "") show = SplitString(" ", _file);
+                    if (show != "")
+                    {
+                        cntValid++;
+                        show = show.Replace(".", " ").Replace(@"C:\tv\done720p\", "");
+                        if (show.ToLower() == "Historys Deadliest with Ving Rhames".ToLower())
+                        {
+                            show = "Historys Deadliest";
+                        }
+                        if (show.ToLower() == "BBQ Brawl Flay V Symon".ToLower())
+                        {
+                            show = "BBQ Brawl";
+                        }
+                        if (!ShowNames.Any(x => string.Equals(x, show, StringComparison.OrdinalIgnoreCase)))
+                        {
+                            ShowNames.Add(show);
+                            string ShowDir = Path.Combine(@"C:\tv\shows", show.ToPascalCase());
+                            if (!Directory.Exists(ShowDir))
+                            {
+                                Directory.CreateDirectory(ShowDir);
+                            }
+                        }
+                        string DestFile = _file.Split(@"\").ToList().LastOrDefault();
+                        string ShowDir2 = Path.Combine(@"C:\tv\shows", show.ToPascalCase(), DestFile);
+                        string oldfile = _file;
+                        var DestFileInfo = new FileInfo(ShowDir2);
+                        if (!DestFileInfo.Exists)
+                        {
+                            //File.CreateHardLink(ShowDir2, _file);
+                        }
+                    }
+
+                }
+                if (cntValid == files.Count)
+                {
+
+                }
+
+
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"BtnScan_Click {this} {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
             }
         }
 
