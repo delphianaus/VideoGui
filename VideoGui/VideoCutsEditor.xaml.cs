@@ -12,6 +12,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -41,7 +42,7 @@ namespace VideoGui
     public partial class VideoCutsEditor : Window
     {
 
-        string Filename = "", XML_Filename = "";
+        string Filename = "", XML_Filename = "", XML_Dest = "";
         int _TotalSecs = 0;
         string ConnectionString = "";
         public AddRecordDelegate DoAddRecord;
@@ -191,6 +192,7 @@ namespace VideoGui
                 else
                 {
 
+                    XML_Dest = "";
                     cnvControls.Visibility = Visibility.Hidden;
                     var fld = new OpenFileDialog();
                     fld.Filter = "xml|*.xml";
@@ -236,6 +238,13 @@ namespace VideoGui
                             bool newclip = false;
                             int prevend = 0;
                             List<AdobeClipData> adobeclips = new List<AdobeClipData>();
+                            var DestPat = urlLocation.Split('/').ToList();
+                            if (DestPat.Count > 0)
+                            {
+                                DestPat.RemoveAt(DestPat.Count - 1);
+                                XML_Dest = Uri.UnescapeDataString(DestPat.LastOrDefault().ToString());
+                            }
+                            
 
                             /*List<string> times = new List<string>();
                             foreach (var clip in clipItems)
@@ -489,7 +498,7 @@ namespace VideoGui
             {
                 if (WidthChanged && Ready && IsLoaded)
                 {
-                    msuVideoCuts.Width =  (tbSource.IsChecked.Value) ? _w-245 : _w-16;
+                    msuVideoCuts.Width = (tbSource.IsChecked.Value) ? _w - 245 : _w - 16;
                     brdControls.Width = _w - 20;
                     stsBar1.Width = _w - 19;
                     lblStatus.Width = _w - 19;
@@ -600,9 +609,16 @@ namespace VideoGui
             {
                 RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                 string TwitchDir = key.GetValueStr("DestDirectoryTwitch");
-                string destdir = (chkExportForTwitch.IsChecked.Value) ? TwitchDir : txxtEditDirectory.Text;
+                string destdir = (chkExportForTwitch.IsChecked.Value) ? TwitchDir : 
+                   Path.Combine(txxtEditDirectory.Text,XML_Dest);
+                if (!Directory.Exists(destdir))
+                {
+                   Directory.CreateDirectory(destdir);
+                }
                 key?.Close();
-                DoAddRecord?.Invoke(false, true, false, false, -1, true, false, false, false,
+
+
+                DoAddRecord?.Invoke(chkExportForTwitch.IsChecked.Value, true, false, false, -1, true, false, false, false,
                                         true, ctv.TimeFrom.ToFFmpeg(), ctv.TimeTo.ToFFmpeg()
                                         , (tbSource.IsChecked.Value) ? txtsrcdir.Text : XML_Filename,
                                         destdir + "\\" + ctv.FileName.Trim() + $" Part {ctv._CutNo}.mp4",

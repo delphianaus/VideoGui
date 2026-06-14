@@ -70,7 +70,7 @@ namespace VideoGui
         System.Windows.Forms.Timer DbLayerInitiateTimer, UpdateProgess, RestartTimer;
         MainWindow MainAppWindow;
         string filename_pegpeg, link;
-        long bytesdone = 0, oldbytesdone = -1;
+       long bytesdone = 0, oldbytesdone = -1;
         bool done = false;
         bool ffmpegready = false;
         string Root, ffmpeg_ver = "", ffmpeg_gitver = "";
