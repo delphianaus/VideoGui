@@ -3178,21 +3178,21 @@ namespace VideoGui
                                 availabletagsViewSource.Source = availableTagsList;
                                 availabletagsViewSource.SortDescriptions.Add(new SortDescription("Tag", ListSortDirection.Ascending));
                                 availabletagsViewSource.Filter += (object sender, FilterEventArgs e) =>
+                                {
+                                    if (e.Item is AvailableTags availTag)
                                     {
-                                        if (e.Item is AvailableTags availTag)
+                                        bool fndx = false;
+                                        foreach (var item in titletagsViewSource.View)
                                         {
-                                            bool fndx = false;
-                                            foreach (var item in titletagsViewSource.View)
+                                            if (item is TitleTags titleTag && titleTag.Description == availTag.Tag)
                                             {
-                                                if (item is TitleTags titleTag && titleTag.Description == availTag.Tag)
-                                                {
-                                                    fndx = true;
-                                                    break;
-                                                }
+                                                fndx = true;
+                                                break;
                                             }
-                                            e.Accepted = !fndx;
                                         }
-                                    };
+                                        e.Accepted = !fndx;
+                                    }
+                                };
                                 frmTitleSelect.TagAvailable.ItemsSource = availabletagsViewSource.View;
                                 frmTitleSelect.TagsGrp.ItemsSource = titletagsViewSource.View;
                             }
@@ -5634,9 +5634,9 @@ namespace VideoGui
 
 
                 connectionString.ExecuteReader("SELECT * FROM YTACTIONS", (FbDataReader r) =>
-                    {
-                        YTScheduledActionsList.Add(new ScheduledActions(r));
-                    });
+                {
+                    YTScheduledActionsList.Add(new ScheduledActions(r));
+                });
                 ObservableCollectionFilter.ActionsScheduleCollectionViewSource.Source = YTScheduledActionsList;
                 /*
                   sqlstring = $"CREATE TABLE MULTISHORTSINFO({Id},ISSHORTSACTIVE SHORT,NUMBEROFSHORTS INTEGER, "+

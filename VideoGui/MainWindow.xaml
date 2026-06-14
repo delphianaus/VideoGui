@@ -95,9 +95,8 @@
             </ListBox>
         </Border>
         <ToggleButton x:Name="GPUEncode" Style="{StaticResource  ToggleStyle1}" Margin="921,0,7,76" Height="24" Width="Auto" HorizontalAlignment="Left" VerticalAlignment="Bottom" IsChecked="False"/>
-        <ToggleButton x:Name="X265Output" Style="{StaticResource  ToggleStyle2}"  Margin="821,0,0,76" Height="24" Width="98" HorizontalAlignment="Left" VerticalAlignment="Bottom" IsChecked="False" Checked="X265Output_Checked_1"/>
+        <ToggleButton x:Name="X265Output" Style="{StaticResource  ToggleStyle2}"  Margin="821,0,0,76" Height="24" Width="98" HorizontalAlignment="Left" VerticalAlignment="Bottom" IsChecked="False" Checked="X265Output_Checked"/>
         <ToggleButton x:Name="Fisheye" Style="{StaticResource  ToggleStyle3}"  Margin="1025,0,7,76" Height="24"  Width="Auto" HorizontalAlignment="Left" VerticalAlignment="Bottom"/>
-
         <Button x:Name="btnConfig" Content="Configuration" HorizontalAlignment="Left" Height="22" Margin="26,0,0,113" VerticalAlignment="Bottom" Click="BtnConfig_Click" Width="97"/>
         <StatusBar x:Name="statusbar1" Height="34" Margin="1,0,1,2" VerticalAlignment="Bottom" >
             <Label x:Name="lblTotalStatus" Background="#FFBFBFBF" Width="62" Height="34" Content="Total Time" FontSize="11"/>
@@ -144,7 +143,6 @@
         <Button x:Name="btnShortsCreator" Content="Create Shorts" HorizontalAlignment="Left" Height="26" VerticalAlignment="Bottom" Width="74" Click="btnShortsCreator_Click" Margin="658,0,0,82"/>
         <Button x:Name="btnThumbnails" Content="Thumbnails Editor" Height="26" Margin="131,0,0,82" VerticalAlignment="Bottom" HorizontalAlignment="Left" Click="btnThumbNails_Click" Width="109"/>
         <Button x:Name="BtnScan" Content="Scanner" HorizontalAlignment="Left" Height="26" VerticalAlignment="Bottom" Width="74" Click="BtnScan_Click" Margin="737,0,0,82"/>
-
     </Grid>
 
 </Window>
