@@ -7,7 +7,6 @@
         xmlns:tb="http://www.hardcodet.net/taskbar"
         ExtendsContentIntoTitleBar="True"
         WindowBackdropType="Mica"
-
         mc:Ignorable="d"
         Title="Video Procesor" Name="MainWindowX" WindowStartupLocation="CenterOwner" 
         ResizeMode="CanResize" 
@@ -94,7 +93,7 @@
                                 <TextBlock x:Name="FileInfo" Tag ="1" Text="{Binding Fileinfo}"   HorizontalAlignment ="Right" />
                                 <ProgressBar Grid.Column="8" Tag ="2" Minimum="0"   x:Name="SubProgressBar"  Maximum="100" 
                                    Value="{Binding Progress}" Margin="5,0,5,0" Height="18" Foreground="Green" >
-                                   
+
                                 </ProgressBar>
                             </Grid>
                         </DataTemplate>
@@ -113,32 +112,32 @@
             <Button x:Name="btnConfig" Content="Configuration" HorizontalAlignment="Left" 
               Height="26" Margin="8,0,0,136" 
               VerticalAlignment="Bottom" Click="BtnConfig_Click" Width="97" Padding="0,0,0,0"/>
-            <Button x:Name="btnstart" Content="Start" Height="26" FontSize="11" Width="97" 
+            <Button x:Name="btnstart" Content="Start" Height="26" Width="97" 
               Margin="8,0,0,169"  HorizontalAlignment="Left" VerticalAlignment="Bottom"
               Click="Btnstart_Click"/>
             <Button x:Name="btnEditDirectories" Content="Edit Directories" Height="26" 
-              Margin="228,0,0,102" VerticalAlignment="Bottom" HorizontalAlignment="Left" 
-               Click="btnEditDirectories_Click" Width="102"/>
+              Margin="253,0,0,102" VerticalAlignment="Bottom" 
+               Click="btnEditDirectories_Click" Width="110" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" HorizontalAlignment="Left"/>
             <Button x:Name="btnEditSchedules" Content="Edit Schedules" Height="26" 
-               Margin="335,0,0,102" VerticalAlignment="Bottom" HorizontalAlignment="Left" 
-               Click="btnEditSchedules_Click" Width="82"/>
+               Margin="371,0,0,102" VerticalAlignment="Bottom" 
+               Click="btnEditSchedules_Click" Width="105" HorizontalContentAlignment="Center" HorizontalAlignment="Left"/>
             <Button x:Name="btnEditActions" Content="Edit Actions" Height="26" 
-              Margin="423,0,0,102" VerticalAlignment="Bottom" HorizontalAlignment="Left" 
-              Click="btnEditActions_Click" Width="68"/>
+              Margin="484,0,0,102" VerticalAlignment="Bottom" 
+              Click="btnEditActions_Click" Width="90" HorizontalContentAlignment="Center" HorizontalAlignment="Left"/>
             <Button x:Name="btnSchedule" Content="Scheduler" Height="26" 
-               Margin="496,0,0,102" VerticalAlignment="Bottom" HorizontalAlignment="Left" 
-               Click="btnSchedule_Click" Width="60"/>
-            <Button x:Name="btnRunTest" Content="Audio Joiner" HorizontalAlignment="Left" 
-               Height="26" VerticalAlignment="Bottom" Width="72" Click="btnRunTest_Click" 
-             Margin="562,0,0,102"/>
-            <Button x:Name="btnShortsCreator" Content="Create Shorts" HorizontalAlignment="Left"
-             Height="26" VerticalAlignment="Bottom" Width="74"
-              Click="btnShortsCreator_Click" Margin="640,0,0,102"/>
+               Margin="580,0,0,102" VerticalAlignment="Bottom" 
+               Click="btnSchedule_Click" Width="75" HorizontalContentAlignment="Center" HorizontalAlignment="Left"/>
+            <Button x:Name="btnRunTest" Content="Audio Joiner" 
+               Height="26" VerticalAlignment="Bottom" Click="btnRunTest_Click" 
+             Margin="662,0,0,102" Width="92" HorizontalContentAlignment="Left" HorizontalAlignment="Left"/>
+            <Button x:Name="btnShortsCreator" Content="Create Shorts"
+             Height="26" VerticalAlignment="Bottom"
+              Click="btnShortsCreator_Click" Margin="761,0,0,102" Width="97" HorizontalContentAlignment="Left" HorizontalAlignment="Left"/>
             <Button x:Name="btnThumbnails" Content="Thumbnails Editor" Height="26" 
-               Margin="113,0,0,102" VerticalAlignment="Bottom" HorizontalAlignment="Left" Click="btnThumbNails_Click" Width="109"/>
-            <Button x:Name="BtnScan" Content="Scanner" HorizontalAlignment="Left" 
+               Margin="113,0,0,102" VerticalAlignment="Bottom" HorizontalAlignment="Left" Click="btnThumbNails_Click" Width="132" HorizontalContentAlignment="Center"/>
+            <Button x:Name="BtnScan" Content="Scanner" 
               Height="26" VerticalAlignment="Bottom" Width="74" Click="BtnScan_Click" 
-              Margin="721,0,0,102"/>
+              Margin="864,0,0,102" HorizontalContentAlignment="Left" HorizontalAlignment="Left"/>
             <Button x:Name="btnShortsInfo" Content="Shorts" HorizontalAlignment="Left" 
               Height="26" Margin="8,0,0,102" VerticalAlignment="Bottom" Width="97" 
               Click="btnShortsInfo_Click"/>
@@ -146,102 +145,102 @@
               Margin="112,0,0,135" VerticalAlignment="Bottom" Width="976" />
             <ProgressBar x:Name="Progressbar2" HorizontalAlignment="Left" Height="26" 
              Margin="112,0,0,169" VerticalAlignment="Bottom" Width="976" />
-            <Grid x:Name="StatusTop" Height="34" Margin="5,0,5,52"
-              VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="1122" >
+            <Grid x:Name="StatusTop" Height="34" Margin="5,0,0,52"
+              VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="1132" Background="{DynamicResource {x:Static SystemColors.HotTrackBrushKey}}" >
                 <Label x:Name="lblSpeedStatus" Height="34" 
-              Content="Speed" MouseDoubleClick="Label_MouseDoubleClick" FontWeight="DemiBold"
-              FontSize="13" HorizontalAlignment="Left" VerticalContentAlignment="Center" 
+              Content="Speed" MouseDoubleClick="Label_MouseDoubleClick" FontWeight="DemiBold" 
+                  HorizontalAlignment="Left" VerticalContentAlignment="Center" 
               HorizontalContentAlignment="Center" Padding="3,0,3,0"/>
-                <Label x:Name="lblSpeed" Content="4" HorizontalAlignment="Left" Height="31" 
-               VerticalAlignment="Center" Width="47" Margin="39,0,0,0"
+                <Label x:Name="lblSpeed" Content="4" HorizontalAlignment="Left" Height="30" 
+               VerticalAlignment="Center" Width="47" Margin="48,0,0,0"
                 HorizontalContentAlignment="Center" 
                VerticalContentAlignment="Center" />
-                <Label x:Name="lblCurrentFrameStatus" Height="31" 
-               Content="Current Frame" FontSize="11" HorizontalAlignment="Left" Margin="90,0,0,0"
+                <Label x:Name="lblCurrentFrameStatus" Height="30" 
+               Content="Current Frame" HorizontalAlignment="Left" Margin="92,0,0,0"
                HorizontalContentAlignment="Center" VerticalContentAlignment="Center" 
                Padding="3,0,3,0" VerticalAlignment="Center"/>
                 <Label x:Name="lblCurrentFrames" Content="frame" HorizontalAlignment="Left"
-                 Height="30" VerticalAlignment="Center" Width="41" Margin="293,0,0,0" 
-                 HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+                 Height="31" VerticalAlignment="Center" Width="41" Margin="318,0,0,0" 
+                 HorizontalContentAlignment="Center" VerticalContentAlignment="Center" AutomationProperties.IsRowHeader="True" Padding="0,0,0,0" Grid.IsSharedSizeScope="True"/>
                 <Label x:Name="lblFramesStatus" Height="31" 
-               Content="Frames" FontSize="11" Margin="250,0,0,0" HorizontalAlignment="Left" 
+               Content="Frames" Margin="272,0,0,0" HorizontalAlignment="Left" 
                VerticalContentAlignment="Center" HorizontalContentAlignment="Center" 
-               Padding="3,0,3,0" VerticalAlignment="Center"/>
-                <Label x:Name="lblFrames" Content="" HorizontalAlignment="Left" Height="31" 
-               VerticalAlignment="Center" Width="78" Margin="168,0,0,0" 
+               Padding="0,0,0,0" VerticalAlignment="Center"/>
+                <Label x:Name="lblFrames" Content="" HorizontalAlignment="Left" Height="30" 
+               VerticalAlignment="Center" Width="84" Margin="186,0,0,0" 
                VerticalContentAlignment="Center" HorizontalContentAlignment="Center"/>
                 <Label x:Name="lblBitrateStatus" Height="34" 
-               Content="Bitrate" FontSize="11" HorizontalAlignment="Left" Margin="335,0,0,0" 
+               Content="Bitrate" HorizontalAlignment="Left" Margin="384,0,0,0" 
                VerticalContentAlignment="Center" VerticalAlignment="Center" 
                HorizontalContentAlignment="Center" Padding="5,0,5,0"/>
-                <Label x:Name="lblBitrate" Content="btrte" HorizontalAlignment="Left" Height="31" 
-              VerticalAlignment="Center" Width="88" Margin="379,0,0,0" 
-              VerticalContentAlignment="Center" />
-                <Label x:Name="lblDurationStatus" Width="60" Height="31" 
-              Content="Processed" FontSize="11" HorizontalAlignment="Left" 
-              VerticalAlignment="Center" Margin="472,0,0,0" HorizontalContentAlignment="Center" 
-              VerticalContentAlignment="Center"/>
+                <Label x:Name="lblBitrate" Content="btrte" HorizontalAlignment="Left" Height="30" 
+              VerticalAlignment="Center" Width="88" Margin="433,0,0,0" 
+              VerticalContentAlignment="Center" Padding="0,0,0,0" />
+                <Label x:Name="lblDurationStatus" Width="60" Height="30" 
+              Content="Processed" HorizontalAlignment="Left" 
+              VerticalAlignment="Center" Margin="494,0,0,0" HorizontalContentAlignment="Center" 
+              VerticalContentAlignment="Center" Padding="0,0,0,0"/>
                 <Label x:Name="lblDuration" Content="dur" HorizontalAlignment="Left" Height="31" 
                VerticalAlignment="Center" Width="59" Margin="534,0,0,0" 
-               VerticalContentAlignment="Center" HorizontalContentAlignment="Center" />
+               VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Padding="0,0,0,40" />
                 <Label x:Name="lblETAStatus" Width="27" Height="30" 
                Content="ETA" FontSize="11" HorizontalContentAlignment="Center" 
-               HorizontalAlignment="Left" VerticalAlignment="Center" Margin="597,0,0,0" 
-               VerticalContentAlignment="Center"/>
-                <Label x:Name="lblEta" Content="ETA" HorizontalAlignment="Left" Height="30" 
-               VerticalAlignment="Center" Width="39" Margin="627,0,0,0"
+               HorizontalAlignment="Left" VerticalAlignment="Center" Margin="610,0,0,0" 
+               VerticalContentAlignment="Center" Padding="0,0,0,0"/>
+                <Label x:Name="lblEta" Content="ETA" HorizontalAlignment="Left" Height="31" 
+               VerticalAlignment="Center" Width="62" Margin="640,0,0,0"
               VerticalContentAlignment="Center"/>
                 <Label x:Name="lblTotalTimeStatus" Height="31" 
                Content="Time" FontSize="11" HorizontalContentAlignment="Center" 
                HorizontalAlignment="Left" VerticalAlignment="Center" VerticalContentAlignment="Center" 
-               Margin="668,0,0,0" Padding="5,0,5,0" Grid.IsSharedSizeScope="True"/>
+               Margin="702,0,0,0" Padding="5,0,5,0" Grid.IsSharedSizeScope="True"/>
                 <Label x:Name="lblTotalTime" HorizontalAlignment="Left" Height="31" 
-               VerticalAlignment="Center" Width="59" Margin="705,0,0,0" />
+               VerticalAlignment="Center" Width="59" Margin="737,0,0,0" VerticalContentAlignment="Center" />
                 <Label x:Name="lblPercentStatus" Width="47" 
                 Height="34" Content="Percent" FontSize="11" VerticalContentAlignment="Center" 
-                 VerticalAlignment="Center" HorizontalAlignment="Left" Margin="769,0,0,0" 
+                 VerticalAlignment="Center" HorizontalAlignment="Left" Margin="795,0,0,0" 
                  HorizontalContentAlignment="Center"/>
-                <Label x:Name="lblPercent" HorizontalAlignment="Left" Height="32" 
-               VerticalAlignment="Center" Width="53" 
-               HorizontalContentAlignment="Center" Margin="820,0,0,0" Content="PER" 
-              VerticalContentAlignment="Center" />
+                <Label x:Name="lblPercent" HorizontalAlignment="Left" Height="31" 
+               VerticalAlignment="Center" Width="32" 
+               HorizontalContentAlignment="Center" Margin="839,0,0,0" Content="PER" 
+              VerticalContentAlignment="Center" Padding="0,0,0,0" />
                 <Button x:Name="btnAppliedSchedule" Content="Upload Schedule" 
               HorizontalAlignment="Right" Height="31" VerticalAlignment="Center" 
-              Width="130" Click="btnAppliedSchedule_Click" Margin="0,0,112,0"/>
+              Width="130" Click="btnAppliedSchedule_Click" Margin="0,0,120,0"/>
                 <Button x:Name="btnYTSchedule" Content="Uploads Info" Height="31" Width="101" 
-              Click="btnYTSchedule_Click" HorizontalAlignment="Right"/>
+              Click="btnYTSchedule_Click" HorizontalAlignment="Right" Margin="0,0,8,0"/>
             </Grid>
             <Grid x:Name="StatusBottom" Height="34" Margin="5,0,0,2"
-               VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="1128" >
+               VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="1132" Background="{DynamicResource {x:Static SystemColors.InactiveSelectionHighlightTextBrushKey}}" >
                 <Label x:Name="lblTotalStatus" Height="30" BorderBrush="Goldenrod"
-               Content="Total Time" FontSize="11" HorizontalAlignment="Left" 
+               Content="Total Time" HorizontalAlignment="Left" 
                VerticalAlignment="Center" Padding="5,0,5,0" VerticalContentAlignment="Center"/>
                 <Label x:Name="LblTotalTIMEAll" Content="" HorizontalAlignment="Left" Height="31" 
                VerticalAlignment="Center" Width="47" Margin="63,0,0,0" VerticalContentAlignment="Center" />
                 <Label x:Name="lblPassFailStatus" Height="31" 
-               Content="Pass/Fail" FontSize="11" HorizontalAlignment="Left" Margin="113,0,0,0" 
+               Content="Pass/Fail" HorizontalAlignment="Left" Margin="113,0,0,0" 
                Padding="5,0,5,0" VerticalContentAlignment="Center"/>
                 <Label x:Name="lblFailpass" Content="" HorizontalAlignment="Left" Height="31" 
-               VerticalAlignment="Center" Width="40" Margin="168,0,0,0" />
+               VerticalAlignment="Center" Width="40" Margin="168,0,0,0" VerticalContentAlignment="Center" />
                 <Label x:Name="lblQueStatus" Height="31" 
-               Content="Que" FontSize="11" HorizontalAlignment="Left" Margin="210,0,0,0" 
+               Content="Que" HorizontalAlignment="Left" Margin="210,0,0,0" 
              VerticalAlignment="Center" Padding="5,0,5,0" VerticalContentAlignment="Center"/>
                 <Label x:Name="lblQueInfo" HorizontalAlignment="Left" Height="31" 
                VerticalAlignment="Center" Width="45" Margin="242,0,0,0" />
                 <Label x:Name="lblAccelStatus" Height="31" 
-               Content="Accel HW" FontSize="11" HorizontalAlignment="Left" VerticalAlignment="Center" 
+               Content="Accel HW" HorizontalAlignment="Left" VerticalAlignment="Center" 
              Padding="5,0,5,0" VerticalContentAlignment="Center" Margin="289,0,0,0"/>
                 <Label x:Name="lbAccelHW" Content="" HorizontalAlignment="Left" Height="30" 
                VerticalAlignment="Center" Width="254"  Margin="347,0,0,0"/>
                 <Button x:Name="btnScriptEditor" Content="Script Injector"
-               Height="30" Click="btnScriptEditor_Click" Margin="698,0,345,0" Padding="5,0,5,0" Width="80" HorizontalAlignment="Right" />
+               Height="30" Click="btnScriptEditor_Click" Width="106" HorizontalAlignment="Right" Margin="0,0,460,0" />
                 <Button x:Name="btnMediaImporter" Content="Import Footage"
-               Height="30" Click="btnMediaImporter_Click" Padding="5,0,5,0" Width="88" HorizontalAlignment="Right" Margin="0,0,255,0"/>
+               Height="30" Click="btnMediaImporter_Click" Width="120" HorizontalContentAlignment="Right" HorizontalAlignment="Right" Margin="0,0,334,0"/>
                 <Button x:Name="btnVIdeoEdit" Content="Edit Points" 
-               Height="30" Width="63" Click="btnVIdeoEdit_Click" Margin="0,0,191,0" HorizontalAlignment="Right"/>
+               Height="30" Width="80" Click="btnVIdeoEdit_Click" HorizontalContentAlignment="Right" HorizontalAlignment="Right" Margin="0,0,250,0"/>
                 <Button x:Name="btnScraperDraft" Content="Scrape Drafts" 
-               Height="30" Click="btnScraperDraft_Click" Padding="5,0,5,0" Width="79" HorizontalAlignment="Right" Margin="0,0,110,0"/>
-                <Button x:Name="btnSetupload" Content="Uploads Directory" Height="30" Click="btnSetupload_Click" Padding="5,0,5,0" Width="102" HorizontalAlignment="Right" Margin="0,0,5,0"/>
+               Height="30" Click="btnScraperDraft_Click" Width="101" HorizontalAlignment="Right" Margin="0,0,144,0"/>
+                <Button x:Name="btnSetupload" Content="Uploads Directory" Height="30" Click="btnSetupload_Click" Width="137" HorizontalAlignment="Right" Margin="0,0,3,0"/>
             </Grid>
 
         </Grid>
