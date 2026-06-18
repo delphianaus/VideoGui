@@ -116,28 +116,28 @@
               Margin="8,0,0,169"  HorizontalAlignment="Left" VerticalAlignment="Bottom"
               Click="Btnstart_Click"/>
             <Button x:Name="btnEditDirectories" Content="Edit Directories" Height="26" 
-              Margin="253,0,0,102" VerticalAlignment="Bottom" 
-               Click="btnEditDirectories_Click" Width="110" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" HorizontalAlignment="Left"/>
+              Margin="241,0,0,102" VerticalAlignment="Bottom" 
+               Click="btnEditDirectories_Click" Width="103" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" HorizontalAlignment="Left"/>
             <Button x:Name="btnEditSchedules" Content="Edit Schedules" Height="26" 
-               Margin="371,0,0,102" VerticalAlignment="Bottom" 
-               Click="btnEditSchedules_Click" Width="105" HorizontalContentAlignment="Center" HorizontalAlignment="Left"/>
+               Margin="349,0,0,102" VerticalAlignment="Bottom" 
+               Click="btnEditSchedules_Click" Width="98" HorizontalContentAlignment="Center" HorizontalAlignment="Left"/>
             <Button x:Name="btnEditActions" Content="Edit Actions" Height="26" 
-              Margin="484,0,0,102" VerticalAlignment="Bottom" 
-              Click="btnEditActions_Click" Width="90" HorizontalContentAlignment="Center" HorizontalAlignment="Left"/>
+              Margin="451,0,0,102" VerticalAlignment="Bottom" 
+              Click="btnEditActions_Click" Width="81" HorizontalContentAlignment="Center" HorizontalAlignment="Left"/>
             <Button x:Name="btnSchedule" Content="Scheduler" Height="26" 
-               Margin="580,0,0,102" VerticalAlignment="Bottom" 
-               Click="btnSchedule_Click" Width="75" HorizontalContentAlignment="Center" HorizontalAlignment="Left"/>
+               Margin="538,0,0,102" VerticalAlignment="Bottom" 
+               Click="btnSchedule_Click" Width="70" HorizontalContentAlignment="Center" HorizontalAlignment="Left"/>
             <Button x:Name="btnRunTest" Content="Audio Joiner" 
                Height="26" VerticalAlignment="Bottom" Click="btnRunTest_Click" 
-             Margin="662,0,0,102" Width="92" HorizontalContentAlignment="Left" HorizontalAlignment="Left"/>
+             Margin="611,0,0,102" Width="88" HorizontalContentAlignment="Left" HorizontalAlignment="Left"/>
             <Button x:Name="btnShortsCreator" Content="Create Shorts"
              Height="26" VerticalAlignment="Bottom"
-              Click="btnShortsCreator_Click" Margin="761,0,0,102" Width="97" HorizontalContentAlignment="Left" HorizontalAlignment="Left"/>
+              Click="btnShortsCreator_Click" Margin="705,0,0,102" Width="91" HorizontalContentAlignment="Left" HorizontalAlignment="Left"/>
             <Button x:Name="btnThumbnails" Content="Thumbnails Editor" Height="26" 
-               Margin="113,0,0,102" VerticalAlignment="Bottom" HorizontalAlignment="Left" Click="btnThumbNails_Click" Width="132" HorizontalContentAlignment="Center"/>
+               Margin="113,0,0,102" VerticalAlignment="Bottom" Click="btnThumbNails_Click" Width="123" HorizontalContentAlignment="Center" HorizontalAlignment="Left"/>
             <Button x:Name="BtnScan" Content="Scanner" 
-              Height="26" VerticalAlignment="Bottom" Width="74" Click="BtnScan_Click" 
-              Margin="864,0,0,102" HorizontalContentAlignment="Left" HorizontalAlignment="Left"/>
+              Height="26" VerticalAlignment="Bottom" Width="63" Click="BtnScan_Click" 
+              Margin="802,0,0,102" HorizontalContentAlignment="Left" HorizontalAlignment="Left"/>
             <Button x:Name="btnShortsInfo" Content="Shorts" HorizontalAlignment="Left" 
               Height="26" Margin="8,0,0,102" VerticalAlignment="Bottom" Width="97" 
               Click="btnShortsInfo_Click"/>
@@ -206,8 +206,8 @@
               VerticalContentAlignment="Center" Padding="0,0,0,0" />
                 <Button x:Name="btnAppliedSchedule" Content="Upload Schedule" 
               HorizontalAlignment="Right" Height="31" VerticalAlignment="Center" 
-              Width="130" Click="btnAppliedSchedule_Click" Margin="0,0,120,0"/>
-                <Button x:Name="btnYTSchedule" Content="Uploads Info" Height="31" Width="101" 
+              Width="106" Click="btnAppliedSchedule_Click" Margin="0,0,104,0"/>
+                <Button x:Name="btnYTSchedule" Content="Uploads Info" Height="31" Width="91" 
               Click="btnYTSchedule_Click" HorizontalAlignment="Right" Margin="0,0,8,0"/>
             </Grid>
             <Grid x:Name="StatusBottom" Height="34" Margin="5,0,0,2"
@@ -233,14 +233,14 @@
                 <Label x:Name="lbAccelHW" Content="" HorizontalAlignment="Left" Height="30" 
                VerticalAlignment="Center" Width="254"  Margin="347,0,0,0"/>
                 <Button x:Name="btnScriptEditor" Content="Script Injector"
-               Height="30" Click="btnScriptEditor_Click" Width="106" HorizontalAlignment="Right" Margin="0,0,460,0" />
+               Height="30" Click="btnScriptEditor_Click" Width="93" HorizontalAlignment="Right" Margin="0,0,424,0" />
                 <Button x:Name="btnMediaImporter" Content="Import Footage"
-               Height="30" Click="btnMediaImporter_Click" Width="120" HorizontalContentAlignment="Right" HorizontalAlignment="Right" Margin="0,0,334,0"/>
+               Height="30" Click="btnMediaImporter_Click" Width="108" HorizontalContentAlignment="Right" HorizontalAlignment="Right" Margin="0,0,309,0"/>
                 <Button x:Name="btnVIdeoEdit" Content="Edit Points" 
-               Height="30" Width="80" Click="btnVIdeoEdit_Click" HorizontalContentAlignment="Right" HorizontalAlignment="Right" Margin="0,0,250,0"/>
+               Height="30" Width="75" Click="btnVIdeoEdit_Click" HorizontalContentAlignment="Right" HorizontalAlignment="Right" Margin="0,0,228,0"/>
                 <Button x:Name="btnScraperDraft" Content="Scrape Drafts" 
-               Height="30" Click="btnScraperDraft_Click" Width="101" HorizontalAlignment="Right" Margin="0,0,144,0"/>
-                <Button x:Name="btnSetupload" Content="Uploads Directory" Height="30" Click="btnSetupload_Click" Width="137" HorizontalAlignment="Right" Margin="0,0,3,0"/>
+               Height="30" Click="btnScraperDraft_Click" Width="90" HorizontalAlignment="Right" Margin="0,0,134,0"/>
+                <Button x:Name="btnSetupload" Content="Uploads Directory" Height="30" Click="btnSetupload_Click" Width="126" HorizontalAlignment="Right" Margin="0,0,3,0"/>
             </Grid>
 
         </Grid>
