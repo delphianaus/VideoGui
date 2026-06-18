@@ -102,6 +102,7 @@ using Object = System.Object;
 using Path = System.IO.Path;
 using Stream = System.IO.Stream;
 using Window = System.Windows.Window;
+using Wpf.Ui.Controls;
 
 
 
@@ -130,7 +131,7 @@ namespace VideoGui
     }
 
     [SupportedOSPlatform("windows")]
-    public partial class MainWindow : Window
+    public partial class MainWindow : FluentWindow
     {
         public _StatsHandler ThreadStatsHandler;
         public _UpdateSpeed ThreadUpdateSpeed;
@@ -4767,9 +4768,9 @@ namespace VideoGui
         {
             try
             {
-                if (!Dispatcher.CheckAccess())
+                if (!Application.Current.Dispatcher.CheckAccess())
                 {
-                    Dispatcher.Invoke(() => SetupTicker());
+                    Application.Current.Dispatcher.Invoke(() => SetupTicker());
                     return;
                 }
 
@@ -6195,7 +6196,8 @@ namespace VideoGui
                 Stats_Handler.TotalTime += new StatsHandler.UpdateSIngleString(totalTIme);
                 Stats_Handler.UpdateTotalSpeeds += new StatsHandler.UpdateSpeeds(SpeedUpdate);
                 //  ProcessingJobs = new ConcurrentQueue<JobListDetails>();
-                Content += " " + Assembly.GetExecutingAssembly().GetName().Version.ToString();
+                
+               
                 OnIsFileInUse = new IsFileInUse(IsFileActive);
                 InitializeComponent();
                 ObservableCollectionFilter = new ObservableCollectionFilters();
@@ -6423,7 +6425,7 @@ namespace VideoGui
                         var s = GetEncryptedString(new int[] { 165, 26, 99, 115, 210, 243,
                             142, 25, 178, 91, 63, 142, 249, 220, 120, 113, 55, 173, 206, 201,
                             134, 206, 205, 105, 23, 91, 223, 250, 59, 243, 113, 171, 63, 252, 103 }.Select(i => (byte)i).ToArray());
-                        lstboxresize();
+                       
                         key.Close();
                         var vp = GetEncryptedString(new int[] { 160, 54, 75, 83, 254, 247, 220, 92, 241, 120, 30, 178, 219, 142 }.Select(i => (byte)i).ToArray());
                         var dd = GetEncryptedString(new int[] { 178, 58, 92, 85, 227, 206, 222, 71, 251, 114, 3 }.Select(i => (byte)i).ToArray());
@@ -6461,9 +6463,9 @@ namespace VideoGui
         {
             try
             {
-                if (!Dispatcher.CheckAccess())
+                if (!Application.Current.Dispatcher.CheckAccess())
                 {
-                    Dispatcher.Invoke(() => LoadSelectForm());
+                    Application.Current.Dispatcher.Invoke(() => LoadSelectForm());
                     return;
                 }
                 RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
@@ -6483,9 +6485,9 @@ namespace VideoGui
         {
             try
             {
-                if (!Dispatcher.CheckAccess())
+                if (!Application.Current.Dispatcher.CheckAccess())
                 {
-                    Dispatcher.Invoke(() => StartTicker());
+                    Application.Current.Dispatcher.Invoke(() => StartTicker());
                     return;
                 }
                 FileQueChecker.Start();
@@ -6501,7 +6503,7 @@ namespace VideoGui
             try
             {
                 DateTime result = DateTime.Now.AddYears(-100);
-                this.Dispatcher.Invoke(() =>
+                Application.Current.Dispatcher.Invoke(() =>
                 {
                     lock (statslocker)
                     {
@@ -6521,13 +6523,14 @@ namespace VideoGui
         {
             try
             {
-                this.Dispatcher.Invoke(() =>
-                {
-                    lock (statslocker)
-                    {
-                        Stats_Handler.UpdateStartTime(filename, start);
-                    }
-                });
+
+                Application.Current.Dispatcher.Invoke(() =>
+                 {
+                     lock (statslocker)
+                     {
+                         Stats_Handler.UpdateStartTime(filename, start);
+                     }
+                 });
             }
             catch (Exception ex)
             {
@@ -6581,14 +6584,14 @@ namespace VideoGui
         {
             try
             {
-                this.Dispatcher.Invoke(() =>
-                {
-                    lock (statslocker)
-                    {
-                        if (mode == 0) Stats_Handler.UpdateTime(filename, eta);
-                        if (mode == 1) Stats_Handler.UpdateProcessingTime(filename, eta);
-                    }
-                });
+                Application.Current.Dispatcher.Invoke(() =>
+                 {
+                     lock (statslocker)
+                     {
+                         if (mode == 0) Stats_Handler.UpdateTime(filename, eta);
+                         if (mode == 1) Stats_Handler.UpdateProcessingTime(filename, eta);
+                     }
+                 });
             }
             catch (Exception ex)
             {
@@ -6599,13 +6602,13 @@ namespace VideoGui
         {
             try
             {
-                this.Dispatcher.Invoke(() =>
-                {
-                    lock (statslocker)
-                    {
-                        Stats_Handler.UpdateProgress(filename, Progress, Duration, Total);
-                    }
-                });
+                Application.Current.Dispatcher.Invoke(() =>
+                 {
+                     lock (statslocker)
+                     {
+                         Stats_Handler.UpdateProgress(filename, Progress, Duration, Total);
+                     }
+                 });
             }
             catch (Exception ex)
             {
@@ -6616,14 +6619,14 @@ namespace VideoGui
         {
             try
             {
-                this.Dispatcher.Invoke(() =>
-                {
-                    lock (statslocker)
-                    {
-                        Stats_Handler.UpdateSpeed(filename, framess, totalb, framecalc, frames1440p);
-                    }
+                Application.Current.Dispatcher.Invoke(() =>
+                 {
+                     lock (statslocker)
+                     {
+                         Stats_Handler.UpdateSpeed(filename, framess, totalb, framecalc, frames1440p);
+                     }
 
-                });
+                 });
             }
             catch (Exception ex)
             {
@@ -6635,14 +6638,14 @@ namespace VideoGui
             try
             {
                 bool thisresult = false;
-                this.Dispatcher.Invoke(() =>
-                {
-                    lock (StatsLock)
-                    {
-                        if (mode == 0) thisresult = Stats_Handler.FindFilename(filename);
-                        //if (mode == 2) thisresult = KillTorrent(true, filename);
-                    }
-                });
+                Application.Current.Dispatcher.Invoke(() =>
+                 {
+                     lock (StatsLock)
+                     {
+                         if (mode == 0) thisresult = Stats_Handler.FindFilename(filename);
+                         //if (mode == 2) thisresult = KillTorrent(true, filename);
+                     }
+                 });
                 return thisresult;
             }
             catch (Exception ex)
@@ -6655,14 +6658,14 @@ namespace VideoGui
         {
             try
             {
-                this.Dispatcher.Invoke(() =>
-                {
-                    lock (StatsLock)
-                    {
-                        if (mode == 0) Stats_Handler.AddNewStats(filename);
-                        if (mode == 1) Stats_Handler.RemoveStats(filename);
-                    }
-                });
+                Application.Current.Dispatcher.Invoke(() =>
+                 {
+                     lock (StatsLock)
+                     {
+                         if (mode == 0) Stats_Handler.AddNewStats(filename);
+                         if (mode == 1) Stats_Handler.RemoveStats(filename);
+                     }
+                 });
 
             }
             catch (Exception ex)
@@ -6674,9 +6677,9 @@ namespace VideoGui
         {
             try
             {
-                if (!Dispatcher.CheckAccess())
+                if (!Application.Current.Dispatcher.CheckAccess())
                 {
-                    Dispatcher.Invoke(() => removejob(jobid));
+                    Application.Current.Dispatcher.Invoke(() => removejob(jobid));
                     return;
                 }
                 ProcessingJobs.RemoveAt(jobid);
@@ -6696,10 +6699,10 @@ namespace VideoGui
             try
             {
                 int threadid = 0, Index = 0;
-                this.Dispatcher.Invoke(() =>
-                {
-                    lstBoxJobs.ItemsSource = ProcessingJobs;
-                });
+                Application.Current.Dispatcher.Invoke(() =>
+                 {
+                     lstBoxJobs.ItemsSource = ProcessingJobs;
+                 });
                 LineNum = 1;
                 string TwitchStreamKey = string.Empty;
                 RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
@@ -6747,7 +6750,7 @@ namespace VideoGui
                 {
                     if (!this.IsVisible && !this.InTray)
                     {
-                        Dispatcher.Invoke(() =>
+                        Application.Current.Dispatcher.Invoke(() =>
                         {
                             trayicon.Visibility = Visibility.Visible;
                             this.InTray = true;
@@ -6782,7 +6785,7 @@ namespace VideoGui
                     }
                     else
                     {
-                        Dispatcher.Invoke(() =>
+                        Application.Current.Dispatcher.Invoke(() =>
                         {
                             trayicon.ToolTipText = "Idle";
                         });
@@ -7163,9 +7166,9 @@ namespace VideoGui
             try
             {
 
-                if (!Dispatcher.CheckAccess())
+                if (!Application.Current.Dispatcher.CheckAccess())
                 {
-                    Dispatcher.Invoke(async () => AsyncProbe(DestFile, mysourcefiles, SourceDirectory, Job, Index));
+                    Application.Current.Dispatcher.Invoke(async () => AsyncProbe(DestFile, mysourcefiles, SourceDirectory, Job, Index));
                     return;
                 }
                 bool IsOkay = false;
@@ -7625,9 +7628,9 @@ namespace VideoGui
         {
             try
             {
-                if (!Dispatcher.CheckAccess())
+                if (!Application.Current.Dispatcher.CheckAccess())
                 {
-                    Dispatcher.Invoke(() => ThinProcessingListAsync());
+                    Application.Current.Dispatcher.Invoke(() => ThinProcessingListAsync());
                     return;
                 }
 
@@ -7813,9 +7816,9 @@ namespace VideoGui
         {
             try
             {
-                if (!Dispatcher.CheckAccess())
+                if (!Application.Current.Dispatcher.CheckAccess())
                 {
-                    Dispatcher.Invoke(() => DoTimerSetup());
+                    Application.Current.Dispatcher.Invoke(() => DoTimerSetup());
                     return;
                 }
                 FileQueChecker.Interval = (int)new TimeSpan(0, 0, 5).TotalMilliseconds;
@@ -7833,16 +7836,16 @@ namespace VideoGui
         {
             try
             {
-                this.Dispatcher.Invoke(() =>
-                {
-                    if (MainWindowX.Visibility == Visibility.Visible)
-                    {
-                        lblBitrate.AutoSizeLabel(bitrate + " " + bitratespeed);
-                        lblSpeed.AutoSizeLabel(fps + "x");
-                        lblFrames.AutoSizeLabel(frames);
-                        lblCurrentFrames.AutoSizeLabel(frames1440p);
-                    }
-                });
+                Application.Current.Dispatcher.Invoke(() =>
+                 {
+                     if (MainWindowX.Visibility == Visibility.Visible)
+                     {
+                         lblBitrate.AutoSizeLabel(bitrate + " " + bitratespeed);
+                         lblSpeed.AutoSizeLabel(fps + "x");
+                         lblFrames.AutoSizeLabel(frames);
+                         lblCurrentFrames.AutoSizeLabel(frames1440p);
+                     }
+                 });
             }
             catch (Exception ex)
             {
@@ -7958,10 +7961,10 @@ namespace VideoGui
                 List<string> Profiles = new();
                 List<string> LogFiles = new List<string>();
                 string searchpath = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
-                this.Dispatcher.Invoke(() =>
-                {
-                    LogFiles = Directory.EnumerateFiles(searchpath, "*-log.log", SearchOption.AllDirectories).ToList<string>();
-                });
+                Application.Current.Dispatcher.Invoke(() =>
+                 {
+                     LogFiles = Directory.EnumerateFiles(searchpath, "*-log.log", SearchOption.AllDirectories).ToList<string>();
+                 });
                 foreach (string logfile in LogFiles)
                 {
                     if (logfile.Contains("."))
@@ -7977,7 +7980,7 @@ namespace VideoGui
                     }
                 }
                 LineNum = 13;
-                this.Dispatcher.Invoke(() => { InitTitleLength = MainWindowX.Title.Length; });
+                Application.Current.Dispatcher.Invoke(() => { InitTitleLength = MainWindowX.Title.Length; });
                 var values = key.GetValueNames();
                 if (values is not null)
                 {
@@ -8111,16 +8114,16 @@ namespace VideoGui
                     }
                 }
 
-                this.SetChecked("GPUEncode", key.GetValueBool("GPUEncode", true));
-                this.SetChecked("Fisheye", key.GetValueBool("FishEyeRemoval", false));
+                Grid1.SetChecked("GPUEncode", key.GetValueBool("GPUEncode", true));
+                Grid1.SetChecked("Fisheye", key.GetValueBool("FishEyeRemoval", false));
 
-                this.SetChecked("ChkResize1440p", key.GetValueBool("resize1440p"));
+                Grid1.SetChecked("ChkResize1440p", key.GetValueBool("resize1440p"));
 
-                this.SetChecked("X265Output", key.GetValueBool("X265", true));
-                this.SetChecked("ChkAudioConversion", key.GetValueBool("AudioConversionAC3", true));
+                Grid1.SetChecked("X265Output", key.GetValueBool("X265", true));
+                Grid1.SetChecked("ChkAudioConversion", key.GetValueBool("AudioConversionAC3", true));
 
-                this.SetSelectedIndex("cmbH64Target", key.GetValueInt("h264Target", -1));
-                this.SetChecked("ChkResize1080shorts", key.GetValueBool("Do1440pShorts", false));
+                Grid1.SetSelectedIndex("cmbH64Target", key.GetValueInt("h264Target", -1));
+                Grid1.SetChecked("ChkResize1080shorts", key.GetValueBool("Do1440pShorts", false));
 
                 LineNum = 24;
                 SystemSetup = false;
@@ -8203,9 +8206,9 @@ namespace VideoGui
         {
             try
             {
-                if (!Dispatcher.CheckAccess())
+                if (!Application.Current.Dispatcher.CheckAccess())
                 {
-                    Dispatcher.Invoke(() => FileQueChecker_Tick(sender, e));
+                    Application.Current.Dispatcher.Invoke(() => FileQueChecker_Tick(sender, e));
                     return;
                 }
 
@@ -8394,7 +8397,7 @@ namespace VideoGui
                 int _cmbaudiomodeSelectedIndex = key.GetValueInt("Audiomode", 0);
                 int H264Target = key.GetValueInt("h264Target", -1);
                 bool ChkAutoAAC_IsChecked = key.GetValueBool("ChkAutoAAC", true);
-                bool _GPUEncode = this.IsChecked("GPUEncode"), _X265Output = this.IsChecked("X265Output");
+                bool _GPUEncode = Grid1.IsChecked("GPUEncode"), _X265Output = Grid1.IsChecked("X265Output");
                 key?.Close();
                 string myStrQuote = "\"";
                 (chkresized, overrider, job.InProcess) = (ResizeEnable, job.X264Override, true);
@@ -8547,16 +8550,16 @@ namespace VideoGui
                         SourceFile = SourceFile.Contains(" ") ? myStrQuote + SourceFile + myStrQuote : SourceFile;
                         MoveIfExists(SourceFile, ErrorDirectory + "\\" + Path.GetFileName(SourceFile));
                     }
-                    this.Dispatcher.Invoke(() =>
-                    {
-                        LineNum = 29;
-                        job.Fileinfo = "$[ffmpeg open ERROR-{SourceFile}]";// OK]";}
-                        ThreadStatsHandler?.Invoke(1, (job.IsMulti) ? Path.GetFileNameWithoutExtension(job.DestMFile) : job.Title);
-                        LineNum = 30;
-                        LogWrite(MethodBase.GetCurrentMethod().Name.ToString() + " 7 " + ex1.Message);
-                        (job.InProcess, job.Processed, job.IsSkipped) = (false, true, true);
-                        failed++;
-                    });
+                    Application.Current.Dispatcher.Invoke(() =>
+                     {
+                         LineNum = 29;
+                         job.Fileinfo = "$[ffmpeg open ERROR-{SourceFile}]";// OK]";}
+                         ThreadStatsHandler?.Invoke(1, (job.IsMulti) ? Path.GetFileNameWithoutExtension(job.DestMFile) : job.Title);
+                         LineNum = 30;
+                         LogWrite(MethodBase.GetCurrentMethod().Name.ToString() + " 7 " + ex1.Message);
+                         (job.InProcess, job.Processed, job.IsSkipped) = (false, true, true);
+                         failed++;
+                     });
                 }
                 double TotalSecs = 0;
                 IAudioStream audioStream = null;
@@ -8818,7 +8821,7 @@ namespace VideoGui
                     var dfile = (job.IsTwitchStream) ? DestFile : Path.GetFileName(DestFile);
                     var ConverterProgressDelegate = ConverterProgressEventHandler.AddNewProgressEventHandler(dfile);
                     var conversion = FFmpegCli.Converters.New(ConverterProgressDelegate);
-                    bool Isinter = false, IsResize1080shorts = this.IsChecked("ChkResize1080shorts");
+                    bool Isinter = false, IsResize1080shorts = Grid1.IsChecked("ChkResize1080shorts");
 
                     if (job.IsTwitchOut)
                     {
@@ -9048,14 +9051,14 @@ namespace VideoGui
                     {
                         filesize = MSIZE;
                     }
-                    this.Dispatcher.Invoke(() =>
-                    {
-                        LineNum = 88;
-                        job.Fileinfo = $"[{videoinfo}][{filesize}M>]";
-                        //lstBoxJobs.MinHeight = MainWindowX.Height - 220.63;
-                        //lstBoxJobs.Height = lstBoxJobs.MinHeight;
-                        (job.VideoInfo, job.TotalSeconds, job.Progress) = (videoinfo, TotalSecs, 0); ;
-                    });
+                    Application.Current.Dispatcher.Invoke(() =>
+                     {
+                         LineNum = 88;
+                         job.Fileinfo = $"[{videoinfo}][{filesize}M>]";
+                         //lstBoxJobs.MinHeight = MainWindowX.Height - 220.63;
+                         //lstBoxJobs.Height = lstBoxJobs.MinHeight;
+                         (job.VideoInfo, job.TotalSeconds, job.Progress) = (videoinfo, TotalSecs, 0); ;
+                     });
                     LineNum = 89;
                     string SourceFileNoExt = Path.GetFileNameWithoutExtension(job.Title);
                     ThreadStartTimeSet?.Invoke(SourceFileNoExt, DateTime.Now);
@@ -9115,21 +9118,21 @@ namespace VideoGui
                         }
                         else MoveIfExists(SourceFile, ErrorDirectory + "\\" + Path.GetFileName(DestFile));
                         LineNum = 105;
-                        this.Dispatcher.Invoke(() =>
-                        {
-                            LineNum = 106;
-                            job.Fileinfo = "[" + videoinfo + "][ERROR]";// OK]";}
-                            stats_handle?.Invoke(1, Path.GetFileNameWithoutExtension(DestFile));
-                            LineNum = 107;
-                            ex.LogWrite($"Int RunConversion LineNum {LineNum}" + MethodBase.GetCurrentMethod().Name.ToString() + " 7 " + ex.Message);
-                            (job.InProcess, job.Processed, job.IsSkipped) = (false, true, true);
-                            failed++;
-                        });
+                        Application.Current.Dispatcher.Invoke(() =>
+                         {
+                             LineNum = 106;
+                             job.Fileinfo = "[" + videoinfo + "][ERROR]";// OK]";}
+                             stats_handle?.Invoke(1, Path.GetFileNameWithoutExtension(DestFile));
+                             LineNum = 107;
+                             ex.LogWrite($"Int RunConversion LineNum {LineNum}" + MethodBase.GetCurrentMethod().Name.ToString() + " 7 " + ex.Message);
+                             (job.InProcess, job.Processed, job.IsSkipped) = (false, true, true);
+                             failed++;
+                         });
                         ex.LogWrite(MethodBase.GetCurrentMethod().Name);
                     }
                     finally
                     {
-                        this.Dispatcher.Invoke(() => { currentjob++; });
+                        Application.Current.Dispatcher.Invoke(() => { currentjob++; });
                     }
                 }
                 else
@@ -9311,9 +9314,9 @@ namespace VideoGui
         {
             try
             {
-                if (!Dispatcher.CheckAccess())
+                if (!Application.Current.Dispatcher.CheckAccess())
                 {
-                    Dispatcher.Invoke(() => OnStart(sender, filename, processid));
+                    Application.Current.Dispatcher.Invoke(() => OnStart(sender, filename, processid));
                     return;
                 }
                 int ID = -1;
@@ -9584,11 +9587,13 @@ namespace VideoGui
                         }
 
 
-                        string fps = this.GetContent("lblFrames");
+                        string fps = lblFrames.Content.ToString();
+
+
                         string[] comps = {"lblBitrate","lblDuration", "lblEta", "lblFrames",
                                  "lblPercent", "lblSpeed", "lblTotalTime" ,"lblCurrentFrames"};
-                        this.ClearContents(comps);
-                        this.IncreaseProgressValue("Progressbar2");
+                        Grid1.ClearContents(comps);
+                        Grid1.IncreaseProgressValue("Progressbar2");
                         LinePos = 5;
                         if (!jo.IsTwitchActive)
                         {
@@ -9986,10 +9991,10 @@ namespace VideoGui
         {
             try
             {
-                if (!Dispatcher.CheckAccess())
+                if (!Application.Current.Dispatcher.CheckAccess())
                 {
                     int res = 0;
-                    Dispatcher.Invoke(() => res = TotalYears(start, end));
+                    Application.Current.Dispatcher.Invoke(() => res = TotalYears(start, end));
                     return res;
                 }
                 return (end.Year - start.Year - 1) +
@@ -10006,9 +10011,9 @@ namespace VideoGui
         {
             try
             {
-                if (!Dispatcher.CheckAccess())
+                if (!Application.Current.Dispatcher.CheckAccess())
                 {
-                    Dispatcher.Invoke(() => RunGrabUpdate(URL));
+                    Application.Current.Dispatcher.Invoke(() => RunGrabUpdate(URL));
                     return;
                 }
                 var progress = new ProgressMessageHandler();
@@ -10048,9 +10053,9 @@ namespace VideoGui
         {
             try
             {
-                if (!Dispatcher.CheckAccess())
+                if (!Application.Current.Dispatcher.CheckAccess())
                 {
-                    Dispatcher.Invoke(() => Progress_HttpReceiveProgressUpdate(sender, e));
+                    Application.Current.Dispatcher.Invoke(() => Progress_HttpReceiveProgressUpdate(sender, e));
                 }
                 if ((e.BytesTransferred == e.TotalBytes))
                 {
@@ -10186,50 +10191,50 @@ namespace VideoGui
             try
             {
                 string _currentfile = Path.GetFileNameWithoutExtension(filename);
-                this.Dispatcher.Invoke(() =>
-                {
-                    bool Is1440p = false;
-                    if (filename != "")
-                    {
-                        foreach (var job in ProcessingJobs.Where(job => !job.Complete && job.FileNoExt == _currentfile))
-                        {
-                            (job.Handle, job.InProcess, job.Processed) = (processid.ToString(), true, false);
-                            Is1440p = job.Is1440p && job.IsInterlaced;
-                        }
-                        ThreadStatsHandler?.Invoke(0, _currentfile);
-                    }
-                    if ((Data.ToString().Contains("bitrate")) && (Data.ToString().Contains("speed")))
-                    {
-                        string data = Data.ToString();
-                        string framecp = data.Substring(0, data.IndexOf("fps"));
-                        string currentframe = framecp.Substring(data.IndexOf("=")).Replace("=", "").Trim();
-                        string bitrate = data.Substring(data.IndexOf("bitrate"), 18);
-                        string Speed = data.Substring(data.IndexOf("speed"), 12);
-                        Speed = Speed.Replace("speed=", "").Trim();
-                        float Spd = Speed.Replace("x", "").ToFloat();
-                        string totalb = bitrate.Substring(bitrate.IndexOf("=") + 1).Trim();
-                        string framess = data.Substring(data.IndexOf("fps=") + 4, 6).Trim();
-                        framess = framess.Replace("-", "").Replace("q", "").Replace("=", "").Trim();
-                        totalb = totalb.Replace("kbit", string.Empty).Trim();
+                Application.Current.Dispatcher.Invoke(() =>
+                 {
+                     bool Is1440p = false;
+                     if (filename != "")
+                     {
+                         foreach (var job in ProcessingJobs.Where(job => !job.Complete && job.FileNoExt == _currentfile))
+                         {
+                             (job.Handle, job.InProcess, job.Processed) = (processid.ToString(), true, false);
+                             Is1440p = job.Is1440p && job.IsInterlaced;
+                         }
+                         ThreadStatsHandler?.Invoke(0, _currentfile);
+                     }
+                     if ((Data.ToString().Contains("bitrate")) && (Data.ToString().Contains("speed")))
+                     {
+                         string data = Data.ToString();
+                         string framecp = data.Substring(0, data.IndexOf("fps"));
+                         string currentframe = framecp.Substring(data.IndexOf("=")).Replace("=", "").Trim();
+                         string bitrate = data.Substring(data.IndexOf("bitrate"), 18);
+                         string Speed = data.Substring(data.IndexOf("speed"), 12);
+                         Speed = Speed.Replace("speed=", "").Trim();
+                         float Spd = Speed.Replace("x", "").ToFloat();
+                         string totalb = bitrate.Substring(bitrate.IndexOf("=") + 1).Trim();
+                         string framess = data.Substring(data.IndexOf("fps=") + 4, 6).Trim();
+                         framess = framess.Replace("-", "").Replace("q", "").Replace("=", "").Trim();
+                         totalb = totalb.Replace("kbit", string.Empty).Trim();
 
-                        double framecalc = 0;
-                        if (framess != "N/A")
-                        {
-                            framecalc = framess.ToDouble();
-                        }
-                        if (data != string.Empty)
-                        {
-                            ThreadUpdateSpeed?.Invoke(_currentfile, Spd, totalb.ToFloat(), Convert.ToInt32(Math.Floor(framecalc)), currentframe);
-                            int index2 = 1;
-                            foreach (JobListDetails jobb in ProcessingJobs)
-                            {
-                                if (jobb.FileNoExt == _currentfile) break;
-                                index2++;
-                            }
-                            fileprogress = $"[{index2}/{ProcessingJobs.Count}] " + _currentfile + " " + Progressbar1.Value.ToString() + " %";
-                        }
-                    }
-                });
+                         double framecalc = 0;
+                         if (framess != "N/A")
+                         {
+                             framecalc = framess.ToDouble();
+                         }
+                         if (data != string.Empty)
+                         {
+                             ThreadUpdateSpeed?.Invoke(_currentfile, Spd, totalb.ToFloat(), Convert.ToInt32(Math.Floor(framecalc)), currentframe);
+                             int index2 = 1;
+                             foreach (JobListDetails jobb in ProcessingJobs)
+                             {
+                                 if (jobb.FileNoExt == _currentfile) break;
+                                 index2++;
+                             }
+                             fileprogress = $"[{index2}/{ProcessingJobs.Count}] " + _currentfile + " " + Progressbar1.Value.ToString() + " %";
+                         }
+                     }
+                 });
             }
             catch (Exception ex)
             {
@@ -10512,9 +10517,9 @@ namespace VideoGui
         {
             try
             {
-                if (!Dispatcher.CheckAccess())
+                if (!Application.Current.Dispatcher.CheckAccess())
                 {
-                    Dispatcher.Invoke(() => Button_ClickAsync(sender, e));
+                    Application.Current.Dispatcher.Invoke(() => Button_ClickAsync(sender, e));
                     return;
                 }
 
@@ -10540,9 +10545,9 @@ namespace VideoGui
         {
             try
             {
-                if (!Dispatcher.CheckAccess())
+                if (!Application.Current.Dispatcher.CheckAccess())
                 {
-                    Dispatcher.Invoke(() => SelectFiles(SourceDirectory720p, SourceDirectory1440p, SourceDirectory4K, SourceDirectory4KAdobe));
+                    Application.Current.Dispatcher.Invoke(() => SelectFiles(SourceDirectory720p, SourceDirectory1440p, SourceDirectory4K, SourceDirectory4KAdobe));
                     return;
                 }
                 List<string> Source = new List<string>();
@@ -10592,9 +10597,9 @@ namespace VideoGui
         {
             try
             {
-                if (!Dispatcher.CheckAccess())
+                if (!Application.Current.Dispatcher.CheckAccess())
                 {
-                    Dispatcher.Invoke(() => Start());
+                    Application.Current.Dispatcher.Invoke(() => Start());
                     return;
                 }
                 Application.Current.Dispatcher.Invoke(() =>
@@ -10898,44 +10903,44 @@ namespace VideoGui
             byte[] encvar = EMP.RC4(_Password, EncKey);
             return encvar;
         }
-
         public async Task SetupHandlers()
         {
             try
             {
                 SystemSetup = true;
-                this.Dispatcher.Invoke(() =>
-                {
-                    lblSpeedStatus.SetLabelWidth();
-                    lblCurrentFrameStatus.SetLabelWidth();
-                    lblFramesStatus.SetLabelWidth();
-                    lblBitrateStatus.SetLabelWidth();
-                    lblTotalStatus.SetLabelWidth();
-                    lblSpeedStatus.SetLabelWidth();
-                    lblDurationStatus.SetLabelWidth();
-                    lblETAStatus.SetLabelWidth();
-                    lblAccelStatus.SetLabelWidth();
-                    lblPercentStatus.SetLabelWidth();
-                    lblTotalTimeStatus.SetLabelWidth();
-                    lblQueStatus.SetLabelWidth();
-                    lblPassFailStatus.SetLabelWidth();
-                    lblFrames.Width = this.MeasureString("lblFrames", "www");
-                    lblBitrate.Width = this.MeasureString("lblBitrate", "300 Kbit");
-                    lblSpeed.Width = this.MeasureString("lblSpeed", "16X");
-                    lblEta.Width = this.MeasureString("lblEta", "00:00");
-                    lblDuration.Width = this.MeasureString("lblDuration", "00:00");
-                    LblTotalTIMEAll.Width = this.MeasureString("LblTotalTIMEAll", "00:00");
-                    //ChkResize1440p.Click += new RoutedEventHandler(OnChkButton_Click);
-                    //ChkResize1080shorts.Click += new RoutedEventHandler(OnChkButton_Click);
-                    Title += " " + Assembly.GetExecutingAssembly().GetName().Version.ToString();
-                    X265Output.MouseLeave += new System.Windows.Input.MouseEventHandler(OnFocusChanged);
-                    Fisheye.MouseLeave += new System.Windows.Input.MouseEventHandler(OnFocusChanged);
-                    GPUEncode.MouseLeave += new System.Windows.Input.MouseEventHandler(OnFocusChanged);
-                    X265Output.MouseLeave += new System.Windows.Input.MouseEventHandler(OnFocusChanged);
+                Application.Current.Dispatcher.Invoke(() =>
+                 {
+                     lblSpeedStatus.SetLabelWidth();
+                     lblCurrentFrameStatus.SetLabelWidth();
+                     lblFramesStatus.SetLabelWidth();
+                     lblBitrateStatus.SetLabelWidth();
+                     lblTotalStatus.SetLabelWidth();
+                     lblSpeedStatus.SetLabelWidth();
+                     lblDurationStatus.SetLabelWidth();
+                     lblETAStatus.SetLabelWidth();
+                     lblAccelStatus.SetLabelWidth();
+                     lblPercentStatus.SetLabelWidth();
+                     lblTotalTimeStatus.SetLabelWidth();
+                     lblQueStatus.SetLabelWidth();
+                     lblPassFailStatus.SetLabelWidth();
+                     lblFrames.Width = Grid1.MeasureString("lblFrames", "www");
+                     lblBitrate.Width = Grid1.MeasureString("lblBitrate", "300 Kbit");
+                     lblSpeed.Width = Grid1.MeasureString("lblSpeed", "16X");
+                     lblEta.Width = Grid1.MeasureString("lblEta", "00:00");
+                     lblDuration.Width = Grid1.MeasureString("lblDuration", "00:00");
+                     LblTotalTIMEAll.Width = Grid1.MeasureString("LblTotalTIMEAll", "00:00");
+                     //ChkResize1440p.Click += new RoutedEventHandler(OnChkButton_Click);
+                     //ChkResize1080shorts.Click += new RoutedEventHandler(OnChkButton_Click);
+
+                     Title += " " + Assembly.GetExecutingAssembly().GetName().Version.ToString();
+                     X265Output.MouseLeave += new System.Windows.Input.MouseEventHandler(OnFocusChanged);
+                     Fisheye.MouseLeave += new System.Windows.Input.MouseEventHandler(OnFocusChanged);
+                     GPUEncode.MouseLeave += new System.Windows.Input.MouseEventHandler(OnFocusChanged);
+                     X265Output.MouseLeave += new System.Windows.Input.MouseEventHandler(OnFocusChanged);
 
 
-                    SystemSetup = false;
-                });
+                     SystemSetup = false;
+                 });
             }
             catch (Exception ex)
             {
@@ -11380,7 +11385,7 @@ namespace VideoGui
         {
             try
             {
-                Show();
+                MainWindowX.Show();
                 if (sender is SchedulingSelectEditor se)
                 {
                     se = null;
@@ -12450,19 +12455,44 @@ namespace VideoGui
 
         }
 
-        private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
+        private void MainWindowX_SizeChanged(object sender, SizeChangedEventArgs e)
         {
-            ResizeWindow();
-            var cts = new CancellationTokenSource();
-            for (int i = 0; i < 40; i++)
-            {
-                cts.CancelAfter(TimeSpan.FromMilliseconds(250));
-                while (!cts.IsCancellationRequested)
-                {
-                    Thread.Sleep(100);
-                }
-                ResizeWindow();
+            /* ResizeWindow();
+             var cts = new CancellationTokenSource();
+             for (int i = 0; i < 40; i++)
+             {
+                 cts.CancelAfter(TimeSpan.FromMilliseconds(250));
+                 while (!cts.IsCancellationRequested)
+                 {
+                     Thread.Sleep(100);
+                 }
+                 ResizeWindow();
 
+             }*/
+            try
+            {
+                if (IsLoaded)
+                {
+                    if (e.WidthChanged)
+                    {
+
+                        Grid1.Width = e.NewSize.Width;
+                        StatusTop.Width = e.NewSize.Width-10;
+                        StatusBottom.Width = e.NewSize.Width-10;
+                        brdlstbox.Width = e.NewSize.Width - 14;
+                        Progressbar1.Width = e.NewSize.Width - 127;
+                        Progressbar2.Width = Progressbar1.Width;
+                    }
+                    if (e.HeightChanged)
+                    {
+                        Grid1.Height = e.NewSize.Height;
+                        brdlstbox.Height = e.NewSize.Height - 243;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"Window_SizeChanged {ex.Message} {MethodBase.GetCurrentMethod().Name}");
             }
         }
 
@@ -12741,9 +12771,9 @@ namespace VideoGui
         {
             try
             {
-                if (!Dispatcher.CheckAccess())
+                if (!Application.Current.Dispatcher.CheckAccess())
                 {
-                    Dispatcher.Invoke(() => BtnErrorPath_Copy_Click(sender, e));
+                    Application.Current.Dispatcher.Invoke(() => BtnErrorPath_Copy_Click(sender, e));
                     return;
                 }
                 string AppPath = GetExePath(), searchdir = SelectMasterDir("Select Parser Directory", "SourceDirectory");
@@ -12777,9 +12807,9 @@ namespace VideoGui
         {
             try
             {
-                if (!Dispatcher.CheckAccess())
+                if (!Application.Current.Dispatcher.CheckAccess())
                 {
-                    Dispatcher.Invoke(() => Btnrescan_Click(sender, e));
+                    Application.Current.Dispatcher.Invoke(() => Btnrescan_Click(sender, e));
                     return;
                 }
                 RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
@@ -13062,9 +13092,9 @@ namespace VideoGui
         {
             try
             {
-                if (!Dispatcher.CheckAccess())
+                if (!Application.Current.Dispatcher.CheckAccess())
                 {
-                    Dispatcher.Invoke(() => MainWindowX_GotFocus(sender, e));
+                    Application.Current.Dispatcher.Invoke(() => MainWindowX_GotFocus(sender, e));
                     return;
                 }
                 RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
@@ -13107,9 +13137,9 @@ namespace VideoGui
         {
             try
             {
-                if (!Dispatcher.CheckAccess())
+                if (!Application.Current.   Dispatcher.CheckAccess())
                 {
-                    Dispatcher.Invoke(() => BtnViewLog_Click(sender, e));
+                    Application.Current.Dispatcher.Invoke(() => BtnViewLog_Click(sender, e));
                     return;
                 }
                 if (CurrentLogFile != "")
@@ -13154,7 +13184,7 @@ namespace VideoGui
         {
             try
             {
-                if (MainWindowX.IsLoaded)
+                /*if (MainWindowX.IsLoaded)
                 {
                     if ((lstBoxJobs.ActualWidth != double.NaN) && (Grid1.ActualWidth != double.NaN) &&
                         (MainWindowX.ActualWidth != double.NaN) && (MainWindowX.ActualWidth != 0) &&
@@ -13165,24 +13195,15 @@ namespace VideoGui
 
                         lstboxresize();
                     }
-                }
+                }*/
+
             }
             catch (Exception ex)
             {
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
             }
         }
-        private void MainWindowX_SizeChanged(object sender, SizeChangedEventArgs e)
-        {
-            try
-            {
-                ResizeWindow();
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
-            }
-        }
+        
         private void lstBoxJobs_DragOver(object sender, System.Windows.DragEventArgs e)
         {
             try
@@ -13232,34 +13253,7 @@ namespace VideoGui
             }
         }
 
-        public void lstboxresize()
-        {
-            try
-            {
-
-                if (MainWindowX.IsLoaded)
-                {
-                    if ((MainWindowX.Height != 0) && (MainWindowX.Width != 0) &&
-                        (MainWindowX.Height != double.NaN) && (MainWindowX.Width != double.NaN))
-                    {
-                        brdlstbox.Height = MainWindowX.Height - 218;
-                        brdlstbox.Width = MainWindowX.Width - 25;
-                        lstBoxJobs.MinWidth = brdlstbox.Width - 10;
-                        lstBoxJobs.Width = lstBoxJobs.MinWidth;
-                        Progressbar1.Width = lstBoxJobs.Width - 120;
-                        Progressbar2.Width = Progressbar1.Width;
-                        //  statusbar1.Width = MainWindowX.Width - 20;
-                        // statusbar2.Width = statusbar1.Width;
-
-
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
-            }
-        }
+        
         private void MainWindowX_Loaded(object sender, RoutedEventArgs e)
         {
             try
@@ -13268,7 +13262,7 @@ namespace VideoGui
 
                 IsRestart = args.Contains("SCHEDULER_RESTART");
 
-
+                guiTitle.Title += " " + Assembly.GetExecutingAssembly().GetName().Version.ToString();
 
 
                 if (IsRestart)
@@ -13279,7 +13273,7 @@ namespace VideoGui
                     RestartTimer.Interval = (int)new TimeSpan(0, 0, 1).TotalMilliseconds;
                     RestartTimer.Start();
                 }
-                lstboxresize();
+                
 
                 Application.Current.Dispatcher.Invoke(() =>
                 {
@@ -13288,6 +13282,10 @@ namespace VideoGui
                     FileQueChecker.Stop();
                     FileQueChecker.Start();
                 });
+                Width--;
+                Height--;
+                Width++;
+                Height++;
             }
             catch (Exception ex)
             {
@@ -13298,12 +13296,12 @@ namespace VideoGui
         {
             try
             {
-                if (!Dispatcher.CheckAccess())
+                if (!Application.Current.Dispatcher.CheckAccess())
                 {
-                    Dispatcher.Invoke(() => ScanSource_Click(sender, e));
+                    Application.Current.Dispatcher.Invoke(() => ScanSource_Click(sender, e));
                     return;
                 }
-                Dispatcher.Invoke(() =>
+                Application.Current.Dispatcher.Invoke(() =>
                 {
                     FileQueChecker.Interval = (int)new TimeSpan(0, 0, 15).TotalMilliseconds;
                     FileQueChecker.Enabled = true;
@@ -13323,9 +13321,9 @@ namespace VideoGui
         {
             try
             {
-                if (!Dispatcher.CheckAccess())
+                if (!Application.Current.Dispatcher.CheckAccess())
                 {
-                    Dispatcher.Invoke(() => OpenLogFile_Click(sender, e));
+                    Application.Current.Dispatcher.Invoke(() => OpenLogFile_Click(sender, e));
                     return;
                 }
                 if (CurrentLogFile != "")
@@ -13344,9 +13342,9 @@ namespace VideoGui
         {
             try
             {
-                if (!Dispatcher.CheckAccess())
+                if (!Application.Current.Dispatcher.CheckAccess())
                 {
-                    Dispatcher.Invoke(() => DeleteFile_Click(sender, e));
+                    Application.Current.Dispatcher.Invoke(() => DeleteFile_Click(sender, e));
                     return;
                 }
                 if (lstBoxJobs.SelectedIndex != -1)

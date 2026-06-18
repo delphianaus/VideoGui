@@ -375,6 +375,7 @@ namespace VideoGui
                 ex.LogWrite($"ToInt(string) {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
             }
         }
+
         public static double MeasureString(this FrameworkElement frameworkelement, string labelname, string content = "")
         {
             try

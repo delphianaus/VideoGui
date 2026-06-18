@@ -5,7 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:VideoGui" Loaded="Window_Loaded" 
         xmlns:MSU="clr-namespace:CustomComponents.ListBoxExtensions;assembly=CustomComponents"
-        mc:Ignorable="d" WindowStartupLocation="CenterScreen" WindowStyle="ToolWindow" 
+        mc:Ignorable="d" 
+        WindowStartupLocation="CenterScreen" WindowStyle="ToolWindow" 
         Title="Audio Joiner" Height="362" Width="729" SizeChanged="Window_SizeChanged" >
     <Grid>
         <Canvas VerticalAlignment="Top">
