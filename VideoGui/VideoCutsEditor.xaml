@@ -11,27 +11,32 @@
         WindowStartupLocation="CenterScreen" WindowStyle="ToolWindow" 
         Title="Video Cuts Editor" Height="609" Width="721" SizeChanged="frmVideoCutsEditor_SizeChanged">
     <ui:FluentWindow.Resources>
-        <BitmapImage x:Key="FILESOURCE" UriSource="icons/FileSource.png"/>
-        <BitmapImage x:Key="DIRECTORYSOURCE" UriSource="icons/DirectorySource.png"/>
-        <Style x:Key="ToggleButtonSourceStyle" TargetType="{x:Type ToggleButton}">
-            <Setter Property="MinHeight" Value="20"/>
-            <Setter Property="MinWidth" Value="40"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="{x:Type ToggleButton}">
-                        <Image x:Name="PART_Image"  />
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsChecked" Value="true">
-                                <Setter TargetName="PART_Image" Property="Source" Value="{StaticResource DIRECTORYSOURCE}"/>
-                            </Trigger>
-                            <Trigger Property="IsChecked" Value="False">
-                                <Setter TargetName="PART_Image" Property="Source" Value="{StaticResource FILESOURCE}"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Themes/FluentWindowControls.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+            <BitmapImage x:Key="FILESOURCE" UriSource="icons/FileSource.png"/>
+            <BitmapImage x:Key="DIRECTORYSOURCE" UriSource="icons/DirectorySource.png"/>
+            <Style x:Key="ToggleButtonSourceStyle" TargetType="{x:Type ToggleButton}">
+                <Setter Property="MinHeight" Value="20"/>
+                <Setter Property="MinWidth" Value="40"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type ToggleButton}">
+                            <Image x:Name="PART_Image"  />
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsChecked" Value="true">
+                                    <Setter TargetName="PART_Image" Property="Source" Value="{StaticResource DIRECTORYSOURCE}"/>
+                                </Trigger>
+                                <Trigger Property="IsChecked" Value="False">
+                                    <Setter TargetName="PART_Image" Property="Source" Value="{StaticResource FILESOURCE}"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+        </ResourceDictionary>
     </ui:FluentWindow.Resources>
     <Grid Margin="0,0,0,0" >
         <Grid.RowDefinitions>

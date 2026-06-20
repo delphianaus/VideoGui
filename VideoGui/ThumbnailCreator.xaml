@@ -10,6 +10,13 @@
         WindowStyle="ToolWindow" 
         Title="Thumbnail Creator" Height="645" 
         HorizontalAlignment="Right" Width="970">
+    <ui:FluentWindow.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Themes/FluentWindowControls.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </ui:FluentWindow.Resources>
     <Grid >
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>

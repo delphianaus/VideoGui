@@ -10,6 +10,13 @@
         mc:Ignorable="d" Loaded="ConfigSettingsWindow_Loaded" SizeToContent="Manual" WindowStyle="ToolWindow" 
         WindowStartupLocation="CenterScreen" ScrollViewer.VerticalScrollBarVisibility="Disabled"
         Title="User Configuration Settings" Height="720" Width="784">
+    <ui:FluentWindow.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Themes/FluentWindowControls.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </ui:FluentWindow.Resources>
     <Grid Margin="0,0,0,0">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>

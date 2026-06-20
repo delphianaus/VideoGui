@@ -10,6 +10,13 @@
         WindowStyle="ToolWindow"  ResizeMode="CanResizeWithGrip"
         mc:Ignorable="d" Loaded="Window_Loaded" WindowStartupLocation="CenterScreen"  
         Title="Directory Title/Desc Editor" Height="450" Width="805">
+    <ui:FluentWindow.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Themes/FluentWindowControls.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </ui:FluentWindow.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>

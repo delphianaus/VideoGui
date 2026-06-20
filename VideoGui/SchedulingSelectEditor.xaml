@@ -12,6 +12,13 @@
         SizeChanged="Window_SizeChanged" Loaded="Window_Loaded"
         WindowStartupLocation="CenterScreen" WindowStyle="ToolWindow" 
         Title="Scheduling Items Editor" Height="407" Width="767">
+    <ui:FluentWindow.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Themes/FluentWindowControls.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </ui:FluentWindow.Resources>
     <Grid HorizontalAlignment="Left" VerticalAlignment="Top" Width="763" Height="389">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>

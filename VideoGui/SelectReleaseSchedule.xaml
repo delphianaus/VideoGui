@@ -6,10 +6,17 @@
         ExtendsContentIntoTitleBar="True" WindowBackdropType="Mica"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:VideoGui" 
-        Loaded="Window_Loaded"
+        Loaded="Window_Loaded" Background="Gray"
         mc:Ignorable="d" ResizeMode="CanResizeWithGrip" WindowStartupLocation="CenterScreen"  
         WindowStyle="ToolWindow" Title="Select Release Schedule" 
-        Height="344" Width="902">
+        Height="333" Width="902">
+    <ui:FluentWindow.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Themes/FluentWindowControls.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </ui:FluentWindow.Resources>
     <Grid Width="901" Height="322" HorizontalAlignment="Left" VerticalAlignment="Top">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>

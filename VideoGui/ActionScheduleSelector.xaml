@@ -9,6 +9,13 @@
         mc:Ignorable="d" Loaded="Window_Loaded" ResizeMode="CanResizeWithGrip" 
         WindowStartupLocation="CenterScreen" SizeChanged="Window_SizeChanged"
         Title="Action Schedule Selector" Height="450" Width="800" Icon="/Icons/computer.ico">
+    <ui:FluentWindow.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Themes/FluentWindowControls.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </ui:FluentWindow.Resources>
     <Grid Margin="2,2,2,2">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>

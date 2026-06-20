@@ -29,8 +29,12 @@
                         <GradientStop Color="#FF69321C" Offset="0.7"/>
                     </LinearGradientBrush>
                 </Grid.Background>
-                <Label Name="lblYouTubeHelper" Content="VideoGui" FontSize="20" FontStyle="Italic" Margin="10,5,0,0" FontFamily="Maiandra GD" FontWeight="SemiBold"  HorizontalAlignment="Left" Padding="-2,5,0,5" VerticalContentAlignment="Center" Height="24" Width="552" HorizontalContentAlignment="Center" VerticalAlignment="Top" Foreground="#FFFF0F0F" />
-                <Label Name="lblStatus" Content="Status : Initializing Application" FontSize="14" FontStyle="Italic" Margin="10,28,0,0" FontFamily="Maiandra GD" FontWeight="SemiBold" Foreground="Wheat" HorizontalAlignment="Left" Padding="-2,0,5,0" Height="28" VerticalContentAlignment="Center" Width="552" HorizontalContentAlignment="Center" VerticalAlignment="Top"/>
+                <Label Name="lblYouTubeHelper" Content="VideoGui" FontSize="20" 
+                   FontStyle="Italic" Margin="10,5,0,0" FontFamily="Maiandra GD" 
+                   FontWeight="SemiBold"  HorizontalAlignment="Left" Padding="-2,5,0,5" VerticalContentAlignment="Center" Height="24" Width="552" HorizontalContentAlignment="Center" VerticalAlignment="Top" Foreground="#FFFF0F0F" />
+                <Label Name="lblStatus" Content="Status : Initializing Application" 
+                  FontSize="14" FontStyle="Italic" Margin="10,28,0,0" 
+                  FontFamily="Maiandra GD" FontWeight="SemiBold" Foreground="Wheat" HorizontalAlignment="Left" Padding="-2,0,5,0" Height="28" VerticalContentAlignment="Center" Width="552" HorizontalContentAlignment="Center" VerticalAlignment="Top"/>
             </Grid>
         </Border>
     </Border>

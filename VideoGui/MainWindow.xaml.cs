@@ -11407,7 +11407,7 @@ namespace VideoGui
             }
             catch (Exception ex)
             {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+                ex.LogWrite(MethodBase.GetCurrentMethod().Name);    
             }
         }
 

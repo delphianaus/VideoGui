@@ -4,13 +4,24 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:VideoGui" Loaded="Window_Loaded" Name="frmShortsCreator"
-        mc:Ignorable="d" 
+        mc:Ignorable="d" Background="Gray" Title="Shorts Creator" 
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
         ExtendsContentIntoTitleBar="True" WindowBackdropType="Mica"
-        ResizeMode="CanResizeWithGrip" WindowStartupLocation="CenterScreen"  
-        WindowStyle="ToolWindow" Title="Shorts Creator" 
-        Width="671" Height="159">
-    <Grid>
+        
+
+        WindowStartupLocation="CenterScreen"
+        SizeToContent="Manual" WindowStyle="ToolWindow" 
+
+  
+        Width="671" Height="199" MinHeight="190" MaxHeight="190">
+    <ui:FluentWindow.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Themes/FluentWindowControls.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </ui:FluentWindow.Resources>
+    <Grid Height="180" VerticalAlignment="Top" Width="661" Margin="5,0,5,0">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -21,9 +32,9 @@
                 <ui:ImageIcon Source="/Icons/computer.ico" />
             </ui:TitleBar.Icon>
         </ui:TitleBar>
-        <Grid Grid.Row="1">
-            <Border x:Name="brdFileInfo" BorderThickness="2" BorderBrush="Black" Height="78" Margin="4,4,5,50" MinHeight="84" VerticalAlignment="Top">
-                <Canvas x:Name="CnvMedialElements" Margin="1,2,1,2">
+        <Grid Grid.Row="1" Margin="0,0,0,-1" HorizontalAlignment="Left" VerticalAlignment="Top" Height="147">
+            <GroupBox x:Name="brdFileInfo" BorderThickness="1" BorderBrush="White" Margin="0,4,0,44" MinHeight="84" Header="Shorts Creator" Width="662" HorizontalAlignment="Center">
+                <Canvas x:Name="CnvMedialElements">
                     <Label Content="Source File" HorizontalAlignment="Center" VerticalAlignment="Top" Height="26" Canvas.Left="9" Canvas.Top="10"/>
                     <TextBox x:Name="txtsrcdir" HorizontalAlignment="Center" TextWrapping="Wrap" VerticalAlignment="Top" Width="422" Canvas.Left="84" Canvas.Top="15"/>
                     <Button x:Name="btnSelectSourceDir" HorizontalAlignment="Center" VerticalAlignment="Center" Width="20" Height="20" Canvas.Left="617" Canvas.Top="13" Click="btnSelectSourceDir_Click" RenderTransformOrigin="-13.634,1.02" />
@@ -36,8 +47,8 @@
                     <Label x:Name="lblPercent" Content="0" Height="26" Canvas.Left="358" Canvas.Top="40" HorizontalAlignment="Left" VerticalAlignment="Center" Width="33"/>
                     <CheckBox x:Name="chkFormat" Content="Long/Short FMT" Canvas.Left="511" Canvas.Top="15" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Canvas>
-            </Border>
-            <Button x:Name="btnClose" Height="35" Width="123" Content="Close" Margin="0,97,8,0" HorizontalAlignment="Right" VerticalAlignment="Top" Click="btnClose_Click"/>
+            </GroupBox>
+            <Button x:Name="btnClose" Height="35" Width="123" Content="Close" Margin="0,0,10,-4" HorizontalAlignment="Right" VerticalAlignment="Bottom" Click="btnClose_Click"/>
         </Grid>
     </Grid>
 </ui:FluentWindow>

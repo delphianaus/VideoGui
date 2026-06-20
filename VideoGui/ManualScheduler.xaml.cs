@@ -151,7 +151,7 @@ namespace VideoGui
                 }
                 if (IsLoaded && e.HeightChanged)
                 {
-                    grpScheduleDates.Height = e.NewSize.Height - 10;
+                    grpScheduleDates.Height = e.NewSize.Height - 90;
                     cnvmain.Height = e.NewSize.Height - 21;
                 }
             }

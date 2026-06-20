@@ -13,6 +13,13 @@
         Title="YouTube Uploader Module" Height="450" Width="800" Loaded="Window_Loaded" 
         SizeChanged="Window_SizeChanged" KeyDown="mainwindow_KeyDown" 
         Icon="/Icons/computer.ico" ShowInTaskbar="False">
+    <ui:FluentWindow.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Themes/FluentWindowControls.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </ui:FluentWindow.Resources>
     <Grid UseLayoutRounding="True" x:Name="gridmain">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>

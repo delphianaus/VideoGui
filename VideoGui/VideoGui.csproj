@@ -91,6 +91,7 @@
 
   <ItemGroup>
     <Page Remove="complexvideos.xaml" />
+    <Page Remove="Themes\FluentWindowControls.xaml" />
   </ItemGroup>
 
   <ItemGroup>
@@ -207,6 +208,10 @@
     </Resource>
 
     <Resource Include="Icons\Yes.png" />
+
+    <Resource Include="Themes\FluentWindowControls.xaml">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
 
   <ItemGroup>
