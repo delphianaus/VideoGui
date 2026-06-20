@@ -23,13 +23,14 @@ using System.Windows.Shapes;
 using VideoGui.Models;
 using VideoGui.Models.delegates;
 using Path = System.IO.Path;
+using Wpf.Ui.Controls;
 
 namespace VideoGui
 {
     /// <summary>
     /// Interaction logic for SelectShortUpload.xaml
     /// </summary>
-    public partial class SelectShortUpload : Window
+    public partial class SelectShortUpload : FluentWindow
     {
         databasehook<object> Invoker = null;
         public bool IsClosing = false, IsClosed = false;

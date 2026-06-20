@@ -15,13 +15,14 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using VideoGui.Models;
 using VideoGui.Models.delegates;
+using Wpf.Ui.Controls;
 
 namespace VideoGui
 {
     /// <summary>
     /// Interaction logic for ActionScheduleSelector.xaml
     /// </summary>
-    public partial class ActionScheduleSelector : Window
+    public partial class ActionScheduleSelector : FluentWindow
     {
         databasehook<Object> Invoker = null;
         public bool IsClosed = false, IsClosing = false;

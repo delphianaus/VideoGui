@@ -29,13 +29,14 @@ using VideoGui.Models;
 using VideoGui.Models.delegates;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using Path = System.IO.Path;
+using Wpf.Ui.Controls;
 
 namespace VideoGui
 {
     /// <summary>
     /// Interaction logic for AudioJoiner.xaml
     /// </summary>
-    public partial class AudioJoiner : Window
+    public partial class AudioJoiner : FluentWindow
     {
         int MaxFile = 0;
         private object thisLockduration = new object();

@@ -33,13 +33,17 @@ using static Microsoft.WindowsAPICodePack.Shell.PropertySystem.SystemProperties.
 using HorizontalAlignment = System.Windows.HorizontalAlignment;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 using Path = System.IO.Path;
+using Wpf.Ui.Controls;
+using MenuItem = Wpf.Ui.Controls.MenuItem;
+using TextBlock = Wpf.Ui.Controls.TextBlock;
+using System.Security.Cryptography.Xml;
 
 namespace VideoGui
 {
     /// <summary>
     /// Interaction logic for MultiShortsUploader.xaml
     /// </summary>
-    public partial class MultiShortsUploader : Window
+    public partial class MultiShortsUploader : FluentWindow
     {
         databasehook<object> Invoker = null;
         public TitleSelectFrm DoTitleSelectFrm = null;
@@ -281,22 +285,25 @@ namespace VideoGui
                     MainScroller.Height = _height;
                     MainContent.Height = _height;
                     ResizeMultilistBoxes(msuShorts.Height);
-                    Canvas.SetTop(BtnClose, _height - 78);
-                    Canvas.SetTop(tbAutoUpload, _height - 82);
-                    Canvas.SetTop(BtnRunUploaders, _height - 78);
-                    Canvas.SetTop(btnSchdule, _height - 78);
 
-                    Canvas.SetTop(BtnScrapeDrafts, _height - 78);
-                    Canvas.SetTop(btnSchduleScraper, _height - 78);
+                    int _top = 74;
+                    Canvas.SetTop(BtnClose, _height - _top);
+                    Canvas.SetTop(tbAutoUpload, _height - (_top+4));
+                    Canvas.SetTop(BtnRunUploaders, _height - _top);
+                    Canvas.SetTop(btnSchdule, _height - _top);
+
+                    Canvas.SetTop(BtnScrapeDrafts, _height - _top);
+                    Canvas.SetTop(btnschedulescraper, _height - _top);
 
 
-                    Canvas.SetTop(tbDebug, _height - 82);
-                    double r = 4.2;
-                    Canvas.SetTop(txtTotalUploads, _height - 64.5 - r);
-                    Canvas.SetTop(txtMaxUpload, _height - 64.5 - r);
-                    Canvas.SetTop(lblupload, _height - 67.5 - r);
-                    Canvas.SetTop(lblmax, _height - 67.5 - r);
-                    Canvas.SetTop(lblUploaded, _height - 70.5 - r);// Height - 386 = 420- 386 = 34
+                    Canvas.SetTop(tbDebug, _height - (_top + 4));
+                    double r = -8;
+
+                    Canvas.SetTop(txtTotalUploads, _height - _top - r);
+                    Canvas.SetTop(txtMaxUpload, _height - _top - r);
+                    Canvas.SetTop(lblupload, _height - _top - r);
+                    Canvas.SetTop(lblmax, _height - _top - r);
+                    Canvas.SetTop(lblUploaded, _height - _top - r);// Height - 386 = 420- 386 = 34
 
 
                 }
@@ -1412,6 +1419,25 @@ namespace VideoGui
             catch (Exception ex)
             {
                 ex.LogWrite($"Priority_SortChange {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
+            }
+        }
+
+        private void btnschedulescraper_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                NewTarget = true;
+                WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
+                string TargetUrl = webAddressBuilder.AddFilterByDraftShorts().GetHTML();
+                string gUrl = webAddressBuilder.Dashboard().Address;
+                var __scraperModule = new ScraperModule(Invoker, FinishScraperTargets, gUrl, TargetUrl);
+                Hide();
+                __scraperModule.ShowActivated = true;
+                __scraperModule.Show();
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"btnSchduleScraper_Click {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
         }
 

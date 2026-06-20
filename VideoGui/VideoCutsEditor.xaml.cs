@@ -33,13 +33,14 @@ using static VideoGui.ffmpeg.Probe.FormatModel;
 using FolderBrowserDialog = FolderBrowserEx.FolderBrowserDialog;
 using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
 using Path = System.IO.Path;
+using Wpf.Ui.Controls;
 
 namespace VideoGui
 {
     /// <summary>
     /// Interaction logic for VideoCutsEditor.xaml
     /// </summary>
-    public partial class VideoCutsEditor : Window
+    public partial class VideoCutsEditor : FluentWindow
     {
 
         string Filename = "", XML_Filename = "", XML_Dest = "";

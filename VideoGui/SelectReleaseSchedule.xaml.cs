@@ -15,13 +15,14 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using VideoGui.Models;
 using VideoGui.Models.delegates;
+using Wpf.Ui.Controls;
 
 namespace VideoGui
 {
     /// <summary>
     /// Interaction logic for SelectReleaseSchedule.xaml
     /// </summary>
-    public partial class SelectReleaseSchedule : Window
+    public partial class SelectReleaseSchedule : FluentWindow
     {
         public bool IsApplied = false, IsClosing = false, IsClosed = false;
         databasehook<object> Invoker = null;

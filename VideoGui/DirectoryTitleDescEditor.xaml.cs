@@ -20,13 +20,14 @@ using System.Windows.Shapes;
 using System.Windows.Threading;
 using VideoGui.Models;
 using VideoGui.Models.delegates;
+using Wpf.Ui.Controls;
 
 namespace VideoGui
 {
     /// <summary>
     /// Interaction logic for DirectoryTitleDescEditor.xaml
     /// </summary>
-    public partial class DirectoryTitleDescEditor : Window
+    public partial class DirectoryTitleDescEditor : FluentWindow
     {
         databasehook<object> Invoker = null;
         public bool IsClosing = false, IsClosed = false;

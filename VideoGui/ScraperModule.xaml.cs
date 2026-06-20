@@ -1,4 +1,4 @@
-using CliWrap;
+    using CliWrap;
 using CliWrap.EventStream;
 using FirebirdSql.Data.FirebirdClient;
 using FirebirdSql.Data.Isql;
@@ -83,6 +83,7 @@ using String = System.String;
 using Task = System.Threading.Tasks.Task;
 using WebView2 = Microsoft.Web.WebView2.Wpf.WebView2;
 using Window = System.Windows.Window;
+using Wpf.Ui.Controls;
 
 namespace VideoGui
 {
@@ -103,7 +104,7 @@ namespace VideoGui
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class ScraperModule : Window
+    public partial class ScraperModule : FluentWindow
     {
         object lockobj = new object();
         CancellationTokenSource canceltoken = new CancellationTokenSource();

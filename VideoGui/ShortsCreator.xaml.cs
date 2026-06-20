@@ -27,13 +27,14 @@ using VideoGui.Models.delegates;
 using static System.Net.WebRequestMethods;
 using File = System.IO.File;
 using Path = System.IO.Path;
+using Wpf.Ui.Controls;
 
 namespace VideoGui
 {
     /// <summary>
     /// Interaction logic for ShortsCreator.xaml
     /// </summary>
-    public partial class ShortsCreator : Window
+    public partial class ShortsCreator : FluentWindow
     {
         string shortsfile = "", mondir = "";
         int max = 0;

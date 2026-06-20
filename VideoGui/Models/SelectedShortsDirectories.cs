@@ -13,6 +13,7 @@ using System.Windows;
 using System.Windows.Media;
 using Windows.Devices.PointOfService.Provider;
 using Windows.Security.Isolation;
+using Wpf.Ui.Appearance;
 
 
 
@@ -24,9 +25,10 @@ namespace VideoGui.Models
             _TitleId = -1, _DescId = -1;
         private string _DirectoryName = "", _LinkedDescId = "", _LinkedTitleId = "";
         private DateTime _LastUploadedDate = DateTime.Now.Date.AddYears(-100);
-        private bool _IsActive = false;
+            private bool _IsActive = false;
         private FontWeight _FontWeight = FontWeights.Normal;
-        private SolidColorBrush _Color = new SolidColorBrush(Colors.Black);
+        public static bool IsDarkMode =>  ApplicationThemeManager.GetAppTheme() == ApplicationTheme.Dark;
+        private SolidColorBrush _Color = new SolidColorBrush(IsDarkMode ? Colors.White : Colors.Black );
 
         public bool IsActive
         {
@@ -68,8 +70,17 @@ namespace VideoGui.Models
                 }
                 else if (value != null)
                 {
-                    _Color = (IsActive) ? new SolidColorBrush((value as SolidColorBrush)?.Color ?? Colors.Red) :
-                        new SolidColorBrush((value as SolidColorBrush)?.Color ?? Colors.Black);
+                    if (IsDarkMode)
+                    {
+                        _Color = (IsActive) ? new SolidColorBrush((value as SolidColorBrush)?.Color ?? Colors.Red) :
+                            new SolidColorBrush((value as SolidColorBrush)?.Color ?? Colors.White);
+                    }
+                    else
+                    {
+                        _Color = (IsActive) ? new SolidColorBrush((value as SolidColorBrush)?.Color ?? Colors.Red) :
+                           new SolidColorBrush((value as SolidColorBrush)?.Color ?? Colors.Black);
+
+                    }
                 }
                 OnPropertyChanged();
             }
@@ -152,14 +163,15 @@ namespace VideoGui.Models
                 ex.LogWrite($"GetLinkedTitle {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-
+      
         public void SetActive(bool value)
         {
             try
             {
+                var isarkMode = ApplicationThemeManager.GetAppTheme();
                 AutoFontWeight = value ? FontWeights.Bold : FontWeights.Normal;  // Reversed this line
                 AutoFontColor = value ? new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.Red) :
-                    new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.Black);
+                   new System.Windows.Media.SolidColorBrush(IsDarkMode ? System.Windows.Media.Colors.White: System.Windows.Media.Colors.Black);
                 OnPropertyChanged();
             }
             catch (Exception ex)

@@ -1,4 +1,4 @@
-﻿using AsyncAwaitBestPractices;
+﻿    using AsyncAwaitBestPractices;
 using FolderBrowserEx;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Win32;
@@ -30,7 +30,8 @@ using VideoGui.Models;
 using VideoGui.Models.delegates;
 using FolderBrowserDialog = FolderBrowserEx.FolderBrowserDialog;
 using Path = System.IO.Path;
-
+using Wpf.Ui.Controls;
+using MenuItem = Wpf.Ui.Controls.MenuItem;
 
 namespace VideoGui
 {
@@ -39,7 +40,7 @@ namespace VideoGui
     /// </summary>
     /// 
 
-    public partial class MediaImporter : Window
+    public partial class MediaImporter : FluentWindow
     {
         List<(string, TimeSpan, string, string)> MediaInfoTimes = new List<(string, TimeSpan, string, string)>();
         List<(TimeSpan, string, string)> MediaInfoTimesSort = new List<(TimeSpan, string, string)>();

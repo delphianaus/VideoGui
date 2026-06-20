@@ -15,6 +15,7 @@
 
   <ItemGroup>
     <PackageReference Include="DotNetProjects.Extended.Wpf.Toolkit" Version="5.0.124" />
+    <PackageReference Include="WPF-UI" Version="4.3.0" />
 	<ProjectReference Include="..\ToggleClass\ToggleClass.csproj" />
 
 

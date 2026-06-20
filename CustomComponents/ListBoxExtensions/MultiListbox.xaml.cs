@@ -28,6 +28,12 @@ using static CustomComponents.delegates;
 using static CustomComponents.Extensions;
 using static System.Net.Mime.MediaTypeNames;
 using Image = System.Windows.Controls.Image;
+using Wpf.Ui.Controls;
+using TimePicker = Wpf.Ui.Controls.TimePicker;
+using TextBox = Wpf.Ui.Controls.TextBox;
+using PasswordBox = Wpf.Ui.Controls.PasswordBox;
+using TextBlock = Wpf.Ui.Controls.TextBlock;
+using Button = Wpf.Ui.Controls.Button;
 
 
 namespace CustomComponents.ListBoxExtensions
@@ -100,6 +106,46 @@ namespace CustomComponents.ListBoxExtensions
                 new PropertyMetadata(HorizontalAlignment.Left));
 
 
+        public Brush AutoBackground
+        {
+            get => (Brush)GetValue(AutoBackgroundProperty);
+            set => SetValue(AutoBackgroundProperty, value);
+        }
+
+        public static readonly DependencyProperty AutoBackgroundProperty =
+            DependencyProperty.Register(
+                nameof(AutoBackground),
+                typeof(Brush),
+                typeof(MultiListbox),
+                new PropertyMetadata(Brushes.White));
+
+        public bool IsDarkMode
+        {
+            get => (bool)GetValue(IsDarkModeProperty);
+            set => SetValue(IsDarkModeProperty, value);
+        }
+
+        public static readonly DependencyProperty IsDarkModeProperty =
+            DependencyProperty.Register(
+                nameof(IsDarkMode),
+                typeof(bool),
+                typeof(MultiListbox),
+                new PropertyMetadata(false, OnIsDarkModeChanged));
+
+        private static void OnIsDarkModeChanged(
+            DependencyObject d,
+            DependencyPropertyChangedEventArgs e)
+        {
+            var control = (MultiListbox)d;
+            var dark = (bool)e.NewValue;
+
+            control.Resources["MultiListBoxBackground"] =
+                dark ? Brushes.Black : Brushes.White;
+
+            control.Resources["MultiListBoxForeground"] =
+                dark ? Brushes.White : Brushes.Black;
+            control.AutoBackground = dark ? Brushes.Black : Brushes.White;
+        }
 
         public static readonly DependencyProperty TemplatesProperty =
             DependencyProperty.Register(nameof(Templates),
@@ -1455,7 +1501,7 @@ namespace CustomComponents.ListBoxExtensions
                 var gridFactory = new FrameworkElementFactory(typeof(Grid));
                 gridFactory.SetValue(FrameworkElement.MarginProperty, new Thickness(0, 0, 0, 0));
 
-                gridFactory.SetValue(Panel.BackgroundProperty, Brushes.White);
+                gridFactory.SetValue(Panel.BackgroundProperty, IsDarkMode ? Brushes.Black : Brushes.White);
                 int x = 0;
                 // Store reference to the grid factory for later use
                 _itemGrid = new Grid(); // Temporary grid just for column definitions
@@ -2181,7 +2227,7 @@ namespace CustomComponents.ListBoxExtensions
                 var dp = (control == typeof(TextBox)) ? TextBox.TextProperty :
                          (control == typeof(Label)) ? Label.ContentProperty :
                          (control == typeof(DatePicker)) ? DatePicker.SelectedDateProperty :
-                         (control == typeof(TimePicker)) ? TimePicker.TextProperty :
+                         (control == typeof(TimePicker)) ? TimePicker.TimeProperty :
                           (control == typeof(ComboBox)) ? ComboBox.TagProperty :
                          (control == typeof(TextBlock)) ? TextBlock.TextProperty : null;
                 if (dp is null || string.IsNullOrEmpty(colDef.DataField)) return;
@@ -2425,7 +2471,7 @@ namespace CustomComponents.ListBoxExtensions
                 }
                 else if (control is TextBlock textBlock)
                 {
-                    
+
 
 
                     textBlock.TextAlignment = colDef.ItemTextAlignment;
@@ -2636,7 +2682,7 @@ namespace CustomComponents.ListBoxExtensions
                     case "passwordbox":
                         return PasswordBox.PasswordCharProperty;
                     case "timepicker":
-                        return TimePicker.ValueProperty;
+                        return TimePicker.TimeProperty;
                     case "datepicker":
                         return DatePicker.SelectedDateProperty;
                     case "datetimepicker":
@@ -2730,7 +2776,7 @@ namespace CustomComponents.ListBoxExtensions
                 _headerGrid.ColumnDefinitions.Clear();
                 _headerGrid.Children.Clear();
                 _itemGrid.ColumnDefinitions.Clear();
-                StyleHandler styleHandler = new StyleHandler();
+                StyleHandler styleHandler = new();
                 bool HasValidStyle = false;
                 foreach (var colDef in ColumnDefinitions)
                 {
@@ -2926,8 +2972,7 @@ namespace CustomComponents.ListBoxExtensions
                         SetHorizontalAlignmentBinding(controlType, factory, colDef);
                         factory.AddHandler(FrameworkElement.LoadedEvent, new RoutedEventHandler((s, e) =>
                         {
-                            var textBlock = s as TextBlock;
-                            if (textBlock != null)
+                            if (s is TextBlock textBlock)
                             {
                                 textBlock.HorizontalAlignment = colDef.ItemHorizontalAlignment;
                                 if (!string.IsNullOrEmpty(colDef.TextualFontSizeBinding))
@@ -2975,8 +3020,7 @@ namespace CustomComponents.ListBoxExtensions
                         }
                         factory.AddHandler(FrameworkElement.LoadedEvent, new RoutedEventHandler((s, e) =>
                         {
-                            var button = s as Button;
-                            if (button != null)
+                            if (s is Button button)
                             {
                                 button.Width = 50.0;
                             }

@@ -20,12 +20,12 @@ using System.Windows.Shapes;
 using static VideoGui.ffmpeg.Probe.FormatModel;
 using FolderBrowserDialog = FolderBrowserEx.FolderBrowserDialog;
 using Path = System.IO.Path;
-
+using Wpf.Ui.Controls;
 
 namespace VideoGui
 {
     /// </summary>
-    public partial class ConfigurationSettings : Window
+    public partial class ConfigurationSettings : FluentWindow
     {
         bool SettingsLoaded = false;
         public ConfigurationSettings()

@@ -25,6 +25,7 @@ using Brushes = System.Windows.Media.Brushes;
 using Color = System.Drawing.Color;
 using FolderBrowserDialog = FolderBrowserEx.FolderBrowserDialog;
 
+using Wpf.Ui.Controls;
 
 
 namespace VideoGui
@@ -32,7 +33,7 @@ namespace VideoGui
     /// <summary>
     /// Interaction logic for ThumbnailCreator.xaml
     /// </summary>
-    public partial class ThumbnailCreator : Window
+    public partial class ThumbnailCreator : FluentWindow
     {
         [DllImport("kernel32.dll", EntryPoint = "RtlMoveMemory", SetLastError = false)]
         public static extern void CopyMemory(IntPtr dest, IntPtr src, uint count);

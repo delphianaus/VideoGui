@@ -25,6 +25,14 @@ using static VideoGui.ffmpeg.Probe.FormatModel;
 using File = System.IO.File;
 using FolderBrowserDialog = FolderBrowserEx.FolderBrowserDialog;
 using Path = System.IO.Path;
+using Wpf.Ui.Controls;
+using System.Drawing.Drawing2D;
+using MenuItem = Wpf.Ui.Controls.MenuItem;
+using Button = Wpf.Ui.Controls.Button;
+using TextBox = Wpf.Ui.Controls.TextBox;
+using MessageBox = Wpf.Ui.Controls.MessageBox;
+
+
 
 namespace VideoGui
 {
@@ -34,7 +42,7 @@ namespace VideoGui
     /// 
 
 
-    public partial class ComplexSchedular : Window
+    public partial class ComplexSchedular : FluentWindow
     {
 
         string tstart = "", tduration = "", destinationdir = "", adobedir = "";
@@ -249,7 +257,7 @@ namespace VideoGui
                             List<string> timespans = time.Split("-").ToList();
                             TimeSpan Start = timespans.FirstOrDefault().FromStrToTimeSpan();
                             TimeSpan End = timespans.LastOrDefault().FromStrToTimeSpan() - Start;
-                            DoAddRecord?.Invoke(false,true, false, false, 0, true, false, false, false,
+                            DoAddRecord?.Invoke(false, true, false, false, 0, true, false, false, false,
                                  true, Start.ToFFmpeg(), End.ToFFmpeg(), txtsrcdir.Text,
                                  txtdestdir.Text + "\\" + txtFilename.Text + $" {RecNum++}");
                         }
@@ -258,7 +266,9 @@ namespace VideoGui
                 else
                 {
                     string Message = "Please Enter Source & Destination Data First";
-                    MessageBox.Show(Message);
+                    var msg = new MessageBox();
+                    msg.Title = Message;
+                    msg.ShowDialog();
                 }
             }
             catch (Exception ex)
@@ -320,18 +330,18 @@ namespace VideoGui
             {
                 if (IsLoaded && WidthChanged && Ready)
                 {
-                    msuComplexSchedules.Width = _w - 20;
-                    brdtimes.Width = _w - (925 - 369);
-                    brdFileInfo.Width = _w - 22;
-                    CnvTimes.Width = brdtimes.Width - 2;
+                    msuComplexSchedules.Width = _w - 18+12;
+                    brdtimes.Width = _w - (925 - 369)+2+12;
+                    brdFileInfo.Width = _w - 20 + 12;
+                    CnvTimes.Width = brdtimes.Width;
                     var srw = _w - 850;
                     var dsw = _w - 850;
                     SrcFileNameWidth = srw < 250 ? 250 : srw;
                     DestFileNameWidth = dsw < 250 ? 250 : dsw;
-                    Canvas.SetLeft(btnSelectSourceDir, _w - 63);
-                    Canvas.SetLeft(btnSelectDestDir, _w - 63);
-                    txtdestdir.Width = _w - 220;
-                    txtsrcdir.Width = _w - 220;
+                    Canvas.SetLeft(btnSelectSourceDir, _w - 38);
+                    Canvas.SetLeft(btnSelectDestDir, _w - 38);
+                    txtdestdir.Width = _w - 190;
+                    txtsrcdir.Width = _w - 190;
                     Canvas.SetLeft(tglflip, _w - 112);
                     Canvas.SetLeft(tbSource, _w - 682);
                     Canvas.SetLeft(btnInject, _w - 182);

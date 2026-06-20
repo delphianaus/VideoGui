@@ -14,13 +14,14 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using VideoGui.Models;
 using VideoGui.Models.delegates;
+using Wpf.Ui.Controls;
 
 namespace VideoGui
 {
     /// <summary>
     /// Interaction logic for SchedulingSelectEditor.xaml
     /// </summary>
-    public partial class SchedulingSelectEditor : Window
+    public partial class SchedulingSelectEditor : FluentWindow
     {
         databasehook<object> Invoker = null;
         public bool IsClosing = false, IsClosed = false;
