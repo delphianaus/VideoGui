@@ -12,8 +12,8 @@
     <StartupObject>VideoGui.App</StartupObject>
     <ApplicationIcon>Properties\computer.ico</ApplicationIcon>
     <Platforms>x64</Platforms>
-    <AssemblyVersion>1.0.0.450</AssemblyVersion>
-    <FileVersion>1.0.0.450</FileVersion>
+    <AssemblyVersion>1.0.0.451</AssemblyVersion>
+    <FileVersion>1.0.0.451</FileVersion>
     <Nullable>annotations</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <UseWindowsForms>True</UseWindowsForms>
@@ -98,7 +98,7 @@
     <PackageReference Include="AsyncAwaitBestPractices" Version="10.0.0" />
     <PackageReference Include="CliWrap" Version="3.10.2" />
     <PackageReference Include="Coravel" Version="6.0.2" />
-    <PackageReference Include="DotNetProjects.Extended.Wpf.Toolkit" Version="5.0.129" />
+    <PackageReference Include="Extended.Wpf.Toolkit" Version="5.1.2" />
     <PackageReference Include="FirebirdSql.Data.FirebirdClient" Version="10.3.4" />
     <PackageReference Include="FolderBrowserEx" Version="1.0.1" />
     <PackageReference Include="Google.Apis" Version="1.75.0" />
@@ -121,9 +121,12 @@
     <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
     <PackageReference Include="WindowsAPICodePackShellExtensions" Version="8.0.15.2" />
     <PackageReference Include="WPF-UI" Version="4.3.0" />
+    <PackageReference Include="Xceed.Products.Wpf.Toolkit.Base.Themes" Version="5.2.26322.8434" />
+    <PackageReference Include="Xceed.Products.Wpf.Toolkit.ListBox.Themes" Version="5.2.26322.8434" />
     <ProjectReference Include="..\ToggleClass\ToggleClass.csproj" />
     <ProjectReference Include="..\NotifyIconWpf\NotifyIconWpf.csproj" />
 	<ProjectReference Include="..\CustomComponents\CustomComponents.csproj" />
+    <ProjectReference Include="..\Xceed.Wpf.Toolkit\Xceed.Wpf.Toolkit.NET5.csproj" />
 
   </ItemGroup>
 

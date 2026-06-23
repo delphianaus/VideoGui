@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:VideoGui" 
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
-        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+        xmlns:xctk="clr-namespace:Xceed.Wpf.Toolkit;assembly=Xceed.Wpf.Toolkit"
         xmlns:MSU="clr-namespace:CustomComponents.ListBoxExtensions;assembly=CustomComponents"
         SizeChanged="Window_SizeChanged" Background="Gray"
         mc:Ignorable="d" DataContext="{Binding RelativeSource={RelativeSource Self}}" 

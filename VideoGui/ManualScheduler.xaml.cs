@@ -9,6 +9,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
+using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -47,6 +48,18 @@ namespace VideoGui
             {
                 ex.LogWrite($"ManualScheduler.lblDate_MouseDoubleClick {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
+        }
+
+        private void ReleaseDate_GotFocus(object sender, RoutedEventArgs e)
+        {
+            if (sender is Xceed.Wpf.Toolkit.DateTimePicker DTYP)
+            {
+            }
+        }
+
+        private void ReleaseDate_Initialized(object sender, EventArgs e)
+        {
+            ;
         }
 
         private void btnAccept_Click(object sender, RoutedEventArgs e)
@@ -133,6 +146,15 @@ namespace VideoGui
                 Invoker?.Invoke(this, new CustomParams_Initialize());
                 Width++;
                 Height++;
+
+                this.Resources.MergedDictionaries.Add(
+                    new Xceed.Wpf.Themes.Metro.MetroDarkThemeResourceDictionary(new SolidColorBrush(Colors.Green)));
+
+                // Toolkit Controls
+                this.Resources.MergedDictionaries.Add(
+                    new Xceed.Wpf.Toolkit.Themes.Metro.ToolkitMetroDarkThemeResourceDictionary(new SolidColorBrush(Colors.Green)));
+
+
             }
             catch (Exception ex)
             {

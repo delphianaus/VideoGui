@@ -288,7 +288,7 @@ namespace VideoGui
 
                     int _top = 74;
                     Canvas.SetTop(BtnClose, _height - _top);
-                    Canvas.SetTop(tbAutoUpload, _height - (_top+4));
+                    Canvas.SetTop(tbAutoUpload, _height - (_top + 4));
                     Canvas.SetTop(BtnRunUploaders, _height - _top);
                     Canvas.SetTop(btnSchdule, _height - _top);
 
@@ -1270,7 +1270,7 @@ namespace VideoGui
         {
             try
             {
-                if (e.OriginalSource is MenuItem m && m.DataContext is SelectedShortsDirectories rp)
+                if (e.OriginalSource is System.Windows.Controls.MenuItem m && m.DataContext is SelectedShortsDirectories rp)
                 {
                     Invoker?.Invoke(this, new CustomParams_MoveOrphanFiles());
                 }
@@ -1380,7 +1380,7 @@ namespace VideoGui
         {
             try
             {
-                if (e.OriginalSource is MenuItem m &&
+                if (e.OriginalSource is System.Windows.Controls.MenuItem m &&
                     m.DataContext is SelectedShortsDirectories rp)// && !rp.IsActive)
                 {
                     Invoker?.Invoke(this, new CustomParams_ChangePriority(rp.Id, rp.Priority, true));
@@ -1396,7 +1396,7 @@ namespace VideoGui
         {
             try
             {
-                if (e.OriginalSource is MenuItem m &&
+                if (e.OriginalSource is System.Windows.Controls.MenuItem m &&
                     m.DataContext is SelectedShortsDirectories rp)// && !rp.IsActive)
                 {
                     Invoker?.Invoke(this, new CustomParams_ChangePriority(rp.Id, rp.Priority, false));
@@ -1461,7 +1461,7 @@ namespace VideoGui
         {
             try
             {
-                if (e.OriginalSource is MenuItem m && m.DataContext is SelectedShortsDirectories rp)
+                if (e.OriginalSource is System.Windows.Controls.MenuItem m && m.DataContext is SelectedShortsDirectories rp)
                 {
                     Invoker?.Invoke(this, new CustomParams_RemoveSchedule(rp.Id));
                 }
@@ -1475,10 +1475,12 @@ namespace VideoGui
         {
             try
             {
-                if (e.OriginalSource is MenuItem m &&
-                    m.DataContext is SelectedShortsDirectories rp)// && !rp.IsActive)
+                if (e.OriginalSource is System.Windows.Controls.MenuItem m)
                 {
-                    Invoker?.Invoke(this, new CustomParams_SetActive(rp.LinkedShortsDirectoryId));
+                    if (m.DataContext is SelectedShortsDirectories rp)// && !rp.IsActive)
+                    {
+                        Invoker?.Invoke(this, new CustomParams_SetActive(rp.LinkedShortsDirectoryId));
+                    }
                 }
             }
             catch (Exception ex)
@@ -1523,7 +1525,8 @@ namespace VideoGui
         {
             try
             {
-                if (e.OriginalSource is MenuItem mnu && mnu.DataContext is SelectedShortsDirectories info)
+                ///System.Windows.Controls.MenuItem
+                if (e.OriginalSource is System.Windows.Controls.MenuItem mnu && mnu.DataContext is SelectedShortsDirectories info)
                 {
                     Invoker?.Invoke(this, new CustomParams_RemoveSelectedDirectory(info.Id, info.DirectoryName));
                 }

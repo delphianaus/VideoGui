@@ -4,16 +4,18 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:VideoGui" ResizeMode="CanResizeWithGrip" 
-        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml" Title="Manual Scheduler"
+        xmlns:xctk="clr-namespace:Xceed.Wpf.Toolkit;assembly=Xceed.Wpf.Toolkit"
+        xmlns:xctw="clr-namespace:Xceed.Wpf.Toolkit.Themes.Windows10;assembly=Xceed.Wpf.Toolkit.Themes.Windows10"
+        xmlns:xclw="clr-namespace:Xceed.Wpf.ListBox.Themes.Windows10;assembly=Xceed.Wpf.ListBox.Themes.Windows10"
         ExtendsContentIntoTitleBar="True" WindowBackdropType="Mica" 
         mc:Ignorable="d" Loaded="Window_Loaded" Icon="/computer.ico" 
 
-         WindowStartupLocation="CenterScreen" Background="gray"
+         WindowStartupLocation="CenterScreen" d:Background="gray"
          SizeChanged="Window_SizeChanged"
          SizeToContent="Manual" WindowStyle="ToolWindow" 
-         Width="559" MinWidth="559" MinHeight="172" Height="172" 
-         MaxWidth="559" MaxHeight="172">
+         Width="559" MinWidth="559" MinHeight="172" Height="182" 
+         MaxWidth="559" MaxHeight="182">
 
     <ui:FluentWindow.Resources>
         <ResourceDictionary>
@@ -22,7 +24,7 @@
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </ui:FluentWindow.Resources>
-    <Grid>
+    <Grid Margin="0,0,0,1">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -34,24 +36,35 @@
             </ui:TitleBar.Icon>
         </ui:TitleBar>
         <Grid Grid.Row="1">
-            <GroupBox x:Name="grpScheduleDates" Header="Video Scheduled Date &amp; Time" Canvas.Top="73" Margin="5,0,5,52" Width="549" Height="75">
+            <GroupBox x:Name="grpScheduleDates" Header="Video Scheduled Date &amp; Time" Canvas.Top="73" Margin="5,0,5,40" Width="549">
                 <Canvas x:Name="cnvmain" Margin="0,0,0,0" Width="516" Height="52">
                     <CheckBox x:Name="chkSchedule" Content="Test Mode" Canvas.Top="34" Canvas.Left="419" 
-                              HorizontalAlignment="Center" VerticalAlignment="Top"/>
+                              HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,0,3,0"/>
                     <Label Name="lblDate" Content="Date :" HorizontalAlignment="Center"
-                           Canvas.Top="20" VerticalAlignment="Top" Canvas.Left="6" MouseDoubleClick="lblDate_MouseDoubleClick"/>
+                           Canvas.Top="18" VerticalAlignment="Top" Canvas.Left="6" MouseDoubleClick="lblDate_MouseDoubleClick"/>
+
+
                     <xctk:DateTimePicker x:Name="ReleaseDate" Format="Custom" 
-          FormatString="dd/MM/yyyy" MinWidth="140" 
-          Focusable="True" Width="140" HorizontalAlignment="Center" 
-          Canvas.Left="45" Canvas.Top="19" VerticalAlignment="Center" 
-          AutoCloseCalendar="True" TimePickerAllowSpin="False" 
-          TimePickerShowButtonSpinner="False" TimePickerVisibility="Collapsed" />
-                    <Label x:Name="lblTime" Content="Start" Canvas.Top="6" Canvas.Left="198" 
-                           HorizontalAlignment="Center" VerticalAlignment="Top"/>
+                       FormatString="dd/MM/yyyy" MinWidth="140" Foreground='Bisque'
+                       Focusable="True" Width="140" HorizontalAlignment="Center" 
+                       Canvas.Left="45" Canvas.Top="6" VerticalAlignment="Top" 
+                       GotFocus="ReleaseDate_GotFocus" Initialized="ReleaseDate_Initialized"
+                       AutoCloseCalendar="True" TimePickerAllowSpin="False" 
+                       TimePickerShowButtonSpinner="False" TimePickerVisibility="Collapsed" 
+                       Background="#FF383333">
+
+
+                    </xctk:DateTimePicker>
+                    <Label x:Name="lblTime" Content="Start" Canvas.Left="198" 
+                           HorizontalAlignment="Center" VerticalAlignment="Top" Canvas.Top="4"/>
                     <xctk:TimePicker x:Name="ReleaseTimeStart" Format="Custom"  FormatString="hh:mm:ss tt" MinWidth="140"  
-          Focusable="True" Width="140" HorizontalAlignment="Left" Canvas.Left="232" Canvas.Top="5" VerticalAlignment="Center" />
+                      Focusable="True" Width="140" HorizontalAlignment="Center" Canvas.Left="232" 
+                      Canvas.Top="-8" VerticalAlignment="Top" Background="#FF180B0B" 
+                      Foreground="{DynamicResource {x:Static SystemColors.InactiveBorderBrushKey}}" />
                     <xctk:TimePicker x:Name="ReleaseTimeEnd" Format="Custom" FormatString="hh:mm:ss tt" MinWidth="140"  
-            Focusable="True" Width="140" Canvas.Left="232" Canvas.Top="32" HorizontalAlignment="Left" VerticalAlignment="Center" />
+                      Focusable="True" Width="140" Canvas.Left="232" Canvas.Top="32" HorizontalAlignment="Left" 
+                      VerticalAlignment="Center" Background="#FF0A0101" 
+                      Foreground="{DynamicResource {x:Static SystemColors.InfoBrushKey}}" />
                     <Label x:Name="lblTime_Copy" Content="End" Canvas.Top="33" Canvas.Left="198" HorizontalAlignment="Center" VerticalAlignment="Top"/>
                     <TextBox x:Name="txtMaxSchedules" Width="85" Height="24" Canvas.Top="9" Canvas.Left="419"
                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -60,10 +73,13 @@
             </GroupBox>
 
 
-            <Button x:Name="BtnClose" Content="Close" Width="90" Height="30" Margin="0,0,9,10" 
-          HorizontalAlignment="Right" VerticalAlignment="Bottom" Click="BtnClose_Click"/>
-            <Button x:Name="btnAccept" Content="Accept" Width="90" Height="30" Margin="10,0,0,10" 
-            HorizontalAlignment="Left" VerticalAlignment="Bottom" Click="btnAccept_Click"/>
+            <Button x:Name="BtnClose" Content="Close" Width="90" 
+              Height="30" Margin="0,0,9,4" 
+              HorizontalAlignment="Right" VerticalAlignment="Bottom" 
+              Click="BtnClose_Click"/>
+            <Button x:Name="btnAccept" Content="Accept" Width="90" 
+              Height="30" Margin="10,0,0,4" VerticalAlignment="Bottom" 
+              Click="btnAccept_Click"/>
         </Grid>
     </Grid>
 </ui:FluentWindow>
