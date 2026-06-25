@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "dgSpecHash": "RXeIRctrjZk=",
+  "success": true,
+  "projectFilePath": "C:\\VideoGui\\src\\Xceed.Wpf.Toolkit\\Xceed.Wpf.Toolkit.NET5.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Justin\\.nuget\\packages\\microsoft.aspnetcore.app.ref\\9.0.17\\microsoft.aspnetcore.app.ref.9.0.17.nupkg.sha512",
+    "C:\\Users\\Justin\\.nuget\\packages\\microsoft.netcore.app.ref\\9.0.17\\microsoft.netcore.app.ref.9.0.17.nupkg.sha512",
+    "C:\\Users\\Justin\\.nuget\\packages\\microsoft.windowsdesktop.app.ref\\9.0.17\\microsoft.windowsdesktop.app.ref.9.0.17.nupkg.sha512"
+  ],
+  "logs": []
+}
