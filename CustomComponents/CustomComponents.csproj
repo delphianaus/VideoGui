@@ -16,9 +16,6 @@
   <ItemGroup>
 	  <PackageReference Include="Extended.Wpf.Toolkit" Version="5.1.2" />
     <PackageReference Include="WPF-UI" Version="4.3.0" />
-    <PackageReference Include="Xceed.Products.Wpf.DataGrid.Themes" Version="7.3.26322.8481" />
-    <PackageReference Include="Xceed.Products.Wpf.Toolkit.Base.Themes" Version="5.2.26322.8434" />
-    <PackageReference Include="Xceed.Products.Wpf.Toolkit.ListBox.Themes" Version="5.2.26322.8434" />
 	<ProjectReference Include="..\ToggleClass\ToggleClass.csproj" />
 
 

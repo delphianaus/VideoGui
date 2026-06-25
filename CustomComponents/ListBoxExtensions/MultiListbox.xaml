@@ -4,7 +4,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:CustomComponents.ListBoxExtensions"
+             xmlns:xctk="clr-namespace:CustomComponents.ListBoxExtensions"
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
@@ -34,16 +34,16 @@
                Cursor="SizeNS" DragDelta="BottomThumb_DragDelta"/>
 
         <GroupBox x:Name="brdmain" 
-                  BorderBrush="{Binding BorderBrush, RelativeSource={RelativeSource AncestorType={x:Type local:MultiListbox}}}" 
-                  BorderThickness="{Binding BorderThickness, RelativeSource={RelativeSource AncestorType={x:Type local:MultiListbox}}}" 
-                  Width="{Binding Width, RelativeSource={RelativeSource AncestorType={x:Type local:MultiListbox}}}" 
-                  Height="{Binding Height, RelativeSource={RelativeSource AncestorType={x:Type local:MultiListbox}}}" 
+                  BorderBrush="{Binding BorderBrush, RelativeSource={RelativeSource AncestorType={x:Type xctk:MultiListbox}}}" 
+                  BorderThickness="{Binding BorderThickness, RelativeSource={RelativeSource AncestorType={x:Type xctk:MultiListbox}}}" 
+                  Width="{Binding Width, RelativeSource={RelativeSource AncestorType={x:Type xctk:MultiListbox}}}" 
+                  Height="{Binding Height, RelativeSource={RelativeSource AncestorType={x:Type xctk:MultiListbox}}}" 
                   HorizontalAlignment="Left" VerticalAlignment="Top"
-                  Header="{Binding Header, RelativeSource={RelativeSource AncestorType={x:Type local:MultiListbox}}}">
+                  Header="{Binding Header, RelativeSource={RelativeSource AncestorType={x:Type xctk:MultiListbox}}}">
             <DockPanel LastChildFill="True">
                 <ListBox x:Name="lstTitles" Height="30" DockPanel.Dock="Top"
                          HorizontalAlignment="Stretch" 
-                         Margin="{Binding BorderMargin, RelativeSource={RelativeSource AncestorType={x:Type local:MultiListbox}}}"
+                         Margin="{Binding BorderMargin, RelativeSource={RelativeSource AncestorType={x:Type xctk:MultiListbox}}}"
                          ScrollViewer.HorizontalScrollBarVisibility="Auto"
                          ScrollViewer.CanContentScroll="True"
                          ScrollViewer.VerticalScrollBarVisibility="Hidden"
@@ -51,7 +51,7 @@
                          VerticalAlignment="Top" >
                     <ListBox.ItemContainerStyle>
                         <Style TargetType="{x:Type ListBoxItem}">
-                            <Setter Property="ContextMenu" Value="{Binding RelativeSource={RelativeSource AncestorType={x:Type local:MultiListbox}}, Path=HeaderContextMenu}"/>
+                            <Setter Property="ContextMenu" Value="{Binding RelativeSource={RelativeSource AncestorType={x:Type xctk:MultiListbox}}, Path=HeaderContextMenu}"/>
                         </Style>
                     </ListBox.ItemContainerStyle>
                     <ListBox.Template>
@@ -80,19 +80,19 @@
                          HorizontalAlignment="Stretch"
                          VerticalAlignment="Stretch"
                          MouseWheel="lstBoxUploadItems_MouseWheel"
-                         Margin="{Binding BorderItemMargin, RelativeSource={RelativeSource AncestorType={x:Type local:MultiListbox}}}"
-                         SelectionMode="{Binding SelectionMode, RelativeSource={RelativeSource AncestorType={x:Type local:MultiListbox}}}"
-                         ItemsSource="{Binding ItemsSource, RelativeSource={RelativeSource AncestorType={x:Type local:MultiListbox}}}"
+                         Margin="{Binding BorderItemMargin, RelativeSource={RelativeSource AncestorType={x:Type xctk:MultiListbox}}}"
+                         SelectionMode="{Binding SelectionMode, RelativeSource={RelativeSource AncestorType={x:Type xctk:MultiListbox}}}"
+                         ItemsSource="{Binding ItemsSource, RelativeSource={RelativeSource AncestorType={x:Type xctk:MultiListbox}}}"
                          SelectionChanged="lstBoxUploadItems_SelectionChanged"
                          MouseDoubleClick="lstBoxUploadItems_MouseDoubleClick"
                          LostFocus="lstBoxUploadItems_LostFocus"
                          GotFocus="lstBoxUploadItems_GotFocus">
                     <ListBox.ItemContainerStyle>
                         <Style TargetType="{x:Type ListBoxItem}">
-                            <Setter Property="ContextMenu" Value="{Binding RelativeSource={RelativeSource AncestorType={x:Type local:MultiListbox}}, Path=ItemsContextMenu}"/>
-                            <Setter Property="MinHeight" Value="{Binding ItemMinHeight, RelativeSource={RelativeSource AncestorType={x:Type local:MultiListbox}}}"/>
-                            <Setter Property="MaxHeight" Value="{Binding ItemMaxHeight, RelativeSource={RelativeSource AncestorType={x:Type local:MultiListbox}}}"/>
-                            <Setter Property="Background" Value="{Binding AutoBackground, RelativeSource={RelativeSource AncestorType={x:Type local:MultiListbox}}}"/>
+                            <Setter Property="ContextMenu" Value="{Binding RelativeSource={RelativeSource AncestorType={x:Type xctk:MultiListbox}}, Path=ItemsContextMenu}"/>
+                            <Setter Property="MinHeight" Value="{Binding ItemMinHeight, RelativeSource={RelativeSource AncestorType={x:Type xctk:MultiListbox}}}"/>
+                            <Setter Property="MaxHeight" Value="{Binding ItemMaxHeight, RelativeSource={RelativeSource AncestorType={x:Type xctk:MultiListbox}}}"/>
+                            <Setter Property="Background" Value="{Binding AutoBackground, RelativeSource={RelativeSource AncestorType={x:Type xctk:MultiListbox}}}"/>
                             <Setter Property="VerticalContentAlignment" Value="Center"/>
                         </Style>
                     </ListBox.ItemContainerStyle>
@@ -113,7 +113,7 @@
                         <DataTemplate>
                             <TextBlock Text="{Binding}" 
                                      TextAlignment="Center"
-                                     Background="{Binding AutoBackground, RelativeSource={RelativeSource AncestorType={x:Type local:MultiListbox}}}"/>
+                                     Background="{Binding AutoBackground, RelativeSource={RelativeSource AncestorType={x:Type xctk:MultiListbox}}}"/>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>

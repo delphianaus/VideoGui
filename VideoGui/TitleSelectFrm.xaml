@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:VideoGui"
+        xmlns:xctk="clr-namespace:VideoGui"
         mc:Ignorable="d"
         Title="Select Title" Height="450" Width="614" Loaded="frmTitleEditor_Loaded" 
         Closing="frmTitleEditor_Closing" SizeToContent="Manual" WindowStyle="ToolWindow" 

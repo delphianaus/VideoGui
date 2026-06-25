@@ -77,6 +77,7 @@
     <None Remove="Icons\plus.png" />
     <None Remove="Icons\RightArrow..png" />
     <None Remove="Icons\save.png" />
+    <None Remove="Icons\SelDown.png" />
     <None Remove="Icons\SelectDown.png" />
     <None Remove="Icons\set.png" />
     <None Remove="Icons\StepOff.png" />
@@ -121,8 +122,6 @@
     <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
     <PackageReference Include="WindowsAPICodePackShellExtensions" Version="8.0.15.2" />
     <PackageReference Include="WPF-UI" Version="4.3.0" />
-    <PackageReference Include="Xceed.Products.Wpf.Toolkit.Base.Themes" Version="5.2.26322.8434" />
-    <PackageReference Include="Xceed.Products.Wpf.Toolkit.ListBox.Themes" Version="5.2.26322.8434" />
     <ProjectReference Include="..\ToggleClass\ToggleClass.csproj" />
     <ProjectReference Include="..\NotifyIconWpf\NotifyIconWpf.csproj" />
 	<ProjectReference Include="..\CustomComponents\CustomComponents.csproj" />
@@ -182,7 +181,13 @@
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
 
-    <Resource Include="Icons\SelectDown.png" />
+    <Resource Include="Icons\SelDown.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+
+    <Resource Include="Icons\SelectDown.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
 
     <Resource Include="Icons\set.png">
       <CopyToOutputDirectory>f</CopyToOutputDirectory>

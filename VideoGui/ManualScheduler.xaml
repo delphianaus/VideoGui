@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:VideoGui" ResizeMode="CanResizeWithGrip" 
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml" Title="Manual Scheduler"
-        xmlns:xctk="clr-namespace:Xceed.Wpf.Toolkit;assembly=Xceed.Wpf.Toolkit"
+        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit" 
         ExtendsContentIntoTitleBar="True" WindowBackdropType="Mica" 
         mc:Ignorable="d" Loaded="Window_Loaded" Icon="/computer.ico" 
 

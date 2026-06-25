@@ -5972,7 +5972,7 @@ namespace VideoGui
                 var connectionString = new FbConnectionStringBuilder
                 {
                     Database = exepath,
-                    DataSource = "localhost",
+                    DataSource = "xctkhost",
                     ServerType = FbServerType.Embedded,
                     UserID = "SYSDBA",
                     Dialect = 3,
@@ -6034,7 +6034,7 @@ namespace VideoGui
             }
         }
 
-        public void LocalSetFilterAge(int a, int b)
+        public void xctkSetFilterAge(int a, int b)
         {
             try
             {
@@ -6046,7 +6046,7 @@ namespace VideoGui
             }
         }
 
-        public void LocalSetFilterString(string Filter, FilterTypes FilterType, FilterClass FilterClassIs)
+        public void xctkSetFilterString(string Filter, FilterTypes FilterType, FilterClass FilterClassIs)
         {
             try
             {
@@ -12108,7 +12108,7 @@ namespace VideoGui
             try
             {
                 var _complexfrm = new ComplexSchedular(InvokerHandler<object>, AddRecord, DeleteRecord, CloseDialogComplexEditor,
-                     LocalSetFilterAge, LocalSetFilterString, GetFilterAges, GetFilterString);
+                     xctkSetFilterAge, xctkSetFilterString, GetFilterAges, GetFilterString);
                 Hide();
                 _complexfrm.ShowDialog();
                 Show();

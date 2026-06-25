@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
         ExtendsContentIntoTitleBar="True" WindowBackdropType="Mica"
-        xmlns:local="clr-namespace:VideoGui" SizeChanged="Window_SizeChanged"
+        xmlns:xctk="clr-namespace:VideoGui" SizeChanged="Window_SizeChanged"
         xmlns:MSU="clr-namespace:CustomComponents.ListBoxExtensions;assembly=CustomComponents"
         WindowStyle="ToolWindow"  ResizeMode="CanResizeWithGrip"
         mc:Ignorable="d" Loaded="Window_Loaded" WindowStartupLocation="CenterScreen"  

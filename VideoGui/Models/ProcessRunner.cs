@@ -104,7 +104,7 @@ namespace VideoGui.Models
                 SafeCloseHandle(hRestrictedToken);
                 if (tml.Label.Sid != IntPtr.Zero)
                 {
-                    LocalFree(tml.Label.Sid);
+                    xctkFree(tml.Label.Sid);
                 }
                 if (tmlPtr != IntPtr.Zero)
                 {
@@ -203,7 +203,7 @@ namespace VideoGui.Models
         }
 
         [DllImport("kernel32.dll", SetLastError = true)]
-        static extern IntPtr LocalFree(IntPtr hMem);
+        static extern IntPtr xctkFree(IntPtr hMem);
 
         enum TOKEN_INFORMATION_CLASS
         {

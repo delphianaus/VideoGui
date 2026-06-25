@@ -5,7 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:xctk="clr-namespace:Xceed.Wpf.Toolkit;assembly=Xceed.Wpf.Toolkit"
          SizeChanged="Window_SizeChanged"
-        xmlns:local="clr-namespace:VideoGui" ResizeMode="CanResizeWithGrip" WindowStartupLocation="CenterScreen" 
+        xmlns:local="clr-namespace:VideoGui" 
+        ResizeMode="CanResizeWithGrip" WindowStartupLocation="CenterScreen" 
         mc:Ignorable="d" Loaded="Window_Loaded" SizeToContent="Manual" WindowStyle="ToolWindow" 
         Title="ScheduleActioner" Height="372" Width="396" MinWidth="396" MinHeight="372" Icon="/Icons/computer.ico" 
         ShowInTaskbar="False" IsManipulationEnabled="True">

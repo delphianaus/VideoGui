@@ -308,7 +308,7 @@ namespace VideoGui
 
 
                             var filenamelist = urlLocation.Replace("%20", " ").Replace("%3a", ":").
-                              Replace("file://localhost/", "").Replace(@"/", @"\").ToString();
+                              Replace("file://xctkhost/", "").Replace(@"/", @"\").ToString();
                             XML_Filename = filenamelist.ToString().Replace("{ PathUrl = ", "").Trim();
 
 

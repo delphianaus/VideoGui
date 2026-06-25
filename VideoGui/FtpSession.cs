@@ -455,11 +455,11 @@ namespace VideoGui
                     } while (IsPortInUse(port));
 
 
-                    IPEndPoint localEndPoint = (IPEndPoint)_client.Client.LocalEndPoint;
-                    string localIP = localEndPoint.Address.ToString().Split('.')[0];
-                    string pasvMessage = $"227 Entering Passive Mode ({localIP},{port / 256},{port % 256})\r\n";
+                    IPEndPoint xctkEndPoint = (IPEndPoint)_client.Client.LocalEndPoint;
+                    string xctkIP = xctkEndPoint.Address.ToString().Split('.')[0];
+                    string pasvMessage = $"227 Entering Passive Mode ({xctkIP},{port / 256},{port % 256})\r\n";
                     _client.GetStream().Write(Encoding.ASCII.GetBytes(pasvMessage));
-                    _dataListener = new TcpListener(IPAddress.Parse(localIP), port);
+                    _dataListener = new TcpListener(IPAddress.Parse(xctkIP), port);
                     _dataListener.Start();
                 }
             }

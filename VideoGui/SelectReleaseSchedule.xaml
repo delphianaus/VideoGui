@@ -5,8 +5,8 @@
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
         ExtendsContentIntoTitleBar="True" WindowBackdropType="Mica"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:VideoGui" 
-        Loaded="Window_Loaded" Background="Gray"
+        xmlns:xctk="clr-namespace:VideoGui" 
+        Loaded="Window_Loaded" d:Background="Gray"
         mc:Ignorable="d" ResizeMode="CanResizeWithGrip" WindowStartupLocation="CenterScreen"  
         WindowStyle="ToolWindow" Title="Select Release Schedule" 
         Height="333" Width="902">
