@@ -6,9 +6,6 @@
         xmlns:local="clr-namespace:VideoGui" ResizeMode="CanResizeWithGrip" 
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml" Title="Manual Scheduler"
         xmlns:xctk="clr-namespace:Xceed.Wpf.Toolkit;assembly=Xceed.Wpf.Toolkit"
-        xmlns:xctw="clr-namespace:Xceed.Wpf.Toolkit.Themes.Windows10;assembly=Xceed.Wpf.Toolkit.Themes.Windows10"
-        xmlns:xclw="clr-namespace:Xceed.Wpf.ListBox.Themes.Windows10;assembly=Xceed.Wpf.ListBox.Themes.Windows10"
-        ExtendsContentIntoTitleBar="True" WindowBackdropType="Mica" 
         mc:Ignorable="d" Loaded="Window_Loaded" Icon="/computer.ico" 
 
          WindowStartupLocation="CenterScreen" d:Background="gray"

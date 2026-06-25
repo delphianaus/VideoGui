@@ -11460,7 +11460,13 @@ namespace VideoGui
 
 
         }
+
         private void BtnScan_Click(object sender, RoutedEventArgs e)
+        {
+            var ThemeExtractors = new ThemeExtractor();
+            ThemeExtractors.Show();
+        }
+        private void BtnScan_Click1(object sender, RoutedEventArgs e)
         {
             try
             {
