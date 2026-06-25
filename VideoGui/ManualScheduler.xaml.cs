@@ -147,12 +147,7 @@ namespace VideoGui
                 Width++;
                 Height++;
 
-                this.Resources.MergedDictionaries.Add(
-                    new Xceed.Wpf.Themes.Metro.MetroDarkThemeResourceDictionary(new SolidColorBrush(Colors.Green)));
-
-                // Toolkit Controls
-                this.Resources.MergedDictionaries.Add(
-                    new Xceed.Wpf.Toolkit.Themes.Metro.ToolkitMetroDarkThemeResourceDictionary(new SolidColorBrush(Colors.Green)));
+              
 
 
             }

@@ -6,6 +6,7 @@
         xmlns:local="clr-namespace:VideoGui" ResizeMode="CanResizeWithGrip" 
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml" Title="Manual Scheduler"
         xmlns:xctk="clr-namespace:Xceed.Wpf.Toolkit;assembly=Xceed.Wpf.Toolkit"
+        ExtendsContentIntoTitleBar="True" WindowBackdropType="Mica" 
         mc:Ignorable="d" Loaded="Window_Loaded" Icon="/computer.ico" 
 
          WindowStartupLocation="CenterScreen" d:Background="gray"
@@ -57,11 +58,11 @@
                     <xctk:TimePicker x:Name="ReleaseTimeStart" Format="Custom"  FormatString="hh:mm:ss tt" MinWidth="140"  
                       Focusable="True" Width="140" HorizontalAlignment="Center" Canvas.Left="232" 
                       Canvas.Top="-8" VerticalAlignment="Top" Background="#FF180B0B" 
-                      Foreground="{DynamicResource {x:Static SystemColors.InactiveBorderBrushKey}}" />
+                      Foreground="White" />
                     <xctk:TimePicker x:Name="ReleaseTimeEnd" Format="Custom" FormatString="hh:mm:ss tt" MinWidth="140"  
                       Focusable="True" Width="140" Canvas.Left="232" Canvas.Top="32" HorizontalAlignment="Left" 
                       VerticalAlignment="Center" Background="#FF0A0101" 
-                      Foreground="{DynamicResource {x:Static SystemColors.InfoBrushKey}}" />
+                      Foreground="Wheat"  />
                     <Label x:Name="lblTime_Copy" Content="End" Canvas.Top="33" Canvas.Left="198" HorizontalAlignment="Center" VerticalAlignment="Top"/>
                     <TextBox x:Name="txtMaxSchedules" Width="85" Height="24" Canvas.Top="9" Canvas.Left="419"
                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
