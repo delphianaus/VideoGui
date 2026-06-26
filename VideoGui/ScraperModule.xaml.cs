@@ -242,7 +242,8 @@ namespace VideoGui
         {
             try
             {
-                ScraperType = EventTypes.VideoLookup;
+                
+                                ScraperType = EventTypes.VideoLookup;
                 DoOnFinish = _OnFinish;
                 foreach (var dir in directories)
                 {
