@@ -132,7 +132,7 @@ namespace VideoGui
             int milliseconds = ts.Milliseconds;
             int seconds = ts.Seconds;
             int minutes = ts.Minutes;
-                var hours = (int)ts.TotalHours;
+            var hours = (int)ts.TotalHours;
             // test
             string hr = $"{hours:D}";
             string res = $"{hours:D}:{minutes:D2}:{seconds:D2}.{milliseconds:D3}";
@@ -1517,8 +1517,40 @@ namespace VideoGui
             try
             {
                 TimeSpan ts;
-                TimeSpan.TryParseExact(data, @"\hh:mm\:ss\.ff", null, out ts);
-                return ts;
+                TimeSpan.TryParseExact(data, @"\hh:mm\:ss\.fff", null, out ts);
+                if (ts == TimeSpan.Zero)
+                {
+                    TimeSpan.TryParseExact(data, @"\hh:mm\:ss\:fff", null, out ts);
+                }
+                if (ts == TimeSpan.Zero)
+                {
+                    var dnt = data.Split(':');
+                    if (dnt.Length == 4 || dnt.Length == 3)
+                    {
+                        string hr = dnt[0];
+                        string mm = dnt[1];
+                        string ss = dnt[2];
+                        string ms = dnt[3];
+                        TimeSpan nm = TimeSpan.Zero;
+                        int Hours = hr.ToInt(0);
+                        int Minutes = mm.ToInt(0);
+                        int secs = ss.ToInt(0);
+                        if (dnt.Length == 4)
+                        {
+                            int mss = ms.ToInt(0);
+                            TimeSpan r = new TimeSpan(0,Hours, Minutes, secs,mss);
+                            
+                            return r;
+                        }
+                        if (dnt.Length == 3)
+                        {
+                            TimeSpan r = new TimeSpan(Hours, Minutes, secs);
+                            return r;
+                        }
+                    }
+                    return TimeSpan.Zero;
+                }
+                else return ts;
             }
             catch (Exception ex)
             {

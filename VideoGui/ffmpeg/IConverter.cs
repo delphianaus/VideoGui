@@ -34,6 +34,7 @@ namespace VideoGui.ffmpeg
         IConverter SetSeek(TimeSpan? seek);
         IConverter UseTextStream(int textStream = 0, bool UseTextStream = false);
         IConverter SetSourceIndex(int index);
+        IConverter AddTotalFrames(int total);
         IConverter SetPreset(ConversionPreset preset);
         IConverter SetTotalTime(double _totalseconds);
         IConverter SetVideoBitrate(string Minibitrate, string Maxbitrate, string Buffersize, VideoCodec Outputcodec, bool IsComplex, bool ComplexMode, bool IsCopy = false);

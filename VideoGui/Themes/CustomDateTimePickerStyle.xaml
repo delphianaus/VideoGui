@@ -22,22 +22,22 @@
 
 
 
-  <!-- =============================================================================== -->
-  <!-- DateTimePicker                                                                  -->
-  <!-- =============================================================================== -->
+    <!-- =============================================================================== -->
+    <!-- DateTimePicker                                                                  -->
+    <!-- =============================================================================== -->
 
-  <Style TargetType="{x:Type xctk:DateTimePicker}">
-    <Setter Property="Template">
-      <Setter.Value>
-        <ControlTemplate TargetType="{x:Type xctk:DateTimePicker}">
-          <Border>
-            <Grid>
-              <Grid>
-                <Grid.ColumnDefinitions>
-                  <ColumnDefinition Width="*" />
-                  <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <xctk:ButtonSpinner x:Name="PART_Spinner"
+    <Style TargetType="{x:Type xctk:DateTimePicker}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type xctk:DateTimePicker}">
+                    <Border>
+                        <Grid>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <xctk:ButtonSpinner x:Name="PART_Spinner"
                                      IsTabStop="False"
                                      Background="{TemplateBinding Background}"
                                      BorderBrush="{TemplateBinding BorderBrush}"
@@ -53,7 +53,7 @@
                                      VerticalContentAlignment="Stretch"
                                      AllowSpin="{TemplateBinding AllowSpin}"
                                      ShowSpinner="{TemplateBinding ShowButtonSpinner}"    >
-                  <xctk:WatermarkTextBox x:Name="PART_TextBox"
+                                    <xctk:WatermarkTextBox x:Name="PART_TextBox"
                                           BorderThickness="0"
                                           Background="Transparent"
                                           CaretBrush="{Binding CaretBrush, RelativeSource={RelativeSource TemplatedParent}}"
@@ -77,8 +77,8 @@
                                           TabIndex="{TemplateBinding TabIndex}"
                                           Watermark="{TemplateBinding Watermark}"
                                           WatermarkTemplate="{TemplateBinding WatermarkTemplate}" />
-                </xctk:ButtonSpinner>
-                <ToggleButton x:Name="_calendarToggleButton"
+                                </xctk:ButtonSpinner>
+                                <ToggleButton x:Name="_calendarToggleButton"
                               Grid.Column="1"
                               Width="32"
                               Height="28"
@@ -88,45 +88,44 @@
                               BorderThickness="1"
                               Focusable="False"
                               IsChecked="{Binding IsOpen, RelativeSource={RelativeSource TemplatedParent}}" >
-                    <Image Stretch="Fill" Source="/Icons/SelDown.png"      />
-                </ToggleButton>
-              </Grid>
-              <Popup x:Name="PART_Popup"
+                                    <Image Stretch="Fill" Source="/Icons/SelDown.png"      />
+                                </ToggleButton>
+                            </Grid>
+                            <Popup x:Name="PART_Popup" 
                      IsOpen="{Binding IsChecked, ElementName=_calendarToggleButton}"
                      StaysOpen="False"
                      ToolTip="{x:Static sys:String.Empty}">
-                <Popup.Resources>
-                  <Style TargetType="ToolTip">
-                    <Style.Triggers>
-                      <Trigger Property="Content"
+                                <Popup.Resources>
+                                    <Style TargetType="ToolTip">
+                                        <Style.Triggers>
+                                            <Trigger Property="Content"
                                Value="{x:Static sys:String.Empty}">
-                        <Setter Property="Visibility"
+                                                <Setter Property="Visibility"
                                 Value="Collapsed" />
-                      </Trigger>
-                    </Style.Triggers>
-                  </Style>
-                </Popup.Resources>
-                <Border BorderThickness="1">
-                  <StackPanel>
-                    <Calendar x:Name="PART_Calendar"
-                              BorderThickness="0"
-                              DisplayMode="{Binding CalendarDisplayMode, RelativeSource={RelativeSource TemplatedParent}}">
-                      <Calendar.Template>
-                        <ControlTemplate TargetType="{x:Type Calendar}">
-                          <Viewbox Width="{Binding CalendarWidth, RelativeSource={RelativeSource AncestorType={x:Type xctk:DateTimePicker}}}">
-                            <StackPanel x:Name="PART_Root"
-                                        HorizontalAlignment="Center">
-                              <CalendarItem x:Name="PART_CalendarItem"
-                                            BorderBrush="{TemplateBinding BorderBrush}"
-                                            BorderThickness="{TemplateBinding BorderThickness}"
-                                            Background="{TemplateBinding Background}"
-                                            Style="{TemplateBinding CalendarItemStyle}" />
-                            </StackPanel>
-                          </Viewbox>
-                        </ControlTemplate>
-                      </Calendar.Template>
-                    </Calendar>
-                    <xctk:TimePicker x:Name="PART_TimeUpDown"
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Popup.Resources>
+                                <Border BorderThickness="1" Background="Black">
+                                    <StackPanel>
+                                        <Calendar x:Name="PART_Calendar" BorderThickness="1" 
+                                           DisplayMode="{Binding CalendarDisplayMode, RelativeSource={RelativeSource TemplatedParent}}">
+                                            <Calendar.Template>
+                                                <ControlTemplate TargetType="{x:Type Calendar}"  >
+                                                    <Viewbox Width="320" Height="320">
+                                                        <StackPanel x:Name="PART_Root" HorizontalAlignment="Center">
+                                                            <CalendarItem x:Name="PART_CalendarItem"
+                                                              BorderBrush="{TemplateBinding BorderBrush}"
+                                                              BorderThickness="{TemplateBinding BorderThickness}"
+                                                              Background="{TemplateBinding Background}"
+                                                              Style="{TemplateBinding CalendarItemStyle}" />
+                                                        </StackPanel>
+                                                    </Viewbox>
+                                                </ControlTemplate>
+                                            </Calendar.Template>
+                                           
+                                        </Calendar>
+                                        <xctk:TimePicker x:Name="PART_TimeUpDown"
                                       Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}"
                                       Foreground="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}"
                                       Format="{TemplateBinding TimeFormat}"
@@ -144,55 +143,55 @@
                                       Watermark="{TemplateBinding TimeWatermark}"
                                       WatermarkTemplate="{TemplateBinding TimeWatermarkTemplate}"
                                       Visibility="{TemplateBinding TimePickerVisibility}" />
-                  </StackPanel>
-                </Border>
-              </Popup>
-            </Grid>
-          </Border>
-          <ControlTemplate.Triggers>
-            <DataTrigger Binding="{Binding RelativeSource={RelativeSource Self}, Path=ShowDropDownButton}"
+                                    </StackPanel>
+                                </Border>
+                            </Popup>
+                        </Grid>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <DataTrigger Binding="{Binding RelativeSource={RelativeSource Self}, Path=ShowDropDownButton}"
                          Value="False">
-              <Setter TargetName="PART_Spinner"
+                            <Setter TargetName="PART_Spinner"
                       Property="CornerRadius"
                       Value="{Binding RelativeSource={RelativeSource Mode=TemplatedParent}, Path=CornerRadius}" />
-            </DataTrigger>
-            <MultiDataTrigger>
-              <MultiDataTrigger.Conditions>
-                <Condition Binding="{Binding IsReadOnly, RelativeSource={RelativeSource Self}}"
+                        </DataTrigger>
+                        <MultiDataTrigger>
+                            <MultiDataTrigger.Conditions>
+                                <Condition Binding="{Binding IsReadOnly, RelativeSource={RelativeSource Self}}"
                            Value="False" />
-                <Condition Binding="{Binding AllowTextInput, RelativeSource={RelativeSource Self}}"
+                                <Condition Binding="{Binding AllowTextInput, RelativeSource={RelativeSource Self}}"
                            Value="False" />
-              </MultiDataTrigger.Conditions>
-              <Setter Property="IsReadOnly"
+                            </MultiDataTrigger.Conditions>
+                            <Setter Property="IsReadOnly"
                       Value="True"
                       TargetName="PART_TextBox" />
-            </MultiDataTrigger>
-            <DataTrigger Binding="{Binding IsReadOnly, RelativeSource={RelativeSource Self}}"
+                        </MultiDataTrigger>
+                        <DataTrigger Binding="{Binding IsReadOnly, RelativeSource={RelativeSource Self}}"
                          Value="True">
-              <Setter Property="IsReadOnly"
+                            <Setter Property="IsReadOnly"
                       Value="True"
                       TargetName="PART_TextBox" />
-            </DataTrigger>
-            <Trigger Property="IsEnabled"
+                        </DataTrigger>
+                        <Trigger Property="IsEnabled"
                      Value="False">
-              <Setter Property="Foreground"
+                            <Setter Property="Foreground"
                       Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
-              <Setter TargetName="_calendarToggleButton"
+                            <Setter TargetName="_calendarToggleButton"
                       Property="Content"
                       Value="{Binding DropDownButtonDisabledContent, RelativeSource={RelativeSource TemplatedParent}}" />
-            </Trigger>
-            <MultiTrigger>
-              <MultiTrigger.Conditions>
-                <Condition Property="ShowButtonSpinner"
+                        </Trigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="ShowButtonSpinner"
                            Value="False" />
-                <Condition Property="ShowDropDownButton"
+                                <Condition Property="ShowDropDownButton"
                            Value="False" />
-              </MultiTrigger.Conditions>
-            </MultiTrigger>
-          </ControlTemplate.Triggers>
-        </ControlTemplate>
-      </Setter.Value>
-    </Setter>
-  </Style>
+                            </MultiTrigger.Conditions>
+                        </MultiTrigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
 
 </ResourceDictionary>

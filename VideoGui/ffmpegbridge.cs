@@ -10,6 +10,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Forms;
 using VideoGui.ffmpeg.Streams.Audio;
 using VideoGui.ffmpeg.Streams.Text;
@@ -20,7 +21,7 @@ namespace VideoGui
 {
     public class ffmpegbridge
     {
-        int MaxFile = 0;
+        int MaxFile = 0, mduration = 0;
         private Object thisLockduration = new Object();
         TimeSpan Duration = TimeSpan.Zero;
         public bool Finished = false;
@@ -48,7 +49,90 @@ namespace VideoGui
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
             }
         }
+        public int GetFrames()
+        {
+            try
+            {
+                return mduration;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+                return 0;
+            }
+        }
+        public async Task ReadMDurations(List<string> files)
+        {
+            try
+            {
+                MaxFile = 0;
+                Duration = TimeSpan.Zero;
+                FileInfoList.Clear();
+                mduration = 0;
+                foreach (string file in files)
+                {
+                    while (MaxFile > 8)
+                    {
+                        Thread.Sleep(25);
+                    }
+                    ReadMetaData(file).ConfigureAwait(false);
+                }
+                while (MaxFile > 0)
+                {
+                    Thread.Sleep(100);
+                }
+                Finished = true;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+            }
+        }
 
+
+        public async Task ReadMetaData(string filePath)
+        {
+            try
+            {
+                var mw1 = new MediaInfo.MediaInfo();
+                mw1.Open(filePath);
+                string format = "", ftype = "";
+                int cstrcnt = mw1.CountGet(MediaInfo.StreamKind.Other);
+                for (int i = 0; i < cstrcnt; i++)
+                {
+                    format = mw1.Get(StreamKind.Other, i, "Format");
+                    ftype = mw1.Get(StreamKind.Other, i, "Type");
+                    if (format == "fdsc" && ftype == "meta")
+                    {
+                        mduration += mw1.Get(StreamKind.Other, i, "mdhd_Duration").ToInt();
+                        string duration1 = mw1.Get(StreamKind.Other, i, "Duration");
+                        if (duration1 != "")
+                        {
+                            double r = duration1.ToDouble(0.0);
+                            TimeSpan ty = TimeSpan.FromMilliseconds(r);
+                            Duration += ty;
+                        }
+                        break;
+                    }
+
+
+                }
+                mw1.Close();
+                Finished = true;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+            }
+            finally
+            {
+                if (MaxFile > 0)
+                {
+                    MaxFile--;
+                }
+            }
+        }
+        public int level = -1;
         public (IVideoStream, IAudioStream, List<TextStream>, TimeSpan) ReadMediaFile(string filePath)
         {
             try
@@ -56,12 +140,14 @@ namespace VideoGui
                 ffmpeg.Streams.Video.IVideoStream videostream = new ffmpeg.Streams.Video.VideoStream();
                 ffmpeg.Streams.Audio.IAudioStream audiostream = new ffmpeg.Streams.Audio.AudioStream();
                 List<ffmpeg.Streams.Text.TextStream> textstream = new List<ffmpeg.Streams.Text.TextStream>();
-
+                level = 0;
                 var mw1 = new MediaInfo.MediaInfo();
+                level = 2;
                 mw1.Open(filePath);
                 double durgen = mw1.Get(StreamKind.General, 0, "Duration").ToDouble();
+                level = 3;
                 TimeSpan DurationGen = TimeSpan.FromMilliseconds(durgen);
-
+                level = 4;
                 int vstrcnt = mw1.CountGet(MediaInfo.StreamKind.Video);
                 int astrcnt = mw1.CountGet(MediaInfo.StreamKind.Audio);
                 int cstrcnt = mw1.CountGet(MediaInfo.StreamKind.Other);
@@ -104,6 +190,7 @@ namespace VideoGui
                 }
                 if (vstrcnt > 0)
                 {
+                    level = 7;
                     string Codec = mw1.Get(MediaInfo.StreamKind.Video, 0, "Format").Replace("-", "").ToLower();
                     int ID = mw1.Get(StreamKind.Video, 0, "ID").ToInt();
                     int Width = mw1.Get(StreamKind.Video, 0, "Width").ToInt();
@@ -122,8 +209,10 @@ namespace VideoGui
                     {
                         pixelfrm += "10le";
                     }
+                    level = 9;
                     videostream.Initialize(filePath, Codec, AspectRatioMode, Duration, pixelfrm,
                         Width, Height, Bitrate, (float)FrameRate, Default, Forced, ID);
+                    level = 10;
                 }
                 if (astrcnt > 0)
                 {
@@ -157,10 +246,12 @@ namespace VideoGui
                     }
                 }
                 mw1.Close();
+                level = 11;
                 return (videostream, audiostream, textstream, DurationGen);
             }
             catch (Exception ex)
             {
+                level = 12;
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
                 return (null, null, null, TimeSpan.Zero);
             }
@@ -189,33 +280,42 @@ namespace VideoGui
             }
         }
 
-        public async Task ReadDurations(List<string> files, bool UseVideoDuration = false)
+        public async Task<double> ReadDurations(List<string> files, bool UseVideoDuration = false)
         {
             try
             {
                 MaxFile = 0;
                 Duration = TimeSpan.Zero;
                 FileInfoList.Clear();
+
                 foreach (string file in files)
                 {
                     while (MaxFile > 8)
                     {
                         Thread.Sleep(25);
                     }
-                    ReadFile(file).ConfigureAwait(false);
+                    string f = file;
+                    if (f.Contains(@"file '"))
+                    {
+                        f = f.Replace(@"file '", "");
+                    }
+                    ReadFile(f, UseVideoDuration).ConfigureAwait(false);
                 }
+                Task.Delay(200);
                 while (MaxFile > 0)
                 {
-                    Thread.Sleep(100);
+                    Task.Delay(500);
                 }
                 Finished = true;
+                return Duration.TotalSeconds;
             }
             catch (Exception ex)
             {
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+                return 0;
             }
         }
-        public async Task ReadFile(string filePath, bool UseVideoDuration = false)
+        public async Task ReadFile(string filePath, bool UseVideoDuration = false, bool AllowFinish = false)
         {
             try
             {
@@ -277,7 +377,8 @@ namespace VideoGui
                 }
                 mw1.Close();
                 FileInfoList.Add((filePath, TBL));
-                Finished = true;
+                Finished = AllowFinish;
+                //Finished = true;
             }
             catch (Exception ex)
             {

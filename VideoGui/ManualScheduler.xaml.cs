@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Forms;
@@ -50,16 +51,45 @@ namespace VideoGui
             }
         }
 
+        private void PART_Popup_Opened(object sender, EventArgs e)
+        {
+            var popup = sender as Popup;
+
+            // safer place to edit calendar visuals
+        }
+
         private void ReleaseDate_GotFocus(object sender, RoutedEventArgs e)
         {
-            if (sender is Xceed.Wpf.Toolkit.DateTimePicker DTYP)
+            if (sender is Xceed.Wpf.Toolkit.DateTimePicker DTYP && DTYP is not null)
             {
+
+
+                var calItem = DTYP?.Template.FindName("PART_CalendarItem", DTYP) as CalendarItem;
+
+                if (calItem != null)
+                {
+                    var header = calItem.Template.FindName("PART_HeaderButton", calItem) as System.Windows.Controls.Button;
+
+                    // 5. Set the FontSize
+                    if (header != null)
+                    {
+                        header.FontSize = 16; // Set desired font size here
+                        header.Height = 30;   // Optional: Adjust height for readability
+                        header.Width = 120;   // Optional: Adjust width for readability
+                    }
+                }
+
             }
         }
 
         private void ReleaseDate_Initialized(object sender, EventArgs e)
         {
             ;
+        }
+
+        private void ReleaseDate_GotFocus_1(object sender, RoutedEventArgs e)
+        {
+
         }
 
         private void btnAccept_Click(object sender, RoutedEventArgs e)

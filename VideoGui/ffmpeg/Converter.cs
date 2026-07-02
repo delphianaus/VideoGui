@@ -54,6 +54,8 @@ namespace VideoGui.ffmpeg
         private string defaultpath = "";
         private bool _ScanInterlaced = false;
         private int _SourceIndex = 0;
+        int TotalFrames = -1;
+        List<string> ListOfFIles = new List<string>();
         private string _parameterAsstring = "";
         private string _source, _src = "", _dest = "";
         private bool SendProbEvents = false;
@@ -117,7 +119,7 @@ namespace VideoGui.ffmpeg
                             string FileToWrite = Path.GetDirectoryName(destdir) + $"\\sourcefiles{_SourceIndex}.txt";
                             if (System.IO.File.Exists(FileToWrite))
                             {
-                                List<string> ListOfFIles = System.IO.File.ReadAllLines(FileToWrite).ToList<string>();
+                                ListOfFIles = System.IO.File.ReadAllLines(FileToWrite).ToList<string>();
                                 bool fnd = true;
                                 foreach (var file in ListOfFIles)
                                 {
@@ -305,6 +307,20 @@ namespace VideoGui.ffmpeg
                 }
 
                 return builder == null ? null : builder;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+                return null;
+            }
+        }
+
+        public IConverter AddTotalFrames(int total)
+        {
+            try
+            {
+                TotalFrames = total;
+                return this;
             }
             catch (Exception ex)
             {
@@ -514,6 +530,7 @@ namespace VideoGui.ffmpeg
                 errn = 2;
                 bool bMetaData = false;
                 int percent = 0;
+                double totalsecs = 0;
                 Int64 maxframes = -1;
                 string maxduration = "";
                 TimeSpan Eta = TimeSpan.Zero;
@@ -677,6 +694,10 @@ namespace VideoGui.ffmpeg
                        WithWorkingDirectory(defaultpath);
                     _dest = DestFileName;
                 }
+
+
+
+
                 await foreach (var commandEvent in cmd.ListenAsync())
                 {
                     switch (commandEvent)
@@ -684,6 +705,11 @@ namespace VideoGui.ffmpeg
                         case StartedCommandEvent StartedEvent:
                             {
                                 errn = 9;
+                                if (TotalFrames != -1)
+                                {
+                                    maxduration = TotalFrames.ToString();
+                                    MaxDuration = TimeSpan.FromSeconds(TotalFrames);
+                                }
                                 ProcessID = StartedEvent.ProcessId;
                                 InternalProcessId = ProcessID;
                                 ProcessRunning = true;
@@ -713,19 +739,26 @@ namespace VideoGui.ffmpeg
                                 }
                                 if (data.ToUpper().Contains("DURATION:"))
                                 {
-                                    List<string> frames = data.Trim().Split(" ").ToList<string>();
-                                    int idx = frames.IndexOf("Duration:");
-                                    if (idx != -1)
+                                    if (!data.ToUpper().Contains("N/A"))
                                     {
-                                        string frmecnt = frames[idx + 1].Trim();
-                                        frmecnt = frmecnt.Replace(",", "");
-                                        int max = (frmecnt.Length > 11) ? 11 : frmecnt.Length;
-                                        maxduration = frmecnt.Trim().Substring(0, max);
-                                        TimeSpan.TryParse(maxduration, out MaxDuration);
-                                        if (MaxDuration == TimeSpan.Zero)
+                                        List<string> frames = data.Trim().Split(" ").ToList<string>();
+                                        int idx = frames.IndexOf("Duration:");
+                                        if (idx != -1)
                                         {
-                                            MaxDuration = TimeSpan.FromSeconds(totalseconds);
+                                            string frmecnt = frames[idx + 1].Trim();
+                                            frmecnt = frmecnt.Replace(",", "");
+                                            int max = (frmecnt.Length > 11) ? 11 : frmecnt.Length;
+                                            maxduration = frmecnt.Trim().Substring(0, max);
+                                            TimeSpan.TryParse(maxduration, out MaxDuration);
+                                            if (MaxDuration == TimeSpan.Zero)
+                                            {
+                                                MaxDuration = TimeSpan.FromSeconds(totalseconds);
+                                            }
                                         }
+                                    }
+                                    else
+                                    {
+
                                     }
                                 }
                                 if (!bIsEncoding)
@@ -770,15 +803,17 @@ namespace VideoGui.ffmpeg
                                                 continue;
                                             }
 
-                                            if (sp != "" && IsMuxed)
+                                            if (sp != "" && totalseconds > 0)
                                             {
                                                 TimeSpan Tse = TimeSpan.Zero;
                                                 TimeSpan.TryParse(sp, out Tse);
-                                                double totalsecs = Tse.TotalSeconds;
-                                                if (totalseconds > 0)
+                                                totalsecs = Tse.TotalSeconds;
+                                                if (totalsecs > 0)
                                                 {
                                                     //totalseconds -= startime.TotalSeconds;
                                                     perc = (100 / totalseconds) * totalsecs;
+                                                    var rpercentdone = Convert.ToInt32(perc);
+                                                    OnConverterProgress?.Invoke(this, ComplexFile, rpercentdone, Eta, MaxDuration, ProcessID);
                                                 }
                                                 if (data.ContainsAll(new string[] { "frame", "fps", "size", "bitrate", "speed" }))
                                                 {
@@ -833,18 +868,13 @@ namespace VideoGui.ffmpeg
                                         TimeSpan.TryParse(frm2.Trim(), out Eta);
                                         if ((maxframes == -1) && (!_IsComplex))
                                         {
-                                            double mx = MaxDuration.TotalSeconds;
-                                            if (MaxDuration.TotalSeconds > 0)
+                                            percentdone = Convert.ToInt32(perc);
+                                            if (percentdone > 100)
                                             {
-                                                double pcd = (100 / mx);
-                                                pcd = pcd * Eta.TotalSeconds;
-                                                percentdone = Convert.ToInt32(pcd);
-                                                if (percentdone > 100)
-                                                {
-                                                    percentdone = 0;
-                                                }
+                                                percentdone = 0;
                                             }
-                                            //else percentdone = 0;
+
+
                                         }
                                         if (_IsComplex)
                                         {

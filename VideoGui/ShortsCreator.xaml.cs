@@ -390,13 +390,13 @@ namespace VideoGui
                     var Shortsbase = Path.GetDirectoryName(shortsfile);
                     var ext = Path.GetExtension(shortsfile);
 
-                     
-                    var dest = shortsfile.Split(@"\").ToList().LastOrDefault();    
+
+                    var dest = shortsfile.Split(@"\").ToList().LastOrDefault();
                     var newfile = Path.Combine(ShortsDirectory, "sourcefiles", dest);
-                   
+
                     File.Move(shortsfile, newfile);
 
-                    });
+                });
                 var logof = shortsfile.Replace("(shorts)", "(shorts_logo)");
                 //"D:\\filter\\120525\\dest\\VLINE Ararat To Southern Cross 060525 (shorts).mp4"
                 if (File.Exists(logof))
@@ -826,11 +826,21 @@ namespace VideoGui
                 if ((fd != null) && (fd.Value == true))
                 {
                     shortsfile = fld.FileName;
+
+                    if (shortsfile != null)
+                    {
+                        if (!shortsfile.Contains("(shorts).mp4"))
+                        {
+                            string newfile = fld.FileName.Replace(".mp4", " (shorts).mp4");
+                            File.Move(shortsfile,newfile);
+                            shortsfile = newfile;
+                        }
+                    }
                     RegistryKey key2 = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                     key2.SetValue("ShortsFile", Path.GetDirectoryName(shortsfile));
                     key2?.Close();
                     var bridge = new ffmpegbridge();
-                    bridge.ReadFile(shortsfile, true);
+                    bridge.ReadFile(shortsfile, true, true);
                     while (!bridge.Finished)
                     {
                         Thread.Sleep(100);

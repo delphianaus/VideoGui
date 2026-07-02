@@ -10,7 +10,7 @@
                 <ui:ThemesDictionary Theme="Dark" /> 
                 <ui:ControlsDictionary />
                 <ResourceDictionary Source="Themes/CustomDateTimePickerStyle.xaml"/>
-                <ResourceDictionary Source="Themes/CustomTimePickerStyle.xaml"/>
+                <ResourceDictionary Source="/Themes/customtimepickerstyle.xaml"/>
             </ResourceDictionary.MergedDictionaries>
 
   

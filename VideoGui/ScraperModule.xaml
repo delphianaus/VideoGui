@@ -75,7 +75,8 @@
                      
                      Margin="1,0,0,0" IsSynchronizedWithCurrentItem="False" 
                      Padding="0" ScrollViewer.HorizontalScrollBarVisibility="Auto" 
-                     ScrollViewer.VerticalScrollBarVisibility="Auto" Height="70" Width="782" FontSize="11">
+                     ScrollViewer.VerticalScrollBarVisibility="Auto" Height="70" 
+                     Width="782" FontSize="11">
                     <ListBox.ItemContainerStyle>
                         <Style TargetType="ListBoxItem">
                             <Setter Property="Height" Value="22" />

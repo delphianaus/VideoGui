@@ -20,7 +20,7 @@ namespace VideoGui.Models
         private DateOnly _DateOfRecord;
         private string _RTMP, _SourceDirectory, _DestinationDirectory, _Filename;
         private bool _IsTwitchStream, _Is720p, _IsShorts, _IsCutTrim, _IsEncodeTrim, _IsDeleteMonitoredSource,
-            _IsPersistentJob, _IsLocked, _IsMuxed, _IsFileSource;
+            _IsPersistentJob, _IsLocked, _IsMuxed, _ISFILESRC;
         private string _Id, _MuxData;
         private Nullable<DateTime> _TwitchSchedule;
         private int _IsCreateShorts = -1;
@@ -53,7 +53,7 @@ namespace VideoGui.Models
         public bool IsLocked { get => _IsLocked; set { _IsLocked = value; OnPropertyChanged(); } }
         public bool Is720p { get => _Is720p; set { _Is720p = value; OnPropertyChanged(); } }
         public bool IsShorts { get => _IsShorts; set { _IsShorts = value; OnPropertyChanged(); } }
-        public bool IsFileSource { get => _IsFileSource; set { _IsFileSource = value; OnPropertyChanged(); } }
+        public bool ISFILESRC { get => _ISFILESRC; set { _ISFILESRC = value; OnPropertyChanged(); } }
         public int IsCreateShorts { get => _IsCreateShorts; set { _IsCreateShorts = value; OnPropertyChanged(); } }
         public bool IsCutTrim { get => _IsCutTrim; set { _IsCutTrim = value; OnPropertyChanged(); } }
         public bool IsEncodeTrim { get => _IsEncodeTrim; set { _IsEncodeTrim = value; OnPropertyChanged(); } }
@@ -80,7 +80,7 @@ namespace VideoGui.Models
                 IsDeleteMonitoredSource = (reader["BMONITOREDSOURCE"] is Int16 isMonitoredSource) ? (Int16)isMonitoredSource == 1 : false;
                 IsPersistentJob = (reader["BPERSISTENTJOB"] is Int16 isPersistentJob) ? (Int16)isPersistentJob == 1 : false;
                 IsMuxed = (reader["IsMuxed"]) is Int16 _IsMuxed ? _IsMuxed == 1 : false;
-                IsFileSource = (reader["ISFILESOURCE"]) is Int16 _ISF ? _ISF == 1 : false;
+                ISFILESRC = (reader["ISFILESRC"]) is Int16 _ISF ? _ISF == 1 : false;
                 MuxData = (reader["MuxData"]) is string _MuxData ? _MuxData : "";
                 long start = reader["STARTPOS"].ToString().ToInt();
                 long end = reader["DURATION"].ToString().ToInt();
@@ -141,7 +141,7 @@ namespace VideoGui.Models
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
             }
         }
-        public ComplexJobHistory(bool _IsFileSOurce,string srcdir, string destfname, TimeSpan StartPos, TimeSpan Durationcut, DateOnly RecordDate, bool b720p,
+        public ComplexJobHistory(bool _ISFILESRC,string srcdir, string destfname, TimeSpan StartPos, TimeSpan Durationcut, DateOnly RecordDate, bool b720p,
             bool bShorts, int bCreateShorts, bool bEncodeTrim, bool bCutTrim, bool bMonitoredSource, bool bPersistentJob, int id,
             bool isMuxed, string muxData)
         {
@@ -150,7 +150,7 @@ namespace VideoGui.Models
                 SourceDirectory = srcdir;
                 IsLocked = false;
                 DateOfRecord = RecordDate;
-                IsFileSource = _IsFileSource;
+                ISFILESRC = _ISFILESRC;
                 DestinationDirectory = Path.GetDirectoryName(destfname);
                 Filename = Path.GetFileName(destfname);
                 Start = StartPos != TimeSpan.Zero ? StartPos : TimeSpan.Zero;
