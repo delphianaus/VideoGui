@@ -832,7 +832,7 @@ namespace VideoGui
                         if (!shortsfile.Contains("(shorts).mp4"))
                         {
                             string newfile = fld.FileName.Replace(".mp4", " (shorts).mp4");
-                            File.Move(shortsfile,newfile);
+                            File.Move(shortsfile, newfile);
                             shortsfile = newfile;
                         }
                     }
@@ -890,8 +890,33 @@ namespace VideoGui
             }
         }
 
+        private void frmShortsCreator_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            try
+            {
+                if (IsLoaded)
+                {
+                    if (e.WidthChanged)
+                    {
+                        gr1.Width = e.NewSize.Width;
+                        brdFileInfo.Width = e.NewSize.Width - 9;
+                        Canvas.SetLeft(btnSelectSourceDir, e.NewSize.Width - 54);
+                        Canvas.SetLeft(chkFormat, e.NewSize.Width - 150);
+                        txtsrcdir.Width = e.NewSize.Width - 240;
+                        pg1.Width = e.NewSize.Width - 431;
+                        e.Handled = true;
+                    }
+                    if (e.HeightChanged)
+                    {
 
-
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"{this} frmShortsCreator_SizeChanged {MethodBase.GetCurrentMethod().Name}");
+            }
+        }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {

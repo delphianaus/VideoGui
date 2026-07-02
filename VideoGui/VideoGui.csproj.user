@@ -22,9 +22,6 @@
     <Compile Update="ScheduleActioner.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="ScheduleEventCreator.xaml.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Update="ThemeExtractor.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -48,9 +45,6 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Update="MasterTagSelectForm.xaml">
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Update="ScheduleEventCreator.xaml">
       <SubType>Designer</SubType>
     </Page>
     <Page Update="SelectReleaseSchedule.xaml">
