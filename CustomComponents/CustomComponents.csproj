@@ -14,11 +14,21 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Page Remove="ListBoxExtensions\Themes\FluentWindowControls.xaml" />
+  </ItemGroup>
+
+  <ItemGroup>
 	<PackageReference Include="Extended.Wpf.Toolkit" Version="5.1.2" />
     <PackageReference Include="WPF-UI" Version="4.3.0" />
 	<ProjectReference Include="..\ToggleClass\ToggleClass.csproj" />
 
 
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="ListBoxExtensions\Themes\FluentWindowControls.xaml">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
 
 </Project>

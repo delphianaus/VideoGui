@@ -4,13 +4,14 @@ using System.Windows;
 using System.Windows.Input;
 using VideoGui.Models;
 using VideoGui.Models.delegates;
+using Wpf.Ui.Controls;
 
 namespace VideoGui
 {
     /// <summary>
     /// Interaction logic for MasterTagSelectForm.xaml
     /// </summary>
-    public partial class MasterTagSelectForm : Window
+    public partial class MasterTagSelectForm : FluentWindow
     {
         OnFinish DoOnFinish;
         databasehook<Object> Invoker;

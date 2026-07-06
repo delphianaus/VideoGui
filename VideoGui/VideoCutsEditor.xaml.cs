@@ -34,6 +34,7 @@ using FolderBrowserDialog = FolderBrowserEx.FolderBrowserDialog;
 using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
 using Path = System.IO.Path;
 using Wpf.Ui.Controls;
+using System.Xml.Resolvers;
 
 namespace VideoGui
 {
@@ -245,7 +246,7 @@ namespace VideoGui
                                 DestPat.RemoveAt(DestPat.Count - 1);
                                 XML_Dest = Uri.UnescapeDataString(DestPat.LastOrDefault().ToString());
                             }
-                            
+
 
                             /*List<string> times = new List<string>();
                             foreach (var clip in clipItems)
@@ -310,7 +311,11 @@ namespace VideoGui
                             var filenamelist = urlLocation.Replace("%20", " ").Replace("%3a", ":").
                               Replace("file://xctkhost/", "").Replace(@"/", @"\").ToString();
                             XML_Filename = filenamelist.ToString().Replace("{ PathUrl = ", "").Trim();
+                            if (XML_Filename.StartsWith(@"file:\\localhost\"))
+                            {
+                                XML_Filename = XML_Filename.Replace(@"file:\\localhost\", "");
 
+                            }
 
                             int idx = XML_Filename.IndexOf(@"\GX_");
                             if (idx != -1)
@@ -610,11 +615,11 @@ namespace VideoGui
             {
                 RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                 string TwitchDir = key.GetValueStr("DestDirectoryTwitch");
-                string destdir = (chkExportForTwitch.IsChecked.Value) ? TwitchDir : 
-                   Path.Combine(txxtEditDirectory.Text,XML_Dest);
+                string destdir = (chkExportForTwitch.IsChecked.Value) ? TwitchDir :
+                   Path.Combine(txxtEditDirectory.Text, XML_Dest);
                 if (!Directory.Exists(destdir))
                 {
-                   Directory.CreateDirectory(destdir);
+                    Directory.CreateDirectory(destdir);
                 }
                 key?.Close();
 

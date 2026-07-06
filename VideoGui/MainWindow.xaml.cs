@@ -9804,6 +9804,7 @@ namespace VideoGui
                     bool IsComplex = false;
                     bool Is4kAdobe = false;
                     string dfile = "";
+                    bool IsAdobeEditing = false;
                     for (int jindex = 0; jindex < ProcessingJobs.Count(); jindex++)
                     {
                         if (ProcessingJobs[jindex].FileNoExt == sourcefile)
@@ -9811,6 +9812,7 @@ namespace VideoGui
                             Is4kAdobe = ProcessingJobs[jindex].Is4KAdobe;
                             sc = ProcessingJobs[jindex].SourceFile;
                             IsComplex = ProcessingJobs[jindex].IsComplex;
+                            IsAdobeEditing = ProcessingJobs[jindex].SourceFile.Contains(@"adobe\editing\");
                             dfile = ProcessingJobs[jindex].SourcePath;
                             if (Is4kAdobe)
                             {
@@ -9824,7 +9826,7 @@ namespace VideoGui
                         MoveIfExists(sc, destdir);
                     }
                     string mismatch = $"Dest {Math.Round(_TotalSeconds)} Source {Math.Truncate(TotalSeconds)}";
-                    if (Is4kAdobe && !IsMuxed)
+                    if (Is4kAdobe && !IsMuxed && !IsAdobeEditing)
                     {
                         string df = Directory.EnumerateFiles(dfile, $"{sourcefile}.mp4", SearchOption.AllDirectories).ToList().FirstOrDefault();
                         if (File.Exists(df))

@@ -1,4 +1,4 @@
-﻿    using AsyncAwaitBestPractices;
+﻿using AsyncAwaitBestPractices;
 using FolderBrowserEx;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Win32;
@@ -118,7 +118,7 @@ namespace VideoGui
                 Top = (Top != _top && _top != 0) ? _top : Top;
                 Width = (ActualWidth != _width && _width != 0) ? _width : Width;
                 Height = (ActualHeight != _height && _height != 0) ? _height : Height;
-                HandleResize(Width, Height, true, true);
+                //HandleResize(Width, Height, true, true);
 
 
                 LoadingPanel.Visibility = Visibility.Collapsed;
@@ -138,58 +138,13 @@ namespace VideoGui
                 ex.LogWrite($"LocationChanger_Tick {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-        private void HandleResize(double _width, double _height, bool IsWidth = true, bool IsHeight = true)
-        {
-            try
-            {
-                if (IsLoaded && Ready)
-                {
-                    if (IsWidth)
-                    {
-                        MainGrid.Width = _width;
-                        LoadingPanel.Width = _width;
-                        MainContent.Width = _width;
-                        MainScroller.Width = _width;
-                        brdFileInfo.Width = _width - 25;
-                        brdControls.Width = brdFileInfo.Width;
-                        msuSchedules.Width = _width - 113;
-                        Canvas.SetLeft(brdt2, _width - 109);
-                        Canvas.SetLeft(btnSelectSourceDir, _width - 55);
-                        Canvas.SetLeft(btnClose, _width - 124);
-                        txtsrcdir.Width = _width - 180;
-                        double myWidth = (_width - 200 - 120) / 2;
-                        if (myWidth < 140) myWidth = 140;
-                        GridLength gl = new GridLength(myWidth, GridUnitType.Pixel);
-                        SuggestedWidth = myWidth;
-                        FileNameWidth = myWidth;
-                    }
-                    if (IsHeight)
-                    {
-                        MainGrid.Height = _height;
-                        LoadingPanel.Height = _height;
-                        MainScroller.Height = _height;
-                        MainContent.Height = _height;
-                        msuSchedules.Height = _height - 152;
-                        Canvas.SetTop(brdControls, _height - 93);
-                        brdTControls.Height = _height - 161;
-                        cnvControls.Height = brdTControls.Height;
-                        Canvas.SetTop(btnMove, _height - 196);
-                        Canvas.SetTop(btnSelectAll, _height - 227);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite($"SetControls {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
-            }
-
-        }
+        
 
         private void frmImport_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             try
             {
-                if (IsLoaded && Ready)
+                if (IsLoaded)
                 {
                     if (_isFirstResize)
                     {
@@ -197,13 +152,48 @@ namespace VideoGui
                         LoadingPanel.Visibility = Visibility.Collapsed;
                         MainContent.Visibility = Visibility.Visible;
                     }
-                    HandleResize(e.NewSize.Width, e.NewSize.Height, e.WidthChanged, e.HeightChanged);
+                   // HandleResize(e.NewSize.Width, e.NewSize.Height, e.WidthChanged, e.HeightChanged);
                     if (e.HeightChanged || e.WidthChanged)
                     {
                         RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                         key?.SetValue("MIWidth", ActualWidth);
                         key?.SetValue("MIHeight", ActualHeight);
                         key?.Close();
+                        if (e.WidthChanged)
+                        {
+                            FormGrid.Width = e.NewSize.Width;
+                            MITITLE.Width = e.NewSize.Width;
+                            MainGrid.Width = e.NewSize.Width;
+                            maingrid1.Width = e.NewSize.Width;
+                            brdFileInfo.Width = e.NewSize.Width-7;
+                            brdControls.Width = brdFileInfo.Width;
+                            msuSchedules.Width = e.NewSize.Width - 105;
+                            Canvas.SetLeft(brdt2, e.NewSize.Width - 98);
+                            Canvas.SetLeft(btnSelectSourceDir, e.NewSize.Width - 43);
+                            Canvas.SetLeft(btnClose, e.NewSize.Width - 124);
+                            txtsrcdir.Width = e.NewSize.Width - 51;
+                            double myWidth = (e.NewSize.Width - 200 - 120) / 2;
+                            if (myWidth < 140) myWidth = 140;
+                            GridLength gl = new GridLength(myWidth, GridUnitType.Pixel);
+
+                        }
+                        if (e.HeightChanged)
+                        {
+                            FormGrid.Height = e.NewSize.Height;
+                            MainGrid.Height = e.NewSize.Height;
+                            maingrid1.Height = e.NewSize.Height;
+                            LoadingPanel.Height = e.NewSize.Height;
+                            MainScroller.Height = e.NewSize.Height;
+                            MainContent.Height = e.NewSize.Height;
+                            msuSchedules.Height = e.NewSize.Height - 158;
+                            brdTControls.Height = msuSchedules.Height - 11;
+                            Canvas.SetTop(brdControls, e.NewSize.Height - 93);
+                           
+                            cnvControls.Height = brdTControls.Height;
+                            Canvas.SetTop(btnMove, e.NewSize.Height - 200);
+                            Canvas.SetTop(btnSelectAll, e.NewSize.Height - 232);
+                        }
+
                     }
                     e.Handled = true;
                 }
@@ -265,7 +255,7 @@ namespace VideoGui
                 }
                 while (MaxFile > 0)
                 {
-                    await Task.Delay(100);      
+                    await Task.Delay(100);
                 }
                 MediaInfoTimesSort.Sort();
                 string Pad = "";
@@ -413,6 +403,10 @@ namespace VideoGui
                 if (IsLoaded)
                 {
                     Invoker?.Invoke(this, new CustomParams_Initialize());
+                    Width--;
+                    Width++;
+                    Height--;
+                    Height++;
                 }
 
                 LocationChanger.Interval = TimeSpan.FromMilliseconds(10);
@@ -432,6 +426,11 @@ namespace VideoGui
                     };
                     LocationChangedTimer.Start();
                 };
+                Width--;
+                Width++;
+                Height--;
+                Height++;
+  
             }
             catch (Exception ex)
             {

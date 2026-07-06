@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:xctk="clr-namespace:VideoGui" Loaded="frmVideoCutsEditor_Loaded"
         xmlns:MSU="clr-namespace:CustomComponents.ListBoxExtensions;assembly=CustomComponents"
-        mc:Ignorable="d" ResizeMode="CanResizeWithGrip" 
+        mc:Ignorable="d" ResizeMode="CanResizeWithGrip"  d:Background="DimGray"
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
         ExtendsContentIntoTitleBar="True" WindowBackdropType="Mica"
         WindowStartupLocation="CenterScreen" WindowStyle="ToolWindow" 
@@ -63,8 +63,8 @@
                     <Label x:Name="lblTotalTime" Content="00:00:00" Height="26" Canvas.Left="617" Canvas.Top="40" HorizontalAlignment="Left" VerticalAlignment="Center"/>
                 </Canvas>
             </Border>
-            <MSU:MultiListbox x:Name="msuVideoCuts" ItemHeight="15"
-           Header="Video Cuts" Width="494" FontSize="13"
+            <MSU:MultiListbox x:Name="msuVideoCuts" ItemHeight="15" Background="Black"
+           Header="Video Cuts" Width="494" FontSize="13" IsDarkMode="True"
            VerticalAlignment="Top" VerticalContentAlignment="Bottom" 
            Height="409" HorizontalAlignment="Left" Margin="0,90,0,0">
                 <MSU:MultiListbox.ColumnDefinitions>
@@ -145,8 +145,10 @@
                     <CheckBox x:Name="chkExportForTwitch" Content="Twitch Export" Canvas.Left="256" Canvas.Top="22" HorizontalAlignment="Center" VerticalAlignment="Top" Width="133" FontSize="16" IsEnabled="False" />
                 </Canvas>
             </Border>
-            <StatusBar Height="34" Margin="2,0,2,0" Name="stsBar1" VerticalAlignment="Bottom" Width="713" HorizontalAlignment="Left" >
-                <Label x:Name="lblStatus" Background="#FFBFBFBF" Height="34" Content="Status" FontSize="11" Width="711"/>
+            <StatusBar Height="34" Margin="2,0,0,0" Name="stsBar1" VerticalAlignment="Bottom" Width="713" HorizontalAlignment="Left" Background="#0F3F3C3C" Padding="0,0,0,0" >
+                <Label x:Name="lblStatus" Background="{x:Null}" Height="20" 
+                 Content="Status" FontSize="11" Width="711" 
+                  HorizontalAlignment="Left" VerticalAlignment="Top" HorizontalContentAlignment="Center"/>
             </StatusBar>
         </Grid>
     </Grid>

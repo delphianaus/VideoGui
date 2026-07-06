@@ -5,6 +5,8 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using VideoGui.Models;
 using VideoGui.Models.delegates;
+using Wpf.Ui.Controls;
+using MenuItem = Wpf.Ui.Controls.MenuItem;
 
 
 namespace VideoGui
@@ -12,7 +14,7 @@ namespace VideoGui
     /// <summary>
     /// Interaction logic for DescSelectFrm.xaml
     /// </summary>
-    public partial class DescSelectFrm : Window
+    public partial class DescSelectFrm : FluentWindow
     {
         bool IsUploadsBuilder = false;
         databasehook<object> Invoker;

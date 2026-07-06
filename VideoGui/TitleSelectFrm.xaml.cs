@@ -7,13 +7,16 @@ using System.Windows;
 using System.Windows.Input;
 using VideoGui.Models;
 using VideoGui.Models.delegates;
+using Wpf.Ui.Controls;
+using MenuItem = Wpf.Ui.Controls.MenuItem;
+using MessageBox = Wpf.Ui.Controls.MessageBox;
 
 namespace VideoGui
 {
     /// <summary>
     /// Interaction logic for TitleSelectFrm.xaml
     /// </summary>
-    public partial class TitleSelectFrm : Window
+    public partial class TitleSelectFrm : FluentWindow
     {
         public bool IsShorts = false, IsClosed = false, IsClosing = false, IsTitleChanged = false;
 
@@ -192,7 +195,9 @@ namespace VideoGui
                     }
                     else
                     {
-                        MessageBox.Show("Title And Tags Exceeds 100 Characters");
+                        var msgbox = new MessageBox();
+                        msgbox.Title = "Title And Tags Exceeds 100 Characters";
+                        msgbox.ShowDialog();
                     }
                     TagsGrp.Items.Refresh();
                     TagAvailable.Items.Refresh();
@@ -348,7 +353,9 @@ namespace VideoGui
                     }
                     else
                     {
-                        MessageBox.Show("Title And Tags Exceeds 100 Characters");
+                        var msgbox = new MessageBox();
+                        msgbox.Title = "Title And Tags Exceeds 100 Characters";
+                        msgbox.ShowDialog();
                     }
                 }
             }
