@@ -168,7 +168,7 @@ namespace VideoGui
                 IsShorts = (reader["BSHORTS"] is Int16 _isShorts) ? (Int16)_isShorts == 1 : false;
                 IsMuxed = (reader["ISMUXED"] is Int16 _isMux) ? (Int16)_isMux == 1 : false;
                 IsMovie = (reader["ISMOVIE"] is Int16 _isMovie) ? (Int16)_isMovie == 1 : false;
-                IsXMLSource = (reader["BXMLSOURCE"] is Int16 _isXML) ? (Int16)_isXML == 1 : false;
+                IsXMLSource = (reader["ISXMLFILESOURCE"] is Int16 _isXML) ? (Int16)_isXML == 1 : false;
                 MuxData = (reader["MUXDATA"] is string _isMuxData) ? _isMuxData : "";
                 IsCreateShorts = (reader["BCREATESHORTS"] is Int16 _isCShorts) ? (Int16)_isCShorts : -1; ;
                 var IsEncodeTrim = (reader["BENCODETRIM"] is Int16 _isEncodeTrim) ? (Int16)_isEncodeTrim == 1 : false;

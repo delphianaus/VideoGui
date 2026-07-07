@@ -4841,9 +4841,9 @@ namespace VideoGui
                 connectionString.AddFieldToTable("AutoInsertHistory", "ISMUXED", "SMALLINT", 0);
                 connectionString.AddFieldToTable("AutoInsertHistory", "ISFILESRC", "SMALLINT", 0);
                 connectionString.AddFieldToTable("AutoInsertHistory", "MUXDATA", "VARCHAR(256)", "");
-                connectionString.AddFieldToTable("AutoInsertHistory", "XMLFILESOURCE", "SMALLINT", "0");
+                connectionString.AddFieldToTable("AutoInsertHistory", "ISXMLFILESOURCE", "SMALLINT", "0");
                 connectionString.AddFieldToTable("AutoInsertHistory", "ISMOVIE", "SMALLINT", "0");
-                connectionString.AddFieldToTable("AutoInsert", "XMLFILESOURCE", "SMALLINT", "0");
+                connectionString.AddFieldToTable("AutoInsert", "ISXMLFILESOURCE", "SMALLINT", "0");
                 connectionString.AddFieldToTable("AutoInsert", "ISMOVIE", "SMALLINT", "0");
                 // autoinert modify & autoinsert history modify
 

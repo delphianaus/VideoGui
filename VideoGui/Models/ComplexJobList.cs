@@ -90,10 +90,10 @@ namespace VideoGui.Models
                 IsMuxed = (reader["IsMuxed"] is Int16 _ismuxed) ? _ismuxed == 1 : false;
                 MuxData = (reader["MuxData"] is string _MuxData) ? _MuxData : "";
                 Is720p = (reader["B720P"] is Int16 _is720p) ? _is720p == 1 : false;
-                IsMovie = (reader["BMOVIE"] is Int16 _isMovie) ? _isMovie == 1 : false;
+                IsMovie = (reader["ISMOVIE"] is Int16 _isMovie) ? _isMovie == 1 : false;
                 ISFILESRC = (reader["ISFILESRC"] is Int16 _ISF) ? _ISF == 1 : false;
                 IsDownloads = false;
-                IsXMLSource = (reader["ISXMLSOURCE"] is Int16 _IsXMLSource) ? _IsXMLSource == 1 : false;
+                IsXMLSource = (reader["ISXMLFILESOURCE"] is Int16 _IsXMLSource) ? _IsXMLSource == 1 : false;
                 IsShorts = (reader["BSHORTS"] is Int16 _isShorts) ? (Int16)_isShorts == 1 : false;
                 IsCreateShorts = (reader["BCREATESHORTS"] is Int16 _isCreateShorts) ? (Int16)_isCreateShorts : -1;
                 IsEncodeTrim = (reader["BENCODETRIM"] is Int16 _isEncodeTrim) ? (Int16)_isEncodeTrim == 1 : false;
