@@ -87,7 +87,7 @@
                     </ContextMenu>
                 </MSU:MultiListbox.ItemsContextMenu>
             </MSU:MultiListbox>
-            <Border x:Name="brdControls1" BorderThickness="2" BorderBrush="Black" Width="221" Height="399" HorizontalAlignment="Right" Margin="10,0,3,0">
+            <Border x:Name="brdControls1" BorderThickness="2" BorderBrush="CadetBlue" Width="221" Height="399" HorizontalAlignment="Right" Margin="10,0,3,0">
                 <Canvas x:Name="cnvControls" Margin="0,2,0,0">
                     <ContentControl x:Name="labelstartevents" Canvas.Left="6" Canvas.Top="36" HorizontalAlignment="Center" VerticalAlignment="Top"/>
                     <ContentControl x:Name="labelendevents" Canvas.Left="7" Canvas.Top="90" HorizontalAlignment="Left" VerticalAlignment="Center"/>
@@ -140,7 +140,7 @@
                    Canvas.Top="19" Canvas.Left="483" Width="90" Height="26"
                    Click="tbSource_Click" HorizontalAlignment="Center" />
                     <Button x:Name="btnClose" Content="Close" Width="90" Height="30"  HorizontalAlignment="Center" Canvas.Left="603" Canvas.Top="17" VerticalAlignment="Top" Click="btnClose_Click"/>
-                    <Button x:Name="btnAccept" Content="Accept" Width="90" Height="30" Canvas.Left="10" Canvas.Top="17" Click="btnAccept_Click" HorizontalAlignment="Center" VerticalAlignment="Top" IsEnabled="False"/>
+                    <Button x:Name="btnAccept" Content="Accept" Width="90" Height="30" Canvas.Left="10" Canvas.Top="18" Click="btnAccept_Click" HorizontalAlignment="Center" VerticalAlignment="Top" IsEnabled="False"/>
                     <Button x:Name="btnAcceptSelected" Content="Accept Selected" Width="134" Height="30" Canvas.Left="110" Canvas.Top="17" Click="btnAcceptSelected_Click" IsEnabled="False" HorizontalAlignment="Center" VerticalAlignment="Top"/>
                     <CheckBox x:Name="chkExportForTwitch" Content="Twitch Export" Canvas.Left="256" Canvas.Top="22" HorizontalAlignment="Center" VerticalAlignment="Top" Width="133" FontSize="16" IsEnabled="False" />
                 </Canvas>

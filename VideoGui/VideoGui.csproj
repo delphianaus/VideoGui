@@ -12,8 +12,8 @@
     <StartupObject>VideoGui.App</StartupObject>
     <ApplicationIcon>Properties\computer.ico</ApplicationIcon>
     <Platforms>x64</Platforms>
-    <AssemblyVersion>1.0.0.456</AssemblyVersion>
-    <FileVersion>1.0.0.456</FileVersion>
+    <AssemblyVersion>1.0.0.457</AssemblyVersion>
+    <FileVersion>1.0.0.457</FileVersion>
     <Nullable>annotations</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <UseWindowsForms>True</UseWindowsForms>
@@ -90,10 +90,7 @@
     <None Remove="Icons\Yes.png" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Page Remove="complexvideos.xaml" />
-    <Page Remove="Themes\FluentWindowControls.xaml" />
-  </ItemGroup>
+
 
   <ItemGroup>
     <PackageReference Include="AsyncAwaitBestPractices" Version="10.0.0" />

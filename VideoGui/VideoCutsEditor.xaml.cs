@@ -624,8 +624,9 @@ namespace VideoGui
                 key?.Close();
 
 
-                DoAddRecord?.Invoke(chkExportForTwitch.IsChecked.Value, true, false, false, -1, true, false, false, false,
-                                        true, ctv.TimeFrom.ToFFmpeg(), ctv.TimeTo.ToFFmpeg()
+                DoAddRecord?.Invoke(tbSource.IsChecked.Value,chkExportForTwitch.IsChecked.Value, true, 
+                    false, false, false,-1, true, false, false, false,
+                    true, ctv.TimeFrom.ToFFmpeg(), ctv.TimeTo.ToFFmpeg()
                                         , (tbSource.IsChecked.Value) ? txtsrcdir.Text : XML_Filename,
                                         destdir + "\\" + ctv.FileName.Trim() + $" Part {ctv._CutNo}.mp4",
                                         null, null, chkExportForTwitch.IsChecked.Value);

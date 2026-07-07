@@ -257,7 +257,7 @@ namespace VideoGui
                             List<string> timespans = time.Split("-").ToList();
                             TimeSpan Start = timespans.FirstOrDefault().FromStrToTimeSpan();
                             TimeSpan End = timespans.LastOrDefault().FromStrToTimeSpan() - Start;
-                            DoAddRecord?.Invoke(false, true, false, false, 0, true, false, false, false,
+                            DoAddRecord?.Invoke(false,false,false, true, false, false, 0, true, false, false, false,
                                  true, Start.ToFFmpeg(), End.ToFFmpeg(), txtsrcdir.Text,
                                  txtdestdir.Text + "\\" + txtFilename.Text + $" {RecNum++}");
                         }
@@ -882,7 +882,7 @@ namespace VideoGui
                 bool IsAdobe = txtdestdir.Text.ToLower() == adobedir.ToLower();
                 Nullable<DateTime> twitchdata = null;
                 twitchdata = (ReleaseDate.Value.HasValue) ? ReleaseDate.Value.Value : null;
-                DoAddRecord?.Invoke(!tbSource.IsChecked.Value,
+                DoAddRecord?.Invoke(false,false,!tbSource.IsChecked.Value,
                     ChkElapsed.IsChecked.Value, Chk720P.IsChecked.Value,
                     ChkShorts.IsChecked.Value, 0,  // number 4
                     ChkEnableTrim.IsChecked.Value, ChkCut.IsChecked.Value,
@@ -1172,7 +1172,7 @@ namespace VideoGui
                     }
                     foreach (var tbpfile in tobeprocessed)
                     {
-                        DoAddRecord?.Invoke(tbSource.IsChecked.Value, ChkElapsed.IsChecked.Value, Chk720P.IsChecked.Value,
+                        DoAddRecord?.Invoke(false,false,tbSource.IsChecked.Value, ChkElapsed.IsChecked.Value, Chk720P.IsChecked.Value,
                             ChkShorts.IsChecked.Value, 0,
                             ChkEnableTrim.IsChecked.Value, ChkCut.IsChecked.Value,
                             chkDeleteMonitored.IsChecked.Value, chkPersistantSource.IsChecked.Value,

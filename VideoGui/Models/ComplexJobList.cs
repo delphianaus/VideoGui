@@ -17,7 +17,7 @@ namespace VideoGui.Models
     {
         private TimeSpan _Start, _Duration;
         private string _RTMP, _SourceDirectory, _DestinationDirectory, _Filename;
-        private bool _IsTwitchStream, _Is720p, _IsShorts, _IsCutTrim, _IsEncodeTrim, _ISFILESRC,
+        private bool _IsXMLSource, _IsTwitchStream, _Is720p, _bIsMovie,_IsShorts, _IsCutTrim, _IsEncodeTrim, _ISFILESRC,
               _IsDeleteMonitoredSource, _IsDownloads, _IsPersistentJob, _IsLocked, _IsMuxed;
         private string _Id, _MuxData;
         private Nullable<DateTime> _TwitchSchedule;
@@ -51,13 +51,14 @@ namespace VideoGui.Models
         public string RTMP { get => _RTMP; set { _RTMP = value; OnPropertyChanged(); } }
 
         public bool IsMuxed { get => _IsMuxed; set { _IsMuxed = value; OnPropertyChanged(); } }
-
+        public bool IsXMLSource { get => _IsXMLSource; set { _IsXMLSource = value; OnPropertyChanged(); } }
         public bool IsTwitchStream { get => _IsTwitchStream; set { _IsTwitchStream = value; OnPropertyChanged(); } }
         public bool IsLocked { get => _IsLocked; set { _IsLocked = value; OnPropertyChanged(); } }
         public bool Is720p { get => _Is720p; set { _Is720p = value; OnPropertyChanged(); } }
         public bool IsShorts { get => _IsShorts; set { _IsShorts = value; OnPropertyChanged(); } }
         public bool ISFILESRC { get => _ISFILESRC; set { _ISFILESRC = value; OnPropertyChanged(); } }
         public bool IsDownloads { get => _IsDownloads; set { _IsDownloads = value; OnPropertyChanged(); } }
+        public bool IsMovie { get => _bIsMovie; set { _bIsMovie = value; OnPropertyChanged(); } }
 
         public int IsCreateShorts { get => _IsCreateShorts; set { _IsCreateShorts = value; OnPropertyChanged(); } }
         public bool IsCutTrim { get => _IsCutTrim; set { _IsCutTrim = value; OnPropertyChanged(); } }
@@ -79,6 +80,7 @@ namespace VideoGui.Models
                 IsShorts = false;
                 IsCreateShorts = -1;
                 IsCutTrim = false;
+
                 IsEncodeTrim = false;
                 Id = reader["Id"].ToString();
                 SourceDirectory = reader["SRCDIR"].ToString();
@@ -88,8 +90,10 @@ namespace VideoGui.Models
                 IsMuxed = (reader["IsMuxed"] is Int16 _ismuxed) ? _ismuxed == 1 : false;
                 MuxData = (reader["MuxData"] is string _MuxData) ? _MuxData : "";
                 Is720p = (reader["B720P"] is Int16 _is720p) ? _is720p == 1 : false;
+                IsMovie = (reader["BMOVIE"] is Int16 _isMovie) ? _isMovie == 1 : false;
                 ISFILESRC = (reader["ISFILESRC"] is Int16 _ISF) ? _ISF == 1 : false;
                 IsDownloads = false;
+                IsXMLSource = (reader["ISXMLSOURCE"] is Int16 _IsXMLSource) ? _IsXMLSource == 1 : false;
                 IsShorts = (reader["BSHORTS"] is Int16 _isShorts) ? (Int16)_isShorts == 1 : false;
                 IsCreateShorts = (reader["BCREATESHORTS"] is Int16 _isCreateShorts) ? (Int16)_isCreateShorts : -1;
                 IsEncodeTrim = (reader["BENCODETRIM"] is Int16 _isEncodeTrim) ? (Int16)_isEncodeTrim == 1 : false;
@@ -140,15 +144,17 @@ namespace VideoGui.Models
                 ex.LogWrite($"{this} {MethodBase.GetCurrentMethod().Name}");
             }
         }
-        public ComplexJobList(bool ISFILESRC,string srcdir, string destfname, TimeSpan StartPos, TimeSpan Durationcut,
-            bool b720p, bool bShorts, int bCreateShorts, bool bEncodeTrim, bool bCutTrim, bool bMonitoredSource,
+        public ComplexJobList(bool _IsXMLSource,bool _ISFILESRC,string srcdir, string destfname, TimeSpan StartPos, TimeSpan Durationcut,
+            bool b720p, bool _bIsMovie, bool bShorts, int bCreateShorts, bool bEncodeTrim, bool bCutTrim, bool bMonitoredSource,
             bool bPersistentJob, int id, bool _IsMuxed, string _MuxData, bool _IsDownloads)
         {
             try
             {
                 SourceDirectory = srcdir;
                 IsLocked = false;
-                ISFILESRC = ISFILESRC;
+                IsMovie = _bIsMovie;
+                ISFILESRC = _ISFILESRC;
+                IsXMLSource = _IsXMLSource;
                 DestinationDirectory = Path.GetDirectoryName(destfname);
                 Filename = Path.GetFileName(destfname);
                 Start = StartPos != TimeSpan.Zero ? StartPos : TimeSpan.Zero;

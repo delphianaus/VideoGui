@@ -29,7 +29,7 @@ namespace VideoGui
             _fisheye, _processed, _X264Override, _ComplexMode, _Is720p,
             _Is48K, _IsComplex, _ProbeLock, _IsAc3_2Channel, _IsAc3_6Channel,
             _InProcess, _IsSkipped, _IsShorts, _Mpeg4ASP, _Mpeg4AVC, _Is1440p,
-            _Is4K, _IsInterlaced, _ProbeStarted, _IsMuxed, _ISFILESRC;
+            _Is4K, _IsInterlaced, _ProbeStarted, _IsMuxed, _ISFILESRC, _IsXMLSource, _IsMovie;
         private FontStyle _ItemFontStyle;
         private Color _ForegroundColor;
         private int _IsCreateShorts = -1;
@@ -85,7 +85,8 @@ namespace VideoGui
         public bool Is4K { get => _Is4K; set { _Is4K = value; OnPropertyChanged(); } }
         // CET MOD
         public bool IsNVM { get => _IsNVM; set { _IsNVM = value; OnPropertyChanged(); } }
-
+        public bool IsMovie { get => _IsMovie; set { _IsMovie = value; OnPropertyChanged(); } }
+        public bool IsXMLSource { get => _IsXMLSource; set { _IsXMLSource = value; OnPropertyChanged(); } }
         public bool IsMSJ { get => _IsMSJ; set { _IsMSJ = value; OnPropertyChanged(); } }
         public bool Is5K { get => _Is5K; set { _Is5K = value; OnPropertyChanged(); } }
         public bool IsTwitchStream { get => _IsTwitchStream; set { _IsTwitchStream = value; OnPropertyChanged(); } }
@@ -166,6 +167,8 @@ namespace VideoGui
                 Is720P = (reader["B720P"] is Int16 _is720p) ? (Int16)_is720p == 1 : false;
                 IsShorts = (reader["BSHORTS"] is Int16 _isShorts) ? (Int16)_isShorts == 1 : false;
                 IsMuxed = (reader["ISMUXED"] is Int16 _isMux) ? (Int16)_isMux == 1 : false;
+                IsMovie = (reader["ISMOVIE"] is Int16 _isMovie) ? (Int16)_isMovie == 1 : false;
+                IsXMLSource = (reader["BXMLSOURCE"] is Int16 _isXML) ? (Int16)_isXML == 1 : false;
                 MuxData = (reader["MUXDATA"] is string _isMuxData) ? _isMuxData : "";
                 IsCreateShorts = (reader["BCREATESHORTS"] is Int16 _isCShorts) ? (Int16)_isCShorts : -1; ;
                 var IsEncodeTrim = (reader["BENCODETRIM"] is Int16 _isEncodeTrim) ? (Int16)_isEncodeTrim == 1 : false;
@@ -259,7 +262,7 @@ namespace VideoGui
                 ex.LogWrite($"{this} {MethodBase.GetCurrentMethod().Name}");
             }
         }
-        public JobListDetails(bool _IsDownloads, bool _ISFILESRC, string _Title, int _SourceFileIndex,
+        public JobListDetails(bool _IsXMLSource, bool _IsMovie, bool _IsDownloads, bool _ISFILESRC, string _Title, int _SourceFileIndex,
             int _Autoinssertid, string _ScriptFile,
             int _ScriptType, bool _Is1440p = false, bool _Is4Kp = false, bool _ISMJS = false,
             bool __Is4KAdobe = false, bool __IsShorts = false, int __IsCreateShorts = 0,
@@ -268,6 +271,8 @@ namespace VideoGui
             // _ScriptType - 0 = src, 1 cst, 2 edt
             DeletionFileHandle = -1;
             IsDownloads = _IsDownloads;
+            IsMovie = _IsMovie;
+            IsXMLSource = _IsXMLSource;
             ISFILESRC = _ISFILESRC || _ScriptType == 7;
             (Fileinfo, Progress, SourceFileIndex, Is1440p, Is4K, ScriptFile) = (_FIleInfo, 0, _SourceFileIndex, _Is1440p, _Is4Kp, _ScriptFile);
             (ProbePassed, Complete, ProbeLock, _ProbeStarted, _ConversionStarted, Processed) = (true, false, false, false, false, false);
@@ -302,13 +307,13 @@ namespace VideoGui
             Commands.RemoveAt(0);
             string ext = Commands.FirstOrDefault();
             Commands.RemoveAt(0);
-            if ((Commands.Count >= 2) && (IsTwitchOut))
+            if ((Commands.Count >= 2) && (IsTwitchOut||IsXMLSource))
             {
                 StartPos = Commands.FirstOrDefault();
                 EndPos = Commands[1].ToString();
                 PosMode = Commands[2].ToString();
             }
-            if (!IsMuxed && !ISFILESRC)
+            if ((IsXMLSource)||(!IsMuxed && !ISFILESRC))
             {
                 List<string> Files = Directory.EnumerateFiles(sourceDir, "*" + ext, SearchOption.AllDirectories).ToList();
                 foreach (string file in Files)
@@ -324,7 +329,7 @@ namespace VideoGui
             (_Is48K, _IsAc3_2Channel, _IsAc3_6Channel) = (false, false, false);
             ItemFontStyle = (X264Override) ? System.Windows.FontStyles.Italic : System.Windows.FontStyles.Normal;
             ForegroundColor = X264Override ? Color.FromScRgb(100, 6, 186, 28) : Color.FromArgb(100, 246, 8, 50);
-            if (IsMuxed || ISFILESRC)
+            if (IsMuxed || ISFILESRC || IsXMLSource)
             {
                 IsMulti = false;
                 Title = Path.GetFileNameWithoutExtension(MultiSourceDir);
@@ -333,7 +338,7 @@ namespace VideoGui
             }
         }
 
-        public JobListDetails(bool _IsDownloads, bool _ISFILESRC,string _Title, int _SourceFileIndex, string _SourceDir = "",
+        public JobListDetails(bool _IsXMLSource, bool _IsMovie, bool _IsDownloads, bool _ISFILESRC,string _Title, int _SourceFileIndex, string _SourceDir = "",
             int _Progress = 0, bool x265Override = false, bool _IsMpeg4ASP = false,
             bool _IsMpeg4AVC = false)
         {
@@ -341,6 +346,8 @@ namespace VideoGui
             Progress = _Progress;
             RTMP = "";
             ISFILESRC = _ISFILESRC;
+            IsXMLSource = _IsXMLSource;
+            IsMovie = _IsMovie;
             twitchschedule = DateTime.Now.AddYears(-100);
             Processed = false;
             SourceFileIndex = _SourceFileIndex;
