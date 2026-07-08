@@ -867,11 +867,24 @@ namespace VideoGui
             }
         }
 
-        public static void CreatePathIfNotExists(this string path)
+        public static void CreatePathIfNotExists(this string _path)
         {
-            if (!Directory.Exists(path) && path.NotNullOrEmpty())
+            try
             {
-                Directory.CreateDirectory(path);
+                if (_path.Contains(@":\"))
+                {
+                    int idx = _path.IndexOf(@":\");
+                    string drv = _path.Substring(0, idx + 2);
+                    if (!Directory.Exists(drv)) return;
+                }
+                if (!Directory.Exists(_path) && _path.NotNullOrEmpty())
+                {
+                    Directory.CreateDirectory(_path);
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"CreatePathIfNotExists {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
             }
         }
         public static void ExecuteReader(this string connectionStr, List<(string, object)>? parameters, string sql, OnFirebirdReader Reader)
