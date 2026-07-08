@@ -4843,315 +4843,415 @@ namespace VideoGui
                 string sqlstring = "";
 
                 List<string> AutoTables = new List<string>() { "AUTOINSERT", "AUTOINSERTHISTORY" };
-                foreach (var table in AutoTables)
+                Task.Run(async () =>
                 {
-                    if (!Tables.Where(s => s.TableName == table).Any())
+                    foreach (var table in AutoTables)
                     {
-                        sqlstring = $"CREATE TABLE {table}({Id},SRCDIR VARCHAR(500), DESTFNAME VARCHAR(500),STARTPOS BIGINT," +
-                            "DURATION BIGINT,B720P SMALLINT,RTMP VARCHAR(250)," +
-                       "BSHORTS SMALLINT,BENCODETRIM SMALLINT,BCUTTRIM SMALLINT,BTWITCHSTREAM SMALLINT,TWITCHTIME TIME," +
-                       "BMONITOREDSOURCE SMALLINT,BPERSISTENTJOB SMALLINT, RUNID INTEGER,TWITCHDATE DATE," +
-                       "ISMUXED SMALLINT, MUXDATA VARCHAR(256),ISMUXED SMALLINT,ISFILESRC SMALLINT," +
-                       "MUXDATA VARCHAR(256),ISXMLFILESOURCE SMALLINT,ISMOVIE SMALLINT,BCREATESHORTS SMALLINT); ";
-                        connectionString.ExecuteNonQuery(sqlstring);
-                    }
-                    else
-                    {
-                        List<string> Smallints = new List<string>() { "ISMUXED", "ISFILESRC", "ISXMLFILESOURCE", "ISMOVIE",
-                            "BCREATESHORTS", "BTWITCHSTREAM" };
-                        foreach (var small in Smallints)
+                        if (!Tables.Where(s => s.TableName == table).Any())
                         {
-                            if (Tables.Where(s => s.TableName == table).Where(t => !t.Fields.Contains(small)).Any())
+                            sqlstring = $"CREATE TABLE {table}({Id},SRCDIR VARCHAR(500), DESTFNAME VARCHAR(500),STARTPOS BIGINT," +
+                                "DURATION BIGINT,B720P SMALLINT,RTMP VARCHAR(250)," +
+                           "BSHORTS SMALLINT,BENCODETRIM SMALLINT,BCUTTRIM SMALLINT,BTWITCHSTREAM SMALLINT,TWITCHTIME TIME," +
+                           "BMONITOREDSOURCE SMALLINT,BPERSISTENTJOB SMALLINT, RUNID INTEGER,TWITCHDATE DATE," +
+                           "ISMUXED SMALLINT, MUXDATA VARCHAR(256),ISMUXED SMALLINT,ISFILESRC SMALLINT," +
+                           "MUXDATA VARCHAR(256),ISXMLFILESOURCE SMALLINT,ISMOVIE SMALLINT,BCREATESHORTS SMALLINT); ";
+                            connectionString.ExecuteNonQuery(sqlstring);
+                        }
+                        else
+                        {
+                            List<string> Smallints = new List<string>() { "ISMUXED", "ISFILESRC", "ISXMLFILESOURCE", "ISMOVIE",
+                            "BCREATESHORTS", "BTWITCHSTREAM" };
+                            foreach (var small in Smallints)
                             {
-                                connectionString.AddFieldToTable(table, small, "SMALLINT", 0);
+                                if (Tables.Where(s => s.TableName == table).Where(t => !t.Fields.Contains(small)).Any())
+                                {
+                                    connectionString.AddFieldToTable(table, small, "SMALLINT", 0);
+                                }
+                            }
+                            if (Tables.Where(s => s.TableName == table).Where(t => !t.Fields.Contains("MUXDATA")).Any())
+                            {
+                                connectionString.ExecuteNonQuery($"ALTER TABLE {table} ADD MUXDATA VARCHAR(256) DEFAULT;");
+                            }
+                            if (Tables.Where(s => s.TableName == table).Where(t => !t.Fields.Contains("TWITCHDATE")).Any())
+                            {
+                                connectionString.ExecuteNonQuery($"ALTER TABLE {table} ADD TWITCHDATE DATE;");
+                            }
+                            if (Tables.Where(s => s.TableName == table).Where(t => !t.Fields.Contains("TWITCHTIME")).Any())
+                            {
+                                connectionString.ExecuteNonQuery($"ALTER TABLE {table} ADD TWITCHTIME TIME;");
+                            }
+                            if (Tables.Where(s => s.TableName == table).Where(t => !t.Fields.Contains("RTMP")).Any())
+                            {
+                                connectionString.ExecuteNonQuery($"ALTER TABLE {table} ADD RTMP VARCHAR(250);");
                             }
                         }
-                        if (Tables.Where(s => s.TableName == table).Where(t => !t.Fields.Contains("MUXDATA")).Any())
-                        {
-                            connectionString.ExecuteNonQuery($"ALTER TABLE {table} ADD MUXDATA VARCHAR(256) DEFAULT;");
-                        }
-                        if (Tables.Where(s => s.TableName == table).Where(t => !t.Fields.Contains("TWITCHDATE")).Any())
-                        {
-                            connectionString.ExecuteNonQuery($"ALTER TABLE {table} ADD TWITCHDATE DATE;");
-                        }
-                        if (Tables.Where(s => s.TableName == table).Where(t => !t.Fields.Contains("TWITCHTIME")).Any())
-                        {
-                            connectionString.ExecuteNonQuery($"ALTER TABLE {table} ADD TWITCHTIME TIME;");
-                        }
-                        if (Tables.Where(s => s.TableName == table).Where(t => !t.Fields.Contains("RTMP")).Any())
-                        {
-                            connectionString.ExecuteNonQuery($"ALTER TABLE {table} ADD RTMP VARCHAR(250);");
-                        }
                     }
-                }
-                if (!Tables.Where(s => s.TableName == "MONITOREDDELETION").Any())
+                });
+                Task.Run(async () =>
                 {
-                    sqlstring = $"CREATE TABLE MONITOREDDELETION({Id},DestinationFile varchar(500))";
-                    connectionString.ExecuteNonQuery(sqlstring);
-                }
-                if (!Tables.Where(s => s.TableName == "UPLOADSRECORD").Any())
+                    if (!Tables.Where(s => s.TableName == "MONITOREDDELETION").Any())
+                    {
+                        sqlstring = $"CREATE TABLE MONITOREDDELETION({Id},DestinationFile varchar(500))";
+                        connectionString.ExecuteNonQuery(sqlstring);
+                    }
+                });
+                Task.Run(async () =>
                 {
-                    sqlstring = $"CREATE TABLE UPLOADSRECORD({Id},UPLOADFILE varchar(256), UPLOAD_DATE DATE, " +
-                        "UPLOAD_TIME TIME,UPLOADTYPE INTEGER, DIRECTORYNAME VARCHAR(255))";
-                    connectionString.ExecuteNonQuery(sqlstring);
-                }
-                if (Tables.Where(s => s.TableName == "UPLOADSRECORD").Where(t => !t.Fields.Contains("UPLOADTYPE")).Any())
+                    if (!Tables.Where(s => s.TableName == "UPLOADSRECORD").Any())
+                    {
+                        sqlstring = $"CREATE TABLE UPLOADSRECORD({Id},UPLOADFILE varchar(256), UPLOAD_DATE DATE, " +
+                            "UPLOAD_TIME TIME,UPLOADTYPE INTEGER, DIRECTORYNAME VARCHAR(255))";
+                        connectionString.ExecuteNonQuery(sqlstring);
+                    }
+                    if (Tables.Where(s => s.TableName == "UPLOADSRECORD").Where(t => !t.Fields.Contains("UPLOADTYPE")).Any())
+                    {
+                        connectionString.AddFieldToTable("UPLOADSRECORD", "UPLOADTYPE", "INTEGER", 0);
+                    }
+                    if (Tables.Where(s => s.TableName == "UPLOADSRECORD").Where(t => !t.Fields.Contains("DIRECTORYNAME")).Any())
+                    {
+                        connectionString.AddFieldToTable("UPLOADSRECORD", "DIRECTORYNAME", "VARCHAR(255)");
+                    }
+                });
+                Task.Run(async () =>
                 {
-                    connectionString.AddFieldToTable("UPLOADSRECORD", "UPLOADTYPE", "INTEGER", 0);
-                }
-                if (Tables.Where(s => s.TableName == "UPLOADSRECORD").Where(t => !t.Fields.Contains("DIRECTORYNAME")).Any())
+                    if (!Tables.Where(s => s.TableName == "PLANINGQUES").Any())
+                    {
+                        sqlstring = $"CREATE TABLE PLANINGQUES({Id},SOURCE VARCHAR(500),SOURCEDIR VARCHAR(500))";
+                        connectionString.ExecuteNonQuery(sqlstring);
+                    }
+                });
+                Task.Run(async () =>
                 {
-                    connectionString.AddFieldToTable("UPLOADSRECORD", "DIRECTORYNAME", "VARCHAR(255)");
-                }
-                if (!Tables.Where(s => s.TableName == "PLANINGQUES").Any())
+                    if (!Tables.Where(s => s.TableName == "SETTINGS").Any())
+                    {
+                        sqlstring = $"CREATE TABLE SETTINGS({Id},SETTINGNAME VARCHAR(250),SETTING VARCHAR(250), " +
+                            "SETTINGDATE DATE, SETTINGTIME TIME)";
+                        connectionString.ExecuteNonQuery(sqlstring);
+                    }
+
+                    if (Tables.Where(s => s.TableName == "SETTINGS").Where(t => !t.Fields.Contains("SETTINGDATE")).Any())
+                    {
+                        connectionString.AddFieldToTable("SETTINGS", "SETTINGDATE", "DATE");
+                    }
+                    if (Tables.Where(s => s.TableName == "SETTINGS").Where(t => !t.Fields.Contains("SETTINGTIME")).Any())
+                    {
+                        connectionString.AddFieldToTable("SETTINGS", "SETTINGTIME", "TIME");
+                    }
+                }); Task.Run(async () =>
                 {
-                    sqlstring = $"CREATE TABLE PLANINGQUES({Id},SOURCE VARCHAR(500),SOURCEDIR VARCHAR(500))";
-                    connectionString.ExecuteNonQuery(sqlstring);
-                }
-                if (!Tables.Where(s => s.TableName == "SETTINGS").Any())
+                    if (!Tables.Where(s => s.TableName == "PLANINGCUTS").Any())
+                    {
+                        sqlstring = $"CREATE TABLE PLANINGCUTS({Id}, PLANNINGQUEID INTEGER,STARTA BIGINT,ENDA BIGINT , " +
+                       "CUTNO SMALLINT,FILENAME VARCHAR(500))";
+                        connectionString.ExecuteNonQuery(sqlstring);
+                    }
+                });
+                Task.Run(async () =>
                 {
-                    sqlstring = $"CREATE TABLE SETTINGS({Id},SETTINGNAME VARCHAR(250),SETTING VARCHAR(250), " +
-                        "SETTINGDATE DATE, SETTINGTIME TIME)";
-                    connectionString.ExecuteNonQuery(sqlstring);
-                }
-                if (Tables.Where(s => s.TableName == "SETTINGS").Where(t => !t.Fields.Contains("SETTINGDATE")).Any())
+                    if (!Tables.Where(s => s.TableName == "DRAFTSHORTS").Any())
+                    {
+                        sqlstring = $"CREATE TABLE DRAFTSHORTS({Id}, VIDEOID VARCHAR(255), FILENAME VARCHAR(500))";
+                        connectionString.ExecuteNonQuery(sqlstring);
+                    }
+                });
+                Task.Run(async () =>
                 {
-                    connectionString.AddFieldToTable("SETTINGS", "SETTINGDATE", "DATE");
-                }
-                if (Tables.Where(s => s.TableName == "SETTINGS").Where(t => !t.Fields.Contains("SETTINGTIME")).Any())
+                    if (!Tables.Where(s => s.TableName == "PROCESSINGLOG").Any())
+                    {
+                        sqlstring = $"CREATE TABLE PROCESSINGLOG({Id},SOURCE VARCHAR(500),DESTINATION VARCHAR(500),INPROCESS SMALLINT);";
+                        connectionString.ExecuteNonQuery(sqlstring);
+                    }
+                });
+                Task.Run(async () =>
                 {
-                    connectionString.AddFieldToTable("SETTINGS", "SETTINGTIME", "TIME");
-                }
-                if (!Tables.Where(s => s.TableName == "PLANINGCUTS").Any())
+                    if (!Tables.Where(s => s.TableName == "SHORTSDIRECTORY").Any())
+                    {
+                        sqlstring = $"CREATE TABLE SHORTSDIRECTORY({Id},DIRECTORYNAME VARCHAR(500), TITLEID INTEGER," +
+                             "TITLEID INTEGER,DESCID INTEGER);";
+                        connectionString.ExecuteNonQuery(sqlstring);
+                    }
+                    if (Tables.Where(s => s.TableName == "SHORTSDIRECTORY").Where(t => !t.Fields.Contains("TITLEID")).Any())
+                    {
+                        connectionString.AddFieldToTable("SHORTSDIRECTORY", "TITLEID", "INTEGER");
+                    }
+                    if (Tables.Where(s => s.TableName == "SHORTSDIRECTORY").Where(t => !t.Fields.Contains("DESCID")).Any())
+                    {
+                        connectionString.AddFieldToTable("SHORTSDIRECTORY", "DESCID", "INTEGER");
+                    }
+                });
+                Task.Run(async () =>
                 {
-                    sqlstring = $"CREATE TABLE PLANINGCUTS({Id}, PLANNINGQUEID INTEGER,STARTA BIGINT,ENDA BIGINT , " +
-                   "CUTNO SMALLINT,FILENAME VARCHAR(500))";
-                    connectionString.ExecuteNonQuery(sqlstring);
-                }
-                if (!Tables.Where(s => s.TableName == "DRAFTSHORTS").Any())
+                    if (!Tables.Where(s => s.TableName == "AUTOUPLOADLIMITS").Any())
+                    {
+                        sqlstring = $"CREATE TABLE AUTOUPLOADLIMITS({Id},LIMITDATE DATE, LIMITACTIVE SMALLINT,LIMIT INTEGER);";
+                        connectionString.ExecuteNonQuery(sqlstring);
+                    }
+                });
+                Task.Run(async () =>
                 {
-                    sqlstring = $"CREATE TABLE DRAFTSHORTS({Id}, VIDEOID VARCHAR(255), FILENAME VARCHAR(500))";
-                    connectionString.ExecuteNonQuery(sqlstring);
-                }
-                if (!Tables.Where(s => s.TableName == "PROCESSINGLOG").Any())
-                {
-                    sqlstring = $"CREATE TABLE PROCESSINGLOG({Id},SOURCE VARCHAR(500),DESTINATION VARCHAR(500),INPROCESS SMALLINT);";
-                    connectionString.ExecuteNonQuery(sqlstring);
-                }
-                if (!Tables.Where(s => s.TableName == "SHORTSDIRECTORY").Any())
-                {
-                    sqlstring = $"CREATE TABLE SHORTSDIRECTORY({Id},DIRECTORYNAME VARCHAR(500), TITLEID INTEGER," +
-                         "TITLEID INTEGER,DESCID INTEGER);";
-                    connectionString.ExecuteNonQuery(sqlstring);
-                }
-                if (Tables.Where(s => s.TableName == "SHORTSDIRECTORY").Where(t => !t.Fields.Contains("TITLEID")).Any())
-                {
-                    connectionString.AddFieldToTable("SHORTSDIRECTORY", "TITLEID", "INTEGER");
-                }
-                if (Tables.Where(s => s.TableName == "SHORTSDIRECTORY").Where(t => !t.Fields.Contains("DESCID")).Any())
-                {
-                    connectionString.AddFieldToTable("SHORTSDIRECTORY", "DESCID", "INTEGER");
-                }
-                if (!Tables.Where(s => s.TableName == "AUTOUPLOADLIMITS").Any())
-                {
-                    sqlstring = $"CREATE TABLE AUTOUPLOADLIMITS({Id},LIMITDATE DATE, LIMITACTIVE SMALLINT,LIMIT INTEGER);";
-                    connectionString.ExecuteNonQuery(sqlstring);
-                }
-                if (!Tables.Where(s => s.TableName == "AUTOEDITS").Any())
-                {
-                    sqlstring = $"CREATE TABLE AUTOEDITS({Id},SOURCE VARCHAR(500),DESTINATION VARCHAR(500),THRESHHOLD VARCHAR(255)," +
-                    "SEGMENT VARCHAR(255),TARGET VARCHAR(255));".ToUpper();
-                    connectionString.ExecuteNonQuery(sqlstring);
-                }
+                    if (!Tables.Where(s => s.TableName == "AUTOEDITS").Any())
+                    {
+                        sqlstring = $"CREATE TABLE AUTOEDITS({Id},SOURCE VARCHAR(500),DESTINATION VARCHAR(500),THRESHHOLD VARCHAR(255)," +
+                        "SEGMENT VARCHAR(255),TARGET VARCHAR(255));".ToUpper();
+                        connectionString.ExecuteNonQuery(sqlstring);
+                    }
+                });
                 connectionString.ExecuteNonQuery($"DELETE FROM PROCESSINGLOG WHERE INPROCESS = @PUD;", [("@PUD", 1)]);
-                if (!Tables.Where(s => s.TableName == "AVAILABLETAGS").Any())
+                Task.Run(async () =>
                 {
-                    sqlstring = $"CREATE TABLE AVAILABLETAGS({Id},TAG VARCHAR(500));";
-                    connectionString.ExecuteNonQuery(sqlstring);
-                }
-                if (!Tables.Where(s => s.TableName == "SELECTEDTAGS").Any())
+                    if (!Tables.Where(s => s.TableName == "AVAILABLETAGS").Any())
+                    {
+                        sqlstring = $"CREATE TABLE AVAILABLETAGS({Id},TAG VARCHAR(500));";
+                        connectionString.ExecuteNonQuery(sqlstring);
+                    }
+                });
+                Task.Run(async () =>
                 {
-                    sqlstring = $"CREATE TABLE SELECTEDTAGS({Id},SELECTEDTAG INTEGER, GROUPTAGID INTEGER);";
-                    connectionString.ExecuteNonQuery(sqlstring);
-                }
-                if (!Tables.Where(s => s.TableName == "TITLETAGS").Any())
+                    if (!Tables.Where(s => s.TableName == "SELECTEDTAGS").Any())
+                    {
+                        sqlstring = $"CREATE TABLE SELECTEDTAGS({Id},SELECTEDTAG INTEGER, GROUPTAGID INTEGER);";
+                        connectionString.ExecuteNonQuery(sqlstring);
+                    }
+                });
+                Task.Run(async () =>
                 {
-                    sqlstring = $"CREATE TABLE TITLETAGS({Id},TAGID INTEGER, GROUPID INTEGER)";
-                    connectionString.ExecuteNonQuery(sqlstring);
-                }
-                if (!Tables.Where(s => s.TableName == "TITLES").Any())
+                    if (!Tables.Where(s => s.TableName == "TITLETAGS").Any())
+                    {
+                        sqlstring = $"CREATE TABLE TITLETAGS({Id},TAGID INTEGER, GROUPID INTEGER)";
+                        connectionString.ExecuteNonQuery(sqlstring);
+                    }
+                });
+                Task.Run(async () =>
                 {
-                    sqlstring = $"CREATE TABLE TITLES({Id},DESCRIPTION VARCHAR(500), "+
-                        "TITLETAGID INTEGER, GROUPID INTEGER,ISTAG INTEGER);";
-                    connectionString.ExecuteNonQuery(sqlstring);
-                }
-                if (Tables.Where(s => s.TableName == "TITLES").Where(t => !t.Fields.Contains("GROUPID")).Any())
+                    if (!Tables.Where(s => s.TableName == "TITLES").Any())
+                    {
+                        sqlstring = $"CREATE TABLE TITLES({Id},DESCRIPTION VARCHAR(500), " +
+                            "TITLETAGID INTEGER, GROUPID INTEGER,ISTAG INTEGER);";
+                        connectionString.ExecuteNonQuery(sqlstring);
+                    }
+                    if (Tables.Where(s => s.TableName == "TITLES").Where(t => !t.Fields.Contains("GROUPID")).Any())
+                    {
+                        connectionString.AddFieldToTable("TITLES", "GROUPID", "INTEGER", -1);
+                    }
+                    if (Tables.Where(s => s.TableName == "TITLES").Where(t => !t.Fields.Contains("ISTAG")).Any())
+                    {
+                        connectionString.AddFieldToTable("TITLES", "ISTAG", "INTEGER", -1);
+                    }
+                });
+                Task.Run(async () =>
                 {
-                    connectionString.AddFieldToTable("TITLES", "GROUPID", "INTEGER", -1);
-                }
-                if (Tables.Where(s => s.TableName == "TITLES").Where(t => !t.Fields.Contains("ISTAG")).Any())
+                    if (!Tables.Where(s => s.TableName == "DESCRIPTIONS").Any())
+                    {
+                        sqlstring = $"CREATE TABLE DESCRIPTIONS({Id},NAME VARCHAR(250)," +
+                            "DESCRIPTION VARCHAR(2500),TITLETAGID INTEGER, ISSHORTVIDEO SMALLINT, " +
+                            "ISTAG SMALLINT);";
+                        connectionString.ExecuteNonQuery(sqlstring);
+                    }
+                    if (Tables.Where(s => s.TableName == "DESCRIPTIONS").Where(t => !t.Fields.Contains("ISTAG")).Any())
+                    {
+                        connectionString.AddFieldToTable("DESCRIPTIONS", "ISTAG", "SMALLINT", 0);
+                    }
+                });
+                Task.Run(async () =>
                 {
-                    connectionString.AddFieldToTable("TITLES", "ISTAG", "INTEGER", -1);
-                }
-                if (!Tables.Where(s => s.TableName == "DESCRIPTIONS").Any())
+                    if (!Tables.Where(s => s.TableName == "SCHEDULEDPOOL").Any())
+                    {
+                        sqlstring = $"CREATE TABLE SCHEDULEDPOOL({Id},NAME VARCHAR(250));";
+                        connectionString.ExecuteNonQuery(sqlstring);
+                    }
+                    if (!Tables.Where(s => s.TableName == "SCHEDULEDPOOLS").Any())
+                    {
+                        sqlstring = $"CREATE TABLE SCHEDULEDPOOLS({Id},POOLID INTEGER, DIRECTORY VARCHAR(512));";
+                        connectionString.ExecuteNonQuery(sqlstring);
+                    }
+                });
+                Task.Run(async () =>
                 {
-                    sqlstring = $"CREATE TABLE DESCRIPTIONS({Id},NAME VARCHAR(250),"+
-                        "DESCRIPTION VARCHAR(2500),TITLETAGID INTEGER, ISSHORTVIDEO SMALLINT, "+
-                        "ISTAG SMALLINT);";
-                    connectionString.ExecuteNonQuery(sqlstring);
-                }
-                if (Tables.Where(s => s.TableName == "DESCRIPTIONS").Where(t => !t.Fields.Contains("ISTAG")).Any())
+                    if (!Tables.Where(s => s.TableName == "SCHEDULEUPLOADS").Any())
+                    {
+                        sqlstring = $"CREATE TABLE SCHEDULEUPLOADS({Id},POOLID INTEGER, DAYS SMALLINT, UPLOADTIME TIME, MAXA SMALLINT);";
+                        connectionString.ExecuteNonQuery(sqlstring);
+                    }
+                });
+                Task.Run(async () =>
                 {
-                    connectionString.AddFieldToTable("DESCRIPTIONS", "ISTAG", "SMALLINT",0);
-                }
-                if (!Tables.Where(s => s.TableName == "SCHEDULEDPOOL").Any())
+                    if (!Tables.Where(s => s.TableName == "EVENTSCHEDULES").Any())
+                    {
+                        sqlstring = $"CREATE TABLE EVENTSCHEDULES({Id},EVENTID INTEGER, SCHEDULEID INTEGER);";
+                        connectionString.ExecuteNonQuery(sqlstring);
+                    }
+                });
+                Task.Run(async () =>
                 {
-                    sqlstring = $"CREATE TABLE SCHEDULEDPOOL({Id},NAME VARCHAR(250));";
-                    connectionString.ExecuteNonQuery(sqlstring);
-                }
-                if (!Tables.Where(s => s.TableName == "SCHEDULEDPOOLS").Any())
+                    if (!Tables.Where(s => s.TableName == "EVENTSCHEDULEDATE").Any())
+                    {
+                        sqlstring = $"CREATE TABLE EVENTSCHEDULEDATE({Id},EVENTID INTEGER, STARTA DATE, ENDA DATE, STARTTIME TIME, ENDTIME TIME);";
+                        connectionString.ExecuteNonQuery(sqlstring);
+                    }
+                });
+                Task.Run(async () =>
                 {
-                    sqlstring = $"CREATE TABLE SCHEDULEDPOOLS({Id},POOLID INTEGER, DIRECTORY VARCHAR(512));";
-                    connectionString.ExecuteNonQuery(sqlstring);
-                }
-                if (!Tables.Where(s => s.TableName == "SCHEDULEUPLOADS").Any())
+                    if (!Tables.Where(s => s.TableName == "SCHEDULEDATE").Any())
+                    {
+                        sqlstring = $"CREATE TABLE SCHEDULEDATE({Id},EVENTID INTEGER, STARTA DATE, ENDA DATE, STARTTIME TIME, ENDTIME TIME);";
+                        connectionString.ExecuteNonQuery(sqlstring);
+                    }
+                });
+                Task.Run(async () =>
                 {
-                    sqlstring = $"CREATE TABLE SCHEDULEUPLOADS({Id},POOLID INTEGER, DAYS SMALLINT, UPLOADTIME TIME, MAXA SMALLINT);";
-                    connectionString.ExecuteNonQuery(sqlstring);
-                }
-                if (!Tables.Where(s => s.TableName == "EVENTSCHEDULES").Any())
+                    if (!Tables.Where(s => s.TableName == "SCHEDULES").Any())
+                    {
+                        sqlstring = $"CREATE TABLE SCHEDULES({Id},NAME VARCHAR(250), " +
+                           "MAXDAILY INTEGER,MAXEVENT INTEGER," +
+                           "ISSCHEDULE SMALLINT, SCHEDULEID INTEGER, SOURCE INTEGER);";
+                        connectionString.ExecuteNonQuery(sqlstring);
+                    }
+                    if (Tables.Where(s => s.TableName == "SCHEDULES").Where(t => !t.Fields.Contains("SCHEDULEID")).Any())
+                    {
+                        connectionString.AddFieldToTable("SCHEDULES", "SCHEDULEID", "INTEGER", -1);
+                    }
+                    if (Tables.Where(s => s.TableName == "SCHEDULES").Where(t => !t.Fields.Contains("SOURCE")).Any())
+                    {
+                        connectionString.AddFieldToTable("SCHEDULES", "SOURCE", "INTEGER", -1);
+                    }
+                    if (Tables.Where(s => s.TableName == "SCHEDULES").Where(t => !t.Fields.Contains("MAXDAILY")).Any())
+                    {
+                        connectionString.AddFieldToTable("SCHEDULES", "MAXDAILY", "INTEGER", -1);
+                    }
+                    if (Tables.Where(s => s.TableName == "SCHEDULES").Where(t => !t.Fields.Contains("MAXEVENT")).Any())
+                    {
+                        connectionString.AddFieldToTable("SCHEDULES", "MAXEVENT", "INTEGER", -1);
+                    }
+                });
+                Task.Run(async () =>
                 {
-                    sqlstring = $"CREATE TABLE EVENTSCHEDULES({Id},EVENTID INTEGER, SCHEDULEID INTEGER);";
-                    connectionString.ExecuteNonQuery(sqlstring);
-                }
-                if (!Tables.Where(s => s.TableName == "EVENTSCHEDULEDATE").Any())
+                    if (!Tables.Where(s => s.TableName == "VIDEOSCHEDULE").Any())
+                    {
+                        sqlstring = $"CREATE TABLE VIDEOSCHEDULE({Id},SCHEDULEID INTEGER, " +
+                            "SCHEDULETIME TIME,DAYS INTEGER);";
+                        connectionString.ExecuteNonQuery(sqlstring);
+                    }
+                });
+                Task.Run(async () =>
                 {
-                    sqlstring = $"CREATE TABLE EVENTSCHEDULEDATE({Id},EVENTID INTEGER, STARTA DATE, ENDA DATE, STARTTIME TIME, ENDTIME TIME);";
-                    connectionString.ExecuteNonQuery(sqlstring);
-                }
-                if (!Tables.Where(s => s.TableName == "SCHEDULEDATE").Any())
+                    if (!Tables.Where(s => s.TableName == "APPLIEDSCHEDULE").Any())
+                    {
+                        sqlstring = $"CREATE TABLE APPLIEDSCHEDULE({Id},SCHEDULEID INTEGER, STARTHOUR SMALLINT," +
+                            "ENDHOUR SMALLINT,GAP SMALLINT,DAYS INTEGER);";
+                        connectionString.ExecuteNonQuery(sqlstring);
+                    }
+                });
+                Task.Run(async () =>
                 {
-                    sqlstring = $"CREATE TABLE SCHEDULEDATE({Id},EVENTID INTEGER, STARTA DATE, ENDA DATE, STARTTIME TIME, ENDTIME TIME);";
-                    connectionString.ExecuteNonQuery(sqlstring);
-                }
-                if (!Tables.Where(s => s.TableName == "SCHEDULES").Any())
-                {
-                     sqlstring = $"CREATE TABLE SCHEDULES({Id},NAME VARCHAR(250), "+
-                        "MAXDAILY INTEGER,MAXEVENT INTEGER," +
-                        "ISSCHEDULE SMALLINT, SCHEDULEID INTEGER, SOURCE INTEGER);";
-                    connectionString.ExecuteNonQuery(sqlstring);
-                }
-                if (Tables.Where(s => s.TableName == "SCHEDULES").Where(t => !t.Fields.Contains("SCHEDULEID")).Any())
-                {
-                    connectionString.AddFieldToTable("SCHEDULES", "SCHEDULEID", "INTEGER", -1);
-                }
-                if (Tables.Where(s => s.TableName == "SCHEDULES").Where(t => !t.Fields.Contains("SOURCE")).Any())
-                {
-                    connectionString.AddFieldToTable("SCHEDULES", "SOURCE", "INTEGER", -1);
-                }
-                if (Tables.Where(s => s.TableName == "SCHEDULES").Where(t => !t.Fields.Contains("MAXDAILY")).Any())
-                {
-                    connectionString.AddFieldToTable("SCHEDULES", "MAXDAILY", "INTEGER", -1);
-                }
-                if (Tables.Where(s => s.TableName == "SCHEDULES").Where(t => !t.Fields.Contains("MAXEVENT")).Any())
-                {
-                    connectionString.AddFieldToTable("SCHEDULES", "MAXEVENT", "INTEGER", -1);
-                }
-                if (!Tables.Where(s => s.TableName == "VIDEOSCHEDULE").Any())
-                {
-                    sqlstring = $"CREATE TABLE VIDEOSCHEDULE({Id},SCHEDULEID INTEGER, "+
-                        "SCHEDULETIME TIME,DAYS INTEGER);";
-                    connectionString.ExecuteNonQuery(sqlstring);
-                }
-                if (!Tables.Where(s => s.TableName == "APPLIEDSCHEDULE").Any())
-                {
-                    sqlstring = $"CREATE TABLE APPLIEDSCHEDULE({Id},SCHEDULEID INTEGER, STARTHOUR SMALLINT,"+
-                        "ENDHOUR SMALLINT,GAP SMALLINT,DAYS INTEGER);";
-                    connectionString.ExecuteNonQuery(sqlstring);
-                }
-                if (!Tables.Where(s => s.TableName == "SCRAPEINFOTABLE").Any())
-                {
-                    sqlstring = $"CREATE TABLE SCRAPEINFOTABLE({Id},EVENTID INTEGER, SCRAPETYPE INTEGER, "+
-                        "SCRAPECOMMAND VARCHAR(255),TABLEDESTINATION VARCHAR(255));";
-                    connectionString.ExecuteNonQuery(sqlstring);
-                }
+                    if (!Tables.Where(s => s.TableName == "SCRAPEINFOTABLE").Any())
+                    {
+                        sqlstring = $"CREATE TABLE SCRAPEINFOTABLE({Id},EVENTID INTEGER, SCRAPETYPE INTEGER, " +
+                            "SCRAPECOMMAND VARCHAR(255),TABLEDESTINATION VARCHAR(255));";
+                        connectionString.ExecuteNonQuery(sqlstring);
+                    }
+                });
+
                 if (!Tables.Where(s => s.TableName == "RUNNINGID").Any())
                 {
                     sqlstring = $"CREATE TABLE RUNNINGID({Id}, ACTIVE SMALLINT);";
                     connectionString.ExecuteNonQuery(sqlstring);
                 }
-                if (!Tables.Where(s => s.TableName == "SCHEDULINGITEMS").Any())
+                Task.Run(async () =>
                 {
-                    sqlstring = $"CREATE TABLE SCHEDULINGITEMS({Id},SCHEDULINGID INTEGER,SSTART TIME," +
-                        "SEND TIME,GAP INTEGER);";
-                    connectionString.ExecuteNonQuery(sqlstring);
-                }
-                if (!Tables.Where(s => s.TableName == "SCHEDULINGITEMS").Any())
+                    if (!Tables.Where(s => s.TableName == "SCHEDULINGITEMS").Any())
+                    {
+                        sqlstring = $"CREATE TABLE SCHEDULINGITEMS({Id},SCHEDULINGID INTEGER,SSTART TIME," +
+                            "SEND TIME,GAP INTEGER);";
+                        connectionString.ExecuteNonQuery(sqlstring);
+                    }
+                    if (!Tables.Where(s => s.TableName == "SCHEDULINGITEMS").Any())
+                    {
+                        sqlstring = $"CREATE TABLE SCHEDULINGITEMS({Id},SCHEDULINGID INTEGER,SSTART TIME," +
+                            "SEND TIME,GAP INTEGER);";
+                        connectionString.ExecuteNonQuery(sqlstring);
+                    }
+                });
+                Task.Run(async () =>
                 {
-                    sqlstring = $"CREATE TABLE SCHEDULINGITEMS({Id},SCHEDULINGID INTEGER,SSTART TIME," +
-                        "SEND TIME,GAP INTEGER);";
-                    connectionString.ExecuteNonQuery(sqlstring);
-                }
-                if (!Tables.Where(s => s.TableName == "SCHEDULINGNAMES").Any())
-                {
-                    sqlstring = $"CREATE TABLE SCHEDULINGNAMES({Id},NAME VARCHAR(250));";
-                    connectionString.ExecuteNonQuery(sqlstring);
-                }
+                    if (!Tables.Where(s => s.TableName == "SCHEDULINGNAMES").Any())
+                    {
+                        sqlstring = $"CREATE TABLE SCHEDULINGNAMES({Id},NAME VARCHAR(250));";
+                        connectionString.ExecuteNonQuery(sqlstring);
+                    }
+                });
                 if (!Tables.Where(s => s.TableName == "REMATCHED").Any())
                 {
-                    sqlstring = $"CREATE TABLE REMATCHED({Id},OLDID INTEGER,NEWID INTEGER, "+
+                    sqlstring = $"CREATE TABLE REMATCHED({Id},OLDID INTEGER,NEWID INTEGER, " +
                         "DIRECTORY VARCHAR(500));";
                     connectionString.ExecuteNonQuery(sqlstring);
                 }
-                if (!Tables.Where(s => s.TableName == "REMATCHED").Any())
+                Task.Run(async () =>
                 {
-                    sqlstring = $"CREATE TABLE MULTISHORTSINFO({Id},ISSHORTSACTIVE SMALLINT,"+
-                        "NUMBEROFSHORTS INTEGER, PRIORITY INTEGER, LASTUPLOADEDDATE DATE, " +
-                        "LINKEDSHORTSDIRECTORYID INTEGER, LASTUPLOADEDTIME TIME);";
-                    connectionString.ExecuteNonQuery(sqlstring);
-                }
-                if (Tables.Where(s => s.TableName == "MULTISHORTSINFO").Where(t => !t.Fields.Contains("PRIORITY")).Any())
+                    if (!Tables.Where(s => s.TableName == "REMATCHED").Any())
+                    {
+                        sqlstring = $"CREATE TABLE MULTISHORTSINFO({Id},ISSHORTSACTIVE SMALLINT," +
+                            "NUMBEROFSHORTS INTEGER, PRIORITY INTEGER, LASTUPLOADEDDATE DATE, " +
+                            "LINKEDSHORTSDIRECTORYID INTEGER, LASTUPLOADEDTIME TIME);";
+                        connectionString.ExecuteNonQuery(sqlstring);
+                    }
+                });
+                Task.Run(async () =>
                 {
-                    connectionString.AddFieldToTable("MULTISHORTSINFO", "PRIORITY", "INTEGER", 1);
-                }
-                if (!Tables.Where(s => s.TableName == "EXCEEDED").Any())
+                    if (Tables.Where(s => s.TableName == "MULTISHORTSINFO").Where(t => !t.Fields.Contains("PRIORITY")).Any())
+                    {
+                        connectionString.AddFieldToTable("MULTISHORTSINFO", "PRIORITY", "INTEGER", 1);
+                    }
+                });
+                Task.Run(async () =>
                 {
-                    sqlstring = $"CREATE TABLE EXCEEDED({Id},EXCEEDED_DATE DATE, EXCEEDED_TIME TIME);";
-                    connectionString.ExecuteNonQuery(sqlstring);
-                }
-                if (!Tables.Where(s => s.TableName == "CONVERTERSETTINGS").Any())
+                    if (!Tables.Where(s => s.TableName == "EXCEEDED").Any())
+                    {
+                        sqlstring = $"CREATE TABLE EXCEEDED({Id},EXCEEDED_DATE DATE, EXCEEDED_TIME TIME);";
+                        connectionString.ExecuteNonQuery(sqlstring);
+                    }
+                });
+                Task.Run(async () =>
                 {
-                    sqlstring = $"CREATE TABLE CONVERTERSETTINGS({Id},ISDEFAULT SMALLINT,MINBITRATE VARCHAR(255)" +
-                        ",MAXBITRATE VARCHAR(255),BITRATEBUFFER VARCHAR(255),VIDEOWIDTH VARCHAR(255)," +
-                        "VIDEOHEIGHT VARCHAR(255),ARMODULAS VARCHAR(255), RESIZEENABLE SMALLINT," +
-                        "ARROUNDENABLE SMALLINT,ARSCALINGENABLED SMALLINT,VSYNCEABLE SMALLINT);";
-                    connectionString.ExecuteNonQuery(sqlstring);
-                }
-                if (!Tables.Where(s => s.TableName == "THUMBNAILDATA").Any())
+                    if (!Tables.Where(s => s.TableName == "CONVERTERSETTINGS").Any())
+                    {
+                        sqlstring = $"CREATE TABLE CONVERTERSETTINGS({Id},ISDEFAULT SMALLINT,MINBITRATE VARCHAR(255)" +
+                            ",MAXBITRATE VARCHAR(255),BITRATEBUFFER VARCHAR(255),VIDEOWIDTH VARCHAR(255)," +
+                            "VIDEOHEIGHT VARCHAR(255),ARMODULAS VARCHAR(255), RESIZEENABLE SMALLINT," +
+                            "ARROUNDENABLE SMALLINT,ARSCALINGENABLED SMALLINT,VSYNCEABLE SMALLINT);";
+                        connectionString.ExecuteNonQuery(sqlstring);
+                    }
+                });
+                Task.Run(async () =>
                 {
-                    sqlstring = $"CREATE TABLE THUMBNAILDATA({Id}, TITLE1 VARCHAR(255), TITLE2 VARCHAR(255)," +
-                  "SOURCEDIRECTORY VARCHAR(255), SOURCEIMAGE VARCHAR(255), RECT_X DOUBLE PRECISION, "+
-                  "RECT_Y DOUBLE PRECISION,RECT_WIDTH DOUBLE PRECISION,RECT_HEIGHT DOUBLE PRECISION,"+
-                  "TEXTSIZE1 INTEGER, TEXTSIZE2 INTEGER,TEXTOFFSET1 INTEGER, TEXTOFFSET2 INTEGER);";
-                    connectionString.ExecuteNonQuery(sqlstring);
-                }
-                if (!Tables.Where(s => s.TableName == "YTACTIONS").Any())
+                    if (!Tables.Where(s => s.TableName == "THUMBNAILDATA").Any())
+                    {
+                        sqlstring = $"CREATE TABLE THUMBNAILDATA({Id}, TITLE1 VARCHAR(255), TITLE2 VARCHAR(255)," +
+                      "SOURCEDIRECTORY VARCHAR(255), SOURCEIMAGE VARCHAR(255), RECT_X DOUBLE PRECISION, " +
+                      "RECT_Y DOUBLE PRECISION,RECT_WIDTH DOUBLE PRECISION,RECT_HEIGHT DOUBLE PRECISION," +
+                      "TEXTSIZE1 INTEGER, TEXTSIZE2 INTEGER,TEXTOFFSET1 INTEGER, TEXTOFFSET2 INTEGER);";
+                        connectionString.ExecuteNonQuery(sqlstring);
+                    }
+                });
+                Task.Run(async () =>
                 {
-                    sqlstring = $"CREATE TABLE YTACTIONS({Id}, SCHEDULENAMEID INTEGER, SCHEDULENAME VARCHAR(255)," +
-                             "ACTIONNAME VARCHAR(255), MAXSCHEDULES INTEGER, VIDEOTYPE INTEGER" +
-                             "SCHEDULED_DATE DATE, SCHEDULED_TIME_START TIME, SCHEDULED_TIME_END TIME," +
-                             "ACTION_DATE DATE, ACTION_TIME TIME, COMPLETED_DATE DATE, "+
-                             "COMPLETED_TIME TIME, ISACTIONED SMALLINT);";
-                    connectionString.ExecuteNonQuery(sqlstring);
-                }
-                if (Tables.Where(s => s.TableName == "YTACTIONS").Where(t => !t.Fields.Contains("SCHEDULED_TIME_START")).Any())
-                {
-                    connectionString.AddFieldToTable("YTACTIONS", "SCHEDULED_TIME_START", "TIME");
-                }
-                if (Tables.Where(s => s.TableName == "YTACTIONS").Where(t => !t.Fields.Contains("SCHEDULED_TIME_END")).Any())
-                {
-                    connectionString.AddFieldToTable("YTACTIONS", "SCHEDULED_TIME_END", "TIME");
-                }
+                    if (!Tables.Where(s => s.TableName == "YTACTIONS").Any())
+                    {
+                        sqlstring = $"CREATE TABLE YTACTIONS({Id}, SCHEDULENAMEID INTEGER, SCHEDULENAME VARCHAR(255)," +
+                                 "ACTIONNAME VARCHAR(255), MAXSCHEDULES INTEGER, VIDEOTYPE INTEGER" +
+                                 "SCHEDULED_DATE DATE, SCHEDULED_TIME_START TIME, SCHEDULED_TIME_END TIME," +
+                                 "ACTION_DATE DATE, ACTION_TIME TIME, COMPLETED_DATE DATE, " +
+                                 "COMPLETED_TIME TIME, ISACTIONED SMALLINT);";
+                        connectionString.ExecuteNonQuery(sqlstring);
+                    }
+                    if (Tables.Where(s => s.TableName == "YTACTIONS").Where(t => !t.Fields.Contains("SCHEDULED_TIME_START")).Any())
+                    {
+                        connectionString.AddFieldToTable("YTACTIONS", "SCHEDULED_TIME_START", "TIME");
+                    }
+                    if (Tables.Where(s => s.TableName == "YTACTIONS").Where(t => !t.Fields.Contains("SCHEDULED_TIME_END")).Any())
+                    {
+                        connectionString.AddFieldToTable("YTACTIONS", "SCHEDULED_TIME_END", "TIME");
+                    }
+                });
                 sqlstring = $"INSERT INTO RUNNINGID(ACTIVE) VALUES(0) RETURNING ID;";
                 int idx = connectionString.ExecuteScalar(sqlstring).ToInt(-1);
                 CurrentDbId = (idx != -1) ? idx : CurrentDbId;
@@ -5761,7 +5861,7 @@ namespace VideoGui
                         }
                     }
                 }
-                
+
 
             }
             catch (Exception ex)
