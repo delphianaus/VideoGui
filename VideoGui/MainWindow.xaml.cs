@@ -5761,19 +5761,7 @@ namespace VideoGui
                         }
                     }
                 }
-                foreach (var item in EditableshortsDirectoryList)
-                {
-                    if (item.DescId == 1)
-                    {
-
-                    }
-
-
-                }
-
-
-
-
+                
 
             }
             catch (Exception ex)

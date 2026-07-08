@@ -18,7 +18,7 @@ namespace VideoGui.Models
 
         public DataDiscover(FbDataReader reader)
         {
-            TableName = reader.GetString(0).ToString();
+            TableName = reader.GetString(0).ToString().Trim();
             Fields = new List<string>();
         }
     }

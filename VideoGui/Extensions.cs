@@ -1083,7 +1083,7 @@ namespace VideoGui
             }
         }
 
-        public static int ExecuteNonQuery(this string sql, string connectionStr)
+        public static int ExecuteNonQuery(this string connectionStr, string sql)
         {
             try
             {
