@@ -4861,24 +4861,24 @@ namespace VideoGui
                             "BCREATESHORTS", "BTWITCHSTREAM" };
                         foreach (var small in Smallints)
                         {
-                            if (!Tables.Any(s => s.TableName == table && !s.Fields.Contains(small)))
+                            if (Tables.Where(s => s.TableName == table).Where(t => !t.Fields.Contains(small)).Any())
                             {
-                                connectionString.ExecuteNonQuery($"ALTER TABLE {table} ADD {small} SMALLINT DEFAULT 0;");
+                                connectionString.AddFieldToTable(table, small, "SMALLINT", 0);
                             }
                         }
-                        if (!Tables.Any(s => s.TableName == table && !s.Fields.Contains("MUXDATA")))
+                        if (Tables.Where(s => s.TableName == table).Where(t => !t.Fields.Contains("MUXDATA")).Any())
                         {
                             connectionString.ExecuteNonQuery($"ALTER TABLE {table} ADD MUXDATA VARCHAR(256) DEFAULT;");
                         }
-                        if (!Tables.Any(s => s.TableName == table && !s.Fields.Contains("TWITCHDATE")))
+                        if (Tables.Where(s => s.TableName == table).Where(t => !t.Fields.Contains("TWITCHDATE")).Any())
                         {
                             connectionString.ExecuteNonQuery($"ALTER TABLE {table} ADD TWITCHDATE DATE;");
                         }
-                        if (!Tables.Any(s => s.TableName == table && !s.Fields.Contains("TWITCHTIME")))
+                        if (Tables.Where(s => s.TableName == table).Where(t => !t.Fields.Contains("TWITCHTIME")).Any())
                         {
                             connectionString.ExecuteNonQuery($"ALTER TABLE {table} ADD TWITCHTIME TIME;");
                         }
-                        if (!Tables.Any(s => s.TableName == table && !s.Fields.Contains("RTMP")))
+                        if (Tables.Where(s => s.TableName == table).Where(t => !t.Fields.Contains("RTMP")).Any())
                         {
                             connectionString.ExecuteNonQuery($"ALTER TABLE {table} ADD RTMP VARCHAR(250);");
                         }
@@ -4895,11 +4895,11 @@ namespace VideoGui
                         "UPLOAD_TIME TIME,UPLOADTYPE INTEGER, DIRECTORYNAME VARCHAR(255))";
                     connectionString.ExecuteNonQuery(sqlstring);
                 }
-                if (!Tables.Any(s => s.TableName == "UPLOADSRECORD" && !s.Fields.Contains("UPLOADTYPE")))
+                if (Tables.Where(s => s.TableName == "UPLOADSRECORD").Where(t => !t.Fields.Contains("UPLOADTYPE")).Any())
                 {
                     connectionString.AddFieldToTable("UPLOADSRECORD", "UPLOADTYPE", "INTEGER", 0);
                 }
-                if (!Tables.Any(s => s.TableName == "UPLOADSRECORD" && !s.Fields.Contains("DIRECTORYNAME")))
+                if (Tables.Where(s => s.TableName == "UPLOADSRECORD").Where(t => !t.Fields.Contains("DIRECTORYNAME")).Any())
                 {
                     connectionString.AddFieldToTable("UPLOADSRECORD", "DIRECTORYNAME", "VARCHAR(255)");
                 }
@@ -4908,17 +4908,17 @@ namespace VideoGui
                     sqlstring = $"CREATE TABLE PLANINGQUES({Id},SOURCE VARCHAR(500),SOURCEDIR VARCHAR(500))";
                     connectionString.ExecuteNonQuery(sqlstring);
                 }
-                if (!Tables.Where(s => s.TableName == "SETTINGNAME").Any())
+                if (!Tables.Where(s => s.TableName == "SETTINGS").Any())
                 {
                     sqlstring = $"CREATE TABLE SETTINGS({Id},SETTINGNAME VARCHAR(250),SETTING VARCHAR(250), " +
                         "SETTINGDATE DATE, SETTINGTIME TIME)";
                     connectionString.ExecuteNonQuery(sqlstring);
                 }
-                if (!Tables.Any(s => s.TableName == "SETTINGS" && !s.Fields.Contains("SETTINGDATE")))
+                if (Tables.Where(s => s.TableName == "SETTINGS").Where(t => !t.Fields.Contains("SETTINGDATE")).Any())
                 {
                     connectionString.AddFieldToTable("SETTINGS", "SETTINGDATE", "DATE");
                 }
-                if (!Tables.Any(s => s.TableName == "SETTINGS" && !s.Fields.Contains("SETTINGTIME")))
+                if (Tables.Where(s => s.TableName == "SETTINGS").Where(t => !t.Fields.Contains("SETTINGTIME")).Any())
                 {
                     connectionString.AddFieldToTable("SETTINGS", "SETTINGTIME", "TIME");
                 }
@@ -4944,11 +4944,11 @@ namespace VideoGui
                          "TITLEID INTEGER,DESCID INTEGER);";
                     connectionString.ExecuteNonQuery(sqlstring);
                 }
-                if (!Tables.Any(s => s.TableName == "SHORTSDIRECTORY" && !s.Fields.Contains("TITLEID")))
+                if (Tables.Where(s => s.TableName == "SHORTSDIRECTORY").Where(t => !t.Fields.Contains("TITLEID")).Any())
                 {
                     connectionString.AddFieldToTable("SHORTSDIRECTORY", "TITLEID", "INTEGER");
                 }
-                if (!Tables.Any(s => s.TableName == "SHORTSDIRECTORY" && !s.Fields.Contains("DESCID")))
+                if (Tables.Where(s => s.TableName == "SHORTSDIRECTORY").Where(t => !t.Fields.Contains("DESCID")).Any())
                 {
                     connectionString.AddFieldToTable("SHORTSDIRECTORY", "DESCID", "INTEGER");
                 }
@@ -4985,11 +4985,11 @@ namespace VideoGui
                         "TITLETAGID INTEGER, GROUPID INTEGER,ISTAG INTEGER);";
                     connectionString.ExecuteNonQuery(sqlstring);
                 }
-                if (!Tables.Any(s => s.TableName == "TITLES" && !s.Fields.Contains("GROUPID")))
+                if (Tables.Where(s => s.TableName == "TITLES").Where(t => !t.Fields.Contains("GROUPID")).Any())
                 {
                     connectionString.AddFieldToTable("TITLES", "GROUPID", "INTEGER", -1);
                 }
-                if (!Tables.Any(s => s.TableName == "TITLES" && !s.Fields.Contains("ISTAG")))
+                if (Tables.Where(s => s.TableName == "TITLES").Where(t => !t.Fields.Contains("ISTAG")).Any())
                 {
                     connectionString.AddFieldToTable("TITLES", "ISTAG", "INTEGER", -1);
                 }
@@ -5000,7 +5000,7 @@ namespace VideoGui
                         "ISTAG SMALLINT);";
                     connectionString.ExecuteNonQuery(sqlstring);
                 }
-                if (!Tables.Any(s => s.TableName == "DESCRIPTIONS" && !s.Fields.Contains("ISTAG")))
+                if (Tables.Where(s => s.TableName == "DESCRIPTIONS").Where(t => !t.Fields.Contains("ISTAG")).Any())
                 {
                     connectionString.AddFieldToTable("DESCRIPTIONS", "ISTAG", "SMALLINT",0);
                 }
@@ -5041,19 +5041,19 @@ namespace VideoGui
                         "ISSCHEDULE SMALLINT, SCHEDULEID INTEGER, SOURCE INTEGER);";
                     connectionString.ExecuteNonQuery(sqlstring);
                 }
-                if (!Tables.Any(s => s.TableName == "SCHEDULES" && !s.Fields.Contains("SCHEDULEID")))
+                if (Tables.Where(s => s.TableName == "SCHEDULES").Where(t => !t.Fields.Contains("SCHEDULEID")).Any())
                 {
                     connectionString.AddFieldToTable("SCHEDULES", "SCHEDULEID", "INTEGER", -1);
                 }
-                if (!Tables.Any(s => s.TableName == "SCHEDULES" && !s.Fields.Contains("SOURCE")))
+                if (Tables.Where(s => s.TableName == "SCHEDULES").Where(t => !t.Fields.Contains("SOURCE")).Any())
                 {
                     connectionString.AddFieldToTable("SCHEDULES", "SOURCE", "INTEGER", -1);
                 }
-                if (!Tables.Any(s => s.TableName == "SCHEDULES" && !s.Fields.Contains("MAXDAILY")))
+                if (Tables.Where(s => s.TableName == "SCHEDULES").Where(t => !t.Fields.Contains("MAXDAILY")).Any())
                 {
                     connectionString.AddFieldToTable("SCHEDULES", "MAXDAILY", "INTEGER", -1);
                 }
-                if (!Tables.Any(s => s.TableName == "SCHEDULES" && !s.Fields.Contains("MAXEVENT")))
+                if (Tables.Where(s => s.TableName == "SCHEDULES").Where(t => !t.Fields.Contains("MAXEVENT")).Any())
                 {
                     connectionString.AddFieldToTable("SCHEDULES", "MAXEVENT", "INTEGER", -1);
                 }
@@ -5110,13 +5110,13 @@ namespace VideoGui
                         "LINKEDSHORTSDIRECTORYID INTEGER, LASTUPLOADEDTIME TIME);";
                     connectionString.ExecuteNonQuery(sqlstring);
                 }
-                if (!Tables.Any(s => s.TableName == "MULTISHORTSINFO" && !s.Fields.Contains("PRIORITY")))
+                if (Tables.Where(s => s.TableName == "MULTISHORTSINFO").Where(t => !t.Fields.Contains("PRIORITY")).Any())
                 {
                     connectionString.AddFieldToTable("MULTISHORTSINFO", "PRIORITY", "INTEGER", 1);
                 }
                 if (!Tables.Where(s => s.TableName == "EXCEEDED").Any())
                 {
-                    sqlstring = $"CREATE TABLE EXCEEDED({Id},EXCEEDED_DATE, EXCEEDED_TIME TIME);";
+                    sqlstring = $"CREATE TABLE EXCEEDED({Id},EXCEEDED_DATE DATE, EXCEEDED_TIME TIME);";
                     connectionString.ExecuteNonQuery(sqlstring);
                 }
                 if (!Tables.Where(s => s.TableName == "CONVERTERSETTINGS").Any())
@@ -5144,11 +5144,11 @@ namespace VideoGui
                              "COMPLETED_TIME TIME, ISACTIONED SMALLINT);";
                     connectionString.ExecuteNonQuery(sqlstring);
                 }
-                if (!Tables.Any(s => s.TableName == "YTACTIONS" && !s.Fields.Contains("SCHEDULED_TIME_START")))
+                if (Tables.Where(s => s.TableName == "YTACTIONS").Where(t => !t.Fields.Contains("SCHEDULED_TIME_START")).Any())
                 {
                     connectionString.AddFieldToTable("YTACTIONS", "SCHEDULED_TIME_START", "TIME");
                 }
-                if (!Tables.Any(s => s.TableName == "YTACTIONS" && !s.Fields.Contains("SCHEDULED_TIME_END")))
+                if (Tables.Where(s => s.TableName == "YTACTIONS").Where(t => !t.Fields.Contains("SCHEDULED_TIME_END")).Any())
                 {
                     connectionString.AddFieldToTable("YTACTIONS", "SCHEDULED_TIME_END", "TIME");
                 }
@@ -5659,7 +5659,7 @@ namespace VideoGui
                         foreach (var tt in TitlesList.Where(d => d.Description == ut.Directory))
                         {
                             tt.GroupId = ut.Id;
-                            string sqla = "UPDATE TITLES SET GROUPID = @GID WHEREID =@ID";
+                            string sqla = "UPDATE TITLES SET GROUPID = @GID WHERE ID =@ID";
                             connectionString.ExecuteScalar(sqla, [("GID", ut.Id), ("@ID", tt.Id)]);
                             ut.TitleId = tt.Id;
                             sqla = "UPDATE SHORTSDIRECTORY SET TITLEID = @TID WHERE ID = @ID";
