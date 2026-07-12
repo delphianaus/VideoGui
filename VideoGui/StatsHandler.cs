@@ -279,7 +279,7 @@ namespace VideoGui
                 //DoUnlock();
             }
         }
-        public void UpdateSpeed(string filename, float fps, float bitrate, int frames, string frames1440p)
+        public void UpdateSpeed(string filename, float fps, string bitrate, int frames, string frames1440p)
         {
             try
             {
@@ -386,6 +386,27 @@ namespace VideoGui
             }
         }
 
+        public float convertSpeed(string speed)
+        {
+            if (speed == null) return 0;
+
+            if (speed.ToLower().Contains("kbits/s"))
+            {
+                int idx = speed.ToLower().IndexOf("kbits/s");
+                string realspeed = speed.Substring(0, idx).Trim();
+                float fr = realspeed.ToFloat() * 1000;
+                return fr;
+            }
+            else if (speed.ToLower().Contains("mbits/s"))
+            {
+                int idx = speed.ToLower().IndexOf("mbits/s");
+                string realspeed = speed.Substring(0, idx).Trim();
+                float fr = realspeed.ToFloat() * 1000000;
+                return fr;
+            }
+
+            return 0;
+        }
         public void GetAverageSpeeds()
         {
             try
@@ -396,7 +417,7 @@ namespace VideoGui
                 foreach (Stats stats in RunningStats)
                 {
                     fps += stats.fps;
-                    bitrate += stats.bitrate;
+                    bitrate += convertSpeed(stats.bitrate);
                     frames += stats.frames;
                     if (stats.CurrentFrame != -1) totalframes += stats.CurrentFrame;
                 }
@@ -404,7 +425,7 @@ namespace VideoGui
                 {
                     string bitraatespeed = "";
                     string Bitrate = bitrate.ToBitrate(bitrate > 1024);
-                    bitraatespeed = (bitrate > 1024) ? "MBits/s" : "KBits/s";
+                    bitraatespeed = ((bitrate/1000) > 1000000) ? "MBits/s" : "KBits/s";
                     double fspstring = Math.Round(fps, 1);
                     UpdateTotalSpeeds?.Invoke(Bitrate, bitraatespeed, fspstring.ToString(), frames.ToString(), totalframes.ToString());
                 }

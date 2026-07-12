@@ -22,7 +22,10 @@ namespace VideoGui.Models
         public string FormatedTimeFrom { get => _FormatedTimeFrom; set { _FormatedTimeFrom = value; OnPropertyChanged(); } }
         public string FormatedTimeTo { get => _FormatedTimeTo; set { _FormatedTimeTo = value; OnPropertyChanged(); } }
 
-    
+        public VideoCutInfo()
+        {
+            
+        }
 
         public VideoCutInfo(string __FileName, TimeSpan _FromTime, TimeSpan To_Time, int _Cutnum)
         {

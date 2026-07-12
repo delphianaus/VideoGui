@@ -35,6 +35,11 @@ using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
 using Path = System.IO.Path;
 using Wpf.Ui.Controls;
 using System.Xml.Resolvers;
+using Google.Apis.Util;
+using System.Reflection.Metadata;
+using Nancy.TinyIoc;
+using System.Linq.Expressions;
+using System.Windows.Markup.Localizer;
 
 namespace VideoGui
 {
@@ -221,7 +226,14 @@ namespace VideoGui
                                 PathUrl = (string)c.Element("file")?.Element("pathurl")
                                   ?? (string)c.Descendants("pathurl").FirstOrDefault(),
                             }).FirstOrDefault().ToString();
-
+                        var filenamelist = urlLocation.Replace("%20", " ").Replace("%3a", ":").
+                                                Replace("file://localhost/", "").Replace(@"/", @"\").ToString();
+                        XML_Filename = filenamelist.ToString().Replace("{ PathUrl = ", "").Trim();
+                        var tfps = _fps.ToString().Replace("{ PathUrl = ", "").Replace("}", "").Trim().ToDouble(0.0);
+                        if (XML_Filename.StartsWith(@"file:\\localhost\"))
+                        {
+                            XML_Filename = XML_Filename.Replace(@"file:\\localhost\", "");
+                        }
                         var clipItems = doc
                             .Descendants("clipitem")
                             .Select(c => new
@@ -232,13 +244,12 @@ namespace VideoGui
                                 End = (int?)c.Element("end"),
                                 In = (int?)c.Element("in"),
                                 Out = (int?)c.Element("out"),
+                                Duration = (int?)c.Element("duration")
                             })
                             .ToList();
                         if (clipItems != null)
                         {
                             int clipno = 0;
-                            bool newclip = false;
-                            int prevend = 0;
                             List<AdobeClipData> adobeclips = new List<AdobeClipData>();
                             var DestPat = urlLocation.Split('/').ToList();
                             if (DestPat.Count > 0)
@@ -246,96 +257,176 @@ namespace VideoGui
                                 DestPat.RemoveAt(DestPat.Count - 1);
                                 XML_Dest = Uri.UnescapeDataString(DestPat.LastOrDefault().ToString());
                             }
-
-
-                            /*List<string> times = new List<string>();
+                            List<AdobeExport> AdobeExports = new();
                             foreach (var clip in clipItems)
                             {
-                                int start = clip.Start.Value;
-                                int end = clip.End.Value;
-                                int In = clip.In.Value;
-                                int Out = clip.Out.Value;
-
-                                times.Add($"{start},{end},{In},{Out}");
-                            }*/
-                            // System.IO.File.AppendAllLines(@"c:\videogui\times.csv",times.ToArray());
-
-
-                            List<string> names = new();
-                            foreach (var clip in clipItems)
-                            {
-
                                 string nameid = clip.Name.ToString();
-                                if (names.IndexOf(nameid) != -1)
-                                {
-                                    continue;
-                                }
-                                names.Add(nameid);
                                 int start = clip.Start.Value;
                                 int end = clip.End.Value;
                                 int In = clip.In.Value;
                                 int Out = clip.Out.Value;
-                                int Startframe = start + In;
-                                int Endframe = start + Out;
-
-                                if (adobeclips.Count == 0)
+                                int duration = clip.Duration.Value;
+                                if (!AdobeExports.Where(s => s.filename == nameid).Any())
                                 {
-                                    adobeclips.Add(new AdobeClipData(clipno++, Startframe, Endframe));
+                                    AdobeExports.Add(new AdobeExport(nameid, In, Out, start, end, duration));
                                 }
-                                else if (newclip || In > 0)
+                                else
                                 {
-                                    adobeclips.Add(new AdobeClipData(clipno++, start, end));
+                                    foreach (AdobeExport export in AdobeExports.Where(s => s.filename == nameid && s.In != In && s.Out != Out))
+                                    {
+                                        AdobeExports.Add(new AdobeExport(nameid, In, Out, start, end, duration));
+                                        break;
+                                    }
                                 }
-                                else adobeclips.LastOrDefault().end = Endframe;
-                                newclip = Startframe != prevend;
-                                prevend = Endframe;
                             }
-
-                            int totalframes = 0;
-                            List<TimeSpan> frames = new List<TimeSpan>();
-                            double tts = 0;
-                            foreach (var aclips in adobeclips)
+                            var mewlist = AdobeExports.OrderBy(s => s.filename).ThenBy(s => s.In).Distinct().ToList();
+                            AdobeExports.Clear();
+                            List<int> RamgeDelete = new List<int>();
+                            foreach (var export in mewlist)
                             {
-                                int fm = aclips.end - aclips.start;
-                                double totalsecs = fm / 50;
-                                TimeSpan tfs = TimeSpan.FromSeconds(totalsecs);
-                                TimeSpan tfs1 = TimeSpan.FromSeconds(aclips.start / 50);
-                                TimeSpan tfs2 = TimeSpan.FromSeconds(aclips.end / 50);
-                                frames.Add(tfs);
-                                tts += totalsecs;
+                                if (!AdobeExports.Where(s => s.filename ==
+                                  export.filename && s.In == export.In && s.Out == export.Out).Any())
+                                {
+                                    AdobeExports.Add(export);
+                                }
                             }
-
-
-
-
-                            var filenamelist = urlLocation.Replace("%20", " ").Replace("%3a", ":").
-                              Replace("file://xctkhost/", "").Replace(@"/", @"\").ToString();
-                            XML_Filename = filenamelist.ToString().Replace("{ PathUrl = ", "").Trim();
-                            if (XML_Filename.StartsWith(@"file:\\localhost\"))
+                            var cutPointFileNames = AdobeExports.
+                              Where(x => x.IsCutPoint).Select(x => x.filename).Distinct();
+                            List<AdobeExport> newep = new();
+                            foreach (var exp in cutPointFileNames)
                             {
-                                XML_Filename = XML_Filename.Replace(@"file:\\localhost\", "");
-
+                                if (AdobeExports.Where(s => s.filename == exp).Count() > 1)
+                                {
+                                    int total = AdobeExports.Where(s => s.filename == exp).Sum(s => s.Out - s.In);
+                                    if (total == AdobeExports.Where(s => s.filename == exp).First().Duration)
+                                    {
+                                        int nStart = AdobeExports.Where(s => s.filename == exp).First().Start;
+                                        int nEnd = AdobeExports.Where(s => s.filename == exp).Last().End;
+                                        int nOut = AdobeExports.Where(s => s.filename == exp).First().Duration;
+                                        for (int i = AdobeExports.Count - 1; i >= 0; i--)
+                                        {
+                                            AdobeExports[i].Delete = (AdobeExports[i].filename == exp) ? true : AdobeExports[i].Delete;
+                                        }
+                                        newep.Add(new AdobeExport(exp, 0, nOut, nStart, nEnd, nOut));
+                                    }
+                                }
                             }
+                            AdobeExports.RemoveAll(s => s.Delete);
+                            AdobeExports.AddRange(newep);
+                            var tl = AdobeExports.OrderBy(s => s.filename).ThenBy(s => s.In).Distinct().ToList();
+                            AdobeExports.Clear();
+                            AdobeExports.AddRange(tl);
 
-                            int idx = XML_Filename.IndexOf(@"\GX_");
-                            if (idx != -1)
+
+
+                            string dir = filenamelist.Replace("{ PathUrl = ", "").Replace("}", "").Trim();
+
+                            int idpf = dir.LastIndexOf(@"\");
+                            dir = dir.Substring(0, idpf);
+                            if (AdobeExports.Where(s => s.IsCutPoint).Any())
                             {
-                                XML_Filename = XML_Filename.Substring(0, idx);
-                            }
+                                for (int x = 0; x < AdobeExports.Count; x++)
+                                {
+                                    if ((!AdobeExports[x].IsCutPoint) ||
+                                      (x + 1 > AdobeExports.Count)) continue;
+                                    string startname = AdobeExports[x].filename;
+                                    string endname = AdobeExports[x + 1].filename;
+                                    string ext = Path.GetExtension(startname);
+                                    List<string> Files = new List<string>(), FilesToRead = new();
+                                    bool ssT = false, ssE = false;
+                                    Files = Directory.EnumerateFiles(dir, $"*{ext}").ToList();
+                                    foreach (var media in Files)
+                                    {
+                                        if (Path.GetFileName(media) == startname)
+                                        {
+                                            ssT = true;
+                                            continue;
+                                        }
+                                        if (ssT)
+                                        {
+                                            if (Path.GetFileName(media) == endname)
+                                            {
+                                                ssE = true;
+                                                break;
+                                            }
+                                            FilesToRead.Add(media);
+                                        }
+                                    }
+                                    if (FilesToRead.Count > 0)
+                                    {
+                                        var bridge = new ffmpegbridge();
+                                        bridge.ReadMDurations(FilesToRead);
+                                        while (!bridge.Finished)
+                                        {
+                                            Thread.Sleep(100);
+                                        }
 
+                                        AdobeExports[x + 1].Offset += bridge.GetFrames() / 1000 * tfps;
+                                        for (int y = x + 1; y < AdobeExports.Count; y++)
+                                        {
+                                            if ((!AdobeExports[y].IsCutPoint) ||
+                                              (y + 1 > AdobeExports.Count)) continue;
+                                            AdobeExports[y + 1].Offset += AdobeExports[x + 1].Offset;
+                                        }
+                                    }
+                                }
+                            }
+                            TimeSpan Start = TimeSpan.Zero, Duration = TimeSpan.Zero;
+                            double _duration = 0, StartFrame = 0, maxFrames = 0;
+                            int fnumber = 1;
                             string fn = XML_Filename.Split(@"\").ToList().LastOrDefault() as string;
-                            double fps = _fps.ToDouble(50);
-                            clipno = 1;
-                            foreach (var _aclip in adobeclips)
+                            bool EndAdd = false;
+                            VideoCutInfo vci = new();
+                           
+                            foreach (var MyExport in AdobeExports)
                             {
-                                // filename is the source dir, last part of //
-                                TimeSpan _Start = TimeSpan.FromSeconds(_aclip.start / fps);
-                                TimeSpan _End = TimeSpan.FromSeconds(_aclip.end / fps);
-                                var vcut = new VideoCutInfo(fn.Trim(), _Start, _End, clipno++);
-                                ListOfCuts.Add(vcut);
+                                if (!MyExport.IsStartGap && !MyExport.IsEndGap)
+                                {
+                                    EndAdd = true;
+                                    if (MyExport.Offset > 0) _duration = 0;
+                                    _duration += (MyExport.Used);
+                                    StartFrame += (MyExport.Offset);
+                                    maxFrames += _duration;
+                                }
+                                else if (MyExport.IsEndGap)
+                                {
+                                    _duration += (MyExport.Used) + (MyExport.Offset);
+                                    maxFrames += _duration;
+                                    TimeSpan START = TimeSpan.FromSeconds(StartFrame / tfps);
+                                    TimeSpan END = TimeSpan.FromSeconds(_duration / tfps);
+                                    string ExFileName = $"{XML_Filename.Trim()} Part {fnumber}".Trim();
+                                    vci = new(ExFileName, START, END, fnumber++);
+                                    ListOfCuts.Add(vci);
+                                    StartFrame += _duration;
+                                    _duration = 0;
+                                    EndAdd = false;
+                                }
+                                else if (!MyExport.IsStartGap)
+                                {
+                                    TimeSpan START = TimeSpan.FromSeconds(StartFrame / tfps);
+                                    TimeSpan END = TimeSpan.FromSeconds(_duration / tfps);
+                                    maxFrames += _duration;
+                                    string ExFileName = $"{XML_Filename.Trim()} Part {fnumber}".Trim();
+                                    vci = new(ExFileName, START, END, fnumber++);
+                                    ListOfCuts.Add(vci);
+                                    StartFrame = MyExport.In;
+                                    _duration = (MyExport.Used) + (MyExport.Offset);
+                                    maxFrames += _duration;
+                                    EndAdd = true;
+                                }
                             }
 
-                            TimeSpan TotalD = TimeSpan.FromSeconds(tts);
+                            if (EndAdd)
+                            {
+                                TimeSpan START = TimeSpan.FromSeconds(StartFrame / tfps);
+                                TimeSpan END = TimeSpan.FromSeconds(_duration /  tfps);
+                                string ExFileName = $"{XML_Filename.Trim()} Part {fnumber}".Trim();
+                                vci = new(ExFileName, START, END, fnumber++);
+                                ListOfCuts.Add(vci);
+                            }
+
+
+                            TimeSpan TotalD = TimeSpan.FromSeconds(maxFrames/50);
                             lblTotalTime.Content = TotalD.ToFFmpeg().Substring(0, 8);
                             msuVideoCuts.ItemsSource = ListOfCuts;
                             btnAccept.IsEnabled = true;
@@ -624,8 +715,8 @@ namespace VideoGui
                 key?.Close();
 
 
-                DoAddRecord?.Invoke(tbSource.IsChecked.Value,chkExportForTwitch.IsChecked.Value, true, 
-                    false, false, false,-1, true, false, false, false,
+                DoAddRecord?.Invoke(!tbSource.IsChecked.Value, chkExportForTwitch.IsChecked.Value, true,
+                    false, false, false, -1, true, false, false, false,
                     true, ctv.TimeFrom.ToFFmpeg(), ctv.TimeTo.ToFFmpeg()
                                         , (tbSource.IsChecked.Value) ? txtsrcdir.Text : XML_Filename,
                                         destdir + "\\" + ctv.FileName.Trim() + $" Part {ctv._CutNo}.mp4",

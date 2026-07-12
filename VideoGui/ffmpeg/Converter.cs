@@ -1522,7 +1522,7 @@ namespace VideoGui.ffmpeg
                 {
                     if (seek != TimeSpan.Zero)
                     {
-                        _parameters.Add(($"-ss {seek.Value.ToFFmpeg()}", true));
+                        _parameters.Add(($"-ss {seek.Value.ToFFmpeg()}", false));
                         startime = seek.Value;
                         totalseconds -= startime.TotalSeconds;
                     }
@@ -1562,7 +1562,7 @@ namespace VideoGui.ffmpeg
                 {
                     if (time != TimeSpan.Zero)
                     {
-                        _parameters.Add(($"-t {time.Value.ToFFmpeg()}", true));
+                        _parameters.Add(($"-t {time.Value.ToFFmpeg()}", false));
                         totalseconds = time.Value.TotalSeconds;
                     }
                 }

@@ -160,34 +160,34 @@
                HorizontalContentAlignment="Center" VerticalContentAlignment="Center" 
                Padding="3,0,3,0" VerticalAlignment="Center"/>
                 <Label x:Name="lblFrames" Content="frame" HorizontalAlignment="Left"
-                 Height="30" VerticalAlignment="Center" Width="41" Margin="290,0,0,0" VerticalContentAlignment="Center"/>
+                 Height="30" VerticalAlignment="Center" Width="41" Margin="280,0,0,0" VerticalContentAlignment="Center"/>
                 <Label x:Name="lblFramesStatus" Height="30" 
-               Content="fps" FontSize="13" Margin="263,0,0,0" HorizontalAlignment="Left" 
+               Content="fps" FontSize="13" Margin="251,0,0,0" HorizontalAlignment="Left" 
                VerticalContentAlignment="Center" HorizontalContentAlignment="Center" 
                Padding="3,0,3,0" VerticalAlignment="Center"/>
                 <Label x:Name="lblCurrentFrames" Content="" HorizontalAlignment="Left" Height="30" 
                VerticalAlignment="Center" Width="78" Margin="181,0,0,0" 
                VerticalContentAlignment="Center"/>
                 <Label x:Name="lblBitrateStatus" Height="34" 
-               Content="Bitrate" FontSize="13" HorizontalAlignment="Left" Margin="335,0,0,0" 
+               Content="Bitrate" FontSize="13" HorizontalAlignment="Left" Margin="316,0,0,0" 
                VerticalContentAlignment="Center" VerticalAlignment="Center" 
                HorizontalContentAlignment="Center" Padding="5,0,5,0"/>
                 <Label x:Name="lblBitrate" Content="btrte" HorizontalAlignment="Left" Height="30" 
-              VerticalAlignment="Center" Width="88" Margin="379,0,0,0" 
+              VerticalAlignment="Center" Width="88" Margin="366,0,0,0" 
               VerticalContentAlignment="Center" />
                 <Label x:Name="lblDurationStatus" Width="60" Height="30" 
               Content="Processed" FontSize="13" HorizontalAlignment="Left" 
-              VerticalAlignment="Center" Margin="472,0,0,0" HorizontalContentAlignment="Center" 
+              VerticalAlignment="Center" Margin="454,0,0,0" HorizontalContentAlignment="Center" 
               VerticalContentAlignment="Center"/>
                 <Label x:Name="lblDuration" Content="dur" HorizontalAlignment="Left" Height="30" 
-               VerticalAlignment="Center" Width="59" Margin="534,0,0,0" 
-               VerticalContentAlignment="Center" />
+               VerticalAlignment="Center" Width="60" 
+               VerticalContentAlignment="Center" Margin="521,0,0,0" />
                 <Label x:Name="lblETAStatus" Width="27" Height="30" 
                Content="ETA" FontSize="13" HorizontalContentAlignment="Center" 
-               HorizontalAlignment="Left" VerticalAlignment="Center" Margin="597,0,0,0" 
+               HorizontalAlignment="Left" VerticalAlignment="Center" Margin="583,0,0,0" 
                VerticalContentAlignment="Center"/>
                 <Label x:Name="lblEta" Content="ETA" HorizontalAlignment="Left" Height="30" 
-               VerticalAlignment="Center" Width="39" Margin="627,0,0,0"
+               VerticalAlignment="Center" Width="39" Margin="618,0,0,0"
               VerticalContentAlignment="Center"/>
                 <Label x:Name="lblTotalTimeStatus" Height="30" 
                Content="Time" FontSize="11" HorizontalContentAlignment="Center" 
