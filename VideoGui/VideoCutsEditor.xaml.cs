@@ -1,15 +1,21 @@
-﻿using CliWrap;
+﻿
+using CliWrap;
 using FirebirdSql.Data.FirebirdClient;
 using FolderBrowserEx;
+using Google.Apis.Util;
 using Microsoft.Win32;
 using Nancy.Routing.Trie.Nodes;
+using Nancy.TinyIoc;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Configuration;
+using System.Drawing.Drawing2D;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
+using System.Reflection.Metadata;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -21,25 +27,21 @@ using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Forms;
 using System.Windows.Input;
+using System.Windows.Markup.Localizer;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 using System.Xml.Linq;
+using System.Xml.Resolvers;
 using VideoGui.Models;
 using VideoGui.Models.delegates;
+using Wpf.Ui.Controls;
 using static System.Net.WebRequestMethods;
 using static VideoGui.ffmpeg.Probe.FormatModel;
 using FolderBrowserDialog = FolderBrowserEx.FolderBrowserDialog;
 using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
 using Path = System.IO.Path;
-using Wpf.Ui.Controls;
-using System.Xml.Resolvers;
-using Google.Apis.Util;
-using System.Reflection.Metadata;
-using Nancy.TinyIoc;
-using System.Linq.Expressions;
-using System.Windows.Markup.Localizer;
 
 namespace VideoGui
 {
@@ -228,7 +230,8 @@ namespace VideoGui
                             }).FirstOrDefault().ToString();
                         var filenamelist = urlLocation.Replace("%20", " ").Replace("%3a", ":").
                                                 Replace("file://localhost/", "").Replace(@"/", @"\").ToString();
-                        XML_Filename = filenamelist.ToString().Replace("{ PathUrl = ", "").Trim();
+                        XML_Filename = filenamelist.ToString().Replace("{ PathUrl = ", "").Replace("}", "").Trim(); 
+                          
                         var tfps = _fps.ToString().Replace("{ PathUrl = ", "").Replace("}", "").Trim().ToDouble(0.0);
                         if (XML_Filename.StartsWith(@"file:\\localhost\"))
                         {
@@ -321,6 +324,7 @@ namespace VideoGui
 
                             string dir = filenamelist.Replace("{ PathUrl = ", "").Replace("}", "").Trim();
 
+
                             int idpf = dir.LastIndexOf(@"\");
                             dir = dir.Substring(0, idpf);
                             if (AdobeExports.Where(s => s.IsCutPoint).Any())
@@ -372,61 +376,91 @@ namespace VideoGui
                                 }
                             }
                             TimeSpan Start = TimeSpan.Zero, Duration = TimeSpan.Zero;
-                            double _duration = 0, StartFrame = 0, maxFrames = 0;
+                            double _duration = 0, StartFrame = 0, maxFrames = 0, EndFrame = 0;
                             int fnumber = 1;
                             string fn = XML_Filename.Split(@"\").ToList().LastOrDefault() as string;
+                            string fnxa = XML_Filename.Replace(fn, "").Trim();
+                            fnxa = fnxa.Substring(0, fnxa.Length - 1);
+                            string fnp = fnxa.Split(@"\").ToList().LastOrDefault() as string;
+
+                            
                             bool EndAdd = false;
                             VideoCutInfo vci = new();
-                           
+
+                            bool IsFirst = true;
+
+                            int x1 = 1;
+
+                            AdobeExports.Last().IsLast = true;
                             foreach (var MyExport in AdobeExports)
                             {
-                                if (!MyExport.IsStartGap && !MyExport.IsEndGap)
+                                if (IsFirst)
                                 {
-                                    EndAdd = true;
-                                    if (MyExport.Offset > 0) _duration = 0;
-                                    _duration += (MyExport.Used);
-                                    StartFrame += (MyExport.Offset);
-                                    maxFrames += _duration;
+                                    StartFrame = (MyExport.Offset) + MyExport.Start;
+                                    EndFrame = (MyExport.Offset) + MyExport.Out;
+                                    IsFirst = false;
+                                    if (!MyExport.IsGap)
+                                    {
+                                        continue;
+                                    }
+                                    if (MyExport.IsEndGap)
+                                    {
+                                        TimeSpan _S = TimeSpan.FromSeconds(StartFrame / tfps);
+                                        TimeSpan _E = TimeSpan.FromSeconds(EndFrame / tfps);
+                                        ListOfCuts.Add(new VideoCutInfo(fnp, _S, _E, x1));
+                                        x1++;
+                                    }
+                                    continue;
                                 }
-                                else if (MyExport.IsEndGap)
+                                else
                                 {
-                                    _duration += (MyExport.Used) + (MyExport.Offset);
-                                    maxFrames += _duration;
-                                    TimeSpan START = TimeSpan.FromSeconds(StartFrame / tfps);
-                                    TimeSpan END = TimeSpan.FromSeconds(_duration / tfps);
-                                    string ExFileName = $"{XML_Filename.Trim()} Part {fnumber}".Trim();
-                                    vci = new(ExFileName, START, END, fnumber++);
-                                    ListOfCuts.Add(vci);
-                                    StartFrame += _duration;
-                                    _duration = 0;
-                                    EndAdd = false;
-                                }
-                                else if (!MyExport.IsStartGap)
-                                {
-                                    TimeSpan START = TimeSpan.FromSeconds(StartFrame / tfps);
-                                    TimeSpan END = TimeSpan.FromSeconds(_duration / tfps);
-                                    maxFrames += _duration;
-                                    string ExFileName = $"{XML_Filename.Trim()} Part {fnumber}".Trim();
-                                    vci = new(ExFileName, START, END, fnumber++);
-                                    ListOfCuts.Add(vci);
-                                    StartFrame = MyExport.In;
-                                    _duration = (MyExport.Used) + (MyExport.Offset);
-                                    maxFrames += _duration;
-                                    EndAdd = true;
+                                    if (!MyExport.IsGap)
+                                    {
+                                        EndFrame += MyExport.Used;
+                                        if (MyExport.IsLast)
+                                        {
+                                            TimeSpan _S = TimeSpan.FromSeconds(StartFrame / tfps);
+                                            TimeSpan _E = TimeSpan.FromSeconds(EndFrame / tfps);
+                                            ListOfCuts.Add(new VideoCutInfo(fnp, _S, _E, x1));
+                                            break;
+                                        }
+                                        continue;
+                                    }
+                                    else if (MyExport.IsEndGap)
+                                    {
+                                        TimeSpan _S = TimeSpan.FromSeconds(StartFrame / tfps);
+                                        EndFrame += MyExport.Used;
+                                        TimeSpan _E = TimeSpan.FromSeconds(EndFrame / tfps);
+                                        ListOfCuts.Add(new VideoCutInfo(fnp, _S, _E, x1));
+                                        x1++;
+                                        StartFrame = MyExport.Start+ MyExport.Duration;
+                                        TimeSpan _S1 = TimeSpan.FromSeconds(StartFrame / tfps);
+                                        continue;
+
+                                    }
+                                    else if (MyExport.IsStartGap)
+                                    {
+                                        StartFrame = MyExport.Start + MyExport.In ;
+                                        EndFrame += MyExport.Out;
+                                        if (MyExport.IsLast)
+                                        {
+                                            TimeSpan _S = TimeSpan.FromSeconds(StartFrame / tfps);
+                                            TimeSpan _E = TimeSpan.FromSeconds(EndFrame / tfps);
+                                            ListOfCuts.Add(new VideoCutInfo(fnp, _S, _E, x1));
+                                        }
+                                    }
                                 }
                             }
 
-                            if (EndAdd)
+
+
+                            TimeSpan TotalD = TimeSpan.Zero;
+                            foreach (var d in ListOfCuts)
                             {
-                                TimeSpan START = TimeSpan.FromSeconds(StartFrame / tfps);
-                                TimeSpan END = TimeSpan.FromSeconds(_duration /  tfps);
-                                string ExFileName = $"{XML_Filename.Trim()} Part {fnumber}".Trim();
-                                vci = new(ExFileName, START, END, fnumber++);
-                                ListOfCuts.Add(vci);
+                                TotalD += d.Duration;
                             }
 
 
-                            TimeSpan TotalD = TimeSpan.FromSeconds(maxFrames/50);
                             lblTotalTime.Content = TotalD.ToFFmpeg().Substring(0, 8);
                             msuVideoCuts.ItemsSource = ListOfCuts;
                             btnAccept.IsEnabled = true;
@@ -609,7 +643,8 @@ namespace VideoGui
                     txxtEditDirectory.Width = _w - 305;
                     var _ww = _w - 465;
                     if (_ww < 255) _ww = 255;
-                    SrcFileNameWidth = _ww;
+                    var r = (tbSource.IsChecked.Value) ? 70 : 0;
+                    SrcFileNameWidth = _ww - r;
                 }
                 if (HeightChanged && Ready && IsLoaded)
                 {
@@ -718,7 +753,7 @@ namespace VideoGui
                 DoAddRecord?.Invoke(!tbSource.IsChecked.Value, chkExportForTwitch.IsChecked.Value, true,
                     false, false, false, -1, true, false, false, false,
                     true, ctv.TimeFrom.ToFFmpeg(), ctv.TimeTo.ToFFmpeg()
-                                        , (tbSource.IsChecked.Value) ? txtsrcdir.Text : XML_Filename,
+                                        , (tbSource.IsChecked.Value) ? txtsrcdir.Text : Path.GetDirectoryName(XML_Filename),
                                         destdir + "\\" + ctv.FileName.Trim() + $" Part {ctv._CutNo}.mp4",
                                         null, null, chkExportForTwitch.IsChecked.Value);
                 lblStatus.Content = $"Injecting {ctv.FileName} part {ctv._CutNo}";

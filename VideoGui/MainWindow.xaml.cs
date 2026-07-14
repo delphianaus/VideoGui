@@ -7156,7 +7156,7 @@ namespace VideoGui
                             LineNum = 13;
                             string DestFile = "", SourceDirectory = Job.SourcePath, sep = Job.X264Override ? "\\x264\\" : "\\";
                             DestFile = (Job.IsTwitchStream && !Job.twitchschedule.HasValue) ? DestDirectoryTwitch : (Job.Is4KAdobe) ? DestDirectoryAdobe4K : (Job.Is4K) ? DestDirectory4K : (Job.Is1440p) ? DestDirectory1440p : DestDirectory720p;
-                            if (Job.ISFILESRC)
+                            if (Job.ISFILESRC || Job.IsXMLSource)
                             {
                                 DestFile = Job.DestMFile;
                             }
@@ -7541,7 +7541,7 @@ namespace VideoGui
                     if (IsOkay)
                     {
                         LineNum = 29;
-                        if (Job.SourceFile != null)
+                        if (Job.SourceFile != null && !Job.IsXMLSource)
                         {
                             DestFile = (Job.IsTwitchStream) ? DestDirectoryTwitch : (Job.Is4K) ? DestDirectory4K : (Job.Is1440p) ? DestDirectory1440p : DestDirectory720p;
                             if (Job.Is4KAdobe) DestFile = DestDirectoryAdobe4K;

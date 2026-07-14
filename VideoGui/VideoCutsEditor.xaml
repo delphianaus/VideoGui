@@ -77,6 +77,9 @@
                     <MSU:MultiListboxColumnDefinition HeaderText="Cut To" 
                   DataField="FormatedTimeTo" 
                   Width="73" ComponentType="TextBlock"/>
+                    <MSU:MultiListboxColumnDefinition HeaderText="Duration" 
+                    DataField="FormatedDuration" 
+                  Width="73" ComponentType="TextBlock"/>
                     <MSU:MultiListboxColumnDefinition HeaderText="Cut No" 
                   DataField="CutTo" ItemMargin="10,0,0,0"
                   Width="50" ComponentType="TextBlock"/>

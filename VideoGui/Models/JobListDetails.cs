@@ -331,10 +331,14 @@ namespace VideoGui
             ForegroundColor = X264Override ? Color.FromScRgb(100, 6, 186, 28) : Color.FromArgb(100, 246, 8, 50);
             if (IsMuxed || ISFILESRC || IsXMLSource)
             {
-                IsMulti = false;
-                Title = Path.GetFileNameWithoutExtension(MultiSourceDir);
+                if (!IsXMLSource)
+                {
+                    Title = Path.GetFileNameWithoutExtension(MultiSourceDir);
+                    SourcePath = Path.GetDirectoryName(MultiSourceDir);
+                    IsMulti = false;
+                }
                 SourceFile = MultiSourceDir;
-                SourcePath = Path.GetDirectoryName(MultiSourceDir);
+                
             }
         }
 
