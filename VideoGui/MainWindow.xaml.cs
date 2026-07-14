@@ -3211,7 +3211,7 @@ namespace VideoGui
                         cts.CancelAfter(1500);
                         if (true && !cts.IsCancellationRequested)
                         {
-                            Thread.Sleep(100);
+                            Task.Delay(100);
                             System.Windows.Forms.Application.DoEvents();
                         }
                         MasterTagSelectFrm = null;
@@ -6421,7 +6421,7 @@ namespace VideoGui
                 FileQueChecker.Tick += new EventHandler(FileQueChecker_Tick);
                 FileQueChecker.Interval = (int)new TimeSpan(0, 0, 1).TotalMilliseconds;
                 Task.Run(async () => SetupThreadProcessorAsync());
-                Thread.Sleep(100);
+                Task.Delay(100);
                 SetupTicker();
                 Task.Run(async () => { await ClearLogs(); });
 
@@ -6704,7 +6704,7 @@ namespace VideoGui
                         bool found = false;
                         foreach (var v in ProcessingJobs.Where(v => v.FileNoExt == record))
                         {
-                            Thread.Sleep(100);
+                            Task.Delay(100);
                             v.Fileinfo = filename;
                             string pr = record + "|" + v.Fileinfo;
                             found = true;
@@ -6956,7 +6956,7 @@ namespace VideoGui
 
                     if (xcnt == 0 && xcnt1440p == 0 && xcnt4K == 0 && ProcessingJobs.Count == 0)
                     {
-                        Thread.Sleep(500);
+                        Task.Delay(500);
                         continue;
                     }
                     LineNum = 3;
@@ -6994,16 +6994,21 @@ namespace VideoGui
                         {
                             break;
                         }
-                        var Job = ProcessingJobs.Where(s => s.FileNoExt == Jobr.FileNoExt).FirstOrDefault();
+                        var Job = ProcessingJobs.Where(s => s.FileNoExt == Jobr.FileNoExt && !Jobr.Complete).FirstOrDefault();
+                        if (Job is null)
+                        {
+                            Task.Delay(200);
+                            continue;
+                        }
                         if (Job != null)
                         {
                             bool found = false;
                             var x = GetEncryptedString(new int[] { 144, 57, 66, 70, 244, 192 }.Select(i => (byte)i).ToArray());
                             Process[] psa = Process.GetProcessesByName(x);
                             List<string> ProcessIDs = (psa.Select(pid => pid.Id.ToString())).ToList();
-                            if (Job.Handle.ContainsAny(ProcessIDs))
+                            if (Job.Handle.ContainsAny(ProcessIDs) || Job.Complete)
                             {
-                                Thread.Sleep(250);
+                                Task.Delay(250);
                                 continue;
                             }
                             LineNum = 7;
@@ -7040,7 +7045,7 @@ namespace VideoGui
                                     (_4KFiles.Count >= total4kTasks)) ||
                                     ((!Job.Is720P && !Job.IsMovie) && (_720PFiles.Count >= totaltasks)))
                                 {
-                                    Thread.Sleep(200);
+                                    Task.Delay(200);
                                     continue;
                                 }
                                 if ((Job.Is1440p || Job.IsTwitchOut) && (_1440pFiles.Count < total1440ptasks))
@@ -7063,7 +7068,7 @@ namespace VideoGui
                                 {
                                     break;
                                 }
-                                Thread.Sleep(150);
+                                Task.Delay(150);
                             }
                             LineNum = 10;
 
@@ -7100,7 +7105,7 @@ namespace VideoGui
                                        ((Job.Is4K || Job.IsMuxed || Job.ISFILESRC) && (_4KFiles.Count >= total4kTasks)) ||
                                      ((!Job.Is720P && !Job.IsMovie) && (_720PFiles.Count >= totaltasks)))
                                     {
-                                        Thread.Sleep(100);
+                                        Task.Delay(100);
                                         continue;
                                     }
                                     if ((Job.Is1440p || Job.IsTwitchOut) && (_1440pFiles.Count < total1440ptasks))
@@ -7307,7 +7312,7 @@ namespace VideoGui
                     TimeSpan time2 = TimeSpan.Zero;
                     while (!FileIndexer.Finished)
                     {
-                        Thread.Sleep(100);
+                        Task.Delay(100);
                     }
                     time1 = FileIndexer.GetDuration();
                     FileIndexer = null;
@@ -7478,7 +7483,7 @@ namespace VideoGui
                                     failed++;
                                     LineNum = 18;
                                     ThreadStatsHandler?.Invoke(1, (Job.IsMulti) ? Path.GetFileNameWithoutExtension(Job.DestMFile) : Job.Title);
-                                    Thread.Sleep(850);
+                                    Task.Delay(850);
                                     LineNum = 19;
                                     IsOkay = false;
                                     passed = false;
@@ -7526,7 +7531,7 @@ namespace VideoGui
                                 failed++;
                                 LineNum = 27;
                                 ThreadStatsHandler?.Invoke(1, (Job.IsMulti) ? Path.GetFileNameWithoutExtension(Job.DestMFile) : Job.Title);
-                                Thread.Sleep(850);
+                                Task.Delay(850);
                                 LineNum = 28;
 
                                 IsOkay = false;
@@ -7683,8 +7688,8 @@ namespace VideoGui
                                 LineNum = 48;
                                 RunConversion(processingfile, DestFile, Job, ThreadStatsHandler).ConfigureAwait(false);
                                 LineNum = 49;
-                                Thread.Sleep(250);
-                                Thread.Sleep(100);
+                                Task.Delay(250);
+                                Task.Delay(100);
                             }
                             else
                             {
@@ -7885,7 +7890,7 @@ namespace VideoGui
                                     FileIndexer.ReadDuration(source);
                                     while (!FileIndexer.Finished)
                                     {
-                                        Thread.Sleep(100);
+                                        Task.Delay(100);
                                     }
                                     TotalSecs = FileIndexer.GetDuration().TotalSeconds;
                                     FileIndexer = null;
@@ -7895,7 +7900,7 @@ namespace VideoGui
                                     FileIndexer1.ReadDuration(Destination);
                                     while (!FileIndexer1.Finished)
                                     {
-                                        Thread.Sleep(100);
+                                        Task.Delay(100);
                                     }
                                     double DTotalSecs = FileIndexer1.GetDuration().TotalSeconds;
                                     FileIndexer1 = null;
@@ -8001,7 +8006,7 @@ namespace VideoGui
                 FileQueChecker.Enabled = true;
                 FileQueChecker.Stop();
                 FileQueChecker.Start();
-                Thread.Sleep(200);
+                Task.Delay(200);
             }
             catch (Exception ex)
             {
@@ -8392,7 +8397,7 @@ namespace VideoGui
                 Task.Run(async () => ThinProcessingListAsync());
                 while (Monitor.IsEntered(ProcessingJobslocker))
                 {
-                    Thread.Sleep(250);
+                    Task.Delay(250);
                 }
                 string ext = "";
                 ProcessingCancellationTokenSource.Cancel();
@@ -8455,7 +8460,7 @@ namespace VideoGui
                                     FileIndexer.ReadDuration(pfile);
                                     while (!FileIndexer.Finished)
                                     {
-                                        Thread.Sleep(100);
+                                        Task.Delay(100);
                                     }
                                     int ptime = FileIndexer.GetDuration().TotalSeconds.ToInt();
                                     FileIndexer = null;
@@ -8470,7 +8475,7 @@ namespace VideoGui
                                         FileIndexer.ReadDuration(filename);
                                         while (!FileIndexer2.Finished)
                                         {
-                                            Thread.Sleep(100);
+                                            Task.Delay(100);
                                         }
                                         int ptime2 = FileIndexer2.GetDuration().TotalSeconds.ToInt();
                                         FileIndexer = null;
@@ -8478,7 +8483,7 @@ namespace VideoGui
                                         FileIndexer.ReadDuration(pfile);
                                         while (!FileIndexer3.Finished)
                                         {
-                                            Thread.Sleep(100);
+                                            Task.Delay(100);
                                         }
                                         int ptime3 = FileIndexer3.GetDuration().TotalSeconds.ToInt();
                                         FileIndexer = null;
@@ -8653,14 +8658,14 @@ namespace VideoGui
 
                         while (!FileIndexer.Finished)
                         {
-                            Thread.Sleep(100);
+                            Task.Delay(100);
                         }
                         List<(string, double)> FileInfos = new List<(string, double)>();
                         FileInfos.AddRange(FileIndexer.FileInfoList);
                         FileIndexer.ReadMDurations(Files);
                         while (!FileIndexer.Finished)
                         {
-                            Thread.Sleep(100);
+                            Task.Delay(100);
                         }
                         TotalFrames = FileIndexer.GetFrames();
 
@@ -8704,13 +8709,13 @@ namespace VideoGui
                             List<Process> Processes = Win32Processes.GetProcessesLockingFile(SourceFile);
                             if (Processes.Count == 0) cts.Cancel();
 
-                            Thread.Sleep(100);
+                            Task.Delay(100);
                         }
                         ffmpegbridge FileIndexer = new ffmpegbridge();
                         FileIndexer.ReadDuration(SourceFile);
                         while (!FileIndexer.Finished)
                         {
-                            Thread.Sleep(100);
+                            Task.Delay(100);
                         }
                         totalseconds = FileIndexer.GetDuration().TotalSeconds;
                         FileIndexer = null;
@@ -8788,7 +8793,7 @@ namespace VideoGui
                     {
                         LineNum = 41;
                         NewSeekTo = SeekTo;
-                        
+
                         TimeSpan Duration = SeekTo - SeekFrom;
                         NewSeekFrom = Duration;
                         string MSRC = job.MultiSourceDir.Split('\\').ToList().LastOrDefault();
@@ -8820,7 +8825,7 @@ namespace VideoGui
                                     if (flist.Count == 0)
                                     {
                                         NewSeekFrom = SeekFrom - fss.Start;
-                                        
+
                                     }
                                     if (SeekTo > (fss.Start + fss.Duration))
                                     {
@@ -8867,7 +8872,7 @@ namespace VideoGui
                     bridge.ReadMDurations(Files);
                     while (!bridge.Finished)
                     {
-                        Thread.Sleep(100);
+                        Task.Delay(100);
                     }
                     TotalFrames = bridge.GetFrames();
                     LineNum = 48;
@@ -8887,7 +8892,7 @@ namespace VideoGui
                         List<Process> Processes = Win32Processes.GetProcessesLockingFile(SourceFile);
                         if (Processes.Count == 0) cts.Cancel();
 
-                        Thread.Sleep(100);
+                        Task.Delay(100);
                     }
 
                     ffmpegbridge bridge = new ffmpegbridge();
@@ -9565,7 +9570,7 @@ namespace VideoGui
                 FileIndexer.ReadDuration(filename);
                 while (!FileIndexer.Finished)
                 {
-                    Thread.Sleep(100);
+                    Task.Delay(100);
                 }
                 res = FileIndexer.GetDuration().TotalSeconds.ToInt();
                 FileIndexer = null;
@@ -9662,6 +9667,11 @@ namespace VideoGui
                     foreach (var jo in ProcessingJobs.Where(jo => !jo.Complete && jo.FileNoExt == Path.GetFileNameWithoutExtension(filename)))
                     {
                         found = true;
+                        if (jo.IsXMLSource)
+                        {
+                            jo.Complete = true;
+                            jo.Progress = 100;
+                        }
                         IsNVM = jo.IsNVM;
                         IsMSJ |= jo.IsMSJ;
                         IsCreateShorts = jo.IsCreateShorts;
@@ -9675,7 +9685,7 @@ namespace VideoGui
                             List<Process> Processes = Win32Processes.GetProcessesLockingFile(filename.Replace("\"", "").Trim());
                             if (Processes.Count == 0) cts.Cancel();
 
-                            Thread.Sleep(100);
+                            Task.Delay(100);
                         }
                         var tff = new System.IO.FileInfo(filename.Replace("\"", "").Trim());
                         double filesize2 = tff.Length / 1048576.00;
@@ -9714,7 +9724,7 @@ namespace VideoGui
                         {
                             List<Process> Processes = Win32Processes.GetProcessesLockingFile(fn);
                             if (Processes.Count == 0) cts2.Cancel();
-                            Thread.Sleep(100);
+                            Task.Delay(100);
                         }
                         var tff1 = new System.IO.FileInfo(fn);
                         double filesize = tff1.Length / 1048576.00;
@@ -9736,9 +9746,8 @@ namespace VideoGui
                             fs = (int)Math.Round(filesize);
                         }
                         LinePos = 4;
-                        if (jo.IsMulti)
+                        if (jo.IsMulti || jo.IsXMLSource)
                         {
-
                             string sql = "insert into AutoInsertHistory(srcdir, ISFILESRC,destfname ,StartPos, Duration , b720p, " +
                                 "bShorts , bCreateShorts, bEncodeTrim ,bCutTrim, bMonitoredSource ,bPersistentJob , " +
                                 "BTWITCHSTREAM, TWITCHDATE, TWITCHTIME,RUNID, ISMUXED,MUXDATA)" +
@@ -9777,7 +9786,7 @@ namespace VideoGui
                                     FileIndexer.ReadDuration(df);
                                     while (!FileIndexer.Finished)
                                     {
-                                        Thread.Sleep(100);
+                                        Task.Delay(100);
                                     }
                                     var _TotalSeconds = (double)FileIndexer.GetDuration().TotalSeconds;
                                     FileIndexer = null;
@@ -9788,14 +9797,17 @@ namespace VideoGui
                                 }
                             }
 
-                            if ((!jo.IsTwitchOut) && (File.Exists(filename) || ExitCode != 0) && (!jo.IsMuxed))
+                            if (!jo.IsXMLSource)
                             {
-                                string PathDestnfile = Path.GetDirectoryName(destnFile);
-                                if (!Directory.Exists(PathDestnfile))
+                                if ((!jo.IsTwitchOut) && (File.Exists(filename) || ExitCode != 0) && (!jo.IsMuxed))
                                 {
-                                    Directory.CreateDirectory(PathDestnfile);
+                                    string PathDestnfile = Path.GetDirectoryName(destnFile);
+                                    if (!Directory.Exists(PathDestnfile))
+                                    {
+                                        Directory.CreateDirectory(PathDestnfile);
+                                    }
+                                    MovedIfExists(fn, destnFile);
                                 }
-                                MovedIfExists(fn, destnFile);
                             }
                         }
 
@@ -9825,9 +9837,10 @@ namespace VideoGui
 
 
 
-                        if (!jo.IsShorts || jo.IsMuxed)
+                        if (!jo.IsShorts || jo.IsMuxed || jo.IsXMLSource)
                         {
-                            DoAsyncFinish(jo.FileNoExt, newdest, Totals, fs, fs2, fps, filename, jo.IsComplex, jo.IsTwitchStream, jo.IsMuxed).ConfigureAwait(false);
+                            DoAsyncFinish(jo.FileNoExt, newdest, Totals, fs, fs2, fps,
+                             filename, jo.IsComplex, jo.IsTwitchStream, jo.IsMuxed, jo.IsXMLSource).ConfigureAwait(false);
                         }
                     }
                     if (!found)
@@ -9883,7 +9896,7 @@ namespace VideoGui
                 {
                     if (ShortsProcessors[i].SourceFile == shortname)
                     {
-                        Thread.Sleep(100);
+                        Task.Delay(100);
                         ShortsProcessors[i].Dispose();
                         ShortsProcessors.RemoveAt(i);
                         break;
@@ -9923,7 +9936,7 @@ namespace VideoGui
             }
         }
         public async Task DoAsyncFinish(string sourcefile, string destfile, double TotalSeconds,
-            int fs, int fs2, string fps, string filename, bool _IsComplex, bool isTwitchStream, bool IsMuxed)
+            int fs, int fs2, string fps, string filename, bool _IsComplex, bool isTwitchStream, bool IsMuxed, bool IsXMLSource)
         {
             try
             {
@@ -9934,13 +9947,13 @@ namespace VideoGui
                     FileIndexer.ReadDuration(destfile);
                     while (!FileIndexer.Finished)
                     {
-                        Thread.Sleep(100);
+                        Task.Delay(100);
                     }
 
                     _TotalSeconds = (double)FileIndexer.GetDuration().TotalSeconds;
                     FileIndexer = null;
                 }
-                if ((IsMuxed || isTwitchStream) || (Math.Round(_TotalSeconds) == Math.Truncate(TotalSeconds)) || (_IsComplex) || Math.Round(TotalSeconds * 0.98) < (Math.Round(_TotalSeconds)))
+                if ((IsMuxed || isTwitchStream || IsXMLSource) || (Math.Round(_TotalSeconds) == Math.Truncate(TotalSeconds)) || (_IsComplex) || Math.Round(TotalSeconds * 0.98) < (Math.Round(_TotalSeconds)))
                 {
                     Passed++;
                     lblFailpass.AutoSizeLabel(Passed.ToString() + "/" + failed.ToString());
@@ -10027,7 +10040,7 @@ namespace VideoGui
                             break;
                         }
                     }
-                    if (!isTwitchStream) AddToRecentDocs(DestFile);
+                    if (!isTwitchStream && !IsXMLSource) AddToRecentDocs(DestFile);
 
                     if (!File.Exists(SourceFileIs) && !IsMuxed)
                     {
@@ -10063,7 +10076,7 @@ namespace VideoGui
                             List<Process> Processes = Win32Processes.GetProcessesLockingFile(SourceFileIs);
                             if (Processes.Count == 0) cts.Cancel();
 
-                            Thread.Sleep(100);
+                            Task.Delay(100);
                         }
                         if (!IsMulti && (DoesDeletionFileExist(SourceFileIs)))
                         {
@@ -10075,12 +10088,12 @@ namespace VideoGui
                     {
                         DeleteFromAutoInsertTable(ID);
                     }
-                    else if (IsSrc)
+                    else if (IsSrc && !IsXMLSource)
                     {
                         List<string> Files = Cuts.Select(sp => sp.Replace("file ", "").Replace("'", "").Trim()).ToList();
                         string dstfn = "", srcfile, destfn = Path.GetFileNameWithoutExtension(Title);
                         DeleteFromAutoInsertTable(ID);
-                        if (!KeepSource && !IsMuxed)
+                        if (!KeepSource && !IsMuxed && !IsXMLSource)
                         {
                             foreach (string pr in Files)
                             {
@@ -10095,7 +10108,7 @@ namespace VideoGui
                             MoveIfExists(Multifile, dstfn);
                         }
                     }
-                    else if (!IsMuxed)
+                    else if (!IsMuxed || !IsXMLSource)
                     {
                         var t = GetDesinationFromLog(SourceFileIs);
                         bool RunDelete = true;
@@ -10148,21 +10161,25 @@ namespace VideoGui
                             break;
                         }
                     }
-                    if (sc != "" && !Is4kAdobe)
+
+                    if (!IsXMLSource)
                     {
-                        MoveIfExists(sc, destdir);
-                    }
-                    string mismatch = $"Dest {Math.Round(_TotalSeconds)} Source {Math.Truncate(TotalSeconds)}";
-                    if (Is4kAdobe && !IsMuxed && !IsAdobeEditing)
-                    {
-                        string df = Directory.EnumerateFiles(dfile, $"{sourcefile}.mp4", SearchOption.AllDirectories).ToList().FirstOrDefault();
-                        if (File.Exists(df))
+                        if (sc != "" && !Is4kAdobe)
                         {
-                            File.Delete(df);
+                            MoveIfExists(sc, destdir);
                         }
-                        LogWrite($"file re-que for {Path.GetFileNameWithoutExtension(sourcefile)} as size mismatch issue.");
+                        string mismatch = $"Dest {Math.Round(_TotalSeconds)} Source {Math.Truncate(TotalSeconds)}";
+                        if (Is4kAdobe && !IsMuxed && !IsAdobeEditing)
+                        {
+                            string df = Directory.EnumerateFiles(dfile, $"{sourcefile}.mp4", SearchOption.AllDirectories).ToList().FirstOrDefault();
+                            if (File.Exists(df))
+                            {
+                                File.Delete(df);
+                            }
+                            LogWrite($"file re-que for {Path.GetFileNameWithoutExtension(sourcefile)} as size mismatch issue.");
+                        }
+                        else LogWrite($"{sourcefile} Failed Due to size mismatch {mismatch}");
                     }
-                    else LogWrite($"{sourcefile} Failed Due to size mismatch {mismatch}");
                 }
             }
             catch (Exception ex)
@@ -10244,7 +10261,7 @@ namespace VideoGui
                     MoveIfExists(me, newfile);
                     var xx = GetEncryptedString(new int[] { 216, 37, 70, 70 }.Select(i => (byte)i).ToArray());
                     string SourceAssembly = Path.ChangeExtension(me, xx);
-                    Thread.Sleep(10);
+                    Task.Delay(10);
                     var x = GetEncryptedString(new int[] { 216, 58, 87, 83 }.Select(i => (byte)i).ToArray());
                     using (ZipArchive zipArchive = new ZipArchive(response, ZipArchiveMode.Read))
                     {
@@ -10469,7 +10486,7 @@ namespace VideoGui
                 string _currentfile = Path.GetFileNameWithoutExtension(filename);
 
                 ThreadUpdateProgress?.Invoke(_currentfile, Percent, Duration, Total);
-                Thread.Sleep(10);
+                Task.Delay(10);
                 DateTime LastProgressEvent = DateTime.Now.AddYears(-1500);
                 if (CanUpdate)
                 {
@@ -11453,7 +11470,7 @@ namespace VideoGui
                 {
                     while (ajf.IsActive && !cts.IsCancellationRequested && ix > 0)
                     {
-                        Thread.Sleep(100);
+                        Task.Delay(100);
                         ManagementObjectSearcher searcher1 = new($"SELECT * FROM Win32_Process where name = {myStrQuote}{ExeName}{myStrQuote}");
                         ix = searcher1.Get().OfType<ManagementObject>().Count();
                     }
@@ -12670,7 +12687,7 @@ namespace VideoGui
                     cts.CancelAfter(TimeSpan.FromMilliseconds(250));
                     while (!cts.IsCancellationRequested)
                     {
-                        Thread.Sleep(100);
+                        Task.Delay(100);
                     }
                     ResizeWindow();
 
@@ -13252,7 +13269,7 @@ namespace VideoGui
                     cts.CancelAfter(TimeSpan.FromMilliseconds(250));
                     while (!cts.IsCancellationRequested)
                     {
-                        Thread.Sleep(100);
+                        Task.Delay(100);
                     }
                     ResizeWindow();
 

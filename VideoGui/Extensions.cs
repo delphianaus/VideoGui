@@ -1120,6 +1120,18 @@ namespace VideoGui
             }
         }
 
+        public static TimeSpan FrameToTimeSpan(this double frame, double fps)
+        {
+            try
+            {
+                return TimeSpan.FromSeconds(frame / fps);   
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"ExecuteNonQuery {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+                return TimeSpan.Zero;
+            }
+        }
         public static void DropTable(this string connectionStr, string tableName)
         {
             try

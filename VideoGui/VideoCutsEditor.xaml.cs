@@ -230,8 +230,8 @@ namespace VideoGui
                             }).FirstOrDefault().ToString();
                         var filenamelist = urlLocation.Replace("%20", " ").Replace("%3a", ":").
                                                 Replace("file://localhost/", "").Replace(@"/", @"\").ToString();
-                        XML_Filename = filenamelist.ToString().Replace("{ PathUrl = ", "").Replace("}", "").Trim(); 
-                          
+                        XML_Filename = filenamelist.ToString().Replace("{ PathUrl = ", "").Replace("}", "").Trim();
+
                         var tfps = _fps.ToString().Replace("{ PathUrl = ", "").Replace("}", "").Trim().ToDouble(0.0);
                         if (XML_Filename.StartsWith(@"file:\\localhost\"))
                         {
@@ -383,7 +383,7 @@ namespace VideoGui
                             fnxa = fnxa.Substring(0, fnxa.Length - 1);
                             string fnp = fnxa.Split(@"\").ToList().LastOrDefault() as string;
 
-                            
+
                             bool EndAdd = false;
                             VideoCutInfo vci = new();
 
@@ -399,16 +399,12 @@ namespace VideoGui
                                     StartFrame = (MyExport.Offset) + MyExport.Start;
                                     EndFrame = (MyExport.Offset) + MyExport.Out;
                                     IsFirst = false;
-                                    if (!MyExport.IsGap)
+                                    if (!MyExport.IsGap && @MyExport.IsLast) continue;
+                                    if (MyExport.IsEndGap || MyExport.IsLast)
                                     {
-                                        continue;
-                                    }
-                                    if (MyExport.IsEndGap)
-                                    {
-                                        TimeSpan _S = TimeSpan.FromSeconds(StartFrame / tfps);
-                                        TimeSpan _E = TimeSpan.FromSeconds(EndFrame / tfps);
-                                        ListOfCuts.Add(new VideoCutInfo(fnp, _S, _E, x1));
-                                        x1++;
+                                        ListOfCuts.Add(new VideoCutInfo(fnp, StartFrame.FrameToTimeSpan(tfps), 
+                                          EndFrame.FrameToTimeSpan(tfps), x1++));
+                                        if (MyExport.IsLast) break;
                                     }
                                     continue;
                                 }
@@ -419,34 +415,28 @@ namespace VideoGui
                                         EndFrame += MyExport.Used;
                                         if (MyExport.IsLast)
                                         {
-                                            TimeSpan _S = TimeSpan.FromSeconds(StartFrame / tfps);
-                                            TimeSpan _E = TimeSpan.FromSeconds(EndFrame / tfps);
-                                            ListOfCuts.Add(new VideoCutInfo(fnp, _S, _E, x1));
+                                            ListOfCuts.Add(new VideoCutInfo(fnp, StartFrame.FrameToTimeSpan(tfps),
+                                             EndFrame.FrameToTimeSpan(tfps), x1));
                                             break;
                                         }
                                         continue;
                                     }
                                     else if (MyExport.IsEndGap)
                                     {
-                                        TimeSpan _S = TimeSpan.FromSeconds(StartFrame / tfps);
                                         EndFrame += MyExport.Used;
-                                        TimeSpan _E = TimeSpan.FromSeconds(EndFrame / tfps);
-                                        ListOfCuts.Add(new VideoCutInfo(fnp, _S, _E, x1));
-                                        x1++;
-                                        StartFrame = MyExport.Start+ MyExport.Duration;
-                                        TimeSpan _S1 = TimeSpan.FromSeconds(StartFrame / tfps);
+                                        ListOfCuts.Add(new VideoCutInfo(fnp, StartFrame.FrameToTimeSpan(tfps),
+                                            EndFrame.FrameToTimeSpan(tfps), x1++));
+                                        StartFrame = MyExport.Start + MyExport.Duration;
                                         continue;
-
                                     }
                                     else if (MyExport.IsStartGap)
                                     {
-                                        StartFrame = MyExport.Start + MyExport.In ;
-                                        EndFrame += MyExport.Out;
+                                        StartFrame = (MyExport.Offset)+MyExport.Start + MyExport.In;
+                                        EndFrame += (MyExport.Offset)+MyExport.Out;
                                         if (MyExport.IsLast)
                                         {
-                                            TimeSpan _S = TimeSpan.FromSeconds(StartFrame / tfps);
-                                            TimeSpan _E = TimeSpan.FromSeconds(EndFrame / tfps);
-                                            ListOfCuts.Add(new VideoCutInfo(fnp, _S, _E, x1));
+                                            ListOfCuts.Add(new VideoCutInfo(fnp, StartFrame.FrameToTimeSpan(tfps),
+                                             EndFrame.FrameToTimeSpan(tfps), x1));
                                         }
                                     }
                                 }
