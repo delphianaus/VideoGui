@@ -358,14 +358,14 @@ namespace VideoGui
                                     }
                                     if (FilesToRead.Count > 0)
                                     {
-                                        var bridge = new ffmpegbridge();
-                                        bridge.ReadMDurations(FilesToRead);
-                                        while (!bridge.Finished)
+                                        var bridge2 = new ffmpegbridge();
+                                        bridge2.ReadMDurations(FilesToRead);
+                                        while (!bridge2.Finished)
                                         {
                                             Thread.Sleep(100);
                                         }
 
-                                        AdobeExports[x + 1].Offset += bridge.GetFrames() / 1000 * tfps;
+                                        AdobeExports[x + 1].Offset += bridge2.GetFrames() / 1000 * tfps;
                                         for (int y = x + 1; y < AdobeExports.Count; y++)
                                         {
                                             if ((!AdobeExports[y].IsCutPoint) ||
