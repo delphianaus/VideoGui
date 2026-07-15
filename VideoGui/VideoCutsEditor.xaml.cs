@@ -327,12 +327,12 @@ namespace VideoGui
 
                             int idpf = dir.LastIndexOf(@"\");
                             dir = dir.Substring(0, idpf);
+                            AdobeExports.Last().IsLast = true;
                             if (AdobeExports.Where(s => s.IsCutPoint).Any())
                             {
                                 for (int x = 0; x < AdobeExports.Count; x++)
                                 {
-                                    if ((!AdobeExports[x].IsCutPoint) ||
-                                      (x + 1 > AdobeExports.Count)) continue;
+                                    if ((!AdobeExports[x].IsCutPoint) || (AdobeExports[x].IsLast)) continue;
                                     string startname = AdobeExports[x].filename;
                                     string endname = AdobeExports[x + 1].filename;
                                     string ext = Path.GetExtension(startname);
@@ -462,7 +462,7 @@ namespace VideoGui
             }
             catch (Exception ex)
             {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+                ex.LogWrite($"btnSelectSourceDir_Click {ex.Message} {MethodBase.GetCurrentMethod().Name}");
             }
         }
 
