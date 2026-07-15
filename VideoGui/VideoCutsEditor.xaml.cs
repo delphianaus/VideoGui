@@ -369,7 +369,7 @@ namespace VideoGui
                                         for (int y = x + 1; y < AdobeExports.Count; y++)
                                         {
                                             if ((!AdobeExports[y].IsCutPoint) ||
-                                              (y + 1 > AdobeExports.Count)) continue;
+                                              (AdobeExports[y].IsLast)) continue;
                                             AdobeExports[y + 1].Offset += AdobeExports[x + 1].Offset;
                                         }
                                     }
@@ -392,6 +392,38 @@ namespace VideoGui
                             int x1 = 1;
 
                             AdobeExports.Last().IsLast = true;
+                            double totoff = 0;
+                            foreach (var MyExport in AdobeExports)
+                            {
+                                if (IsFirst)
+                                {
+                                    List<string> filesx = Directory.EnumerateFiles(
+                                        Path.GetDirectoryName(XML_Filename),
+                                        $"*{Path.GetExtension(MyExport.filename)}").ToList();
+                                    List<string> fileDurations = new List<string>();
+                                    foreach (var file in filesx)
+                                    {
+                                        if (Path.GetFileName(file) == MyExport.filename)
+                                        {
+                                            break;
+                                        }
+                                        else
+                                        {
+                                           fileDurations.Add(file);
+                                        }
+                                    }
+                                    var bridge = new ffmpegbridge();
+                                    totoff = bridge.ReadDurations(fileDurations).Result;
+
+                                }
+                            }
+                            if (totoff > 0)
+                            {
+                                foreach (var MyExport in AdobeExports)
+                                {
+                                    MyExport.Offset += totoff;
+                                }
+                            }
                             foreach (var MyExport in AdobeExports)
                             {
                                 if (IsFirst)
