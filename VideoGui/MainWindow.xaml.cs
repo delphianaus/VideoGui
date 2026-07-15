@@ -7435,7 +7435,7 @@ namespace VideoGui
                     string processingfile = (Job.IsMuxed || Job.ISFILESRC) ? Job.MultiSourceDir :
                         (Job.IsMulti) ? Job.DestMFile : Job.SourcePath + "\\" + Job.SourceFile;
 
-                    if (Job.IsMulti && !Job.IsMuxed && !Job.ISFILESRC && Job.IsXMLSource)
+                    if ((Job.IsMulti && !Job.IsMuxed && !Job.ISFILESRC) || Job.IsXMLSource || Job.IsShorts)
                     {
                         bool passed = true;
                         int i = 1;
