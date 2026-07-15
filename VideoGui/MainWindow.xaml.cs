@@ -8662,6 +8662,7 @@ namespace VideoGui
                         }
                         List<(string, double)> FileInfos = new List<(string, double)>();
                         FileInfos.AddRange(FileIndexer.FileInfoList);
+                        totalseconds = FileIndexer.GetDuration().TotalSeconds;
                         FileIndexer.ReadMDurations(Files);
                         while (!FileIndexer.Finished)
                         {
@@ -8669,7 +8670,7 @@ namespace VideoGui
                         }
                         TotalFrames = FileIndexer.GetFrames();
 
-                        totalseconds = FileIndexer.GetDuration().TotalSeconds;
+                        
                         job.TotalSeconds = totalseconds;
                         // Add Get List of files and durations 
                         FileIndexer = null;
