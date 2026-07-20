@@ -1,4 +1,4 @@
-    using CliWrap;
+using CliWrap;
 using CliWrap.EventStream;
 using FirebirdSql.Data.FirebirdClient;
 using FirebirdSql.Data.Isql;
@@ -242,8 +242,8 @@ namespace VideoGui
         {
             try
             {
-                
-                                ScraperType = EventTypes.VideoLookup;
+
+                ScraperType = EventTypes.VideoLookup;
                 DoOnFinish = _OnFinish;
                 foreach (var dir in directories)
                 {
@@ -737,14 +737,14 @@ namespace VideoGui
         {
             try
             {
-                Dispatcher.BeginInvoke(new Action(() =>
+                /*Dispatcher.BeginInvoke(new Action(() =>
                 {
                     StatusBar.Items.OfType<FrameworkElement>().Where(child => !(child is Button)).ToList().ForEach(frameworkElement =>
                     {
-                        frameworkElement.SizeChanged += (object sender, SizeChangedEventArgs e) => { StatusBar.ApplyMargin(); };
+                        frameworkElement.SizeChanged += (object sender, SizeChangedEventArgs e) => { //StatusBar.ApplyMargin(); };
                     });
                 }));
-
+*/
 
 
                 LocationChanged += (s, e) =>
@@ -844,10 +844,10 @@ namespace VideoGui
                     ShortsDirectoriesList.Add(new ShortsDirectory(r));
                 });
                 await SetupSubstDrive();
-                StatusBar.Items.OfType<FrameworkElement>().Where(child => !(child is Button)).ToList().ForEach(frameworkElement =>
+                /*StatusBar.Items.OfType<FrameworkElement>().Where(child => !(child is Button)).ToList().ForEach(frameworkElement =>
                 {
-                    frameworkElement.SizeChanged += (object sender, SizeChangedEventArgs e) => { StatusBar.ApplyMargin(); };
-                });
+                    frameworkElement.SizeChanged += (object sender, SizeChangedEventArgs e) => { //StatusBar.ApplyMargin(); };
+                });*/
             }
             catch (Exception ex)
             {
@@ -1164,7 +1164,7 @@ namespace VideoGui
                     int id = -1;
                     string _dest = UploadPath, defaultpath = Environment.SystemDirectory;
                     lblLastNode.Content = "Uploading...";
-                    StatusBar.ApplyMargin();
+                    // //StatusBar.ApplyMargin();
                     List<string> ufc = new List<string>();
                     if (ShortsDirectoriesList.Count == 0) ShortsDirectoriesList.Add(new ShortsDirectory(-1, UploadPath));
                     string dir = UploadPath.Split('\\').LastOrDefault();
@@ -1204,7 +1204,7 @@ namespace VideoGui
                     if (Invoker?.Invoke(this, new CustomParams_GetUploadsRecCnt(false)) is int cnt) res = cnt;
                     TotalScheduled = res;
                     lblTotal.Content = TotalScheduled.ToString();
-                    StatusBar.ApplyMargin();
+                    //StatusBar.ApplyMargin();
                     max = TotalScheduled;
                     ts = max;
                     if (ts < MaxUploads)
@@ -1215,7 +1215,7 @@ namespace VideoGui
                             if (max <= MaxUploads)
                             {
                                 lblTotal.Content = $"{TotalScheduled}";
-                                StatusBar.ApplyMargin();
+                                //StatusBar.ApplyMargin();
                                 ScheduledFiles.Add(new VideoIdFileName(Path.GetFileName(f)));
                                 string news = "\"" + @"Z:\" + new DirectoryInfo(Path.GetDirectoryName(f)).Name + "\\" + Path.GetFileName(f) + "\" ";
                                 if (SendKeysString.Length + news.Length < 255)
@@ -1265,7 +1265,7 @@ namespace VideoGui
                         }
                         await Task.Delay(50);
                         //SetMargin(StatusBar);
-                        StatusBar.ApplyMargin();
+                        // //StatusBar.ApplyMargin();
                         bool flowControl = await ProcessBody(Span_Name, Script_Close, connectStr);
                         if (!flowControl)
                         {
@@ -1407,6 +1407,160 @@ namespace VideoGui
             }
         }
 
+        private void lblInsertId5_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            try
+            {
+                var wwidth = lblWaitingtext.Width + 15;
+                var winfo = lblWaiting.Margin;
+                var linfo = lblWaitingtext.Margin;
+                winfo.Left = wwidth + linfo.Left;
+                lblWaiting.Margin = winfo;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"lblInsertId5_SizeChanged waiting {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+        }
+
+        private void lblTotalUploadsText_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            try
+            {
+                var wwidth = lblTotalUploadsText.Width + 15;
+                var winfo = lblTotal.Margin;
+                var linfo = lblTotalUploadsText.Margin;
+                winfo.Left = wwidth + linfo.Left;
+                lblTotal.Margin = winfo;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"lblInsertId5_SizeChanged waiting {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+        }
+
+        private void lblUploadedText_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            try
+            {
+                var wwidth = lblUploadedText.Width + 15;
+                var winfo = lblUploaded.Margin;
+                var linfo = lblUploadedText.Margin;
+                winfo.Left = wwidth + linfo.Left;
+                lblUploaded.Margin = winfo;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"lblInsertId5_SizeChanged waiting {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+        }
+
+        private void lblUploadingText_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            try
+            {
+                var wwidth = lblUploadingText.Width + 15;
+                var winfo = lblUploading.Margin;
+                var linfo = lblUploadingText.Margin;
+                winfo.Left = wwidth + linfo.Left;
+                lblUploading.Margin = winfo;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"lblInsertId5_SizeChanged waiting {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+        }
+
+
+        private void LabelSizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            try
+            {
+                if (sender is Label lbl)
+                {
+                    if (lbl.Name == lblTotalUploadsText.Name)
+                    {
+                        var wwidth = lblTotalUploadsText.Width + 15;
+                        var winfo = lblTotal.Margin;
+                        var linfo = lblTotalUploadsText.Margin;
+                        winfo.Left = wwidth + linfo.Left;
+                        lblTotal.Margin = winfo;
+                    }
+                    else if (lbl.Name == lblUploadedText.Name)
+                    {
+                        var wwidth = lblUploadedText.Width + 15;
+                        var winfo = lblUploaded.Margin;
+                        var linfo = lblUploadedText.Margin;
+                        winfo.Left = wwidth + linfo.Left;
+                        lblUploaded.Margin = winfo;
+                    }
+                    else if (lbl.Name == lblUploadingText.Name)
+                    {
+                        var wwidth = lblUploadingText.Width + 15;
+                        var winfo = lblUploading.Margin;
+                        var linfo = lblUploadingText.Margin;
+                        winfo.Left = wwidth + linfo.Left;
+                        lblUploading.Margin = winfo;
+                    }
+                    else if (lbl.Name == lblWaitingtext.Name)
+                    {
+                        var wwidth = lblWaitingtext.Width + 15;
+                        var winfo = lblWaiting.Margin;
+                        var linfo = lblWaitingtext.Margin;
+                        winfo.Left = wwidth + linfo.Left;
+                        lblWaiting.Margin = winfo;
+                    }
+                    else if (lbl.Name == lblTotalUploadsText.Name)
+                    {
+                        var wwidth = lblTotalUploadsText.Width + 15;
+                        var winfo = lblTotal.Margin;
+                        var linfo = lblTotalUploadsText.Margin;
+                        winfo.Left = wwidth + linfo.Left;
+                        lblTotal.Margin = winfo;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"lblInsertId5_SizeChanged waiting {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+        }
+
+        private void LabelVisibilityChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            try
+            {
+                if (sender is Label lbl)
+                {
+                    if (lbl.Name == lblTotalUploadsText.Name)
+                    {
+                        lblTotal.Visibility = lblTotalUploadsText.Visibility;
+                    }
+                    else if (lbl.Name == lblUploadedText.Name)
+                    {
+                        lblUploaded.Visibility = lblUploadedText.Visibility;
+                    }
+                    else if (lbl.Name == lblUploadingText.Name)
+                    {
+                        lblUploading.Visibility = lblUploadingText.Visibility;
+                    }
+                    else if (lbl.Name == lblWaitingtext.Name)
+                    {
+                        lblWaiting.Visibility = lblWaitingtext.Visibility;
+                    }
+                    else if (lbl.Name == lblTotalUploadsText.Name)
+                    {
+                        lblTotal.Visibility = lblTotalUploadsText.Visibility;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"lblInsertId5_SizeChanged waiting {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+        }
+
+
         private int ScheduledGet()
         {
             return TotalScheduled;
@@ -1444,9 +1598,9 @@ namespace VideoGui
                         lblTotal.Content = Scheduled.ToString();
                         lblUploading.Content = Uploading.ToString();
                         lblUploaded.Content = Uploaded.ToString();
-                        StatusBar.ApplyMargin();
+                        ////StatusBar.ApplyMargin();
                     });
-                    StatusBar.ApplyMargin();
+                    ////StatusBar.ApplyMargin();
                     return true;
                 }
                 return false;
@@ -1500,10 +1654,13 @@ namespace VideoGui
                 thick.Left = Width - 190;
                 if (ScraperType == EventTypes.ScapeSchedule)
                 {
-                    lblInsert.Content = "Files in DB";
-                    lblUp.Content = "Max Scraped";
-                    lblInsertId4.Content = "Current Page:";
-                    StatusBar.ApplyMargin();
+                    lblTotalUploadsText.Content = "Files in DB";
+                    lblUploadingText.Content = "Max Scraped";
+                    lblUploadedText.Content = "Current Page:";
+
+
+
+                    //StatusBar.ApplyMargin();
                 }
                 key?.Close();
                 if (Parent is MainWindow mainWindow)
@@ -1673,12 +1830,12 @@ namespace VideoGui
                     }
                     Dispatcher.Invoke(() =>
                     {
-                        lblInsertId5.Content = LastNode;
+                        lblWaitingtext.Content = LastNode;
                         if (ScraperType == EventTypes.ScapeSchedule)
                         {
                             lblUploading.Content = MaxNodes.ToString();
                         }
-                        StatusBar.ApplyMargin();
+                        //StatusBar.ApplyMargin();
                     });
                     bool timeractive = false;
                     DispatcherTimer timer = new DispatcherTimer();
@@ -1808,7 +1965,7 @@ namespace VideoGui
                                     }
                                     double totalms = (DateTime.Now - q).TotalMilliseconds;
                                     lblWaiting.Content = $"{totalms.ToString("0.00")} ms";
-                                    StatusBar.ApplyMargin();
+                                    //StatusBar.ApplyMargin();
                                     GetTitlesAndDesc(newidint);
                                     TimerSimulate.Start();
                                 }
@@ -1835,8 +1992,8 @@ namespace VideoGui
                                         }
                                     }
                                     double totalms = (DateTime.Now - q).TotalMilliseconds;
-                                    lblInsertId5.Content = $"{totalms.ToString("0.00")} ms";
-                                    StatusBar.ApplyMargin();
+                                    lblWaitingtext.Content = $"{totalms.ToString("0.00")} ms";
+                                    //StatusBar.ApplyMargin();
                                 }
 
                                 if (TimedOut || canceltoken.IsCancellationRequested)
@@ -1967,16 +2124,16 @@ namespace VideoGui
                                         if (files > 0)
                                         {
                                             lblLastNode.Content = $"{files} Processed";
-                                            StatusBar.ApplyMargin();
+                                            //StatusBar.ApplyMargin();
 
                                         }
                                         if (dbfiles > 0)
                                         {
                                             lblTotal.Content = $"{dbfiles}";
-                                            StatusBar.ApplyMargin();
+                                            //StatusBar.ApplyMargin();
                                         }
 
-                                        StatusBar.ApplyMargin();
+                                        //StatusBar.ApplyMargin();
                                     }
                                     else webAddressBuilder.ScopeVideo(Id, true);
 
@@ -2247,7 +2404,7 @@ namespace VideoGui
                     if (ehtml is not null && ehtml.Contains(">Uploads complete</span>"))
                     {
                         lblLastNode.Content = "Uploads Completed";
-                        StatusBar.ApplyMargin();
+                        //StatusBar.ApplyMargin();
                         foreach (var file in Scraper_uploaded.Where(file => !file.uploaded && file.finished))
                         {
                             File.Delete(file.file);
@@ -3241,7 +3398,7 @@ namespace VideoGui
             {
                 var pos = e.GetPosition(this);
                 lblMouseOver.Content = $"X: {pos.X:F2}, Y: {pos.Y:F2}";
-                StatusBar.ApplyMargin();
+                //StatusBar.ApplyMargin();
             }
             catch (Exception ex)
             {
@@ -3368,7 +3525,7 @@ namespace VideoGui
             {
                 if (webAddressBuilder is not null)
                 {
-                    StatusBar.ApplyMargin();
+                    //StatusBar.ApplyMargin();
                     if (ScraperType != EventTypes.VideoLookup)
                     {
                         if (ScraperType == EventTypes.ShortsSchedule && directshortsScheduler is null && ReleaseDate.HasValue && ReleaseEndDate.HasValue)
@@ -3734,7 +3891,7 @@ namespace VideoGui
                     string t = $"{id} {title.Replace("\n", "").Replace("\r", "").Trim()}  {r + 1} {dateTime}";
                     lstMain.Items.Insert(0, t);
                     lblLastNode.Content = $"{r} Scheduled";
-                    StatusBar.ApplyMargin();
+                    //StatusBar.ApplyMargin();
                     System.Windows.Forms.Application.DoEvents();
                     var nextSchedule = dateTime.AddMinutes(directshortsScheduler.LastGap);
                     Nullable<TimeSpan> st = LoadTime("ScheduleTimeStart");
@@ -3880,7 +4037,7 @@ namespace VideoGui
                     key.SetValue("Webleft", Left);
                     key.SetValue("Webtop", Top);
                     key?.Close();
-                    StatusBar.ApplyMargin();
+                    //StatusBar.ApplyMargin();
                 }
             }
             catch (Exception ex)
@@ -4735,7 +4892,7 @@ namespace VideoGui
                             lstMain.Items[index1] += $" {filename}";
                             files++;
 
-                            StatusBar.ApplyMargin();
+                            //StatusBar.ApplyMargin();
                             int lstCnt = lstMain.Items.Count;
                             foreach (var item in lstMain.Items)
                             {
@@ -4754,7 +4911,7 @@ namespace VideoGui
                             }
                         }
                     }
-                    StatusBar.ApplyMargin();
+                    //StatusBar.ApplyMargin();
                 }
                 else
                 {
@@ -4782,7 +4939,7 @@ namespace VideoGui
                     if (files > 0)
                     {
                         lblLastNode.Content = $"{files} Processed";
-                        StatusBar.ApplyMargin();
+                        //StatusBar.ApplyMargin();
                     }
                 });
                 if (wv2Dictionary.ContainsKey(id))

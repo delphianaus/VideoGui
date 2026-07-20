@@ -31,7 +31,7 @@
                 <ui:ImageIcon Source="/Icons/computer.ico" />
             </ui:TitleBar.Icon>
         </ui:TitleBar>
-        <Grid Grid.Row="1">
+        <Grid Grid.Row="1" Width="NaN">
             <Border x:Name="brdmain" BorderBrush="Black" BorderThickness="3" Margin="2,1,3,40" AllowDrop="True"
                 VerticalAlignment="Top" Height="290" SizeChanged="brdmain_SizeChanged">
                 <wv2:WebView2 x:Name="wv2" Margin="3,3,3,3" ZoomFactor="0.5" MouseMove="wv2_MouseMove" 
@@ -84,25 +84,39 @@
                     </ListBox.ItemContainerStyle>
                 </ListBox>
             </Border>
-            <StatusBar Name="StatusBar" HorizontalAlignment="Left" 
-                   VerticalAlignment="Bottom" Height="37" Background="#FFEBCACA" Width="795" Margin="2,0,0,2">
-                <Label x:Name="lblLastNode" Content="Initializing..."  Margin="0,0,0,0" VerticalAlignment="Bottom" Padding="0,2,24,0"/>
-                <Label Name="lblInsert" Content="Total Uploads : " VerticalAlignment="Center"/>
-                <Label x:Name="lblTotal" Content="" VerticalAlignment="Center" />
-                <Label x:Name="lblUp" Content="Uploading : " VerticalAlignment="Center" />
-                <Label x:Name="lblUploading" Content="" VerticalAlignment="Center"/>
-                <Label Name="lblInsertId4" Content="Uploaded : " VerticalAlignment="Center" />
-                <Label x:Name="lblUploaded" Content="" VerticalAlignment="Center" />
-                <Label Name="lblInsertId5" Content="Waiting : " VerticalAlignment="Center" HorizontalAlignment="Left" />
-                <Label x:Name="lblWaiting" Content="" VerticalAlignment="Center"/>
-                <Label x:Name="lblInsertId6" Width="80" Content="Mouse Over : " VerticalAlignment="Center" 
-                   HorizontalAlignment="Left" />
-                <Label x:Name="lblMouseOver" VerticalAlignment="Center" 
-              HorizontalAlignment="Left" />
+            <Grid Name="StatusBar" HorizontalAlignment="Left" 
+                   VerticalAlignment="Bottom" Height="37" Background="#FF341919"
+           Margin="2,0,0,2"  Width="796">
+                <Label x:Name="lblLastNode" Content="Initializing..."  Margin="8,0,0,0" HorizontalAlignment="Left" 
+                    VerticalContentAlignment="Center" Padding="0,0,1,0"/>
+                <Label x:Name="lblTotalUploadsText" Content="Total Uploads : " VerticalContentAlignment="Center"
+                   HorizontalAlignment="Left" Margin="109,0,0,0" SizeChanged="LabelSizeChanged" 
+                IsVisibleChanged="LabelVisibilityChanged"/>
+                <Label x:Name="lblTotal" Content="x" HorizontalAlignment="Left" VerticalContentAlignment="Center"
+                Margin="202,0,0,0" />
+                <Label x:Name="lblUploadingText" Content="Uploading : " HorizontalAlignment="Left" Margin="357,0,0,0" 
+                  VerticalContentAlignment="Center" IsVisibleChanged="LabelVisibilityChanged" 
+                  SizeChanged="LabelSizeChanged" />
+                <Label x:Name="lblUploading" Content="x" HorizontalAlignment="Left" Margin="434,0,0,0" 
+                 VerticalContentAlignment="Center"/>
+                <Label x:Name="lblUploadedText" Content="Uploaded : " Margin="264,0,0,0" 
+                  VerticalContentAlignment="Center" HorizontalAlignment="Left" 
+              SizeChanged="LabelSizeChanged" IsVisibleChanged="LabelVisibilityChanged" />
+                <Label x:Name="lblUploaded" Content="x" HorizontalAlignment="Left" Margin="336,0,0,0" 
+                  VerticalContentAlignment="Center" />
+                <Label x:Name="lblWaitingtext" Content="Waiting : " HorizontalAlignment="Left" Margin="481,0,0,0" 
+                   VerticalContentAlignment="Center" SizeChanged="LabelSizeChanged" 
+                 IsVisibleChanged="LabelVisibilityChanged"/>
+                <Label x:Name="lblWaiting" Content="x" AutomationProperties.IsRowHeader="True" HorizontalAlignment="Left" 
+                    VerticalContentAlignment="Center" Margin="548,0,0,0"/>
+                <Label x:Name="lblMouseOverText" Content="Mouse Over : " 
+                   HorizontalAlignment="Right" VerticalContentAlignment="Center" Margin="0,0,116,0" Width="67" Visibility="Hidden" />
+                <Label x:Name="lblMouseOver" Content ="x" VerticalAlignment="Center" 
+              HorizontalAlignment="Right" Margin="80,0,103,0" Visibility="Hidden" />
                 <Button Name="btnClose" Content="Close" VerticalAlignment="Center"
-            Height="32" Width="75" HorizontalAlignment="Left" Margin="239,0,0,0" 
-                    MinWidth="3" Click="btnClose_Click" HorizontalContentAlignment="Center"/>
-            </StatusBar>
+            Height="26" HorizontalAlignment="Right" 
+                    MinWidth="3" Click="btnClose_Click" HorizontalContentAlignment="Center" Width="45" Padding="6,0,0,0" Margin="0,0,7,0"/>
+            </Grid>
         </Grid>
     </Grid>
 </ui:FluentWindow>

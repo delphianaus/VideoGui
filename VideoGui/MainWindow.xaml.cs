@@ -2883,7 +2883,8 @@ namespace VideoGui
                         {
                             string _title = "", BaseTitle = "", xx = "", part = "";
                             var index = ((CustomParams_Initialize)tld).Id;
-                            foreach (var item in EditableshortsDirectoryList.Where(x => x.TitleId == index && index != -1))
+
+                            foreach (var item in EditableshortsDirectoryList.Where(x => x.Id == ShortsDirectoryIndex && ShortsDirectoryIndex != -1))
                             {
                                 BaseTitle = item.Directory;
                                 var _tid = item.TitleId;
