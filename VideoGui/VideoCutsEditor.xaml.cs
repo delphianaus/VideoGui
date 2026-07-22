@@ -338,39 +338,43 @@ namespace VideoGui
                                     string ext = Path.GetExtension(startname);
                                     List<string> Files = new List<string>(), FilesToRead = new();
                                     bool ssT = false, ssE = false;
+                                    FilesToRead.Clear();
                                     Files = Directory.EnumerateFiles(dir, $"*{ext}").ToList();
-                                    foreach (var media in Files)
+                                    if (startname != endname)
                                     {
-                                        if (Path.GetFileName(media) == startname)
+                                        foreach (var media in Files)
                                         {
-                                            ssT = true;
-                                            continue;
-                                        }
-                                        if (ssT)
-                                        {
-                                            if (Path.GetFileName(media) == endname)
+                                            if (Path.GetFileName(media) == startname)
                                             {
-                                                ssE = true;
-                                                break;
+                                                ssT = true;
+                                                continue;
                                             }
-                                            FilesToRead.Add(media);
+                                            if (ssT)
+                                            {
+                                                if (Path.GetFileName(media) == endname)
+                                                {
+                                                    ssE = true;
+                                                    break;
+                                                }
+                                                FilesToRead.Add(media);
+                                            }
                                         }
-                                    }
-                                    if (FilesToRead.Count > 0)
-                                    {
-                                        var bridge2 = new ffmpegbridge();
-                                        bridge2.ReadMDurations(FilesToRead);
-                                        while (!bridge2.Finished)
+                                        if (FilesToRead.Count > 0)
                                         {
-                                            Thread.Sleep(100);
-                                        }
+                                            var bridge2 = new ffmpegbridge();
+                                            bridge2.ReadMDurations(FilesToRead);
+                                            while (!bridge2.Finished)
+                                            {
+                                                Thread.Sleep(100);
+                                            }
 
-                                        AdobeExports[x + 1].Offset += bridge2.GetFrames() / 1000 * tfps;
-                                        for (int y = x + 1; y < AdobeExports.Count; y++)
-                                        {
-                                            if ((!AdobeExports[y].IsCutPoint) ||
-                                              (AdobeExports[y].IsLast)) continue;
-                                            AdobeExports[y + 1].Offset += AdobeExports[x + 1].Offset;
+                                            AdobeExports[x + 1].Offset += bridge2.GetFrames() / 1000 * tfps;
+                                            for (int y = x + 1; y < AdobeExports.Count; y++)
+                                            {
+                                                if ((!AdobeExports[y].IsCutPoint) ||
+                                                  (AdobeExports[y].IsLast)) continue;
+                                                AdobeExports[y + 1].Offset += AdobeExports[x + 1].Offset;
+                                            }
                                         }
                                     }
                                 }
@@ -412,7 +416,7 @@ namespace VideoGui
                             {
                                 MyExport.Offset += totoff;
                             }
-                            
+
                             foreach (var MyExport in AdobeExports)
                             {
                                 if (IsFirst)
