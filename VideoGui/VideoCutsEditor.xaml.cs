@@ -202,7 +202,7 @@ namespace VideoGui
                 }
                 else
                 {
-
+                    ListOfCuts.Clear();
                     XML_Dest = "";
                     cnvControls.Visibility = Visibility.Hidden;
                     var fld = new OpenFileDialog();
@@ -269,7 +269,7 @@ namespace VideoGui
                                 int duration = clip.Duration.Value;
                                 if (!AdobeExports.Where(s => s.filename == nameid).Any())
                                 {
-                                    AdobeExports.Add(new AdobeExport(nameid, In, Out,  duration));
+                                    AdobeExports.Add(new AdobeExport(nameid, In, Out, duration));
                                 }
                                 else
                                 {
@@ -308,18 +308,14 @@ namespace VideoGui
                             }
 
                             exportGroups.LastOrDefault().IsLastGroup = true;
+                            exportGroups.LastOrDefault().exports.Last().IsLast = true;
                             double start = 0;
-                            foreach (var export in exportGroups)
-                            {
-                                export.StartingPoint = start;
-                                start += export.Duration;
-                                export.exports.Last().IsLast = true;
-                            }
+                           
 
 
                             string dir = filenamelist.Replace("{ PathUrl = ", "").Replace("}", "").Trim();
                             int idpf = dir.LastIndexOf(@"\");
-                            
+
                             dir = dir.Substring(0, idpf);
                             bool IsOffsetNeeded = false;
                             string fn = "";
@@ -334,61 +330,32 @@ namespace VideoGui
                             string LastName = "";
                             if (IsOffsetNeeded)
                             {
-                                List<string> FilesToRead = new List<string>();
-                                for (int i = 0; i < exportGroups.Count; i++)
+                                List<AdobeExportGroups> grpcopy = new();
+                                grpcopy.AddRange(exportGroups);
+                                for (int i = 0; i < _Files.Count; i++)
                                 {
-                                    AdobeExportGroups export = exportGroups[i];
-                                    string fn2 = export.ExportName;
-                                    if (IsFirst)
+                                    string fnx = Path.GetFileName(_Files[i]);
+                                    if (!exportGroups.Where(s => s.ExportName == fnx).Any())
                                     {
-                                        IsFirst = false;
-                                        foreach (var _File in _Files)
-                                        {
-                                            fn = Path.GetFileName(_File);
-                                            if (fn == fn2) break;
-                                            FilesToRead.Add(_File);
-                                        }
-                                        var MyBridge = new ffmpegbridge();
-                                        MyBridge.ReadDuration(FilesToRead);
-                                        while (!MyBridge.Finished)
-                                        {
-                                            Thread.Sleep(100);
-                                        }
-                                        double offset = MyBridge.GetDuration().TotalSeconds;
-                                        for (int j = i; j < exportGroups.Count; j++)
-                                        {
-                                            exportGroups[j].Offset += offset;
-                                        }
-                                        LastName = fn2;
+                                        var mybridge = new ffmpegbridge();
+                                        mybridge.ReadMetaData(_Files[i]);
+                                        var _d = ((mybridge.GetFrames() / 1000)) * tfps;
+                                        AdobeExportGroups rp = new AdobeExportGroups();
+                                        rp.dummyrecord = true;
+                                        rp.ExportName = fnx;
+                                        rp.exports.Add(new AdobeExport(Path.GetFileName(_Files[i]), 0, _d.ToInt(), _d.ToInt()));
+                                        grpcopy.Add(rp);
                                     }
-                                    else
-                                    {
-                                        fn2 = export.ExportName;
-                                        bool IsFirstFound = false, IsF = true;
-                                        foreach (var _File in _Files)
-                                        {
-                                            fn = Path.GetFileName(_File);
-                                            IsFirstFound = (IsFirstFound || (fn == LastName));
-                                            if (!IsFirstFound) continue;
-                                            if (LastName == fn2 || fn == fn2) break;
-                                            FilesToRead.Add(_File);
-                                        }
-                                        var MyBridge = new ffmpegbridge();
-                                        MyBridge.ReadDuration(FilesToRead);
-                                        while (!MyBridge.Finished)
-                                        {
-                                            Thread.Sleep(100);
-                                        }
-                                        double offset = MyBridge.GetDuration().TotalSeconds;
-                                        for (int j = i; j < exportGroups.Count; j++)
-                                        {
-                                            exportGroups[j].Offset += offset;
-                                        }
-                                    }
-                                    LastName = fn2;
                                 }
-                            }
+                                exportGroups.Clear();
+                                exportGroups = grpcopy.OrderBy(s => s.ExportName).ToList();
 
+                            }
+                            foreach (var export in exportGroups)
+                            {
+                                export.StartingPoint = start;
+                                start += export.Duration;
+                            }
 
                             foreach (var exportgrp in exportGroups)
                             {
@@ -430,15 +397,13 @@ namespace VideoGui
                                 }
                             }
                             double LastStartFrame = 0, LastEndFrame = 0;
-                            string LastFileName = string.Empty;
-                            
+
                             int filenumber = 1;
-                            string fname = "";
-                            IsFirst = true;
+                            string fname = "", LastFileName = "";
                             Filename = dir.Split(@"\").LastOrDefault();
-                            foreach (var exportgrp in exportGroups)
+                            foreach (var exportgrp in exportGroups.Where(s=>!s.dummyrecord))
                             {
-                                fname = $"{Filename} Part {filenumber}";
+                                fname = $"{Filename}";
                                 if (IsFirst)
                                 {
                                     LastStartFrame = exportgrp.StartingPoint;
@@ -454,8 +419,8 @@ namespace VideoGui
                                         {
                                             ListOfCuts.Add(new VideoCutInfo(fname,
                                                 LastStartFrame.FrameToTimeSpan(tfps),
-                                                LastEndFrame.FrameToTimeSpan(tfps), filenumber++)); 
-                                            
+                                                LastEndFrame.FrameToTimeSpan(tfps), filenumber++));
+
                                         }
                                         continue;
                                     }
@@ -471,7 +436,6 @@ namespace VideoGui
 
                                 }
                             }
-
 
                             TimeSpan Start = TimeSpan.Zero, Duration = TimeSpan.Zero;
                             double _duration = 0, StartFrame = 0, maxFrames = 0, EndFrame = 0;
@@ -490,7 +454,7 @@ namespace VideoGui
                             var bridge = new ffmpegbridge();
 
 
-                            
+
 
 
                             TimeSpan TotalD = TimeSpan.Zero;

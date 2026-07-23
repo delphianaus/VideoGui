@@ -13,6 +13,8 @@ namespace VideoGui.Models
         public double StartingPoint = 0.0;
         public double Offset = 0.0;
         public string ExportName = "";
+
+        public bool dummyrecord = false;
         public bool IsLastGroup = false;
         public AdobeExportGroups()
         {
