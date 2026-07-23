@@ -2894,15 +2894,18 @@ namespace VideoGui
                                 {
                                     foreach (var t in TitlesList.Where(i => i.GroupId == ShortsDirectoryIndex && !i.IsTag))
                                     {
-                                        BaseTitle = t.Description;
-                                        index = t.Id;
-                                        item.TitleId = t.Id;
-                                        string SQLa = "UPDATE SHORTSDIRECTORY SET TITLEID = @TID WHERE ID = @ID;";
-                                        connectionString.ExecuteScalar(SQLa, [("@ID", ShortsDirectoryIndex),
+                                        if (BaseTitle != t.Description)
+                                        {
+                                            BaseTitle = t.Description;
+                                            index = t.Id;
+                                            item.TitleId = t.Id;
+                                            string SQLa = "UPDATE SHORTSDIRECTORY SET TITLEID = @TID WHERE ID = @ID;";
+                                            connectionString.ExecuteScalar(SQLa, [("@ID", ShortsDirectoryIndex),
                                             ("@TID", t.Id)]);
-                                        frmTitleSelect.SetTitleTag(t.Id);
-                                        return default(TResult);
-                                        break;
+                                            frmTitleSelect.SetTitleTag(t.Id);
+                                            return default(TResult);
+                                            break;
+                                        }
                                     }
                                 }
                                 else
