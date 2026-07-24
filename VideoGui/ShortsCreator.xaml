@@ -4,12 +4,12 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:xctk="clr-namespace:VideoGui" Loaded="Window_Loaded" Name="frmShortsCreator"
-        mc:Ignorable="d" Background="Gray" Title="Shorts Creator" 
+        mc:Ignorable="d"  Title="Shorts Creator" 
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
         ExtendsContentIntoTitleBar="True" WindowBackdropType="Mica"
         SizeChanged="frmShortsCreator_SizeChanged"
 
-        WindowStartupLocation="CenterScreen"
+        WindowStartupLocation="CenterScreen" d:Background="gray"
         SizeToContent="Manual" WindowStyle="ToolWindow" 
 
   
