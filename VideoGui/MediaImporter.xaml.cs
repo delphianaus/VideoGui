@@ -332,6 +332,7 @@ namespace VideoGui
         {
             try
             {
+                MediaInfoTimes.Clear();
                 Invoker.Invoke(this, new CustomParams_DataSelect());
                 RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                 string Root = key.GetValueStr("MediaImporterSource", "c:\\");
@@ -512,6 +513,7 @@ namespace VideoGui
             try
             {
                 Invoker.Invoke(this, new CustomParams_ClearCheck(ClearModes.ClearTimes, new List<string>()));
+                GetFiles(txtsrcdir.Text).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -645,6 +647,8 @@ namespace VideoGui
                 Invoker.Invoke(this, new CustomParams_ClearCheck(ClearModes.ClearTimes, new List<string>()));
                 txtStart.Text = string.Empty;
                 txtEnd.Text = string.Empty;
+                GetFiles(txtsrcdir.Text).ConfigureAwait(false);
+
             }
             catch (Exception ex)
             {

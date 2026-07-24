@@ -1272,6 +1272,10 @@ namespace VideoGui
                     {
                         FileRenamer.Clear();
                         ObservableCollectionFilter?.ClearImportTimes();
+                        ObservableCollectionFilter.ImportCollectionViewSource.Source = FileRenamer;
+                        ObservableCollectionFilter.ImportCollectionViewSource.View.Refresh();
+                        goProMediaImporter.msuSchedules.ItemsSource = ObservableCollectionFilter.ImportCollectionViewSource.View;
+                        return (TResult)Convert.ChangeType(true, typeof(TResult));
                     }
                     else if (cpcc.mode == ClearModes.CheckImports)
                     {

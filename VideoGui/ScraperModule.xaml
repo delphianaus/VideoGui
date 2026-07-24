@@ -84,39 +84,41 @@
                     </ListBox.ItemContainerStyle>
                 </ListBox>
             </Border>
-            <Grid Name="StatusBar" HorizontalAlignment="Left" 
+            <Border Name="brdStatusBar" BorderBrush="CadetBlue" BorderThickness="3" VerticalAlignment="Bottom" Margin="1,0,0,2">
+                <Grid Name="StatusBar" HorizontalAlignment="Left" 
                    VerticalAlignment="Bottom" Height="37" Background="#FF341919"
-           Margin="2,0,0,2"  Width="796">
-                <Label x:Name="lblLastNode" Content="Initializing..."  Margin="8,0,0,0" HorizontalAlignment="Left" 
+                Width="796" ClipToBounds="True" SnapsToDevicePixels="True">
+                    <Label x:Name="lblLastNode" Content="Initializing..."  Margin="8,0,0,0" HorizontalAlignment="Left" 
                     VerticalContentAlignment="Center" Padding="0,0,1,0"/>
-                <Label x:Name="lblTotalUploadsText" Content="Total Uploads : " VerticalContentAlignment="Center"
+                    <Label x:Name="lblTotalUploadsText" Content="Total Uploads : " VerticalContentAlignment="Center"
                    HorizontalAlignment="Left" Margin="109,0,0,0" SizeChanged="LabelSizeChanged" 
                 IsVisibleChanged="LabelVisibilityChanged"/>
-                <Label x:Name="lblTotal" Content="x" HorizontalAlignment="Left" VerticalContentAlignment="Center"
+                    <Label x:Name="lblTotal" Content="x" HorizontalAlignment="Left" VerticalContentAlignment="Center"
                 Margin="202,0,0,0" />
-                <Label x:Name="lblUploadingText" Content="Uploading : " HorizontalAlignment="Left" Margin="357,0,0,0" 
+                    <Label x:Name="lblUploadingText" Content="Uploading : " HorizontalAlignment="Left" Margin="357,0,0,0" 
                   VerticalContentAlignment="Center" IsVisibleChanged="LabelVisibilityChanged" 
                   SizeChanged="LabelSizeChanged" />
-                <Label x:Name="lblUploading" Content="x" HorizontalAlignment="Left" Margin="434,0,0,0" 
+                    <Label x:Name="lblUploading" Content="x" HorizontalAlignment="Left" Margin="434,0,0,0" 
                  VerticalContentAlignment="Center"/>
-                <Label x:Name="lblUploadedText" Content="Uploaded : " Margin="264,0,0,0" 
+                    <Label x:Name="lblUploadedText" Content="Uploaded : " Margin="264,0,0,0" 
                   VerticalContentAlignment="Center" HorizontalAlignment="Left" 
               SizeChanged="LabelSizeChanged" IsVisibleChanged="LabelVisibilityChanged" />
-                <Label x:Name="lblUploaded" Content="x" HorizontalAlignment="Left" Margin="336,0,0,0" 
+                    <Label x:Name="lblUploaded" Content="x" HorizontalAlignment="Left" Margin="336,0,0,0" 
                   VerticalContentAlignment="Center" />
-                <Label x:Name="lblWaitingtext" Content="Waiting : " HorizontalAlignment="Left" Margin="481,0,0,0" 
+                    <Label x:Name="lblWaitingtext" Content="Waiting : " HorizontalAlignment="Left" Margin="481,0,0,0" 
                    VerticalContentAlignment="Center" SizeChanged="LabelSizeChanged" 
                  IsVisibleChanged="LabelVisibilityChanged"/>
-                <Label x:Name="lblWaiting" Content="x" AutomationProperties.IsRowHeader="True" HorizontalAlignment="Left" 
+                    <Label x:Name="lblWaiting" Content="x" AutomationProperties.IsRowHeader="True" HorizontalAlignment="Left" 
                     VerticalContentAlignment="Center" Margin="548,0,0,0"/>
-                <Label x:Name="lblMouseOverText" Content="Mouse Over : " 
+                    <Label x:Name="lblMouseOverText" Content="Mouse Over : " 
                    HorizontalAlignment="Right" VerticalContentAlignment="Center" Margin="0,0,116,0" Width="67" Visibility="Hidden" />
-                <Label x:Name="lblMouseOver" Content ="x" VerticalAlignment="Center" 
+                    <Label x:Name="lblMouseOver" Content ="x" VerticalAlignment="Center" 
               HorizontalAlignment="Right" Margin="80,0,103,0" Visibility="Hidden" />
-                <Button Name="btnClose" Content="Close" VerticalAlignment="Center"
+                    <Button Name="btnClose" Content="Close" VerticalAlignment="Center"
             Height="26" HorizontalAlignment="Right" 
                     MinWidth="3" Click="btnClose_Click" HorizontalContentAlignment="Center" Width="45" Padding="6,0,0,0" Margin="0,0,7,0"/>
-            </Grid>
+                </Grid>
+            </Border>
         </Grid>
     </Grid>
 </ui:FluentWindow>
