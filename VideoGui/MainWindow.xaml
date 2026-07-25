@@ -46,7 +46,7 @@
             </tb:TaskbarIcon>
 
 
-            <Border x:Name="brdlstbox" BorderThickness="2" BorderBrush="Beige" Margin="5,5,5,115" 
+            <Border x:Name="brdlstbox" BorderThickness="2" BorderBrush="CadetBlue" Margin="5,5,5,115" 
                 VerticalAlignment="Top" Height="450" HorizontalAlignment="Left">
                 <ListBox x:Name="lstBoxJobs" Margin="1,1,1,1"
                  AllowDrop="True" 

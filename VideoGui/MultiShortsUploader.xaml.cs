@@ -393,6 +393,7 @@ namespace VideoGui
                     foreach (MultiShortsInfo info in msuShorts.SelectedItems)
                     {
                         Invoker?.Invoke(this, new CustomParams_AddDirectory(info.DirectoryName));
+                        Invoker?.Invoke(this, new CustomParams_Update(-1));
                     }
                 }
                 catch (Exception ex)

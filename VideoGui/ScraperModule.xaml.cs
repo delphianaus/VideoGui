@@ -1395,17 +1395,7 @@ namespace VideoGui
             }
         }
 
-        private void brdmain_SizeChanged(object sender, SizeChangedEventArgs e)
-        {
-            try
-            {
 
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite($"UploadedHandler {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
-            }
-        }
 
         private void lblInsertId5_SizeChanged(object sender, SizeChangedEventArgs e)
         {
@@ -1480,7 +1470,7 @@ namespace VideoGui
                 {
                     if (lbl.Name == lblTotalUploadsText.Name)
                     {
-                        var wwidth = lblTotalUploadsText.Width + 15;
+                        var wwidth = lblTotalUploadsText.ActualWidth + 5;
                         var winfo = lblTotal.Margin;
                         var linfo = lblTotalUploadsText.Margin;
                         winfo.Left = wwidth + linfo.Left;
@@ -1488,7 +1478,7 @@ namespace VideoGui
                     }
                     else if (lbl.Name == lblUploadedText.Name)
                     {
-                        var wwidth = lblUploadedText.Width + 15;
+                        var wwidth = lblUploadedText.ActualWidth + 5;
                         var winfo = lblUploaded.Margin;
                         var linfo = lblUploadedText.Margin;
                         winfo.Left = wwidth + linfo.Left;
@@ -1496,7 +1486,7 @@ namespace VideoGui
                     }
                     else if (lbl.Name == lblUploadingText.Name)
                     {
-                        var wwidth = lblUploadingText.Width + 15;
+                        var wwidth = lblUploadingText.ActualWidth + 5;
                         var winfo = lblUploading.Margin;
                         var linfo = lblUploadingText.Margin;
                         winfo.Left = wwidth + linfo.Left;
@@ -1504,7 +1494,7 @@ namespace VideoGui
                     }
                     else if (lbl.Name == lblWaitingtext.Name)
                     {
-                        var wwidth = lblWaitingtext.Width + 15;
+                        var wwidth = lblWaitingtext.ActualWidth + 5;
                         var winfo = lblWaiting.Margin;
                         var linfo = lblWaitingtext.Margin;
                         winfo.Left = wwidth + linfo.Left;
@@ -1512,7 +1502,7 @@ namespace VideoGui
                     }
                     else if (lbl.Name == lblTotalUploadsText.Name)
                     {
-                        var wwidth = lblTotalUploadsText.Width + 15;
+                        var wwidth = lblTotalUploadsText.ActualWidth + 5;
                         var winfo = lblTotal.Margin;
                         var linfo = lblTotalUploadsText.Margin;
                         winfo.Left = wwidth + linfo.Left;
@@ -1652,15 +1642,31 @@ namespace VideoGui
                 lstMain.Width = Width - 5;
                 var thick = new Thickness(0, 0, 0, 0);
                 thick.Left = Width - 190;
+                if (ScraperType == EventTypes.ShortsSchedule)
+                {
+                    lblUploadedText.Content = "Video : ";
+                    lblUploadingText.Visibility = Visibility.Hidden;
+                    lblWaitingtext.Visibility = Visibility.Hidden;
+                }
+                if (ScraperType == EventTypes.VideoUpload)
+                {
+                    lblTotal.Content = "";
+                    lblUploading.Content = "";
+                    lblWaiting.Content = "";
+                    lblUploaded.Content = "";
+                    lblTotal.Content = "";
+                }
                 if (ScraperType == EventTypes.ScapeSchedule)
                 {
                     lblTotalUploadsText.Content = "Files in DB";
                     lblUploadingText.Content = "Max Scraped";
-                    lblUploadedText.Content = "Current Page:";
+                    lblUploadedText.Content = "Current Video:";
 
-
-
-                    //StatusBar.ApplyMargin();
+                    lblTotal.Content = "";
+                    lblUploading.Content = "";
+                    lblWaiting.Content = "";
+                    lblUploaded.Content = "";
+                    lblTotal.Content = "";
                 }
                 key?.Close();
                 if (Parent is MainWindow mainWindow)
@@ -1830,7 +1836,9 @@ namespace VideoGui
                     }
                     Dispatcher.Invoke(() =>
                     {
-                        lblWaitingtext.Content = LastNode;
+
+                        lblUploaded.Content = LastNode;
+
                         if (ScraperType == EventTypes.ScapeSchedule)
                         {
                             lblUploading.Content = MaxNodes.ToString();
@@ -1964,7 +1972,10 @@ namespace VideoGui
                                         newidint = itx.NewId;
                                     }
                                     double totalms = (DateTime.Now - q).TotalMilliseconds;
-                                    lblWaiting.Content = $"{totalms.ToString("0.00")} ms";
+
+                                    lblTotalUploadsText.Content = "Lookup Time : ";
+
+                                    lblTotal.Content = $"{totalms.ToString("0.00")} ms";
                                     //StatusBar.ApplyMargin();
                                     GetTitlesAndDesc(newidint);
                                     TimerSimulate.Start();
@@ -4023,14 +4034,21 @@ namespace VideoGui
             {
                 if (IsLoaded)
                 {
-                    brdmain.Width = Width - 20;
-                    brdmain.Height = Height - (258 - 70);
-                    ActiveWebView[1].Width = brdmain.Width - 10;
-                    ActiveWebView[1].Height = brdmain.Height - 13;
-                    var p = new Thickness(0, 0, 0, 0);
-                    p.Left = Width - 692;
-                    lstMain.Width = Width - 25;
-                    StatusBar.Width = Width - 5;
+
+                    if (e.WidthChanged)
+                    {
+                        brdmain.Width = e.NewSize.Width - 3;
+                        ActiveWebView[1].Width = brdmain.Width - 18;
+
+                        StatusBar.Width = e.NewSize.Width - 1;
+                    }
+                    if (e.HeightChanged)
+                    {
+                        // Main Height = 450 - 32 - 280;
+                        brdmain.Height = e.NewSize.Height - 230;
+                        brdInfo.Height = e.NewSize.Height - brdmain.Height - 80;
+                        ActiveWebView[1].Height = brdmain.Height - 15;
+                    }
                     RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                     key.SetValue("WebWidth", ActualWidth);
                     key.SetValue("WebHeight", ActualHeight);

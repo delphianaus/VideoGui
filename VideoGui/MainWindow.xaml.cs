@@ -666,6 +666,15 @@ namespace VideoGui
             try
             {
                 string loginfo = "formObjectHandler_MultiShortsUploader";
+
+                if (tld is CustomParams_Update crUp)
+                {
+                    EditableshortsDirectoryList.Clear();
+                    connectionString.ExecuteReader(GetUploadReleaseBuilderSql(), (FbDataReader r) =>
+                    {
+                        EditableshortsDirectoryList.Add(new ShortsDirectory(r));
+                    });
+                }
                 if (tld is CustomParams_FlipPrioritySort cpfps)
                 {
                     if (SelectedShortsDirectoriesListView is not null)
@@ -8678,7 +8687,7 @@ namespace VideoGui
                         }
                         TotalFrames = FileIndexer.GetFrames();
 
-                        
+
                         job.TotalSeconds = totalseconds;
                         // Add Get List of files and durations 
                         FileIndexer = null;
