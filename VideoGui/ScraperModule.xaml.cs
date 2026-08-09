@@ -1550,6 +1550,22 @@ namespace VideoGui
             }
         }
 
+        private void brdmain_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            try
+            {
+                if (IsLoaded)
+                {
+                    wv2.Width = brdmain.Width - 2;
+                    wv2.Height = brdmain.Height - 2;
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"brdmain_SizeChanged waiting {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+
+        }
 
         private int ScheduledGet()
         {

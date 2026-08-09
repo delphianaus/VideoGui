@@ -9221,7 +9221,7 @@ namespace VideoGui
                     if (job.Is1440p && job.IsInterlaced) samplesize = 16;
                     if ((job.Is1440p && !job.IsInterlaced) || (job.Is4K && !job.IsInterlaced))
                     {
-                        samplesize = (!job.Is4K) ? 8.3M : 23.5M;// was 6.5M : 30M
+                        samplesize = (!job.Is4K) ? 8.3M : 33.5M;// was 6.5M : 30M
                         if (job.IsMulti)
                         {
                             if (job.DestMFile.Contains("(shorts)") || job.IsShorts) samplesize = 2.2M;
