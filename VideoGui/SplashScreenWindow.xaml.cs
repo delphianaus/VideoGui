@@ -178,6 +178,8 @@ namespace VideoGui
                     List<string> Errors = new List<string>();
                     List<string> Output = new List<string>();
                     List<string> total = new List<string>();
+                    File.Delete(@"C:\bin\mount.log");
+                    File.Delete(@"C:\bin\wsl.log");
                     drive_cmd = Cli.Wrap(defaultpath + "\\" + x).
                     WithValidation(CommandResultValidation.None);
                     await foreach (var commandEvent in drive_cmd.ListenAsync())
@@ -202,8 +204,6 @@ namespace VideoGui
                             case ExitedCommandEvent ExitedEvent:
                                 {
                                     total.Add($"Starting {ExitedEvent}");
-                                    total.Add("--- ERRORS --");
-                                    total.AddRange(Errors);
                                     total.Add("--- Output --");
                                     total.AddRange(Output);
                                     File.WriteAllLines(@"C:\bin\mount.log", total);
@@ -212,6 +212,46 @@ namespace VideoGui
                         }
                     }
 
+                    if (File.Exists(@"C:\bin\mount.log"))
+                    {
+                        x = "wsl";
+                        defaultpath = @"C:\windows";
+                        drive_cmd = Cli.Wrap(defaultpath + "\\" + x).
+                         WithArguments(args => args
+                        .Add($"\\mnt\\c\\Users\\Justin\\Attach.sh")).
+                                            WithValidation(CommandResultValidation.None);
+                        await foreach (var commandEvent in drive_cmd.ListenAsync())
+                        {
+                            switch (commandEvent)
+                            {
+                                case StartedCommandEvent StartedEvent:
+                                    {
+                                        total.Add($"Starting {StartedEvent}");
+                                        break;
+                                    }
+                                case StandardOutputCommandEvent OutputEvent:
+                                    {
+                                        Output.Add(commandEvent.ToString());
+                                        break;
+                                    }
+                                case StandardErrorCommandEvent ErrorEvent:
+                                    {
+                                        Errors.Add(ErrorEvent.ToString());
+                                        break;
+                                    }
+                                case ExitedCommandEvent ExitedEvent:
+                                    {
+                                        total.Add($"Starting {ExitedEvent}");
+                                        total.Add("--- ERRORS --");
+                                        total.AddRange(Errors);
+                                        total.Add("--- Output --");
+                                        total.AddRange(Output);
+                                        File.WriteAllLines(@"C:\bin\wsl.log", total);
+                                        break;
+                                    }
+                            }
+                        }
+                    }
                 }
 
                 return false;
