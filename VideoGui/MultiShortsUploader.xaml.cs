@@ -168,6 +168,9 @@ namespace VideoGui
         {
             try
             {
+
+                this.MinHeight = 700;
+                this.MinWidth = 1100;
                 connectionStr = Invoker.InvokeWithReturn<string>(this, new CustomParams_GetConnectionString());
                 RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                 var _w = key?.GetValue("MSUWidth");
@@ -211,6 +214,7 @@ namespace VideoGui
                 if (args.Contains("SCHEDULER_RESTART"))
                 {
                     AutoClose = false;
+                    Hide();
                     btnSchdule_Click(sender, e);
                 }
 

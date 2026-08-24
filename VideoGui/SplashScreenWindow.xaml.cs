@@ -1,5 +1,6 @@
 ﻿using ABI.System;
 using CliWrap;
+using CliWrap.EventStream;
 using FirebirdSql.Data.Services;
 using HtmlAgilityPack;
 using Microsoft.Win32;
@@ -70,7 +71,7 @@ namespace VideoGui
         System.Windows.Forms.Timer DbLayerInitiateTimer, UpdateProgess, RestartTimer;
         MainWindow MainAppWindow;
         string filename_pegpeg, link;
-       long bytesdone = 0, oldbytesdone = -1;
+        long bytesdone = 0, oldbytesdone = -1;
         bool done = false;
         bool ffmpegready = false;
         string Root, ffmpeg_ver = "", ffmpeg_gitver = "";
@@ -95,7 +96,7 @@ namespace VideoGui
 
                 ssid = GetEncryptedString(new int[] { 180, 19, 100, 123, 208, 243, 252, 122,
                     202, 47, 88, 134 }.Select(i => (byte)i).ToArray());
-               // KillFFMPEG().ConfigureAwait(true);
+                // KillFFMPEG().ConfigureAwait(true);
 
                 DbLayerInitiateTimer = new System.Windows.Forms.Timer();
                 DbLayerInitiateTimer.Tick += new EventHandler(DbLayerInitiateTimer_Tick);
@@ -108,6 +109,7 @@ namespace VideoGui
                 UpdateProgess.Start();
                 if (Environment.MachineName == "LEVIATHAN")
                 {
+                    Task.Run(async () => { AttachAllDrives(); });
                     _timer = new Timer(RunTask, null, Timeout.Infinite, Timeout.Infinite);
                     _timer.Change(1000, 2000);
                 }
@@ -131,7 +133,96 @@ namespace VideoGui
             }
         }
 
+        private Command drive_cmd = null;
+        private async Task<bool> AttachAllDrives()
+        {
 
+            try
+            {
+                List<string> Models = new List<string>();
+                Models.Add("ST10000VE001");
+                Models.Add("WD101PURZ");
+                Models.Add("WD102PURZ");
+                Models.Add("WD101PURP");
+                Models.Add("WD102PURP");
+                int TotalDrives = 0;
+                using (var searcher = new ManagementObjectSearcher("SELECT Model, SerialNumber FROM Win32_DiskDrive"))
+                {
+                    foreach (ManagementObject disk in searcher.Get())
+                    {
+                        string model = disk["Model"]?.ToString();
+                        if (model.Contains("ATA"))
+                        {
+                            model = model.Replace("ATA", "").Trim();
+                        }
+                        if (model.StartsWith("WDC"))
+                        {
+                            model = model.Substring(4).Trim();
+                        }
+                        int idx = model.IndexOf('-');
+                        if (idx != -1)
+                        {
+                            model = model.Substring(0, idx).Trim();
+                        }
+                        string serial = disk["SerialNumber"]?.ToString();
+                        if (Models.Contains(model))
+                        {
+                            TotalDrives++;
+                        }
+                    }
+                }
+                if (TotalDrives == 6)
+                {
+                    string defaultpath = @"C:\bin";
+                    string x = @"mountdrives.bat";
+                    List<string> Errors = new List<string>();
+                    List<string> Output = new List<string>();
+                    List<string> total = new List<string>();
+                    drive_cmd = Cli.Wrap(defaultpath + "\\" + x).
+                    WithValidation(CommandResultValidation.None);
+                    await foreach (var commandEvent in drive_cmd.ListenAsync())
+                    {
+                        switch (commandEvent)
+                        {
+                            case StartedCommandEvent StartedEvent:
+                                {
+                                    total.Add($"Starting {StartedEvent}");
+                                    break;
+                                }
+                            case StandardOutputCommandEvent OutputEvent:
+                                {
+                                    Output.Add(commandEvent.ToString());
+                                    break;
+                                }
+                            case StandardErrorCommandEvent ErrorEvent:
+                                {
+                                    Errors.Add(ErrorEvent.ToString());
+                                    break;
+                                }
+                            case ExitedCommandEvent ExitedEvent:
+                                {
+                                    total.Add($"Starting {ExitedEvent}");
+                                    total.Add("--- ERRORS --");
+                                    total.AddRange(Errors);
+                                    total.Add("--- Output --");
+                                    total.AddRange(Output);
+                                    File.WriteAllLines(@"C:\bin\mount.log", total);
+                                    break;
+                                }
+                        }
+                    }
+
+                }
+
+                return false;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"AttachAllDrives {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+                return false;
+            }
+
+        }
         private void RunTask(object? state)
         {
             try
@@ -335,7 +426,7 @@ namespace VideoGui
                             lblStatus.Content = "Downloading Firebird...";
                         });
                         int index_f = DownloadUrl.IndexOf("https:");
-                        if (index_f != -1) 
+                        if (index_f != -1)
                         {
                             DownloadUrl = DownloadUrl.Substring(index_f, DownloadUrl.Length - index_f);
                         }
@@ -510,7 +601,7 @@ namespace VideoGui
         {
             try
             {
-              
+
                 string myStrQuote = "\"";
                 var x = GetEncryptedString(new int[] { 166, 45, 64, 85, 244, 212, 221, 122, 214 }.Select(i => (byte)i).ToArray());
                 var pp = GetEncryptedString(new int[] { 166, 62, 93, 83, 255, 211, 254, 65, 253, 126, 8, 178, 199, 181, 107 }.Select(i => (byte)i).ToArray());
@@ -552,7 +643,7 @@ namespace VideoGui
 
                 if (pt != null)
                 {
-                   // if (pt.Count() > 0) KillFFMPEG().ConfigureAwait(true);
+                    // if (pt.Count() > 0) KillFFMPEG().ConfigureAwait(true);
                 }
                 return true;
             }

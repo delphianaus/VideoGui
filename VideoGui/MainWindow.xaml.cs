@@ -13530,6 +13530,8 @@ namespace VideoGui
         {
             try
             {
+                this.MinHeight = 625;
+                this.MinWidth = 1300;
                 List<string> args = Environment.GetCommandLineArgs().ToList();
 
                 IsRestart = args.Contains("SCHEDULER_RESTART");
