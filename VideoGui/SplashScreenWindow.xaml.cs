@@ -214,8 +214,8 @@ namespace VideoGui
 
                     if (File.Exists(@"C:\bin\mount.log"))
                     {
-                        x = "wsl";
-                        defaultpath = @"C:\windows";
+                        x = "wsl.exe";
+                        defaultpath = @"C:\Program Files\WSL";
                         drive_cmd = Cli.Wrap(defaultpath + "\\" + x).
                          WithArguments(args => args
                         .Add($"\\mnt\\c\\Users\\Justin\\Attach.sh")).
