@@ -96,7 +96,7 @@
                     <Label x:Name="lblUploadingText" Content="Uploading : " HorizontalAlignment="Left" Margin="357,0,0,0" 
                   VerticalContentAlignment="Center" IsVisibleChanged="LabelVisibilityChanged" 
                   SizeChanged="LabelSizeChanged" />
-                    <Label x:Name="lblUploading" Content="x" HorizontalAlignment="Left" Margin="434,0,0,0" 
+                    <Label x:Name="lblUploading" Content="x" HorizontalAlignment="Left" Margin="433,0,0,0" 
                  VerticalContentAlignment="Center"/>
                     <Label x:Name="lblUploadedText" Content="Uploaded : " Margin="264,0,0,0" 
                   VerticalContentAlignment="Center" HorizontalAlignment="Left" 

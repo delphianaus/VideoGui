@@ -86,7 +86,7 @@ namespace VideoGui
                 return false;
             }
         }
-        public static bool ContainsAll(this string data, List<string> containsall)
+        public static bool ContainsAll2(this string data, List<string> containsall)
         {
             bool res = false;
             res = containsall.All(s => data.ToLower().Contains(s.ToLower()));
@@ -2480,7 +2480,7 @@ namespace VideoGui
 
             }
         }
-
+        public static bool IsAscii(this string s) => s?.All(Char.IsAscii) ?? false;
         public static void WriteLog(this string obj, string LogName = "")
         {
 

@@ -995,11 +995,19 @@ namespace VideoGui
             try
             {
                 ExitDialog = true;
+                Thread.Sleep(100);
                 if (canceltoken.IsCancellationRequested) return false;
-                IntPtr mainWindowHandle = FindWindow(null, "Open"); // Provide the title of the active window
-                if (mainWindowHandle != IntPtr.Zero)
+
+                while (true)
                 {
-                    EnumChildWindows(mainWindowHandle, EnumChildWindowCallback, IntPtr.Zero);
+                    IntPtr mainWindowHandle = FindWindow(null, "Open"); // Provide the title of the active window
+                    if (mainWindowHandle != IntPtr.Zero)
+                    {
+                        EnumChildWindows(mainWindowHandle, EnumChildWindowCallback, IntPtr.Zero);
+                        Thread.Sleep(100);
+                        break;
+                    }
+                    else Thread.Sleep(100);
                 }
 
                 return Valid;
@@ -1019,6 +1027,7 @@ namespace VideoGui
                 StringBuilder className = new StringBuilder(256);
                 GetClassName(hWnd, className, className.Capacity);
                 int controlId = GetDlgCtrlID(hWnd);
+                Thread.Sleep(250);
                 if (className.ToString() == "Edit" && controlId == 0x47C && !EditDone) // Check for Edit control with ID 000000000000047C
                 {
                     while (true && !canceltoken.IsCancellationRequested)
@@ -1139,7 +1148,7 @@ namespace VideoGui
                 }
 
                 HasExited = false;
-                InternalTimer.Interval = TimeSpan.FromMilliseconds(1200);
+                InternalTimer.Interval = TimeSpan.FromMilliseconds(1900);
                 InternalTimer.Tick += new EventHandler(SendKeys_Tick);
                 string Span_Name = "row style-scope ytcp-multi-progress-monitor";
                 string script = @"
@@ -1683,6 +1692,30 @@ namespace VideoGui
                     lblWaiting.Content = "";
                     lblUploaded.Content = "";
                     lblTotal.Content = "";
+
+                    lblWaitingtext.Visibility = Visibility.Hidden;
+                    lblUploadingText.Visibility = Visibility.Hidden;
+
+
+                    var m = lblWaitingtext.Margin;
+                    m.Left += 200;
+                    lblWaitingtext.Margin = m;
+                    m = lblWaiting.Margin;
+                    m.Left += 200;
+                    lblWaiting.Margin = m;
+
+
+
+                    //lblTotalUploadsText
+                    m = lblTotalUploadsText.Margin;
+                    m.Left += 200;
+                    lblTotalUploadsText.Margin = m;
+
+                    m = lblUploading.Margin;
+                    m.Left += 200;
+                    lblUploading.Margin = m;
+
+
                 }
                 key?.Close();
                 if (Parent is MainWindow mainWindow)
@@ -1854,9 +1887,28 @@ namespace VideoGui
                     {
 
                         lblUploaded.Content = LastNode;
+                        var m = lblUploaded.Margin;
+                        if (m.Left < 400)
+                        {
+                            m.Left += 200;
+
+                            lblUploaded.Margin = m;
+                        }
+                        if (!lblLastNode.Content.ToString().Contains("Scraping..."))
+                        {
+                            lblLastNode.Content = "Scraping...";
+                        }
+                        m = lblUploadedText.Margin;
+                        if (m.Left < 300)
+                        {
+                            m.Left += 200;
+
+                            lblUploadedText.Margin = m;
+                        }
 
                         if (ScraperType == EventTypes.ScapeSchedule)
                         {
+
                             lblUploading.Content = MaxNodes.ToString();
                         }
                         //StatusBar.ApplyMargin();
@@ -2495,7 +2547,7 @@ namespace VideoGui
                                 await Task.Delay(50);
                                 html = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
                             }
-                            if (html.ContainsAll(new List<string>() { "Email", "or", "phone" }))
+                            if (html.ContainsAll2(new List<string>() { "Email", "or", "phone" }))
                             {
                                 bool res = await HandleGoogleLogin(html, wv2);
                                 if (res) continue;
@@ -2975,6 +3027,7 @@ namespace VideoGui
             try
             {
                 string filename = "";
+
                 if (html is not null)
                 {
                     string ehtml = Regex.Unescape(html);
@@ -2982,51 +3035,46 @@ namespace VideoGui
                     {
                         if (ehtml.Contains(IntId))
                         {
-                            string Search = "div id=\"original-filename\" class=\"value style-scope ytcp-video-info\">";
-                            if (ehtml.Contains("div id=\"original-filename\" class=\"value style-scope ytcp-video-info\">"))
+                            HtmlDocument doc = new HtmlDocument();
+                            doc.LoadHtml(ehtml);
+                            var node = doc.DocumentNode.SelectSingleNode("//div[@id='original-filename']");
+                            filename = (node is not null) ? node.InnerText : filename;
+
+
+                            if (filename.Contains("_") && IsVideoLookup && ScraperType == EventTypes.ShortsSchedule)
                             {
-                                int index = ehtml.IndexOf("div id=\"original-filename\" class=\"value style-scope ytcp-video-info\">");
-                                html = ehtml.Substring(index + Search.Length, 1500);
-                                if (html.Contains('<'))
+                                string idp = filename.Split("_").ToArray<string>().ToList().LastOrDefault().Trim();
+                                if (idp is not null && idp != "")
                                 {
-                                    index = html.IndexOf("<");
-                                    html = html[..(index - 1)];
-                                    filename = html.Replace("\n", "").Replace("\r", "").Trim();
-                                    if (filename.Contains("_") && IsVideoLookup && ScraperType == EventTypes.ShortsSchedule)
+                                    bool fnd = false;
+                                    string newid = idp.Split('_').LastOrDefault().Trim();
+                                    newid = newid.Split('.').First().Trim();
+                                    foreach (var itx in RematchedList.Where(s => s.OldId == 47))
                                     {
-                                        string idp = filename.Split("_").ToArray<string>().ToList().LastOrDefault().Trim();
-                                        if (idp is not null && idp != "")
-                                        {
-                                            bool fnd = false;
-                                            string newid = idp.Split('_').LastOrDefault().Trim();
-                                            newid = newid.Split('.').First().Trim();
-                                            foreach (var itx in RematchedList.Where(s => s.OldId == 47))
-                                            {
-                                                fnd = true;
-                                                break;
-                                            }
-                                            if (!fnd) RematchedList.Add(new Rematched { OldId = 47, NewId = 62 });
-                                            fnd = false;
-                                            foreach (var itx in RematchedList.Where(s => s.OldId == 49))
-                                            {
-                                                fnd = true;
-                                                break;
-                                            }
-                                            if (!fnd) RematchedList.Add(new Rematched { OldId = 49, NewId = 63 });
-                                            int newidint = newid.ToInt(-1);
-                                            int oldid = newidint;
-                                            foreach (var itx in RematchedList.Where(
-                                                s => s.OldId == oldid))
-                                            {
-                                                newidint = itx.NewId;
-                                            }
-                                            GetTitlesAndDesc(newidint);
-                                            WaitingFileName = false;
-                                            return;
-                                        }
+                                        fnd = true;
+                                        break;
                                     }
+                                    if (!fnd) RematchedList.Add(new Rematched { OldId = 47, NewId = 62 });
+                                    fnd = false;
+                                    foreach (var itx in RematchedList.Where(s => s.OldId == 49))
+                                    {
+                                        fnd = true;
+                                        break;
+                                    }
+                                    if (!fnd) RematchedList.Add(new Rematched { OldId = 49, NewId = 63 });
+                                    int newidint = newid.ToInt(-1);
+                                    int oldid = newidint;
+                                    foreach (var itx in RematchedList.Where(
+                                        s => s.OldId == oldid))
+                                    {
+                                        newidint = itx.NewId;
+                                    }
+                                    GetTitlesAndDesc(newidint);
+                                    WaitingFileName = false;
+                                    return;
                                 }
                             }
+
                         }
                         else
                         {
@@ -4809,89 +4857,88 @@ namespace VideoGui
                     {
                         if (ehtml.Contains(IntId))
                         {
-                            string Search = "div id=\"original-filename\" class=\"value style-scope ytcp-video-info\">";
-                            if (ehtml.Contains("div id=\"original-filename\" class=\"value style-scope ytcp-video-info\">"))
-                            {
-                                int index = ehtml.IndexOf("div id=\"original-filename\" class=\"value style-scope ytcp-video-info\">");
-                                html = ehtml.Substring(index + Search.Length, 1500);
-                                if (html.Contains('<'))
-                                {
-                                    index = html.IndexOf("<");
-                                    html = html[..(index - 1)];
-                                    filename = html.Replace("\n", "").Replace("\r", "").Trim();
-                                    if (filename.Contains("_") && IsVideoLookup && ScraperType == EventTypes.UploadTest)
-                                    {
-                                        string idp = filename.Split("_").ToArray<string>().ToList().LastOrDefault().Trim();
-                                        if (idp is not null && idp != "")
-                                        {
-                                            if (Invoker?.Invoke(this, new CustomParams_AddDirectory(idp)) is TurlpeDualString tds)
-                                            {
-                                                TitleStr = tds.turlpe1;
-                                                DescStr = tds.turlpe2;
-                                            }
-                                            if (TitleStr != "")
-                                            {
-                                                if ((sender as WebView2).CoreWebView2 != null)
-                                                {
-                                                    string script = "var divElements = document.querySelectorAll('[aria-label=\"Tell viewers about your video (type @ to mention a channel)\"]');" +
-                                                       "divElements.forEach(function(divElement) {" +
-                                                      $"   divElement.textContent = '{TitleStr}';" +
-                                                       "});";
 
-                                                    (sender as WebView2).CoreWebView2.ExecuteScriptAsync(script);
-                                                }
-                                            }
-                                            if (DescStr != "")
+                            HtmlDocument doc = new HtmlDocument();
+                            doc.LoadHtml(ehtml);
+                            var node = doc.DocumentNode.SelectSingleNode("//div[@id='original-filename']");
+                            filename = (node is not null) ? node.InnerText : filename;
+
+
+
+
+                            if (filename.Contains("_") && IsVideoLookup && ScraperType == EventTypes.UploadTest)
+                            {
+                                string idp = filename.Split("_").ToArray<string>().ToList().LastOrDefault().Trim();
+                                if (idp is not null && idp != "")
+                                {
+                                    if (Invoker?.Invoke(this, new CustomParams_AddDirectory(idp)) is TurlpeDualString tds)
+                                    {
+                                        TitleStr = tds.turlpe1;
+                                        DescStr = tds.turlpe2;
+                                    }
+                                    if (TitleStr != "")
+                                    {
+                                        if ((sender as WebView2).CoreWebView2 != null)
+                                        {
+                                            string script = "var divElements = document.querySelectorAll('[aria-label=\"Tell viewers about your video (type @ to mention a channel)\"]');" +
+                                               "divElements.forEach(function(divElement) {" +
+                                              $"   divElement.textContent = '{TitleStr}';" +
+                                               "});";
+
+                                            (sender as WebView2).CoreWebView2.ExecuteScriptAsync(script);
+                                        }
+                                    }
+                                    if (DescStr != "")
+                                    {
+                                        string script2 = "var divElements = document.querySelectorAll('[aria-label=\"Add a title that describes your video (type @ to mention a channel)\"]');" +
+                                               "divElements.forEach(function(divElement) {" +
+                                              $"   divElement.textContent = '{DescStr}';" +
+                                               "});";
+                                        (sender as WebView2).CoreWebView2.ExecuteScriptAsync(script2);
+                                    }
+                                    if (TitleStr != "" || DescStr != "")
+                                    {
+                                        if ((sender as WebView2).CoreWebView2 != null)
+                                        {
+                                            while (true)
                                             {
-                                                string script2 = "var divElements = document.querySelectorAll('[aria-label=\"Add a title that describes your video (type @ to mention a channel)\"]');" +
-                                                       "divElements.forEach(function(divElement) {" +
-                                                      $"   divElement.textContent = '{DescStr}';" +
-                                                       "});";
-                                                (sender as WebView2).CoreWebView2.ExecuteScriptAsync(script2);
+                                                var p = IsButtonEnabled((sender as WebView2)).GetAwaiter().GetResult();
+                                                if (p == ButtonReturnType.Enabled)
+                                                {
+                                                    break;
+                                                }
+                                                Thread.Sleep(100);
                                             }
-                                            if (TitleStr != "" || DescStr != "")
+                                            string script1 = "var saveButton = document.querySelector('.ytcp-button-shape-impl__button-text-content');" +
+                                                           "if (saveButton) {" +
+                                                           "   saveButton.click();" +
+                                                           "}";
+                                            (sender as WebView2).CoreWebView2.ExecuteScriptAsync(script1);
+                                            while (true)
                                             {
-                                                if ((sender as WebView2).CoreWebView2 != null)
+                                                var p = IsButtonEnabled((sender as WebView2)).GetAwaiter().GetResult();
+                                                if (p == ButtonReturnType.Disabled)
                                                 {
-                                                    while (true)
-                                                    {
-                                                        var p = IsButtonEnabled((sender as WebView2)).GetAwaiter().GetResult();
-                                                        if (p == ButtonReturnType.Enabled)
-                                                        {
-                                                            break;
-                                                        }
-                                                        Thread.Sleep(100);
-                                                    }
-                                                    string script1 = "var saveButton = document.querySelector('.ytcp-button-shape-impl__button-text-content');" +
-                                                                   "if (saveButton) {" +
-                                                                   "   saveButton.click();" +
-                                                                   "}";
-                                                    (sender as WebView2).CoreWebView2.ExecuteScriptAsync(script1);
-                                                    while (true)
-                                                    {
-                                                        var p = IsButtonEnabled((sender as WebView2)).GetAwaiter().GetResult();
-                                                        if (p == ButtonReturnType.Disabled)
-                                                        {
-                                                            break;
-                                                        }
-                                                        Thread.Sleep(100);
-                                                    }
+                                                    break;
                                                 }
-                                                for (int i = ScheduledFiles.Count - 1; i >= 0; i--)
-                                                {
-                                                    if (ScheduledFiles[i].FileName == filename)
-                                                    {
-                                                        ScheduledFiles.RemoveAt(i);
-                                                    }
-                                                }
-                                                if (ScheduledFiles.Count == 0)
-                                                {
-                                                    Waiting = false;
-                                                }
+                                                Thread.Sleep(100);
                                             }
+                                        }
+                                        for (int i = ScheduledFiles.Count - 1; i >= 0; i--)
+                                        {
+                                            if (ScheduledFiles[i].FileName == filename)
+                                            {
+                                                ScheduledFiles.RemoveAt(i);
+                                            }
+                                        }
+                                        if (ScheduledFiles.Count == 0)
+                                        {
+                                            Waiting = false;
                                         }
                                     }
                                 }
+
+
                             }
                         }
                         if (filename == "")

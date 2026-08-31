@@ -11,7 +11,7 @@
         ResizeMode="CanResize" WindowStartupLocation="CenterScreen" 
         WindowStyle="ToolWindow" KeyDown="frmMultiShortsUploader_KeyDown"
         mc:Ignorable="d" Loaded="Window_Loaded"
-        Title="Multi Shorts Uploader" Height="439" Width="559">
+        Title="Multi Shorts Uploader" Height="470" Width="555">
     <ui:FluentWindow.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -97,7 +97,7 @@
                 </ui:TitleBar.Icon>
             </ui:TitleBar>
             <Grid Grid.Row="1">
-                <Grid Width="560" Height="873" x:Name="MainGrid" HorizontalAlignment="Left" VerticalAlignment="Top">
+                <Grid Width="560" Height="806" x:Name="MainGrid" HorizontalAlignment="Left" VerticalAlignment="Top">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <!-- Loading Panel -->
@@ -139,7 +139,7 @@
                         <MSU:MultiListbox x:Name="msuSchedules" Header="Active Schedules" 
                   Width="560" Canvas.Top="168" VerticalContentAlignment="Top" 
                    Background="Transparent"
-                   Height="202" HorizontalAlignment="Center" IsDarkMode="True"
+                   Height="201" HorizontalAlignment="Center" IsDarkMode="True"
                     VerticalAlignment="Top"  ItemHeight="25" FontSize="12"
                     ItemsHorizontalAlignment="Left" ItemsVerticalAlignment="Center"
                     MouseDoubleClick="msuSchedules_MouseDoubleClick" >

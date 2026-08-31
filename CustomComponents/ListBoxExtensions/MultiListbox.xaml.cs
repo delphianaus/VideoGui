@@ -965,7 +965,7 @@ namespace CustomComponents.ListBoxExtensions
                 InitializeComponent();
                 ColumnDefinitions = new ObservableCollection<MultiListboxColumnDefinition>();
                 Loaded += MultiListbox_Loaded;
-
+                
                 SizeChanged += MultiListbox_SizeChanged;
 
                 this.DataContext = this;
@@ -1441,6 +1441,8 @@ namespace CustomComponents.ListBoxExtensions
         {
             try
             {
+                if (!IsVisible)
+                    return;
                 if (lstBoxUploadItems.ItemContainerGenerator.Status == GeneratorStatus.ContainersGenerated)
                 {
                     foreach (var item in lstBoxUploadItems.Items)
@@ -1875,7 +1877,8 @@ namespace CustomComponents.ListBoxExtensions
         {
             try
             {
-
+                if (!IsVisible) return;
+                
                 int i = -1;
                 foreach (var child in grid.Children)
                 {

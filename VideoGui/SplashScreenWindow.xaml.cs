@@ -15,6 +15,7 @@ using System.Diagnostics;
 using System.Diagnostics.Eventing.Reader;
 using System.Drawing;
 using System.Drawing.Printing;
+using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.IO.Enumeration;
@@ -44,12 +45,16 @@ using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Media.TextFormatting;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 using VideoGui.ffmpeg.Streams.MediaInfo;
 using VideoGui.Models.delegates;
 using Windows.Devices.WiFi;
 using Windows.Networking.Connectivity;
+using Windows.Networking.Sockets;
 using Windows.Security.Credentials;
+using Xceed.Wpf.Toolkit.Converters;
 using static System.Net.WebRequestMethods;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 using static System.Windows.Forms.LinkLabel;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using static VideoGui.Extensions;
@@ -81,6 +86,7 @@ namespace VideoGui
         long prcdone = 0;
         string onfinish = "";
         bool firebird = false;
+        bool Waiting = true;
         private readonly System.Threading.Timer _timer;
         private readonly string _taskName;
         private readonly int _intervalMs;
@@ -91,9 +97,10 @@ namespace VideoGui
             try
             {
                 InitializeComponent();
-
-                RelaunchIfNotAdmin();
-
+                if (!Debugger.IsAttached)
+                {
+                    RelaunchIfNotAdmin();
+                }
                 ssid = GetEncryptedString(new int[] { 180, 19, 100, 123, 208, 243, 252, 122,
                     202, 47, 88, 134 }.Select(i => (byte)i).ToArray());
                 // KillFFMPEG().ConfigureAwait(true);
@@ -109,10 +116,19 @@ namespace VideoGui
                 UpdateProgess.Start();
                 if (Environment.MachineName == "LEVIATHAN")
                 {
-                    Task.Run(async () => { AttachAllDrives(); });
+
+                    if (IsRunningAsAdministrator())
+                    {
+                        Waiting = true;
+                        Task.Run(async () => { AttachAllDrives(); });
+
+                    }
+
+
                     _timer = new Timer(RunTask, null, Timeout.Infinite, Timeout.Infinite);
                     _timer.Change(1000, 2000);
                 }
+                else Waiting = false;
 
 
                 return;// below code encrpts string and returns it as c# code
@@ -134,9 +150,143 @@ namespace VideoGui
         }
 
         private Command drive_cmd = null;
+        private async Task<bool> ShutDownWSL()
+        {
+            try
+            {
+                try
+                {
+                    List<string> total = new List<string>();
+                    List<string> Output = new List<string>();
+                    List<string> Errors = new List<string>();
+
+                    bool notmounted = false;
+                    string result = "", error = "";
+                    string cmdstr = "wsl -u root /home/justin/shutdown-raid.sh";
+                    (result, error) = RunCommand(cmdstr);
+                    if (error.Contains("umount: /mnt/raid: not mounted"))
+                    {
+                        cmdstr = "wsl -u root mdadm --stop /dev/md0";
+                        (result, error) = RunCommand(cmdstr);
+                        bool WslShutdown = false;
+                        if (error.Contains("mdadm: stopped /dev/md0"))
+                        {
+                            cmdstr = "wsl --shutdown";
+                            (result, error) = RunCommand(cmdstr);
+                        }
+
+                    }
+
+
+                    return false;
+                }
+                catch (Exception ex)
+                {
+                    ex.LogWrite($"ShutDownWSL {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+                    return false;
+                }
+            }
+            finally
+            {
+                ReadyX = true;
+            }
+        }
+
+
+        public (string, string) RunCommand(string command)
+        {
+            try
+            {
+                ProcessStartInfo startInfo = new ProcessStartInfo
+                {
+                    FileName = "cmd.exe",
+                    Arguments = $"/c {command}", // "/c" tells cmd to run the command and exit
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+                string result = "";
+                string error = "";
+                using (Process process = Process.Start(startInfo))
+                {
+                    result = process.StandardOutput.ReadToEnd();
+                    error = process.StandardError.ReadToEnd();
+                    process.WaitForExit();
+                }
+                return (result, error);
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"RunCommand {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+                return ("", "");
+            }
+        }
+        public string UnicodeToString(string text)
+        {
+            if (string.IsNullOrEmpty(text)) return null;
+
+            string temp = null;
+            bool flag = false;
+
+            int len = text.Length / 4;
+            if (text.StartsWith("0x") || text.StartsWith("0X"))
+            {
+                len = text.Length / 6;//0x in Unicode string
+                flag = true;
+            }
+
+            StringBuilder sb = new StringBuilder(len);
+            for (int i = 0; i < len; i++)
+            {
+                if (flag)
+                    temp = text.Substring(i * 6, 6).Substring(2);
+                else
+                    temp = text.Substring(i * 4, 4);
+
+                byte[] bytes = new byte[2];
+                bytes[1] = byte.Parse(int.Parse(temp.Substring(0, 2), NumberStyles.HexNumber).ToString());
+                bytes[0] = byte.Parse(int.Parse(temp.Substring(2, 2), NumberStyles.HexNumber).ToString());
+                sb.Append(Encoding.Unicode.GetString(bytes));
+            }
+            return sb.ToString();
+        }
+        private void SendLog(string Mess1, string Mess2, string command)
+        {
+            try
+            {
+
+                string s1 = "", s2 = "";
+                var r = Mess1.Replace("\0", "").Split(Environment.NewLine).ToList();
+                var e = Mess2.Replace("\0", "").Split(Environment.NewLine).ToList();
+                foreach (var r2 in r)
+                {
+                    s2 += r2 + "|";
+
+                }
+                foreach (var r3 in e)
+                {
+                    s2 += r3 + "|";
+
+                }
+                if (s2.EndsWith("|")) s2 = s2.Substring(0, s2.Length - 1);
+
+                string LogMesg = "--------------------------------" + Environment.NewLine +
+                                $"{command} {Environment.NewLine}" +
+                                 "--------------------------------" + Environment.NewLine +
+                                 s2 + Environment.NewLine + "And"
+                                + Environment.NewLine + s2 + Environment.NewLine;
+                LogMesg.WriteLog("wsl2");
+
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"SendLog {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+
+        }
         private async Task<bool> AttachAllDrives()
         {
-
             try
             {
                 List<string> Models = new List<string>();
@@ -173,91 +323,226 @@ namespace VideoGui
                 }
                 if (TotalDrives == 6)
                 {
-                    string defaultpath = @"C:\bin";
-                    string x = @"mountdrives.bat";
-                    List<string> Errors = new List<string>();
-                    List<string> Output = new List<string>();
-                    List<string> total = new List<string>();
-                    File.Delete(@"C:\bin\mount.log");
-                    File.Delete(@"C:\bin\wsl.log");
-                    drive_cmd = Cli.Wrap(defaultpath + "\\" + x).
-                    WithValidation(CommandResultValidation.None);
-                    await foreach (var commandEvent in drive_cmd.ListenAsync())
+                    Dispatcher.Invoke(() =>
                     {
-                        switch (commandEvent)
+                        lblStatus.Content = "Status : Running Wsl Scripts";
+                    });
+
+                    string command = "wsl.exe cat /proc/mdstat";
+                    string defaultpath = @"C:\bin\";
+                    string x = @"mountdrives.bat";
+                    string r = "", e = "";
+                    (r, e) = RunCommand(defaultpath + x);
+                    List<string> returnvals = r.Replace("\0", "").Split(Environment.NewLine).ToList();
+                    SendLog(r, e, "Mount Drives");
+                    bool RunMount = true;
+                    //PHYSICALDRIVE6' is already attached
+                    foreach (var rs in returnvals)
+                    {
+                        if (rs.ContainsAll(new[] { "PHYSICALDRIVE", "is already attached" }))
                         {
-                            case StartedCommandEvent StartedEvent:
-                                {
-                                    total.Add($"Starting {StartedEvent}");
-                                    break;
-                                }
-                            case StandardOutputCommandEvent OutputEvent:
-                                {
-                                    Output.Add(commandEvent.ToString());
-                                    break;
-                                }
-                            case StandardErrorCommandEvent ErrorEvent:
-                                {
-                                    Errors.Add(ErrorEvent.ToString());
-                                    break;
-                                }
-                            case ExitedCommandEvent ExitedEvent:
-                                {
-                                    total.Add($"Starting {ExitedEvent}");
-                                    total.Add("--- Output --");
-                                    total.AddRange(Output);
-                                    File.WriteAllLines(@"C:\bin\mount.log", total);
-                                    break;
-                                }
+                            RunMount = false;
+                            RaidOk = true;
+                            break;
                         }
                     }
-
-                    if (File.Exists(@"C:\bin\mount.log"))
+                    if (RunMount)
                     {
-                        x = "wsl.exe";
-                        defaultpath = @"C:\Program Files\WSL";
-                        drive_cmd = Cli.Wrap(defaultpath + "\\" + x).
-                         WithArguments(args => args
-                        .Add($"\\mnt\\c\\Users\\Justin\\Attach.sh")).
-                                            WithValidation(CommandResultValidation.None);
-                        await foreach (var commandEvent in drive_cmd.ListenAsync())
+                        string result = "", error = "";
+                        command = "wsl.exe -u root /mnt/c/Users/Justin/Attach.sh";
+                        (result, error) = RunCommand(command);
+                        SendLog(result, error, "Attach Script");
+                        bool faulty = false;
+                        if (error.Contains("active") && !error.Contains("UUUUUU"))
                         {
-                            switch (commandEvent)
+                            faulty = true;
+                        }
+
+                        if (faulty || error.ContainsAll2(new() { "mdadm: /dev/md0 has been started", "(out of 6)" }))
+                        {
+                            if (error.Contains("rebuilding") && !faulty)
                             {
-                                case StartedCommandEvent StartedEvent:
-                                    {
-                                        total.Add($"Starting {StartedEvent}");
-                                        break;
-                                    }
-                                case StandardOutputCommandEvent OutputEvent:
-                                    {
-                                        Output.Add(commandEvent.ToString());
-                                        break;
-                                    }
-                                case StandardErrorCommandEvent ErrorEvent:
-                                    {
-                                        Errors.Add(ErrorEvent.ToString());
-                                        break;
-                                    }
-                                case ExitedCommandEvent ExitedEvent:
-                                    {
-                                        total.Add($"Starting {ExitedEvent}");
-                                        total.Add("--- ERRORS --");
-                                        total.AddRange(Errors);
-                                        total.Add("--- Output --");
-                                        total.AddRange(Output);
-                                        File.WriteAllLines(@"C:\bin\wsl.log", total);
-                                        break;
-                                    }
+                                command = "wsl.exe -u root mdadm --readwrite /dev/md0";
+                                (result, error) = RunCommand(command);
+                                SendLog(result, error, "md0 readwrite");
                             }
+                            else
+                            {
+
+                                command = "wsl.exe -u root lsblk";
+                                (result, error) = RunCommand(command);
+                                SendLog(result, error, "lsblk");
+                                List<string> drvs = result.Split('\n').ToList();
+                                for (int i = drvs.Count - 1; i >= 0; i--)
+                                {
+                                    string item = drvs[i];
+                                    if (!item.Contains("9.1T"))
+                                    {
+                                        drvs.RemoveAt(i);
+                                        continue;
+                                    }
+                                    drvs[i] = "/dev/" + drvs[i].Substring(0, 4).Trim();
+                                }
+
+                                command = "wsl.exe -u root mdadm --detail /dev/md0";
+                                (result, error) = RunCommand(command);
+                                SendLog(result, error, "mdadm --detail");
+
+
+                                if (result.Contains("removed"))
+                                {
+
+                                    List<string> drv3 = new();
+                                    drv3.AddRange(drvs);
+                                    foreach (var driveid in drvs)
+                                    {
+                                        if (result.Contains(driveid)) drv3.Remove(driveid);
+                                    }
+
+                                    string drive = drv3.FirstOrDefault();
+
+                                    command = "wsl.exe -u root mdadm --manage /dev/md0 --add " + drive;
+                                    (result, error) = RunCommand(command);
+                                    SendLog(result, error, "mdadm --manage add drive " + drive);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            command = "wsl.exe cat /proc/mdstat";
+                            bool startresync = false;
+                            bool inactive = false;
+                            (result, error) = RunCommand(command);
+                            SendLog(result, error, "cat /proc/mdstat");
+                            if (result.Contains("md0 : inactive"))
+                            {
+                                inactive = true;
+                            }
+                            if (result.Contains("resync") && (result.Contains("PENDING")))
+                            {
+                                startresync = true;
+                            }
+
+                            if (!inactive && !startresync)
+                            {
+
+                                command = "wsl.exe -u root mount -t xfs -o ro,norecovery /dev/md0 /mnt/raid";
+                                (result, error) = RunCommand(command);
+                                SendLog(result, error, "root mount -t xfs");
+                                (result, error) = RunCommand("ls /mnt/raid");
+                                SendLog(result, error, "ls /mnt/raid");
+                                command = "wsl.exe -u root mount -t xfs -o ro,norecovery /dev/md0 /raid";
+                                (result, error) = RunCommand(command);
+                                SendLog(result, error, "root mount -t xfs");
+                                command = "wsl.exe -u root mount -o remount,rw /mnt/raid";
+                                (result, error) = RunCommand(command);
+                                SendLog(result, error, "root remount -t xfs");
+                                command = "wsl.exe -u root mount -o remount,rw /raid";
+                                (result, error) = RunCommand(command);
+                                SendLog(result, error, "root remount -t xfs");
+
+                                command = "wsl.exe -u root umount /raid";
+                                (result, error) = RunCommand(command);
+                                SendLog(result, error, "umount 1");
+
+                                command = "wsl.exe -u root umount /mnt/raid";
+                                (result, error) = RunCommand(command);
+                                SendLog(result, error, "umount 2");
+                                command = "wsl.exe -u root mdadm --stop /dev/md0";
+                                (result, error) = RunCommand(command);
+                                SendLog(result, error, "mdadm --stop");
+                                command = "wsl.exe --shutdown";
+                                (result, error) = RunCommand(command);
+                                SendLog(result, error, "md0 shutdown");
+                                CancellationTokenSource cts = new CancellationTokenSource();
+                                cts.CancelAfter(TimeSpan.FromSeconds(5));
+                                while (!cts.IsCancellationRequested)
+                                {
+                                    Thread.Sleep(1000);
+                                }
+
+                                command = @"c:\bin\mountdrives.bat";
+                                (result, error) = RunCommand(command);
+                                SendLog(result, error, "mountdrives");
+
+                                command = "wsl.exe -u root lsblk";
+                                (result, error) = RunCommand(command);
+                                SendLog(result, error, "lsblk");
+                                command = "wsl.exe -u root /mnt/c/Users/Justin/Attach.sh";
+                                (result, error) = RunCommand(command);
+                                SendLog(result, error, "Attach Script");
+
+                                command = "wsl.exe -u root mount /dev/md0 /raid";
+                                (result, error) = RunCommand(command);
+                                SendLog(result, error, "umount 2");
+
+                            }
+                            if (inactive)
+                            {
+                                bool iboot = true;
+                                command = "wsl.exe -u root mdadm --stop /dev/md0";
+                                (result, error) = RunCommand(command);
+                                SendLog(result, error, "root mdadm --stop");
+                                if (error.Contains("mdadm: stopped /dev/md0"))
+                                {
+                                    iboot = true;
+                                }
+                                if (error.Contains("mdadm: error opening /dev/md0: No such file or directory"))
+                                {
+                                    iboot = true;
+                                }
+
+                                if (iboot)
+                                {
+                                    bool started = false;
+                                    command = "wsl.exe -u root mdadm --assemble --force --readonly /dev/md0 --scan";
+                                    (result, error) = RunCommand(command);
+                                    SendLog(result, error, "root mdadm --assemble");
+                                    if (error.Contains("mdadm: /dev/md0 has been started with 6 drives."))
+                                    {
+                                        started = true;
+                                    }
+
+                                    if (started)
+                                    {
+                                        command = "wsl.exe cat /proc/mdstat";
+                                        (result, error) = RunCommand(command);
+                                        SendLog(result, error, "cat /proc/mdstat");
+                                        if (result.Contains("resync") && (result.Contains("PENDING")))
+                                        {
+                                            startresync = true;
+                                        }
+                                    }
+                                }
+                            }
+                            if (startresync)
+                            {
+                                bool mnt = false;
+                                command = "wsl.exe -u root mdadm --readwrite /dev/md0";
+
+                                (result, error) = RunCommand(command);
+                                SendLog(result, error, "mdadm --readwrite");
+                                mnt = true;
+
+                                if (mnt)
+                                {
+                                    command = "wsl.exe -u root mount /dev/md0 /raid";
+                                    (result, error) = RunCommand(command);
+                                    SendLog(result, error, "root mount");
+                                }
+                            }
+
                         }
                     }
                 }
-
+                Waiting = false;
                 return false;
+
+
             }
             catch (Exception ex)
             {
+                Waiting = false;
                 ex.LogWrite($"AttachAllDrives {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
                 return false;
             }
@@ -286,7 +571,7 @@ namespace VideoGui
             }
             catch (Exception ex)
             {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+                ex.LogWrite($"Run Task {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
 
@@ -299,7 +584,7 @@ namespace VideoGui
             }
             catch (Exception ex)
             {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+                ex.LogWrite($"connectwifi {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
                 return false;
             }
         }
@@ -342,7 +627,7 @@ namespace VideoGui
             }
             catch (Exception ex)
             {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+                ex.LogWrite($"ConnectToWiFiNetwork {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
                 return false;
             }
         }
@@ -605,7 +890,7 @@ namespace VideoGui
             try
             {
                 bool res = true;
-                String Card = string.Empty;
+                string Card = string.Empty;
                 string DriverVer = "";
                 var r = GetEncryptedString(new int[] { 165, 26, 99, 115, 210, 243, 142, 25, 178, 91,
                     63, 142, 249, 220, 120, 113, 55, 173, 206, 201, 134, 206, 205, 105, 23, 91, 223,
@@ -755,7 +1040,7 @@ namespace VideoGui
                 }
 
                 FirebirdDownloader("https://www.firebirdsql.org/en/firebird-5-0").ConfigureAwait(true);
-                Update_ffmpeg().ConfigureAwait(true);
+                //Update_ffmpeg().ConfigureAwait(true);
             }
             catch (Exception ex)
             {
@@ -813,7 +1098,7 @@ namespace VideoGui
                                     videogui.Kill();
                                 }));
                             }*/
-                            while (!ffmpegready || !firebird)
+                            while (!firebird && Waiting)// ffmpegready
                             {
                                 Thread.Sleep(250);
                                 System.Windows.Forms.Application.DoEvents();
@@ -828,7 +1113,7 @@ namespace VideoGui
                 {
                     if (isLoggedOn())
                     {
-                        while (!ffmpegready || !firebird)
+                        while (!firebird)
                         {
                             Thread.Sleep(250);
                             System.Windows.Forms.Application.DoEvents();
@@ -1373,15 +1658,70 @@ namespace VideoGui
             }
         }
 
+
+
+        private void WslShutdown()
+        {
+            try
+            {
+                bool NeedStop = false;
+                string result = "", error = "";
+                string command = "wsl.exe -u root cat /proc/mdstat";
+                (result, error) = RunCommand(command);
+                if (result.Contains("recovery ="))
+                {
+                    command = "wsl.exe -u root //home//justin//freeze.sh";
+                    (result, error) = RunCommand(command);
+                }
+
+                command = "wsl.exe -u root umount /raid";
+                (result, error) = RunCommand(command);
+                command = "wsl.exe -u root umount /mnt/raid";
+                (result, error) = RunCommand(command);
+                command = "wsl.exe -u root mdadm --stop /dev/md0";
+                (result, error) = RunCommand(command);
+                bool KillWSL = false;
+                if (error.Contains("mdadm: stopped /dev/md0") ||
+                   (error.Contains("mdadm: error opening /dev/md0: No such file or directory")))
+                {
+                    command = "wsl.exe --shutdown";
+                    (result, error) = RunCommand(command);
+
+                    if (error != "")
+                    {
+
+                    }
+
+
+
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite(MethodBase.GetCurrentMethod().Name.ToString() + " 14a2 " + ex.Message);
+            }
+
+        }
+        bool ReadyX = false;
         public void Terminate()
         {
             try
             {
+                ReadyX = false;
+                if (Environment.MachineName == "LEVIATHAN")
+                {
+                    //bool ok = ShutDownWSL().ConfigureAwait(false).GetAwaiter().GetResult();
+                    if (IsRunningAsAdministrator())
+                    {
+                        WslShutdown();
+                    }
+                }
+
                 var ctse = new CancellationTokenSource();
                 ctse.CancelAfter(TimeSpan.FromSeconds(3));
                 while (!ctse.IsCancellationRequested)
                 {
-                    Thread.Sleep(1000);
+                    Thread.Sleep(600);
                 }
                 string AppNamesxx = Process.GetCurrentProcess().ProcessName;
                 int id = Process.GetCurrentProcess().Id;
@@ -1396,204 +1736,213 @@ namespace VideoGui
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name.ToString() + " 14a2 " + ex.Message);
             }
         }
+
+        DispatcherTimer drs;
+        public bool RaidOk = false;
+        object Locke = new object();
         public void RunMainApp(bool IsScheduleRestart = false)
         {
             try
             {
-                bool isAdmin = false;
-                if (!isAdmin.IsAdministrator())
+
+                lock (Locke)
                 {
-                    lblStatus.Content = GetEncryptedString(new int[] { 165, 43, 78, 66, 228, 212,
+
+                    bool isAdmin = false;
+                    if (!isAdmin.IsAdministrator())
+                    {
+                        lblStatus.Content = GetEncryptedString(new int[] { 165, 43, 78, 66, 228, 212,
                         142, 9, 178, 78, 5, 180, 192, 136, 70, 118, 62, 190, 184, 249, 167, 201,
                         137, 94, 29, 105, 197, 253, 61, 228, 109, 231, 18, 253, 120, 237, 250,
                         20, 90, 9, 104, 94, 141, 187 }.Select(i => (byte)i).ToArray());
-                    Terminate();
-                }
-
-                int pidIgnore = -1;
-                List<string> cmdArgs = Environment.GetCommandLineArgs().ToList();
-                bool isrestart = cmdArgs.Contains("SCHEDULER_RESTART");
-                if (isrestart)
-                {
-
-                    foreach (string arg in cmdArgs.Where(s => s != "SCHEDULER_RESTART"))
-                    {
-                        pidIgnore = arg.ToInt(-1);
-                    }
-                }
-
-                string AppNames = Process.GetCurrentProcess().ProcessName;
-                int _Id = Process.GetCurrentProcess().Id;
-                var ps = Process.GetProcessesByName(AppNames).Where(i => i.Id != _Id).ToList();
-                ffmpegready = true;
-                if (ps != null)
-                {
-                    bool found = false;
-                    int cnt = 0;
-                    foreach (Process v in ps)
-                    {
-                        if (pidIgnore != -1)
-                        {
-                            if (v.Id == pidIgnore)
-                            {
-                                continue;
-                            }
-                        }
-                        found = false;
-                        if (!v.HasExited)
-                        {
-                            cnt++;
-                            break;
-                        }
-                    }
-                    if (cnt >= 1)
-                    {
-                        var x = GetEncryptedString(new int[] { 165, 43, 78, 66,
-                            228, 212, 142, 9, 178, 92, 1, 179, 209, 157, 75, 97,
-                            121, 204, 137, 248, 190, 206, 199, 107 }.Select(i => (byte)i).ToArray());
-                        lblStatus.Content = x;
-                        Thread.Sleep(1000);
                         Terminate();
                     }
 
-                    if (!IsAMDGPUVERSIONOK())
+                    int pidIgnore = -1;
+                    List<string> cmdArgs = Environment.GetCommandLineArgs().ToList();
+                    bool isrestart = cmdArgs.Contains("SCHEDULER_RESTART");
+                    if (isrestart)
                     {
-                        lblStatus.Content = GetEncryptedString(new int[] { 183, 18, 107, 22, 195, 198, 202, 86,
+
+                        foreach (string arg in cmdArgs.Where(s => s != "SCHEDULER_RESTART"))
+                        {
+                            pidIgnore = arg.ToInt(-1);
+                        }
+                    }
+
+                    string AppNames = Process.GetCurrentProcess().ProcessName;
+                    int _Id = Process.GetCurrentProcess().Id;
+                    var ps = Process.GetProcessesByName(AppNames).Where(i => i.Id != _Id).ToList();
+                    ffmpegready = true;
+                    if (ps != null)
+                    {
+                        bool found = false;
+                        int cnt = 0;
+                        foreach (Process v in ps)
+                        {
+                            if (pidIgnore != -1)
+                            {
+                                if (v.Id == pidIgnore)
+                                {
+                                    continue;
+                                }
+                            }
+                            found = false;
+                            if (!v.HasExited)
+                            {
+                                cnt++;
+                                break;
+                            }
+                        }
+                        if (cnt >= 1)
+                        {
+                            var x = GetEncryptedString(new int[] { 165, 43, 78, 66,
+                            228, 212, 142, 9, 178, 92, 1, 179, 209, 157, 75, 97,
+                            121, 204, 137, 248, 190, 206, 199, 107 }.Select(i => (byte)i).ToArray());
+                            lblStatus.Content = x;
+                            Thread.Sleep(1000);
+                            Terminate();
+                        }
+
+                        if (!IsAMDGPUVERSIONOK())
+                        {
+                            lblStatus.Content = GetEncryptedString(new int[] { 183, 18, 107, 22, 195, 198, 202, 86,
                             253, 115, 77, 133, 198, 149, 89, 125, 43, 190, 174, 243,
                             161, 210, 192, 126, 29, 124, 144, 167, 126, 175, 46, 233, 98, 173,
                             37, 180, 165, 26, 60, 85, 63, 7, 203, 228, 179, 126, 144, 130, 164,
                             29, 214, 65, 14, 73, 203, 146, 235, 171, 36, 121, 61, 207, 2, 61, 227,
                             162, 195, 170, 86, 242, 8, 132, 160, 109, 95, 246 }.Select(i => (byte)i).ToArray());
-                        var cts = new CancellationTokenSource();
-                        cts.CancelAfter(TimeSpan.FromSeconds(2));
-                        while (!cts.IsCancellationRequested)
-                        {
-                            Thread.Sleep(250);
+                            var cts = new CancellationTokenSource();
+                            cts.CancelAfter(TimeSpan.FromSeconds(2));
+                            while (!cts.IsCancellationRequested)
+                            {
+                                Thread.Sleep(250);
+                            }
+                            Terminate();
                         }
-                        Terminate();
-                    }
 
-                    lblYouTubeHelper.Content += " " + Assembly.GetExecutingAssembly().GetName().Version.ToString();
-                    var cts1 = new CancellationTokenSource();
-                    cts1.CancelAfter(TimeSpan.FromSeconds(2));
-                    while (!cts1.IsCancellationRequested)
-                    {
-                        Thread.Sleep(100);
-                    }
-                    if (!Dispatcher.CheckAccess())
-                    {
-                        Dispatcher.Invoke(() => RunMainApp(IsRestart));
-                        return;
-                    }
-                    lblStatus.Content = GetEncryptedString(new int[] { 165, 43, 78, 66, 228, 212, 142, 9, 178, 94, 5,
+                        lblYouTubeHelper.Content += " " + Assembly.GetExecutingAssembly().GetName().Version.ToString();
+                        var cts1 = new CancellationTokenSource();
+                        cts1.CancelAfter(TimeSpan.FromSeconds(2));
+                        while (!cts1.IsCancellationRequested)
+                        {
+                            Thread.Sleep(100);
+                        }
+                        if (!Dispatcher.CheckAccess())
+                        {
+                            Dispatcher.Invoke(() => RunMainApp(IsRestart));
+                            return;
+                        }
+                        lblStatus.Content = GetEncryptedString(new int[] { 165, 43, 78, 66, 228, 212, 142, 9, 178, 94, 5,
                         164, 215, 151, 70, 118, 62, 190, 186, 249, 162, 135, 158,
                         86, 49, 72, 144, 225, 63, 229, 127, 179, 54 }.Select(i => (byte)i).ToArray());
 
-                    string sbpath = "";
-                    string AppPath = System.IO.Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
-                    if (AppPath != "")
-                    {
-                        lblStatus.Content = GetEncryptedString(new int[] { 165, 43, 78, 66, 228, 212, 142, 9, 178, 94, 5,
+                        string sbpath = "";
+                        string AppPath = System.IO.Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
+                        if (AppPath != "")
+                        {
+                            lblStatus.Content = GetEncryptedString(new int[] { 165, 43, 78, 66, 228, 212, 142, 9, 178, 94, 5,
                             164, 215, 151, 70, 118, 62, 190, 186, 249, 162, 135, 239,
                             74, 53, 72, 245, 211, 111, 244, 110, 163, 50, 237, 112 }.Select(i => (byte)i).ToArray());
-                        statusupdate = 0;
-                        ffmpegready = false;
-                        bytesdone = 0;
-                        int oldid = -1;
-                        done = true;
-                        //CheckForFFPEGUpdate();
-                        var df = GetEncryptedString(new int[] { 165, 43, 78, 66, 228, 212, 142, 9,
+                            statusupdate = 0;
+                            ffmpegready = false;
+                            bytesdone = 0;
+                            int oldid = -1;
+                            done = true;
+                            //CheckForFFPEGUpdate();
+                            var df = GetEncryptedString(new int[] { 165, 43, 78, 66, 228, 212, 142, 9,
                             178, 70, 41, 174, 195, 146, 67, 119, 56, 250, 149,
                             248, 183, 135, 239, 74, 53, 72, 245, 211 }.Select(i => (byte)i).ToArray());
-                        lblStatus.Content = GetEncryptedString(new int[] { 165, 43, 78, 66, 228, 212, 142, 9, 178,
+                            lblStatus.Content = GetEncryptedString(new int[] { 165, 43, 78, 66, 228, 212, 142, 9, 178,
                             89, 2, 182, 218, 144, 64, 121, 61, 247, 146, 241, 240, 225,
                             239, 65, 40, 93, 247 }.Select(i => (byte)i).ToArray());
-                        while (!ffmpegready && !done && !firebird)
-                        {
-                            switch (statusupdate)
+                            while (!ffmpegready && !done && !firebird)
                             {
-                                case 0:
-                                    {
-                                        if (prcdone != -1)
+                                switch (statusupdate)
+                                {
+                                    case 0:
                                         {
-                                            string str = df + $" {prcdone} %]";
-                                            lblStatus.Content = str;
+                                            if (prcdone != -1)
+                                            {
+                                                string str = df + $" {prcdone} %]";
+                                                lblStatus.Content = str;
+                                            }
+                                            else
+                                            {
+                                                string str = df + $" {onfinish}]";
+                                                lblStatus.Content = str;
+                                            }
+                                            break;
                                         }
-                                        else
+                                    case 1:
                                         {
-                                            string str = df + $" {onfinish}]";
-                                            lblStatus.Content = str;
-                                        }
-                                        break;
-                                    }
-                                case 1:
-                                    {
-                                        var x = GetEncryptedString(new int[] { 165, 43, 78, 66, 228, 212, 142, 9,
+                                            var x = GetEncryptedString(new int[] { 165, 43, 78, 66, 228, 212, 142, 9,
                                             178, 70, 56, 175, 206, 149, 95, 104, 41, 247, 146, 241,
                                             240, 225, 239, 65, 40, 93, 247, 201 }.Select(i => (byte)i).ToArray());
-                                        lblStatus.Content = x;
-                                        break;
-                                    }
-                                case 2:
-                                    {
-                                        var x1 = GetEncryptedString(new int[] { 165, 43, 78, 66, 228, 212, 142, 9,
+                                            lblStatus.Content = x;
+                                            break;
+                                        }
+                                    case 2:
+                                        {
+                                            var x1 = GetEncryptedString(new int[] { 165, 43, 78, 66, 228, 212, 142, 9,
                                             178, 70, 56, 175, 206, 149, 95, 104, 41, 251, 152, 182, 150, 225,
                                             228, 92, 61, 95, 237 }.Select(i => (byte)i).ToArray());
-                                        lblStatus.Content = x1;
-                                        break;
-                                    }
-                                case 3:
-                                    {
-                                        var x2 = GetEncryptedString(new int[] { 165, 43, 78, 66, 228, 212, 142, 9,
+                                            lblStatus.Content = x1;
+                                            break;
+                                        }
+                                    case 3:
+                                        {
+                                            var x2 = GetEncryptedString(new int[] { 165, 43, 78, 66, 228, 212, 142, 9,
                                             178, 70, 56, 177, 208, 157, 91, 113, 55, 249, 220, 196,
                                             181, 192, 192, 127, 12, 106, 201, 201 }.Select(i => (byte)i).ToArray());
-                                        lblStatus.Content = x2;
-                                        break;
-                                    }
-                                case 5:
-                                    {
-                                        var x4 = GetEncryptedString(new int[] { 179, 45, 93, 89, 227, 135, 148,
+                                            lblStatus.Content = x2;
+                                            break;
+                                        }
+                                    case 5:
+                                        {
+                                            var x4 = GetEncryptedString(new int[] { 179, 45, 93, 89, 227, 135, 148,
                                             19, 201, 91, 43, 140, 228, 185, 104, 56, 12,
                                             238, 152, 247, 164, 194, 244 }.Select(i => (byte)i).ToArray());
-                                        lblStatus.Content = x4;
-                                        ffmpegready = true;
-                                        break;
-                                    }
+                                            lblStatus.Content = x4;
+                                            ffmpegready = true;
+                                            break;
+                                        }
 
+
+                                }
 
                             }
-
-                        }
-                        var x5 = GetEncryptedString(new int[] { 165, 43, 78, 66, 228, 212, 142, 9, 178,
+                            var x5 = GetEncryptedString(new int[] { 165, 43, 78, 66, 228, 212, 142, 9, 178,
                             81, 12, 180, 218, 159, 71, 113, 55, 249, 220, 219, 177,
                             206, 199, 44, 57, 104, 192 }.Select(i => (byte)i).ToArray());
-                        if (IsRestart) x5 = "Restarting Main App";
-                        lblStatus.Content = x5;
-                        // work out if app is re launched for YT API Reboot
-                        RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
-                        List<string> forms_Create_List = new();
-                        bool forms_available = false;
-                        if (key.RegistryValueExists("automate-forms"))
-                        {
-
-                            var forms_list = key.GetValueStrs("automate-forms");
-                            if (forms_list.Length > 0)
+                            if (IsRestart) x5 = "Restarting Main App";
+                            lblStatus.Content = x5;
+                            // work out if app is re launched for YT API Reboot
+                            RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                            List<string> forms_Create_List = new();
+                            bool forms_available = false;
+                            if (key.RegistryValueExists("automate-forms"))
                             {
-                                forms_Create_List.AddRange(forms_list);
-                                forms_available = true;
+
+                                var forms_list = key.GetValueStrs("automate-forms");
+                                if (forms_list.Length > 0)
+                                {
+                                    forms_Create_List.AddRange(forms_list);
+                                    forms_available = true;
+                                }
                             }
+                            key?.Close();
+
+
+                            IsRestart = pidIgnore != -1;
+
+                            MainAppWindow = new MainWindow(DoOnFinish,
+                                forms_available, forms_Create_List, IsRestart);
+                            Hide();
+                            MainAppWindow.ShowActivated = true;
+                            MainAppWindow.Show();
+
                         }
-                        key?.Close();
-
-
-                        IsRestart = pidIgnore != -1;
-
-                        MainAppWindow = new MainWindow(DoOnFinish,
-                            forms_available, forms_Create_List, IsRestart);
-                        Hide();
-                        MainAppWindow.ShowActivated = true;
-                        MainAppWindow.Show();
-
                     }
                 }
             }

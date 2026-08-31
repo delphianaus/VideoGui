@@ -310,7 +310,7 @@ namespace VideoGui
                             exportGroups.LastOrDefault().IsLastGroup = true;
                             exportGroups.LastOrDefault().exports.Last().IsLast = true;
                             double start = 0;
-                           
+
 
 
                             string dir = filenamelist.Replace("{ PathUrl = ", "").Replace("}", "").Trim();
@@ -401,7 +401,7 @@ namespace VideoGui
                             int filenumber = 1;
                             string fname = "", LastFileName = "";
                             Filename = dir.Split(@"\").LastOrDefault();
-                            foreach (var exportgrp in exportGroups.Where(s=>!s.dummyrecord))
+                            foreach (var exportgrp in exportGroups.Where(s => !s.dummyrecord))
                             {
                                 fname = $"{Filename}";
                                 if (IsFirst)
@@ -751,13 +751,34 @@ namespace VideoGui
                     Directory.CreateDirectory(destdir);
                 }
                 key?.Close();
-
+                string fname = "";
+                if (!tbSource.IsChecked.Value)
+                {
+                    string fdestdir = txxtEditDirectory.Text.Trim().Split('\\').ToList().LastOrDefault();
+                    string fxml = XML_Filename.Split("\\").ToList().LastOrDefault();
+                    if (fdestdir == fxml)
+                    {
+                        string pn = ctv._CutNo.ToString();
+                        if (pn.Length == 1) pn = $"0{pn}";
+                        fname = $"GX_{pn}.mp4";
+                    }
+                    else
+                    {
+                        string pn = ctv._CutNo.ToString();
+                        if (pn.Length == 1) pn = $"0{pn}";
+                        fname = $"GX_{pn}_" + ctv.FileName.Trim()+ $" Part {ctv._CutNo}.mp4"; ;
+                    }
+                }
+                else
+                {
+                    fname = destdir + "\\" + ctv.FileName.Trim() + $" Part {ctv._CutNo}.mp4";
+                }
 
                 DoAddRecord?.Invoke(!tbSource.IsChecked.Value, chkExportForTwitch.IsChecked.Value, true,
                     false, false, false, -1, true, false, false, false,
                     true, ctv.TimeFrom.ToFFmpeg(), ctv.TimeTo.ToFFmpeg()
                                         , (tbSource.IsChecked.Value) ? txtsrcdir.Text : Path.GetDirectoryName(XML_Filename),
-                                        destdir + "\\" + ctv.FileName.Trim() + $" Part {ctv._CutNo}.mp4",
+                                        fname,
                                         null, null, chkExportForTwitch.IsChecked.Value);
                 lblStatus.Content = $"Injecting {ctv.FileName} part {ctv._CutNo}";
             }
