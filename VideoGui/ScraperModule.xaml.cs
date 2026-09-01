@@ -345,6 +345,34 @@ namespace VideoGui
                 wv2Dictionary.Add(9, wv2A9);//100
                 wv2Dictionary.Add(10, wv2A10);
                 ActiveWebView.Add(1, wv2);
+
+                lblTotalUploadsText.Content = "Files in DB";
+                lblUploadingText.Content = "Max Scraped";
+                lblUploadedText.Content = "Current Video:";
+
+                lblTotal.Content = "";
+                lblUploading.Content = "";
+                lblWaiting.Content = "";
+                lblUploaded.Content = "";
+                lblTotal.Content = "";
+
+                lblWaitingtext.Visibility = Visibility.Hidden;
+                lblUploadingText.Visibility = Visibility.Hidden;
+
+
+                var m = lblWaitingtext.Margin;
+                m.Left += 200;
+                lblWaitingtext.Margin = m;
+                m = lblWaiting.Margin;
+                m.Left += 200;
+                lblWaiting.Margin = m;
+                m = lblTotalUploadsText.Margin;
+                m.Left += 200;
+                lblTotalUploadsText.Margin = m;
+
+                m = lblUploading.Margin;
+                m.Left += 200;
+                lblUploading.Margin = m;
             }
             catch (Exception ex)
             {
@@ -366,6 +394,33 @@ namespace VideoGui
                 IsDashboardMode = true;
                 Invoker = _Invoker;
                 InitializeComponent();
+                lblTotalUploadsText.Content = "Files in DB";
+                lblUploadingText.Content = "Max Scraped";
+                lblUploadedText.Content = "Current Video:";
+
+                lblTotal.Content = "";
+                lblUploading.Content = "";
+                lblWaiting.Content = "";
+                lblUploaded.Content = "";
+                lblTotal.Content = "";
+
+                lblWaitingtext.Visibility = Visibility.Hidden;
+                lblUploadingText.Visibility = Visibility.Hidden;
+
+
+                var m = lblWaitingtext.Margin;
+                m.Left += 200;
+                lblWaitingtext.Margin = m;
+                m = lblWaiting.Margin;
+                m.Left += 200;
+                lblWaiting.Margin = m;
+                m = lblTotalUploadsText.Margin;
+                m.Left += 200;
+                lblTotalUploadsText.Margin = m;
+
+                m = lblUploading.Margin;
+                m.Left += 200;
+                lblUploading.Margin = m;
                 Closing += (s, e) =>
                 {
                     TimerSimulate?.Stop();
@@ -1224,7 +1279,6 @@ namespace VideoGui
                             if (max <= MaxUploads)
                             {
                                 lblTotal.Content = $"{TotalScheduled}";
-                                //StatusBar.ApplyMargin();
                                 ScheduledFiles.Add(new VideoIdFileName(Path.GetFileName(f)));
                                 string news = "\"" + @"Z:\" + new DirectoryInfo(Path.GetDirectoryName(f)).Name + "\\" + Path.GetFileName(f) + "\" ";
                                 if (SendKeysString.Length + news.Length < 255)
@@ -1273,8 +1327,6 @@ namespace VideoGui
                             break;
                         }
                         await Task.Delay(50);
-                        //SetMargin(StatusBar);
-                        // //StatusBar.ApplyMargin();
                         bool flowControl = await ProcessBody(Span_Name, Script_Close, connectStr);
                         if (!flowControl)
                         {
@@ -1613,9 +1665,7 @@ namespace VideoGui
                         lblTotal.Content = Scheduled.ToString();
                         lblUploading.Content = Uploading.ToString();
                         lblUploaded.Content = Uploaded.ToString();
-                        ////StatusBar.ApplyMargin();
                     });
-                    ////StatusBar.ApplyMargin();
                     return true;
                 }
                 return false;
@@ -1683,7 +1733,7 @@ namespace VideoGui
                 }
                 if (ScraperType == EventTypes.ScapeSchedule)
                 {
-                    lblTotalUploadsText.Content = "Files in DB";
+                    /*lblTotalUploadsText.Content = "Files in DB";
                     lblUploadingText.Content = "Max Scraped";
                     lblUploadedText.Content = "Current Video:";
 
@@ -1703,17 +1753,13 @@ namespace VideoGui
                     m = lblWaiting.Margin;
                     m.Left += 200;
                     lblWaiting.Margin = m;
-
-
-
-                    //lblTotalUploadsText
                     m = lblTotalUploadsText.Margin;
                     m.Left += 200;
                     lblTotalUploadsText.Margin = m;
 
                     m = lblUploading.Margin;
                     m.Left += 200;
-                    lblUploading.Margin = m;
+                    lblUploading.Margin = m;*/
 
 
                 }
@@ -4862,9 +4908,6 @@ namespace VideoGui
                             doc.LoadHtml(ehtml);
                             var node = doc.DocumentNode.SelectSingleNode("//div[@id='original-filename']");
                             filename = (node is not null) ? node.InnerText : filename;
-
-
-
 
                             if (filename.Contains("_") && IsVideoLookup && ScraperType == EventTypes.UploadTest)
                             {
