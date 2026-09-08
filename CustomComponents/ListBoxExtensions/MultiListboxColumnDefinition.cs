@@ -85,7 +85,47 @@ namespace CustomComponents.ListBoxExtensions
                 }
             }
         }
+        public string Name
+        {
+            get => (string)GetValue(NameProperty);
+            set => SetValue(NameProperty, value);
+        }
 
+        public static readonly DependencyProperty NameProperty =
+            DependencyProperty.Register(nameof(Name), typeof(string),
+                typeof(MultiListboxColumnDefinition),
+                new PropertyMetadata(""));
+        public SolidColorBrush ProgressBarForeground
+        {
+            get => (SolidColorBrush)GetValue(ProgressBarForegroundProperty);
+            set => SetValue(ProgressBarForegroundProperty, value);
+        }
+        public static readonly DependencyProperty ProgressBarForegroundProperty =
+            DependencyProperty.Register(nameof(ProgressBarForeground),
+                typeof(SolidColorBrush), typeof(MultiListboxColumnDefinition),
+                new PropertyMetadata(Brushes.Green));
+
+        public double ProgressBarMinimum
+        {
+            get => (double)GetValue(ProgressBarMinimumProperty);
+            set => SetValue(ProgressBarMinimumProperty, value);
+        }
+
+        public static readonly DependencyProperty ProgressBarMinimumProperty =
+            DependencyProperty.Register(nameof(ProgressBarMinimum),
+                typeof(double), typeof(MultiListboxColumnDefinition),
+                new PropertyMetadata(0.0));
+
+        public double ProgressBarMaximum
+        {
+            get => (double)GetValue(ProgressBarMaximumProperty);
+            set => SetValue(ProgressBarMaximumProperty, value);
+        }
+
+        public static readonly DependencyProperty ProgressBarMaximumProperty =
+            DependencyProperty.Register(nameof(ProgressBarMaximum),
+                typeof(double), typeof(MultiListboxColumnDefinition),
+                new PropertyMetadata(100.0));
         public double Height
         {
             get => (double)GetValue(HeightProperty);

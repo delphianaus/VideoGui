@@ -11,6 +11,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Forms;
 using VideoGui.ffmpeg.Streams.Audio;
 using VideoGui.ffmpeg.Streams.Text;
@@ -26,6 +27,7 @@ namespace VideoGui
         TimeSpan Duration = TimeSpan.Zero;
         public bool Finished = false;
         public List<(string, double)> FileInfoList = new List<(string, double)>();
+        public List<(string, int)> FramesList = new List<(string, int)>();
         public TimeSpan GetDuration()
         {
             try
@@ -313,6 +315,90 @@ namespace VideoGui
             {
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
                 return 0;
+            }
+        }
+
+        public int SumFrames()
+        {
+            try
+            {
+                int totalframe = FramesList.Sum(s => s.Item2);
+                return totalframe;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+                return 0;
+            }
+        }
+
+
+        public double FPS = 0.90;
+        public async Task<int> ReadAllFrames(List<string> files, bool UseVideoDuration = false)
+        {
+            try
+            {
+                MaxFile = 0;
+                Duration = TimeSpan.Zero;
+                FileInfoList.Clear();
+
+                foreach (string file in files)
+                {
+                    while (MaxFile > 8)
+                    {
+                        Thread.Sleep(25);
+                    }
+                    string f = file;
+                    if (f.Contains(@"file '"))
+                    {
+                        f = f.Replace(@"file '", "");
+                    }
+                    ReadFrames(f, UseVideoDuration).ConfigureAwait(false);
+                }
+                Task.Delay(200);
+                while (MaxFile > 0)
+                {
+                    Task.Delay(500);
+                }
+                Finished = true;
+                return SumFrames();
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+                return 0;
+            }
+        }
+
+        public async Task ReadFrames(string filePath, bool UseVideoDuration = false, bool AllowFinish = false)
+        {
+            try
+            {
+                MaxFile++;
+                Double TBL = 0;
+                var mw1 = new MediaInfo.MediaInfo();
+                mw1.Open(filePath);
+                var videoduration = mw1.Get(MediaInfo.StreamKind.General, 0, "Duration");
+                var fpd = mw1.Get(MediaInfo.StreamKind.General, 0, "FrameRate");
+
+                FPS = fpd.ToDouble(0);
+                var _duration = videoduration.ToInt(0);
+                double durationinsecs = _duration / 1000;
+                var tdp = FPS * durationinsecs;
+                mw1.Close();
+                FramesList.Add((filePath, tdp.ToInt(0)));
+                Finished = AllowFinish;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+            }
+            finally
+            {
+                if (MaxFile > 0)
+                {
+                    MaxFile--;
+                }
             }
         }
         public async Task ReadFile(string filePath, bool UseVideoDuration = false, bool AllowFinish = false)

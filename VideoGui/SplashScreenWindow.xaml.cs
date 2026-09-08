@@ -1664,6 +1664,8 @@ namespace VideoGui
         {
             try
             {
+
+                if (Debugger.IsAttached) return;
                 bool NeedStop = false;
                 string result = "", error = "";
                 string command = "wsl.exe -u root cat /proc/mdstat";

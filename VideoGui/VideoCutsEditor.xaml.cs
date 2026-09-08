@@ -16,6 +16,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Reflection.Metadata;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -215,6 +216,8 @@ namespace VideoGui
                     if ((fd != null) && (fd.Value == true))
                     {
                         txtsrcdir.Text = fld.FileName;
+                        string xm = Path.GetFileNameWithoutExtension(txtsrcdir.Text);
+                        string ft = xm.Split(' ').ToList().LastOrDefault();
                         XDocument doc = XDocument.Load(fld.FileName);
                         var _fps = doc
                             .Descendants("clipitem")
@@ -229,8 +232,16 @@ namespace VideoGui
                             {
                                 PathUrl = (string)c.Element("file")?.Element("pathurl")
                                   ?? (string)c.Descendants("pathurl").FirstOrDefault(),
-                            }).FirstOrDefault().ToString();
-                        var filenamelist = urlLocation.Replace("%20", " ").Replace("%3a", ":").
+                            }).Where(s=>s.PathUrl is not null && s.PathUrl.Contains(ft)).FirstOrDefault().ToString();
+                    var urlLocations = doc
+                        .Descendants("clipitem")
+                        .Select(c => new
+                        {
+                            PathUrl = (string)c.Element("file")?.Element("pathurl")
+                              ?? (string)c.Descendants("pathurl").FirstOrDefault(),
+                        }).ToList();
+
+                    var filenamelist = urlLocation.Replace("%20", " ").Replace("%3a", ":").
                                                 Replace("file://localhost/", "").Replace(@"/", @"\").ToString();
                         XML_Filename = filenamelist.ToString().Replace("{ PathUrl = ", "").Replace("}", "").Trim();
 
@@ -261,7 +272,7 @@ namespace VideoGui
                                 XML_Dest = Uri.UnescapeDataString(DestPat.LastOrDefault().ToString());
                             }
                             List<AdobeExport> AdobeExports = new();
-                            foreach (var clip in clipItems)
+                            foreach (var clip in clipItems.Where(s=>s.In is not null))
                             {
                                 string nameid = clip.Name.ToString();
                                 int In = clip.In.Value;
@@ -359,8 +370,8 @@ namespace VideoGui
 
                             foreach (var exportgrp in exportGroups)
                             {
-                                if (exportgrp.exports.Count > 1)
-                                {
+                               if (exportgrp.exports.Count > 1)
+                               {
                                     exportgrp.exports.LastOrDefault().IsLast = true;
                                     while (true)
                                     {
@@ -754,20 +765,11 @@ namespace VideoGui
                 string fname = "";
                 if (!tbSource.IsChecked.Value)
                 {
-                    string fdestdir = txxtEditDirectory.Text.Trim().Split('\\').ToList().LastOrDefault();
-                    string fxml = XML_Filename.Split("\\").ToList().LastOrDefault();
-                    if (fdestdir == fxml)
-                    {
                         string pn = ctv._CutNo.ToString();
                         if (pn.Length == 1) pn = $"0{pn}";
-                        fname = $"GX_{pn}.mp4";
-                    }
-                    else
-                    {
-                        string pn = ctv._CutNo.ToString();
-                        if (pn.Length == 1) pn = $"0{pn}";
-                        fname = $"GX_{pn}_" + ctv.FileName.Trim()+ $" Part {ctv._CutNo}.mp4"; ;
-                    }
+                        string drn = Path.GetDirectoryName(XML_Filename).Split('\\').ToList().LastOrDefault();
+
+                        fname = destdir + "\\" + $"GX_{pn} ({drn} # {ctv._CutNo}).mp4";
                 }
                 else
                 {
@@ -777,7 +779,8 @@ namespace VideoGui
                 DoAddRecord?.Invoke(!tbSource.IsChecked.Value, chkExportForTwitch.IsChecked.Value, true,
                     false, false, false, -1, true, false, false, false,
                     true, ctv.TimeFrom.ToFFmpeg(), ctv.TimeTo.ToFFmpeg()
-                                        , (tbSource.IsChecked.Value) ? txtsrcdir.Text : Path.GetDirectoryName(XML_Filename),
+                                        , (tbSource.IsChecked.Value) ? txtsrcdir.Text : 
+                                        Path.GetDirectoryName(XML_Filename),
                                         fname,
                                         null, null, chkExportForTwitch.IsChecked.Value);
                 lblStatus.Content = $"Injecting {ctv.FileName} part {ctv._CutNo}";

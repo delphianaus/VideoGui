@@ -8,7 +8,7 @@ using System.ComponentModel;
 using System.Data.Common;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
-using System.DirectoryServices; 
+using System.DirectoryServices;
 using System.Globalization;
 using System.IO;
 using System.Reflection;
@@ -965,7 +965,7 @@ namespace CustomComponents.ListBoxExtensions
                 InitializeComponent();
                 ColumnDefinitions = new ObservableCollection<MultiListboxColumnDefinition>();
                 Loaded += MultiListbox_Loaded;
-                
+
                 SizeChanged += MultiListbox_SizeChanged;
 
                 this.DataContext = this;
@@ -1112,6 +1112,48 @@ namespace CustomComponents.ListBoxExtensions
             }
         }
 
+        public void ForceUpdate(string ColumnData, string UpdateData, string ColumnSearchName, string UpdateName)
+        {
+            try
+            {
+                Dispatcher.Invoke(new Action(() =>
+                {
+                    foreach (var item in lstBoxUploadItems.Items)
+                    {
+                        var container = lstBoxUploadItems.ItemContainerGenerator.ContainerFromItem(item);// as ListBoxItem;
+                        if (container != null)
+                        {
+                            var border = VisualTreeHelper.GetChild(container, 0) as Border;
+                            if (border != null)
+                            {
+                                var contentPresenter = VisualTreeHelper.GetChild(border, 0) as ContentPresenter;
+                                if (contentPresenter != null)
+                                {
+                                    var grid = VisualTreeHelper.GetChild(contentPresenter, 0) as Grid;
+                                    if (grid != null && grid.Children.Count > 0)
+                                    {
+                                        var _ColumnData = grid.Children.OfType<TextBlock>().FirstOrDefault(tb => tb.Name == ColumnSearchName);
+                                        if (_ColumnData.Text != ColumnData)
+                                        {
+                                            continue;
+                                        }
+                                        var _UpdateData = grid.Children.OfType<TextBlock>().FirstOrDefault(tb => tb.Name == UpdateName);
+                                        if (_UpdateData != null)
+                                        {
+                                            _UpdateData.Text = UpdateData;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }));
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error in UpdateSpeed: {ex}");
+            }
+        }
 
 
         private INotifyCollectionChanged _currentCollection;
@@ -1808,7 +1850,17 @@ namespace CustomComponents.ListBoxExtensions
                         SetItemHeight(controlType, controlFactory, colDef);
 
                     }
-
+                    else if (controlType == typeof(ProgressBar))
+                    {
+                        SetDataBinding(controlType, controlFactory, colDef);
+                        SetVerticalAlignmentBinding(controlType, controlFactory, colDef);
+                        SetHorizontalAlignmentBinding(controlType, controlFactory, colDef);
+                        SetWidthBinding(controlType, controlFactory, colDef);
+                        SetItemHeight(controlType, controlFactory, colDef);
+                        controlFactory.SetValue(ProgressBar.ForegroundProperty, colDef.ProgressBarForeground);
+                        controlFactory.SetValue(ProgressBar.MinimumProperty, colDef.ProgressBarMinimum);
+                        controlFactory.SetValue(ProgressBar.MaximumProperty, colDef.ProgressBarMaximum);
+                    }
                     // Handle specific control types
 
                     if (ItemHeightProperty is not null && !IsCheckBoxInColumn)
@@ -1878,7 +1930,7 @@ namespace CustomComponents.ListBoxExtensions
             try
             {
                 if (!IsVisible) return;
-                
+
                 int i = -1;
                 foreach (var child in grid.Children)
                 {
@@ -1964,6 +2016,9 @@ namespace CustomComponents.ListBoxExtensions
                     else if (child is ProgressBar progressBar)
                     {
                         SetCustomBindings<ProgressBar>(progressBar, colDef);
+                        progressBar.Foreground = colDef.ProgressBarForeground;
+                        progressBar.Minimum = colDef.ProgressBarMinimum;
+                        progressBar.Maximum = colDef.ProgressBarMaximum;
                     }
                     else if (child is Slider slider)
                     {
@@ -2231,6 +2286,7 @@ namespace CustomComponents.ListBoxExtensions
                          (control == typeof(Label)) ? Label.ContentProperty :
                          (control == typeof(DatePicker)) ? DatePicker.SelectedDateProperty :
                          (control == typeof(TimePicker)) ? TimePicker.TimeProperty :
+                         (control == typeof(ProgressBar)) ? ProgressBar.ValueProperty :
                           (control == typeof(ComboBox)) ? ComboBox.TagProperty :
                          (control == typeof(TextBlock)) ? TextBlock.TextProperty : null;
                 if (dp is null || string.IsNullOrEmpty(colDef.DataField)) return;
@@ -2252,6 +2308,7 @@ namespace CustomComponents.ListBoxExtensions
                          (control == typeof(Label)) ? Label.HeightProperty :
                          (control == typeof(DatePicker)) ? DatePicker.HeightProperty :
                          (control == typeof(TimePicker)) ? TimePicker.HeightProperty :
+                         (control == typeof(ProgressBar)) ? ProgressBar.HeightProperty :
                          (control == typeof(CheckBox)) ? CheckBox.HeightProperty :
                          (control == typeof(TextBlock)) ? TextBlock.HeightProperty : null;
                 if (dp is null) return;
@@ -2278,6 +2335,7 @@ namespace CustomComponents.ListBoxExtensions
                          (control == typeof(DatePicker)) ? DatePicker.MinHeightProperty :
                          (control == typeof(TimePicker)) ? TimePicker.MinHeightProperty :
                          (control == typeof(CheckBox)) ? CheckBox.MinHeightProperty :
+                         (control == typeof(ProgressBar)) ? ProgressBar.MinHeightProperty :
                           (control == typeof(ComboBox)) ? CheckBox.MinHeightProperty :
                          (control == typeof(TextBlock)) ? TextBlock.MinHeightProperty : null;
                 if (dp is null) return;
@@ -2423,6 +2481,15 @@ namespace CustomComponents.ListBoxExtensions
             try
             {
                 if (colDef == null) return;
+                if (colDef == null) return;
+                if (control is ProgressBar progressBar)
+                {
+                    control.SetBinding(ProgressBar.ValueProperty, new Binding(colDef.DataField)
+                    {
+                        UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
+                        Mode = BindingMode.OneWay
+                    });
+                }
                 if (control is Button btn)
                 {
                     control.KeyUp += (s, e) =>
@@ -2488,6 +2555,8 @@ namespace CustomComponents.ListBoxExtensions
                             Mode = BindingMode.TwoWay
                         };
                         BindingOperations.SetBinding(textBlock, FrameworkElement.WidthProperty, binding);
+                        // BindingOperations.SetBinding(textBlock, FrameworkElement., binding);
+
                     }
                     else textBlock.Width = colDef.Width;
                 }
@@ -2629,6 +2698,49 @@ namespace CustomComponents.ListBoxExtensions
             }
         }
 
+        public void UpdateProgress(string VideoId, int progress, string VideoIdName)
+        {
+            try
+            {
+                Dispatcher.Invoke(new Action(() =>
+                {
+                    foreach (var item in lstBoxUploadItems.Items)
+                    {
+                        var container = lstBoxUploadItems.ItemContainerGenerator.ContainerFromItem(item) as ListBoxItem;
+                        if (container != null)
+                        {
+                            var border = VisualTreeHelper.GetChild(container, 0) as Border;
+                            if (border != null)
+                            {
+                                var contentPresenter = VisualTreeHelper.GetChild(border, 0) as ContentPresenter;
+                                if (contentPresenter != null)
+                                {
+                                    var grid = VisualTreeHelper.GetChild(contentPresenter, 0) as Grid;
+                                    if (grid != null && grid.Children.Count > 0)
+                                    {
+                                        var _videoId = grid.Children.OfType<TextBlock>().FirstOrDefault(tb => tb.Name == VideoIdName);
+                                        if (_videoId.Text != VideoId)
+                                        {
+                                            continue;
+                                        }
+                                        var progressbar = grid.Children.OfType<ProgressBar>().FirstOrDefault();
+
+                                        if (progressbar != null)
+                                        {
+                                            progressbar.Value = progress;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }));
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error in unlockToggleBox: {ex}");
+            }
+        }
         private DependencyProperty GetMainBindingProperty(string componentType, string boundTo = null)
         {
             try
@@ -3053,6 +3165,22 @@ namespace CustomComponents.ListBoxExtensions
                         {
                             var comboBox = s as ComboBox;
                             colDef.GotFocusEvent(s, e);
+                        }));
+                    }
+                    else if (controlType == typeof(ProgressBar))
+                    {
+                        factory.AddHandler(FrameworkElement.LoadedEvent, new RoutedEventHandler((s, e) =>
+                        {
+                            var progressBar = s as ProgressBar;
+                            if (progresfsBar != null)
+                            {
+                                if (!string.IsNullOrEmpty(colDef.DataField))
+                                {
+                                    progressBar.SetBinding(ProgressBar.ValueProperty,
+                                        new Binding(colDef.DataField));
+                                }
+                                // Visual properties will be set in MultiListbox_Loaded
+                            }
                         }));
                     }
                     else if (controlType == typeof(Xceed.Wpf.Toolkit.DateTimePicker))

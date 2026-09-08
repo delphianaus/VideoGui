@@ -25,8 +25,10 @@ using VideoGui.ffmpeg.Streams.Video;
 using VideoGui.Models.delegates;
 using Windows.ApplicationModel.Background;
 using Windows.Media.Audio;
+using static Microsoft.WindowsAPICodePack.Shell.PropertySystem.SystemProperties.System;
 using static System.Formats.Asn1.AsnWriter;
 using static System.Net.WebRequestMethods;
+using Task = System.Threading.Tasks.Task;
 
 
 namespace VideoGui.ffmpeg
@@ -787,6 +789,8 @@ namespace VideoGui.ffmpeg
                                         ComplexFile = fnm;
                                     }
                                     double perc = -1;
+
+                                    double percf = 0;
                                     if (data.Contains("time="))
                                     {
                                         int idx = data.IndexOf("time=");
@@ -803,21 +807,28 @@ namespace VideoGui.ffmpeg
                                                 continue;
                                             }
 
-                                            if (sp != "" && totalseconds > 0)
+                                            if (sp != "" && TotalFrames > 0)
                                             {
-                                                TimeSpan Tse = TimeSpan.Zero;
-                                                TimeSpan.TryParse(sp, out Tse);
-                                                totalsecs = Tse.TotalSeconds;
-                                                if (totalsecs > 0)
+                                                if (data.Contains("frame="))
                                                 {
-                                                    //totalseconds -= startime.TotalSeconds;
-                                                    perc = (100 / totalseconds) * totalsecs;
-                                                    var rpercentdone = Convert.ToInt32(perc);
-                                                    OnConverterProgress?.Invoke(this, ComplexFile, rpercentdone, Eta, MaxDuration, ProcessID);
-                                                }
-                                                if (data.ContainsAll(new string[] { "frame", "fps", "size", "bitrate", "speed" }))
-                                                {
+                                                    int pos1 = data.IndexOf("frame=");
 
+                                                    string cf = data.Substring(pos1 + 6).Trim();
+                                                    int pos2 = cf.IndexOf("fps");
+                                                    string CurrentFrame = cf.Substring(0, pos2).Trim();
+
+                                                    double myfrm = CurrentFrame.ToDouble(0);
+
+                                                    if (TotalFrames > 0 && myfrm > 0)
+                                                    {
+                                                        //totalseconds -= startime.TotalSeconds;
+                                                        percf = (myfrm / TotalFrames) * 100;
+                                                        OnConverterProgress?.Invoke(this, ComplexFile, Math.Round(percf).ToInt(), Eta, MaxDuration, ProcessID);
+                                                    }
+                                                    if (data.ContainsAll(new string[] { "frame", "fps", "size", "bitrate", "speed" }))
+                                                    {
+
+                                                    }
                                                 }
                                             }
 
@@ -880,9 +891,29 @@ namespace VideoGui.ffmpeg
                                         {
                                             // findfile in DestFIle; Get Index , Get Cut , Get DUration, from time work out %
                                         }
+
+                                        if (percf == -1)
+                                        {
+                                            if (data.Contains("frame="))
+                                            {
+                                                int pos1 = data.IndexOf("frame=");
+                                                string cf = data.Substring(pos1 + 6).Trim();
+                                                pos2 = cf.IndexOf("fps");
+                                                string CurrentFrame = cf.Substring(0, pos2).Trim();
+
+                                                double myfrm = CurrentFrame.ToDouble(0);
+
+                                                if (TotalFrames > 0 && myfrm > 0)
+                                                {
+                                                    //totalseconds -= startime.TotalSeconds;
+                                                    percf = (myfrm / TotalFrames) * 100;
+
+                                                }
+                                            }
+                                        }
                                         ComplexFile = (!_IsComplex) ? _source : ComplexFile;
                                         ComplexFile = (MutliModeFileName != "") ? MutliModeFileName : ComplexFile;
-                                        OnConverterProgress?.Invoke(this, ComplexFile, percentdone, Eta, MaxDuration, ProcessID);
+                                        OnConverterProgress?.Invoke(this, ComplexFile, Math.Round(percf).ToInt(), Eta, MaxDuration, ProcessID);
                                     }
                                 }
                                 break;

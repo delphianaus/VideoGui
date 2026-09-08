@@ -113,12 +113,18 @@ namespace VideoGui
                 lock (thisLockduration2)
                 {
                     bool found = false;
+                    string Display = "";
                     for (int i = 0; i < MediaInfoTimes.Count - 1; i++)
                     {
                         if (MediaInfoTimes[i].FileName == filePath)
                         {
                             found = true;
-                            MediaInfoTimes[i].TimeData = TBL;
+                            Dispatcher.Invoke(() =>
+                            {
+                                MediaInfoTimes[i].TimeDataInternal = TBL;
+                                Display = MediaInfoTimes[i].DisplayTimeData();
+                                msuAudioJoiner.ForceUpdate(filePath, Display, "filename", "duration");
+                            });
                             break;
                         }
                     }
@@ -126,7 +132,13 @@ namespace VideoGui
                     {
 
                         var mm = new AudioJoinerInfo(filePath, "", TBL);
+
                         MediaInfoTimes.Add(mm);
+
+                        
+                            int ix = MediaInfoTimes.Count-1;
+                            Display = MediaInfoTimes[ix].DisplayTimeData();
+                            msuAudioJoiner.ForceUpdate(filePath, Display, "filename", "duration");
                     }
 
                 }
@@ -227,11 +239,12 @@ namespace VideoGui
                     msuAudioJoiner.Width = _w - 23;
                     brdControls.Width = _w - 26;
                     brdFileInfo.Width = _w - 26;
-                    Canvas.SetLeft(btnSelectSourceDir, _w - 63);
+                    Canvas.SetLeft(btnSelectSourceDir, _w - 203);
                     Canvas.SetLeft(btnSetDetDir, _w - 171);
                     Canvas.SetLeft(btnClose, _w - 133);
+                    Canvas.SetLeft(chkDest, _w - 170);
                     txtDestDir.Width = _w - 413;
-                    txtsrcdir.Width = _w - 186;
+                    txtsrcdir.Width = _w - 330;
                     var srw = _w - 300;
                     SrcFileNameWidth = srw < 145 ? 145 : srw;
                 }
@@ -326,33 +339,45 @@ namespace VideoGui
                 var folder = "";
                 if (folderBrowserDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                 {
-                    RegistryKey key2 = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
-                    key2.SetValue("AudioJoinerSourceDir", folderBrowserDialog.SelectedFolder);
+                    string Dest = "";
                     folder = folderBrowserDialog.SelectedFolder;
-                    string Dest = Path.Combine(folder, "dest");
-                    if (!Directory.Exists(Dest))
+                    if (!chkDest.IsChecked.Value)
                     {
-                        Directory.CreateDirectory(Dest);
-                    }
-                    key2.SetValue("AudioJoinerDestDir", Dest);
-                    key2?.Close();
-                    string DestLst = Path.GetFileName(Dest);
-                    string SrcLst = Path.GetFileName(folder);
+                        RegistryKey key2 = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                        key2.SetValue("AudioJoinerSourceDir", folderBrowserDialog.SelectedFolder);
 
-                    string srcBase = folder;
-                    string destBase = Path.GetDirectoryName(Dest) ?? "";
-                    if ((destBase.EndsWith("dest") || (!string.Equals(srcBase, destBase, StringComparison.OrdinalIgnoreCase))))
-                    {
-                        Dest = Path.Combine(srcBase, "dest");
+                        Dest = Path.Combine(folder, "dest");
                         if (!Directory.Exists(Dest))
                         {
                             Directory.CreateDirectory(Dest);
                         }
-                        using (RegistryKey key3 = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser))
+                        key2.SetValue("AudioJoinerDestDir", Dest);
+                        key2?.Close();
+                        string DestLst = Path.GetFileName(Dest);
+                        string SrcLst = Path.GetFileName(folder);
+
+                        string srcBase = folder;
+                        string destBase = Path.GetDirectoryName(Dest) ?? "";
+                        if ((destBase.EndsWith("dest") || (!string.Equals(srcBase, destBase, StringComparison.OrdinalIgnoreCase))))
                         {
-                            key3?.SetValue("AudioJoinerDestDir", Dest);
+                            Dest = Path.Combine(srcBase, "dest");
+                            if (!Directory.Exists(Dest))
+                            {
+                                Directory.CreateDirectory(Dest);
+                            }
+                            using (RegistryKey key3 = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser))
+                            {
+                                key3?.SetValue("AudioJoinerDestDir", Dest);
+                            }
                         }
                     }
+                    else
+                    {
+                        RegistryKey key2 = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                        Dest = key2.GetValueStr("AudioJoinerDestDir");
+                        key2.Close();
+                    }
+
 
 
                     txtDestDir.Text = Dest;
@@ -430,7 +455,7 @@ namespace VideoGui
             }
             else
             {
-                TimeSpan P = desttime - MediaInfoTimes[i].TimeData;
+                TimeSpan P = desttime - MediaInfoTimes[i].TimeDataInternal;
                 if (P.TotalSeconds < 1)
                 {
                     MediaInfoTimes[i].Status = $"Converted OK";

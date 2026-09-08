@@ -7674,6 +7674,11 @@ namespace VideoGui
                         isOK = isRe.HasValue && isRe.Value;
                         if (Job.IsMulti) Job.SourcePath = Path.GetDirectoryName(Job.DestMFile);
                         LineNum = 44;
+
+                        if (Job.SourcePath == "" && Job.IsXMLSource)
+                        {
+                            Job.SourcePath = Job.MultiSourceDir;
+                        }
                         if ((Job.SourcePath != "") && (isOK))
                         {
                             TimeSpan probedatse = Job.ProbeDate - DateTime.Now;
@@ -8657,7 +8662,8 @@ namespace VideoGui
                     else Encoder = ffmpeg.VideoCodec.libx265;
                 }
                 string AppPath = GetExePath();
-                double totalseconds = 0;
+                double totalseconds = 0
+
                 //SourceFile = SourceFile.Contains(" ") ? myStrQuote + SourceFile + myStrQuote : SourceFile;
                 try
                 {
@@ -8679,13 +8685,11 @@ namespace VideoGui
                         }
                         List<(string, double)> FileInfos = new List<(string, double)>();
                         FileInfos.AddRange(FileIndexer.FileInfoList);
-                        totalseconds = FileIndexer.GetDuration().TotalSeconds;
-                        FileIndexer.ReadMDurations(Files);
-                        while (!FileIndexer.Finished)
-                        {
-                            Task.Delay(100);
-                        }
-                        TotalFrames = FileIndexer.GetFrames();
+
+                        TotalFrames = await FileIndexer.ReadAllFrames(Files) / ((job.IsShorts ? 2 : 1));
+                        totalseconds = TotalFrames / ((job.IsShorts) ? FileIndexer.FPS / 2 : FileIndexer.FPS);
+                        //TotalFrames Is OUTPUT FRAMES EXPECTED
+                        
 
 
                         job.TotalSeconds = totalseconds;
@@ -8892,7 +8896,6 @@ namespace VideoGui
                     {
                         Task.Delay(100);
                     }
-                    TotalFrames = bridge.GetFrames();
                     LineNum = 48;
                     TotalSecs = bridge.GetDuration().TotalSeconds;
                     TimeSpan Dur = TimeSpan.Zero;

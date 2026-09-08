@@ -19,13 +19,12 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using VideoGui.Models;
 using VideoGui.Models.delegates;
-
+using Wpf.Ui.Controls;
 using static System.Net.Mime.MediaTypeNames;
+using static VideoGui.ffmpeg.Probe.FormatModel;
 using Brushes = System.Windows.Media.Brushes;
 using Color = System.Drawing.Color;
 using FolderBrowserDialog = FolderBrowserEx.FolderBrowserDialog;
-
-using Wpf.Ui.Controls;
 
 
 namespace VideoGui
@@ -708,6 +707,34 @@ namespace VideoGui
                 ex.LogWrite($"{this} imgUp_MouseLeftButtonDown {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
             }
         }
+
+        private void btnSelectSrc_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                string Root = key.GetValueStr("ThumbnailsFileName", "c:\\");
+                key?.Close();
+                FolderBrowserDialog folderBrowserDialog = new FolderBrowserDialog();
+                folderBrowserDialog.Title = "Select a Source Directory";
+                folderBrowserDialog.InitialFolder = Root;
+                folderBrowserDialog.AllowMultiSelect = false;
+                var folder = "";
+                var selectresult = folderBrowserDialog.ShowDialog();
+                if (selectresult == System.Windows.Forms.DialogResult.OK)
+                {
+                    txtFileNameSavedAs.Text = folderBrowserDialog.SelectedFolder.Split('\\').ToList().LastOrDefault();
+                    RegistryKey key2 = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                    key2.SetValue("ThumbnailsFileName", txtOutputDir.Text);
+                    key2?.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"{this} btnSelectSrc_Click {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
+
         private void Up_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -773,10 +800,10 @@ namespace VideoGui
                             if (rfDate == "")
                             {
                                 fname = System.IO.Path.Combine(txtOutputDir.Text,
-                                $"thumbnail_{txtLine2.Text}.png");
+                                $"thumbnail_{txtFileNameSavedAs.Text}.png");
                             }
                             else fname = System.IO.Path.Combine(txtOutputDir.Text,
-                                $"thumbnail_{txtLine2.Text} {rfDate}.png");
+                                $"thumbnail_{txtFileNameSavedAs.Text} {rfDate}.png");
 
                             if (Date != "")
                             {
@@ -807,15 +834,18 @@ namespace VideoGui
                             {
                                 string Part = pr.Substring(id, 4).Trim();
 
-                                string cnt = pr.Substring(0, id).Trim() + $" {Part}";
+                                string cnt = txtFileNameSavedAs.Text;
 
                                 if (cnt != "")
                                 {
                                     for (int i = cntr; i < cntr2 + 1; i++)
                                     {
                                         string fnn = cnt + $" {i}";
+                                        string fnn2 = txtLine2.Text + $" {i}";
                                         //btnCrop_Click(this, e);
-                                        var thumbnail2 = QuickWriteText(txtLine1.Text, fnn);
+
+                                        var thumbnail2 = QuickWriteText(txtLine1.Text, txtLine2.Text+ $" {i}");
+                                        //var thumbnail2 = QuickWriteText(txtLine1.Text, fnn2);
                                         string fname = System.IO.Path.Combine(txtOutputDir.Text, $"thumbnail_{fnn}.png");
                                         if (rfDate == "")
                                         {
