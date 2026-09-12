@@ -8,7 +8,7 @@
         ExtendsContentIntoTitleBar="True" WindowBackdropType="Mica"
         mc:Ignorable="d" WindowStartupLocation="CenterScreen" 
         WindowStyle="ToolWindow" 
-        Title="Thumbnail Creator" Height="645" 
+        Title="Thumbnail Creator" Height="705" 
         HorizontalAlignment="Right" Width="970">
     <ui:FluentWindow.Resources>
         <ResourceDictionary>
@@ -28,74 +28,78 @@
                 <ui:ImageIcon Source="/Icons/computer.ico" />
             </ui:TitleBar.Icon>
         </ui:TitleBar>
-        <Grid Grid.Row="1" Margin="-122,28,122,-28">
+        <Grid Grid.Row="1" Margin="0,28,10,0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="40*"/>
+                <RowDefinition Height="559*"/>
+            </Grid.RowDefinitions>
             <Border x:Name="brdImg" BorderBrush="Black" BorderThickness="2" Height="314" Width="385"
-                Margin="5,7,0,0" HorizontalAlignment="Left" VerticalAlignment="Top">
+                Margin="5,7,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Grid.RowSpan="2">
                 <Image x:Name="srcImage" Margin="1,1,1,1" MinWidth="383" MinHeight="312"
                    MouseMove="srcImage_MouseMove" MouseDown="srcImage_MouseDown" MouseUp="srcImage_MouseUp" />
             </Border>
             <Border x:Name="brdImg2" BorderBrush="Black" BorderThickness="2" Height="314" Width="558"
-        Margin="395,7,0,0" HorizontalAlignment="Left" VerticalAlignment="Top">
+        Margin="393,7,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Grid.RowSpan="2">
                 <Image x:Name="srcImageClip" Margin="1,1,1,1" MinWidth="383" MinHeight="312" 
                    MouseMove="srcImage_MouseMove"/>
             </Border>
             <Button x:Name="btnSelectImage" Content="Select Image" Width="102" Height="30" 
-                Click="btnSelectImage_Click" HorizontalAlignment="Left" 
-                Margin="10,330,0,0" VerticalAlignment="Top"/>
+                Click="btnSelectImage_Click" 
+                Margin="10,290,0,0" VerticalAlignment="Top" Grid.Row="1"/>
             <Button x:Name="btnClose" Content="Close" Width="140" Height="34"
                 Click="btnClose_Click" HorizontalAlignment="Right" VerticalAlignment="Bottom"
-                Margin="0,0,6,6"/>
+                Margin="0,0,6,6" Grid.Row="1"/>
             <TextBlock x:Name="txtImage" Text="img" Width="490" Height="26" HorizontalAlignment="Left"
-                   VerticalAlignment="Top" Margin="125,334,0,0"/>
+                   VerticalAlignment="Top" Margin="125,294,0,0" Grid.Row="1" FontSize="16"/>
             <Button x:Name="btnCrop" Content="Crop" Width="140" Height="30" 
-            Margin="-5,328,6,0" VerticalAlignment="Top" Click="btnCrop_Click" HorizontalAlignment="Right"/>
-            <Border BorderBrush="Black" BorderThickness="2" HorizontalAlignment="Left" Height="198" 
-                Margin="10,364,0,0" VerticalAlignment="Top" Width="173">
+            Margin="0,288,6,0" VerticalAlignment="Top" Click="btnCrop_Click" HorizontalAlignment="Right" Grid.Row="1"/>
+            <Border BorderBrush="Black" BorderThickness="2" HorizontalAlignment="Left" Height="210" 
+                Margin="10,330,0,0" VerticalAlignment="Top" Width="173" Grid.Row="1">
                 <Canvas >
                     <RepeatButton  x:Name="btnUp2_Margin" Width="24" Height="24" Canvas.Left="56" Canvas.Top="5" 
-                    Delay="500" Interval="100" HorizontalAlignment="Center" Click="Up_Click"  >
+                    Delay="500" Interval="100" HorizontalAlignment="Center" Click="Up_Click" Background="#FF262727"  >
                         <Image x:Name="imgUp2"  Source="/Icons/upArrow.png"/>
                     </RepeatButton>
                     <RepeatButton  x:Name="btnDown2_Margin" Width="24" Height="24" 
                  HorizontalAlignment="Center" Delay="500" Interval="100"
-                    Canvas.Left="121" Canvas.Top="5" Click="Down_Click">
+                    Canvas.Left="121" Canvas.Top="5" Click="Down_Click" Background="#FF262727">
                         <Image x:Name="imgDown4"  Source="/Icons/downArrow.png"/>
                     </RepeatButton>
-                    <Label x:Name="lblMargin2" Content="Margin" Canvas.Top="9" HorizontalAlignment="Center" Canvas.Left="15" VerticalAlignment="Top" FontSize="12" HorizontalContentAlignment="Right"/>
-                    <TextBox x:Name="txtMargin" Text="67" Width="34" Canvas.Left="84" 
-                    HorizontalAlignment="Center" VerticalAlignment="Center" Canvas.Top="9" />
-                    <Label x:Name="lblMargin_Copy1" Content="Top" Canvas.Top="53" HorizontalAlignment="Center" VerticalAlignment="Top" Canvas.Left="31" FontSize="12"/>
-                    <TextBox x:Name="txtTop" Text="0" Width="34" Canvas.Left="84" Canvas.Top="53" 
-                    HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    <Label x:Name="lblMargin2" Content="Margin" Canvas.Top="9" HorizontalAlignment="Left" Canvas.Left="13" VerticalAlignment="Center" FontSize="12" HorizontalContentAlignment="Right"/>
+                    <TextBox x:Name="txtMargin" Text="200" Width="30" Canvas.Left="87" 
+                    HorizontalAlignment="Left" VerticalAlignment="Center" Canvas.Top="9" HorizontalContentAlignment="Center" />
+                    <Label x:Name="lblMargin_Copy1" Content="Top" Canvas.Top="53" HorizontalAlignment="Center" VerticalAlignment="Center" Canvas.Left="31" FontSize="12"/>
+                    <TextBox x:Name="txtTop" Text="0" Width="30" Canvas.Left="87" Canvas.Top="53" 
+                    HorizontalAlignment="Left" VerticalAlignment="Center" HorizontalContentAlignment="Center" />
                     <RepeatButton  x:Name="btnUp_Top" Width="24" Delay="500" Interval="100" Height="24" Canvas.Left="56" Canvas.Top="49" 
-                    HorizontalAlignment="Center" Click="Up_Click">
+                    HorizontalAlignment="Center" Click="Up_Click" Background="#FF262727">
                         <Image x:Name="imgUp6"  Source="/Icons/upArrow.png"/>
                     </RepeatButton>
                     <RepeatButton  x:Name="btnDown_Top" Delay="500" Interval="100" Width="24" Height="24" 
-                    Canvas.Left="122" Canvas.Top="49" HorizontalAlignment="Center" Click="Down_Click">
+                    Canvas.Left="122" Canvas.Top="49" HorizontalAlignment="Center" Click="Down_Click" Background="#FF262727">
                         <Image x:Name="imgDown5"  Source="/Icons/downArrow.png"/>
                     </RepeatButton>
-                    <Label x:Name="lblMargin_Copy4" Content="Left" Canvas.Top="97" HorizontalAlignment="Center" VerticalAlignment="Top" Canvas.Left="31" FontSize="12"/>
+                    <Label x:Name="lblMargin_Copy4" Content="Left" Canvas.Top="97" HorizontalAlignment="Center" VerticalAlignment="Center" Canvas.Left="31" FontSize="12"/>
                     <RepeatButton  x:Name="btnUp_Left" Width="24" Delay="500" Interval="100" Height="24" Canvas.Left="56" Canvas.Top="93" 
-                     HorizontalAlignment="Center" Click="Up_Click">
+                     HorizontalAlignment="Center" Click="Up_Click" Background="#FF262727">
                         <Image x:Name="imgUp7"  Source="/Icons/upArrow.png"/>
                     </RepeatButton>
-                    <TextBox x:Name="txtLeft" Text="0" Width="34" Canvas.Left="83" Canvas.Top="97" 
-                    HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    <TextBox x:Name="txtLeft" Text="0" Width="30" Canvas.Left="87" Canvas.Top="97" 
+                    HorizontalAlignment="Left" VerticalAlignment="Center" HorizontalContentAlignment="Center" />
                     <RepeatButton  x:Name="btnDown_Left" Delay="500" Interval="100" Width="24" Height="24" 
-                    Canvas.Left="123" Canvas.Top="93" HorizontalAlignment="Center" Click="Down_Click">
+                    Canvas.Left="123" Canvas.Top="93" HorizontalAlignment="Center" Click="Down_Click" Background="#FF262727">
                         <Image x:Name="imgDown6" Source="/Icons/downArrow.png"/>
                     </RepeatButton>
                     <CheckBox x:Name="chkAutoCrop" Content="Auto Crop" Canvas.Left="85" Canvas.Top="176" IsChecked="True"/>
-                    <Label x:Name="lblMargin_Copy5" Content="Step" Canvas.Top="150" HorizontalAlignment="Center" VerticalAlignment="Top" Canvas.Left="27" FontSize="12"/>
+                    <Label x:Name="lblMargin_Copy5" Content="Step" Canvas.Top="150" HorizontalAlignment="Center" VerticalAlignment="Center" Canvas.Left="27" FontSize="12"/>
                     <RepeatButton x:Name="btnUp_Step" Width="24" Delay="500" Interval="100" Height="24" Canvas.Left="56" Canvas.Top="146" 
-                     HorizontalAlignment="Center" Click="Up_Click">
+                     HorizontalAlignment="Center" Click="Up_Click" Background="#FF262727">
                         <Image x:Name="imgUp8"  Source="/Icons/upArrow.png"/>
                     </RepeatButton>
-                    <TextBox x:Name="txtStep" Text="1" Width="34" Canvas.Left="83" Canvas.Top="150" 
-                    HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    <TextBox x:Name="txtStep" Text="1" Width="30" Canvas.Left="87" Canvas.Top="150" 
+                    HorizontalAlignment="Left" VerticalAlignment="Center" HorizontalContentAlignment="Center" />
                     <RepeatButton x:Name="btnDown_Step" Width="24" Height="24" Delay="500" Interval="100"                     
-                    Canvas.Left="123" Canvas.Top="146" HorizontalAlignment="Center" Click="Down_Click">
+                    Canvas.Left="123" Canvas.Top="146" HorizontalAlignment="Center" Click="Down_Click" Background="#FF262727">
                         <Image x:Name="imgDown1" Source="/Icons/downArrow.png" />
                     </RepeatButton>
                     <Border x:Name="brd" Width="157" BorderThickness="2" BorderBrush="Black" Canvas.Top="128" Canvas.Left="5" Height="2"/>
@@ -104,74 +108,78 @@
                 </Canvas>
 
             </Border>
-            <Border x:Name="brdTextControls" BorderBrush="Black" BorderThickness="2" HorizontalAlignment="Left" Height="200" Margin="188,362,0,0" 
-                VerticalAlignment="Top" Width="765">
+            <Border x:Name="brdTextControls" BorderBrush="Black" BorderThickness="2" HorizontalAlignment="Left" Height="212" Margin="188,330,0,0" 
+                VerticalAlignment="Top" Width="765" Grid.Row="1">
                 <Canvas>
-                    <Label Name="lblTextLine1" Content="Primary Text   :" Canvas.Top="11"  HorizontalAlignment="Center" VerticalAlignment="Top" Canvas.Left="20" FontSize="12"/>
-                    <Label Name="lblTextLine2" Content="Secondary Text :" Canvas.Top="34" HorizontalAlignment="Left" VerticalAlignment="Center" Canvas.Left="12" FontSize="12"/>
+                    <Label x:Name="lblTextLine1" Content="Primary Text   :" Canvas.Top="11"  HorizontalAlignment="Center" VerticalAlignment="Top" Canvas.Left="20" FontSize="12"/>
+                    <Label x:Name="lblTextLine2" Content="Secondary Text :" Canvas.Top="34" HorizontalAlignment="Left" VerticalAlignment="Center" Canvas.Left="12" FontSize="12"/>
                     <TextBox x:Name="txtLine1" Width="439" Canvas.Left="102" Canvas.Top="10" 
-                    HorizontalAlignment="Center" VerticalAlignment="Center" VerticalContentAlignment="Center"  Height="18" FontSize="12" />
+                        HorizontalAlignment="Center" VerticalAlignment="Center" VerticalContentAlignment="Center"  Height="18" FontSize="12" />
                     <TextBox x:Name="txtLine2" Width="439" Height="18" Canvas.Left="102" Canvas.Top="33" 
-                    HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12"  />
-                    <Button x:Name="btnPlaceText" Content="Place Txt" Width="95" Height="135" Canvas.Left="650" Canvas.Top="23" HorizontalAlignment="Center" VerticalAlignment="Top" Click="btnPlaceText_Click"/>
-                    <Label x:Name="lblFontsize1" Content="Font Size 1:" Canvas.Top="61" HorizontalAlignment="Center" VerticalAlignment="Top" Canvas.Left="34" FontSize="12"/>
-                    <TextBox x:Name="txtfFontSize1" Width="25" Height="18" Canvas.Left="49" Canvas.Top="83" 
-                    HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="12"  />
-                    <Label x:Name="lblFontSize2" Content="Font Size 2:" Canvas.Top="61" HorizontalAlignment="Center" VerticalAlignment="Top" Canvas.Left="124" FontSize="12"/>
-                    <TextBox x:Name="txtfFontSize2" Width="25" Height="18" Canvas.Left="141" Canvas.Top="83" 
-                    HorizontalAlignment="Left" VerticalAlignment="Center" FontSize="12" RenderTransformOrigin="-0.38,1.642"  />
-                    <Label x:Name="lblTextOffset1" Content="Text Offset 1" Canvas.Top="61" HorizontalAlignment="Center" VerticalAlignment="Top" Canvas.Left="215" FontSize="12"/>
-                    <TextBox x:Name="txtfOffset1" Width="25" Height="18" Canvas.Left="234" Canvas.Top="83" 
-                    HorizontalAlignment="Left" VerticalAlignment="Center" FontSize="12"  />
-                    <Label x:Name="lblTextOffset2" Content="Text Offset 2:" Canvas.Top="61" HorizontalAlignment="Left" VerticalAlignment="Center" Canvas.Left="313" FontSize="12"/>
-                    <TextBox x:Name="txtfOffset2" Width="25" Height="18" Canvas.Left="334" Canvas.Top="83" 
-                    HorizontalAlignment="Left" VerticalAlignment="Center" FontSize="12" RenderTransformOrigin="-4.988,0.781"  />
-                    <Button x:Name="btnFontSize1Up" Width="20" Height="20" Canvas.Left="24" Canvas.Top="82" Click="btnFontSize1Up_Click" Background="#FF262727" RenderTransformOrigin="-2.06,0.408">
-                        <Image x:Name="imgFSUp"  Source="/Icons/UpArrow.png" OpacityMask="#FFCB8080" />
+                        HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12"  />
+                    <Button x:Name="btnPlaceText1" Content="Update Thumbnail" Width="191" Height="99" Canvas.Left="560" Canvas.Top="11" VerticalAlignment="Top" Click="btnPlaceText_Click" HorizontalAlignment="Center" HorizontalContentAlignment="Center"/>
+                    <Label x:Name="lblFontsize2" Content="Font Size 1:" Canvas.Top="61" HorizontalAlignment="Center" VerticalAlignment="Center" Canvas.Left="109" FontSize="12"/>
+                    <TextBox x:Name="txtfFontSize1" Width="25" Height="18" Canvas.Left="127" Canvas.Top="83" 
+                        HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12" HorizontalContentAlignment="Center"  />
+                    <Label x:Name="lblFontSize1" Content="Font Size 2:" Canvas.Top="61" HorizontalAlignment="Left" VerticalAlignment="Center" Canvas.Left="229" FontSize="12"/>
+                    <TextBox x:Name="txtfFontSize2" Width="25" Height="18" Canvas.Left="247" Canvas.Top="83" 
+                        HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12" RenderTransformOrigin="-0.38,1.642" HorizontalContentAlignment="Center"  />
+                    <Label x:Name="lblTextOffset3" Content="Text Offset 1" Canvas.Top="61" HorizontalAlignment="Left" VerticalAlignment="Center" Canvas.Left="347" FontSize="12"/>
+                    <TextBox x:Name="txtfOffset1" Width="25" Height="18" Canvas.Left="368" Canvas.Top="83" 
+                        HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12" HorizontalContentAlignment="Center"  />
+                    <Label x:Name="lblTextOffset4" Content="Text Offset 2:" Canvas.Top="61" HorizontalAlignment="Center" VerticalAlignment="Center" Canvas.Left="468" FontSize="12"/>
+                    <TextBox x:Name="txtfOffset2" Width="25" Height="18" Canvas.Left="490" Canvas.Top="83" 
+                        HorizontalAlignment="Left" VerticalAlignment="Center" FontSize="12" RenderTransformOrigin="-4.988,0.781" HorizontalContentAlignment="Center"  />
+                    <Button x:Name="btnFontSize1Up1" Width="20" Height="20" Canvas.Left="102" Canvas.Top="82" Click="btnFontSize1Up_Click" Background="#FF262727" RenderTransformOrigin="-2.06,0.408" VerticalAlignment="Top" HorizontalAlignment="Center">
+                        <Image x:Name="imgFSUp1"  Source="/Icons/upArrow.png" OpacityMask="#FFCB8080" />
                     </Button>
-                    <Button x:Name="btnFontSize1Down" Width="20" Height="20" Canvas.Left="79" Canvas.Top="82" Click="btnFontSize1Down_Click" VerticalAlignment="Top" Background="#FF262727">
-                        <Image x:Name="imgFSDown"  Source="/Icons/DownArrow.png" />
+                    <Button x:Name="btnFontSize1Down1" Width="20" Height="20" Canvas.Left="157" Canvas.Top="82" Click="btnFontSize1Down_Click" VerticalAlignment="Top" Background="#FF262727" HorizontalAlignment="Center">
+                        <Image x:Name="imgFSDown1"  Source="/Icons/downArrow.png" />
                     </Button>
-                    <Button x:Name="btnFontSize2Up" Width="20" Height="20" Canvas.Left="117" Canvas.Top="82" Click="btnFontSize2Up_Click" Background="#FF262727" RenderTransformOrigin="-0.415,0.538">
-                        <Image x:Name="imgFS2Up"  Source="/Icons/UpArrow.png"/>
+                    <Button x:Name="btnFontSize2Up1" Width="20" Height="20" Canvas.Left="219" Canvas.Top="82" Click="btnFontSize2Up_Click" Background="#FF262727" RenderTransformOrigin="-0.415,0.538">
+                        <Image x:Name="imgFS2Up1"  Source="/Icons/upArrow.png"/>
                     </Button>
-                    <Button x:Name="btnFontSize2Down" Width="20" Height="20" Canvas.Left="170" Canvas.Top="82" Click="btnFontSize2Down_Click" Background="#FF262727">
-                        <Image x:Name="imgFS2Down"  Source="/Icons/DownArrow.png" />
+                    <Button x:Name="btnFontSize2Down1" Width="20" Height="20" Canvas.Left="277" Canvas.Top="82" Click="btnFontSize2Down_Click" Background="#FF262727">
+                        <Image x:Name="imgFS2Down1"  Source="/Icons/downArrow.png" />
                     </Button>
-                    <Button x:Name="btnTextOffset1UP" Width="20" Height="20" Canvas.Left="210" Canvas.Top="82" Click="btnTextOffset1UP_Click" Background="#FF262727">
-                        <Image x:Name="imgTextoffset1Up"  Source="/Icons/UpArrow.png" />
+                    <Button x:Name="btnTextOffset1UP1" Width="20" Height="20" Canvas.Left="343" Canvas.Top="82" Click="btnTextOffset1UP_Click" Background="#FF262727" HorizontalAlignment="Center">
+                        <Image x:Name="imgTextoffset1Up1"  Source="/Icons/upArrow.png" />
                     </Button>
-                    <Button x:Name="btnTextOffset1DOWN" Width="20" Height="20" Canvas.Left="262" Canvas.Top="82" Click="btnTextOffset1DOWN_Click" Background="#FF262727">
-                        <Image x:Name="imgTextOffset1Down"  Source="/Icons/DownArrow.png" RenderTransformOrigin="0.419,0.572" />
+                    <Button x:Name="btnTextOffset1DOWN1" Width="20" Height="20" Canvas.Left="398" Canvas.Top="82" Click="btnTextOffset1DOWN_Click" Background="#FF262727" VerticalAlignment="Top" HorizontalAlignment="Center">
+                        <Image x:Name="imgTextOffset1Down1"  Source="/Icons/downArrow.png" RenderTransformOrigin="0.419,0.572" />
                     </Button>
-                    <Button x:Name="btnTextOffset2UP" Width="20" Height="20" Canvas.Left="310" Canvas.Top="82" Click="btnTextOffset2UP_Click" VerticalAlignment="Top" Background="#FF262727">
-                        <Image x:Name="imgTextOffset2Up"  Source="/Icons/UpArrow.png" />
+                    <Button x:Name="btnTextOffset2UP1" Width="20" Height="20" Canvas.Left="466" Canvas.Top="82" Click="btnTextOffset2UP_Click" Background="#FF262727" HorizontalAlignment="Center">
+                        <Image x:Name="imgTextOffset2Up1"  Source="/Icons/upArrow.png" />
                     </Button>
-                    <Button x:Name="btnTextOffset2DOWN" Width="20" Height="20" Canvas.Left="362" Canvas.Top="82" Click="btnTextOffset2DOWN_Click" VerticalAlignment="Top" Background="#FF262727">
-                        <Image x:Name="imgTextOffset2Down"  Source="/Icons/DownArrow.png" />
+                    <Button x:Name="btnTextOffset2DOWN1" Width="20" Height="20" Canvas.Left="521" Canvas.Top="82" Click="btnTextOffset2DOWN_Click" VerticalAlignment="Top" Background="#FF262727" HorizontalAlignment="Center">
+                        <Image x:Name="imgTextOffset2Down1"  Source="/Icons/downArrow.png" />
                     </Button>
-                    <Label x:Name="lblTextLine2_Copy" Content="Save In :" Canvas.Top="121" HorizontalAlignment="Center" VerticalAlignment="Top" Canvas.Left="13"/>
-                    <TextBox x:Name="txtOutputDir" Width="328" Height="18" Canvas.Left="57" Canvas.Top="119" 
-                    HorizontalAlignment="Center" VerticalAlignment="Center"  />
-                    <TextBox x:Name="txtNumThumbs" Width="33" Height="18" Canvas.Left="390" Canvas.Top="119" 
-                    HorizontalAlignment="Left" VerticalAlignment="Center"   />
-                    <TextBox x:Name="txtNumThumbs2" Width="33" Height="18" Canvas.Left="428" Canvas.Top="119" 
-                    HorizontalAlignment="Left" VerticalAlignment="Center"   />
-                    <Label x:Name="txtFilename" Content="Filename :" Canvas.Top="154" Canvas.Left="8" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    <TextBox x:Name="txtFileNameSavedAs" Width="404" Height="18" Canvas.Left="57" Canvas.Top="152" 
-                    HorizontalAlignment="Center" VerticalAlignment="Center"  />
+                    <Label x:Name="lblTextLine2_Copy1" Content="Save In :" Canvas.Top="138" HorizontalAlignment="Center" VerticalAlignment="Center" Canvas.Left="9"/>
+                    <TextBox x:Name="txtOutputDir" Width="289" Height="18" Canvas.Left="53" Canvas.Top="136" 
+                        HorizontalAlignment="Center" VerticalAlignment="Top"  />
+                    <TextBox x:Name="txtNumThumbsMIN" Width="33" Height="18" Canvas.Left="350" Canvas.Top="136" 
+                        HorizontalAlignment="Left" VerticalAlignment="Center"   />
+                    <TextBox x:Name="txtNumThumbsMAX" Width="33" Height="18" Canvas.Left="388" Canvas.Top="136" 
+                        HorizontalAlignment="Left" VerticalAlignment="Center"   />
+                    <Label x:Name="txtFilename1" Content="Filename :" Canvas.Top="171" Canvas.Left="4" HorizontalAlignment="Center" VerticalAlignment="Top"/>
+                    <TextBox x:Name="txtFileNameSavedAs" Width="371" Height="18" Canvas.Left="53" Canvas.Top="169" 
+                        HorizontalAlignment="Left" VerticalAlignment="Center"  />
+                    <Button x:Name="btnSelectSrc1" Content="Select Filename" Width="112" Height="20"
+                        Click="btnSelectSrc_Click" Grid.Row="1" Canvas.Left="433" Canvas.Top="168"/>
+                    <Button x:Name="btnSetOutput1" Content="Select Directory" Width="112" Height="20"
+                        Click="btnSetOutput_Click" Grid.Row="1" Canvas.Left="433" Canvas.Top="135"/>
+                    <Button x:Name="btnClose_Copy1" Content="Build Thumbnails" Width="191" Height="66" VerticalAlignment="Top"
+                        Click="btnClose_Copy3_Click" Grid.Row="1" Canvas.Left="560" Canvas.Top="129" HorizontalAlignment="Center"/>
+                    <Label x:Name="lblFontsize1_Copy1" Content="Min" Canvas.Top="120" Canvas.Left="356" FontSize="12" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                    <Label x:Name="lblFontsize1_Copy" Content="Max" Canvas.Top="120" Canvas.Left="394" FontSize="12" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+
                 </Canvas>
             </Border>
-            <Button x:Name="btnClose_Copy" Content="Save Template" Width="140" Height="34" HorizontalAlignment="Left"
-            Margin="167,0,0,6" VerticalAlignment="Bottom"/>
+            <Button x:Name="btnClose_Copy" Content="Save Template" Width="140" Height="34"
+            Margin="167,0,0,6" VerticalAlignment="Bottom" Grid.Row="1"/>
             <Button x:Name="btnLoadTemplate" Content="Load Template" Width="140" Height="34" VerticalAlignment="Bottom"
-            Margin="13,0,0,6" Click="btnLoadTemplate_Click" HorizontalAlignment="Left"/>
-            <Button x:Name="btnSetOutput" Content="Set Output" Width="108" Height="20" HorizontalAlignment="Right" VerticalAlignment="Top"
-            Margin="0,482,189,0" Click="btnSetOutput_Click"/>
-            <Button x:Name="btnClose_Copy3" Content="Build Thumbnails" Width="140" Height="34" HorizontalAlignment="Left" VerticalAlignment="Bottom"
-            Margin="320,0,0,6" Click="btnClose_Copy3_Click"/>
-            <Button x:Name="btnSelectSrc" Content="Select Src" Width="108" Height="20" HorizontalAlignment="Right" VerticalAlignment="Top"
-                Margin="0,515,189,0" Click="btnSelectSrc_Click"/>
+            Margin="13,0,0,6" Click="btnLoadTemplate_Click" Grid.Row="1"/>
+
 
         </Grid>
     </Grid>

@@ -373,6 +373,23 @@ namespace VideoGui
                         RegistryKey key2 = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                         Dest = key2.GetValueStr("AudioJoinerDestDir");
                         key2.Close();
+                        string SrcFolderName = folder.Split('\\').LastOrDefault().ToLower().ToLower() ?? "";
+                        string DestFolderName = Dest.Split('\\').LastOrDefault().ToLower() ?? "";
+                        if (DestFolderName.StartsWith("vline") ||
+                            DestFolderName.StartsWith("v/line") ||
+                            SrcFolderName.StartsWith("vline") ||
+                            SrcFolderName.StartsWith("v/line"))
+                        {
+                            if (DestFolderName != SrcFolderName)
+                            {
+                                Dest = Dest.Replace(DestFolderName, SrcFolderName);
+                            }
+                        }
+                        else
+                        {
+                            Dest = Path.Combine(folder, SrcFolderName);
+                        }
+
                     }
 
 

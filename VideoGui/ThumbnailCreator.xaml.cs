@@ -81,8 +81,8 @@ namespace VideoGui
                 DoSaveTemplate = OnSaveTemplate;
                 txtLine1.Text = Line1;
                 txtLine2.Text = Line2;
-                txtNumThumbs.Text = FromNum1;
-                txtNumThumbs2.Text = FromNum2;
+                txtNumThumbsMIN.Text = FromNum1;
+                txtNumThumbsMAX.Text = FromNum2;
                 RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                 int PMargin = key.GetValueInt("ImageMargin", 70);
                 int PLeft = key.GetValueInt("ImageLeft", 0);
@@ -784,7 +784,7 @@ namespace VideoGui
 
                 if (txtLine1.Text != "" && txtLine2.Text != "" && ThumbnailReady)
                 {
-                    if (txtNumThumbs.Text == "")
+                    if (txtNumThumbsMIN.Text == "" || txtNumThumbsMAX.Text == "")
                     {
                         //btnCrop_Click(this, e);
                         var thumbnail = QuickWriteText(txtLine1.Text, txtLine2.Text);
@@ -825,8 +825,8 @@ namespace VideoGui
                     else
                     {
                         string pr = txtLine2.Text;
-                        var cntr = txtNumThumbs.Text.ToInt();
-                        var cntr2 = txtNumThumbs2.Text.ToInt();
+                        var cntr = txtNumThumbsMIN.Text.ToInt();
+                        var cntr2 = txtNumThumbsMAX.Text.ToInt();
                         if (pr.ToLower().Contains("part"))
                         {
                             int id = pr.ToLower().LastIndexOf("part");
