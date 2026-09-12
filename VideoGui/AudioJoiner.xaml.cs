@@ -382,6 +382,8 @@ namespace VideoGui
                         {
                             if (DestFolderName != SrcFolderName)
                             {
+                                SrcFolderName = folder.Split('\\').LastOrDefault() ?? "";
+                                DestFolderName = Dest.Split('\\').LastOrDefault() ?? "";
                                 Dest = Dest.Replace(DestFolderName, SrcFolderName);
                             }
                         }
