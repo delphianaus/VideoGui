@@ -354,7 +354,7 @@ namespace VideoGui
                         f = f.Replace(@"file '", "");
                     }
                     ReadFrames(f, UseVideoDuration).ConfigureAwait(false);
-                }
+                    }
                 Task.Delay(200);
                 while (MaxFile > 0)
                 {
@@ -386,7 +386,8 @@ namespace VideoGui
                 double durationinsecs = _duration / 1000;
                 var tdp = FPS * durationinsecs;
                 mw1.Close();
-                FramesList.Add((filePath, tdp.ToInt(0)));
+                int frme = (int)Math.Truncate(tdp);
+                FramesList.Add((filePath,frme));
                 Finished = AllowFinish;
             }
             catch (Exception ex)

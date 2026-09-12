@@ -261,7 +261,7 @@ namespace VideoGui
                                                 }
                                             }
                                         }
-                                        // Dispatcher.Invoke(() =>
+                                        // Dispatcher.InvokeAsync(() =>
                                         //  {
                                         pg1.Value = percentdone;
                                         lblPercent.Content = percentdone.ToString((percentdone < 1) ? "0.0" : "0") + "%";
@@ -383,7 +383,7 @@ namespace VideoGui
                     Directory.Delete(subp, true);
                 }
 
-                Dispatcher.Invoke(() =>
+                Dispatcher.InvokeAsync(() =>
                 {
                     lblShortNo.Content = "Finished";
                     btnSelectSourceDir.IsEnabled = true;
@@ -568,7 +568,7 @@ namespace VideoGui
             {
                 // upgraded to new shorts length
                 source = await AddLogo(shortsfile, @"C:\videogui\logo.png");
-                Dispatcher.Invoke(() =>
+                Dispatcher.InvokeAsync(() =>
                 {
                     btnSelectSourceDir.IsEnabled = false;
                 });

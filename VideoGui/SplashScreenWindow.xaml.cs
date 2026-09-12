@@ -323,7 +323,7 @@ namespace VideoGui
                 }
                 if (TotalDrives == 6)
                 {
-                    Dispatcher.Invoke(() =>
+                    Dispatcher.InvokeAsync(() =>
                     {
                         lblStatus.Content = "Status : Running Wsl Scripts";
                     });
@@ -725,7 +725,7 @@ namespace VideoGui
                     int rr = DownloadUrl.IndexOf("Firebird-");
                     int rr2 = DownloadUrl.IndexOf("windows");
                     string version = DownloadUrl.Substring(rr + 9, rr2 - rr - 9);
-                    Dispatcher.Invoke(() =>
+                    Dispatcher.InvokeAsync  (() =>
                     {
                         SevenZipExtractor.SetLibraryPath(AppPath);
                     });
@@ -746,7 +746,7 @@ namespace VideoGui
                     }
                     if (firebirdv != version)
                     {
-                        Dispatcher.Invoke(() =>
+                        Dispatcher.InvokeAsync(() =>
                         {
                             lblStatus.Content = "Downloading Firebird...";
                         });
@@ -870,7 +870,7 @@ namespace VideoGui
         {
             try
             {
-                Dispatcher.Invoke(() =>
+                Dispatcher.InvokeAsync(() =>
                 {
                     if (arg2)
                     {
@@ -984,7 +984,7 @@ namespace VideoGui
             {
                 if (!Dispatcher.CheckAccess())
                 {
-                    Dispatcher.Invoke(() => Progress_HttpReceiveProgressFFMPEG(sender, e));
+                    Dispatcher.InvokeAsync(() => Progress_HttpReceiveProgressFFMPEG(sender, e));
                     return;
                 }
 
@@ -1093,7 +1093,7 @@ namespace VideoGui
                             /*var videogui = Process.GetProcessById(pid);
                             if (videogui is not null)
                             {
-                                Dispatcher.Invoke(new Action(() =>
+                                Dispatcher.InvokeAsync(new Action(() =>
                                 {
                                     videogui.Kill();
                                 }));
@@ -1161,7 +1161,7 @@ namespace VideoGui
             {
                 if (!Dispatcher.CheckAccess())
                 {
-                    Dispatcher.Invoke(() => UpdateStatus(status));
+                    Dispatcher.InvokeAsync(() => UpdateStatus(status));
                     return;
                 }
                 lblStatus.Content = status;
@@ -1187,7 +1187,7 @@ namespace VideoGui
                         119, 56, 250, 149, 248, 183, 135, 239,
                         74, 53, 72, 245, 211 }.Select(i => (byte)i).ToArray());
                     string str = t + $" {Math.Round(_percent)} %]";
-                    Dispatcher.Invoke(() =>
+                    Dispatcher.InvokeAsync(() =>
                     {
                         lblStatus.Content = (lblStatus.Content == str) ? lblStatus.Content : str;
                     });
@@ -1246,7 +1246,7 @@ namespace VideoGui
             {
                 if (!Dispatcher.CheckAccess())
                 {
-                    Dispatcher.Invoke(() => OnDownloadDone());
+                    Dispatcher.InvokeAsync(() => OnDownloadDone());
                     return;
                 }
                 done = true;
@@ -1328,7 +1328,7 @@ namespace VideoGui
             {
                 if (!Dispatcher.CheckAccess())
                 {
-                    Dispatcher.Invoke(() => RunFFMPEGDownload(URL, gitversion));
+                    Dispatcher.InvokeAsync(() => RunFFMPEGDownload(URL, gitversion));
                     return;
                 }
 
@@ -1504,7 +1504,7 @@ namespace VideoGui
             {
                 if (!Dispatcher.CheckAccess())
                 {
-                    Dispatcher.Invoke(() => Progress_HttpReceiveProgress(sender, e));
+                    Dispatcher.InvokeAsync(() => Progress_HttpReceiveProgress(sender, e));
                     return;
                 }
                 if ((e.BytesTransferred < e.TotalBytes) && (!ffmpegready))
@@ -1832,7 +1832,7 @@ namespace VideoGui
                         }
                         if (!Dispatcher.CheckAccess())
                         {
-                            Dispatcher.Invoke(() => RunMainApp(IsRestart));
+                            Dispatcher.InvokeAsync(() => RunMainApp(IsRestart));
                             return;
                         }
                         lblStatus.Content = GetEncryptedString(new int[] { 165, 43, 78, 66, 228, 212, 142, 9, 178, 94, 5,

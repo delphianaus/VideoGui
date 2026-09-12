@@ -1109,7 +1109,7 @@ namespace VideoGui
                     scraperModulej = null;
                     if (IsTimeOut)
                     {
-                        Dispatcher.Invoke(() =>
+                        Dispatcher.InvokeAsync(() =>
                         {
                             var gscraperModule = new ScraperModule(Invoker, FinishScraper, OldgUrl, OldTarget, 0);
                             gscraperModule.ShowActivated = true;

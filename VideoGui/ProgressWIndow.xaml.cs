@@ -32,7 +32,7 @@ namespace VideoGui
 
                 OnCancelScan = _OnCancelScan;
                 InitializeComponent();
-                Application.Current.Dispatcher.Invoke(() =>
+                Application.Current.Dispatcher.InvokeAsync(() =>
                 {
                     lblScanningPath.Content = "Scanning Path";
                     lblScanningFileName.Content = ScanningPath;
@@ -58,7 +58,7 @@ namespace VideoGui
         {
             try
             {
-                Application.Current.Dispatcher.Invoke(() =>
+                Application.Current.Dispatcher.InvokeAsync(() =>
                 {
                     lblStatus.Content = status;
                 });
@@ -73,7 +73,7 @@ namespace VideoGui
         {
             try
             {
-                Application.Current.Dispatcher.Invoke(() =>
+                Application.Current.Dispatcher.InvokeAsync(() =>
                 {
                     ProgressBar1.Maximum = count;
                     lblMax.Content = count;
@@ -89,7 +89,7 @@ namespace VideoGui
             try
             {
 
-                Application.Current.Dispatcher.Invoke(() =>
+                Application.Current.Dispatcher.InvokeAsync(() =>
                 {
                     // lblStatus.Content
                     ProgressBar1.Value = CurrentProgress;
@@ -120,7 +120,7 @@ namespace VideoGui
         {
             try
             {
-                Application.Current.Dispatcher.Invoke(() =>
+                Application.Current.Dispatcher.InvokeAsync(() =>
                 {
                     this.DragMove();
                 });

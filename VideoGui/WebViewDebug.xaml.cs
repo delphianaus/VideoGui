@@ -170,7 +170,7 @@ namespace VideoGui
                 thick.Left = Width - 190;
                 key?.Close();
                 wv2.CoreWebView2InitializationCompleted += Wv2_CoreWebView2InitializationCompleted;
-                Dispatcher.Invoke(() =>
+                Dispatcher.InvokeAsync(() =>
                 {
                     InitAsync();
                 });

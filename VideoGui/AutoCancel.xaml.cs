@@ -97,7 +97,7 @@ namespace VideoGui
             {
                 if (!Dispatcher.CheckAccess())
                 {
-                    Dispatcher.Invoke(() => TimerEvent_Handler(state));
+                    Dispatcher.InvokeAsync(() => TimerEvent_Handler(state));
                     return;
                 }
                 DateTime nowx = DateTime.Now;
@@ -110,7 +110,7 @@ namespace VideoGui
                         IsCloseAction = true;
                         Close();
                     }
-                    Dispatcher.Invoke(() =>
+                    Dispatcher.InvokeAsync(() =>
                     {
                         lblTime.Content = (dispatchcnt <= 1) ? "1" : dispatchcnt.ToString();
                     });
@@ -120,7 +120,7 @@ namespace VideoGui
                         AutoCloseTimer.Change(0, 10);
                     }
                 }
-                Dispatcher.Invoke(() =>
+                Dispatcher.InvokeAsync(() =>
                 {
                     if (dispatchcnt.ToString() == "" || dispatchcnt < 0)
                     {
@@ -141,7 +141,7 @@ namespace VideoGui
             {
                 if (!Dispatcher.CheckAccess())
                 {
-                    Dispatcher.Invoke(() => AutoCloseTimer_Tick(sender, e));
+                    Dispatcher.InvokeAsync(() => AutoCloseTimer_Tick(sender, e));
                     return;
                 }
                 dispatchcnt--;

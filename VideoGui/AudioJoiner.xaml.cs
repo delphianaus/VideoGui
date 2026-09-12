@@ -119,11 +119,11 @@ namespace VideoGui
                         if (MediaInfoTimes[i].FileName == filePath)
                         {
                             found = true;
-                            Dispatcher.Invoke(() =>
+                            Dispatcher.InvokeAsync(() =>
                             {
                                 MediaInfoTimes[i].TimeDataInternal = TBL;
-                                Display = MediaInfoTimes[i].DisplayTimeData();
-                                msuAudioJoiner.ForceUpdate(filePath, Display, "filename", "duration");
+                                //Display = MediaInfoTimes[i].DisplayTimeData();
+                                // msuAudioJoiner.ForceUpdate(filePath, Display, "filename", "duration");
                             });
                             break;
                         }
@@ -131,14 +131,11 @@ namespace VideoGui
                     if (!found)
                     {
 
-                        var mm = new AudioJoinerInfo(filePath, "", TBL);
+                        Dispatcher.InvokeAsync(() =>
+                        {
+                            MediaInfoTimes.Add(new AudioJoinerInfo(filePath, "", TBL));
+                        });
 
-                        MediaInfoTimes.Add(mm);
-
-                        
-                            int ix = MediaInfoTimes.Count-1;
-                            Display = MediaInfoTimes[ix].DisplayTimeData();
-                            msuAudioJoiner.ForceUpdate(filePath, Display, "filename", "duration");
                     }
 
                 }

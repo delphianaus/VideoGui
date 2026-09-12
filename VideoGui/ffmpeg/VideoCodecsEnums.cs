@@ -3723,6 +3723,12 @@ namespace VideoGui.ffmpeg
         ///<summary>
         ///      H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10 (decoders: h264 h264_qsv h264_cuvid ) (encoders: libx264 libx264rgb h264_amf h264_nvenc h264_qsv nvenc nvenc_h264 )
         ///</summary>
+        libaom_av1,
+/// <summary>
+/// av1
+/// </summary>
+
+
         h264,
 
         ///<summary>

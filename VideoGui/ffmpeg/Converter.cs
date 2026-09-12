@@ -700,7 +700,7 @@ namespace VideoGui.ffmpeg
 
 
 
-                await foreach (var commandEvent in cmd.ListenAsync())
+                    await foreach (var commandEvent in cmd.ListenAsync())
                 {
                     switch (commandEvent)
                     {
@@ -1647,9 +1647,16 @@ namespace VideoGui.ffmpeg
             try
             {
                 _parameters.Add(($"-hwaccel {hardwareAccelerator}", true));
-                _parameters.Add(($"-c:v {decoder}", true));
+                if (decoder == "libaom_av1")
+                {
+                    decoder = "libaom-av1";
+                    _parameters.Add(($"-c:v {decoder}", true));
+                    _parameters.Add(($"-strict -2", true));
+                }
+                else _parameters.Add(($"-c:v {decoder}", true));
                 ComplexEncoder = $"-c:v {encoder?.ToString()}";
                 _parameters.Add(($"-c:v {encoder?.ToString()}", false));
+
                 if (device != 0)
                 {
                     _parameters.Add(($"-hwaccel_device {device}", true));

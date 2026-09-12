@@ -8662,8 +8662,20 @@ namespace VideoGui
                     else Encoder = ffmpeg.VideoCodec.libx265;
                 }
                 string AppPath = GetExePath();
-                double totalseconds = 0
+                double totalseconds = 0;
+                if (!job.IsMulti)
+                {
+                    List<string> Files2 = new();
+                    Files2.AddRange(
+                     Directory.EnumerateFiles(job.SourcePath, job.SourceFile, 
+                     SearchOption.AllDirectories).ToList().FirstOrDefault());
+                   
 
+                    ffmpegbridge FileIndexer2 = new ffmpegbridge();
+                    FileIndexer2.ReadDuration(Files2);
+                    TotalFrames = await FileIndexer2.ReadAllFrames(Files2) / ((job.IsShorts ? 2 : 1));
+                    totalseconds = TotalFrames / ((job.IsShorts) ? FileIndexer2.FPS / 2 : FileIndexer2.FPS);
+                }
                 //SourceFile = SourceFile.Contains(" ") ? myStrQuote + SourceFile + myStrQuote : SourceFile;
                 try
                 {
@@ -8689,7 +8701,7 @@ namespace VideoGui
                         TotalFrames = await FileIndexer.ReadAllFrames(Files) / ((job.IsShorts ? 2 : 1));
                         totalseconds = TotalFrames / ((job.IsShorts) ? FileIndexer.FPS / 2 : FileIndexer.FPS);
                         //TotalFrames Is OUTPUT FRAMES EXPECTED
-                        
+
 
 
                         job.TotalSeconds = totalseconds;
@@ -8984,6 +8996,7 @@ namespace VideoGui
                     job.Is5K = (videoStream.Width > 4000) ? true : false;
                     LineNum = 55;
                     string codec = videoStream.Codec.ToString(), resize = string.Empty;
+                    if (codec == ffmpeg.VideoCodec.av1.ToString()) DecoderCodec = ffmpeg.VideoCodec.libaom_av1;
                     if (codec == ffmpeg.VideoCodec.h264.ToString()) DecoderCodec = ffmpeg.VideoCodec.h264;
                     if (codec == ffmpeg.VideoCodec.hevc.ToString()) DecoderCodec = ffmpeg.VideoCodec.hevc;
                     if (codec == ffmpeg.VideoCodec.mpeg4.ToString()) DecoderCodec = ffmpeg.VideoCodec.mpeg4;
@@ -9290,7 +9303,7 @@ namespace VideoGui
                     {
                         filesize = MSIZE;
                     }
-                    Application.Current.Dispatcher.Invoke(() =>
+                    Application.Current.Dispatcher.InvokeAsync(() =>
                      {
                          LineNum = 88;
                          job.Fileinfo = $"[{videoinfo}][{filesize}M>]";
@@ -9357,7 +9370,7 @@ namespace VideoGui
                         }
                         else MoveIfExists(SourceFile, ErrorDirectory + "\\" + Path.GetFileName(DestFile));
                         LineNum = 105;
-                        Application.Current.Dispatcher.Invoke(() =>
+                        Application.Current.Dispatcher.InvokeAsync(() =>
                          {
                              LineNum = 106;
                              job.Fileinfo = "[" + videoinfo + "][ERROR]";// OK]";}
@@ -9905,7 +9918,7 @@ namespace VideoGui
                 {
                     if (ProcessingJobs[i].SourceFile == shortname)
                     {
-                        Application.Current.Dispatcher.Invoke(() =>
+                        Application.Current.Dispatcher.InvokeAsync(() =>
                         {
                             ProcessingJobs[i].VideoInfo = $"{shortnum} Shorts Created";
                         });

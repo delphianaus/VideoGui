@@ -1112,48 +1112,7 @@ namespace CustomComponents.ListBoxExtensions
             }
         }
 
-        public void ForceUpdate(string ColumnData, string UpdateData, string ColumnSearchName, string UpdateName)
-        {
-            try
-            {
-                Dispatcher.Invoke(new Action(() =>
-                {
-                    foreach (var item in lstBoxUploadItems.Items)
-                    {
-                        var container = lstBoxUploadItems.ItemContainerGenerator.ContainerFromItem(item);// as ListBoxItem;
-                        if (container != null)
-                        {
-                            var border = VisualTreeHelper.GetChild(container, 0) as Border;
-                            if (border != null)
-                            {
-                                var contentPresenter = VisualTreeHelper.GetChild(border, 0) as ContentPresenter;
-                                if (contentPresenter != null)
-                                {
-                                    var grid = VisualTreeHelper.GetChild(contentPresenter, 0) as Grid;
-                                    if (grid != null && grid.Children.Count > 0)
-                                    {
-                                        var _ColumnData = grid.Children.OfType<TextBlock>().FirstOrDefault(tb => tb.Name == ColumnSearchName);
-                                        if (_ColumnData.Text != ColumnData)
-                                        {
-                                            continue;
-                                        }
-                                        var _UpdateData = grid.Children.OfType<TextBlock>().FirstOrDefault(tb => tb.Name == UpdateName);
-                                        if (_UpdateData != null)
-                                        {
-                                            _UpdateData.Text = UpdateData;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }));
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Error in UpdateSpeed: {ex}");
-            }
-        }
+
 
 
         private INotifyCollectionChanged _currentCollection;
@@ -2698,49 +2657,6 @@ namespace CustomComponents.ListBoxExtensions
             }
         }
 
-        public void UpdateProgress(string VideoId, int progress, string VideoIdName)
-        {
-            try
-            {
-                Dispatcher.Invoke(new Action(() =>
-                {
-                    foreach (var item in lstBoxUploadItems.Items)
-                    {
-                        var container = lstBoxUploadItems.ItemContainerGenerator.ContainerFromItem(item) as ListBoxItem;
-                        if (container != null)
-                        {
-                            var border = VisualTreeHelper.GetChild(container, 0) as Border;
-                            if (border != null)
-                            {
-                                var contentPresenter = VisualTreeHelper.GetChild(border, 0) as ContentPresenter;
-                                if (contentPresenter != null)
-                                {
-                                    var grid = VisualTreeHelper.GetChild(contentPresenter, 0) as Grid;
-                                    if (grid != null && grid.Children.Count > 0)
-                                    {
-                                        var _videoId = grid.Children.OfType<TextBlock>().FirstOrDefault(tb => tb.Name == VideoIdName);
-                                        if (_videoId.Text != VideoId)
-                                        {
-                                            continue;
-                                        }
-                                        var progressbar = grid.Children.OfType<ProgressBar>().FirstOrDefault();
-
-                                        if (progressbar != null)
-                                        {
-                                            progressbar.Value = progress;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }));
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Error in unlockToggleBox: {ex}");
-            }
-        }
         private DependencyProperty GetMainBindingProperty(string componentType, string boundTo = null)
         {
             try
@@ -3172,7 +3088,7 @@ namespace CustomComponents.ListBoxExtensions
                         factory.AddHandler(FrameworkElement.LoadedEvent, new RoutedEventHandler((s, e) =>
                         {
                             var progressBar = s as ProgressBar;
-                            if (progresfsBar != null)
+                            if (progressBar != null)
                             {
                                 if (!string.IsNullOrEmpty(colDef.DataField))
                                 {
