@@ -89,6 +89,7 @@ namespace VideoGui
         bool firebird = false;
         bool Waiting = true, Attached = false;
         private readonly System.Threading.Timer _timer;
+        private System.Threading.Timer _attachTimer;
         private readonly string _taskName;
         private readonly int _intervalMs;
         private string ssid = "";
@@ -102,6 +103,9 @@ namespace VideoGui
                 {
                     RelaunchIfNotAdmin();
                 }
+                WindowStyle = WindowStyle.None;
+                ResizeMode = ResizeMode.NoResize;
+                //Topmost = true;
                 cmdArgs = Environment.GetCommandLineArgs().ToList();
                 ssid = GetEncryptedString(new int[] { 180, 19, 100, 123, 208, 243, 252, 122,
                     202, 47, 88, 134 }.Select(i => (byte)i).ToArray());
@@ -122,7 +126,12 @@ namespace VideoGui
                     if (IsRunningAsAdministrator())
                     {
                         Waiting = true;
-                        Task.Run(async () => { AttachAllDrives(); });
+
+                        _attachTimer = new Timer(Attacher, null, Timeout.Infinite, Timeout.Infinite);
+                        _attachTimer.Change(1000, 5000);
+
+
+                        //Task.Run(async () => { AttachAllDrives(); });
 
                     }
 
@@ -388,7 +397,21 @@ namespace VideoGui
 
                                     (result, error) = RunCommand("-u root mount /dev/md0 /raid", false);
                                     (result, error) = RunCommand("ls /raid", false);
-                                    if (true)
+                                    var rr = result.Split('\n').ToList();
+                                    if (rr.Count > 0)
+                                    {
+                                        var dl2 = Directory.EnumerateDirectories(@"\\wsl.localhost\Ubuntu\raid",
+                                                       "*.*", SearchOption.TopDirectoryOnly).ToList();
+                                        if (dl2.Any())
+                                        {
+                                            Attached = true;
+                                            raidmapper = new System.Timers.Timer(15000); // 1 second interval
+                                            raidmapper.AutoReset = true;
+                                            raidmapper.Elapsed += Raidmapper_Elapsed;
+                                            raidmapper.Start();
+                                        }
+                                    }
+                                    else
                                     {
                                         (result, error) = RunCommand("-u root umount /raid", false);
                                         (result, error) = RunCommand("-u root mdadm --stop /dev/md0", false);
@@ -411,7 +434,8 @@ namespace VideoGui
                                             {
                                                 var res = result.Split('\n').ToList();
                                                 res.WriteLogAsLines(@"wsl_int.log");
-                                                var dirlist = Directory.EnumerateDirectories(@"\\wsl.localhost\Ubuntu\raid", "*.*", SearchOption.TopDirectoryOnly).ToList();
+                                                var dirlist = Directory.EnumerateDirectories(@"\\wsl.localhost\Ubuntu\raid",
+                                                   "*.*", SearchOption.TopDirectoryOnly).ToList();
 
                                                 Attached = true;
                                                 raidmapper = new System.Timers.Timer(15000); // 1 second interval
@@ -429,7 +453,7 @@ namespace VideoGui
                                         });
                                         return true;
                                     }
-                                    else if (faulty || error.ContainsAll2(new() { "mdadm: /dev/md0 has been started", "(out of 6)" }))
+                                    if (faulty || error.ContainsAll2(new() { "mdadm: /dev/md0 has been started", "(out of 6)" }))
                                     {
                                         if (error.Contains("rebuilding") && !faulty)
                                         {
@@ -505,10 +529,25 @@ namespace VideoGui
             catch (Exception ex)
             {
                 ex.LogWrite($"Raidmapper_Tick {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+                raidmapper.Start();
             }
 
         }
 
+
+        private void Attacher(object? state)
+        {
+            try
+            {
+                _attachTimer.Change(Timeout.Infinite, Timeout.Infinite);
+                AttachAllDrives();
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"Attacher {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+            }
+
+        }
         private void RunTask(object? state)
         {
             try

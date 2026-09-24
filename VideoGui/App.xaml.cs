@@ -12,8 +12,9 @@ namespace VideoGui
     {
         protected override void OnStartup(StartupEventArgs e)
         {
+           
+            ShutdownMode = ShutdownMode.OnMainWindowClose; 
             base.OnStartup(e);
-
             // Set theme
             ApplicationThemeManager.Apply(
                 ApplicationTheme.Dark
