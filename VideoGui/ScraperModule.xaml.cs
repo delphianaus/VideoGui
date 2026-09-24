@@ -1306,7 +1306,7 @@ namespace VideoGui
                         }
                         lstMain.Items.Insert(0, $"Inserting {max} Files {r}");
                         await wv2.ExecuteScriptAsync("document.getElementById('upload-icon').click();");
-                        await Task.Delay(1000);
+                        await Task.Delay(500);
                         await wv2.ExecuteScriptAsync("document.getElementById('select-files-button').click();");
                         HasExited = true;
                         Dispatcher.InvokeAsync(() => InternalTimer.Start());
@@ -1386,7 +1386,7 @@ namespace VideoGui
                         if (finishedz == Nodes1.Count && Nodes1.Count > 0)
                         {
                             var cts = new CancellationTokenSource();
-                            cts.CancelAfter(TimeSpan.FromSeconds(4));
+                            cts.CancelAfter(TimeSpan.FromSeconds(2));
                             while (!cts.IsCancellationRequested)
                             {
                                 var html = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
@@ -2100,7 +2100,7 @@ namespace VideoGui
                                     lookups.Add(gUrl2);
                                     wv2A10.Source = new Uri(gUrl2);
                                     var cts = new CancellationTokenSource();
-                                    cts.CancelAfter(TimeSpan.FromSeconds(20000));
+                                    cts.CancelAfter(TimeSpan.FromSeconds(2000));
                                     TimedOut = false;
                                     string oldtitle = TitleStr;
                                     DateTime q = DateTime.Now;
@@ -2306,7 +2306,7 @@ namespace VideoGui
                                 while (true && !canceltoken.IsCancellationRequested)
                                 {
                                     var cts = new CancellationTokenSource();
-                                    cts.CancelAfter(TimeSpan.FromMilliseconds(400));
+                                    cts.CancelAfter(TimeSpan.FromMilliseconds(100));
                                     while (!cts.IsCancellationRequested && !canceltoken.IsCancellationRequested)
                                     {
                                         Thread.Sleep(200);
@@ -2467,7 +2467,7 @@ namespace VideoGui
                         {
                             SendTraceInfo?.Invoke(this, $"ProcessWV2Completed step2");
                             var cts1 = new CancellationTokenSource();
-                            cts1.CancelAfter(TimeSpan.FromMilliseconds(500));
+                            cts1.CancelAfter(TimeSpan.FromMilliseconds(250));
                             while (!cts1.IsCancellationRequested && !canceltoken.IsCancellationRequested)
                             {
                                 await Task.Delay(100);
@@ -2538,7 +2538,7 @@ namespace VideoGui
                     else
                     {
                         var cts = new CancellationTokenSource();
-                        cts.CancelAfter(TimeSpan.FromMilliseconds(1500));
+                        cts.CancelAfter(TimeSpan.FromMilliseconds(500));
                         while (!cts.IsCancellationRequested && !canceltoken.IsCancellationRequested)
                         {
                             await Task.Delay(100);
@@ -4342,13 +4342,13 @@ namespace VideoGui
                 string EditDialog = "class=\"draft-badge style-scope ytcp-uploads-dialog\"";
                 string CloseId = "ytcp-uploads-dialog-close-button";
                 var ProcessingLoopWait = new CancellationTokenSource();
-                ProcessingLoopWait.CancelAfter(TimeSpan.FromSeconds(5));
+                ProcessingLoopWait.CancelAfter(TimeSpan.FromSeconds(3));
                 while (!ProcessingLoopWait.IsCancellationRequested)
                 {
                     await Task.Delay(15);
                 }
                 var ProcessingLoop = new CancellationTokenSource();
-                ProcessingLoop.CancelAfter(TimeSpan.FromMinutes(15));
+                ProcessingLoop.CancelAfter(TimeSpan.FromMinutes(5));
                 while (!ProcessingLoop.IsCancellationRequested)
                 {
                     await Task.Delay(50);
@@ -4438,7 +4438,7 @@ namespace VideoGui
                             var buttonLabel = $"Edit video {FileName}";
                             await wv2.ExecuteScriptAsync($"document.querySelector('button[aria-label=\"{buttonLabel}\"]').click()");
                             var EditProcessingLoop = new CancellationTokenSource();
-                            EditProcessingLoop.CancelAfter(TimeSpan.FromSeconds(10));
+                            EditProcessingLoop.CancelAfter(TimeSpan.FromSeconds(3));
                             bool Valid = false;
                             while (!EditProcessingLoop.IsCancellationRequested)
                             {
@@ -4499,7 +4499,7 @@ namespace VideoGui
                         timeractive = false;
                     };
                     var ctsxr = new CancellationTokenSource();
-                    ctsxr.CancelAfter(TimeSpan.FromSeconds(30));
+                    ctsxr.CancelAfter(TimeSpan.FromSeconds(3));
                     while (true && !ctsxr.IsCancellationRequested)
                     {
                         var htmlx2 = Regex.Unescape(await ActiveWebView[1].ExecuteScriptAsync("document.body.innerHTML"));
@@ -4507,7 +4507,7 @@ namespace VideoGui
                         if (htmlx2 is not null && htmlx2.Contains(classprogress) && htmlx2.Contains("Uploading"))
                         {
                             var _cts1 = new CancellationTokenSource();
-                            _cts1.CancelAfter(TimeSpan.FromSeconds(4));
+                            _cts1.CancelAfter(TimeSpan.FromSeconds(2));
                             while (!_cts1.IsCancellationRequested)
                             {
                                 System.Windows.Forms.Application.DoEvents();
@@ -4644,7 +4644,7 @@ namespace VideoGui
                                         //lstMain.Items.Insert(0, $"Getting Edit Window For {newfile}");
                                         await wv2.ExecuteScriptAsync($"document.querySelector('button[aria-label=\"{buttonLabel}\"]').click()");
                                         var ctsx = new CancellationTokenSource();
-                                        ctsx.CancelAfter(TimeSpan.FromSeconds(25));
+                                        ctsx.CancelAfter(TimeSpan.FromSeconds(5));
                                         bool fnd = false;
                                         while (!ctsx.IsCancellationRequested)
                                         {
@@ -4722,7 +4722,7 @@ namespace VideoGui
                                             }
                                             string vid = "";
                                             var ctxs = new CancellationTokenSource();
-                                            ctxs.CancelAfter(TimeSpan.FromSeconds(5));
+                                            ctxs.CancelAfter(TimeSpan.FromSeconds(2));
                                             while (true && !ctxs.IsCancellationRequested)
                                             {
                                                 Debug.Print("video id parsing");
@@ -4776,7 +4776,7 @@ namespace VideoGui
                                                 TimerSimulate.Start();
                                                 SendTraceInfo?.Invoke(this, $"Sent Close Click");
                                                 var cts1 = new CancellationTokenSource();
-                                                cts1.CancelAfter(TimeSpan.FromSeconds(5));
+                                                cts1.CancelAfter(TimeSpan.FromSeconds(2));
                                                 while (!cts1.IsCancellationRequested)
                                                 {
                                                     System.Windows.Forms.Application.DoEvents();

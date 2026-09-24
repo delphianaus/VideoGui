@@ -58,6 +58,7 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 using static System.Windows.Forms.LinkLabel;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using static VideoGui.Extensions;
+using static VideoGui.ffmpeg.Probe.FormatModel;
 using static VideoGui.MainWindow;
 using Exception = System.Exception;
 using File = System.IO.File;
@@ -86,12 +87,12 @@ namespace VideoGui
         long prcdone = 0;
         string onfinish = "";
         bool firebird = false;
-        bool Waiting = true;
+        bool Waiting = true, Attached = false;
         private readonly System.Threading.Timer _timer;
         private readonly string _taskName;
         private readonly int _intervalMs;
         private string ssid = "";
-
+        List<string> cmdArgs = new();
         public SplashScreenWindow()
         {
             try
@@ -101,6 +102,7 @@ namespace VideoGui
                 {
                     RelaunchIfNotAdmin();
                 }
+                cmdArgs = Environment.GetCommandLineArgs().ToList();
                 ssid = GetEncryptedString(new int[] { 180, 19, 100, 123, 208, 243, 252, 122,
                     202, 47, 88, 134 }.Select(i => (byte)i).ToArray());
                 // KillFFMPEG().ConfigureAwait(true);
@@ -149,58 +151,17 @@ namespace VideoGui
             }
         }
 
-        private Command drive_cmd = null;
-        private async Task<bool> ShutDownWSL()
-        {
-            try
-            {
-                try
-                {
-                    List<string> total = new List<string>();
-                    List<string> Output = new List<string>();
-                    List<string> Errors = new List<string>();
-
-                    bool notmounted = false;
-                    string result = "", error = "";
-                    string cmdstr = "wsl -u root /home/justin/shutdown-raid.sh";
-                    (result, error) = RunCommand(cmdstr);
-                    if (error.Contains("umount: /mnt/raid: not mounted"))
-                    {
-                        cmdstr = "wsl -u root mdadm --stop /dev/md0";
-                        (result, error) = RunCommand(cmdstr);
-                        bool WslShutdown = false;
-                        if (error.Contains("mdadm: stopped /dev/md0"))
-                        {
-                            cmdstr = "wsl --shutdown";
-                            (result, error) = RunCommand(cmdstr);
-                        }
-
-                    }
 
 
-                    return false;
-                }
-                catch (Exception ex)
-                {
-                    ex.LogWrite($"ShutDownWSL {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
-                    return false;
-                }
-            }
-            finally
-            {
-                ReadyX = true;
-            }
-        }
 
-
-        public (string, string) RunCommand(string command)
+        public (string, string) RunCommand(string command, bool Usecmd = true)
         {
             try
             {
                 ProcessStartInfo startInfo = new ProcessStartInfo
                 {
-                    FileName = "cmd.exe",
-                    Arguments = $"/c {command}", // "/c" tells cmd to run the command and exit
+                    FileName = Usecmd ? "cmd.exe" : "wsl.exe",
+                    Arguments = Usecmd ? $"/c {command}" : command, // "/c" tells cmd to run the command and exit
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     UseShellExecute = false,
@@ -214,6 +175,44 @@ namespace VideoGui
                     error = process.StandardError.ReadToEnd();
                     process.WaitForExit();
                 }
+                string TodaysDate = DateTime.Now.ToString("ddMMyy");
+                string logn = $"wsl{TodaysDate}.log";
+                command.WriteLog(logn);
+                if (result == "" && error == "")
+                {
+                    "----------".WriteLog(logn);
+                }
+                else
+                {
+                    result = result.Replace("\0", "");
+
+                    error = error.Replace("\0", "");
+                    if (result != "" && error != "")
+                    {
+
+                        result += "\n" + error;
+                    }
+                    string resl = result != "" ? result : error;
+                    if (resl.Contains(Environment.NewLine))
+                    {
+                        var errList = resl.Split('\n').ToList();
+                        errList.WriteLogAsLines(logn);
+                    }
+                    else
+                    {
+                        bool isUnicode = error.Any(c => c > 255);
+                        if (isUnicode)
+                        {
+                            byte[] asciiBytes = Encoding.ASCII.GetBytes(error);
+                            string asciiString = Encoding.ASCII.GetString(asciiBytes);
+                            asciiString.WriteLog(logn);
+                        }
+                        else error.WriteLog(logn);
+                    }
+                    "------------".WriteLog(logn);
+                }
+
+
                 return (result, error);
             }
             catch (Exception ex)
@@ -289,265 +288,227 @@ namespace VideoGui
         {
             try
             {
-                List<string> Models = new List<string>();
-                Models.Add("ST10000VE001");
-                Models.Add("WD101PURZ");
-                Models.Add("WD102PURZ");
-                Models.Add("WD101PURP");
-                Models.Add("WD102PURP");
-                int TotalDrives = 0;
-                using (var searcher = new ManagementObjectSearcher("SELECT Model, SerialNumber FROM Win32_DiskDrive"))
+
+                try
                 {
-                    foreach (ManagementObject disk in searcher.Get())
+                    List<string> Models = new List<string>();
+                    Models.Add("ST10000VE001");
+                    Models.Add("WD101PURZ");
+                    Models.Add("WD102PURZ");
+                    Models.Add("WD101PURP");
+                    Models.Add("WD102PURP");
+                    int TotalDrives = 0;
+                    using (var searcher = new ManagementObjectSearcher("SELECT Model, SerialNumber FROM Win32_DiskDrive"))
                     {
-                        string model = disk["Model"]?.ToString();
-                        if (model.Contains("ATA"))
+                        foreach (ManagementObject disk in searcher.Get())
                         {
-                            model = model.Replace("ATA", "").Trim();
-                        }
-                        if (model.StartsWith("WDC"))
-                        {
-                            model = model.Substring(4).Trim();
-                        }
-                        int idx = model.IndexOf('-');
-                        if (idx != -1)
-                        {
-                            model = model.Substring(0, idx).Trim();
-                        }
-                        string serial = disk["SerialNumber"]?.ToString();
-                        if (Models.Contains(model))
-                        {
-                            TotalDrives++;
+                            string model = disk["Model"]?.ToString();
+                            if (model.Contains("ATA"))
+                            {
+                                model = model.Replace("ATA", "").Trim();
+                            }
+                            if (model.StartsWith("WDC"))
+                            {
+                                model = model.Substring(4).Trim();
+                            }
+                            int idx = model.IndexOf('-');
+                            if (idx != -1)
+                            {
+                                model = model.Substring(0, idx).Trim();
+                            }
+                            string serial = disk["SerialNumber"]?.ToString();
+                            if (Models.Contains(model))
+                            {
+                                TotalDrives++;
+                            }
                         }
                     }
-                }
-                if (TotalDrives == 6)
-                {
-                    Dispatcher.InvokeAsync(() =>
+                    if (TotalDrives == 6)
                     {
-                        lblStatus.Content = "Status : Running Wsl Scripts";
-                    });
+                        Dispatcher.InvokeAsync(() =>
+                        {
+                            lblStatus.Content = "Status : Running Wsl Scripts";
+                        });
 
-                    string command = "wsl.exe cat /proc/mdstat";
-                    string defaultpath = @"C:\bin\";
-                    string x = @"mountdrives.bat";
-                    string r = "", e = "";
-                    (r, e) = RunCommand(defaultpath + x);
-                    List<string> returnvals = r.Replace("\0", "").Split(Environment.NewLine).ToList();
-                    SendLog(r, e, "Mount Drives");
-                    bool RunMount = true;
-                    //PHYSICALDRIVE6' is already attached
-                    foreach (var rs in returnvals)
-                    {
-                        if (rs.ContainsAll(new[] { "PHYSICALDRIVE", "is already attached" }))
-                        {
-                            RunMount = false;
-                            RaidOk = true;
-                            break;
-                        }
-                    }
-                    if (RunMount)
-                    {
-                        string result = "", error = "";
-                        command = "wsl.exe -u root /mnt/c/Users/Justin/Attach.sh";
-                        (result, error) = RunCommand(command);
-                        SendLog(result, error, "Attach Script");
-                        bool faulty = false;
-                        if (error.Contains("active") && !error.Contains("UUUUUU"))
-                        {
-                            faulty = true;
-                        }
+                        string command = "wsl.exe cat /proc/mdstat";
+                        string defaultpath = @"C:\bin\";
+                        string x = @"mountdrives.bat";
+                        string r = "", e = "";
+                        (r, e) = RunCommand(defaultpath + x);
+                        List<string> returnvals = r.Replace("\0", "").Split(Environment.NewLine).ToList();
 
-                        if (faulty || error.ContainsAll2(new() { "mdadm: /dev/md0 has been started", "(out of 6)" }))
+                        bool RunMount = true;
+                        //PHYSICALDRIVE6' is already attached
+                        foreach (var rs in returnvals)
                         {
-                            if (error.Contains("rebuilding") && !faulty)
+                            if (rs.ContainsAll(new[] { "PHYSICALDRIVE", "is already attached" }))
                             {
-                                command = "wsl.exe -u root mdadm --readwrite /dev/md0";
-                                (result, error) = RunCommand(command);
-                                SendLog(result, error, "md0 readwrite");
-                            }
-                            else
-                            {
-
-                                command = "wsl.exe -u root lsblk";
-                                (result, error) = RunCommand(command);
-                                SendLog(result, error, "lsblk");
-                                List<string> drvs = result.Split('\n').ToList();
-                                for (int i = drvs.Count - 1; i >= 0; i--)
-                                {
-                                    string item = drvs[i];
-                                    if (!item.Contains("9.1T"))
-                                    {
-                                        drvs.RemoveAt(i);
-                                        continue;
-                                    }
-                                    drvs[i] = "/dev/" + drvs[i].Substring(0, 4).Trim();
-                                }
-
-                                command = "wsl.exe -u root mdadm --detail /dev/md0";
-                                (result, error) = RunCommand(command);
-                                SendLog(result, error, "mdadm --detail");
-
-
-                                if (result.Contains("removed"))
-                                {
-
-                                    List<string> drv3 = new();
-                                    drv3.AddRange(drvs);
-                                    foreach (var driveid in drvs)
-                                    {
-                                        if (result.Contains(driveid)) drv3.Remove(driveid);
-                                    }
-
-                                    string drive = drv3.FirstOrDefault();
-
-                                    command = "wsl.exe -u root mdadm --manage /dev/md0 --add " + drive;
-                                    (result, error) = RunCommand(command);
-                                    SendLog(result, error, "mdadm --manage add drive " + drive);
-                                }
+                                RunMount = false;
+                                RaidOk = true;
+                                break;
                             }
                         }
-                        else
+                        if (RunMount || Debugger.IsAttached)
                         {
-                            command = "wsl.exe cat /proc/mdstat";
-                            bool startresync = false;
-                            bool inactive = false;
-                            (result, error) = RunCommand(command);
-                            SendLog(result, error, "cat /proc/mdstat");
-                            if (result.Contains("md0 : inactive"))
+                            int ttx = 5;
+                            var cts = new CancellationTokenSource();
+                            cts.CancelAfter(TimeSpan.FromSeconds(ttx));
+                            var TimeOut = ttx * 4;
+                            while (!cts.IsCancellationRequested)
                             {
-                                inactive = true;
+                                Thread.Sleep(250);
+                                TimeOut--;
+                                Dispatcher.InvokeAsync(() =>
+                                {
+                                    decimal tt = TimeOut / 4;
+                                    double m = (double)Math.Round(tt);
+                                    lblStatus.Content = $"Status : Waiting On Wsl {Math.Round(m, 1)} Seconds";
+                                });
                             }
-                            if (result.Contains("resync") && (result.Contains("PENDING")))
+
+                            string result = "", error = "";
+                            (result, error) = RunCommand(" -u root cat /proc/mdstat", false);
+                            bool faulty = (error.Contains("active") && !error.Contains("UUUUUU")) ? true : false;
+                            if (!faulty)
                             {
-                                startresync = true;
-                            }
-
-                            if (!inactive && !startresync)
-                            {
-
-                                command = "wsl.exe -u root mount -t xfs -o ro,norecovery /dev/md0 /mnt/raid";
-                                (result, error) = RunCommand(command);
-                                SendLog(result, error, "root mount -t xfs");
-                                (result, error) = RunCommand("ls /mnt/raid");
-                                SendLog(result, error, "ls /mnt/raid");
-                                command = "wsl.exe -u root mount -t xfs -o ro,norecovery /dev/md0 /raid";
-                                (result, error) = RunCommand(command);
-                                SendLog(result, error, "root mount -t xfs");
-                                command = "wsl.exe -u root mount -o remount,rw /mnt/raid";
-                                (result, error) = RunCommand(command);
-                                SendLog(result, error, "root remount -t xfs");
-                                command = "wsl.exe -u root mount -o remount,rw /raid";
-                                (result, error) = RunCommand(command);
-                                SendLog(result, error, "root remount -t xfs");
-
-                                command = "wsl.exe -u root umount /raid";
-                                (result, error) = RunCommand(command);
-                                SendLog(result, error, "umount 1");
-
-                                command = "wsl.exe -u root umount /mnt/raid";
-                                (result, error) = RunCommand(command);
-                                SendLog(result, error, "umount 2");
-                                command = "wsl.exe -u root mdadm --stop /dev/md0";
-                                (result, error) = RunCommand(command);
-                                SendLog(result, error, "mdadm --stop");
-                                command = "wsl.exe --shutdown";
-                                (result, error) = RunCommand(command);
-                                SendLog(result, error, "md0 shutdown");
-                                CancellationTokenSource cts = new CancellationTokenSource();
-                                cts.CancelAfter(TimeSpan.FromSeconds(5));
-                                while (!cts.IsCancellationRequested)
+                                if (result.ContainsAll2(new() { "Personalities", "inactive" }))
                                 {
-                                    Thread.Sleep(1000);
-                                }
-
-                                command = @"c:\bin\mountdrives.bat";
-                                (result, error) = RunCommand(command);
-                                SendLog(result, error, "mountdrives");
-
-                                command = "wsl.exe -u root lsblk";
-                                (result, error) = RunCommand(command);
-                                SendLog(result, error, "lsblk");
-                                command = "wsl.exe -u root /mnt/c/Users/Justin/Attach.sh";
-                                (result, error) = RunCommand(command);
-                                SendLog(result, error, "Attach Script");
-
-                                command = "wsl.exe -u root mount /dev/md0 /raid";
-                                (result, error) = RunCommand(command);
-                                SendLog(result, error, "umount 2");
-
-                            }
-                            if (inactive)
-                            {
-                                bool iboot = true;
-                                command = "wsl.exe -u root mdadm --stop /dev/md0";
-                                (result, error) = RunCommand(command);
-                                SendLog(result, error, "root mdadm --stop");
-                                if (error.Contains("mdadm: stopped /dev/md0"))
-                                {
-                                    iboot = true;
-                                }
-                                if (error.Contains("mdadm: error opening /dev/md0: No such file or directory"))
-                                {
-                                    iboot = true;
-                                }
-
-                                if (iboot)
-                                {
-                                    bool started = false;
-                                    command = "wsl.exe -u root mdadm --assemble --force --readonly /dev/md0 --scan";
-                                    (result, error) = RunCommand(command);
-                                    SendLog(result, error, "root mdadm --assemble");
-                                    if (error.Contains("mdadm: /dev/md0 has been started with 6 drives."))
+                                    (result, error) = RunCommand("-u root mount /dev/md0 /raid", false);
+                                    (result, error) = RunCommand("-u root mdadm --stop /dev/md0", false);
+                                    (result, error) = RunCommand("-u root mdadm --assemble /dev/md0 --scan --force", false);
+                                    if (result == "")
                                     {
-                                        started = true;
+
                                     }
 
-                                    if (started)
+
+                                }
+                                else if (result.ContainsAll2(new() { "Personalities", "raid5", "active", "auto-read-only" }))
+                                {
+
+                                    (result, error) = RunCommand("-u root mount /dev/md0 /raid", false);
+                                    (result, error) = RunCommand("ls /raid", false);
+                                    if (true)
                                     {
-                                        command = "wsl.exe cat /proc/mdstat";
-                                        (result, error) = RunCommand(command);
-                                        SendLog(result, error, "cat /proc/mdstat");
-                                        if (result.Contains("resync") && (result.Contains("PENDING")))
+                                        (result, error) = RunCommand("-u root umount /raid", false);
+                                        (result, error) = RunCommand("-u root mdadm --stop /dev/md0", false);
+                                        (result, error) = RunCommand("--shutdown", false);
+                                        (result, error) = RunCommand("c:\\bin\\mountdrives.bat");
+                                        List<string> rv = result.Replace("\0", "").Split(Environment.NewLine).ToList();
+                                        (result, error) = RunCommand("-u root cat /proc/mdstat", false);
+
+                                        if (result.ContainsAll2(new() { "Personalities", "raid5", "active", "auto-read-only" }))
                                         {
-                                            startresync = true;
+                                            (result, error) = RunCommand("-u root mount /dev/md0 /raid", false);
+                                            (result, error) = RunCommand("-u root ls /raid", false);
+
+                                            if (result.Contains("\\0"))
+                                            {
+                                                result = result.Replace("\\0", "");
+
+                                            }
+                                            if (result.Contains('\n'))
+                                            {
+                                                var res = result.Split('\n').ToList();
+                                                res.WriteLogAsLines(@"wsl_int.log");
+                                                var dirlist = Directory.EnumerateDirectories(@"\\wsl.localhost\Ubuntu\raid", "*.*", SearchOption.TopDirectoryOnly).ToList();
+
+                                                Attached = true;
+                                                raidmapper = new System.Timers.Timer(15000); // 1 second interval
+                                                raidmapper.AutoReset = true;
+                                                raidmapper.Elapsed += Raidmapper_Elapsed;
+                                                raidmapper.Start();
+                                            }
+                                            else result.WriteLog(@"wsl_int.log");
+                                        }
+                                        Dispatcher.InvokeAsync(() =>
+                                        {
+                                            decimal tt = TimeOut / 4;
+                                            double m = (double)Math.Round(tt);
+                                            lblStatus.Content = $"Status : WSL Initialized";
+                                        });
+                                        return true;
+                                    }
+                                    else if (faulty || error.ContainsAll2(new() { "mdadm: /dev/md0 has been started", "(out of 6)" }))
+                                    {
+                                        if (error.Contains("rebuilding") && !faulty)
+                                        {
+                                            (result, error) = RunCommand("-u root mdadm --readwrite /dev/md0", false);
+                                        }
+                                        else
+                                        {
+                                            (result, error) = RunCommand("-u root lsblk", false);
+                                            List<string> drvs = result.Split('\n').ToList();
+                                            for (int i = drvs.Count - 1; i >= 0; i--)
+                                            {
+                                                string item = drvs[i];
+                                                if (!item.Contains("9.1T"))
+                                                {
+                                                    drvs.RemoveAt(i);
+                                                    continue;
+                                                }
+                                                drvs[i] = "/dev/" + drvs[i].Substring(0, 4).Trim();
+                                            }
+                                            (result, error) = RunCommand("-u root mdadm --detail /dev/md0", false);
+                                            if (result.Contains("removed"))
+                                            {
+                                                List<string> drv3 = new();
+                                                drv3.AddRange(drvs);
+                                                foreach (var driveid in drvs)
+                                                {
+                                                    if (result.Contains(driveid)) drv3.Remove(driveid);
+                                                }
+                                                string drive = drv3.FirstOrDefault();
+                                                (result, error) = RunCommand("-u root mdadm --manage /dev/md0 --add" + drive, false);
+                                            }
                                         }
                                     }
+
                                 }
                             }
-                            if (startresync)
-                            {
-                                bool mnt = false;
-                                command = "wsl.exe -u root mdadm --readwrite /dev/md0";
-
-                                (result, error) = RunCommand(command);
-                                SendLog(result, error, "mdadm --readwrite");
-                                mnt = true;
-
-                                if (mnt)
-                                {
-                                    command = "wsl.exe -u root mount /dev/md0 /raid";
-                                    (result, error) = RunCommand(command);
-                                    SendLog(result, error, "root mount");
-                                }
-                            }
-
                         }
                     }
+
+                    Waiting = false;
+                    return false;
                 }
+                catch (Exception ex)
+                {
+                    Waiting = false;
+                    ex.LogWrite($"AttachAllDrives {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+                    return false;
+                }
+            }
+            finally
+            {
                 Waiting = false;
-                return false;
+            }
+        }
 
+        private void Raidmapper_Elapsed(object? sender, System.Timers.ElapsedEventArgs e)
+        {
+            try
+            {
+                raidmapper.Stop();
 
+                var dirlist = Directory.EnumerateDirectories(@"\\wsl.localhost\Ubuntu\raid", "*.*", SearchOption.TopDirectoryOnly).ToList();
+                if (dirlist.Count == 0)
+                {
+                    string err = "raid not mounted";
+                    err.WriteLog(@"C:\videogui\raidlog.log");
+                    string ss = "", ee = "";
+                    (ss, ee) = RunCommand("-u root mount /dev/md0 /raid", false);
+                }
+
+                raidmapper.Start();
             }
             catch (Exception ex)
             {
-                Waiting = false;
-                ex.LogWrite($"AttachAllDrives {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
-                return false;
+                ex.LogWrite($"Raidmapper_Tick {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
 
         }
+
         private void RunTask(object? state)
         {
             try
@@ -725,7 +686,7 @@ namespace VideoGui
                     int rr = DownloadUrl.IndexOf("Firebird-");
                     int rr2 = DownloadUrl.IndexOf("windows");
                     string version = DownloadUrl.Substring(rr + 9, rr2 - rr - 9);
-                    Dispatcher.InvokeAsync  (() =>
+                    Dispatcher.InvokeAsync(() =>
                     {
                         SevenZipExtractor.SetLibraryPath(AppPath);
                     });
@@ -904,15 +865,7 @@ namespace VideoGui
                     PropertyData description = mo.Properties[d];
                     PropertyData Driver = mo.Properties[dv];
 
-                    if ((description.Value != null) && (Driver.Value != null))
-                    {
-                        Card = description.Value.ToString();
-                        DriverVer = Driver.Value.ToString();
-                        if (Card.ToLower().Contains(amd) && DriverVer != "31.0.14001.45012")
-                        {
-                            //res = false;
-                        }
-                    }
+
                 }
                 return res;
             }
@@ -1098,7 +1051,7 @@ namespace VideoGui
                                     videogui.Kill();
                                 }));
                             }*/
-                            while (!firebird && Waiting)// ffmpegready
+                            while (!firebird || Waiting)// ffmpegready
                             {
                                 Thread.Sleep(250);
                                 System.Windows.Forms.Application.DoEvents();
@@ -1113,7 +1066,7 @@ namespace VideoGui
                 {
                     if (isLoggedOn())
                     {
-                        while (!firebird)
+                        while (!firebird || Waiting)
                         {
                             Thread.Sleep(250);
                             System.Windows.Forms.Application.DoEvents();
@@ -1664,7 +1617,8 @@ namespace VideoGui
         {
             try
             {
-
+                string wslLog = "Shutting Down wsl";
+                wslLog.WriteLog(@"C:\videogui\wsl_int.log");
                 if (Debugger.IsAttached) return;
                 bool NeedStop = false;
                 string result = "", error = "";
@@ -1705,12 +1659,12 @@ namespace VideoGui
 
         }
         bool ReadyX = false;
-        public void Terminate()
+        public void Terminate(bool allow_wsl = true)
         {
             try
             {
                 ReadyX = false;
-                if (Environment.MachineName == "LEVIATHAN")
+                if (Environment.MachineName == "LEVIATHAN" && allow_wsl)
                 {
                     //bool ok = ShutDownWSL().ConfigureAwait(false).GetAwaiter().GetResult();
                     if (IsRunningAsAdministrator())
@@ -1740,6 +1694,7 @@ namespace VideoGui
         }
 
         DispatcherTimer drs;
+        private System.Timers.Timer raidmapper;
         public bool RaidOk = false;
         object Locke = new object();
         public void RunMainApp(bool IsScheduleRestart = false)
@@ -1757,11 +1712,10 @@ namespace VideoGui
                         142, 9, 178, 78, 5, 180, 192, 136, 70, 118, 62, 190, 184, 249, 167, 201,
                         137, 94, 29, 105, 197, 253, 61, 228, 109, 231, 18, 253, 120, 237, 250,
                         20, 90, 9, 104, 94, 141, 187 }.Select(i => (byte)i).ToArray());
-                        Terminate();
+                        Terminate(false);
                     }
 
                     int pidIgnore = -1;
-                    List<string> cmdArgs = Environment.GetCommandLineArgs().ToList();
                     bool isrestart = cmdArgs.Contains("SCHEDULER_RESTART");
                     if (isrestart)
                     {
@@ -1803,25 +1757,10 @@ namespace VideoGui
                             121, 204, 137, 248, 190, 206, 199, 107 }.Select(i => (byte)i).ToArray());
                             lblStatus.Content = x;
                             Thread.Sleep(1000);
-                            Terminate();
+                            Terminate(false);
                         }
 
-                        if (!IsAMDGPUVERSIONOK())
-                        {
-                            lblStatus.Content = GetEncryptedString(new int[] { 183, 18, 107, 22, 195, 198, 202, 86,
-                            253, 115, 77, 133, 198, 149, 89, 125, 43, 190, 174, 243,
-                            161, 210, 192, 126, 29, 124, 144, 167, 126, 175, 46, 233, 98, 173,
-                            37, 180, 165, 26, 60, 85, 63, 7, 203, 228, 179, 126, 144, 130, 164,
-                            29, 214, 65, 14, 73, 203, 146, 235, 171, 36, 121, 61, 207, 2, 61, 227,
-                            162, 195, 170, 86, 242, 8, 132, 160, 109, 95, 246 }.Select(i => (byte)i).ToArray());
-                            var cts = new CancellationTokenSource();
-                            cts.CancelAfter(TimeSpan.FromSeconds(2));
-                            while (!cts.IsCancellationRequested)
-                            {
-                                Thread.Sleep(250);
-                            }
-                            Terminate();
-                        }
+
 
                         lblYouTubeHelper.Content += " " + Assembly.GetExecutingAssembly().GetName().Version.ToString();
                         var cts1 = new CancellationTokenSource();
@@ -1830,11 +1769,13 @@ namespace VideoGui
                         {
                             Thread.Sleep(100);
                         }
-                        if (!Dispatcher.CheckAccess())
+                        /*if (!Dispatcher.CheckAccess())
                         {
+
+
                             Dispatcher.InvokeAsync(() => RunMainApp(IsRestart));
                             return;
-                        }
+                        }*/
                         lblStatus.Content = GetEncryptedString(new int[] { 165, 43, 78, 66, 228, 212, 142, 9, 178, 94, 5,
                         164, 215, 151, 70, 118, 62, 190, 186, 249, 162, 135, 158,
                         86, 49, 72, 144, 225, 63, 229, 127, 179, 54 }.Select(i => (byte)i).ToArray());
@@ -1920,26 +1861,16 @@ namespace VideoGui
                             if (IsRestart) x5 = "Restarting Main App";
                             lblStatus.Content = x5;
                             // work out if app is re launched for YT API Reboot
-                            RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
-                            List<string> forms_Create_List = new();
-                            bool forms_available = false;
-                            if (key.RegistryValueExists("automate-forms"))
+
+                            if (Attached)
                             {
+                                string ss = "", ee = "";
+                                (ss, ee) = RunCommand("-u root mount /dev/md0 /raid", false);
 
-                                var forms_list = key.GetValueStrs("automate-forms");
-                                if (forms_list.Length > 0)
-                                {
-                                    forms_Create_List.AddRange(forms_list);
-                                    forms_available = true;
-                                }
                             }
-                            key?.Close();
-
-
                             IsRestart = pidIgnore != -1;
 
-                            MainAppWindow = new MainWindow(DoOnFinish,
-                                forms_available, forms_Create_List, IsRestart);
+                            MainAppWindow = new MainWindow(DoOnFinish);
                             Hide();
                             MainAppWindow.ShowActivated = true;
                             MainAppWindow.Show();
@@ -1980,7 +1911,7 @@ namespace VideoGui
                         var r = Process.Start(processStartInfo);
                         if (r != null)
                         {
-                            Terminate();
+                            Terminate(false);
                         }
                     }
                     else Terminate();

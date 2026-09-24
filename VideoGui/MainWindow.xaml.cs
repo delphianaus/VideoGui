@@ -6307,8 +6307,7 @@ namespace VideoGui
         }
 
         public bool IsClosed = false, IsClosing = false;
-        public MainWindow(OnFinishReload DoOnFinish, bool IsReloaded = false,
-            object formsList = null, bool IsRestart = false)
+        public MainWindow(OnFinishReload DoOnFinish)//, bool IsReloaded = false, bool IsRestart = false)
         {
             try
             {

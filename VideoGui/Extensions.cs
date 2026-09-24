@@ -2507,6 +2507,32 @@ namespace VideoGui
             }
         }
 
+        public static void WriteLogAsLines(this List<string> obj, string LogName = "")
+        {
+
+            string m_exePath = Debugger.IsAttached ? GetAppPath() : System.IO.Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
+            try
+            {
+                if (m_exePath.Contains("Debug")) m_exePath = GetAppPath();
+                string date = DateTime.Now.ToString("dd_MM_yyyy");
+                using (StreamWriter txtWriter = File.AppendText(m_exePath + $"\\{date}-{LogName}-WRITELOG.log"))
+                {
+                    
+                    string tta = DateTime.Now.TimeOfDay.ToString();
+                    txtWriter.WriteLine($"--------------{tta}-----------------");
+                    foreach (var line in obj)
+                    {
+                        txtWriter.WriteLine($"{line}");
+                    }
+                    txtWriter.WriteLine("-------------------------------");
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.Print(MethodBase.GetCurrentMethod().Name.ToString() + " LogWrite" + ex.Message);
+            }
+        }
+
         public static void WriteLog(this string obj, string LogName = "", string opt = "")
         {
 

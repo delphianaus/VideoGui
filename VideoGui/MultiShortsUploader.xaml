@@ -10,7 +10,7 @@
         SizeChanged="Window_SizeChanged" 
         ResizeMode="CanResize" WindowStartupLocation="CenterScreen" 
         WindowStyle="ToolWindow" KeyDown="frmMultiShortsUploader_KeyDown"
-        mc:Ignorable="d" Loaded="Window_Loaded"
+        mc:Ignorable="d" Loaded="Window_Loaded" d:Background="Gray"
         Title="Multi Shorts Uploader" Height="470" Width="555">
     <ui:FluentWindow.Resources>
         <ResourceDictionary>
