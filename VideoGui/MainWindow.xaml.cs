@@ -7199,7 +7199,7 @@ namespace VideoGui
                             (Job.Is4K) ? DestDirectory4K :
                             (Job.Is1440p) ? DestDirectory1440p :
                             (Job.IsYouTube) ? DestDirectoryYouTube :
-                            (Job.IsMovie) ? DestDirectory4K : DestDirectory720p;
+                            (Job.IsMovie) ? DestDirectoryMovie : DestDirectory720p;
                             if (Job.ISFILESRC || Job.IsXMLSource)
                             {
                                 DestFile = Job.DestMFile;
@@ -8455,14 +8455,15 @@ namespace VideoGui
                 string SourceDirectory4K = key.GetValueStr("SourceDirectory4K", string.Empty);
                 string SourceDirectory4KAdobe = key.GetValueStr("SourceDirectory4KAdobe", string.Empty);
                 string SourceDirectoryMovies = key.GetValueStr("SourceDirectoryMovies", string.Empty);
-
+                string SourceDirectoryYouTube = key.GetValueStr("SourceDirectoryYouTube", string.Empty);
                 key?.Close();
                 SourceList.Clear();
                 if (SourceDirectory720p != string.Empty)
                 {
                     string DownloadsDir = GetDownloadsFolder();
 
-                    List<string> SourceDirs = new List<string>() { SourceDirectory720p, SourceDirectory1440p, SourceDirectory4K, SourceDirectory4KAdobe };
+                    List<string> SourceDirs = new List<string>() { SourceDirectory720p, SourceDirectory1440p,
+                    SourceDirectory4K, SourceDirectory4KAdobe,SourceDirectoryMovies,SourceDirectoryYouTube };
                     bool IsPrometheus = Environment.MachineName.ToLower().Contains("prometheus");
                     if (!IsPrometheus)
                     {
@@ -9291,7 +9292,14 @@ namespace VideoGui
                     decimal samplesize = 1;
                     LineNum = 82;
 
-                    if (job.IsMovie || job.IsYouTube || job.Is720P) samplesize = 0.8M;
+                    if (job.IsMovie || job.IsYouTube || job.Is720P) samplesize = 1.4M;
+                    if (job.IsYouTube || job.Is720P)
+                    {
+                        if (videoStream.Framerate > 25)
+                        {
+                            videoStream = videoStream.SetFPS(25.0f);
+                        }
+                    }
                     if ((job.Is1440p) || (job.Is4K))
                     {
                         samplesize = (!job.Is4K) ? 14M : 33.5M;// was 6.5M : 30M
