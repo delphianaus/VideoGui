@@ -395,7 +395,34 @@ namespace VideoGui.ffmpeg.Streams.Video
         {
             try
             {
-                if (width > 0)
+                if (width > 0 && height > 0)
+                {
+                    string crop = x > 0 || y > 0 ? $"crop={x}:{y}:{left}:{top}" : "";
+                    string setdar = (dar != "") ? $"setdar={dar}" : "";
+                    _size = $"scale={width}:{height}:flags=" + Scaler.ToString();//
+                    //crop + setdar;
+                    _parameters.AddIfNotExists(_size, PostInput);
+                    if ((x > 0) && (y > 0)) _parameters.AddIfNotExists(crop, PostInput);
+                    if (setdar != "") _parameters.AddIfNotExists(setdar, PostInput);
+                }
+                else if (width < 0 && height > 0)
+                {
+                    double AdjustedWidth = aspectratio != -1 ? Math.Round(height * aspectratio) : width;
+                    if (Modulas != -1)
+                    {
+                        int rd = Modulas.ToString().ToInt();
+                        AdjustedWidth = Math.Round(AdjustedWidth / rd) * rd;
+                    }
+                    string crop = x > 0 || y > 0 ? $"crop={x}:{y}:{left}:{top}" : "";
+                    string setdar = (dar != "") ? $"setdar={dar}" : "";
+                    _size = $"scale={AdjustedWidth}:{height}:flags=" + Scaler.ToString();//
+                    //crop + setdar;
+                    _parameters.AddIfNotExists(_size, PostInput);
+                    if ((x > 0) && (y > 0)) _parameters.AddIfNotExists(crop, PostInput);
+                    if (setdar != "") _parameters.AddIfNotExists(setdar, PostInput);
+                }
+
+                else if (width > 0 && height < 1)
                 {
                     double AdjustedHeight = aspectratio != -1 ? Math.Round(width / aspectratio) : height;
                     if (Modulas != -1)

@@ -357,7 +357,7 @@ namespace VideoGui
             ISFILESRC = _ISFILESRC;
             IsXMLSource = _IsXMLSource;
             IsMovie = _IsMovie;
-            
+            IsYouTube = _IsYouTube;
             twitchschedule = DateTime.Now.AddYears(-100);
             Processed = false;
             SourceFileIndex = _SourceFileIndex;
@@ -381,7 +381,7 @@ namespace VideoGui
             _ProbeStarted = false;
             ScriptFile = "";
             IsNVM = false;
-            if (!Is1440p && !Is4K && !Is4KAdobe)
+            if (!Is1440p && !Is4K && !Is4KAdobe && !IsYouTube && !IsMovie)
             {
                 Is720P = true;
             }
