@@ -28,7 +28,7 @@ namespace VideoGui
             _ConversionStarted, _ProbePassed, _KeepSource, _IsMulti, _IsDownloads,
             _fisheye, _processed, _X264Override, _ComplexMode, _Is720p,
             _Is48K, _IsComplex, _ProbeLock, _IsAc3_2Channel, _IsAc3_6Channel,
-            _InProcess, _IsSkipped, _IsShorts, _Mpeg4ASP, _Mpeg4AVC, _Is1440p,
+            _InProcess, _IsSkipped, _IsShorts, _Mpeg4ASP, _Mpeg4AVC, _Is1440p,_IsYouTube,
             _Is4K, _IsInterlaced, _ProbeStarted, _IsMuxed, _ISFILESRC, _IsXMLSource, _IsMovie;
         private FontStyle _ItemFontStyle;
         private Color _ForegroundColor;
@@ -86,6 +86,7 @@ namespace VideoGui
         // CET MOD
         public bool IsNVM { get => _IsNVM; set { _IsNVM = value; OnPropertyChanged(); } }
         public bool IsMovie { get => _IsMovie; set { _IsMovie = value; OnPropertyChanged(); } }
+        public bool IsYouTube { get => _IsYouTube; set { _IsYouTube = value; OnPropertyChanged(); } }
         public bool IsXMLSource { get => _IsXMLSource; set { _IsXMLSource = value; OnPropertyChanged(); } }
         public bool IsMSJ { get => _IsMSJ; set { _IsMSJ = value; OnPropertyChanged(); } }
         public bool Is5K { get => _Is5K; set { _Is5K = value; OnPropertyChanged(); } }
@@ -133,7 +134,7 @@ namespace VideoGui
         public int DeletionFileHandle { get => _DeletionFileHandle; set { _DeletionFileHandle = value; OnPropertyChanged(); } }
 
         public int SourceFileIndex { get => _SourceFileIndex; set { _SourceFileIndex = value; OnPropertyChanged(); } }
-
+        public bool IsTwitchValid => IsTwitchStream && !twitchschedule.HasValue;
         public bool X264Override { get => _X264Override; set { _X264Override = value; OnPropertyChanged(); } }
         public bool ProbeLock { get => _ProbeLock; set { _ProbeLock = value; OnPropertyChanged(); } }
         public bool Is1440p { get => _Is1440p; set { _Is1440p = value; OnPropertyChanged(); } }
@@ -165,6 +166,7 @@ namespace VideoGui
                 Title = Path.GetFileName(destfname);
                 ISFILESRC = (reader["ISFILESRC"] is Int16 _ISF) ? (Int16)_ISF == 1 : false;
                 Is720P = (reader["B720P"] is Int16 _is720p) ? (Int16)_is720p == 1 : false;
+                IsMovie = (reader["ISYOUTUBE"] is Int16 _ISYT) ? (Int16)_ISYT == 1 : false;
                 IsShorts = (reader["BSHORTS"] is Int16 _isShorts) ? (Int16)_isShorts == 1 : false;
                 IsMuxed = (reader["ISMUXED"] is Int16 _isMux) ? (Int16)_isMux == 1 : false;
                 IsMovie = (reader["ISMOVIE"] is Int16 _isMovie) ? (Int16)_isMovie == 1 : false;
@@ -209,6 +211,8 @@ namespace VideoGui
                 if (IsTwitchStream) ScriptType = 5;
                 if (IsMuxed) ScriptType = 6;
                 if (ISFILESRC) ScriptType = 7;
+                if (IsYouTube) ScriptType = 8;
+                if (IsMovie) ScriptType = 9;
                 string CutFrames = (_Duration != TimeSpan.Zero) ?
                     $"|{_StartPos.ToFFmpeg()}|{_Duration.ToFFmpeg()}|time" : "";
                 ScriptFile = $"true|{destfname}|{srcdir}|*.mp4{CutFrames}";
@@ -262,7 +266,7 @@ namespace VideoGui
                 ex.LogWrite($"{this} {MethodBase.GetCurrentMethod().Name}");
             }
         }
-        public JobListDetails(bool _IsXMLSource, bool _IsMovie, bool _IsDownloads, bool _ISFILESRC, string _Title, int _SourceFileIndex,
+        public JobListDetails(bool _IsXMLSource, bool _IsMovie, bool _IsYouTube,bool _IsDownloads, bool _ISFILESRC, string _Title, int _SourceFileIndex,
             int _Autoinssertid, string _ScriptFile,
             int _ScriptType, bool _Is1440p = false, bool _Is4Kp = false, bool _ISMJS = false,
             bool __Is4KAdobe = false, bool __IsShorts = false, int __IsCreateShorts = 0,
@@ -273,6 +277,7 @@ namespace VideoGui
             IsDownloads = _IsDownloads;
             IsMovie = _IsMovie;
             IsXMLSource = _IsXMLSource;
+            IsYouTube = _IsYouTube;
             ISFILESRC = _ISFILESRC || _ScriptType == 7;
             (Fileinfo, Progress, SourceFileIndex, Is1440p, Is4K, ScriptFile) = (_FIleInfo, 0, _SourceFileIndex, _Is1440p, _Is4Kp, _ScriptFile);
             (ProbePassed, Complete, ProbeLock, _ProbeStarted, _ConversionStarted, Processed) = (true, false, false, false, false, false);
@@ -342,7 +347,7 @@ namespace VideoGui
             }
         }
 
-        public JobListDetails(bool _IsXMLSource, bool _IsMovie, bool _IsDownloads, bool _ISFILESRC,string _Title, int _SourceFileIndex, string _SourceDir = "",
+        public JobListDetails(bool _IsXMLSource, bool _IsMovie, bool _IsYouTube,bool _IsDownloads, bool _ISFILESRC,string _Title, int _SourceFileIndex, string _SourceDir = "",
             int _Progress = 0, bool x265Override = false, bool _IsMpeg4ASP = false,
             bool _IsMpeg4AVC = false)
         {
@@ -352,6 +357,7 @@ namespace VideoGui
             ISFILESRC = _ISFILESRC;
             IsXMLSource = _IsXMLSource;
             IsMovie = _IsMovie;
+            
             twitchschedule = DateTime.Now.AddYears(-100);
             Processed = false;
             SourceFileIndex = _SourceFileIndex;

@@ -48,7 +48,7 @@ namespace VideoGui.ffmpeg
         private bool _IsProbe = false, _IsComplex = false, _IsConcat = false, IsMuxed = false;
         private string ComplexBitRate = string.Empty, MuxData = "";
         public bool _Is1440p;
-        public int mtscnt = 0;
+        public int mtscnt = 0, av1Preset = 6, av1crf = 28;
         private TimeSpan startime = TimeSpan.Zero;
         private Command cmd = null;
         CancellationTokenSource cancellation = new CancellationTokenSource();
@@ -550,8 +550,9 @@ namespace VideoGui.ffmpeg
                 bool vcopy = false, acopy = false, onseek = false;
                 if (!IsMuxed)
                 {
-                    List<string> argsx = new List<string>();
+
                     List<string> args2x = new List<string>();
+                    List<string> argsx = new List<string>();
                     argsx.AddRange(GetParameters());
                     errn = 114;
                     argsx.AddRange(GetInputs());
@@ -700,7 +701,7 @@ namespace VideoGui.ffmpeg
 
 
 
-                    await foreach (var commandEvent in cmd.ListenAsync())
+                await foreach (var commandEvent in cmd.ListenAsync())
                 {
                     switch (commandEvent)
                     {
@@ -1504,7 +1505,7 @@ namespace VideoGui.ffmpeg
         {
             try
             {
-                if (!IsCopy)
+                if (!IsCopy && Outputcodec != VideoCodec.svt_av1)
                 {
                     _IsComplex = IsComplex;
                     AddParameter(string.Format("-b:v {0}", Minibitrate));
@@ -1517,10 +1518,10 @@ namespace VideoGui.ffmpeg
                         ComplexBitRate += string.Format(" -bufsize {0}", Buffersize);
                         if (!ComplexMode)
                         {
-                            ComplexBitRate += " -x264opts nal-hrd=cbr:force-cfr=1";
+                            //ComplexBitRate += " -x264opts nal-hrd=cbr:force-cfr=1";
                         }
                     }
-                    if (Outputcodec == VideoCodec.h264) AddParameter("-x264opts nal-hrd=cbr:force-cfr=1");
+                    //if (Outputcodec == VideoCodec.h264) AddParameter("-x264opts nal-hrd=cbr:force-cfr=1");
                 }
                 return this;
             }
@@ -1638,6 +1639,20 @@ namespace VideoGui.ffmpeg
             }
         }
 
+        public IConverter SetAV1Params(int preset, int crf)
+        {
+            try
+            {
+                av1Preset = preset;
+                av1crf = crf;
+                return this;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+                return this;
+            }
+        }
         public IConverter UseHardwareAcceleration(HardwareAccelerator hardwareAccelerator, VideoCodec decoder, VideoCodec encoder, int device = 0)
         {
             return UseHardwareAcceleration($"{hardwareAccelerator}", decoder.ToString(), encoder.ToString(), device);
@@ -1646,6 +1661,7 @@ namespace VideoGui.ffmpeg
         {
             try
             {
+                if (decoder == "d3d11va") return this;
                 _parameters.Add(($"-hwaccel {hardwareAccelerator}", true));
                 if (decoder == "libaom_av1")
                 {
@@ -1655,8 +1671,18 @@ namespace VideoGui.ffmpeg
                 }
                 else _parameters.Add(($"-c:v {decoder}", true));
                 ComplexEncoder = $"-c:v {encoder?.ToString()}";
-                _parameters.Add(($"-c:v {encoder?.ToString()}", false));
 
+                if (encoder?.ToString() != "svt_av1")
+                {
+                    _parameters.Add(($"-c:v {encoder?.ToString()}", false));
+                }
+                else
+                {
+                    _parameters.Add(($"-c:v libsvtav1", false));
+                    _parameters.Add(($"-preset {av1Preset}", false));
+                    _parameters.Add(($"-crf {av1crf}", false));
+                    _parameters.Add(($"-pix_fmt yuv420p10le", false));
+                }
                 if (device != 0)
                 {
                     _parameters.Add(($"-hwaccel_device {device}", true));

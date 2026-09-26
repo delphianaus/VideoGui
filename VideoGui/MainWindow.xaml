@@ -9,7 +9,7 @@
         mc:Ignorable="d" Title="Video Procesor" Name="MainWindowX" WindowStartupLocation="CenterOwner" 
         ResizeMode="CanResize" SizeToContent="Manual" Height="auto" Width="Auto" 
         Loaded="MainWindowX_Loaded" StateChanged="MainWindowX_StateChanged"
-        IsVisibleChanged="MainWindowX_IsVisibleChanged" SizeChanged="MainWindowX_SizeChanged" 
+        SizeChanged="MainWindowX_SizeChanged" 
         FocusableChanged="Window_FocusableChanged" WindowStyle="ThreeDBorderWindow"
         AutomationProperties.IsColumnHeader="True" GotFocus="MainWindowX_GotFocus" >
     <ui:FluentWindow.Resources>
@@ -99,15 +99,15 @@
                     </ListBox.ItemTemplate>
                 </ListBox>
             </Border>
-            <ToggleButton x:Name="GPUEncode" Style="{StaticResource  ToggleStyle1}" 
-             Margin="0,0,116,100" Height="24" Width="Auto" HorizontalAlignment="Right" 
+            <ToggleButton x:Name="GPUEncode" Style="{StaticResource GPUCPUStyle}" 
+             Margin="0,0,124,100" Height="24" Width="Auto" HorizontalAlignment="Right" 
              VerticalAlignment="Bottom" IsChecked="False"/>
-            <ToggleButton x:Name="X265Output" Style="{StaticResource  ToggleStyle2}"  
-             Margin="0,0,220,100" Height="24" Width="98" HorizontalAlignment="Right" 
+            <ToggleButton x:Name="X265Output" Style="{StaticResource HEVCAV1_Style}"  
+             Margin="0,0,20,100" Height="24" Width="98" HorizontalAlignment="Right" 
              VerticalAlignment="Bottom" IsChecked="False" Checked="X265Output_Checked"/>
-            <ToggleButton x:Name="Fisheye" Style="{StaticResource  ToggleStyle3}"  
+            <!--<ToggleButton x:Name="Fisheye" Style="{StaticResource  ToggleStyle3}"  
               Margin="10,0,15,100" Height="24"  Width="Auto" HorizontalAlignment="Right" 
-               VerticalAlignment="Bottom"/>
+               VerticalAlignment="Bottom"/>-->
             <Button x:Name="btnConfig" Content="Configuration" HorizontalAlignment="Left" 
               Height="26" Margin="8,0,0,136" 
               VerticalAlignment="Bottom" Click="BtnConfig_Click" Width="97" Padding="0,0,0,0"/>

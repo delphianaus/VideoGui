@@ -12,8 +12,8 @@
     <StartupObject>VideoGui.App</StartupObject>
     <ApplicationIcon>Properties\computer.ico</ApplicationIcon>
     <Platforms>x64</Platforms>
-    <AssemblyVersion>1.0.0.476</AssemblyVersion>
-    <FileVersion>1.0.0.476</FileVersion>
+    <AssemblyVersion>1.0.0.477</AssemblyVersion>
+    <FileVersion>1.0.0.477</FileVersion>
     <Nullable>annotations</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <UseWindowsForms>True</UseWindowsForms>
@@ -72,6 +72,8 @@
     <None Remove="Icons\Historic.png" />
     <None Remove="Icons\LeftArrow.png" />
     <None Remove="Icons\No.png" />
+    <None Remove="Icons\OutputAV1.png" />
+    <None Remove="Icons\OutputHEVC.png" />
     <None Remove="Icons\OutputX265.png" />
     <None Remove="Icons\OutputX264.png" />
     <None Remove="Icons\plus.png" />
@@ -147,10 +149,14 @@
     <Resource Include="Icons\FisheyeRemoval.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="Icons\GPUEncode.png" />
+    <Resource Include="Icons\GPUEncode.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
     <Resource Include="Icons\Historic.png" />
     <Resource Include="Icons\LeftArrow.png" />
     <Resource Include="Icons\No.png" />
+    <Resource Include="Icons\OutputAV1.png" />
+    <Resource Include="Icons\OutputHEVC.png" />
     <Resource Include="icons\OutputX265.png" />
     <Resource Include="icons\OutputX264.png" />
 

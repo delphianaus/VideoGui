@@ -3724,9 +3724,26 @@ namespace VideoGui.ffmpeg
         ///      H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10 (decoders: h264 h264_qsv h264_cuvid ) (encoders: libx264 libx264rgb h264_amf h264_nvenc h264_qsv nvenc nvenc_h264 )
         ///</summary>
         libaom_av1,
-/// <summary>
-/// av1
-/// </summary>
+        /// <summary>
+        /// av1 cpu
+        /// </summary>,
+        av1_nvenc,
+        /// <summary>
+        /// nvidia av1 encoder
+        /// </summary>
+        av1_amf,
+        /// <summary>
+        /// AMD 7000 series GPU's RDNA 4 ONWARDS GPU'S
+        /// </summary>
+        svt_av1,
+        /// <summary>
+        /// multi core cpu
+        /// </summary>
+        av1_d3d11va,
+        /// <summary>
+        /// av1 d3d
+        /// </summary>
+        //
 
 
         h264,

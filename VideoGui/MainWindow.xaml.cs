@@ -86,10 +86,12 @@ using VideoGui.ffmpeg.Streams.Text;
 using VideoGui.ffmpeg.Streams.Video;
 using VideoGui.Models;
 using VideoGui.Models.delegates;
+using Windows.Devices.Radios;
 using Wpf.Ui.Controls;
 using Xceed.Wpf.Toolkit;
 using Xceed.Wpf.Toolkit.PropertyGrid.Converters;
 using Xceed.Wpf.Toolkit.PropertyGrid.Editors;
+using static Microsoft.WindowsAPICodePack.Shell.PropertySystem.SystemProperties.System;
 using static System.Net.Mime.MediaTypeNames;
 using static System.Net.WebRequestMethods;
 using static System.Runtime.InteropServices.JavaScript.JSType;
@@ -104,6 +106,7 @@ using HtmlDocument = HtmlAgilityPack.HtmlDocument;
 using Object = System.Object;
 using Path = System.IO.Path;
 using Stream = System.IO.Stream;
+using Task = System.Threading.Tasks.Task;
 using Window = System.Windows.Window;
 
 
@@ -232,10 +235,14 @@ namespace VideoGui
         public ObservableCollection<ShortsProcessor> ShortsProcessors = new ObservableCollection<ShortsProcessor>();
         VideoCutsEditor frmVCE = null;
         public List<string> ComparitorList = new();
-        string DestDirectory720p = string.Empty, DestDirectoryAdobe4K = string.Empty, DestDirectory4K = string.Empty, DestDirectory1440p = string.Empty, backupun = "", DestDirectoryTwitch = "";
-        string fileprogress = "", DoneDirectory720p = string.Empty, DoneDirectory1440p = string.Empty, DoneDirectory4K = string.Empty, DoneDirectoryAdobe4K = string.Empty;
+        string DestDirectory720p = string.Empty, DestDirectoryAdobe4K = string.Empty,
+          DestDirectory4K = string.Empty, DestDirectory1440p = string.Empty,
+          backupun = "", DestDirectoryTwitch = "", DestDirectoryMovie = "", DestDirectoryYouTube = "";
+        string fileprogress = "", DoneDirectory720p = string.Empty, DoneDirectory1440p = string.Empty,
+         DoneDirectory4K = string.Empty, DoneDirectoryAdobe4K = string.Empty;
         string ErrorDirectory = "", SourceDirectoryMovies = "",
-            SourceDirectory4K = string.Empty, SourceDirectoryAdobe4K = string.Empty, SourceDirectory1440p = string.Empty, SourceDirectory720p = string.Empty;
+            SourceDirectory4K = string.Empty, SourceDirectoryAdobe4K = string.Empty, SourceDirectory1440p = string.Empty,
+            SourceDirectory720p = string.Empty, SourceDirectoryMovie = "", SourceDirectoryYouTube;
         TimeSpan ProcessingTimeGlobal;
         DateTime StartTime = DateTime.Now, Start2 = DateTime.Now, Start3 = DateTime.Now;
         bool ffmpegready = false, usetorrents = true, CanUpdate = true, ShowAudioControlDialog = true, UseFisheyeRemoval = false;
@@ -4755,14 +4762,14 @@ namespace VideoGui
                 return -1;
             }
         }
-        public int ModifyRecordInDb(int idx, bool isXMLSource, bool IsMovie, bool ISFILESRC, string SourceDir, string DestinationFName, TimeSpan StartPos, TimeSpan Duration,
+        public int ModifyRecordInDb(int idx, bool isXMLSource, bool IsMovie, bool IsYouTube, bool ISFILESRC, string SourceDir, string DestinationFName, TimeSpan StartPos, TimeSpan Duration,
                                      bool Is720p, bool IsShorts, int IsCreateShorts, bool IsEncodeTrim, bool IsCutTrim, bool IsMonitoredSource,
                                      bool IsPersisentJob, bool ismuxed, string muxdata)
         {
             try
             {
                 string sql = "UPDATE AUTOINSERT SET SRCDIR=@SRCDIR," +
-                    "ISFILESRC=@ISFILESRC,STARTPOS=@STARTPOS, " +
+                    "ISFILESRC=@ISFILESRC,STARTPOS=@STARTPOS,ISYOUTUBE=@ISYOUTUBE, " +
                     "DURATION=@DUR,B720P=@IS720p,BSHORTS=@ISSHORTS," +
                     "BCREATESHORTS=@ISCREATESHORTS,BENCODETRIM=@ISENCODETRIM, " +
                     "BCUTTRIM=@ISCUTTRIM,BMONITOREDSOURCE=@ISMONSRC, " +
@@ -4776,7 +4783,7 @@ namespace VideoGui
                     ("@ISCREATESHORTS", IsCreateShorts), ("@ISENCODETRIM", IsEncodeTrim),
                     ("@ISCUTTRIM", IsCutTrim),("@ISMONSRC", IsMonitoredSource),
                     ("@ISFILESRC", ISFILESRC),("@ISPERJOB", IsPersisentJob),
-                    ("@ISXMLFILESRC",isXMLSource),("@ISMOVIE",IsMovie),
+                    ("@ISXMLFILESRC",isXMLSource),("@ISMOVIE",IsMovie),("@ISYOUTUBE",IsYouTube),
                     ("@DBID", CurrentDbId), ("@ISMUXED", ismuxed), ("@MUXDATA", muxdata),
                     ("@ID", idx)]).ToInt(-1);
                 return res;
@@ -4803,9 +4810,10 @@ namespace VideoGui
             }
         }
 
-        public int InsertRecordIntoDb(string SourceDir, bool ISXMLSource, bool IsMovie, bool ISFILESRC, string DestinationFName, TimeSpan StartPos, TimeSpan Duration,
-                                     bool Is720p, bool IsShorts, int IsCreateShorts, bool IsEncodeTrim, bool IsCutTrim, bool IsMonitoredSource,
-                                     bool IsPersisentJob, Nullable<DateTime> TwitchSchedule = null,
+        public int InsertRecordIntoDb(string SourceDir, bool ISXMLSource, bool IsMovie, bool IsYouTube,
+              bool ISFILESRC, string DestinationFName, TimeSpan StartPos, TimeSpan Duration,
+              bool Is720p, bool IsShorts, int IsCreateShorts, bool IsEncodeTrim, bool IsCutTrim, bool IsMonitoredSource,
+              bool IsPersisentJob, Nullable<DateTime> TwitchSchedule = null,
                                      string RTMP = "", bool IsTwitchStream = false, bool IsMuxed = false, string MuxData = "")
         {
             try
@@ -4814,11 +4822,11 @@ namespace VideoGui
                 string sql = "INSERT INTO AUTOINSERT(ISXMLFILESOURCE,ISMOVIE,SRCDIR, " +
                             "ISFILESRC,DESTFNAME,STARTPOS,DURATION,B720P,BSHORTS,BCREATESHORTS," +
                             "BENCODETRIM,BCUTTRIM,BMONITOREDSOURCE,BPERSISTENTJOB," +
-                            "RUNID,TWITCHDATE,TWITCHTIME,RTMP,BTWITCHSTREAM,ISMUXED,MUXDATA) " +
+                            "RUNID,TWITCHDATE,TWITCHTIME,RTMP,BTWITCHSTREAM,ISMUXED,MUXDATA,ISYOUTUBE) " +
                             "VALUES(@XMLFILESOURCE,@ISMOVIE,@SRCDIR,@ISFILESRC,@DESTNAME,@STARTPOS,@DUR,@IS720P,@ISSHORTS," +
                             "@ISCREATESHORTS,@ISENCODETRIM,@ISCUTTRIM,@ISMONSRC,@ISPERJOB," +
                             "@RUNID,@TWITCHDATE,@TWITCHTIME," +
-                            "@RTMP,@ISTWITCHSTREAM,@ISMUXED,@MUXDATA) RETURNING ID";
+                            "@RTMP,@ISTWITCHSTREAM,@ISMUXED,@MUXDATA,@ISYOUTUBE) RETURNING ID";
                 DateTime _TwitchSchedule = DateTime.Now.AddYears(-500);
                 DateOnly _TwichDate = DateOnly.FromDateTime(_TwitchSchedule);
                 TimeOnly _TwichTime = TimeOnly.FromDateTime(_TwitchSchedule);
@@ -4834,7 +4842,7 @@ namespace VideoGui
                     ("@DUR", Duration.TotalMilliseconds), ("@IS720P", Is720p),("@ISFILESRC", ISFILESRC),
                     ("@ISSHORTS", IsShorts), ("@ISCREATESHORTS", IsCreateShorts), ("@ISENCODETRIM", IsEncodeTrim),
                     ("@ISCUTTRIM", IsCutTrim), ("@ISMONSRC", IsMonitoredSource),
-                    ("@XMLFILESOURCE", ISXMLSource), ("@ISMOVIE", IsMovie),
+                    ("@XMLFILESOURCE", ISXMLSource), ("@ISMOVIE", IsMovie),("@ISYOUTUBE",IsYouTube),
                     ("@ISPERJOB", IsPersisentJob),("@RUNID", CurrentDbId), ("@TWITCHDATE", _TwichDate),
                     ("@TWITCHTIME", _TwichTime),("@RTMP", RTMP), ("@ISTWITCHSTREAM", IsTwitchStream),
                     ("@ISMUXED", IsMuxed), ("@MUXDATA", MuxData)]).ToInt(-1);
@@ -4884,7 +4892,7 @@ namespace VideoGui
                         if (!Tables.Where(s => s.TableName == table).Any())
                         {
                             sqlstring = $"CREATE TABLE {table}({Id},SRCDIR VARCHAR(500), DESTFNAME VARCHAR(500),STARTPOS BIGINT," +
-                                "DURATION BIGINT,B720P SMALLINT,RTMP VARCHAR(250)," +
+                                "DURATION BIGINT,B720P SMALLINT,RTMP VARCHAR(250),ISYOUTUBE SMALLINT," +
                            "BSHORTS SMALLINT,BENCODETRIM SMALLINT,BCUTTRIM SMALLINT,BTWITCHSTREAM SMALLINT,TWITCHTIME TIME," +
                            "BMONITOREDSOURCE SMALLINT,BPERSISTENTJOB SMALLINT, RUNID INTEGER,TWITCHDATE DATE," +
                            "ISMUXED SMALLINT, MUXDATA VARCHAR(256),ISMUXED SMALLINT,ISFILESRC SMALLINT," +
@@ -4894,7 +4902,7 @@ namespace VideoGui
                         else
                         {
                             List<string> Smallints = new List<string>() { "ISMUXED", "ISFILESRC", "ISXMLFILESOURCE", "ISMOVIE",
-                            "BCREATESHORTS", "BTWITCHSTREAM" };
+                            "BCREATESHORTS", "BTWITCHSTREAM","ISYOUTUBE" };
                             foreach (var small in Smallints)
                             {
                                 if (Tables.Where(s => s.TableName == table).Where(t => !t.Fields.Contains(small)).Any())
@@ -5953,7 +5961,7 @@ namespace VideoGui
         }
 
         public void AddRecord(bool IsXMLSource, bool ISFILESRC, bool IsElapsed, bool Is720P,
-            bool IsMovie, bool IsShorts, int IsCreateShorts,
+            bool IsMovie, bool IsYouTube, bool IsShorts, int IsCreateShorts,
         bool IsTrimEncode, bool IsCutEncode, bool IsDeleteMonitored, bool IsPersistantSource,
         bool IsAdobe, string textstart, string textduration, string sourcedirectory, string destFilename,
            Nullable<DateTime> twitchschedule = null, string RTMP = "", bool IsTwitchStream = false,
@@ -5985,6 +5993,7 @@ namespace VideoGui
                     jp.Start = textstart.FromStrToTimeSpan();
                     jp.IsCutTrim = IsCutEncode;
                     jp.IsEncodeTrim = IsTrimEncode;
+                    jp.IsYouTube = IsYouTube;
                     jp.IsDownloads = false;
                     jp.RTMP = RTMP;
                     if (!ismuxed)
@@ -6000,7 +6009,7 @@ namespace VideoGui
                     if (jp.Id != "")
                     {
                         int iddx = -1;
-                        iddx = ModifyRecordInDb(jp.Id.ToInt(), jp.IsXMLSource, jp.IsMovie, jp.ISFILESRC, jp.SourceDirectory, jp.DestinationDirectory, jp.Start, jp.Duration,
+                        iddx = ModifyRecordInDb(jp.Id.ToInt(), jp.IsXMLSource, jp.IsMovie, jp.IsYouTube, jp.ISFILESRC, jp.SourceDirectory, jp.DestinationDirectory, jp.Start, jp.Duration,
                             jp.Is720p, jp.IsShorts, jp.IsCreateShorts, jp.IsEncodeTrim, jp.IsCutTrim, jp.IsDeleteMonitoredSource,
                             jp.IsPersistentJob, jp.IsMuxed, jp.MuxData);
                         jp.Id = (iddx != -1) ? iddx.ToString() : jp.Id;
@@ -6012,6 +6021,7 @@ namespace VideoGui
                         if (IsTwitchStream) ScriptType = 5;
                         if (ISFILESRC) ScriptType = 7;
                         if (ismuxed) ScriptType = 6;
+
                         TimeSpan Final = TimeSpan.Zero;
                         if (!IsElapsed)
                         {
@@ -6028,7 +6038,7 @@ namespace VideoGui
                         if (IsCutEncode) ScriptType = 1;
                         string CutFrames = ((textstart != "") || (textduration != "")) ? $"|{textstart}|{Final.ToFFmpeg()}|time" : "";
                         string ScriptFile = $"true|{destFilename}|{sourcedirectory}|*.mp4{CutFrames}";
-                        JobListDetails InMemoryJob = new JobListDetails(IsXMLSource, IsMovie, false, ISFILESRC, Title, SourceIndex++,
+                        JobListDetails InMemoryJob = new JobListDetails(IsXMLSource, IsMovie, IsYouTube, false, ISFILESRC, Title, SourceIndex++,
                             iddx, ScriptFile,
                             ScriptType, false, true,
                             IsPersistantSource, IsAdobe, IsShorts,
@@ -6064,7 +6074,7 @@ namespace VideoGui
                     }
                     else Final = textduration.FromStrToTimeSpan();
                     int idx = -1;
-                    idx = InsertRecordIntoDb(sourcedirectory, IsXMLSource, IsMovie, ISFILESRC, destFilename,
+                    idx = InsertRecordIntoDb(sourcedirectory, IsXMLSource, IsMovie, IsYouTube, ISFILESRC, destFilename,
                         textstart.FromStrToTimeSpan(), Final, Is720P, IsShorts, IsCreateShorts, IsTrimEncode,
                         IsCutEncode, IsDeleteMonitored, IsPersistantSource, twitchschedule, RTMP,
                         IsTwitchStream, ismuxed, muxdata);
@@ -6072,7 +6082,7 @@ namespace VideoGui
                     {
 
                         ComplexJobList cjl = new ComplexJobList(IsXMLSource, ISFILESRC, sourcedirectory, destFilename,
-                            textstart.FromStrToTimeSpan(), Final, Is720P, IsMovie, IsShorts, IsCreateShorts,
+                            textstart.FromStrToTimeSpan(), Final, Is720P, IsMovie, IsYouTube, IsShorts, IsCreateShorts,
                             IsTrimEncode, IsCutEncode, IsDeleteMonitored, IsPersistantSource, idx, ismuxed, muxdata, false);
                         if (RTMP != "" && twitchschedule.HasValue)
                         {
@@ -6093,7 +6103,7 @@ namespace VideoGui
                         if (ISFILESRC) ScriptType = 7;
                         string CutFrames = ((textstart != "") && (textduration != "")) ? $"|{textstart}|{Final.ToFFmpeg()}|time" : "";
                         string ScriptFile = $"true|{destFilename}|{sourcedirectory}|*.mp4{CutFrames}";
-                        JobListDetails InMemoryJob = new JobListDetails(IsXMLSource, IsMovie, false,
+                        JobListDetails InMemoryJob = new JobListDetails(IsXMLSource, IsMovie, IsYouTube, false,
                             ISFILESRC, TitleStr, SourceIndex++,
                             idx, ScriptFile, ScriptType,
                             false, true,
@@ -6496,7 +6506,7 @@ namespace VideoGui
                         }
                     }
                 }
-                ;
+
             }
             catch (Exception ex)
             {
@@ -6643,9 +6653,10 @@ namespace VideoGui
                 string SourceDirectory4K = key.GetValueStr("SourceDirectory4K", string.Empty);
                 string SourceDirectory4KAdobe = key.GetValueStr("SourceDirectory4KAdobe", string.Empty);
                 string SourceDirectoryMovies = key.GetValueStr("SourceDirectoryMovies", string.Empty);
+                string SourceDirectoryYouTube = key.GetValueStr("SourceDirectoryYouTube", string.Empty);
                 key?.Close();
                 SelectFiles(SourceDirectory720p, SourceDirectory1440p, SourceDirectory4K,
-                    SourceDirectory4KAdobe, SourceDirectoryMovies);
+                    SourceDirectory4KAdobe, SourceDirectoryMovies, SourceDirectoryYouTube);
             }
             catch (Exception ex)
             {
@@ -7176,7 +7187,13 @@ namespace VideoGui
 
                             LineNum = 13;
                             string DestFile = "", SourceDirectory = Job.SourcePath, sep = Job.X264Override ? "\\x264\\" : "\\";
-                            DestFile = (Job.IsTwitchStream && !Job.twitchschedule.HasValue) ? DestDirectoryTwitch : (Job.Is4KAdobe) ? DestDirectoryAdobe4K : (Job.Is4K) ? DestDirectory4K : (Job.Is1440p) ? DestDirectory1440p : DestDirectory720p;
+                            DestFile =
+
+                            (Job.IsTwitchValid) ? DestDirectoryTwitch :
+                            (Job.Is4KAdobe) ? DestDirectoryAdobe4K :
+                            (Job.Is4K) ? DestDirectory4K :
+                            (Job.Is1440p) ? DestDirectory1440p :
+                            (Job.IsMovie) ? DestDirectory4K : DestDirectory720p;
                             if (Job.ISFILESRC || Job.IsXMLSource)
                             {
                                 DestFile = Job.DestMFile;
@@ -8075,7 +8092,6 @@ namespace VideoGui
             {
                 this.SetValue("Progressbar1", B);
                 lblPercent.AutoSizeLabel(A);
-                ResizeWindow();
 
             }
             catch (Exception ex)
@@ -8091,7 +8107,6 @@ namespace VideoGui
                 lblTotalTime.AutoSizeLabel(A);
             }
             lblDuration.AutoSizeLabel(B);
-            ResizeWindow();
 
         }
 
@@ -8597,12 +8612,13 @@ namespace VideoGui
                 bool _isCopy = false;
                 _StatsHandler _stats_handle = stats_handle;
                 bool overrider = false, chkresized = false;
-
+                int _av1Preset = 6, _av1crf = 28;
                 RegistryKey key = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\VideoProcessor", true);
                 int _cmbaudiomodeSelectedIndex = key.GetValueInt("Audiomode", 0);
                 int H264Target = key.GetValueInt("h264Target", -1);
                 bool ChkAutoAAC_IsChecked = key.GetValueBool("ChkAutoAAC", true);
-                bool _GPUEncode = Grid1.IsChecked("GPUEncode"), _X265Output = Grid1.IsChecked("X265Output");
+                bool _GPUEncode = Grid1.IsChecked("GPUEncode"),
+                _X265Output = Grid1.IsChecked("X265Output");
                 key?.Close();
                 string myStrQuote = "\"";
                 (chkresized, overrider, job.InProcess) = (ResizeEnable, job.X264Override, true);
@@ -8624,41 +8640,66 @@ namespace VideoGui
                 }
                 if (_GPUEncode)
                 {
-                    if ((!overrider) && (_X265Output))
+                    if (_X265Output)// hevc
                     {
                         if (Video.Contains("NVIDIA")) Encoder = ffmpeg.VideoCodec.hevc_nvenc;
                         else if (Video.Contains("AMD") || (Video.Contains("Radeon"))) Encoder = ffmpeg.VideoCodec.hevc_amf;
                     }
-                    else
+                    else // AV1
                     {
-                        if (H264Target == 2)
+                        //AMD Radeon RX 6800 XT && AMD Ryzen 9 9950X 16-Core Processor
+                        //NVIDIA GeForce RTX 5070 Ti Laptop GPU
+                        if (Video.ContainsAll2(new List<string> { "AMD", "Radeon" }))
                         {
-                            if (Video.Contains("NVIDIA")) Encoder = ffmpeg.VideoCodec.h264_nvenc;
-                            else if ((Video.Contains("AMD")) || (Video.Contains("Radeon"))) Encoder = ffmpeg.VideoCodec.h264_amf;
+                            string GPU = Video.Replace("AMD", "").Replace("Radeon", "").Replace("RX", "").Trim();
+                            if (GPU.Substring(0, 1) == "6") // RDNA 2
+                            {
+                                if (HWInfo.ContainsAll2(new List<string> { "AMD", "Ryzen", "9", "9950" }))
+                                {
+                                    Encoder = ffmpeg.VideoCodec.svt_av1;
+                                }
+                            }
+                            if ((GPU.Substring(0, 1) == "7") || (GPU.Substring(0, 1) == "9")) // RDNA 3/4
+                            {
+                                Encoder = ffmpeg.VideoCodec.av1_amf;
+                            }
                         }
-                        else if ((H264Target == 0) || (job.Mpeg4ASP))
+                        else if (Video.ContainsAll2(new List<string> { "NVIDIA", "RTX", "5070" }))
                         {
-                            if (!job.Mpeg4AVC) (Encoder, _GPUEncode) = (ffmpeg.VideoCodec.libxvid, false);
-                        }
-                        else if ((H264Target == 1) || (job.Mpeg4AVC))
-                        {
-                            if (!job.Mpeg4ASP) (Encoder, _GPUEncode) = (ffmpeg.VideoCodec.mpeg4, false);
+                            Encoder = ffmpeg.VideoCodec.av1_nvenc;
                         }
                     }
                 }
                 else
                 {
-                    if (!_X265Output)
-                    {  // ASP // AVC // H264
-                        Encoder = (H264Target == 0) ? ffmpeg.VideoCodec.libxvid :
-                            ((H264Target == 1) ? ffmpeg.VideoCodec.mpeg4 : ffmpeg.VideoCodec.h264);
-                        if (H264Target != 2)
+                    if (!_X265Output) // av1
+                    {
+                        if (Video.ContainsAll2(new List<string> { "AMD", "Radeon" }))
                         {
-                            if (job.Mpeg4ASP) Encoder = ffmpeg.VideoCodec.libxvid;
-                            if (job.Mpeg4AVC) Encoder = ffmpeg.VideoCodec.mpeg4;
+                            string GPU = Video.Replace("AMD", "").Replace("Radeon", "").Trim();
+                            if (GPU.Substring(0, 1) == "6") // RDNA 2
+                            {
+                                if (HWInfo.ContainsAll2(new List<string> { "AMD", "Ryzen", "9", "9950" }))
+                                {
+                                    Encoder = ffmpeg.VideoCodec.svt_av1;
+                                }
+                            }
+                            if ((GPU.Substring(0, 1) == "7") || (GPU.Substring(0, 1) == "9")) // RDNA 3/4
+                            {
+                                Encoder = ffmpeg.VideoCodec.av1_amf;
+                            }
+                        }
+                        else if (Video.ContainsAll2(new List<string> { "NVIDIA", "RTX", "5070" }))
+                        {
+                            Encoder = ffmpeg.VideoCodec.av1_nvenc;
                         }
                     }
-                    else Encoder = ffmpeg.VideoCodec.libx265;
+                    else // HEVC 
+                    {
+                        if (Video.Contains("NVIDIA")) Encoder = ffmpeg.VideoCodec.hevc_nvenc;
+                        else if (Video.Contains("AMD") || (Video.Contains("Radeon"))) Encoder = ffmpeg.VideoCodec.hevc_amf;
+                    }
+                    ///Encoder = (_X265Output) ? ffmpeg.VideoCodec.libx265 : ffmpeg.VideoCodec.libaom_av1;
                 }
                 string AppPath = GetExePath();
                 double totalseconds = 0;
@@ -8666,9 +8707,9 @@ namespace VideoGui
                 {
                     List<string> Files2 = new();
                     Files2.AddRange(
-                     Directory.EnumerateFiles(job.SourcePath, job.SourceFile, 
+                     Directory.EnumerateFiles(job.SourcePath, job.SourceFile,
                      SearchOption.AllDirectories).ToList().FirstOrDefault());
-                   
+
 
                     ffmpegbridge FileIndexer2 = new ffmpegbridge();
                     FileIndexer2.ReadDuration(Files2);
@@ -8995,7 +9036,20 @@ namespace VideoGui
                     job.Is5K = (videoStream.Width > 4000) ? true : false;
                     LineNum = 55;
                     string codec = videoStream.Codec.ToString(), resize = string.Empty;
-                    if (codec == ffmpeg.VideoCodec.av1.ToString()) DecoderCodec = ffmpeg.VideoCodec.libaom_av1;
+                    if (codec == ffmpeg.VideoCodec.av1.ToString())
+                    {
+                        DecoderCodec = ffmpeg.VideoCodec.libaom_av1;
+
+                        if (Video.ContainsAll2(new List<string> { "NVIDIA", "RTX", "5070" }))
+                        {
+                            DecoderCodec = ffmpeg.VideoCodec.av1_nvenc;
+                        }
+                        if (Video.ContainsAll2(new List<string> { "AMD", "9950", "Ryzen" }))
+                        {
+                            DecoderCodec = ffmpeg.VideoCodec.av1_d3d11va;
+                        }
+
+                    }
                     if (codec == ffmpeg.VideoCodec.h264.ToString()) DecoderCodec = ffmpeg.VideoCodec.h264;
                     if (codec == ffmpeg.VideoCodec.hevc.ToString()) DecoderCodec = ffmpeg.VideoCodec.hevc;
                     if (codec == ffmpeg.VideoCodec.mpeg4.ToString()) DecoderCodec = ffmpeg.VideoCodec.mpeg4;
@@ -9129,11 +9183,7 @@ namespace VideoGui
                     }
                     else if (job.Is4K || job.Is5K)
                     {
-                        if (UseFisheyeRemoval)
-                        {
-                            videoStream.SetFishEyeRemoval(true, LRF, LLC, RRF, RLC);
-                        }
-                        else if (job.IsMulti)
+                        if (job.IsMulti)
                         {
                             if (job.DestMFile.Contains("(shorts)") || job.IsShorts)
                             {
@@ -9164,30 +9214,27 @@ namespace VideoGui
                     else
                     {
                         LineNum = 74;
-                        if (!job.Is1440p)
+                        if (job.IsYouTube || job.IsMovie || job.Is720P)
                         {
-                            LineNum = 75;
-                            videoStream = videoStream.SetSize(VideoWidth.ToInt(), -1, aspectratio,
-                                ArModulas.ToInt(), Scaling.lanczos, 0, 0, 0, 0);
-                        }
-                        else
-                        {
-                            if (job.IsInterlaced)
+                            if (VideoWidth.ToInt() > 480)
                             {
-                                videoStream.SetInterlaced();
-                                Isinter = true;
-                            }
-                            if ((job.Is1440p) && (videoStream.Width > 2560))
-                            {
-                                videoStream = videoStream.SetSize(2560, -1, aspectratio,
+                                videoStream = videoStream.SetSize(VideoWidth.ToInt(), -1, aspectratio,
                                     ArModulas.ToInt(), Scaling.lanczos, 0, 0, 0, 0);
                             }
-                            if ((job.Is1440p) && (videoStream.Framerate > 25))
-                            {
-                                videoStream = videoStream.SetFPS(25.0f);
-                            }
-
                         }
+
+
+                        if ((job.Is1440p) && (videoStream.Width > 2560))
+                        {
+                            videoStream = videoStream.SetSize(2560, -1, aspectratio,
+                                ArModulas.ToInt(), Scaling.lanczos, 0, 0, 0, 0);
+                        }
+                        if ((job.Is1440p) && (videoStream.Framerate > 25))
+                        {
+                            videoStream = videoStream.SetFPS(25.0f);
+                        }
+
+
                     }
                     LineNum = 76;
                     string currentpath = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
@@ -9233,19 +9280,18 @@ namespace VideoGui
                     }
                     decimal samplesize = 1;
                     LineNum = 82;
-                    if (job.Is1440p && job.IsInterlaced) samplesize = 16;
-                    if ((job.Is1440p && !job.IsInterlaced) || (job.Is4K && !job.IsInterlaced))
+
+                    if (job.IsMovie || job.IsYouTube || job.Is720P) samplesize = 9M;
+                    if ((job.Is1440p) || (job.Is4K))
                     {
-                        samplesize = (!job.Is4K) ? 8.3M : 33.5M;// was 6.5M : 30M
+                        samplesize = (!job.Is4K) ? 14M : 33.5M;// was 6.5M : 30M
                         if (job.IsMulti)
                         {
                             if (job.DestMFile.Contains("(shorts)") || job.IsShorts) samplesize = 2.2M;
-
                         }
                         if (!job.IsTwitchStream)
                         {
                             DestFile = DestFile.Replace(".mkv", ".mp4");
-
                         }
                         else
                         {
@@ -9265,11 +9311,14 @@ namespace VideoGui
                     string _BitRateBuffer = (RateBuffer > 0) ? Math.Round((decimal)RateBuffer * samplesize).ToString() + "K" : BitRateBuffer;
                     LineNum = 85;
 
-
+                    if (job.Is4K) _av1crf = 26;
+                    if (job.Is720P && !job.IsMovie) _av1crf = 32;
+                    if (job.Is720P && job.IsMovie) _av1crf = 28;
                     LockedDeviceID = 0;
                     conversion.AddStream(videoStream).AddStream(audioStream)
                                                      .AddTotalFrames(TotalFrames)
                                                      .UseTextStream(TextStreamId, HasText)
+                                                     .SetAV1Params(_av1Preset, _av1crf)
                                                      .SetOutput(DestFile, job.IsTwitchActive)
                                                      .SetSourceIndex(job.SourceFileIndex)
                                                      .SetTotalTime(totalseconds)
@@ -10803,12 +10852,13 @@ namespace VideoGui
                 string SourceDirectory4k = key.GetValueStr("SourceDirectory4K", string.Empty);
                 string SourceDirectory4kAdobe = key.GetValueStr("SourceDirectory4KAdobe", string.Empty);
                 string SourceDirectoryMovies = key.GetValueStr("SourceDirectoryMovies", string.Empty);
+                string SourceDirectoryYouTube = key.GetValueStr("SourceDirectoryYouTube", string.Empty);
                 key?.Close();
                 string buttonname = (sender is System.Windows.Controls.Button buttonid) ? buttonid.Name : string.Empty;
                 if ((SourceDirectory720p == string.Empty) || (buttonname == "btnselect"))
                     SelectMasterDir("Select Source Directory", "SourceDirectory");
                 SelectFiles(SourceDirectory720p, SourceDirectory1440p, SourceDirectory4k,
-                    SourceDirectory4kAdobe, SourceDirectoryMovies);
+                    SourceDirectory4kAdobe, SourceDirectoryMovies, SourceDirectoryYouTube);
             }
             catch (Exception ex)
             {
@@ -10816,21 +10866,22 @@ namespace VideoGui
             }
         }
         public void SelectFiles(string SourceDirectory720p, string SourceDirectory1440p,
-            string SourceDirectory4K, string SourceDirectory4KAdobe, string SourceDirectoryMovies)
+            string SourceDirectory4K, string SourceDirectory4KAdobe, string SourceDirectoryMovies,
+            string SourceDirectoryYouTube)
         {
             try
             {
                 if (!Application.Current.Dispatcher.CheckAccess())
                 {
                     Application.Current.Dispatcher.Invoke(() => SelectFiles(SourceDirectory720p, SourceDirectory1440p,
-                        SourceDirectory4K, SourceDirectory4KAdobe, SourceDirectoryMovies));
+                        SourceDirectory4K, SourceDirectory4KAdobe, SourceDirectoryMovies, SourceDirectoryYouTube));
                     return;
                 }
                 List<string> Source = new List<string>();
                 string DownloadsDir = GetDownloadsFolder();
 
                 List<string> SourceDirs = new List<string> { SourceDirectory720p, SourceDirectory1440p,
-                    SourceDirectory4K, SourceDirectory4KAdobe, SourceDirectoryMovies };
+                    SourceDirectory4K, SourceDirectory4KAdobe, SourceDirectoryMovies,SourceDirectoryYouTube };
                 bool IsPrometheus = Environment.MachineName.ToLower().Contains("prometheus");
                 if (!IsPrometheus)
                 {
@@ -10852,13 +10903,14 @@ namespace VideoGui
                         }
                     }
                     bool IsMovie = (SourceDir == SourceDirectoryMovies);
+                    bool IsYouTube = (SourceDir == SourceDirectoryYouTube);
                     foreach (string filename in SourceList)
                     {
                         string myfilename = Path.GetFileNameWithoutExtension(filename);
 
                         if (ProcessingJobs.Count(job => job.Title == myfilename) == 0)
                         {
-                            AddIfVaid(filename, SourceDir, IsMovie);
+                            AddIfVaid(filename, SourceDir, IsMovie, IsYouTube);
                         }
                     }
                     SourceList.Clear();
@@ -11211,7 +11263,7 @@ namespace VideoGui
 
                      Title += " " + Assembly.GetExecutingAssembly().GetName().Version.ToString();
                      X265Output.MouseLeave += new System.Windows.Input.MouseEventHandler(OnFocusChanged);
-                     Fisheye.MouseLeave += new System.Windows.Input.MouseEventHandler(OnFocusChanged);
+                     //Fisheye.MouseLeave += new System.Windows.Input.MouseEventHandler(OnFocusChanged);
                      GPUEncode.MouseLeave += new System.Windows.Input.MouseEventHandler(OnFocusChanged);
                      X265Output.MouseLeave += new System.Windows.Input.MouseEventHandler(OnFocusChanged);
 
@@ -11278,11 +11330,11 @@ namespace VideoGui
                         (CompName, df) = (ToggleBox.Name, ToggleBox.IsChecked.Value);
                         switch (CompName)
                         {
-                            case "Fisheye":
-                                {
-                                    if (LoadedKey) key.SetValue("FishEye", df);
-                                    break;
-                                }
+                            //case "Fisheye":
+                            //    {
+                            //        if (LoadedKey) key.SetValue("FishEye", df);
+                            //        break;
+                            //    }
                             case "GPUEncode":
                                 {
                                     if (LoadedKey) key.SetValue("GPUEncode", df);
@@ -12713,7 +12765,6 @@ namespace VideoGui
         {
             try
             {
-                ResizeWindow();
                 var cts = new CancellationTokenSource();
                 for (int i = 0; i < 40; i++)
                 {
@@ -12722,10 +12773,7 @@ namespace VideoGui
                     {
                         Task.Delay(100);
                     }
-                    ResizeWindow();
-
                 }
-
             }
             catch (Exception ex)
             {
@@ -13103,13 +13151,14 @@ namespace VideoGui
                 string SourceDirectory1440p = LoadedKey ? (string)key.GetValue("SourceDirectory1440p", defaultdrive + "\\tv\\new") : defaultdrive + "\\tv\\new";
                 string SourceDirectory4K = LoadedKey ? (string)key.GetValue("SourceDirectory4k", defaultdrive + "\\tv\\new") : defaultdrive + "\\tv\\new";
                 string SourceDirectory4KAdobe = LoadedKey ? (string)key.GetValue("SourceDirectory4kAdobe", defaultdrive + "\\tv\\new") : defaultdrive + "\\tv\\new";
-                string SourceDirectoryMovies = LoadedKey ? (string)key.GetValue("   ", defaultdrive + "\\tv\\movies") : defaultdrive + "\\tv\\new";
+                string SourceDirectoryMovies = LoadedKey ? (string)key.GetValue("SourceDirectoryMovies", defaultdrive + "\\tv\\movies") : defaultdrive + "\\tv\\new";
+                string SourceDirectoryYouTube = LoadedKey ? (string)key.GetValue("SourceDirectoryYouTube", defaultdrive + "\\tv\\movies") : defaultdrive + "\\tv\\new";
                 key.Close();
                 List<string> templist = (SourceList.Where(ss => System.IO.File.Exists(ss))).ToList();
                 SourceList.Clear();
                 SourceList.AddRange(templist);
                 SelectFiles(SourceDirectory720p, SourceDirectory1440p, SourceDirectory4K,
-                    SourceDirectory4KAdobe, SourceDirectoryMovies);
+                    SourceDirectory4KAdobe, SourceDirectoryMovies, SourceDirectoryYouTube);
             }
             catch (Exception ex)
             {
@@ -13226,7 +13275,7 @@ namespace VideoGui
 
 
 
-        public bool AddIfVaid(string newfile, string SourceDir, bool IsMovie = false)
+        public bool AddIfVaid(string newfile, string SourceDir, bool IsMovie = false, bool IsYouTube = false)
         {
             try
             {
@@ -13235,7 +13284,8 @@ namespace VideoGui
 
                 bool IsNotDownloads = Path.GetDirectoryName(SourceDir).Contains(DownloadsDir);// """DownloadsDir;
 
-                var newjob = new JobListDetails(false, false, !IsNotDownloads, false, newfile, SourceIndex++, SourceDir);
+                var newjob = new JobListDetails(false, IsMovie, IsYouTube, !IsNotDownloads,
+                   false, newfile, SourceIndex++, SourceDir);
                 if (newjob.IsMulti)
                 {
                     if (newjob.GetCutList().Count > 0)
@@ -13295,7 +13345,6 @@ namespace VideoGui
         {
             try
             {
-                ResizeWindow();
                 var cts = new CancellationTokenSource();
                 for (int i = 0; i < 40; i++)
                 {
@@ -13304,9 +13353,6 @@ namespace VideoGui
                     {
                         Task.Delay(100);
                     }
-                    ResizeWindow();
-
-
                 }
             }
             catch (Exception ex)
@@ -13391,12 +13437,13 @@ namespace VideoGui
                 string SourceDirectory4K = LoadedKey ? (string)key.GetValue("SourceDirectory4K", defaultdrive + "\\tv\\new") : defaultdrive + "\\tv\\new";
                 string SourceDirectory4KAdobe = LoadedKey ? (string)key.GetValue("SourceDirectory4KAdobe", defaultdrive + "\\tv\\new") : defaultdrive + "\\tv\\new";
                 string SourceDirectoryMovies = LoadedKey ? (string)key.GetValue("SourceDirectoryMovies", defaultdrive + "\\tv\\movies") : defaultdrive + "\\tv\\new";
+                string SourceDirectoryYouTube = LoadedKey ? (string)key.GetValue("SourceDirectoryYouTube", defaultdrive + "\\tv\\movies") : defaultdrive + "\\tv\\new";
                 key.Close();
                 List<string> templist = (SourceList.Where(ss => System.IO.File.Exists(ss))).ToList();
                 SourceList.Clear();
                 SourceList.AddRange(templist);
                 SelectFiles(SourceDirectory720p, SourceDirectory1440p, SourceDirectory4K,
-                    SourceDirectory4KAdobe, SourceDirectoryMovies);
+                    SourceDirectory4KAdobe, SourceDirectoryMovies, SourceDirectoryYouTube);
             }
             catch (Exception ex)
             {
@@ -13456,40 +13503,8 @@ namespace VideoGui
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
             }
         }
-        private void MainWindowX_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
-        {
-            try
-            {
-                ResizeWindow();
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
-            }
-        }
-        public void ResizeWindow()
-        {
-            try
-            {
-                /*if (MainWindowX.IsLoaded)
-                {
-                    if ((lstBoxJobs.ActualWidth != double.NaN) && (Grid1.ActualWidth != double.NaN) &&
-                        (MainWindowX.ActualWidth != double.NaN) && (MainWindowX.ActualWidth != 0) &&
-                         (MainWindowX.Height != double.NaN) && (MainWindowX.Width != double.NaN))
-                    {
-                        Grid1.Width = MainWindowX.ActualWidth - 2;
-
-
-                        lstboxresize();
-                    }
-                }*/
-
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
-            }
-        }
+       
+       
 
         private void lstBoxJobs_DragOver(object sender, System.Windows.DragEventArgs e)
         {

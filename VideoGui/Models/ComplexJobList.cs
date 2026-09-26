@@ -17,7 +17,8 @@ namespace VideoGui.Models
     {
         private TimeSpan _Start, _Duration;
         private string _RTMP, _SourceDirectory, _DestinationDirectory, _Filename;
-        private bool _IsXMLSource, _IsTwitchStream, _Is720p, _bIsMovie,_IsShorts, _IsCutTrim, _IsEncodeTrim, _ISFILESRC,
+        private bool _IsXMLSource, _IsTwitchStream, _Is720p, _bIsMovie,_IsShorts, 
+               _IsCutTrim, _IsEncodeTrim, _ISFILESRC, _IsYouTube,
               _IsDeleteMonitoredSource, _IsDownloads, _IsPersistentJob, _IsLocked, _IsMuxed;
         private string _Id, _MuxData;
         private Nullable<DateTime> _TwitchSchedule;
@@ -55,11 +56,12 @@ namespace VideoGui.Models
         public bool IsTwitchStream { get => _IsTwitchStream; set { _IsTwitchStream = value; OnPropertyChanged(); } }
         public bool IsLocked { get => _IsLocked; set { _IsLocked = value; OnPropertyChanged(); } }
         public bool Is720p { get => _Is720p; set { _Is720p = value; OnPropertyChanged(); } }
+
         public bool IsShorts { get => _IsShorts; set { _IsShorts = value; OnPropertyChanged(); } }
         public bool ISFILESRC { get => _ISFILESRC; set { _ISFILESRC = value; OnPropertyChanged(); } }
         public bool IsDownloads { get => _IsDownloads; set { _IsDownloads = value; OnPropertyChanged(); } }
         public bool IsMovie { get => _bIsMovie; set { _bIsMovie = value; OnPropertyChanged(); } }
-
+        public bool IsYouTube { get => _IsYouTube; set { _IsYouTube = value; OnPropertyChanged(); } }
         public int IsCreateShorts { get => _IsCreateShorts; set { _IsCreateShorts = value; OnPropertyChanged(); } }
         public bool IsCutTrim { get => _IsCutTrim; set { _IsCutTrim = value; OnPropertyChanged(); } }
         public bool IsEncodeTrim { get => _IsEncodeTrim; set { _IsEncodeTrim = value; OnPropertyChanged(); } }
@@ -91,6 +93,7 @@ namespace VideoGui.Models
                 MuxData = (reader["MuxData"] is string _MuxData) ? _MuxData : "";
                 Is720p = (reader["B720P"] is Int16 _is720p) ? _is720p == 1 : false;
                 IsMovie = (reader["ISMOVIE"] is Int16 _isMovie) ? _isMovie == 1 : false;
+                IsYouTube = (reader["ISYOUTUBE"] is Int16 _isyt) ? _isyt == 1 : false;
                 ISFILESRC = (reader["ISFILESRC"] is Int16 _ISF) ? _ISF == 1 : false;
                 IsDownloads = false;
                 IsXMLSource = (reader["ISXMLFILESOURCE"] is Int16 _IsXMLSource) ? _IsXMLSource == 1 : false;
@@ -145,7 +148,7 @@ namespace VideoGui.Models
             }
         }
         public ComplexJobList(bool _IsXMLSource,bool _ISFILESRC,string srcdir, string destfname, TimeSpan StartPos, TimeSpan Durationcut,
-            bool b720p, bool _bIsMovie, bool bShorts, int bCreateShorts, bool bEncodeTrim, bool bCutTrim, bool bMonitoredSource,
+            bool b720p, bool _bIsMovie, bool IsYouTube,bool bShorts, int bCreateShorts, bool bEncodeTrim, bool bCutTrim, bool bMonitoredSource,
             bool bPersistentJob, int id, bool _IsMuxed, string _MuxData, bool _IsDownloads)
         {
             try
@@ -153,6 +156,7 @@ namespace VideoGui.Models
                 SourceDirectory = srcdir;
                 IsLocked = false;
                 IsMovie = _bIsMovie;
+                IsYouTube = _IsYouTube;
                 ISFILESRC = _ISFILESRC;
                 IsXMLSource = _IsXMLSource;
                 DestinationDirectory = Path.GetDirectoryName(destfname);

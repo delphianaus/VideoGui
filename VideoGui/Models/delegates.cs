@@ -57,7 +57,7 @@ namespace VideoGui.Models.delegates
     public delegate bool NodeUpdate(string Id, string Title, string Desc, string FileName, string status, Nullable<DateTime> dateTime);
     public delegate void AddressUpdateId(string address, string id);
     public delegate void AddRecordDelegate(bool IsXMLSource,bool ISFILESRC,bool IsElapsed, bool Is720P, 
-        bool IsMovie, bool IsShorts, int IsCreateShorts, bool IsTrimEncode, bool IsCutEncode,
+        bool IsMovie, bool IsYouTube,bool IsShorts, int IsCreateShorts, bool IsTrimEncode, bool IsCutEncode,
           bool IsDeleteMonitored, bool IsPersistantSource, bool IsAdobe, string textstart, 
           string textduration, string sourcedirectory,string destFilename, 
           Nullable<DateTime> twitchschedule = null, string RTMP = "", bool IsTwichStream = false, 

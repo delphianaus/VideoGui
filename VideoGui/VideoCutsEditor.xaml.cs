@@ -777,7 +777,7 @@ namespace VideoGui
                 }
 
                 DoAddRecord?.Invoke(!tbSource.IsChecked.Value, chkExportForTwitch.IsChecked.Value, true,
-                    false, false, false, -1, true, false, false, false,
+                    false, false, false, false,-1, true, false, false, false,
                     true, ctv.TimeFrom.ToFFmpeg(), ctv.TimeTo.ToFFmpeg()
                                         , (tbSource.IsChecked.Value) ? txtsrcdir.Text : 
                                         Path.GetDirectoryName(XML_Filename),
