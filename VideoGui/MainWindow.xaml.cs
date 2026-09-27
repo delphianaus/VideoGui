@@ -238,7 +238,8 @@ namespace VideoGui
         string DestDirectory720p = string.Empty, DestDirectoryAdobe4K = string.Empty,
           DestDirectory4K = string.Empty, DestDirectory1440p = string.Empty,
           backupun = "", DestDirectoryTwitch = "", DestDirectoryMovie = "", DestDirectoryYouTube = "";
-        string fileprogress = "", DoneDirectory720p = string.Empty, DoneDirectory1440p = string.Empty,
+        string fileprogress = "", DoneDirectory720p = string.Empty, 
+          DoneDirectory1440p = string.Empty,
          DoneDirectory4K = string.Empty, DoneDirectoryAdobe4K = string.Empty;
         string ErrorDirectory = "", SourceDirectoryMovies = "",
             SourceDirectory4K = string.Empty, SourceDirectoryAdobe4K = string.Empty, SourceDirectory1440p = string.Empty,
@@ -7232,17 +7233,7 @@ namespace VideoGui
 
 
 
-                            if (ChkReEncode_IsChecked && (File.Exists(DestFile)))
-                            {
-                                bool doSwap = false;
-                                doSwap = ((ChkAutoAAC_IsChecked) && (!DestFile.EndsWith("[AAC].mkv"))) || doSwap;
-                                doSwap = ((!ChkAutoAAC_IsChecked) && (!DestFile.EndsWith("[NEW].mkv"))) || doSwap;
-                                if (doSwap)
-                                {
-                                    DestFile = ChkAutoAAC_IsChecked ? DestFile.Replace(".mkv", "[AAC].mkv") : DestFile.Replace(".mkv", "[NEW].mkv");
-                                    Job.Title = Path.GetFileNameWithoutExtension(DestFile);
-                                }
-                            }
+                            
                             LineNum = 152;
                             string mysourcefiles = "";
                             if (Job.ISFILESRC)
@@ -8493,12 +8484,19 @@ namespace VideoGui
 
                             if (ProcessingJobs.Count(job => job.Title == myfilename) == 0)
                             {
-                                bool Is1440p = false;
+                                bool Is1440p = SourceDir.SourceIs1440p();
                                 bool Is4K = SourceDir.SourceIs4K();
-
+                                bool IsMovie = SourceDir.SourceIsMovies();
+                                bool IsYouTube = SourceDir.SourceIsYouTube();
                                 bool IsAdobe = SourceDir.SourceIs4KAdobe();
-                                string dDir = (Is4K) ? DestDirectory4K : (Is1440p) ? DestDirectory1440p : DestDirectory720p;
-                                if (IsAdobe) dDir = DestDirectoryAdobe4K;
+                                string dDir =
+                                  (Is4K) ? DestDirectory4K :
+                                  (Is1440p) ? DestDirectory1440p :
+                                  (IsMovie) ? DestDirectoryMovie :
+                                  (IsYouTube) ? DestDirectoryYouTube :
+                                  (IsAdobe) ? DestDirectoryAdobe4K :
+                                  (Is1440p) ? DestDirectory1440p : DestDirectory720p;
+
                                 bool AddFileOK = false;
                                 string pfile = Path.Combine(dDir, Path.GetFileName(filename));
                                 if (File.Exists(pfile))
@@ -8541,7 +8539,9 @@ namespace VideoGui
                                         }
                                         else
                                         {
-                                            string doneDir = (Is4K) ? DoneDirectory4K : (Is1440p) ? DoneDirectory1440p : DoneDirectory720p;
+                                            string doneDir =
+                                              (Is4K) ? DoneDirectory4K :
+                                              (Is1440p) ? DoneDirectory1440p : DoneDirectory720p;
                                             if (IsAdobe) doneDir = DoneDirectoryAdobe4K;
                                             string moveto = Path.Combine(doneDir, Path.GetFileName(filename));
                                             MoveIfExists(filename, moveto);
@@ -8552,7 +8552,7 @@ namespace VideoGui
                                 }
                                 else AddFileOK = true;
 
-                                if (AddFileOK) AddIfVaid(filename, SourceDir, IsMoviesDir);
+                                if (AddFileOK) AddIfVaid(filename, SourceDir, IsMoviesDir, IsYouTube);
                             }
                         }
                         SourceList.Clear();
@@ -11019,7 +11019,7 @@ namespace VideoGui
                 LineNum = 3;
                 if (job.Is4K) _4KFiles.Add(Path.GetFileName(newfile));
                 if (job.Is1440p) _1440pFiles.Add(Path.GetFileName(newfile));
-                if (job.Is720P) _720PFiles.Add(Path.GetFileName(newfile));
+                if (job.Is720P || job.IsYouTube || job.IsMovie) _720PFiles.Add(Path.GetFileName(newfile));
                 LineNum = 4;
 
 
@@ -11822,7 +11822,7 @@ namespace VideoGui
 
         private void BtnScan_Click(object sender, RoutedEventArgs e)
         {
-            var ThemeExtractors = new ThemeExtractor();
+            var ThemeExtractors = new TestListboxResizer();
             ThemeExtractors.Show();
         }
         private void BtnScan_Click1(object sender, RoutedEventArgs e)
@@ -13281,7 +13281,7 @@ namespace VideoGui
 
         }
         private bool AddFiles(string newfile, bool IsMpeg4ASP = false, bool IsMpeg4AVC = false,
-            bool IsMovie = false)
+            bool IsMovie = false, bool IsYouTube=false)
         {
             bool JobsAdded = false, IsX265 = false;
             string ext = Path.GetExtension(newfile);
@@ -13293,7 +13293,7 @@ namespace VideoGui
                 string SourceDir = Path.GetDirectoryName(newfile);
                 if (!ProcessingJobs.Any(job => job.Title == SourceFile))
                 {
-                    JobsAdded = AddIfVaid(newfile, SourceDir, IsMovie);
+                    JobsAdded = AddIfVaid(newfile, SourceDir, IsMovie,IsYouTube);
                 }
             }
             return JobsAdded;

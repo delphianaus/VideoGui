@@ -234,6 +234,37 @@ namespace VideoGui
                 return false;
             }
         }
+
+        public static bool SourceIsMovies(this string dir)
+        {
+            try
+            {
+                RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                string shortsdir = key.GetValueStr("SourceDirectoryMovies", @"D:\shorts\");
+                key?.Close();
+                return dir == shortsdir;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+                return false;
+            }
+        }
+        public static bool SourceIsYouTube(this string dir)
+        {
+            try
+            {
+                RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                string shortsdir = key.GetValueStr("SourceDirectoryYouTube", @"D:\shorts\");
+                key?.Close();
+                return dir == shortsdir;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+                return false;
+            }
+        }
         public static bool SourceIs4KAdobe(this string dir)
         {
             try

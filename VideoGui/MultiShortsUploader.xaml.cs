@@ -1039,8 +1039,8 @@ namespace VideoGui
                 double OtherHeight = totalHeight - newHeight;
                 if (OtherHeight > 0)
                 {
-                    Canvas.SetTop(msuSchedules, newHeight - 4);
-                    msuSchedules.Height = OtherHeight;
+                    Canvas.SetTop(msuSchedules, newHeight + 5);
+                    msuSchedules.Height = OtherHeight-5;
                 }
             }
             catch (Exception ex)
@@ -1052,12 +1052,15 @@ namespace VideoGui
         {
             try
             {
-                if (IsLoaded && Ready && e.HeightChanged && sender is MultiListbox rx && rx.Name == "msuShorts")
+                if (IsLoaded)
                 {
-                    ResizeMultilistBoxes(e.NewSize.Height);
-                    RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
-                    key?.SetValue("MSUSHortsHeight", msuShorts.Height);
-                    key?.Close();
+                    if (Ready && e.HeightChanged && sender is MultiListbox rx && rx.Name == "msuShorts")
+                    {
+                        ResizeMultilistBoxes(e.NewSize.Height);
+                        RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                        key?.SetValue("MSUSHortsHeight", msuShorts.Height);
+                        key?.Close();
+                    }
                 }
             }
             catch (Exception ex)

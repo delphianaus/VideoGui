@@ -22,6 +22,9 @@
     <Compile Update="ScheduleActioner.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="TestListboxResizer.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="ThemeExtractor.xaml.cs">
       <SubType>Code</SubType>
     </Compile>

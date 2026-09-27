@@ -4147,7 +4147,7 @@ namespace VideoGui
 
                     if (e.WidthChanged)
                     {
-                        brdmain.Width = e.NewSize.Width - 3;
+                        brdmain.Width = e.NewSize.Width - 5;
                         ActiveWebView[1].Width = brdmain.Width - 18;
 
                         StatusBar.Width = e.NewSize.Width - 1;

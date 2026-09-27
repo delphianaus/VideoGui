@@ -29,9 +29,9 @@
                 <ui:ImageIcon Source="/Icons/computer.ico" />
             </ui:TitleBar.Icon>
         </ui:TitleBar>
-        <Grid Grid.Row="1" Height="442" ScrollViewer.VerticalScrollBarVisibility="Disabled" HorizontalAlignment="Center" Width="710" VerticalAlignment="Center">
-            <Border x:Name="brdShortsVideoCat" BorderThickness="2" BorderBrush="Black" Margin="4,218,15,66">
-                <ListBox x:Name="lstTitles" MinWidth="100" MinHeight="54" Height="128" MouseDoubleClick="lstTitles_MouseDoubleClick">
+        <Grid Grid.Row="1" Height="442" ScrollViewer.VerticalScrollBarVisibility="Disabled" HorizontalAlignment="Center" Width="696" VerticalAlignment="Center">
+            <Border x:Name="brdShortsVideoCat" BorderThickness="2" BorderBrush="CadetBlue" Margin="4,291,15,52">
+                <ListBox x:Name="lstTitles" MinWidth="100" MinHeight="54" MouseDoubleClick="lstTitles_MouseDoubleClick">
                     ScrollViewer.HorizontalScrollBarVisibility="Disabled" SelectionMode="Multiple" 
                    ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Visible" Width="171">
                     <ListBox.Resources>
@@ -63,14 +63,14 @@
                 </ListBox>
             </Border>
             <Button x:Name="btnclose" Content="Close" Height="30" Width="100" HorizontalAlignment="Right" 
-                Margin="0,0,17,21" VerticalAlignment="Bottom" Click="btnclose_Click"/>
-            <Border x:Name="brdShortsVideoCa1t" BorderThickness="2" BorderBrush="Black" Height="27" 
-                Width="588" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="4,26,0,0">
+                Margin="0,0,17,7" VerticalAlignment="Bottom" Click="btnclose_Click"/>
+            <Border x:Name="brdShortsVideoCa1t" BorderThickness="2" BorderBrush="CadetBlue" Height="27" 
+                Width="645" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="4,26,0,0">
                 <TextBox x:Name="txtTitle" HorizontalAlignment="Stretch" TextWrapping="Wrap" 
-                     VerticalAlignment="Stretch" KeyUp="txtTitle_KeyUp"/>
+                     VerticalAlignment="Stretch" KeyUp="txtTitle_KeyUp" FontSize="14" Grid.IsSharedSizeScope="True"/>
             </Border>
-            <Border x:Name="brdTags" BorderThickness="2" BorderBrush="Black" 
-                Height="129" Width="175" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,84,5,0">
+            <Border x:Name="brdTags" BorderThickness="2" BorderBrush="CadetBlue" 
+                Height="228" Width="175" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,58,0,0">
                 <ListBox x:Name="TagsGrp" 
                 ScrollViewer.HorizontalScrollBarVisibility="Disabled" SelectionMode="Multiple"
                 PreviewMouseRightButtonDown="TagsGrp_PreviewMouseRightButtonDown"
@@ -99,18 +99,13 @@
                     </ListBox.ItemTemplate>
                 </ListBox>
             </Border>
-            <Label x:Name="lblTags" Content="Title Tags" HorizontalAlignment="Left" 
-               Margin="5,60,0,174" VerticalAlignment="Top"/>
-            <Label x:Name="lblTitleName" Content="Title :" HorizontalAlignment="Left" 
+            <Label x:Name="lblTitleName" Content="Title :" HorizontalAlignment="Left" FontSize="14"
             Margin="5,0,0,47" VerticalAlignment="Top" MouseDoubleClick="lblTitleName_MouseDoubleClick"/>
-            <CheckBox Content="Shorts Video" HorizontalAlignment="Left" Margin="423,82,0,0" VerticalAlignment="Top"/>
-            <Border x:Name="brdTags_Copy" BorderThickness="2" BorderBrush="Black" 
-            Height="94" Width="175" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="229,84,0,0">
+            <Border x:Name="brdTags_Copy" BorderThickness="2" BorderBrush="CadetBlue" 
+            Height="195" Width="214" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="229,58,0,0">
                 <ListBox x:Name="TagAvailable" 
                 ScrollViewer.HorizontalScrollBarVisibility="Disabled" SelectionMode="Multiple" 
-                ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Visible" 
-                     Width="171" Height="90" HorizontalAlignment="Left" 
-                     VerticalAlignment="Top" MouseDoubleClick="TagAvailable_MouseDoubleClick"
+                ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Visible" MouseDoubleClick="TagAvailable_MouseDoubleClick"
                 PreviewMouseRightButtonDown="TagAvailable_PreviewMouseRightButtonDown">
                     <ListBox.Resources>
                         <!--Defines a context menu-->
@@ -136,38 +131,32 @@
                     </ListBox.ItemTemplate>
                 </ListBox>
             </Border>
-            <Label x:Name="lblTags_Copy" Content="Available Tags" HorizontalAlignment="Center" 
-            Margin="0,56,0,0" VerticalAlignment="Top"/>
-            <Label x:Name="lblTags_Copy1" Content="Max Chars :" HorizontalAlignment="Left" 
-            Margin="419,56,0,0" VerticalAlignment="Top"/>
             <Label x:Name="lblTitleLength" Content="100" HorizontalAlignment="Left" 
-            Margin="489,56,0,0" VerticalAlignment="Top"/>
-            <Button x:Name="btnRemTag" Click="btnInsertTags_Click" Margin="189,130,308,98" 
-                HorizontalAlignment="Left" 
+            Margin="665,23,0,0" VerticalAlignment="Top"/>
+            <Button x:Name="btnRemTag" Click="btnInsertTags_Click" Background="#FF262727" Margin="189,150,0,0" 
                 VerticalAlignment="Top" IsEnabled="True" Width="26" Height="26">
                 <Image x:Name="ImgAdd" Source="/Icons/LeftArrow.png" IsEnabled="True" Width="22" Height="22" 
-                   HorizontalAlignment="Left" VerticalAlignment="Top" />
+                   HorizontalAlignment="Center" VerticalAlignment="Top" />
             </Button>
-            <Button x:Name="btnAddTag" Click="btnRemoveTags_Click" Margin="189,98,308,130" Width="26" Height="26"
+            <Button x:Name="btnAddTag" Background="#FF262727" Click="btnRemoveTags_Click" Margin="189,98,308,130" Width="26" Height="26"
                 HorizontalAlignment="Left" VerticalAlignment="Top" IsEnabled="True">
                 <Image x:Name="ImgRemove" Source="/Icons/RightArrow..png" IsEnabled="True" Width="22" Height="22" HorizontalAlignment="Left" VerticalAlignment="Top"/>
             </Button>
-            <Button x:Name="btnSelect" Click="btnSelect_Click" Margin="189,164,0,0" 
-                Width="26" Height="26" HorizontalAlignment="Left" VerticalAlignment="Top" >
+            <Button x:Name="btnSelect" Click="btnSelect_Click" Margin="189,197,0,0" Background="#FF262727"
+                Width="26" Height="26" VerticalAlignment="Top" >
                 <Image Source="/Icons/SelectDown.png"/>
             </Button>
-            <Border x:Name="brdShortsVideoCa1t_Copy" BorderThickness="2" BorderBrush="Black" Height="27" 
-            Width="332" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="228,184,0,0">
+            <Border x:Name="brdShortsVideoCa1t_Copy" BorderThickness="2" BorderBrush="CadetBlue" Height="28" 
+            Width="420" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="229,258,0,0">
                 <TextBox x:Name="txtNewTag" HorizontalAlignment="Stretch" TextWrapping="Wrap" 
-                VerticalAlignment="Stretch" KeyUp="txtTitle_KeyUp"/>
+                VerticalAlignment="Stretch" KeyUp="txtTitle_KeyUp" FontSize="14"/>
             </Border>
-            <Button x:Name="btnAdd" Click="btnAdd_Click" Margin="565,185,0,0" 
-                VerticalAlignment="Top" Height="26" Width="26" 
-                HorizontalAlignment="Left">
+            <Button x:Name="btnAdd" Click="btnAdd_Click" Margin="654,259,0,0" Background="#FF262727"
+                VerticalAlignment="Top" Height="26" Width="26">
                 <Image Source="/Icons/plus.png"/>
             </Button>
-            <Label x:Name="txtBaseTitle" Content="" HorizontalAlignment="Left" 
-            Margin="51,0,0,0" VerticalAlignment="Top" Width="509" MouseDoubleClick="txtBaseTitle_MouseDoubleClick"/>
+            <Label x:Name="txtBaseTitle" Content="" HorizontalAlignment="Left" FontSize="14"
+            Margin="53,0,0,0" VerticalAlignment="Top" Width="611" MouseDoubleClick="txtBaseTitle_MouseDoubleClick"/>
         </Grid>
     </Grid>
 </ui:FluentWindow>

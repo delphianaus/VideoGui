@@ -6,7 +6,7 @@
         xmlns:xctk="clr-namespace:VideoGui"  WindowStyle="ToolWindow" 
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
         ResizeMode="NoResize" WindowStartupLocation="CenterScreen"  
-        mc:Ignorable="d" Loaded="Window_Loaded" 
+        mc:Ignorable="d" Loaded="Window_Loaded" d:Background="gray"
         Title="Description Selection Editor" Height="440" Width="833" IsManipulationEnabled="True">
     <ui:FluentWindow.Resources>
         <ResourceDictionary>
@@ -15,26 +15,27 @@
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </ui:FluentWindow.Resources>
-    <Grid x:Name="Grid1" Focusable="True" Margin="0,0,10,29" >
+    <Grid x:Name="Grid1" Focusable="True" Margin="0,0,6,6" >
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
+            <RowDefinition/>
+            <RowDefinition Height="0*"/>
         </Grid.RowDefinitions>
 
-        <ui:TitleBar Name="deset" Grid.Row="0" Title="Description Selection Editor" Height="30">
+        <ui:TitleBar Name="deset" Title="Description Selection Editor" Height="30" VerticalAlignment="Center">
             <ui:TitleBar.Icon>
                 <ui:ImageIcon Source="/Icons/computer.ico" />
             </ui:TitleBar.Icon>
         </ui:TitleBar>
-        <Grid Grid.Row="1" ScrollViewer.VerticalScrollBarVisibility="Disabled" Width="821" Margin="2,2,2,2" Focusable="True" IsManipulationEnabled="True" HorizontalAlignment="Left" VerticalAlignment="Top">
+        <Grid Grid.Row="1" ScrollViewer.VerticalScrollBarVisibility="Disabled" Width="821" Margin="0,2,0,0" Focusable="True" IsManipulationEnabled="True" HorizontalAlignment="Center" VerticalAlignment="Top" Height="391" Grid.RowSpan="2">
             <Border x:Name="brdDesc" BorderThickness="2" BorderBrush="Black" Margin="7,33,7,0" 
-                VerticalAlignment="Top" Height="96">
+                VerticalAlignment="Top" Height="161">
                 <TextBox x:Name="txtDesc" IsManipulationEnabled="True" AcceptsReturn="True"/>
             </Border>
-            <Border x:Name="brdDescName" BorderThickness="2" BorderBrush="Black" Margin="169,140,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Width="610">
+            <Border x:Name="brdDescName" BorderThickness="2" BorderBrush="Black" Margin="169,200,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Width="610">
                 <TextBox x:Name="txtDescName" Margin="1,0,1,0" Width="596"  />
             </Border>
-            <Border x:Name="brdAllDescs" BorderBrush="Black" BorderThickness="2" Margin="7,172,7,38">
+            <Border x:Name="brdAllDescs" BorderBrush="Black" BorderThickness="2" Margin="7,227,7,53">
                 <ListBox x:Name="lstAllDescriptions" 
                 ScrollViewer.HorizontalScrollBarVisibility="Disabled" SelectionMode="Multiple" 
                 ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Visible" Margin="4,4,4,4">
@@ -70,15 +71,15 @@
                     </ListBox.ItemTemplate>
                 </ListBox>
             </Border>
-            <Button x:Name="btnSelect" Click="btnSelect_Click" HorizontalAlignment="Left" 
-                 VerticalAlignment="Top" Width="24" Height="24" Margin="784,140,0,0" ScrollViewer.VerticalScrollBarVisibility="Disabled" UseLayoutRounding="False">
+            <Button x:Name="btnSelect" Click="btnSelect_Click" Background="#FF262727"
+                 VerticalAlignment="Top" Width="24" Height="24" Margin="784,198,0,0" ScrollViewer.VerticalScrollBarVisibility="Disabled" UseLayoutRounding="False">
                 <Image Name="ImgSelect" Source="/Icons/SelectDown.png"
                    HorizontalAlignment="Left" VerticalAlignment="Top" Height="20" Width="18" ScrollViewer.VerticalScrollBarVisibility="Disabled" Focusable="True"/>
             </Button>
             <Button x:Name="btnClose" Width="90" Height="24" Content="Close" Click="btnClose_Click" 
-                VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,11,7">
+                VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,11,19">
             </Button>
-            <Label x:Name="lblDescName" Content="Video Description Name" HorizontalAlignment="Left" Margin="10,137,0,0" 
+            <Label x:Name="lblDescName" Content="Video Description Name" HorizontalAlignment="Left" Margin="10,203,0,0" 
             VerticalAlignment="Top" Width="157"/>
             <Label x:Name="lblDesc" Content="Video Description" HorizontalAlignment="Left" Margin="2,4,0,0" 
               VerticalAlignment="Top" Width="128"/>

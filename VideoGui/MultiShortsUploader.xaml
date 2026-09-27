@@ -5,7 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:toggle="clr-namespace:ToggleClass;assembly=ToggleClass"
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
-        ExtendsContentIntoTitleBar="True" WindowBackdropType="Mica"
+        ExtendsContentIntoTitleBar="True"
+         WindowBackdropType="Mica"
         xmlns:MSU="clr-namespace:CustomComponents.ListBoxExtensions;assembly=CustomComponents"
         SizeChanged="Window_SizeChanged" 
         ResizeMode="CanResize" WindowStartupLocation="CenterScreen" 
@@ -116,11 +117,12 @@
                     </Canvas>
 
                     <!-- Main Content -->
-                    <Canvas x:Name="MainContent" Grid.Row="1" Height="420" 
-                    HorizontalAlignment="Center" Width="558" VerticalAlignment="Center">
-                        <MSU:MultiListbox x:Name="msuShorts" Header="Active Shorts Directory" Canvas.Top="0" IsDarkMode="True"
-                  ItemHeight="18" FontSize="11.8" HorizontalAlignment="Left" VerticalAlignment="Center" Width="560" Height="162" 
-                     SizeChanged="msuShorts_SizeChanged" ResizeDirection="Bottom" Background="Transparent" >
+                    <Canvas x:Name="MainContent" Grid.Row="1" ClipToBounds="True" Focusable="True" AllowDrop="True" IsManipulationEnabled="True" ScrollViewer.CanContentScroll="True">
+                        <MSU:MultiListbox x:Name="msuShorts" Header="Active Shorts Directory" Canvas.Top="1" IsDarkMode="True"
+                            ItemHeight="18" FontSize="11.8" HorizontalAlignment="Left" VerticalAlignment="Center" Width="553" Height="162" 
+                             SizeChanged="msuShorts_SizeChanged" ResizeDirection="Bottom" Background="Transparent" Focusable="True" 
+                             BorderBrush="CadetBlue"
+                        Canvas.Left="1" IsManipulationEnabled="True" ScrollViewer.CanContentScroll="True" UseLayoutRounding="True" ClipToBounds="True" SnapsToDevicePixels="True" ForceCursor="True" >
                             <MSU:MultiListbox.ColumnDefinitions>
                                 <MSU:MultiListboxColumnDefinition HeaderText="Shorts Directory" 
                       DataField="DirectoryName" WidthBinding="ShortsDirectoryNameWidth"  
@@ -137,12 +139,13 @@
                             </MSU:MultiListbox.ItemsContextMenu>
                         </MSU:MultiListbox>
                         <MSU:MultiListbox x:Name="msuSchedules" Header="Active Schedules" 
-                  Width="560" Canvas.Top="168" VerticalContentAlignment="Top" 
-                   Background="Transparent"
-                   Height="201" HorizontalAlignment="Center" IsDarkMode="True"
-                    VerticalAlignment="Top"  ItemHeight="25" FontSize="12"
-                    ItemsHorizontalAlignment="Left" ItemsVerticalAlignment="Center"
-                    MouseDoubleClick="msuSchedules_MouseDoubleClick" >
+                         Width="560" Canvas.Top="184" VerticalContentAlignment="Top" 
+                         Background="Transparent" BorderBrush="CadetBlue" 
+                         Height="201" HorizontalAlignment="Center" IsDarkMode="True"
+                         VerticalAlignment="Top"  ItemHeight="25" FontSize="12"
+                         ItemsHorizontalAlignment="Left" ItemsVerticalAlignment="Center"
+                         MouseDoubleClick="msuSchedules_MouseDoubleClick" 
+                         ClipToBounds="True" SnapsToDevicePixels="True" Focusable="True" AllowDrop="True" ForceCursor="True" IsManipulationEnabled="True" >
                             <MSU:MultiListbox.ColumnDefinitions>
                                 <MSU:MultiListboxColumnDefinition DataField="Id" Width="0" ComponentType="TextBlock"/>
                                 <MSU:MultiListboxColumnDefinition HeaderText="Shorts Directory" 

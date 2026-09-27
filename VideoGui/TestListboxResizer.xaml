@@ -1,0 +1,43 @@
+﻿<ui:FluentWindow x:Class="VideoGui.TestListboxResizer"
+        xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:VideoGui"
+        mc:Ignorable="d" d:Background="Gray"
+        Title="TestListboxResizer" Height="450" Width="800">
+    <ui:FluentWindow.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Themes/FluentWindowControls.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </ui:FluentWindow.Resources>
+    <Grid Name="main">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <ui:TitleBar Name="multishortstitle" Grid.Row="0" Title="Listbox Test Utility" Height="30">
+            <ui:TitleBar.Icon>
+                <ui:ImageIcon Source="/Icons/computer.ico" />
+            </ui:TitleBar.Icon>
+        </ui:TitleBar>
+        <Grid Grid.Row="1">
+            <Grid>
+                <GroupBox Name="brd" BorderBrush="CadetBlue" 
+                           BorderThickness="3" Padding="0,0,0,6" Margin="4,3,4,52" IsManipulationEnabled="True" ForceCursor="True" Focusable="True" AllowDrop="True" ClipToBounds="True" SnapsToDevicePixels="True" UseLayoutRounding="True" ScrollViewer.CanContentScroll="True" Grid.IsSharedSizeScope="True" Header="Test Control" IsTabStop="True">
+                    <ListBox x:Name="lstTest" BorderBrush="CadetBlue" BorderThickness="2" Margin="3,8,3,69" Background="Beige" ScrollViewer.CanContentScroll="True" ClipToBounds="True" IsSynchronizedWithCurrentItem="False" AllowDrop="True" ForceCursor="True" IsManipulationEnabled="True" IsTextSearchCaseSensitive="True" Grid.IsSharedSizeScope="True" UseLayoutRounding="True" Padding="2,2,2,2">
+                        <ListBoxItem Content="Line 1"/>
+                        <ListBoxItem Content="Line 2"/>
+                        <ListBoxItem Content="Line 3"/>
+                        <ListBoxItem Content="Line 4"/>
+                    </ListBox>
+                </GroupBox>
+                <Button Name="btnClose" Width="80" Height="30" Content="Close" RenderTransformOrigin="3.156,5.347" Margin="710,366,0,0" VerticalAlignment="Top" Click="btnClose_Click"/>
+            </Grid>
+        </Grid>
+    </Grid>
+</ui:FluentWindow>
