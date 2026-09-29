@@ -9292,7 +9292,9 @@ namespace VideoGui
                     decimal samplesize = 1;
                     LineNum = 82;
 
-                    if (job.IsMovie || job.IsYouTube || job.Is720P) samplesize = 1.4M;
+                    if (job.IsMovie) samplesize = 1.1M;
+
+                    if (job.Is720P || job.IsYouTube) samplesize = 0.8M;
                     if (job.IsYouTube || job.Is720P)
                     {
                         if (videoStream.Framerate > 25)

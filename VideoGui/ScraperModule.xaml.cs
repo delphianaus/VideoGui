@@ -3313,25 +3313,7 @@ namespace VideoGui
                 ex.LogWrite($"wv2_NavigationCompleted {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-        public void SetMargin(object statusbar, int offset = 78)
-        {
-            try
-            {
-                if (statusbar is StatusBar statusBar)
-                {
-                    double sumWidths = statusBar.Items.OfType<FrameworkElement>().Sum(fe => fe.ActualWidth);
-                    var closeButton = statusBar.Items.OfType<Button>().FirstOrDefault(btn => btn.Name.Equals("btnclose", StringComparison.OrdinalIgnoreCase));
-                    if (closeButton != null)
-                    {
-                        closeButton.Margin = new Thickness(statusBar.Width - sumWidths - offset, 0, 0, 0);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                ex.LogWrite($"SetMargin {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
-            }
-        }
+ 
         async void NextTask()
         {
             try

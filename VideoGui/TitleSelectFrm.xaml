@@ -17,14 +17,16 @@
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </ui:FluentWindow.Resources>
-    <Grid Height="472" x:Name="gr1" VerticalAlignment="Top" Width="695" Margin="5,0,0,0" HorizontalAlignment="Left" >
+    <Grid Height="472" x:Name="gr1" VerticalAlignment="Top"
+        Width="695" Margin="5,0,0,0" HorizontalAlignment="Left" >
 
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <ui:TitleBar Name="TtefTitle" Title="Select Title" Height="30" Grid.ColumnSpan="2" VerticalAlignment="Center">
+        <ui:TitleBar Name="TtefTitle" Title="Select Title" Height="30" 
+               Grid.ColumnSpan="2" VerticalAlignment="Center">
             <ui:TitleBar.Icon>
                 <ui:ImageIcon Source="/Icons/computer.ico" />
             </ui:TitleBar.Icon>
