@@ -52,6 +52,7 @@ using Windows.Devices.WiFi;
 using Windows.Networking.Connectivity;
 using Windows.Networking.Sockets;
 using Windows.Security.Credentials;
+using Wpf.Ui.Controls;
 using Xceed.Wpf.Toolkit.Converters;
 using static System.Net.WebRequestMethods;
 using static System.Runtime.InteropServices.JavaScript.JSType;
@@ -293,6 +294,7 @@ namespace VideoGui
             }
 
         }
+        private Command cmd = null;
         private async Task<bool> AttachAllDrives()
         {
             try
@@ -306,57 +308,78 @@ namespace VideoGui
                     Models.Add("WD102PURZ");
                     Models.Add("WD101PURP");
                     Models.Add("WD102PURP");
-                    int TotalDrives = 0;
-                    using (var searcher = new ManagementObjectSearcher("SELECT Model, SerialNumber FROM Win32_DiskDrive"))
+                    //powershell.exe -NoProfile -NonInteractive -Command "Get-Disk | Sort-Object Number | Format-Table Number,FriendlyName,SerialNumber,Size | Out-String -Width 240"
+                    List<string> ProbeData = new List<string>();
+                    cmd = Cli.Wrap("powershell.exe").
+                                            WithArguments(args => args
+                                            .Add("-NoProfile").Add("-NonInteractive").Add("-Command")
+                                            .Add("Get-Disk | Sort-Object Number | Format-Table Number,FriendlyName,SerialNumber,Size | Out-String -Width 240", true))
+                                            .WithValidation(CommandResultValidation.None).
+                                           WithWorkingDirectory(@"C:\VideoGui");
+
+                    await foreach (var commandEvent in cmd.ListenAsync())
                     {
-                        foreach (ManagementObject disk in searcher.Get())
+                        switch (commandEvent)
                         {
-                            string model = disk["Model"]?.ToString();
-                            if (model.Contains("ATA"))
-                            {
-                                model = model.Replace("ATA", "").Trim();
-                            }
-                            if (model.StartsWith("WDC"))
-                            {
-                                model = model.Substring(4).Trim();
-                            }
-                            int idx = model.IndexOf('-');
-                            if (idx != -1)
-                            {
-                                model = model.Substring(0, idx).Trim();
-                            }
-                            string serial = disk["SerialNumber"]?.ToString();
-                            if (Models.Contains(model))
-                            {
-                                TotalDrives++;
-                            }
+                            case StartedCommandEvent StartedEvent:
+                                break;
+                            case StandardOutputCommandEvent OutputEvent:
+                                {
+                                    string data = OutputEvent.Text.Trim();
+                                    if (data.Contains("ATA") && data.ContainsAny(Models))
+                                    {
+                                        ProbeData.Add(data);
+                                        break;
+                                    }
+                                    break;
+                                }
+                            case StandardErrorCommandEvent ErrorEvent:
+                                {
+                                    string data = ErrorEvent.Text;
+                                    data = data.Trim();
+                                    ProbeData.Add(data);
+
+                                    break;
+                                }
+                            case ExitedCommandEvent ExitEvent:
+                                {
+                                    break;
+                                }
                         }
                     }
-                    if (TotalDrives == 6)
+                    bool RunMount = true;
+                    int TotalDrives = ProbeData.Count;
+                    if (ProbeData.Count == 6)
                     {
+                        string command = "",ss = "", ee = "";
+                        //wsl --mount \\.\PHYSICALDRIVE{} --bare
+                        foreach (var drive in ProbeData)
+                        {
+                            var drvid = drive.Split(" ").ToList().FirstOrDefault();
+                            command = $"--mount \\\\.\\PHYSICALDRIVE{drvid} --bare";
+                            (ss, ee) = RunCommand(command, false);
+                            if (ss.Contains("The operation completed successfully."))
+                            {
+                                continue;
+                            }
+                            List<string> returnvals = ss.Replace("\0", "").Split(Environment.NewLine).ToList();
+                            foreach (var rs in returnvals)
+                            {
+                                if (rs.ContainsAll(new[] { "PHYSICALDRIVE", "is already attached" }))
+                                {
+                                    RunMount = false;
+                                    RaidOk = true;
+                                    break;
+                                }
+                            }
+                        }
+                   
                         Dispatcher.InvokeAsync(() =>
                         {
                             lblStatus.Content = "Status : Running Wsl Scripts";
                         });
 
-                        string command = "wsl.exe cat /proc/mdstat";
-                        string defaultpath = @"C:\bin\";
-                        string x = @"mountdrives.bat";
-                        string r = "", e = "";
-                        (r, e) = RunCommand(defaultpath + x);
-                        List<string> returnvals = r.Replace("\0", "").Split(Environment.NewLine).ToList();
-
-                        bool RunMount = true;
-                        //PHYSICALDRIVE6' is already attached
-                        foreach (var rs in returnvals)
-                        {
-                            if (rs.ContainsAll(new[] { "PHYSICALDRIVE", "is already attached" }))
-                            {
-                                RunMount = false;
-                                RaidOk = true;
-                                break;
-                            }
-                        }
+                        command = "wsl.exe cat /proc/mdstat";
                         if (RunMount || Debugger.IsAttached)
                         {
                             int ttx = 5;
