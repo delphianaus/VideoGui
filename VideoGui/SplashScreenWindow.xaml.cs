@@ -294,7 +294,7 @@ namespace VideoGui
             }
 
         }
-        private Command cmd = null;
+        private Command cmd = null;bool IsArrayPresent = false;
         private async Task<bool> AttachAllDrives()
         {
             try
@@ -302,14 +302,9 @@ namespace VideoGui
 
                 try
                 {
-                    List<string> Models = new List<string>();
-                    Models.Add("ST10000VE001");
-                    Models.Add("WD101PURZ");
-                    Models.Add("WD102PURZ");
-                    Models.Add("WD101PURP");
-                    Models.Add("WD102PURP");
+                    List<string> Models = new List<string> { "ST10000VE001", "WD101PURZ", "WD102PURZ", "WD101PURP", "WD102PURP"};
                     //powershell.exe -NoProfile -NonInteractive -Command "Get-Disk | Sort-Object Number | Format-Table Number,FriendlyName,SerialNumber,Size | Out-String -Width 240"
-                    List<string> ProbeData = new List<string>();
+                    List<string> ProbeData = [], Errors = [] ;
                     cmd = Cli.Wrap("powershell.exe").
                                             WithArguments(args => args
                                             .Add("-NoProfile").Add("-NonInteractive").Add("-Command")
@@ -335,10 +330,7 @@ namespace VideoGui
                                 }
                             case StandardErrorCommandEvent ErrorEvent:
                                 {
-                                    string data = ErrorEvent.Text;
-                                    data = data.Trim();
-                                    ProbeData.Add(data);
-
+                                    Errors.Add(ErrorEvent.Text.Trim());
                                     break;
                                 }
                             case ExitedCommandEvent ExitEvent:
@@ -348,11 +340,11 @@ namespace VideoGui
                         }
                     }
                     bool RunMount = true;
+
                     int TotalDrives = ProbeData.Count;
                     if (ProbeData.Count == 6)
                     {
                         string command = "",ss = "", ee = "";
-                        //wsl --mount \\.\PHYSICALDRIVE{} --bare
                         foreach (var drive in ProbeData)
                         {
                             var drvid = drive.Split(" ").ToList().FirstOrDefault();
@@ -382,10 +374,10 @@ namespace VideoGui
                         command = "wsl.exe cat /proc/mdstat";
                         if (RunMount || Debugger.IsAttached)
                         {
-                            int ttx = 5;
+                            int ttx = 4;
                             var cts = new CancellationTokenSource();
                             cts.CancelAfter(TimeSpan.FromSeconds(ttx));
-                            var TimeOut = ttx * 4;
+                            var TimeOut = ttx * 2;
                             while (!cts.IsCancellationRequested)
                             {
                                 Thread.Sleep(250);
@@ -545,6 +537,12 @@ namespace VideoGui
                     err.WriteLog(@"C:\videogui\raidlog.log");
                     string ss = "", ee = "";
                     (ss, ee) = RunCommand("-u root mount /dev/md0 /raid", false);
+                    dirlist = Directory.EnumerateDirectories(@"\\wsl.localhost\Ubuntu\raid",
+                                            "*.*", SearchOption.TopDirectoryOnly).ToList();
+                    if (dirlist.Count > 0)
+                    {
+                       Attached  = true;
+                    }
                 }
 
                 raidmapper.Start();
