@@ -294,7 +294,7 @@ namespace VideoGui
             }
 
         }
-        private Command cmd = null;bool IsArrayPresent = false;
+        private Command cmd = null; bool IsArrayPresent = false;
         private async Task<bool> AttachAllDrives()
         {
             try
@@ -302,9 +302,9 @@ namespace VideoGui
 
                 try
                 {
-                    List<string> Models = new List<string> { "ST10000VE001", "WD101PURZ", "WD102PURZ", "WD101PURP", "WD102PURP"};
+                    List<string> Models = new List<string> { "ST10000VE001", "WD101PURZ", "WD102PURZ", "WD101PURP", "WD102PURP" };
                     //powershell.exe -NoProfile -NonInteractive -Command "Get-Disk | Sort-Object Number | Format-Table Number,FriendlyName,SerialNumber,Size | Out-String -Width 240"
-                    List<string> ProbeData = [], Errors = [] ;
+                    List<string> ProbeData = [], Errors = [];
                     cmd = Cli.Wrap("powershell.exe").
                                             WithArguments(args => args
                                             .Add("-NoProfile").Add("-NonInteractive").Add("-Command")
@@ -344,7 +344,7 @@ namespace VideoGui
                     int TotalDrives = ProbeData.Count;
                     if (ProbeData.Count == 6)
                     {
-                        string command = "",ss = "", ee = "";
+                        string command = "", ss = "", ee = "";
                         foreach (var drive in ProbeData)
                         {
                             var drvid = drive.Split(" ").ToList().FirstOrDefault();
@@ -365,7 +365,7 @@ namespace VideoGui
                                 }
                             }
                         }
-                   
+
                         Dispatcher.InvokeAsync(() =>
                         {
                             lblStatus.Content = "Status : Running Wsl Scripts";
@@ -377,7 +377,7 @@ namespace VideoGui
                             int ttx = 4;
                             var cts = new CancellationTokenSource();
                             cts.CancelAfter(TimeSpan.FromSeconds(ttx));
-                            var TimeOut = ttx * 2;
+                            var TimeOut = ttx * 4;
                             while (!cts.IsCancellationRequested)
                             {
                                 Thread.Sleep(250);
@@ -386,7 +386,13 @@ namespace VideoGui
                                 {
                                     decimal tt = TimeOut / 4;
                                     double m = (double)Math.Round(tt);
-                                    lblStatus.Content = $"Status : Waiting On Wsl {Math.Round(m, 1)} Seconds";
+                                    if (Math.Round(m, 1) == 0)
+                                    {
+                                        lblStatus.Content = $"Status : WSL2 Initialization Done";
+                                        cts.Cancel();
+                                        
+                                    }
+                                    else lblStatus.Content = $"Status : Waiting On Wsl {Math.Round(m, 1)} Seconds";
                                 });
                             }
 
@@ -541,7 +547,7 @@ namespace VideoGui
                                             "*.*", SearchOption.TopDirectoryOnly).ToList();
                     if (dirlist.Count > 0)
                     {
-                       Attached  = true;
+                        Attached = true;
                     }
                 }
 

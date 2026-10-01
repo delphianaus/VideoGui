@@ -1126,7 +1126,7 @@ namespace VideoGui
             {
                 if (!Dispatcher.CheckAccess())
                 {
-                    Dispatcher.InvokeAsync(() =>
+                    Dispatcher.Invoke(() =>
                     {
                         SetupSubstDrive();
                     });
@@ -1198,7 +1198,7 @@ namespace VideoGui
             {
                 if (!Dispatcher.CheckAccess())
                 {
-                    Dispatcher.InvokeAsync(() => UploadV2Files(rentry));
+                    Dispatcher.Invoke(() => UploadV2Files(rentry));
                     return;
                 }
 
@@ -1309,7 +1309,7 @@ namespace VideoGui
                         await Task.Delay(500);
                         await wv2.ExecuteScriptAsync("document.getElementById('select-files-button').click();");
                         HasExited = true;
-                        Dispatcher.InvokeAsync(() => InternalTimer.Start());
+                        Dispatcher.Invoke(() => InternalTimer.Start());
                     }
                 }
                 else
@@ -1617,7 +1617,7 @@ namespace VideoGui
             {
                 if (IsLoaded)
                 {
-                    wv2.Width = brdmain.Width - 2;
+                    wv2.Width = brdmain.Width - 7;
                     wv2.Height = brdmain.Height - 2;
                 }
             }
@@ -1659,7 +1659,7 @@ namespace VideoGui
                 if (ScheduledGet is not null)
                 {
                     int Scheduled = ScheduledGet.Invoke();
-                    Dispatcher.InvokeAsync(() =>
+                    Dispatcher.Invoke(() =>
                     {
                         lblWaiting.Content = waiting.ToString();
                         lblTotal.Content = Scheduled.ToString();
@@ -1820,7 +1820,7 @@ namespace VideoGui
                         }
                     }
                 }
-                Dispatcher.InvokeAsync(() =>
+                Dispatcher.Invoke(() =>
                 {
                     InitAsync();
                 });
@@ -1929,7 +1929,7 @@ namespace VideoGui
                             MaxNodes = (nodesinfo.LastOrDefault() is string sp) ? sp.ToInt() : -1;
                         }
                     }
-                    Dispatcher.InvokeAsync(() =>
+                    Dispatcher.Invoke(() =>
                     {
 
                         lblUploaded.Content = LastNode;
@@ -2204,7 +2204,7 @@ namespace VideoGui
                                 }
                                 else if (DoNextNode && Id != "" && ScraperType == EventTypes.ScapeSchedule)
                                 {
-                                    Dispatcher.InvokeAsync(() =>
+                                    Dispatcher.Invoke(() =>
                                     {
                                         if (!lstMain.Items.Contains($"{Id} "))
                                         {
@@ -2422,7 +2422,7 @@ namespace VideoGui
             {
                 if (!Dispatcher.CheckAccess())
                 {
-                    Dispatcher.InvokeAsync(() =>
+                    Dispatcher.Invoke(() =>
                     {
                         btnNext_Task(sender);
                     });
@@ -3320,7 +3320,7 @@ namespace VideoGui
             {
                 if (!Dispatcher.CheckAccess())
                 {
-                    Dispatcher.InvokeAsync(() =>
+                    Dispatcher.Invoke(() =>
                     {
                         NextTask();
                     });
@@ -3356,7 +3356,7 @@ namespace VideoGui
             {
                 if (!Dispatcher.CheckAccess())
                 {
-                    Dispatcher.InvokeAsync(() =>
+                    Dispatcher.Invoke(() =>
                     {
                         UploadsClick();
                     });
@@ -3385,7 +3385,7 @@ namespace VideoGui
             {
                 if (!Dispatcher.CheckAccess())
                 {
-                    Dispatcher.InvokeAsync(() =>
+                    Dispatcher.Invoke(() =>
                     {
                         ContentClick();
                     });
@@ -3514,7 +3514,7 @@ namespace VideoGui
             {
                 if (!Dispatcher.CheckAccess())
                 {
-                    Dispatcher.InvokeAsync(() =>
+                    Dispatcher.Invoke(() =>
                     {
                         Select_Upload();
                         return;
@@ -3543,7 +3543,7 @@ namespace VideoGui
             {
                 if (!Dispatcher.CheckAccess())
                 {
-                    Dispatcher.InvokeAsync(() =>
+                    Dispatcher.Invoke(() =>
                     {
                         Click_Finish();
                     });
@@ -3573,7 +3573,7 @@ namespace VideoGui
 
                 if (!Dispatcher.CheckAccess())
                 {
-                    Dispatcher.InvokeAsync(() =>
+                    Dispatcher.Invoke(() =>
                     {
                         Click_Upload();
                         return;
@@ -3602,7 +3602,7 @@ namespace VideoGui
             {
                 if (!Dispatcher.CheckAccess())
                 {
-                    Dispatcher.InvokeAsync(() =>
+                    Dispatcher.Invoke(() =>
                     {
                         Close_Upload(wv2);
                         return;
@@ -3711,7 +3711,7 @@ namespace VideoGui
             {
                 if (!Dispatcher.CheckAccess())
                 {
-                    Dispatcher.InvokeAsync(() =>
+                    Dispatcher.Invoke(() =>
                     {
                         DoQuotaExceeded(message);
                     });
@@ -3988,7 +3988,7 @@ namespace VideoGui
         {
             try
             {
-                Dispatcher.InvokeAsync(() =>
+                Dispatcher.Invoke(() =>
                 {
                     int r = directshortsScheduler.ScheduleNumber;
                     string t = $"{id} {title.Replace("\n", "").Replace("\r", "").Trim()}  {r + 1} {dateTime}";
@@ -4051,12 +4051,12 @@ namespace VideoGui
         {
             if (!Dispatcher.CheckAccess())
             {
-                Dispatcher.InvokeAsync(() => { MenuClicker(webView); });
+                Dispatcher.Invoke(() => { MenuClicker(webView); });
                 return;
             }
             try
             {
-                webView.Dispatcher.InvokeAsync(() =>
+                webView.Dispatcher.Invoke(() =>
                 {
                     if (IsAppActive())
                     {
@@ -4129,8 +4129,8 @@ namespace VideoGui
 
                     if (e.WidthChanged)
                     {
-                        brdmain.Width = e.NewSize.Width - 5;
-                        ActiveWebView[1].Width = brdmain.Width - 18;
+                        brdmain.Width = e.NewSize.Width - 8;
+                        ActiveWebView[1].Width = brdmain.Width - 22;
 
                         StatusBar.Width = e.NewSize.Width - 1;
                     }
@@ -4139,7 +4139,7 @@ namespace VideoGui
                         // Main Height = 450 - 32 - 280;
                         brdmain.Height = e.NewSize.Height - 230;
                         brdInfo.Height = e.NewSize.Height - brdmain.Height - 80;
-                        ActiveWebView[1].Height = brdmain.Height - 15;
+                        ActiveWebView[1].Height = brdmain.Height - 18;
                     }
                     RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                     key.SetValue("WebWidth", ActualWidth);
@@ -4206,7 +4206,7 @@ namespace VideoGui
             {
                 if (!Dispatcher.CheckAccess())
                 {
-                    Dispatcher.InvokeAsync(() => { SimulateMouseWheel(webView, isUp, repeatCount); });
+                    Dispatcher.Invoke(() => { SimulateMouseWheel(webView, isUp, repeatCount); });
                     return;
                 }
 
@@ -4241,7 +4241,7 @@ namespace VideoGui
             {
                 if (!Dispatcher.CheckAccess())
                 {
-                    Dispatcher.InvokeAsync(() => { SimulateWheelUpDownAsync(webView, elementPoint); });
+                    Dispatcher.Invoke(() => { SimulateWheelUpDownAsync(webView, elementPoint); });
                     return;
                 }
 
@@ -4250,7 +4250,7 @@ namespace VideoGui
                 var html = Regex.Unescape(await webView.ExecuteScriptAsync("document.body.innerHTML"));
                 if (html.Contains("Daily upload limit reached")) return;
                 if (!html.Contains("<span class=\"count style-scope ytcp-multi-progress-monitor\">")) return;
-                await webView.Dispatcher.InvokeAsync(async () =>
+                await webView.Dispatcher.Invoke(async () =>
                 {
                     webView.Focus();
                     webView.BringIntoView();
@@ -4296,7 +4296,7 @@ namespace VideoGui
             {
                 if (!Dispatcher.CheckAccess())
                 {
-                    Dispatcher.InvokeAsync(() => SimulateWheelUpDown(webView, elementPoint));
+                    Dispatcher.Invoke(() => SimulateWheelUpDown(webView, elementPoint));
                     return;
                 }
                 Task.Run(() =>
@@ -4830,7 +4830,7 @@ namespace VideoGui
                 if (!Dispatcher.CheckAccess())
                 {
                     var r = 0;
-                    Dispatcher.InvokeAsync(() => { r = DeleteFiles(files, basedirectory); });
+                    Dispatcher.Invoke(() => { r = DeleteFiles(files, basedirectory); });
                     return r;
                 }
                 string files_deleted = "";
@@ -5040,7 +5040,7 @@ namespace VideoGui
                     return;
                 }
                 files++;
-                Dispatcher.InvokeAsync(() =>
+                Dispatcher.Invoke(() =>
                 {
                     if (files > 0)
                     {
