@@ -12021,7 +12021,7 @@ namespace VideoGui
                  "COALESCE(S2.TITLEID, S1.TITLEID) as TITLEID, " +
                  "COALESCE(S2.DESCID, S1.DESCID) as DESCID, " +
                  "COALESCE(" +
-                 "(SELECT LIST(TAGID, ',') FROM TITLETAGS WHERE GROUPID = S2.TITLEID), " +
+                 "FROM TITLETAGS WHERE GROUPID = S2.TITLEID), " +
                  "(SELECT LIST(TAGID, ',') FROM TITLETAGS WHERE GROUPID = S1.TITLEID)" +
                  ") AS LINKEDTITLEIDS, " + "COALESCE(" +
                  "(SELECT LIST(ID,',') FROM DESCRIPTIONS WHERE ID = S2.DESCID), " +
