@@ -10010,7 +10010,7 @@ namespace VideoGui
                         errordetails.WriteLog(filename);
                     }
                 }
-                foreach (var jo in ProcessingJobs.Where(jo => jo.FileNoExt == Path.GetFileNameWithoutExtension(filename)))
+                foreach (var jo in ProcessingJobs.Where(jo => jo.Handle == processid.ToString()))
                 {
                     ReleaseThreadsInUse(jo);
                 }
@@ -10018,7 +10018,7 @@ namespace VideoGui
                 {
                     bool found = false, IsMSJ = false, IsNVM = false;
                     int IsCreateShorts = -1;
-                    foreach (var jo in ProcessingJobs.Where(jo => !jo.Complete && jo.FileNoExt == Path.GetFileNameWithoutExtension(filename)))
+                    foreach (var jo in ProcessingJobs.Where(jo => jo.Handle == processid.ToString()))
                     {
                         found = true;
                         if (jo.IsXMLSource)
