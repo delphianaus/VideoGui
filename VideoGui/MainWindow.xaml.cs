@@ -54,6 +54,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.Marshalling;
 using System.Runtime.Intrinsics.Arm;
+using System.Runtime.Intrinsics.X86;
 using System.Runtime.Versioning;
 using System.Security.Cryptography;
 using System.Security.Cryptography.Pkcs;
@@ -75,6 +76,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
+using System.Windows.Media.Media3D;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 using System.Xaml;
@@ -189,6 +191,8 @@ namespace VideoGui
         CollectionViewSource titletagsViewSource = new CollectionViewSource();
         CollectionViewSource availabletagsViewSource = new CollectionViewSource();
 
+        int ThreadsInUse720p = 0, ThreadsInUse1080p = 0,
+           ThreadsInUse1440p = 0, ThreadsInUse4k = 0;
 
         ObservableCollection<DraftShorts> DraftShortsList = new ObservableCollection<DraftShorts>();
         int TitleTagsSrc = -1;
@@ -238,7 +242,7 @@ namespace VideoGui
         string DestDirectory720p = string.Empty, DestDirectoryAdobe4K = string.Empty,
           DestDirectory4K = string.Empty, DestDirectory1440p = string.Empty,
           backupun = "", DestDirectoryTwitch = "", DestDirectoryMovie = "", DestDirectoryYouTube = "";
-        string fileprogress = "", DoneDirectory720p = string.Empty, 
+        string fileprogress = "", DoneDirectory720p = string.Empty,
           DoneDirectory1440p = string.Empty,
          DoneDirectory4K = string.Empty, DoneDirectoryAdobe4K = string.Empty;
         string ErrorDirectory = "", SourceDirectoryMovies = "",
@@ -6936,6 +6940,9 @@ namespace VideoGui
                 total4kTasks = key.GetValueInt("max4Kthreads", 3);// 1 for laptop. 2 for desktop
                 key?.Close();
                 LineNum = 2;
+                DateTime LastSeen = DateTime.Now;
+                double MaxWeight = 0;
+
                 List<JobListDetails> NewProcessingList = new();
                 List<JobListDetails> NewProcessingListTemp = new();
                 DateTime Start = DateTime.Now;
@@ -6954,30 +6961,10 @@ namespace VideoGui
                     int xcnt1440p = 0, xcnt4K = 0, xcnt = 0;
                     if (ProcessingJobs.Count > 0)
                     {
-                        for (int xp = ProcessingJobs.Count - 1; xp >= 0; xp--)
+                        Application.Current.Dispatcher.Invoke(() =>
                         {
-                            if ((ProcessingJobs[xp] is not null) && (ProcessingJobs[xp].Handle == "") &&
-                                (ProcessingJobs[xp].Is4K) && (!ProcessingJobs[xp].InProcess) && (!ProcessingJobs[xp].IsSkipped))
-                            {
-                                xcnt4K++;
-                            }
-                            if ((ProcessingJobs[xp] is not null) && (ProcessingJobs[xp].Handle == "") &&
-                                (ProcessingJobs[xp].IsMuxed) && (!ProcessingJobs[xp].InProcess) && (!ProcessingJobs[xp].IsSkipped))
-                            {
-                                xcnt4K++;
-                            }
-                            if ((ProcessingJobs[xp] is not null) && (ProcessingJobs[xp].Handle == "") &&
-                                (ProcessingJobs[xp].Is1440p || ProcessingJobs[xp].IsTwitchOut) && (!ProcessingJobs[xp].InProcess) && (!ProcessingJobs[xp].IsSkipped))
-                            {
-                                xcnt1440p++;
-                            }
-                            if ((ProcessingJobs[xp] is not null) && (ProcessingJobs[xp].Handle == "") &&
-                                (ProcessingJobs[xp].Is720P || ProcessingJobs[xp].IsMovie || ProcessingJobs[xp].IsYouTube) && (!ProcessingJobs[xp].InProcess) && (!ProcessingJobs[xp].IsSkipped))
-                            {
-                                xcnt++;
-                            }
-
-                        }
+                            trayicon.ToolTipText = "Busy";
+                        });
                     }
                     else
                     {
@@ -6987,40 +6974,17 @@ namespace VideoGui
                         });
                     }
 
-                    if (xcnt == 0 && xcnt1440p == 0 && xcnt4K == 0 && ProcessingJobs.Count == 0)
-                    {
-                        Task.Delay(500);
-                        continue;
-                    }
+
                     LineNum = 3;
                     NewProcessingList.Clear();
                     NewProcessingListTemp.Clear();
-                    if (xcnt4K > 0 && ProcessingJobs.Count > 0)
+                    if (ProcessingJobs.Count > 0)
                     {
-                        NewProcessingListTemp.AddRange(ProcessingJobs.Where(s => (s.Is4K)).Where(x => !x.Fileinfo.IsNullStr().Contains("Allready Processed")).Where(x => x.Handle == "" || x.Handle is null && !x.Processed && !x.IsSkipped));
+                        NewProcessingListTemp.AddRange(ProcessingJobs.Where(x => !x.Fileinfo.IsNullStr().Contains("Allready Processed")).Where(x => x.Handle == "" || x.Handle is null && !x.Processed && !x.IsSkipped));
                         NewProcessingList.AddRange(NewProcessingListTemp);
                     }
                     LineNum = 4;
-                    if (xcnt1440p > 0)
-                    {
-                        if (ProcessingJobs.Where(s => (s.Is1440p || s.IsTwitchOut) && (!s.Fileinfo.IsNullStr().Contains("Allready Processed")) && (s.Handle == "" || s.Handle is null) && (!s.Processed) && (!s.IsSkipped)).Take(total1440ptasks).Count() > 0)
-                        {
-                            NewProcessingListTemp.AddRange(ProcessingJobs.Where(s => (s.Is1440p || s.IsTwitchOut) && (!s.Fileinfo.IsNullStr().Contains("Allready Processed")) && (s.Handle == "" || s.Handle is null) && (!s.Processed) && (!s.IsSkipped)).Take(total1440ptasks));
-                            NewProcessingList.AddRange(NewProcessingListTemp);
-                        }
-                    }
-                    LineNum = 5;
-                    NewProcessingListTemp.Clear();
-                    if (xcnt > 0)
-                    {
-                        if (ProcessingJobs.Where(s => (s.Is720P || s.IsMovie || s.IsYouTube) && (!s.Fileinfo.IsNullStr().Contains("Allready Processed")) && (s.Handle == "" || s.Handle is null) && (!s.Processed) && (!s.IsSkipped)).Take(totaltasks).Count() > 0)
-                        {
-                            NewProcessingListTemp.AddRange(ProcessingJobs.Where(s => (s.Is720P || s.IsMovie || s.IsYouTube) && (!s.Fileinfo.IsNullStr().Contains("Allready Processed")) && (s.Handle == "" || s.Handle is null) && (!s.Processed) && (!s.IsSkipped)).Take(totaltasks));
-                            NewProcessingList.AddRange(NewProcessingListTemp);
-                        }
-                    }
 
-                    LineNum = 6;
                     foreach (JobListDetails Jobr in NewProcessingList)
                     {
                         if (ProcessingCancellationTokenSource.IsCancellationRequested)
@@ -7046,7 +7010,35 @@ namespace VideoGui
                             }
                             LineNum = 7;
                             var r = GetEncryptedString(new int[] { 144, 57, 66, 70, 244, 192 }.Select(i => (byte)i).ToArray());
-                            while (Process.GetProcessesByName(r).Count() > 0)
+
+                            /// To be replaced with thread locks for 720p,1880p,1440p,4K 
+                            /// 
+
+                            while (true)
+                            {
+                                // 8 720p threads. thread weight = 0.3
+                                // 6 1080p threads. thread weight = 0.5
+                                // 5 1440p threads. thread weight = 0.7
+                                // 3 4k threads. thread weight - 1.0
+
+                                // 5.5 Wait =
+                                // 
+                                MaxWeight = (ThreadsInUse720p * 0.56) +
+                                 (ThreadsInUse1080p * 0.67) +
+                                  (ThreadsInUse1440p * 0.78) + (ThreadsInUse4k * 0.9);
+                                if (MaxWeight <= 56)
+                                {
+                                    break;
+                                }
+                                Task.Delay(100);
+                                if (Math.Abs((DateTime.Now - LastSeen).TotalSeconds) > 2)
+                                {
+                                    // check each job
+                                }
+                            }
+
+
+                            /*while (Process.GetProcessesByName(r).Count() > 0)
                             {
                                 //CountFFMPEGs(NewProcessingList);
                                 RegistryKey key2 = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
@@ -7102,7 +7094,7 @@ namespace VideoGui
                                     break;
                                 }
                                 Task.Delay(150);
-                            }
+                            }*/
                             LineNum = 10;
 
                             if (Job.IsMuxed || Job.ISFILESRC)
@@ -7233,7 +7225,7 @@ namespace VideoGui
 
 
 
-                            
+
                             LineNum = 152;
                             string mysourcefiles = "";
                             if (Job.ISFILESRC)
@@ -7294,6 +7286,53 @@ namespace VideoGui
                                 Job.ProbeDate = DateTime.Now;
                                 Job.ProbeLock = true;
                                 LineNum = 17;
+                                if (!Job.IsShorts &&(Job.Is720P || 
+Job.IsYouTube || Job.IsDownloads || Job.IsMovie))
+                                {
+                                    if (!await Job.Lock.WaitAsync(0))
+                                    {
+                                        continue;
+                                    }
+
+                                    Job.AllowAdjust = (Job.ThreadWeight == 1.0);
+                                    int Weight = (int)Math.Round(Job.ThreadWeight * 10);
+                                    Interlocked.Add(ref ThreadsInUse720p, Weight);
+                                }
+
+                                if (Job.IsShorts)
+                                {
+                                    if (!await Job.Lock.WaitAsync(0))
+                                    {
+                                        continue;
+                                    }
+                                    Job.Is720P = false;
+                                    Job.AllowAdjust = (Job.ThreadWeight == 1.0);
+                                    int Weight = (int)Math.Round(Job.ThreadWeight * 10);
+                                    Interlocked.Add(ref ThreadsInUse1080p, Weight);
+                                }
+                                if (Job.Is1440p)
+                                {
+                                    if (!await Job.Lock.WaitAsync(0))
+                                    {
+                                        continue;
+                                    }
+                                    Job.AllowAdjust = (Job.ThreadWeight == 1.0);
+                                    int Weight = (int)Math.Round(Job.ThreadWeight * 10);
+                                    Interlocked.Add(ref ThreadsInUse1440p, Weight);
+                                }
+                                if (!Job.IsShorts && (Job.Is4K || Job.Is4KAdobe || Job.Is5K ||
+                                  Job.IsMulti || Job.IsTwitchValid || Job.IsXMLSource ||
+                                  Job.ISFILESRC))
+                                {
+                                    if (!await Job.Lock.WaitAsync(0))
+                                    {
+                                        continue;
+                                    }
+                                    Job.AllowAdjust = (Job.ThreadWeight == 1.0);
+                                    int Weight = (int)Math.Round(Job.ThreadWeight * 10);
+                                    Interlocked.Add(ref ThreadsInUse4k, Weight);
+
+                                }
                                 AsyncProbe(DestFile, mysourcefiles, SourceDirectory, Job, Index).ConfigureAwait(false);
                             }
                             else
@@ -7370,6 +7409,43 @@ namespace VideoGui
             }
         }
 
+        private async Task<bool> ReleaseThreadsInUse(JobListDetails Job)
+        {
+            try
+            {
+                if (Job.Is720P || Job.IsYouTube || Job.IsDownloads || Job.IsMovie)
+                {
+                    Job.Lock.Release();
+                    int Weight = (int)Math.Round(Job.ThreadWeight * 10);
+                    Interlocked.Add(ref ThreadsInUse720p, -Weight);
+                }
+                if (Job.IsShorts)
+                {
+                    Job.Lock.Release();
+                    int Weight = (int)Math.Round(Job.ThreadWeight * 10);
+                    Interlocked.Add(ref ThreadsInUse1080p, -Weight);
+                }
+                if (Job.Is1440p)
+                {
+                    Job.Lock.Release();
+                    int Weight = (int)Math.Round(Job.ThreadWeight * 10);
+                    Interlocked.Add(ref ThreadsInUse1440p, -Weight);
+                }
+                if (Job.Is4K || Job.Is4KAdobe || Job.Is5K || Job.IsMulti ||
+                  Job.IsTwitchValid || Job.IsXMLSource || Job.ISFILESRC)
+                {
+                    Job.Lock.Release();
+                    int Weight = (int)Math.Round(Job.ThreadWeight * 1);
+                    Interlocked.Add(ref ThreadsInUse4k, -Weight);
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"ReleaseThreadsInUse {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+                return false;
+            }
+        }
         public async Task AsyncProbe(string DestFile, string mysourcefiles, string SourceDirectory, JobListDetails Job, int Index)
         {
             int LineNum = 0;
@@ -7396,6 +7472,8 @@ namespace VideoGui
                             Job.ProbeLock = false;
                             if (Task && FileIncompleteTimes(Job, DestFile))
                             {
+                                ReleaseThreadsInUse(Job);
+
                                 (Job.ProbeLock, Job.Fileinfo) = (false, "Allready Processed");
                                 string dDir = (Job.Is4K) ? DoneDirectory4K : (Job.Is1440p) ? DoneDirectory1440p : DoneDirectory720p;
                                 if (Job.Is4KAdobe) dDir = DoneDirectoryAdobe4K;
@@ -7508,6 +7586,7 @@ namespace VideoGui
                                 Job.ProbeLock = false;
                                 if (Task1)
                                 {
+                                    ReleaseThreadsInUse(Job);
                                     (Job.ProbeDate, Job.ProbeLock) = (DateTime.Now.AddYears(-500), false);
                                     Job.Fileinfo = "[Video Decoder ERROR]";// OK]";}
                                     failed++;
@@ -7558,6 +7637,7 @@ namespace VideoGui
 
                                 (Job.ProbeDate, Job.ProbeLock) = (DateTime.Now.AddYears(-500), false);
                                 Job.Fileinfo = "[Video Decoder ERROR]";// OK]";}
+                                ReleaseThreadsInUse(Job);
                                 failed++;
                                 LineNum = 27;
                                 ThreadStatsHandler?.Invoke(1, (Job.IsMulti) ? Path.GetFileNameWithoutExtension(Job.DestMFile) : Job.Title);
@@ -7734,6 +7814,7 @@ namespace VideoGui
                             {
                                 LineNum = 50;
                                 Job.ProbeDate = DateTime.Now.AddYears(-500);
+                                ReleaseThreadsInUse(Job);
                                 string er = "Failed Processpath " + processingfile + " " + Job.Handle.ToString();
                             }
                         }
@@ -7859,7 +7940,7 @@ namespace VideoGui
                 TimeSpan EventSpan3 = NowTime - Start3;
                 if (ProcessingJobs.Count > 0)
                 {
-                    if (Math.Abs(EventSpan2.TotalMinutes) > 5)
+                    if (Math.Abs(EventSpan2.TotalMinutes) > 2)
                     {
                         for (int ixy = ProcessingJobs.Count - 1; ixy >= 0; ixy--)
                         {
@@ -7880,12 +7961,28 @@ namespace VideoGui
                                     {
                                         job.Handle = "";
                                     }
+                                    Total = Math.Abs((job.FinishedDate - Start2).TotalMinutes);
+                                    if (Total > 2)
+                                    {
+                                        removejob(ixy);
+                                        (Start2, Start3) = (DateTime.Now, DateTime.Now);
+                                        break;
+                                    }
                                 }
                             }
+
+                            
                             if ((job.Handle == "") && (job.IsSkipped || job.Processed))
                             {
                                 double Total = Math.Abs((job.JobDate - Start2).TotalMinutes);
                                 if (Total > 15)
+                                {
+                                    removejob(ixy);
+                                    (Start2, Start3) = (DateTime.Now, DateTime.Now);
+                                    break;
+                                }
+                                Total = Math.Abs((job.FinishedDate - Start2).TotalMinutes);
+                                if (Total > 2)
                                 {
                                     removejob(ixy);
                                     (Start2, Start3) = (DateTime.Now, DateTime.Now);
@@ -7903,73 +8000,19 @@ namespace VideoGui
                                         (Start2, Start3) = (DateTime.Now, DateTime.Now);
                                         break;
                                     }
+                                    Total = Math.Abs((job.FinishedDate - Start2).TotalMinutes);
+                                    if (Total > 2)
+                                    {
+                                        removejob(ixy);
+                                        (Start2, Start3) = (DateTime.Now, DateTime.Now);
+                                        break;
+                                    }
                                 }
                             }
                         }
                     }
                 }
-                else
-                {
-                    if ((Math.Abs(EventSpan2.TotalMinutes) > 12000000) && (backupserver != "127.0.0.1") && (un != "") && (up != ""))
-                    {
-                        if (CheckServer(backupserver))
-                        {
-                            var progress = new Progress<long>(percent => { PercentUpdate(percent); });
-                            if (backupCompleted != "")
-                            {
-                                List<string> CompleedFiles = Directory.EnumerateFiles(DoneDirectory1440p, "*.*", SearchOption.AllDirectories).ToList<string>();
-                                foreach (string source in CompleedFiles)
-                                {
-                                    string Destination = $"////{backupserver}{backupCompleted}//" + Path.GetFileName(source);
-                                    await Extensions.CopyFiles(backupserver, source, Destination, un, up, progress);
-                                    //if (job)
-                                    double TotalSecs = 0;
-                                    List<string> Files = new List<string>();
-                                    ffmpegbridge FileIndexer = new ffmpegbridge();
-                                    FileIndexer.ReadDuration(source);
-                                    while (!FileIndexer.Finished)
-                                    {
-                                        Task.Delay(100);
-                                    }
-                                    TotalSecs = FileIndexer.GetDuration().TotalSeconds;
-                                    FileIndexer = null;
-
-
-                                    ffmpegbridge FileIndexer1 = new ffmpegbridge();
-                                    FileIndexer1.ReadDuration(Destination);
-                                    while (!FileIndexer1.Finished)
-                                    {
-                                        Task.Delay(100);
-                                    }
-                                    double DTotalSecs = FileIndexer1.GetDuration().TotalSeconds;
-                                    FileIndexer1 = null;
-                                    if (TotalSecs == DTotalSecs)
-                                    {
-
-                                    }
-                                }
-                            }
-                            if (backupDone1440p != "")
-                            {
-                                List<string> CompleedFiles = Directory.EnumerateFiles(DestDirectory1440p, "*.*", SearchOption.AllDirectories).ToList<string>();
-                                foreach (string source in CompleedFiles)
-                                {
-                                    string Destination = $"////{backupserver}{backupDone1440p}//" + Path.GetFileName(source);
-                                    await Extensions.CopyFiles(backupserver, source, Destination, un, up, progress);
-                                }
-                            }
-                            if (backupDone != "")
-                            {
-                                List<string> CompleedFiles = Directory.EnumerateFiles(DestDirectory1440p, "*.*", SearchOption.AllDirectories).ToList<string>();
-                                foreach (string source in CompleedFiles)
-                                {
-                                    string Destination = $"////{backupserver}{backupDone}//" + Path.GetFileName(source);
-                                    await Extensions.CopyFiles(backupserver, source, Destination, un, up, progress);
-                                }
-                            }
-                        }
-                    }
-                }
+                
                 var ffm = GetEncryptedString(new int[] { 144, 57, 66, 70, 244, 192 }.Select(i => (byte)i).ToArray());
                 foreach (var Jobentry in ProcessingJobs.Where(jobentry => jobentry.Handle != ""))
                 {
@@ -8829,6 +8872,7 @@ namespace VideoGui
                     Application.Current.Dispatcher.Invoke(() =>
                      {
                          LineNum = 29;
+                         ReleaseThreadsInUse(job);
                          job.Fileinfo = "$[ffmpeg open ERROR-{SourceFile}]";// OK]";}
                          ThreadStatsHandler?.Invoke(1, (job.IsMulti) ? Path.GetFileNameWithoutExtension(job.DestMFile) : job.Title);
                          LineNum = 30;
@@ -9151,6 +9195,9 @@ namespace VideoGui
                     {
                         if (videowidth > 1080)
                         {
+                            job.ThreadWeight = 1.3;
+
+
                             videoStream = videoStream = videoStream.SetSize(1920, -1, aspectratio, ArModulas.ToInt(), Scaling.lanczos, 0, 0, 0, 0);
                         }
                         Encoder = ffmpeg.VideoCodec.h264_amf;
@@ -9159,7 +9206,8 @@ namespace VideoGui
                     {
                         if (videowidth > 1080)
                         {
-                            videoStream = videoStream = videoStream.SetSize(1920, -1, aspectratio, ArModulas.ToInt(), Scaling.lanczos, 0, 0, 0, 0);
+                            job.ThreadWeight = 1.3;
+                            videoStream = videoStream.SetSize(1920, -1, aspectratio, ArModulas.ToInt(), Scaling.lanczos, 0, 0, 0, 0);
                         }
                     }
                     else if ((IsResize1080shorts) || (job.FileNoExt.ToLower().Contains("shorts")))
@@ -9177,6 +9225,7 @@ namespace VideoGui
                             audioStream.AAC_VbrMode(5, job.Is48K);
                             if (videowidth > 1080)
                             {
+                                job.ThreadWeight = 1.3;
                                 videoStream = videoStream.SetSize(1920, 1080, -1, -1, Scaling.lanczos, CropWidth, CropHeight, CropLeft, CropTop, "9/16");
                             }
                             else if (videowidth == 1080)
@@ -9207,6 +9256,13 @@ namespace VideoGui
                                 LineNum = 70;
                                 if (videowidth > 1080)
                                 {
+                                    job.ThreadWeight = 1.3;
+                                    if (job.AllowAdjust)
+                                    {
+                                        job.AllowAdjust = false;
+                                        int Weight1 = (int)Math.Round(10 * 0.3);
+                                        Interlocked.Add(ref ThreadsInUse1080p, Weight1);
+                                    }
                                     videoStream = videoStream.SetSize(1920, 1080, -1, -1, Scaling.lanczos, CropWidth, CropHeight, CropLeft, CropTop, "9/16");
                                 }
                                 LineNum = 71;
@@ -9214,11 +9270,25 @@ namespace VideoGui
 
                             else if (job.Is5K)
                             {
+                                job.ThreadWeight = 1.8;
+                                if (job.AllowAdjust)
+                                {
+                                    job.AllowAdjust = false;
+                                    int Weight = (int)Math.Round(10 * 0.8);
+                                    Interlocked.Add(ref ThreadsInUse4k, Weight);
+                                }
                                 videoStream = videoStream.SetSize(3840, 2160, aspectratio, ArModulas.ToInt(), Scaling.lanczos, 0, 0, 0, 0);
                             }
                         }
                         else if (job.Is4KAdobe)
                         {
+                            job.ThreadWeight = 1.6;
+                            if (job.AllowAdjust)
+                            {
+                                job.AllowAdjust = false;
+                                int Weight = (int)Math.Round(10 * 0.6);
+                                Interlocked.Add(ref ThreadsInUse4k, Weight);
+                            }
                             videoStream = videoStream.SetSize(3840, 2160, aspectratio, ArModulas.ToInt(), Scaling.lanczos, 0, 0, 0, 0);
                         }
                     }
@@ -9229,6 +9299,13 @@ namespace VideoGui
                         {
                             if (videoStream.Height > 720)
                             {
+                                job.ThreadWeight = 1.2;
+                                if (job.AllowAdjust)
+                                {
+                                    job.AllowAdjust = false;
+                                    int Weight = (int)Math.Round(10 * 0.2);
+                                    Interlocked.Add(ref ThreadsInUse720p, Weight);
+                                }
                                 videoStream = videoStream.SetSize(-1, 720, aspectratio,
                                     ArModulas.ToInt(), Scaling.lanczos, 0, 0, 0, 0);
                             }
@@ -9237,6 +9314,13 @@ namespace VideoGui
 
                         if ((job.Is1440p) && (videoStream.Height > 1440))
                         {
+                            job.ThreadWeight = 1.4;
+                            if (job.AllowAdjust)
+                            {
+                                job.AllowAdjust = false;
+                                int Weight = (int)Math.Round(10 * 0.4);
+                                Interlocked.Add(ref ThreadsInUse1440p, Weight);
+                            }
                             videoStream = videoStream.SetSize(-1, 1440, aspectratio,
                                 ArModulas.ToInt(), Scaling.lanczos, 0, 0, 0, 0);
                         }
@@ -9769,6 +9853,7 @@ namespace VideoGui
                     foreach (var jo in ProcessingJobs.Where(jo => !jo.Complete && jo.FileNoExt == Path.GetFileNameWithoutExtension(filename)))
                     {
                         found = true;
+                        ReleaseThreadsInUse(jo);
                         if (jo.IsXMLSource)
                         {
                             jo.Complete = true;
@@ -9776,6 +9861,7 @@ namespace VideoGui
                         }
                         IsNVM = jo.IsNVM;
                         IsMSJ |= jo.IsMSJ;
+                        jo.FinishedDate = DateTime.Now;
                         IsCreateShorts = jo.IsCreateShorts;
                         (jo.Processed, jo.Handle, jo.Progress, jo.InProcess, jo.Complete) = (true, "", 100, false, true);
                         string fm = filename;
@@ -13283,7 +13369,7 @@ namespace VideoGui
 
         }
         private bool AddFiles(string newfile, bool IsMpeg4ASP = false, bool IsMpeg4AVC = false,
-            bool IsMovie = false, bool IsYouTube=false)
+            bool IsMovie = false, bool IsYouTube = false)
         {
             bool JobsAdded = false, IsX265 = false;
             string ext = Path.GetExtension(newfile);
@@ -13295,7 +13381,7 @@ namespace VideoGui
                 string SourceDir = Path.GetDirectoryName(newfile);
                 if (!ProcessingJobs.Any(job => job.Title == SourceFile))
                 {
-                    JobsAdded = AddIfVaid(newfile, SourceDir, IsMovie,IsYouTube);
+                    JobsAdded = AddIfVaid(newfile, SourceDir, IsMovie, IsYouTube);
                 }
             }
             return JobsAdded;

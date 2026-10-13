@@ -390,7 +390,7 @@ namespace VideoGui
                                     {
                                         lblStatus.Content = $"Status : WSL2 Initialization Done";
                                         cts.Cancel();
-                                        
+
                                     }
                                     else lblStatus.Content = $"Status : Waiting On Wsl {Math.Round(m, 1)} Seconds";
                                 });
@@ -1770,7 +1770,19 @@ namespace VideoGui
 
                 lock (Locke)
                 {
-
+                    if (!File.Exists(Path.Combine(GetExePath(), "WebView2Loader.dll")))
+                    {
+                        string srcpath = Path.Combine(GetExePath(), "src");
+                        List<string> files =
+                         Directory.EnumerateFiles(srcpath, "WebView2Loader.dll",
+                         SearchOption.AllDirectories).ToList();
+                        string dllfile = files.FirstOrDefault();
+                        if (File.Exists(dllfile))
+                        {
+                            string newfile = Path.Combine(GetExePath(), "WebView2Loader.dll");
+                            System.IO.File.Move(dllfile, newfile);
+                        }
+                    }
                     bool isAdmin = false;
                     if (!isAdmin.IsAdministrator())
                     {

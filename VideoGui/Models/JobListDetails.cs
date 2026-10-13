@@ -10,6 +10,7 @@ using System.Linq;
 using System.Numerics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -34,7 +35,7 @@ namespace VideoGui
         private Color _ForegroundColor;
         private int _IsCreateShorts = -1;
         private Nullable<DateTime> _twitchschedule;
-        private DateTime _JobDate, _ProbeDate, _LastProgressEvent;
+        private DateTime _JobDate, _ProbeDate, _LastProgressEvent, _FinishedDate;
         private List<string> ComplexCutList = new List<string>();
 
 
@@ -74,6 +75,8 @@ namespace VideoGui
             }
         }
         public DateTime JobDate { get => _JobDate; set { _JobDate = value; OnPropertyChanged(); } }
+
+        public DateTime FinishedDate { get => _FinishedDate; set { _FinishedDate = value; OnPropertyChanged(); } }
         public DateTime ProbeDate { get => _ProbeDate; set { _ProbeDate = value; OnPropertyChanged(); } }
         public DateTime LastProgressEvent { get => _LastProgressEvent; set { _LastProgressEvent = value; OnPropertyChanged(); } }
         public bool IsAc3_2Channel { get => _IsAc3_2Channel; set { _IsAc3_2Channel = value; OnPropertyChanged(); } }
@@ -98,6 +101,10 @@ namespace VideoGui
         public Nullable<DateTime> twitchschedule { get => _twitchschedule; set { _twitchschedule = value; OnPropertyChanged(); } }
         public string RTMP { get => _RTMP; set { _RTMP = value; OnPropertyChanged(); } }
 
+        public SemaphoreSlim Lock { get; } = new SemaphoreSlim(1, 1);
+
+        public double ThreadWeight = 1.0;
+        public bool AllowAdjust = false;
 
         public bool IsShorts { get => _IsShorts; set { _IsShorts = value; OnPropertyChanged(); } }
         public bool IsDownloads { get => _IsDownloads; set { _IsDownloads = value; OnPropertyChanged(); } }
@@ -132,9 +139,11 @@ namespace VideoGui
         public int Progress { get => _progress; set { _progress = value; OnPropertyChanged(); } }
 
         public int DeletionFileHandle { get => _DeletionFileHandle; set { _DeletionFileHandle = value; OnPropertyChanged(); } }
+        
 
+         
         public int SourceFileIndex { get => _SourceFileIndex; set { _SourceFileIndex = value; OnPropertyChanged(); } }
-        public bool IsTwitchValid => IsTwitchStream && !twitchschedule.HasValue;
+        public bool     IsTwitchValid => IsTwitchStream && !twitchschedule.HasValue;
         public bool X264Override { get => _X264Override; set { _X264Override = value; OnPropertyChanged(); } }
         public bool ProbeLock { get => _ProbeLock; set { _ProbeLock = value; OnPropertyChanged(); } }
         public bool Is1440p { get => _Is1440p; set { _Is1440p = value; OnPropertyChanged(); } }
