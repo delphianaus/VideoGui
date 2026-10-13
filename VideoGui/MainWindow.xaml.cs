@@ -12,6 +12,7 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualBasic;
+using Microsoft.Web.WebView2.Core;
 using Microsoft.Win32;
 using Microsoft.WindowsAPICodePack.Shell;
 using MS.WindowsAPICodePack.Internal;
@@ -22,6 +23,10 @@ using Nancy.Security;
 using Nancy.TinyIoc;
 using Nancy.ViewEngines;
 using SevenZip;
+using SharpCompress.Archives.Rar;
+using SharpCompress.Archives.Rar;
+using SharpCompress.Common;
+using SharpCompress.Readers;
 using System;
 using System.CodeDom;
 using System.Collections;
@@ -41,6 +46,7 @@ using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.IO.Packaging;
+using System.IO.Pipes;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Management;
@@ -88,11 +94,13 @@ using VideoGui.ffmpeg.Streams.Text;
 using VideoGui.ffmpeg.Streams.Video;
 using VideoGui.Models;
 using VideoGui.Models.delegates;
+using Windows.Devices.Perception.Provider;
 using Windows.Devices.Radios;
 using Wpf.Ui.Controls;
 using Xceed.Wpf.Toolkit;
 using Xceed.Wpf.Toolkit.PropertyGrid.Converters;
 using Xceed.Wpf.Toolkit.PropertyGrid.Editors;
+using static Google.Apis.Requests.BatchRequest;
 using static Microsoft.WindowsAPICodePack.Shell.PropertySystem.SystemProperties.System;
 using static System.Net.Mime.MediaTypeNames;
 using static System.Net.WebRequestMethods;
@@ -110,8 +118,6 @@ using Path = System.IO.Path;
 using Stream = System.IO.Stream;
 using Task = System.Threading.Tasks.Task;
 using Window = System.Windows.Window;
-
-
 
 namespace VideoGui
 {
@@ -5249,6 +5255,17 @@ namespace VideoGui
                         connectionString.AddFieldToTable("MULTISHORTSINFO", "PRIORITY", "INTEGER", 1);
                     }
                 });
+
+                //FILEXTRACTED
+
+                Task.Run(async () =>
+                {
+                    if (!Tables.Where(s => s.TableName == "FILEXTRACTED").Any())
+                    {
+                        sqlstring = $"CREATE TABLE FILEXTRACTED({Id},FILEName VARCHAR(256));";
+                        connectionString.ExecuteNonQuery(sqlstring);
+                    }
+                });
                 Task.Run(async () =>
                 {
                     if (!Tables.Where(s => s.TableName == "EXCEEDED").Any())
@@ -6423,7 +6440,7 @@ namespace VideoGui
                     142, 92, 224, 61, 11, 167, 196, 142, 64,
                     122, 60, 190, 181, 229, 163, 210, 204, 44, 84, 56, 244, 241,
                     35, 228, 106, 174, 61, 254 }.Select(i => (byte)i).ToArray());
-                var isok = SanityCheck().GetAwaiter().GetResult();
+                /*var isok = SanityCheck().GetAwaiter().GetResult();
                 if (!isok)
                 {
                     string err = e;
@@ -6431,7 +6448,7 @@ namespace VideoGui
                     string AppPath = GetExePath();
                     //DeleteIfExists(AppPath + ffp);
                     //DeleteIfExists(AppPath + ffm);
-                }
+                }*/
                 lstBoxJobs.ItemsSource = ProcessingJobs;
                 SetupHandlers().ConfigureAwait(false);
                 //Task.Run(() => Loadsettings());
@@ -6875,7 +6892,36 @@ namespace VideoGui
                     Application.Current.Dispatcher.Invoke(() => removejob(jobid));
                     return;
                 }
-                ProcessingJobs.RemoveAt(jobid);
+                var job = ProcessingJobs[jobid];
+                string fname = job.DestMFile;
+
+                List<Process> Processes = Win32Processes.GetProcessesLockingFile(fname);
+                if (Processes.Count > 0) return;
+                bool exit = false;
+                string myStrQuote = "\"";
+                ManagementObjectSearcher searcher = new($"SELECT * FROM `Process where name = {myStrQuote}VideoGui{myStrQuote}");
+
+                foreach (ManagementObject o in searcher.Get())
+                {
+                    if (o.Properties["Handle"] is null || o.Properties["ProcessID"] is null)
+                    {
+                        continue;
+                    }
+                    string HandleID = o.Properties["Handle"].Value.ToString();
+                    string ParentProcessId = "";
+                    ParentProcessId = (o.Properties["ParentProcessID"] is not null) ?
+                        o.Properties["ParentProcessID"].Value.ToString() : "";
+                    string ID = o.Properties["ProcessID"].Value.ToString();
+                    if (o["CommandLine"] != null)
+                    {
+                        string comstr = o["CommandLine"].ToString();
+                        if (comstr.Contains(fname))
+                        {
+                            exit = true;
+                        }
+                    }
+                }
+                if (!exit) ProcessingJobs.RemoveAt(jobid);
             }
             catch (Exception ex)
             {
@@ -6884,7 +6930,7 @@ namespace VideoGui
         }
         public string[] GetDefaultVideoExts()
         {
-            return new string[] { ".avi", ".mkv", ".mp4", ".m2ts" };
+            return new string[] { ".avi", ".mkv", ".mp4", ".m2ts", ".rar" };
         }
         public async Task SetupThreadProcessorAsync()
         {
@@ -7025,76 +7071,98 @@ namespace VideoGui
                                 // 
                                 MaxWeight = (ThreadsInUse720p * 0.56) +
                                  (ThreadsInUse1080p * 0.67) +
-                                  (ThreadsInUse1440p * 0.78) + (ThreadsInUse4k * 0.9);
-                                if (MaxWeight <= 56)
+                                  (ThreadsInUse1440p * 0.78) + (ThreadsInUse4k * 1.3);
+                                if (MaxWeight <= 40)
                                 {
                                     break;
                                 }
                                 Task.Delay(100);
                                 if (Math.Abs((DateTime.Now - LastSeen).TotalSeconds) > 2)
                                 {
-                                    // check each job
+                                    string myStrQuote = "\"";
+                                    ManagementObjectSearcher searcher = new($"SELECT * FROM `Process where name = {myStrQuote}VideoGui{myStrQuote}");
+
+                                    foreach (ManagementObject o in searcher.Get())
+                                    {
+                                        if (o.Properties["Handle"] is null || o.Properties["ProcessID"] is null)
+                                        {
+                                            continue;
+                                        }
+                                        string HandleID = o.Properties["Handle"].Value.ToString();
+                                        string ParentProcessId = "";
+                                        ParentProcessId = (o.Properties["ParentProcessID"] is not null) ?
+                                            o.Properties["ParentProcessID"].Value.ToString() : "";
+                                        string ID = o.Properties["ProcessID"].Value.ToString();
+                                        if (o["CommandLine"] != null)
+                                        {
+                                            string comstr = o["CommandLine"].ToString();
+                                            if (comstr != "")
+                                            {
+
+                                            }
+                                        }
+                                    }
                                 }
-                            }
 
 
-                            /*while (Process.GetProcessesByName(r).Count() > 0)
-                            {
-                                //CountFFMPEGs(NewProcessingList);
-                                RegistryKey key2 = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
-                                int t720p = key2.GetValueInt("maxthreads", 5);
-                                int t1440p = key2.GetValueInt("max1440pthreads", 2);
-                                totaltasks = key2.GetValueInt("maxthreads", 10);
-                                total1440ptasks = key2.GetValueInt("max1440pthreads", 1);
-                                total4kTasks = key2.GetValueInt("max4Kthreads", 3);// 1 for laptop. 2 for desktop
-                                key2?.Close();
-                                t720p = totaltasks;
-                                totaltasks = (_4KFiles.Count > 0) ? 4 : t720p;
-                                total1440ptasks = (_4KFiles.Count > 0) ? 1 : t1440p;
-                                LineNum = 8;
-                                foreach (var j in ProcessingJobs.Where(j => _4KFiles.Contains(j.SourceFile)).Where(j => j.Complete))
+                                /*while (Process.GetProcessesByName(r).Count() > 0)
                                 {
-                                    _4KFiles.Remove(j.SourceFile);
-                                }
-                                foreach (var j in ProcessingJobs.Where(j => _1440pFiles.Contains(j.SourceFile)).Where(j => j.Complete))
-                                {
-                                    _1440pFiles.Remove(j.SourceFile);
-                                }
-                                foreach (var j in ProcessingJobs.Where(j => _720PFiles.Contains(j.SourceFile)).Where(j => j.Complete))
-                                {
-                                    _720PFiles.Remove(j.SourceFile);
-                                }
-                                //(Stats_Handler.count720p, Stats_Handler.count1440p, Stats_Handler.count4k)
-                                if (((Job.Is1440p || Job.IsTwitchOut) && (_1440pFiles.Count >= total1440ptasks)) ||
-                                    ((Job.Is4K || Job.IsMuxed || Job.ISFILESRC || Job.IsXMLSource) &&
-                                    (_4KFiles.Count >= total4kTasks)) ||
-                                    ((!Job.Is720P && !Job.IsMovie) && (_720PFiles.Count >= totaltasks)))
-                                {
-                                    Task.Delay(200);
-                                    continue;
-                                }
-                                if ((Job.Is1440p || Job.IsTwitchOut) && (_1440pFiles.Count < total1440ptasks))
-                                {
-                                    break;
-                                }
-                                if (Job.IsTwitchActive)
-                                {
-                                    if (DateTime.Now >= Job.twitchschedule && !Job.InProcess && !Job.Processed)
+                                    //CountFFMPEGs(NewProcessingList);
+                                    RegistryKey key2 = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                                    int t720p = key2.GetValueInt("maxthreads", 5);
+                                    int t1440p = key2.GetValueInt("max1440pthreads", 2);
+                                    totaltasks = key2.GetValueInt("maxthreads", 10);
+                                    total1440ptasks = key2.GetValueInt("max1440pthreads", 1);
+                                    total4kTasks = key2.GetValueInt("max4Kthreads", 3);// 1 for laptop. 2 for desktop
+                                    key2?.Close();
+                                    t720p = totaltasks;
+                                    totaltasks = (_4KFiles.Count > 0) ? 4 : t720p;
+                                    total1440ptasks = (_4KFiles.Count > 0) ? 1 : t1440p;
+                                    LineNum = 8;
+                                    foreach (var j in ProcessingJobs.Where(j => _4KFiles.Contains(j.SourceFile)).Where(j => j.Complete))
+                                    {
+                                        _4KFiles.Remove(j.SourceFile);
+                                    }
+                                    foreach (var j in ProcessingJobs.Where(j => _1440pFiles.Contains(j.SourceFile)).Where(j => j.Complete))
+                                    {
+                                        _1440pFiles.Remove(j.SourceFile);
+                                    }
+                                    foreach (var j in ProcessingJobs.Where(j => _720PFiles.Contains(j.SourceFile)).Where(j => j.Complete))
+                                    {
+                                        _720PFiles.Remove(j.SourceFile);
+                                    }
+                                    //(Stats_Handler.count720p, Stats_Handler.count1440p, Stats_Handler.count4k)
+                                    if (((Job.Is1440p || Job.IsTwitchOut) && (_1440pFiles.Count >= total1440ptasks)) ||
+                                        ((Job.Is4K || Job.IsMuxed || Job.ISFILESRC || Job.IsXMLSource) &&
+                                        (_4KFiles.Count >= total4kTasks)) ||
+                                        ((!Job.Is720P && !Job.IsMovie) && (_720PFiles.Count >= totaltasks)))
+                                    {
+                                        Task.Delay(200);
+                                        continue;
+                                    }
+                                    if ((Job.Is1440p || Job.IsTwitchOut) && (_1440pFiles.Count < total1440ptasks))
                                     {
                                         break;
                                     }
-                                    else continue;
-                                }
-                                if ((Job.Is4K || Job.IsMuxed || Job.ISFILESRC || Job.IsXMLSource) && (_4KFiles.Count < total4kTasks))
-                                {
-                                    break;
-                                }
-                                if ((Job.Is720P || Job.IsMovie || Job.IsYouTube) && (_720PFiles.Count < totaltasks))
-                                {
-                                    break;
-                                }
-                                Task.Delay(150);
-                            }*/
+                                    if (Job.IsTwitchActive)
+                                    {
+                                        if (DateTime.Now >= Job.twitchschedule && !Job.InProcess && !Job.Processed)
+                                        {
+                                            break;
+                                        }
+                                        else continue;
+                                    }
+                                    if ((Job.Is4K || Job.IsMuxed || Job.ISFILESRC || Job.IsXMLSource) && (_4KFiles.Count < total4kTasks))
+                                    {
+                                        break;
+                                    }
+                                    if ((Job.Is720P || Job.IsMovie || Job.IsYouTube) && (_720PFiles.Count < totaltasks))
+                                    {
+                                        break;
+                                    }
+                                    Task.Delay(150);
+                                }*/
+                            }
                             LineNum = 10;
 
                             if (Job.IsMuxed || Job.ISFILESRC)
@@ -7251,6 +7319,15 @@ namespace VideoGui
                                 {
                                     List<string> PathList = Directory.EnumerateFiles(SourceDirectory, filenames, SearchOption.AllDirectories).
                                            Where(s => s.ToLower().EndsWithAny(GetDefaultVideoExts())).ToList<string>();
+
+                                    for (int i = PathList.Count - 1; i >= 0; i--)
+                                    {
+                                        string pa = PathList[i];
+                                        if (Path.GetExtension(pa) == ".rar")
+                                        {
+                                            PathList.RemoveAt(i);
+                                        }
+                                    }
                                     foreach (var ess in PathList.Where(ess => System.IO.File.Exists(ess)))
                                     {
                                         mysourcefiles = ess;
@@ -7286,8 +7363,8 @@ namespace VideoGui
                                 Job.ProbeDate = DateTime.Now;
                                 Job.ProbeLock = true;
                                 LineNum = 17;
-                                if (!Job.IsShorts &&(Job.Is720P || 
-Job.IsYouTube || Job.IsDownloads || Job.IsMovie))
+                                if (!Job.IsShorts && (Job.Is720P ||
+    Job.IsYouTube || Job.IsDownloads || Job.IsMovie))
                                 {
                                     if (!await Job.Lock.WaitAsync(0))
                                     {
@@ -7348,6 +7425,7 @@ Job.IsYouTube || Job.IsDownloads || Job.IsMovie))
                                 }
                             }
                         }
+
                     }
                 }
             }
@@ -7435,7 +7513,7 @@ Job.IsYouTube || Job.IsDownloads || Job.IsMovie))
                   Job.IsTwitchValid || Job.IsXMLSource || Job.ISFILESRC)
                 {
                     Job.Lock.Release();
-                    int Weight = (int)Math.Round(Job.ThreadWeight * 1);
+                    int Weight = (int)Math.Round(Job.ThreadWeight * 10);
                     Interlocked.Add(ref ThreadsInUse4k, -Weight);
                 }
                 return true;
@@ -7971,7 +8049,7 @@ Job.IsYouTube || Job.IsDownloads || Job.IsMovie))
                                 }
                             }
 
-                            
+
                             if ((job.Handle == "") && (job.IsSkipped || job.Processed))
                             {
                                 double Total = Math.Abs((job.JobDate - Start2).TotalMinutes);
@@ -8012,7 +8090,7 @@ Job.IsYouTube || Job.IsDownloads || Job.IsMovie))
                         }
                     }
                 }
-                
+
                 var ffm = GetEncryptedString(new int[] { 144, 57, 66, 70, 244, 192 }.Select(i => (byte)i).ToArray());
                 foreach (var Jobentry in ProcessingJobs.Where(jobentry => jobentry.Handle != ""))
                 {
@@ -8508,6 +8586,17 @@ Job.IsYouTube || Job.IsDownloads || Job.IsMovie))
                     {
                         List<string> SourceList = Directory.EnumerateFiles(SourceDir, "*.*", SearchOption.AllDirectories).
                              Where(s => s.ToLower().EndsWithAny(GetDefaultVideoExts())).ToList<string>();
+
+
+                        foreach (var filename in SourceList)
+                        {
+                            if (Path.GetExtension(filename).EndsWith("rar"))
+                            {
+                                HandleRarFile(filename);
+                                continue;
+                            }
+                        }
+
                         if (SourceDir == SourceDirectory4KAdobe)
                         {
                             for (int i = SourceList.Count - 1; i >= 0; i--)
@@ -8520,6 +8609,16 @@ Job.IsYouTube || Job.IsDownloads || Job.IsMovie))
                         }
                         bool IsMoviesDir = (SourceDir == SourceDirectoryMovies);
                         foreach (string filename in SourceList)
+                        {
+                            if (Path.GetExtension(filename).EndsWith("rar"))
+                            {
+                                HandleRarFile(filename);
+                                continue;
+                            }
+                        }
+
+
+                        foreach (string filename in SourceList.Where(s => !s.ToLower().EndsWith("rar")))
                         {
                             string SourceDirectoryID = "";
                             string myfilename = Path.GetFileNameWithoutExtension(filename);
@@ -8620,7 +8719,72 @@ Job.IsYouTube || Job.IsDownloads || Job.IsMovie))
             }
         }
 
+        public void SetExtracted(string filename)
+        {
+            try
+            {
+                string mysql = "SELECT ID FROM FILEXTRACTED WHERE FILENAME = @FILENAME;";
+                int id = connectionString.ExecuteScalar(mysql, [("@FILENAME", filename)]).ToInt(-1);
+                if (id == -1)
+                {
+                    mysql = "INSERT INTO FILEXTRACTED(FILENAME) VALUES(@FILENAME);";
+                    connectionString.ExecuteScalar(mysql, [("@FILENAME", filename)]).ToInt(-1);
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"SetExtracted {MethodBase.GetCurrentMethod().Name}");
+            }
+        }
+        public bool Extracted(string filename)
+        {
+            try
+            {
+                string mysql = "SELECT ID FROM FILEXTRACTED WHERE FILENAME = @FILENAME;";
+                int id = connectionString.ExecuteScalar(mysql, [("@FILENAME", filename)]).ToInt(-1);
+                return id != -1;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"Extracted {MethodBase.GetCurrentMethod().Name}");
+                return false;
+            }
+        }
+        public void HandleRarFile(string filename)
+        {
+            try
+            {
+                using (var extractor = new SevenZipExtractor(filename))
+                {
+                    foreach (var entry in extractor.ArchiveFileData)
+                    {
+                        if (entry.IsDirectory)
+                            continue;
+                        string fext = Path.GetExtension(entry.FileName);
+                        string fname = Path.GetFileName(entry.FileName);
+                        if (!Extracted(fname))
+                        {
+                            if (fext.ContainsAny(["mkv", "mp4"]))
+                            {
+                                extractor.ExtractFiles(SourceDirectory720p, entry.Index);
+                            }
+                            var ddir = Directory.EnumerateFiles(SourceDirectory720p, fname,
+                                SearchOption.AllDirectories).ToList().FirstOrDefault()?.ToString();
+                            if (File.Exists(ddir))
+                            {
+                                SetExtracted(fname);
+                            }
+                        }
+                    }
+                }
 
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"HandleRarFile {MethodBase.GetCurrentMethod().Name}");
+            }
+
+        }
         private string GetCpuInfo()
         {
             try
@@ -9846,6 +10010,10 @@ Job.IsYouTube || Job.IsDownloads || Job.IsMovie))
                         errordetails.WriteLog(filename);
                     }
                 }
+                foreach (var jo in ProcessingJobs.Where(jo => jo.FileNoExt == Path.GetFileNameWithoutExtension(filename)))
+                {
+                    ReleaseThreadsInUse(jo);
+                }
                 lock (thisfLock)
                 {
                     bool found = false, IsMSJ = false, IsNVM = false;
@@ -9853,7 +10021,6 @@ Job.IsYouTube || Job.IsDownloads || Job.IsMovie))
                     foreach (var jo in ProcessingJobs.Where(jo => !jo.Complete && jo.FileNoExt == Path.GetFileNameWithoutExtension(filename)))
                     {
                         found = true;
-                        ReleaseThreadsInUse(jo);
                         if (jo.IsXMLSource)
                         {
                             jo.Complete = true;
@@ -11010,6 +11177,15 @@ Job.IsYouTube || Job.IsDownloads || Job.IsMovie))
                 {
                     List<string> SourceList = Directory.EnumerateFiles(SourceDir, "*.*", SearchOption.AllDirectories).
                          Where(s => s.ToLower().EndsWithAny(GetDefaultVideoExts())).ToList<string>();
+
+                    foreach (var filename in SourceList)
+                    {
+                        if (Path.GetExtension(filename).EndsWith("rar"))
+                        {
+                            HandleRarFile(filename);
+                            continue;
+                        }
+                    }
                     if (SourceDir == SourceDirectory4KAdobe)
                     {
                         for (int i = SourceList.Count - 1; i >= 0; i--)
@@ -11028,7 +11204,10 @@ Job.IsYouTube || Job.IsDownloads || Job.IsMovie))
 
                         if (ProcessingJobs.Count(job => job.Title == myfilename) == 0)
                         {
-                            AddIfVaid(filename, SourceDir, IsMovie, IsYouTube);
+                            if (!filename.ToLower().EndsWith("rar"))
+                            {
+                                AddIfVaid(filename, SourceDir, IsMovie, IsYouTube);
+                            }
                         }
                     }
                     SourceList.Clear();
@@ -12963,7 +13142,7 @@ Job.IsYouTube || Job.IsDownloads || Job.IsMovie))
             try
             {
                 string myStrQuote = "\"";
-                ManagementObjectSearcher searcher = new($"SELECT * FROM Win32_Process where name = {myStrQuote}{ExeName}{myStrQuote}");
+                ManagementObjectSearcher searcher = new($"SELECT * FROM `Process where name = {myStrQuote}{ExeName}{myStrQuote}");
                 foreach (ManagementObject o in searcher.Get())
                 {
                     if (o.Properties["Handle"] is null || o.Properties["ProcessID"] is null)
