@@ -2477,7 +2477,7 @@ namespace VideoGui
                             int idx = connectionString.ExecuteScalar(sql).ToInt(-1);
                             if (idx != -1)
                             {
-                                for (int i = 0; i < DescriptionsList.Count; i--)
+                                for (int i = DescriptionsList.Count - 1; i >= 0; i--)
                                 {
                                     if (DescriptionsList[i].Id == cpRemove.id)
                                     {
@@ -5428,6 +5428,26 @@ namespace VideoGui
             }
         }
 
+
+        public (bool, int) NewTest()
+        {
+            try
+            {
+
+                /*
+                 * 
+                 * code
+                 * 
+                 */
+                return (true, 100);
+
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"NewTest {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+                return (false, -1);
+            }
+        }
         private void DoUploadAutomation()
         {
             try
@@ -7077,10 +7097,12 @@ namespace VideoGui
                                     break;
                                 }
                                 Task.Delay(100);
-                                if (Math.Abs((DateTime.Now - LastSeen).TotalSeconds) > 2)
+                                var total = Math.Abs((DateTime.Now - LastSeen).TotalSeconds);
+                                if (total > 10)
                                 {
                                     string myStrQuote = "\"";
-                                    ManagementObjectSearcher searcher = new($"SELECT * FROM `Process where name = {myStrQuote}VideoGui{myStrQuote}");
+                                    LastSeen = DateTime.Now;
+                                    ManagementObjectSearcher searcher = new($"SELECT * FROM Win32_Process where name = {myStrQuote}ffmpeg.exe{myStrQuote}");
 
                                     foreach (ManagementObject o in searcher.Get())
                                     {
@@ -7096,9 +7118,16 @@ namespace VideoGui
                                         if (o["CommandLine"] != null)
                                         {
                                             string comstr = o["CommandLine"].ToString();
-                                            if (comstr != "")
+                                            if (comstr != "" && comstr.Contains("-threads 1"))
                                             {
-
+                                                int idx = comstr.IndexOf("-threads 1");
+                                                int offset = "-threads 1".Length;
+                                                comstr = comstr.Substring(idx + offset, comstr.Length - idx - offset).Trim();
+                                                comstr = comstr.Replace(myStrQuote, "").Trim();
+                                                if (File.Exists(comstr))
+                                                {
+                                                    comstr = Path.GetFileName(comstr);
+                                                }
                                             }
                                         }
                                     }
@@ -13883,6 +13912,9 @@ namespace VideoGui
                     FileQueChecker.Stop();
                     FileQueChecker.Start();
                 });
+
+
+                 
                 Width--;
                 Height--;
                 Width++;

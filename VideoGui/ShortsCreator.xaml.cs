@@ -113,7 +113,7 @@ namespace VideoGui
                 _twitchparameters.Add("-i");
                 _twitchparameters.Add(logosource);
                 _twitchparameters.Add("-filter_complex");
-                _twitchparameters.Add("[0:v][1:v]overlay=03:10");
+                _twitchparameters.Add("[0:v][1:v]overlay=W-w:10");
                 _twitchparameters.Add("-c:a");
                 _twitchparameters.Add("copy");
                 _twitchparameters.Add("-b:v");
