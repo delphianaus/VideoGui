@@ -521,7 +521,7 @@ namespace VideoGui
         }
 
 
-        
+
 
         public static void AddIfNotExists(this List<(string, bool)> list, string Key, bool Input)
         {
@@ -550,6 +550,33 @@ namespace VideoGui
             bool res = false;
             res = DateOnly.TryParseExact(Value, Format, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateValue);
             return res;
+        }
+
+        public static string ParseCommand(this string comstr)
+        {
+            try
+            {
+                if (comstr=="") return comstr;
+                string myStrQuote = "\"";
+                string res = "";
+                if (comstr != "" && comstr.Contains("-threads 1"))
+                {
+                    int idx = comstr.IndexOf("-threads 1");
+                    int offset = "-threads 1".Length;
+                    comstr = comstr.Substring(idx + offset, comstr.Length - idx - offset).Trim();
+                    res = comstr.Replace(myStrQuote, "").Trim();
+                    if (File.Exists(comstr))
+                    {
+                        res = Path.GetFileName(comstr);
+                    }
+                }
+                return res;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"ParseCommand {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+                return "";
+            }
         }
 
         public static string ToBitrate(this float bitrate, bool IsMBit = true)
@@ -631,13 +658,14 @@ namespace VideoGui
                     }
                     else return defaultint;
                 }
-                else return 0;
+                else return defaultint;
             }
             catch (Exception ex)
             {
-                ex.LogWrite($"ToDouble(obj) {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
-                return 0;
+                ex.LogWrite(" ToDouble() " + MethodBase.GetCurrentMethod().Name); 
+               return defaultint;
             }
+
         }
         public static Double ToDouble(this string obj)
         {
@@ -1142,7 +1170,7 @@ namespace VideoGui
         {
             try
             {
-                return TimeSpan.FromSeconds(frame / fps);   
+                return TimeSpan.FromSeconds(frame / fps);
             }
             catch (Exception ex)
             {
@@ -1581,8 +1609,8 @@ namespace VideoGui
                         if (dnt.Length == 4)
                         {
                             int mss = ms.ToInt(0);
-                            TimeSpan r = new TimeSpan(0,Hours, Minutes, secs,mss);
-                            
+                            TimeSpan r = new TimeSpan(0, Hours, Minutes, secs, mss);
+
                             return r;
                         }
                         if (dnt.Length == 3)
@@ -2535,7 +2563,7 @@ namespace VideoGui
                 string date = DateTime.Now.ToString("dd_MM_yyyy");
                 using (StreamWriter txtWriter = File.AppendText(m_exePath + $"\\{date}-{LogName}-WRITELOG.log"))
                 {
-                    
+
                     string tta = DateTime.Now.TimeOfDay.ToString();
                     txtWriter.WriteLine($"--------------{tta}-----------------");
                     foreach (var line in obj)

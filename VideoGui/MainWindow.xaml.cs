@@ -197,6 +197,8 @@ namespace VideoGui
         CollectionViewSource titletagsViewSource = new CollectionViewSource();
         CollectionViewSource availabletagsViewSource = new CollectionViewSource();
 
+
+
         int ThreadsInUse720p = 0, ThreadsInUse1080p = 0,
            ThreadsInUse1440p = 0, ThreadsInUse4k = 0;
 
@@ -6918,36 +6920,15 @@ namespace VideoGui
                 List<Process> Processes = Win32Processes.GetProcessesLockingFile(fname);
                 if (Processes.Count > 0) return;
                 bool exit = false;
-                string myStrQuote = "\"";
-                ManagementObjectSearcher searcher = new($"SELECT * FROM `Process where name = {myStrQuote}VideoGui{myStrQuote}");
 
-                foreach (ManagementObject o in searcher.Get())
-                {
-                    if (o.Properties["Handle"] is null || o.Properties["ProcessID"] is null)
-                    {
-                        continue;
-                    }
-                    string HandleID = o.Properties["Handle"].Value.ToString();
-                    string ParentProcessId = "";
-                    ParentProcessId = (o.Properties["ParentProcessID"] is not null) ?
-                        o.Properties["ParentProcessID"].Value.ToString() : "";
-                    string ID = o.Properties["ProcessID"].Value.ToString();
-                    if (o["CommandLine"] != null)
-                    {
-                        string comstr = o["CommandLine"].ToString();
-                        if (comstr.Contains(fname))
-                        {
-                            exit = true;
-                        }
-                    }
-                }
-                if (!exit) ProcessingJobs.RemoveAt(jobid);
+                ProcessingJobs.RemoveAt(jobid);
             }
             catch (Exception ex)
             {
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
             }
         }
+        ffmpegProcesses activeffmpegProcesses = new ffmpegProcesses();
         public string[] GetDefaultVideoExts()
         {
             return new string[] { ".avi", ".mkv", ".mp4", ".m2ts", ".rar" };
@@ -7103,34 +7084,50 @@ namespace VideoGui
                                     string myStrQuote = "\"";
                                     LastSeen = DateTime.Now;
                                     ManagementObjectSearcher searcher = new($"SELECT * FROM Win32_Process where name = {myStrQuote}ffmpeg.exe{myStrQuote}");
-
                                     foreach (ManagementObject o in searcher.Get())
                                     {
                                         if (o.Properties["Handle"] is null || o.Properties["ProcessID"] is null)
                                         {
                                             continue;
                                         }
-                                        string HandleID = o.Properties["Handle"].Value.ToString();
-                                        string ParentProcessId = "";
-                                        ParentProcessId = (o.Properties["ParentProcessID"] is not null) ?
-                                            o.Properties["ParentProcessID"].Value.ToString() : "";
-                                        string ID = o.Properties["ProcessID"].Value.ToString();
-                                        if (o["CommandLine"] != null)
+                                        int HandleID = o.Properties["Handle"].ToInt(-1);
+                                        //int ID = o.Properties["ProcessID"].ToInt(-1);
+
+                                        string commandline = (o["CommandLine"] is string cmd) ? cmd : "";
+                                        string comstr = commandline.ParseCommand();
+                                        if (HandleID != -1 && comstr != "")
                                         {
-                                            string comstr = o["CommandLine"].ToString();
-                                            if (comstr != "" && comstr.Contains("-threads 1"))
+                                            bool fnd = false;
+                                            foreach (var r2 in activeffmpegProcesses.Processs.Where(s => s.command == comstr))
                                             {
-                                                int idx = comstr.IndexOf("-threads 1");
-                                                int offset = "-threads 1".Length;
-                                                comstr = comstr.Substring(idx + offset, comstr.Length - idx - offset).Trim();
-                                                comstr = comstr.Replace(myStrQuote, "").Trim();
-                                                if (File.Exists(comstr))
+                                                r2.id = HandleID;
+                                                if (r2.FirstSeen is null)
                                                 {
-                                                    comstr = Path.GetFileName(comstr);
+                                                    r2.FirstSeen = DateTime.Now;
                                                 }
+                                                else if (r2.LastSeen is null)
+                                                {
+                                                    r2.LastSeen = DateTime.Now;
+                                                }
+                                                fnd = true;
+                                            }
+                                            if (!fnd)
+                                            {
+                                                activeffmpegProcesses.Processs.Add(new(HandleID, comstr));
                                             }
                                         }
                                     }
+                                    foreach (var activejobs in ProcessingJobs.Where(s => !s.RemovedWeight))
+                                    {
+                                        foreach (var activeffmpeg in activeffmpegProcesses.Processs.Where(x => x.command == activejobs.FileNoExt))
+                                        {
+                                            if (activeffmpeg.LastSeen - DateTime.Now > TimeSpan.FromMinutes(2))
+                                            {
+                                                ReleaseThreadsInUse(activejobs);
+                                            }
+                                        }
+                                    }
+
                                 }
 
 
@@ -7392,16 +7389,15 @@ namespace VideoGui
                                 Job.ProbeDate = DateTime.Now;
                                 Job.ProbeLock = true;
                                 LineNum = 17;
-                                if (!Job.IsShorts && (Job.Is720P ||
-    Job.IsYouTube || Job.IsDownloads || Job.IsMovie))
+                                if (!Job.IsShorts && (Job.Is720P || Job.IsYouTube || Job.IsDownloads || Job.IsMovie))
                                 {
                                     if (!await Job.Lock.WaitAsync(0))
                                     {
                                         continue;
                                     }
-
                                     Job.AllowAdjust = (Job.ThreadWeight == 1.0);
                                     int Weight = (int)Math.Round(Job.ThreadWeight * 10);
+                                    Job.ThreadType = ThreadType.Is720p;
                                     Interlocked.Add(ref ThreadsInUse720p, Weight);
                                 }
 
@@ -7414,6 +7410,7 @@ namespace VideoGui
                                     Job.Is720P = false;
                                     Job.AllowAdjust = (Job.ThreadWeight == 1.0);
                                     int Weight = (int)Math.Round(Job.ThreadWeight * 10);
+                                    Job.ThreadType = ThreadType.IsShorts;
                                     Interlocked.Add(ref ThreadsInUse1080p, Weight);
                                 }
                                 if (Job.Is1440p)
@@ -7424,6 +7421,7 @@ namespace VideoGui
                                     }
                                     Job.AllowAdjust = (Job.ThreadWeight == 1.0);
                                     int Weight = (int)Math.Round(Job.ThreadWeight * 10);
+                                    Job.ThreadType = ThreadType.Is1440p;
                                     Interlocked.Add(ref ThreadsInUse1440p, Weight);
                                 }
                                 if (!Job.IsShorts && (Job.Is4K || Job.Is4KAdobe || Job.Is5K ||
@@ -7436,6 +7434,7 @@ namespace VideoGui
                                     }
                                     Job.AllowAdjust = (Job.ThreadWeight == 1.0);
                                     int Weight = (int)Math.Round(Job.ThreadWeight * 10);
+                                    Job.ThreadType = ThreadType.Is4k;
                                     Interlocked.Add(ref ThreadsInUse4k, Weight);
 
                                 }
@@ -7525,18 +7524,21 @@ namespace VideoGui
                     Job.Lock.Release();
                     int Weight = (int)Math.Round(Job.ThreadWeight * 10);
                     Interlocked.Add(ref ThreadsInUse720p, -Weight);
+                    Job.RemovedWeight = true;
                 }
                 if (Job.IsShorts)
                 {
                     Job.Lock.Release();
                     int Weight = (int)Math.Round(Job.ThreadWeight * 10);
                     Interlocked.Add(ref ThreadsInUse1080p, -Weight);
+                    Job.RemovedWeight = true;
                 }
                 if (Job.Is1440p)
                 {
                     Job.Lock.Release();
                     int Weight = (int)Math.Round(Job.ThreadWeight * 10);
                     Interlocked.Add(ref ThreadsInUse1440p, -Weight);
+                    Job.RemovedWeight = true;
                 }
                 if (Job.Is4K || Job.Is4KAdobe || Job.Is5K || Job.IsMulti ||
                   Job.IsTwitchValid || Job.IsXMLSource || Job.ISFILESRC)
@@ -7544,6 +7546,7 @@ namespace VideoGui
                     Job.Lock.Release();
                     int Weight = (int)Math.Round(Job.ThreadWeight * 10);
                     Interlocked.Add(ref ThreadsInUse4k, -Weight);
+                    Job.RemovedWeight = true;
                 }
                 return true;
             }
@@ -9595,6 +9598,7 @@ namespace VideoGui
                             samplesize = 5.4M;
                             audioStream.CopyStream();
                         }
+                        if (job.IsXMLSource) samplesize = 57M;
                     }
                     LineNum = 84;
                     if (job.IsTwitchOut)
@@ -13914,7 +13918,7 @@ namespace VideoGui
                 });
 
 
-                 
+
                 Width--;
                 Height--;
                 Width++;

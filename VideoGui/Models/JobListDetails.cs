@@ -14,6 +14,7 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
+using VideoGui.Models.delegates;
 
 namespace VideoGui
 {
@@ -104,8 +105,9 @@ namespace VideoGui
         public SemaphoreSlim Lock { get; } = new SemaphoreSlim(1, 1);
 
         public double ThreadWeight = 1.0;
+        public ThreadType ThreadType = ThreadType.Is720p;
         public bool AllowAdjust = false;
-
+        public bool RemovedWeight = false;
         public bool IsShorts { get => _IsShorts; set { _IsShorts = value; OnPropertyChanged(); } }
         public bool IsDownloads { get => _IsDownloads; set { _IsDownloads = value; OnPropertyChanged(); } }
         public int IsCreateShorts { get => _IsCreateShorts; set { _IsCreateShorts = value; OnPropertyChanged(); } }
