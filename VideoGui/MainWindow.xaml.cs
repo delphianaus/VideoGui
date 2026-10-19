@@ -8853,7 +8853,7 @@ namespace VideoGui
             }
         }
         int TotalFrames = -1;
-        private async Task RunConversion(string SourceFile, string DestFile, JobListDetails job, _StatsHandler stats_handle)
+        private async Task  RunConversion(string SourceFile, string DestFile, JobListDetails job, _StatsHandler stats_handle)
         {
             int LineNum = 0;
             try
@@ -9097,7 +9097,7 @@ namespace VideoGui
                         LineNum = 33;
                         SeekFrom = job.StartPos.FromStrToTimeSpan();
                         SeekTo = job.EndPos.FromStrToTimeSpan();
-                        _isCopy = true;
+                       // _isCopy = true;
                         LineNum = 34;
                     }
                     else if (job.PosMode is not null)
