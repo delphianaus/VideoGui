@@ -7222,12 +7222,12 @@ namespace VideoGui
                                 {
                                     if (((Job.Is1440p || Job.IsTwitchOut) && (_1440pFiles.Count >= total1440ptasks)) ||
                                        ((Job.Is4K || Job.IsMuxed || Job.ISFILESRC) && (_4KFiles.Count >= total4kTasks)) ||
-                                     ((!Job.Is720P && !Job.IsMovie) && (_720PFiles.Count >= totaltasks)))
+                                     ((!Job.Is720P && !Job.IsMovie)))
                                     {
                                         Task.Delay(100);
                                         continue;
                                     }
-                                    if ((Job.Is1440p || Job.IsTwitchOut) && (_1440pFiles.Count < total1440ptasks))
+                                    if ((Job.Is1440p || Job.IsTwitchOut))
                                     {
                                         break;
                                     }
@@ -7239,7 +7239,7 @@ namespace VideoGui
                                         }
                                         else continue;
                                     }
-                                    if ((Job.Is4K || Job.IsMuxed || Job.ISFILESRC || Job.IsXMLSource) && (_4KFiles.Count < total4kTasks))
+                                    if ((Job.Is4K || Job.IsMuxed || Job.ISFILESRC || Job.IsXMLSource))
                                     {
                                         break;
                                     }
@@ -9572,9 +9572,10 @@ namespace VideoGui
                     decimal samplesize = 1;
                     LineNum = 82;
 
-                    if (job.IsMovie) samplesize = 1.1M;
+                    if (job.IsMovie) samplesize = 3.1M;
 
-                    if (job.Is720P || job.IsYouTube) samplesize = 0.8M;
+                    if (job.Is720P) samplesize = 2.8M;
+                    if (job.IsYouTube) samplesize = 3.8M;
                     if (job.IsYouTube || job.Is720P)
                     {
                         if (videoStream.Framerate > 25)
