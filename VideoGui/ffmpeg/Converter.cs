@@ -1669,7 +1669,15 @@ namespace VideoGui.ffmpeg
                     _parameters.Add(($"-c:v {decoder}", true));
                     _parameters.Add(($"-strict -2", true));
                 }
-                else _parameters.Add(($"-c:v {decoder}", true));
+                else
+                {
+                   /* if (hardwareAccelerator == "amf")
+                    {
+                        _parameters.Add(($"-c:v {decoder}_amf", true));
+                    }
+                    else */
+                    _parameters.Add(($"-c:v {decoder}", true));
+                }
                 ComplexEncoder = $"-c:v {encoder?.ToString()}";
 
                 if (encoder?.ToString() != "svt_av1")

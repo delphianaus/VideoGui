@@ -579,6 +579,7 @@ namespace VideoGui
         {
             try
             {
+                _timer.Change(Timeout.Infinite, Timeout.Infinite);
                 foreach (var networking in NetworkInformation.GetConnectionProfiles())
                 {
                     if (networking?.ProfileName.Equals(ssid, StringComparison.OrdinalIgnoreCase) == true)

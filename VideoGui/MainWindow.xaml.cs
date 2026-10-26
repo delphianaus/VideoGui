@@ -6491,6 +6491,8 @@ namespace VideoGui
                 FileQueChecker.Tick += new EventHandler(FileQueChecker_Tick);
                 FileQueChecker.Interval = (int)new TimeSpan(0, 0, 1).TotalMilliseconds;
                 Task.Run(async () => SetupThreadProcessorAsync());
+
+                //Task.Run(async () => ReadRaid());
                 Task.Delay(100);
                 SetupTicker();
                 Task.Run(async () => { await ClearLogs(); });
@@ -6508,6 +6510,48 @@ namespace VideoGui
             catch (Exception ex)
             {
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
+            }
+        }
+
+        private async Task<bool> ReadRaid()
+        {
+            try
+            {
+                string wslr = @"\\wsl.localhost\Ubuntu\raid\2025";
+                string fdrv = @"F:\gopro\2025";
+                List<string> fdirs = Directory.
+                EnumerateDirectories(wslr, "*.*", SearchOption.AllDirectories).ToList();
+                List<string> wdirs = Directory.
+                                EnumerateDirectories(fdrv, "*.*", SearchOption.AllDirectories).ToList();
+
+                for (int i = 0; i < wdirs.Count; i++)
+                {
+                    wdirs[i] = wdirs[i].Split(@"\").ToList().LastOrDefault();
+                }
+                for (int i = 0; i < fdirs.Count; i++)
+                {
+                    fdirs[i] = fdirs[i].Split(@"\").ToList().LastOrDefault();
+                }
+                for (int i = wdirs.Count - 1; i >= 0; i--)
+                {
+                    string mydir = wdirs[i];
+                    if (fdirs.Contains(mydir))
+                    {
+                        wdirs.RemoveAt(i);
+                    }
+                }
+                if (true)
+                {
+
+                }
+
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"ReadRaid {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+                return false;
             }
         }
 
@@ -7220,9 +7264,9 @@ namespace VideoGui
                             {
                                 while (true && NewProcessingList.Count > 1)
                                 {
-                                    if (((Job.Is1440p || Job.IsTwitchOut) && (_1440pFiles.Count >= total1440ptasks)) ||
-                                       ((Job.Is4K || Job.IsMuxed || Job.ISFILESRC) && (_4KFiles.Count >= total4kTasks)) ||
-                                     ((!Job.Is720P && !Job.IsMovie)))
+                                    if (((Job.Is1440p || Job.IsTwitchOut)) ||
+                                       ((Job.Is4K || Job.IsMuxed || Job.ISFILESRC)) ||
+                                     ((!Job.IsYouTube && !Job.Is720P && !Job.IsMovie)))
                                     {
                                         Task.Delay(100);
                                         continue;
@@ -7243,7 +7287,7 @@ namespace VideoGui
                                     {
                                         break;
                                     }
-                                    if ((Job.Is720P || Job.IsMovie || Job.IsYouTube) && (_720PFiles.Count < totaltasks))
+                                    if ((Job.Is720P || Job.IsMovie || Job.IsYouTube))
                                     {
                                         break;
                                     }
@@ -8853,7 +8897,7 @@ namespace VideoGui
             }
         }
         int TotalFrames = -1;
-        private async Task  RunConversion(string SourceFile, string DestFile, JobListDetails job, _StatsHandler stats_handle)
+        private async Task RunConversion(string SourceFile, string DestFile, JobListDetails job, _StatsHandler stats_handle)
         {
             int LineNum = 0;
             try
@@ -9097,7 +9141,7 @@ namespace VideoGui
                         LineNum = 33;
                         SeekFrom = job.StartPos.FromStrToTimeSpan();
                         SeekTo = job.EndPos.FromStrToTimeSpan();
-                       // _isCopy = true;
+                        // _isCopy = true;
                         LineNum = 34;
                     }
                     else if (job.PosMode is not null)
@@ -9302,7 +9346,16 @@ namespace VideoGui
 
                     }
                     if (codec == ffmpeg.VideoCodec.h264.ToString()) DecoderCodec = ffmpeg.VideoCodec.h264;
-                    if (codec == ffmpeg.VideoCodec.hevc.ToString()) DecoderCodec = ffmpeg.VideoCodec.hevc;
+                    if (codec == ffmpeg.VideoCodec.hevc.ToString() && (_X265Output))// hevc0
+                    {
+                        if (Video.Contains("NVIDIA")) DecoderCodec = ffmpeg.VideoCodec.hevc_nvenc;
+                        else if (Video.Contains("AMD") || (Video.Contains("Radeon"))) DecoderCodec = ffmpeg.VideoCodec.hevc_amf;
+                    }
+                    else if (codec == ffmpeg.VideoCodec.hevc.ToString() && (!_X265Output))// hevc0
+                    {
+                        if (Video.Contains("NVIDIA")) DecoderCodec = ffmpeg.VideoCodec.hevc;
+                        else if (Video.Contains("AMD") || (Video.Contains("Radeon"))) DecoderCodec = ffmpeg.VideoCodec.hevc;
+                    }
                     if (codec == ffmpeg.VideoCodec.mpeg4.ToString()) DecoderCodec = ffmpeg.VideoCodec.mpeg4;
                     if (codec == ffmpeg.VideoCodec.mpeg2video.ToString()) DecoderCodec = ffmpeg.VideoCodec.mpeg2video;
                     if (codec == ffmpeg.VideoCodec.msmpeg4v3.ToString()) DecoderCodec = ffmpeg.VideoCodec.msmpeg4v3;
