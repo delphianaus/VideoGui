@@ -653,7 +653,7 @@ namespace VideoGui
                 }
                 if (Valid)
                 {
-                    WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
+                    WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7flMpKJRGbbszk5AUc7w");
                     string gUrl = webAddressBuilder.Dashboard().Address;
                     int Maxuploads = (txtTotalUploads.Text != "") ? txtTotalUploads.Text.ToInt(100) : 100;
                     int UploadsPerSlot = (txtMaxUpload.Text != "") ? txtMaxUpload.Text.ToInt(5) : 5;

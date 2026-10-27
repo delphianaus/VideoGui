@@ -1,4 +1,5 @@
 ﻿using MediaInfo;
+using MediaInfo.Builder;
 using MediaInfo.Model;
 using Microsoft.VisualBasic.Logging;
 using System;
@@ -301,6 +302,8 @@ namespace VideoGui
                     {
                         f = f.Replace(@"file '", "");
                     }
+
+                    f = f.Replace("'", "");
                     ReadFile(f, UseVideoDuration).ConfigureAwait(false);
                 }
                 Task.Delay(200);
@@ -353,6 +356,7 @@ namespace VideoGui
                     {
                         f = f.Replace(@"file '", "");
                     }
+                    f = f.Replace("'", "");
                     ReadFrames(f, UseVideoDuration).ConfigureAwait(false);
                     }
                 Task.Delay(200);

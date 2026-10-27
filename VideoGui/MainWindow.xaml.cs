@@ -96,6 +96,7 @@ using VideoGui.Models;
 using VideoGui.Models.delegates;
 using Windows.Devices.Perception.Provider;
 using Windows.Devices.Radios;
+using Windows.Storage;
 using Wpf.Ui.Controls;
 using Xceed.Wpf.Toolkit;
 using Xceed.Wpf.Toolkit.PropertyGrid.Converters;
@@ -8773,7 +8774,7 @@ namespace VideoGui
                                 }
                                 else AddFileOK = true;
 
-                                if (AddFileOK) AddIfVaid(filename, SourceDir, IsMoviesDir, IsYouTube);
+                                if (AddFileOK) AddIfValid(filename, SourceDir, IsMoviesDir, IsYouTube);
                             }
                         }
                         SourceList.Clear();
@@ -9228,18 +9229,15 @@ namespace VideoGui
                     totalseconds = 0;
 
                     var fileindewr = new ffmpegbridge();
-                    if (job.PosMode == "time")
+                    fileindewr.ReadDuration(job.GetCutList());
+
+                    while (!fileindewr.Finished)
                     {
-                        TimeSpan Duration = SeekTo - SeekFrom;
-                        totalseconds = Duration.TotalSeconds;
-                        double tbdl = totalseconds * ((job.IsShorts) ? fileindewr.FPS / 2 : fileindewr.FPS);
-                        TotalFrames = (int)Math.Round(tbdl);
+                        Task.Delay(100);
                     }
-                    else
-                    {
-                        TotalFrames = await fileindewr.ReadAllFrames(job.GetCutList()) / ((job.IsShorts ? 2 : 1));
-                        totalseconds = TotalFrames / ((job.IsShorts) ? fileindewr.FPS / 2 : fileindewr.FPS);
-                    }
+                    TotalFrames = await fileindewr.ReadAllFrames(job.GetCutList()) / ((job.IsShorts ? 2 : 1));
+                    totalseconds = TotalFrames / ((job.IsShorts) ? fileindewr.FPS / 2 : fileindewr.FPS);
+
                     fileindewr = null;
                     foreach (string sp in job.GetCutList())
                     {
@@ -11310,7 +11308,7 @@ namespace VideoGui
                         {
                             if (!filename.ToLower().EndsWith("rar"))
                             {
-                                AddIfVaid(filename, SourceDir, IsMovie, IsYouTube);
+                                AddIfValid(filename, SourceDir, IsMovie, IsYouTube);
                             }
                         }
                     }
@@ -13665,7 +13663,7 @@ namespace VideoGui
                 string SourceDir = Path.GetDirectoryName(newfile);
                 if (!ProcessingJobs.Any(job => job.Title == SourceFile))
                 {
-                    JobsAdded = AddIfVaid(newfile, SourceDir, IsMovie, IsYouTube);
+                    JobsAdded = AddIfValid(newfile, SourceDir, IsMovie, IsYouTube);
                 }
             }
             return JobsAdded;
@@ -13677,11 +13675,17 @@ namespace VideoGui
 
 
 
-        public bool AddIfVaid(string newfile, string SourceDir, bool IsMovie = false, bool IsYouTube = false)
+        public bool AddIfValid(string newfile, string SourceDir, bool IsMovie = false, bool IsYouTube = false)
         {
             try
             {
                 bool res = false;
+
+                if (File.Exists(newfile))
+                {
+                    var fs = new System.IO.FileInfo(newfile);
+                    if (fs.Length == 0) return false;
+                }
                 string DownloadsDir = GetDownloadsFolder();
 
                 bool IsNotDownloads = Path.GetDirectoryName(SourceDir).Contains(DownloadsDir);// """DownloadsDir;
