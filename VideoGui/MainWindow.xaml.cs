@@ -6396,8 +6396,11 @@ namespace VideoGui
                 };
                 Closed += (s, e) =>
                 {
-                    IsClosed = true;
-                    DoOnFinish?.Invoke(IsRestart || AutoClose);
+                    if (!InTray)
+                    {
+                        IsClosed = true;
+                        DoOnFinish?.Invoke(IsRestart || AutoClose);
+                    }
                 };
                 _syncContext = SynchronizationContext.Current;
                 ThreadStatsHandler = new(StatsHandledForThreads);
@@ -9032,11 +9035,6 @@ namespace VideoGui
                         List<(string, double)> FileInfos = new List<(string, double)>();
                         FileInfos.AddRange(FileIndexer.FileInfoList);
 
-                        TotalFrames = await FileIndexer.ReadAllFrames(Files) / ((job.IsShorts ? 2 : 1));
-                        totalseconds = TotalFrames / ((job.IsShorts) ? FileIndexer.FPS / 2 : FileIndexer.FPS);
-                        //TotalFrames Is OUTPUT FRAMES EXPECTED
-
-
 
                         job.TotalSeconds = totalseconds;
                         // Add Get List of files and durations 
@@ -9226,6 +9224,23 @@ namespace VideoGui
                     List<string> Files = new List<string>();
                     string filename = "";
                     LineNum = 45;
+                    TotalFrames = 0;
+                    totalseconds = 0;
+
+                    var fileindewr = new ffmpegbridge();
+                    if (job.PosMode == "time")
+                    {
+                        TimeSpan Duration = SeekTo - SeekFrom;
+                        totalseconds = Duration.TotalSeconds;
+                        double tbdl = totalseconds * ((job.IsShorts) ? fileindewr.FPS / 2 : fileindewr.FPS);
+                        TotalFrames = (int)Math.Round(tbdl);
+                    }
+                    else
+                    {
+                        TotalFrames = await fileindewr.ReadAllFrames(job.GetCutList()) / ((job.IsShorts ? 2 : 1));
+                        totalseconds = TotalFrames / ((job.IsShorts) ? fileindewr.FPS / 2 : fileindewr.FPS);
+                    }
+                    fileindewr = null;
                     foreach (string sp in job.GetCutList())
                     {
                         filename = sp.Replace("file '", "").Replace("'", "");
@@ -9234,6 +9249,8 @@ namespace VideoGui
                         double fs = new System.IO.FileInfo(newstr).Length / 1048576.00;
                         MSIZE = MSIZE + (int)Math.Round(fs);
                         LineNum = 46;
+
+
                     }
                     LineNum = 47;
                     ffmpegbridge bridge = new ffmpegbridge();
