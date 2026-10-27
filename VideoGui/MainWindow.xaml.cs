@@ -13478,6 +13478,7 @@ namespace VideoGui
                     trayicon.IconSource = new ImageSourceConverter().ConvertFromString("pack://application:,,,/icons/computer.ico") as ImageSource;
                     TrayIcon.Stop();
                     TrayIcon.IsEnabled = false;
+                    InTray = false;
                 }
                 Show();
             }
