@@ -7268,13 +7268,7 @@ namespace VideoGui
                             {
                                 while (true && NewProcessingList.Count > 1)
                                 {
-                                    if (((Job.Is1440p || Job.IsTwitchOut)) ||
-                                       ((Job.Is4K || Job.IsMuxed || Job.ISFILESRC)) ||
-                                     ((!Job.IsYouTube && !Job.Is720P && !Job.IsMovie)))
-                                    {
-                                        Task.Delay(100);
-                                        continue;
-                                    }
+                                   
                                     if ((Job.Is1440p || Job.IsTwitchOut))
                                     {
                                         break;
@@ -8927,10 +8921,10 @@ namespace VideoGui
                 string HWInfo = GetCpuInfo();
                 HardwareAccelerator HardwareAcceleration = HardwareAccelerator.software;// "qsv";
                 if (HWInfo.ToLower().Contains("intel")) HardwareAcceleration = HardwareAccelerator.qsv;
-                if (HWInfo.ToLower().Contains("amd")) HardwareAcceleration = HardwareAccelerator.amf;
+                if (HWInfo.ToLower().Contains("amd")) HardwareAcceleration = HardwareAccelerator.d3d11va;
                 if (Video.Contains("AMD") || Video.Contains("Radeon"))
                 {
-                    HardwareAcceleration = HardwareAccelerator.amf;
+                    HardwareAcceleration = HardwareAccelerator.d3d11va;
                 }
                 if (Video.Contains("NVIDIA") && !HWInfo.ToLower().Contains("intel"))
                 {
