@@ -310,7 +310,8 @@ namespace VideoGui
                 {
                     Thread.Sleep(100);
                 }
-                btnRename.IsEnabled = true;
+                btnJoinAll.IsEnabled = true;
+                btnSelectJoin.IsEnabled = true;
                 //cancel.Cancel();
             }
             catch (Exception ex)
@@ -371,29 +372,22 @@ namespace VideoGui
                     else
                     {
                         RegistryKey key2 = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
-                        Dest = key2.GetValueStr("AudioJoinerDestDir");
+                        string DestFolderName = key2.GetValueStr("FilteredDirectory");
                         key2.Close();
                         string SrcFolderName = folder.Split('\\').LastOrDefault().ToLower().ToLower() ?? "";
-                        string DestFolderName = Dest.Split('\\').LastOrDefault().ToLower() ?? "";
-                        if (DestFolderName.StartsWith("vline") ||
-                            DestFolderName.StartsWith("v/line") ||
-                            SrcFolderName.StartsWith("vline") ||
+                        if (SrcFolderName.StartsWith("vline") ||
                             SrcFolderName.StartsWith("v/line"))
                         {
-                            if (DestFolderName != SrcFolderName)
+                            SrcFolderName = folder.Split('\\').LastOrDefault() ?? "";
+                            Dest = Path.Combine(DestFolderName, SrcFolderName);
+                            if (!Directory.Exists(Dest))
                             {
-                                SrcFolderName = folder.Split('\\').LastOrDefault() ?? "";
-                                DestFolderName = Dest.Split('\\').LastOrDefault() ?? "";
-                                Dest = Dest.Replace(DestFolderName, SrcFolderName);
-                                if (!Directory.Exists(Dest))
-                                {
-                                    Directory.CreateDirectory(Dest);
-                                }
+                                Directory.CreateDirectory(Dest);
                             }
                         }
                         else
                         {
-                            Dest = Path.Combine(folder, SrcFolderName);
+                            Dest = Path.Combine(DestFolderName, SrcFolderName);
                         }
 
                     }
@@ -575,6 +569,28 @@ namespace VideoGui
                         break;
                     }
                 }
+            }
+        }
+
+        private void btnSelectJoin_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                foreach (AudioJoinerInfo f in msuAudioJoiner.SelectedItems)
+                {
+                    while (MaxFile >= 4)
+                    {
+                        Thread.Sleep(250);
+                        System.Windows.Forms.Application.DoEvents();
+                    }
+                    MaxFile++;
+                    var NewFileName = txtDestDir.Text + "\\" + Path.GetFileNameWithoutExtension(f.FileName) + ".mp4";
+                    AudioJoiners.Add(new Joiner(f.FileName, NewFileName, DoOnStart, DoOnProgress, DoOnStop, DoOnAviDemuxStart, DoOnAviDemuxEnd));// (mwx.FileName, mwx.FileName);
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"btnSelectJoin_Click {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
 

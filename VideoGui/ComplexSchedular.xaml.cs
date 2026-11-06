@@ -882,10 +882,16 @@ namespace VideoGui
                 bool IsAdobe = txtdestdir.Text.ToLower() == adobedir.ToLower();
                 Nullable<DateTime> twitchdata = null;
                 twitchdata = (ReleaseDate.Value.HasValue) ? ReleaseDate.Value.Value : null;
-                DoAddRecord?.Invoke(false,false,!tbSource.IsChecked.Value,
-                    ChkElapsed.IsChecked.Value, false,Chk720P.IsChecked.Value,
-                    ChkShorts.IsChecked.Value, 0,  // number 4
-                    ChkEnableTrim.IsChecked.Value, ChkCut.IsChecked.Value,
+                DoAddRecord?.Invoke(false,
+                    !tbSource.IsChecked.Value,
+                    ChkElapsed.IsChecked.Value, 
+                    Chk720P.IsChecked.Value,
+                    false,
+                    false,
+                    ChkShorts.IsChecked.Value, 
+                    0,  // number 4
+                    ChkEnableTrim.IsChecked.Value, 
+                    ChkCut.IsChecked.Value,
                     chkDeleteMonitored.IsChecked.Value,
                     chkPersistantSource.IsChecked.Value,
                     IsAdobe,

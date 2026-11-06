@@ -13,6 +13,8 @@ namespace VideoGui.ffmpeg
         /// </summary>
         d3d11va,
 
+        d3d12va,
+
         /// <summary>
         ///     Automatically select the hardware acceleration method.
         /// </summary>

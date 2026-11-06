@@ -33,7 +33,7 @@ using Task = System.Threading.Tasks.Task;
 
 namespace VideoGui.ffmpeg
 {
-    public partial class Converter : IConverter, IDisposable
+    public partial class Converter : fIConverter, IDisposable
     {
         string myStrQuote = "\"";
         List<(string, bool)> _parameters = new List<(string, bool)>();
@@ -1501,16 +1501,19 @@ namespace VideoGui.ffmpeg
                 return this;
             }
         }
-        public IConverter SetVideoBitrate(string Minibitrate, string Maxbitrate, string Buffersize, VideoCodec Outputcodec, bool IsComplex, bool ComplexMode, bool IsCopy = false)
+        public IConverter SetVideoBitrate(string Minibitrate, 
+          string Maxbitrate, string Buffersize, VideoCodec Outputcodec, 
+          bool IsComplex, bool ComplexMode, bool IsCopy = false)
         {
             try
             {
                 if (!IsCopy && Outputcodec != VideoCodec.svt_av1)
                 {
-                    _IsComplex = IsComplex;
+                    _IsComplex = IsComplex;//-rc vbr_lat 
+                    //AddParameter("-rc vbr_lat");
                     AddParameter(string.Format("-b:v {0}", Minibitrate));
-                    AddParameter(string.Format("-maxrate {0}", Maxbitrate));
-                    AddParameter(string.Format("-bufsize {0}", Buffersize));
+                    AddParameter(string.Format("-maxrate:v {0}", Maxbitrate));
+                    AddParameter(string.Format("-bufsize:v {0}", Buffersize));
                     if (IsComplex)
                     {
                         ComplexBitRate = string.Format("-b:v {0}", Minibitrate);
@@ -1653,11 +1656,12 @@ namespace VideoGui.ffmpeg
                 return this;
             }
         }
-        public IConverter UseHardwareAcceleration(HardwareAccelerator hardwareAccelerator, VideoCodec decoder, VideoCodec encoder, int device = 0)
+        public IConverter UseHardwareAcceleration(HardwareAccelerator hardwareAccelerator, VideoCodec decoder, VideoCodec encoder, int device = 0,int tune=11)
         {
-            return UseHardwareAcceleration($"{hardwareAccelerator}", decoder.ToString(), encoder.ToString(), device);
+            return UseHardwareAcceleration($"{hardwareAccelerator}", decoder.ToString(), encoder.ToString(), device, tune);
         }
-        public IConverter UseHardwareAcceleration(string hardwareAccelerator, string decoder, string encoder, int device = 0)
+        public IConverter UseHardwareAcceleration(string hardwareAccelerator, string decoder, 
+              string encoder, int device = 0,int tune=11)
         {
             try
             {
@@ -1683,6 +1687,16 @@ namespace VideoGui.ffmpeg
                 if (encoder?.ToString() != "svt_av1")
                 {
                     _parameters.Add(($"-c:v {encoder?.ToString()}", false));
+                    if (encoder.ToUpper().Contains("AMF"))
+                    {
+                        _parameters.Add(($"-rc vbr_latency", false));
+                    }
+                    if (encoder.ToUpper().Contains("NVENC"))
+                    {
+                        _parameters.Add(($"-rc vbr -tune {tune}", false));
+                    }
+
+                    // rc vbr -tune ll3
                 }
                 else
                 {

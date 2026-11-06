@@ -4776,7 +4776,7 @@ namespace VideoGui
                 return -1;
             }
         }
-        public int ModifyRecordInDb(int idx, bool isXMLSource, bool IsMovie, bool IsYouTube, bool ISFILESRC, string SourceDir, string DestinationFName, TimeSpan StartPos, TimeSpan Duration,
+        public int ModifyRecordInDb(int idx, bool IsTrimEncode,bool isXMLSource, bool IsMovie, bool IsYouTube, bool ISFILESRC, string SourceDir, string DestinationFName, TimeSpan StartPos, TimeSpan Duration,
                                      bool Is720p, bool IsShorts, int IsCreateShorts, bool IsEncodeTrim, bool IsCutTrim, bool IsMonitoredSource,
                                      bool IsPersisentJob, bool ismuxed, string muxdata)
         {
@@ -4784,7 +4784,7 @@ namespace VideoGui
             {
                 string sql = "UPDATE AUTOINSERT SET SRCDIR=@SRCDIR," +
                     "ISFILESRC=@ISFILESRC,STARTPOS=@STARTPOS,ISYOUTUBE=@ISYOUTUBE, " +
-                    "DURATION=@DUR,B720P=@IS720p,BSHORTS=@ISSHORTS," +
+                    "DURATION=@DUR,B720P=@IS720p,BSHORTS=@ISSHORTS,ISTRIMENCODE=@ISTRIMENCODE," +
                     "BCREATESHORTS=@ISCREATESHORTS,BENCODETRIM=@ISENCODETRIM, " +
                     "BCUTTRIM=@ISCUTTRIM,BMONITOREDSOURCE=@ISMONSRC, " +
                     "BPERSISTENTJOB=@ISPERJOB,RUNID=@DBID, " +
@@ -4797,7 +4797,8 @@ namespace VideoGui
                     ("@ISCREATESHORTS", IsCreateShorts), ("@ISENCODETRIM", IsEncodeTrim),
                     ("@ISCUTTRIM", IsCutTrim),("@ISMONSRC", IsMonitoredSource),
                     ("@ISFILESRC", ISFILESRC),("@ISPERJOB", IsPersisentJob),
-                    ("@ISXMLFILESRC",isXMLSource),("@ISMOVIE",IsMovie),("@ISYOUTUBE",IsYouTube),
+                    ("@ISTRIMENCODE",IsTrimEncode),("@ISXMLFILESRC",isXMLSource),
+                    ("@ISMOVIE",IsMovie),("@ISYOUTUBE",IsYouTube),
                     ("@DBID", CurrentDbId), ("@ISMUXED", ismuxed), ("@MUXDATA", muxdata),
                     ("@ID", idx)]).ToInt(-1);
                 return res;
@@ -4824,7 +4825,7 @@ namespace VideoGui
             }
         }
 
-        public int InsertRecordIntoDb(string SourceDir, bool ISXMLSource, bool IsMovie, bool IsYouTube,
+        public int InsertRecordIntoDb(string SourceDir, bool IsTrimEncode, bool ISXMLSource, bool IsMovie, bool IsYouTube,
               bool ISFILESRC, string DestinationFName, TimeSpan StartPos, TimeSpan Duration,
               bool Is720p, bool IsShorts, int IsCreateShorts, bool IsEncodeTrim, bool IsCutTrim, bool IsMonitoredSource,
               bool IsPersisentJob, Nullable<DateTime> TwitchSchedule = null,
@@ -4835,10 +4836,10 @@ namespace VideoGui
                 int res = -1;
                 string sql = "INSERT INTO AUTOINSERT(ISXMLFILESOURCE,ISMOVIE,SRCDIR, " +
                             "ISFILESRC,DESTFNAME,STARTPOS,DURATION,B720P,BSHORTS,BCREATESHORTS," +
-                            "BENCODETRIM,BCUTTRIM,BMONITOREDSOURCE,BPERSISTENTJOB," +
+                            "BENCODETRIM,BCUTTRIM,BMONITOREDSOURCE,BPERSISTENTJOB,ISTRIMENCODE," +
                             "RUNID,TWITCHDATE,TWITCHTIME,RTMP,BTWITCHSTREAM,ISMUXED,MUXDATA,ISYOUTUBE) " +
                             "VALUES(@XMLFILESOURCE,@ISMOVIE,@SRCDIR,@ISFILESRC,@DESTNAME,@STARTPOS,@DUR,@IS720P,@ISSHORTS," +
-                            "@ISCREATESHORTS,@ISENCODETRIM,@ISCUTTRIM,@ISMONSRC,@ISPERJOB," +
+                            "@ISCREATESHORTS,@ISENCODETRIM,@ISCUTTRIM,@ISMONSRC,@ISPERJOB,@ISTRIMENCODE," +
                             "@RUNID,@TWITCHDATE,@TWITCHTIME," +
                             "@RTMP,@ISTWITCHSTREAM,@ISMUXED,@MUXDATA,@ISYOUTUBE) RETURNING ID";
                 DateTime _TwitchSchedule = DateTime.Now.AddYears(-500);
@@ -4856,6 +4857,7 @@ namespace VideoGui
                     ("@DUR", Duration.TotalMilliseconds), ("@IS720P", Is720p),("@ISFILESRC", ISFILESRC),
                     ("@ISSHORTS", IsShorts), ("@ISCREATESHORTS", IsCreateShorts), ("@ISENCODETRIM", IsEncodeTrim),
                     ("@ISCUTTRIM", IsCutTrim), ("@ISMONSRC", IsMonitoredSource),
+                    ("@ISTRIMENCODE",IsTrimEncode),
                     ("@XMLFILESOURCE", ISXMLSource), ("@ISMOVIE", IsMovie),("@ISYOUTUBE",IsYouTube),
                     ("@ISPERJOB", IsPersisentJob),("@RUNID", CurrentDbId), ("@TWITCHDATE", _TwichDate),
                     ("@TWITCHTIME", _TwichTime),("@RTMP", RTMP), ("@ISTWITCHSTREAM", IsTwitchStream),
@@ -4906,7 +4908,7 @@ namespace VideoGui
                         if (!Tables.Where(s => s.TableName == table).Any())
                         {
                             sqlstring = $"CREATE TABLE {table}({Id},SRCDIR VARCHAR(500), DESTFNAME VARCHAR(500),STARTPOS BIGINT," +
-                                "DURATION BIGINT,B720P SMALLINT,RTMP VARCHAR(250),ISYOUTUBE SMALLINT," +
+                                "DURATION BIGINT,B720P SMALLINT,RTMP VARCHAR(250),ISYOUTUBE SMALLINT,ISTRIMENCODE SMALLINT," +
                            "BSHORTS SMALLINT,BENCODETRIM SMALLINT,BCUTTRIM SMALLINT,BTWITCHSTREAM SMALLINT,TWITCHTIME TIME," +
                            "BMONITOREDSOURCE SMALLINT,BPERSISTENTJOB SMALLINT, RUNID INTEGER,TWITCHDATE DATE," +
                            "ISMUXED SMALLINT, MUXDATA VARCHAR(256),ISMUXED SMALLINT,ISFILESRC SMALLINT," +
@@ -4915,7 +4917,7 @@ namespace VideoGui
                         }
                         else
                         {
-                            List<string> Smallints = new List<string>() { "ISMUXED", "ISFILESRC", "ISXMLFILESOURCE", "ISMOVIE",
+                            List<string> Smallints = new List<string>() { "ISTRIMENCODE","ISMUXED", "ISFILESRC", "ISXMLFILESOURCE", "ISMOVIE",
                             "BCREATESHORTS", "BTWITCHSTREAM","ISYOUTUBE" };
                             foreach (var small in Smallints)
                             {
@@ -6005,9 +6007,9 @@ namespace VideoGui
             }
         }
 
-        public void AddRecord(bool IsXMLSource, bool ISFILESRC, bool IsElapsed, bool Is720P,
-            bool IsMovie, bool IsYouTube, bool IsShorts, int IsCreateShorts,
-        bool IsTrimEncode, bool IsCutEncode, bool IsDeleteMonitored, bool IsPersistantSource,
+        public void AddRecord(bool IsXMLSource, bool ISFILESRC, bool IsElapsed, 
+            bool Is720P, bool IsMovie, bool IsYouTube, bool IsShorts,
+            int IsCreateShorts, bool IsTrimEncode, bool IsCutEncode, bool IsDeleteMonitored, bool IsPersistantSource,
         bool IsAdobe, string textstart, string textduration, string sourcedirectory, string destFilename,
            Nullable<DateTime> twitchschedule = null, string RTMP = "", bool IsTwitchStream = false,
            bool ismuxed = false, string muxdata = "")
@@ -6054,7 +6056,7 @@ namespace VideoGui
                     if (jp.Id != "")
                     {
                         int iddx = -1;
-                        iddx = ModifyRecordInDb(jp.Id.ToInt(), jp.IsXMLSource, jp.IsMovie, jp.IsYouTube, jp.ISFILESRC, jp.SourceDirectory, jp.DestinationDirectory, jp.Start, jp.Duration,
+                        iddx = ModifyRecordInDb(jp.Id.ToInt(), jp.IsEncodeTrim,jp.IsXMLSource, jp.IsMovie, jp.IsYouTube, jp.ISFILESRC, jp.SourceDirectory, jp.DestinationDirectory, jp.Start, jp.Duration,
                             jp.Is720p, jp.IsShorts, jp.IsCreateShorts, jp.IsEncodeTrim, jp.IsCutTrim, jp.IsDeleteMonitoredSource,
                             jp.IsPersistentJob, jp.IsMuxed, jp.MuxData);
                         jp.Id = (iddx != -1) ? iddx.ToString() : jp.Id;
@@ -6066,6 +6068,7 @@ namespace VideoGui
                         if (IsTwitchStream) ScriptType = 5;
                         if (ISFILESRC) ScriptType = 7;
                         if (ismuxed) ScriptType = 6;
+                        if (IsTrimEncode) ScriptType = 8;
 
                         TimeSpan Final = TimeSpan.Zero;
                         if (!IsElapsed)
@@ -6083,7 +6086,7 @@ namespace VideoGui
                         if (IsCutEncode) ScriptType = 1;
                         string CutFrames = ((textstart != "") || (textduration != "")) ? $"|{textstart}|{Final.ToFFmpeg()}|time" : "";
                         string ScriptFile = $"true|{destFilename}|{sourcedirectory}|*.mp4{CutFrames}";
-                        JobListDetails InMemoryJob = new JobListDetails(IsXMLSource, IsMovie, IsYouTube, false, ISFILESRC, Title, SourceIndex++,
+                        JobListDetails InMemoryJob = new JobListDetails(IsTrimEncode,IsXMLSource, IsMovie, IsYouTube, false, ISFILESRC, Title, SourceIndex++,
                             iddx, ScriptFile,
                             ScriptType, false, true,
                             IsPersistantSource, IsAdobe, IsShorts,
@@ -6119,7 +6122,7 @@ namespace VideoGui
                     }
                     else Final = textduration.FromStrToTimeSpan();
                     int idx = -1;
-                    idx = InsertRecordIntoDb(sourcedirectory, IsXMLSource, IsMovie, IsYouTube, ISFILESRC, destFilename,
+                    idx = InsertRecordIntoDb(sourcedirectory, IsTrimEncode, IsXMLSource, IsMovie, IsYouTube, ISFILESRC, destFilename,
                         textstart.FromStrToTimeSpan(), Final, Is720P, IsShorts, IsCreateShorts, IsTrimEncode,
                         IsCutEncode, IsDeleteMonitored, IsPersistantSource, twitchschedule, RTMP,
                         IsTwitchStream, ismuxed, muxdata);
@@ -6148,7 +6151,7 @@ namespace VideoGui
                         if (ISFILESRC) ScriptType = 7;
                         string CutFrames = ((textstart != "") && (textduration != "")) ? $"|{textstart}|{Final.ToFFmpeg()}|time" : "";
                         string ScriptFile = $"true|{destFilename}|{sourcedirectory}|*.mp4{CutFrames}";
-                        JobListDetails InMemoryJob = new JobListDetails(IsXMLSource, IsMovie, IsYouTube, false,
+                        JobListDetails InMemoryJob = new JobListDetails(IsTrimEncode,IsXMLSource, IsMovie, IsYouTube, false,
                             ISFILESRC, TitleStr, SourceIndex++,
                             idx, ScriptFile, ScriptType,
                             false, true,
@@ -7329,7 +7332,7 @@ namespace VideoGui
                             (Job.Is1440p) ? DestDirectory1440p :
                             (Job.IsYouTube) ? DestDirectoryYouTube :
                             (Job.IsMovie) ? DestDirectoryMovie : DestDirectory720p;
-                            if (Job.ISFILESRC || Job.IsXMLSource)
+                            if (Job.ISFILESRC || Job.IsXMLSource || Job.IsTrimEncode)
                             {
                                 DestFile = Job.DestMFile;
                             }
@@ -7582,7 +7585,7 @@ namespace VideoGui
                     Interlocked.Add(ref ThreadsInUse1440p, -Weight);
                     Job.RemovedWeight = true;
                 }
-                if (Job.Is4K || Job.Is4KAdobe || Job.Is5K || Job.IsMulti ||
+                if (Job.Is4K || Job.Is4KAdobe || Job.Is5K || Job.IsMulti || Job.IsTrimEncode||
                   Job.IsTwitchValid || Job.IsXMLSource || Job.ISFILESRC)
                 {
                     Job.Lock.Release();
@@ -7819,7 +7822,7 @@ namespace VideoGui
                             (Job.Is4KAdobe) ? DestDirectoryAdobe4K : DestDirectory720p;
 
                             DestFile = DestFile + "\\" + Job.SourceFile;
-                            if (Job.ISFILESRC) DestFile = Job.DestMFile;
+                            if (Job.ISFILESRC||Job.IsTrimEncode) DestFile = Job.DestMFile;
                         }
                         LineNum = 30;
                         string eee = "overide " + Job.X264Override.ToString();
@@ -8921,12 +8924,11 @@ namespace VideoGui
                 string HWInfo = GetCpuInfo();
                 HardwareAccelerator HardwareAcceleration = HardwareAccelerator.software;// "qsv";
                 if (HWInfo.ToLower().Contains("intel")) HardwareAcceleration = HardwareAccelerator.qsv;
-                if (HWInfo.ToLower().Contains("amd")) HardwareAcceleration = HardwareAccelerator.d3d11va;
-                if (Video.Contains("AMD") || Video.Contains("Radeon"))
+                if ((HWInfo.ToLower().Contains("amd") || (Video.Contains("AMD") || Video.Contains("Radeon"))))
                 {
-                    HardwareAcceleration = HardwareAccelerator.d3d11va;
+                    HardwareAcceleration = HardwareAccelerator.d3d12va;
                 }
-                if (Video.Contains("NVIDIA") && !HWInfo.ToLower().Contains("intel"))
+                if (Video.Contains("NVIDIA"))
                 {
                     HardwareAcceleration = HardwareAccelerator.cuda;
                 }
@@ -8968,7 +8970,7 @@ namespace VideoGui
                     {
                         if (Video.ContainsAll2(new List<string> { "AMD", "Radeon" }))
                         {
-                            string GPU = Video.Replace("AMD", "").Replace("Radeon", "").Trim();
+                            string GPU = Video.Replace("AMD", "").Replace("Radeon", "").Replace("RX", "").Trim();
                             if (GPU.Substring(0, 1) == "6") // RDNA 2
                             {
                                 if (HWInfo.ContainsAll2(new List<string> { "AMD", "Ryzen", "9", "9950" }))
@@ -9499,7 +9501,7 @@ namespace VideoGui
 
                         }
                     }
-                    else if (job.Is4K || job.Is5K)
+                    else if (job.Is4K || job.Is5K || job.IsTrimEncode)
                     {
                         if (job.IsMulti)
                         {
@@ -9526,7 +9528,7 @@ namespace VideoGui
                                 LineNum = 71;
                             }
 
-                            else if (job.Is5K)
+                            else if (job.Is5K||job.IsTrimEncode||job.Is4KAdobe)
                             {
                                 job.ThreadWeight = 1.8;
                                 if (job.AllowAdjust)
@@ -9535,20 +9537,10 @@ namespace VideoGui
                                     int Weight = (int)Math.Round(10 * 0.8);
                                     Interlocked.Add(ref ThreadsInUse4k, Weight);
                                 }
-                                videoStream = videoStream.SetSize(3840, 2160, aspectratio, ArModulas.ToInt(), Scaling.lanczos, 0, 0, 0, 0);
+                                //1videoStream = videoStream.SetSize(3840, 2160, aspectratio, ArModulas.ToInt(), Scaling.lanczos, 0, 0, 0, 0);
                             }
                         }
-                        else if (job.Is4KAdobe)
-                        {
-                            job.ThreadWeight = 1.6;
-                            if (job.AllowAdjust)
-                            {
-                                job.AllowAdjust = false;
-                                int Weight = (int)Math.Round(10 * 0.6);
-                                Interlocked.Add(ref ThreadsInUse4k, Weight);
-                            }
-                            videoStream = videoStream.SetSize(3840, 2160, aspectratio, ArModulas.ToInt(), Scaling.lanczos, 0, 0, 0, 0);
-                        }
+                        
                     }
                     else
                     {
@@ -9635,7 +9627,7 @@ namespace VideoGui
                     LineNum = 82;
 
                     if (job.IsMovie) samplesize = 3.1M;
-
+                    if (job.IsTrimEncode) samplesize = 34M;
                     if (job.Is720P) samplesize = 2.8M;
                     if (job.IsYouTube) samplesize = 3.8M;
                     if (job.IsYouTube || job.Is720P)
@@ -9689,7 +9681,7 @@ namespace VideoGui
                                                      .SetSeek(SeekFrom).SetOutputTime(SeekTo)
                                                      .SetMultiModeFile(MMFile)
                                                      .SetOverlay(@"c:\videogui\logo1.png", (job.IsShorts && job.IsCreateShorts > 0))
-                                                     .SetConcat(job.IsMulti || job.IsXMLSource, job.GetCutList())
+                                                     .SetConcat(job.IsTrimEncode||job.IsMulti || job.IsXMLSource, job.GetCutList())
                                                      .SetMuxing(job.IsMuxed, job.MuxData)
                                                      .UseHardwareAcceleration(_GPUEncode ? HardwareAcceleration : HardwareAccelerator.software, DecoderCodec, Encoder, LockedDeviceID)
                                                      .SetVSync(VSyncEnable ? VsyncParams.vfr : VsyncParams.auto)
@@ -10584,7 +10576,7 @@ namespace VideoGui
                         }
                         string SQL = "Delete from ProcessingLog where Source = @SFS";
                         connectionString.ExecuteScalar(SQL.ToUpper(), [("SFS", SourceFileIs)]).ToInt(-1);
-                        if (!isTwitchStream && !IsMuxed)
+                        if (!isTwitchStream && !IsMuxed && !IsXMLSource)
                         {
                             if ((IsNVM) && (DoesDeletionFileExist(Path.GetFileName(destdir))))
                             {

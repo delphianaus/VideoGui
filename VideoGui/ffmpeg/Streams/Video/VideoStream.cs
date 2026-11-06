@@ -395,6 +395,7 @@ namespace VideoGui.ffmpeg.Streams.Video
         {
             try
             {
+                
                 if (width > 0 && height > 0)
                 {
                     string crop = x > 0 || y > 0 ? $"crop={x}:{y}:{left}:{top}" : "";

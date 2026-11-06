@@ -9,7 +9,7 @@
         xmlns:MSU="clr-namespace:CustomComponents.ListBoxExtensions;assembly=CustomComponents"
         mc:Ignorable="d" d:Background="Gray"
         WindowStartupLocation="CenterScreen" WindowStyle="ToolWindow" 
-        Title="Audio Joiner" Height="362" Width="729" SizeChanged="Window_SizeChanged" >
+        Title="Audio Joiner" Height="381" Width="729" SizeChanged="Window_SizeChanged" >
     <ui:FluentWindow.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -38,7 +38,7 @@
                         <CheckBox x:Name="chkDest" Content="Custom Destination" Canvas.Top="12" Width="124"  Canvas.Left="579" HorizontalAlignment="Center" VerticalAlignment="Top"/>
                     </Canvas>
                 </Border>
-                <MSU:MultiListbox x:Name="msuAudioJoiner" ItemHeight="15"
+                <MSU:MultiListbox x:Name="msuAudioJoiner" ItemHeight="15" SelectionMode="Multiple"
         Header="Source Files" Width="722" FontSize="13" IsDarkMode="True"
         VerticalAlignment="Top" VerticalContentAlignment="Bottom" 
         Height="207" HorizontalAlignment="Left" Margin="4,50,0,0">
@@ -55,11 +55,12 @@
 
             <Border x:Name="brdControls" BorderBrush="Black" BorderThickness="2" Height="88"  Width="716" Margin="6,0,3,6" HorizontalAlignment="Left" VerticalAlignment="Bottom">
                 <Canvas x:Name="cnvcontrols" Margin="0,1,0,-1">
-                    <Button x:Name="btnRename" IsEnabled="False" HorizontalAlignment="Center" Content="Process ALL" Width="90" Height="30" Click="btnRename_Click" Canvas.Left="14" Canvas.Top="18" VerticalAlignment="Top"/>
+                    <Button x:Name="btnJoinAll" IsEnabled="False" HorizontalAlignment="Center" Content="Process ALL" Width="90" Height="30" Click="btnRename_Click" Canvas.Left="14" Canvas.Top="18" VerticalAlignment="Top"/>
                     <Button x:Name="btnClose" Content="Close" Width="90" Height="30" Click="btnClose_Click" HorizontalAlignment="Center" Canvas.Left="603" Canvas.Top="18" VerticalAlignment="Center"/>
                     <Label Name="lblSetDest" Content="Destination Directory :" Canvas.Left="111" HorizontalAlignment="Center" Canvas.Top="26" VerticalAlignment="Top"/>
                     <Button x:Name="btnSetDetDir" Width="22" Height="22" Canvas.Left="543" HorizontalAlignment="Center" VerticalAlignment="Top" Canvas.Top="22" Click="btnSetDetDir_Click"/>
                     <TextBox x:Name="txtDestDir" Width="298" Height="22" Canvas.Left="240" HorizontalAlignment="Center" Canvas.Top="22" VerticalAlignment="Center"/>
+                    <Button x:Name="btnSelectJoin" IsEnabled="False" Content="Process Selected" Width="164" Height="30"  Canvas.Left="14" Canvas.Top="53" Click="btnSelectJoin_Click"/>
                 </Canvas>
             </Border>
         </Grid>

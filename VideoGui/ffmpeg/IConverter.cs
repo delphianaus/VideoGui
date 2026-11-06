@@ -42,7 +42,7 @@ namespace VideoGui.ffmpeg
         IConverter SetVideoSyncMethod(VideoSyncMethod method);
         IConverter SetFrameRate(double frameRate);
         IConverter UseHardwareAcceleration(HardwareAccelerator hardwareAccelerator, VideoCodec decoder, VideoCodec encoder, int device = 0);
-        IConverter UseHardwareAcceleration(string hardwareAccelerator, string decoder, string encoder, int device = 0);
+        IConverter UseHardwareAcceleration(string hardwareAccelerator, string decoder, string encoder, int device = 0, int tune = 11);
         IConverter UseMultiThread(bool multiThread);
         IConverter SetOutput(string outputPath, bool IsTwitchStream = false);
 

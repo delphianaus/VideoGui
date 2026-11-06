@@ -116,7 +116,9 @@
                           Canvas.Top="91" Canvas.Left="283" Width="90" Height="26"
                            Click="tbSource_Click" HorizontalAlignment="Center" />
                     <CheckBox x:Name="chkPersistantSource" Content="Persistant Job" HorizontalAlignment="Center" VerticalAlignment="Top" Canvas.Left="181" Canvas.Top="94"/>
-                    <Button x:Name="btnInject" Width="56" Height="41" HorizontalAlignment="Left" VerticalAlignment="Center" Content="Inject" Canvas.Top="80" Canvas.Left="746" Click="btnInject_Click"/>
+                    <Button x:Name="btnInject" Width="56" Height="41" 
+                     HorizontalAlignment="Left" VerticalAlignment="Center" 
+                     Content="Inject" Canvas.Top="80" Canvas.Left="746" Click="btnInject_Click"/>
                     <Button x:Name="btnNew" Width="68" HorizontalAlignment="Center" VerticalAlignment="Center" Content="New" Canvas.Top="80" Canvas.Left="665" Height="41" Click="btnNew_Click"/>
                     <ToggleButton x:Name="tglflip" 
                                       Style="{DynamicResource ToggleSetEditStyle}" 

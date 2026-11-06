@@ -20,7 +20,7 @@ namespace VideoGui.Models
         private DateOnly _DateOfRecord;
         private string _RTMP, _SourceDirectory, _DestinationDirectory, _Filename;
         private bool _IsTwitchStream, _Is720p, _IsShorts, _IsCutTrim, _IsEncodeTrim, _IsDeleteMonitoredSource,
-            _IsPersistentJob, _IsLocked, _IsMuxed, _ISFILESRC;
+            _IsPersistentJob, _IsLocked, _IsMuxed, _ISFILESRC, _IsTrimEncode;
         private string _Id, _MuxData;
         private Nullable<DateTime> _TwitchSchedule;
         private int _IsCreateShorts = -1;
@@ -49,7 +49,7 @@ namespace VideoGui.Models
 
         public string ProcessingActions { get => _ProcessingActions; set { _ProcessingActions = value; OnPropertyChanged(); } }
         public string RecordAge { get => _RecordAge; set { _RecordAge = value; OnPropertyChanged(); } }
-
+        public bool IsTrimEncode { get => _IsTrimEncode; set { _IsTrimEncode = value; OnPropertyChanged(); } }
         public bool IsLocked { get => _IsLocked; set { _IsLocked = value; OnPropertyChanged(); } }
         public bool Is720p { get => _Is720p; set { _Is720p = value; OnPropertyChanged(); } }
         public bool IsShorts { get => _IsShorts; set { _IsShorts = value; OnPropertyChanged(); } }
@@ -80,6 +80,7 @@ namespace VideoGui.Models
                 IsDeleteMonitoredSource = (reader["BMONITOREDSOURCE"] is Int16 isMonitoredSource) ? (Int16)isMonitoredSource == 1 : false;
                 IsPersistentJob = (reader["BPERSISTENTJOB"] is Int16 isPersistentJob) ? (Int16)isPersistentJob == 1 : false;
                 IsMuxed = (reader["IsMuxed"]) is Int16 _IsMuxed ? _IsMuxed == 1 : false;
+                IsTrimEncode = (reader["ISTRIMENCODE"]) is Int16 _IsTRIM ? _IsTRIM == 1 : false;
                 ISFILESRC = (reader["ISFILESRC"]) is Int16 _ISF ? _ISF == 1 : false;
                 MuxData = (reader["MuxData"]) is string _MuxData ? _MuxData : "";
                 long start = reader["STARTPOS"].ToString().ToInt();
@@ -141,7 +142,7 @@ namespace VideoGui.Models
                 ex.LogWrite(MethodBase.GetCurrentMethod().Name);
             }
         }
-        public ComplexJobHistory(bool _ISFILESRC,string srcdir, string destfname, TimeSpan StartPos, TimeSpan Durationcut, DateOnly RecordDate, bool b720p,
+        public ComplexJobHistory(bool _IsTrimEncode,bool _ISFILESRC,string srcdir, string destfname, TimeSpan StartPos, TimeSpan Durationcut, DateOnly RecordDate, bool b720p,
             bool bShorts, int bCreateShorts, bool bEncodeTrim, bool bCutTrim, bool bMonitoredSource, bool bPersistentJob, int id,
             bool isMuxed, string muxData)
         {
@@ -149,6 +150,7 @@ namespace VideoGui.Models
             {
                 SourceDirectory = srcdir;
                 IsLocked = false;
+                IsTrimEncode = _IsTrimEncode;
                 DateOfRecord = RecordDate;
                 ISFILESRC = _ISFILESRC;
                 DestinationDirectory = Path.GetDirectoryName(destfname);

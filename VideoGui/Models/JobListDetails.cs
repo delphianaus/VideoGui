@@ -28,7 +28,7 @@ namespace VideoGui
         //CET MOD
         private bool _IsTwitchStream, _Is5K, _Is4kAdobe, _IsMSJ, _IsNVM, _Complete,
             _ConversionStarted, _ProbePassed, _KeepSource, _IsMulti, _IsDownloads,
-            _fisheye, _processed, _X264Override, _ComplexMode, _Is720p,
+            _fisheye, _processed, _X264Override, _ComplexMode, _Is720p, _IsTrimEncode,
             _Is48K, _IsComplex, _ProbeLock, _IsAc3_2Channel, _IsAc3_6Channel,
             _InProcess, _IsSkipped, _IsShorts, _Mpeg4ASP, _Mpeg4AVC, _Is1440p,_IsYouTube,
             _Is4K, _IsInterlaced, _ProbeStarted, _IsMuxed, _ISFILESRC, _IsXMLSource, _IsMovie;
@@ -96,7 +96,7 @@ namespace VideoGui
         public bool Is5K { get => _Is5K; set { _Is5K = value; OnPropertyChanged(); } }
         public bool IsTwitchStream { get => _IsTwitchStream; set { _IsTwitchStream = value; OnPropertyChanged(); } }
         public bool IsTwitchOut { get => _IsTwitchStream && !_twitchschedule.HasValue; set { _IsTwitchStream = _IsTwitchStream; OnPropertyChanged(); } }
-
+        public bool IsTrimEncode { get => _IsTrimEncode; set { _IsTrimEncode = value; OnPropertyChanged(); } }
 
         public bool IsTwitchActive { get => _IsTwitchStream && _twitchschedule.HasValue; set { _IsTwitchStream = _IsTwitchStream; OnPropertyChanged(); } }
         public Nullable<DateTime> twitchschedule { get => _twitchschedule; set { _twitchschedule = value; OnPropertyChanged(); } }
@@ -178,6 +178,7 @@ namespace VideoGui
                 ISFILESRC = (reader["ISFILESRC"] is Int16 _ISF) ? (Int16)_ISF == 1 : false;
                 Is720P = (reader["B720P"] is Int16 _is720p) ? (Int16)_is720p == 1 : false;
                 IsMovie = (reader["ISYOUTUBE"] is Int16 _ISYT) ? (Int16)_ISYT == 1 : false;
+                IsTrimEncode = (reader["ISTRIMENCODE"] is Int16 _ISRET) ? (Int16)_ISRET == 1 : false;
                 IsShorts = (reader["BSHORTS"] is Int16 _isShorts) ? (Int16)_isShorts == 1 : false;
                 IsMuxed = (reader["ISMUXED"] is Int16 _isMux) ? (Int16)_isMux == 1 : false;
                 IsMovie = (reader["ISMOVIE"] is Int16 _isMovie) ? (Int16)_isMovie == 1 : false;
@@ -277,7 +278,7 @@ namespace VideoGui
                 ex.LogWrite($"{this} {MethodBase.GetCurrentMethod().Name}");
             }
         }
-        public JobListDetails(bool _IsXMLSource, bool _IsMovie, bool _IsYouTube,bool _IsDownloads, bool _ISFILESRC, string _Title, int _SourceFileIndex,
+        public JobListDetails(bool _IsTrimEncode,bool _IsXMLSource, bool _IsMovie, bool _IsYouTube,bool _IsDownloads, bool _ISFILESRC, string _Title, int _SourceFileIndex,
             int _Autoinssertid, string _ScriptFile,
             int _ScriptType, bool _Is1440p = false, bool _Is4Kp = false, bool _ISMJS = false,
             bool __Is4KAdobe = false, bool __IsShorts = false, int __IsCreateShorts = 0,
@@ -286,6 +287,7 @@ namespace VideoGui
             // _ScriptType - 0 = src, 1 cst, 2 edt
             DeletionFileHandle = -1;
             IsDownloads = _IsDownloads;
+            IsTrimEncode = _IsTrimEncode;
             IsMovie = _IsMovie;
             IsXMLSource = _IsXMLSource;
             IsYouTube = _IsYouTube;

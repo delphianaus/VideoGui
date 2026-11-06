@@ -402,7 +402,7 @@ namespace VideoGui
                             if (!faulty)
                             {
                                 if (result.ContainsAll2(new() { "Personalities", "inactive" }))
-                                {
+                                {   
                                     (result, error) = RunCommand("-u root mount /dev/md0 /raid", false);
                                     (result, error) = RunCommand("-u root mdadm --stop /dev/md0", false);
                                     (result, error) = RunCommand("-u root mdadm --assemble /dev/md0 --scan --force", false);
@@ -418,8 +418,9 @@ namespace VideoGui
 
                                     (result, error) = RunCommand("-u root mount /dev/md0 /raid", false);
                                     (result, error) = RunCommand("ls /raid", false);
+
                                     var rr = result.Split('\n').ToList();
-                                    if (rr.Count > 0)
+                                    if (rr.Count > 0 && result != "")
                                     {
                                         var dl2 = Directory.EnumerateDirectories(@"\\wsl.localhost\Ubuntu\raid",
                                                        "*.*", SearchOption.TopDirectoryOnly).ToList();
@@ -434,10 +435,30 @@ namespace VideoGui
                                     }
                                     else
                                     {
+                                        return true;
                                         (result, error) = RunCommand("-u root umount /raid", false);
                                         (result, error) = RunCommand("-u root mdadm --stop /dev/md0", false);
                                         (result, error) = RunCommand("--shutdown", false);
-                                        (result, error) = RunCommand("c:\\bin\\mountdrives.bat");
+                                        foreach (var drive in ProbeData)
+                                        {
+                                            var drvid = drive.Split(" ").ToList().FirstOrDefault();
+                                            command = $"--mount \\\\.\\PHYSICALDRIVE{drvid} --bare";
+                                            (ss, ee) = RunCommand(command, false);
+                                            if (ss.Contains("The operation completed successfully."))
+                                            {
+                                                continue;
+                                            }
+                                            List<string> returnvals = ss.Replace("\0", "").Split(Environment.NewLine).ToList();
+                                            foreach (var rs in returnvals)
+                                            {
+                                                if (rs.ContainsAll(new[] { "PHYSICALDRIVE", "is already attached" }))
+                                                {
+                                                    RunMount = false;
+                                                    RaidOk = true;
+                                                    break;
+                                                }
+                                            }
+                                        }
                                         List<string> rv = result.Replace("\0", "").Split(Environment.NewLine).ToList();
                                         (result, error) = RunCommand("-u root cat /proc/mdstat", false);
 
