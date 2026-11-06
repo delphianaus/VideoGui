@@ -33,7 +33,7 @@ using Task = System.Threading.Tasks.Task;
 
 namespace VideoGui.ffmpeg
 {
-    public partial class Converter : fIConverter, IDisposable
+    public partial class Converter : IConverter, IDisposable
     {
         string myStrQuote = "\"";
         List<(string, bool)> _parameters = new List<(string, bool)>();
