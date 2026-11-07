@@ -7564,7 +7564,7 @@ namespace VideoGui
         {
             try
             {
-                
+
                 if (Job.Is720P || Job.IsYouTube || Job.IsDownloads || Job.IsMovie)
                 {
                     Job.Lock.Release();
@@ -7956,51 +7956,53 @@ namespace VideoGui
                                 break;
                             }
                             LineNum = 47;
+                            if (File.Exists(DestFile))
+                            {
+                                var ffb = new ffmpegbridge();
+                                ffb.ReadDuration(DestFile);
+                                while (!ffb.Finished)
+                                {
+                                    Task.Delay(100);
+                                }
+                                int vtime = ffb.GetDuration().TotalSeconds.ToInt();
+                                if (vtime == 0) File.Delete(DestFile);
+
+                                ffb = null;
+                                if (vtime > 0)
+                                {
+                                    Job.Complete = true;
+                                    Job.Processed = true;
+                                    Job.Handle = "";
+                                    Job.JobDate = DateTime.Now;
+                                    Job.Processed = true;
+                                    Job.Progress = 100;
+                                    Job.FinishedDate = DateTime.Now;
+                                    ReleaseThreadsInUse(Job);
+                                    DeleteRecord(Job.DeletionFileHandle, true);
+                                    DeleteFromAutoInsertTable(Job.DeletionFileHandle);
+                                    InsertIntoDeletionTable(Path.GetFileName(Job.DestMFile));
+                                    Job.Fileinfo = "existing skipping file";
+                                    string dDir = (Job.Is4K) ? DoneDirectory4K :
+                                                                      (Job.Is1440p) ? DoneDirectory1440p :
+                                                                      (Job.IsMovie) ? DoneDirectory720p :
+                                                                      (Job.IsYouTube) ? DoneDirectory720p :
+                                                                      DoneDirectory720p;
+                                    if (Job.Is4KAdobe) dDir = DoneDirectoryAdobe4K;
+
+                                    string destdir = dDir + "\\" + Path.GetFileName(DestFile.Replace("\"", ""));
+                                    MovedIfExists(DestFile, destdir);
+                                    return;
+
+                                }
+                            }
                             if (!founxd && (TotalDays < 1) && (Job.IsMulti || System.IO.File.Exists(processingfile) && (JobHandle == "")))
                             {
                                 ProcessingTime = DateTime.Now;
                                 Job.ProbeDate = DateTime.Now;
                                 LineNum = 48;
 
-                                if (File.Exists(DestFile))
-                                {
-                                    var ffb = new ffmpegbridge();
-                                    ffb.ReadDuration(DestFile);
-                                    while (!ffb.Finished)
-                                    {
-                                        Task.Delay(100);
-                                    }
-                                    int vtime = ffb.GetDuration().TotalSeconds.ToInt();
-                                    if (vtime == 0) File.Delete(DestFile);
 
-                                    ffb = null;
-                                    if (vtime > 0)
-                                    {
-                                        Job.Complete = true;
-                                        Job.Processed = true;
-                                        Job.Handle = "";
-                                        Job.JobDate = DateTime.Now;
-                                        Job.Processed = true;
-                                        Job.Progress = 100;
-                                        Job.FinishedDate = DateTime.Now;
-                                        ReleaseThreadsInUse(Job);
-                                        DeleteRecord(Job.DeletionFileHandle, true);
-                                        DeleteFromAutoInsertTable(Job.DeletionFileHandle);
-                                        InsertIntoDeletionTable(Path.GetFileName(Job.DestMFile));
-                                        Job.Fileinfo = "existing skipping file";
-                                        string dDir = (Job.Is4K) ? DoneDirectory4K :
-                                                                          (Job.Is1440p) ? DoneDirectory1440p :
-                                                                          (Job.IsMovie) ? DoneDirectory720p :
-                                                                          (Job.IsYouTube) ? DoneDirectory720p :
-                                                                          DoneDirectory720p;
-                                        if (Job.Is4KAdobe) dDir = DoneDirectoryAdobe4K;
 
-                                        string destdir = dDir + "\\" + Path.GetFileName(Job.SourceFile.Replace("\"", ""));
-                                        MovedIfExists(DestFile, destdir);
-                                        return;
-
-                                    }
-                                }
                                 RunConversion(processingfile, DestFile, Job, ThreadStatsHandler).ConfigureAwait(false);
                                 LineNum = 49;
                                 Task.Delay(250);
