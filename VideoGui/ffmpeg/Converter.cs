@@ -698,8 +698,8 @@ namespace VideoGui.ffmpeg
                     _dest = DestFileName;
                 }
 
-
-
+                  
+               
 
                 await foreach (var commandEvent in cmd.ListenAsync())
                 {

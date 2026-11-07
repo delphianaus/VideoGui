@@ -4776,7 +4776,7 @@ namespace VideoGui
                 return -1;
             }
         }
-        public int ModifyRecordInDb(int idx, bool IsTrimEncode,bool isXMLSource, bool IsMovie, bool IsYouTube, bool ISFILESRC, string SourceDir, string DestinationFName, TimeSpan StartPos, TimeSpan Duration,
+        public int ModifyRecordInDb(int idx, bool IsTrimEncode, bool isXMLSource, bool IsMovie, bool IsYouTube, bool ISFILESRC, string SourceDir, string DestinationFName, TimeSpan StartPos, TimeSpan Duration,
                                      bool Is720p, bool IsShorts, int IsCreateShorts, bool IsEncodeTrim, bool IsCutTrim, bool IsMonitoredSource,
                                      bool IsPersisentJob, bool ismuxed, string muxdata)
         {
@@ -6007,7 +6007,7 @@ namespace VideoGui
             }
         }
 
-        public void AddRecord(bool IsXMLSource, bool ISFILESRC, bool IsElapsed, 
+        public void AddRecord(bool IsXMLSource, bool ISFILESRC, bool IsElapsed,
             bool Is720P, bool IsMovie, bool IsYouTube, bool IsShorts,
             int IsCreateShorts, bool IsTrimEncode, bool IsCutEncode, bool IsDeleteMonitored, bool IsPersistantSource,
         bool IsAdobe, string textstart, string textduration, string sourcedirectory, string destFilename,
@@ -6056,7 +6056,7 @@ namespace VideoGui
                     if (jp.Id != "")
                     {
                         int iddx = -1;
-                        iddx = ModifyRecordInDb(jp.Id.ToInt(), jp.IsEncodeTrim,jp.IsXMLSource, jp.IsMovie, jp.IsYouTube, jp.ISFILESRC, jp.SourceDirectory, jp.DestinationDirectory, jp.Start, jp.Duration,
+                        iddx = ModifyRecordInDb(jp.Id.ToInt(), jp.IsEncodeTrim, jp.IsXMLSource, jp.IsMovie, jp.IsYouTube, jp.ISFILESRC, jp.SourceDirectory, jp.DestinationDirectory, jp.Start, jp.Duration,
                             jp.Is720p, jp.IsShorts, jp.IsCreateShorts, jp.IsEncodeTrim, jp.IsCutTrim, jp.IsDeleteMonitoredSource,
                             jp.IsPersistentJob, jp.IsMuxed, jp.MuxData);
                         jp.Id = (iddx != -1) ? iddx.ToString() : jp.Id;
@@ -6086,7 +6086,7 @@ namespace VideoGui
                         if (IsCutEncode) ScriptType = 1;
                         string CutFrames = ((textstart != "") || (textduration != "")) ? $"|{textstart}|{Final.ToFFmpeg()}|time" : "";
                         string ScriptFile = $"true|{destFilename}|{sourcedirectory}|*.mp4{CutFrames}";
-                        JobListDetails InMemoryJob = new JobListDetails(IsTrimEncode,IsXMLSource, IsMovie, IsYouTube, false, ISFILESRC, Title, SourceIndex++,
+                        JobListDetails InMemoryJob = new JobListDetails(IsTrimEncode, IsXMLSource, IsMovie, IsYouTube, false, ISFILESRC, Title, SourceIndex++,
                             iddx, ScriptFile,
                             ScriptType, false, true,
                             IsPersistantSource, IsAdobe, IsShorts,
@@ -6151,7 +6151,7 @@ namespace VideoGui
                         if (ISFILESRC) ScriptType = 7;
                         string CutFrames = ((textstart != "") && (textduration != "")) ? $"|{textstart}|{Final.ToFFmpeg()}|time" : "";
                         string ScriptFile = $"true|{destFilename}|{sourcedirectory}|*.mp4{CutFrames}";
-                        JobListDetails InMemoryJob = new JobListDetails(IsTrimEncode,IsXMLSource, IsMovie, IsYouTube, false,
+                        JobListDetails InMemoryJob = new JobListDetails(IsTrimEncode, IsXMLSource, IsMovie, IsYouTube, false,
                             ISFILESRC, TitleStr, SourceIndex++,
                             idx, ScriptFile, ScriptType,
                             false, true,
@@ -7271,7 +7271,7 @@ namespace VideoGui
                             {
                                 while (true && NewProcessingList.Count > 1)
                                 {
-                                   
+
                                     if ((Job.Is1440p || Job.IsTwitchOut))
                                     {
                                         break;
@@ -7560,10 +7560,11 @@ namespace VideoGui
             }
         }
 
-        private async Task<bool> ReleaseThreadsInUse(JobListDetails Job)
+        private async Task<bool> ReleaseThreadsInUse(JobListDetails Job, bool remove = false, string destfile = "")
         {
             try
             {
+                
                 if (Job.Is720P || Job.IsYouTube || Job.IsDownloads || Job.IsMovie)
                 {
                     Job.Lock.Release();
@@ -7585,7 +7586,7 @@ namespace VideoGui
                     Interlocked.Add(ref ThreadsInUse1440p, -Weight);
                     Job.RemovedWeight = true;
                 }
-                if (Job.Is4K || Job.Is4KAdobe || Job.Is5K || Job.IsMulti || Job.IsTrimEncode||
+                if (Job.Is4K || Job.Is4KAdobe || Job.Is5K || Job.IsMulti || Job.IsTrimEncode ||
                   Job.IsTwitchValid || Job.IsXMLSource || Job.ISFILESRC)
                 {
                     Job.Lock.Release();
@@ -7822,7 +7823,7 @@ namespace VideoGui
                             (Job.Is4KAdobe) ? DestDirectoryAdobe4K : DestDirectory720p;
 
                             DestFile = DestFile + "\\" + Job.SourceFile;
-                            if (Job.ISFILESRC||Job.IsTrimEncode) DestFile = Job.DestMFile;
+                            if (Job.ISFILESRC || Job.IsTrimEncode) DestFile = Job.DestMFile;
                         }
                         LineNum = 30;
                         string eee = "overide " + Job.X264Override.ToString();
@@ -7960,6 +7961,46 @@ namespace VideoGui
                                 ProcessingTime = DateTime.Now;
                                 Job.ProbeDate = DateTime.Now;
                                 LineNum = 48;
+
+                                if (File.Exists(DestFile))
+                                {
+                                    var ffb = new ffmpegbridge();
+                                    ffb.ReadDuration(DestFile);
+                                    while (!ffb.Finished)
+                                    {
+                                        Task.Delay(100);
+                                    }
+                                    int vtime = ffb.GetDuration().TotalSeconds.ToInt();
+                                    if (vtime == 0) File.Delete(DestFile);
+
+                                    ffb = null;
+                                    if (vtime > 0)
+                                    {
+                                        Job.Complete = true;
+                                        Job.Processed = true;
+                                        Job.Handle = "";
+                                        Job.JobDate = DateTime.Now;
+                                        Job.Processed = true;
+                                        Job.Progress = 100;
+                                        Job.FinishedDate = DateTime.Now;
+                                        ReleaseThreadsInUse(Job);
+                                        DeleteRecord(Job.DeletionFileHandle, true);
+                                        DeleteFromAutoInsertTable(Job.DeletionFileHandle);
+                                        InsertIntoDeletionTable(Path.GetFileName(Job.DestMFile));
+                                        Job.Fileinfo = "existing skipping file";
+                                        string dDir = (Job.Is4K) ? DoneDirectory4K :
+                                                                          (Job.Is1440p) ? DoneDirectory1440p :
+                                                                          (Job.IsMovie) ? DoneDirectory720p :
+                                                                          (Job.IsYouTube) ? DoneDirectory720p :
+                                                                          DoneDirectory720p;
+                                        if (Job.Is4KAdobe) dDir = DoneDirectoryAdobe4K;
+
+                                        string destdir = dDir + "\\" + Path.GetFileName(Job.SourceFile.Replace("\"", ""));
+                                        MovedIfExists(DestFile, destdir);
+                                        return;
+
+                                    }
+                                }
                                 RunConversion(processingfile, DestFile, Job, ThreadStatsHandler).ConfigureAwait(false);
                                 LineNum = 49;
                                 Task.Delay(250);
@@ -9528,7 +9569,7 @@ namespace VideoGui
                                 LineNum = 71;
                             }
 
-                            else if (job.Is5K||job.IsTrimEncode||job.Is4KAdobe)
+                            else if (job.Is5K || job.IsTrimEncode || job.Is4KAdobe)
                             {
                                 job.ThreadWeight = 1.8;
                                 if (job.AllowAdjust)
@@ -9540,7 +9581,7 @@ namespace VideoGui
                                 //1videoStream = videoStream.SetSize(3840, 2160, aspectratio, ArModulas.ToInt(), Scaling.lanczos, 0, 0, 0, 0);
                             }
                         }
-                        
+
                     }
                     else
                     {
@@ -9681,7 +9722,7 @@ namespace VideoGui
                                                      .SetSeek(SeekFrom).SetOutputTime(SeekTo)
                                                      .SetMultiModeFile(MMFile)
                                                      .SetOverlay(@"c:\videogui\logo1.png", (job.IsShorts && job.IsCreateShorts > 0))
-                                                     .SetConcat(job.IsTrimEncode||job.IsMulti || job.IsXMLSource, job.GetCutList())
+                                                     .SetConcat(job.IsTrimEncode || job.IsMulti || job.IsXMLSource, job.GetCutList())
                                                      .SetMuxing(job.IsMuxed, job.MuxData)
                                                      .UseHardwareAcceleration(_GPUEncode ? HardwareAcceleration : HardwareAccelerator.software, DecoderCodec, Encoder, LockedDeviceID)
                                                      .SetVSync(VSyncEnable ? VsyncParams.vfr : VsyncParams.auto)
