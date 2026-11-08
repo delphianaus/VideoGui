@@ -25,6 +25,7 @@ using static VideoGui.ffmpeg.Probe.FormatModel;
 using Brushes = System.Windows.Media.Brushes;
 using Color = System.Drawing.Color;
 using FolderBrowserDialog = FolderBrowserEx.FolderBrowserDialog;
+using Label = System.Windows.Controls.Label;
 
 
 namespace VideoGui
@@ -453,41 +454,84 @@ namespace VideoGui
                     RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
                     key.SetValue("ImageMargin", SystemImageMargin);
                     key?.Close();
-                    Selector.Height += (Direction) ? step : -step;
-                    srcImage.Source = QuickCopyBitmap(Selector);
+                    if (chkUseSelector.IsChecked.Value)
+                    {
+
+
+                        Selector.Height += step;
+                        srcImage.Source = QuickCopyBitmap(Selector);
+                    }
+
+                    //Selector.X = step;
                     Proceed = true;
                 }
                 else if (btnName.EndsWith("Left"))
                 {
-                    if (Selector.X + step > 0 && (Selector.X + Selector.Width + step) <= SourceImage.Width)
+
+                    if (lblLeft.Tag.ToInt(-1) == 0)
                     {
-                        SystemImageLeft += step;
-                        if (SystemImageLeft < 0) SystemImageLeft = 0;
-                        txtLeft.Text = SystemImageLeft.ToString();
-                        RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
-                        key.SetValue("ImageLeft", SystemImageLeft);
-                        key?.Close();
-                        Selector.X += step;
-                        if (Selector.X < 0) Selector.X = 0;
-                        srcImage.Source = QuickCopyBitmap(Selector);
-                        Proceed = true;
+                        if (Selector.X + step > 0 && (Selector.X + Selector.Width + step) <= SourceImage.Width)
+                        {
+
+                            SystemImageLeft += step;
+                            if (SystemImageLeft < 0) SystemImageLeft = 0;
+                            txtLeft.Text = SystemImageLeft.ToString();
+                            RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                            key.SetValue("ImageLeft", SystemImageLeft);
+                            key?.Close();
+                            Selector.X += step;
+                            if (Selector.X < 0) Selector.X = 0;
+                        }
                     }
+                    else if (lblLeft.Tag.ToInt(-1) == 1)
+                    {
+                        bool allow = true;
+                        if (step > 0)
+                        {
+                            if (Selector.Width + step + Selector.Left > SourceImage.Width) allow = false;
+                        }
+                        if (step < 0)
+                        {
+                            if (Selector.Width + step < 0) allow = false;
+                        }
+                        if (allow) Selector.Width += step;
+                    }
+
+                    srcImage.Source = QuickCopyBitmap(Selector);
+                    Proceed = true;
                 }
                 else if (btnName.EndsWith("Top"))
                 {
-                    if (Selector.Y + step > 0 && (Selector.Y + Selector.Height + step) <= SourceImage.Height)
+                    if (lblTop.Tag.ToInt(-1) == 0)
                     {
-                        SystemImageTop += step;
-                        if (SystemImageTop < 0) SystemImageTop = 0;
-                        txtTop.Text = SystemImageTop.ToString();
-                        RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
-                        key.SetValue("ImageTop", SystemImageTop);
-                        key?.Close();
-                        Selector.Y += step;
-                        if (Selector.Y < 0) Selector.Y = 0;
-                        srcImage.Source = QuickCopyBitmap(Selector);
-                        Proceed = true;
+                        if (Selector.Y + step > 0 && (Selector.Y + Selector.Height + step) <= SourceImage.Height)
+                        {
+                            SystemImageTop += step;
+                            if (SystemImageTop < 0) SystemImageTop = 0;
+                            txtTop.Text = SystemImageTop.ToString();
+                            RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                            key.SetValue("ImageTop", SystemImageTop);
+                            key?.Close();
+                            Selector.Y += step;
+                            if (Selector.Y < 0) Selector.Y = 0;
+                        }
                     }
+                    else if (lblTop.Tag.ToInt(-1) == 1)
+                    {
+                        bool allow = true;
+                        if (step > 0)
+                        {
+                            if (Selector.Top + Selector.Height + step > SourceImage.Height) allow = false;
+                        }
+                        else
+                        {
+                            if (Selector.Height + step < 0) allow = false;
+                        }
+                        if (allow) Selector.Height += step;
+                    }
+                    srcImage.Source = QuickCopyBitmap(Selector);
+                    Proceed = true;
+
                     srcImage.Source = QuickCopyBitmap(Selector);
                     Proceed = true;
                 }
@@ -735,6 +779,36 @@ namespace VideoGui
             }
         }
 
+        private void lblMode_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            try
+            {
+                if (sender is Label lbl)
+                {
+
+                    switch (lbl.Tag.ToInt(0))
+                    {
+                        case 0:
+                            {
+                                lbl.Tag = 1;
+                                lbl.Foreground = System.Windows.Media.Brushes.CadetBlue;
+                                break;
+                            }
+                        case 1:
+                            {
+                                lbl.Tag = 0;
+                                lbl.Foreground = System.Windows.Media.Brushes.Wheat;
+                                break;
+                            }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"{this} lblMode_MouseDoubleClick {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
+
         private void Up_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -844,7 +918,7 @@ namespace VideoGui
                                         string fnn2 = txtLine2.Text + $" {i}";
                                         //btnCrop_Click(this, e);
 
-                                        var thumbnail2 = QuickWriteText(txtLine1.Text, txtLine2.Text+ $" {i}");
+                                        var thumbnail2 = QuickWriteText(txtLine1.Text, txtLine2.Text + $" {i}");
                                         //var thumbnail2 = QuickWriteText(txtLine1.Text, fnn2);
                                         string fname = System.IO.Path.Combine(txtOutputDir.Text, $"thumbnail_{fnn}.png");
                                         if (rfDate == "")

@@ -5,7 +5,11 @@ using Coravel.Scheduling.Schedule;
 using CustomComponents.ListBoxExtensions;
 using FirebirdSql.Data.FirebirdClient;
 using FolderBrowserEx;
+using Google.Apis.Auth.OAuth2;
 using Google.Apis.Auth.OAuth2.Requests;
+using Google.Apis.Services;
+using Google.Apis.Util.Store;
+using Google.Apis.YouTube.v3;
 using Google.Apis.YouTube.v3.Data;
 using MediaInfo.Model;
 using Microsoft.Extensions.FileProviders;
@@ -4445,6 +4449,28 @@ namespace VideoGui
             }
         }
 
+        public Stream GetClientSecrets()
+        {
+            try
+            {
+                byte[] clientSecret = Array.Empty<byte>();
+                CancellationTokenSource cts = new CancellationTokenSource();
+                connectionString.ExecuteReader("SELECT * FROM SETTINGS WHERE SETTINGNAME = 'CLIENT_SECRET';", cts, (FbDataReader r) =>
+                {
+                    clientSecret = (r["SETTINGBLOB"] is System.Byte[] res) ? CryptData(res) : Array.Empty<byte>();
+
+                    cts.Cancel();
+                });
+                var s = Encoding.ASCII.GetString(clientSecret);
+                return (clientSecret.Length > 0) ? new MemoryStream(clientSecret) : new MemoryStream();
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite(MethodBase.GetCurrentMethod().Name + " " + ex.Message);
+                return new MemoryStream();
+            }
+        }
+        
         private void OnTargetsClose(object ThisForm)
         {
             try

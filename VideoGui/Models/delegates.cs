@@ -11,6 +11,7 @@ using System.Windows.Input;
 namespace VideoGui.Models.delegates
 {
     public enum FinishType { Finished, Scheduled, Error, InTest, GapTimeZero, LookUpError, TaskCancelled };
+   
     public enum ButtonReturnType { NotPresent, Disabled, Enabled };
     public enum ThreadType {Is720p, Is1080p, Is1440p, Is4k, IsShorts };
     public enum FilterTypes { DestinationDirectory, DestinationFileName, SourceDirectory };
