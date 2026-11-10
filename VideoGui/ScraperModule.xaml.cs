@@ -90,6 +90,7 @@ using Task = System.Threading.Tasks.Task;
 using WebView2 = Microsoft.Web.WebView2.Wpf.WebView2;
 using Window = System.Windows.Window;
 using static CustomComponents.ListBoxExtensions.MultiListboxColumnDefinition;
+using MenuItem = Wpf.Ui.Controls.MenuItem;
 
 namespace VideoGui
 {
@@ -346,7 +347,7 @@ namespace VideoGui
                 };
                 webAddressBuilder = new WebAddressBuilder(null, ReportNewAddress, "UCdMH7lMpKJRGbbszk5AUc7w");
                 wv2Dictionary.Add(1, wv2A1);//20
-             
+
                 wv2Dictionary.Add(2, wv2A2);//30
                 wv2Dictionary.Add(3, wv2A3);//40
                 wv2Dictionary.Add(4, wv2A4);//50
@@ -1367,7 +1368,9 @@ namespace VideoGui
                             VideoFiles.Add(newfile);
                             r = r + newfile + " ";
                         }
-                        lstMain.Items.Insert(0, $"Inserting {max} Files {r}");
+                        ScraperData sd = new ScraperData();
+                        sd.Filename = $"Inserting {max} Files {r}";
+                        scrapeDataList.Insert(0, sd);
                         await wv2.ExecuteScriptAsync("document.getElementById('upload-icon').click();");
                         await Task.Delay(500);
                         await wv2.ExecuteScriptAsync("document.getElementById('select-files-button').click();");
@@ -1771,39 +1774,21 @@ namespace VideoGui
                       SetHeaderMargin(new Thickness(5,0,0,0)).
                       SetDataField(nameof(ScraperData.VideoId)).
                       Hidden(),
-                    TextBlock().SetHeaderText("Video Title").SetHeaderFontSize(10.0).SetName("VideoTitle").
-                      SetDataField(nameof(DownloaderInformation.VideoTitle)).
+                    TextBlock().SetHeaderText("Filename").SetHeaderFontSize(10.0).SetName("Filename").
+                      SetDataField(nameof(ScraperData.Filename)).
                       SetWidth(700),
-                    TextBlock().SetHeaderText("Length").SetName("Length").
-                      SetDataField(nameof(DownloaderInformation.Duration)).
-                      SetWidth(55),
-                   TextBlock().SetHeaderText("Status").SetName("Status").
-                      SetDataField(nameof(DownloaderInformation.Status)).
-                      SetWidth(80),
-                   ProgressBar().SetHeaderText("Progress").SetProgressBarMinimum(0).
-                      SetProgressBarMaximum(100).SetWidth(200).
-                      SetDataField(nameof(DownloaderInformation.Progress)).
-                      SetProgressBarForeground(Colors.Green),
-                   TextBlock().SetHeaderText("    Speed").SetName("SpeedTextBlock").
-                      SetDataField(nameof(DownloaderInformation.Speed)).
-                      SetWidth(80).SetHeaderMargin(new Thickness(10,0,0,0)).
-                      SetItemMargin(new Thickness(10,0,0,0))
                 };
-                List<object> ContextMenuItems = [];
-
-                MenuItem StopDownload = new MenuItem() { Header = "Stop This Download" };
-                StopDownload.Click += StopDownload_Click;
-                MenuItem RetryMenuItem = new MenuItem() { Header = "Retry This Download" };
-                RetryMenuItem.Click += RetryDownload_Click;
-                ContextMenuItems.Add(StopDownload);
-                ContextMenuItems.Add(RetryMenuItem);
 
 
 
 
 
-                DownloaderInfoList = [];
-                return new(DownloaderInfoList, columns, fontSize: 15, contextMenuItems: ContextMenuItems);
+
+
+
+
+                scrapeDataList = [];
+                return new(scrapeDataList, columns, fontSize: 15);
 
 
 
@@ -1835,6 +1820,13 @@ namespace VideoGui
                 msuVideos.Width = Width - 5;
                 var thick = new Thickness(0, 0, 0, 0);
                 thick.Left = Width - 190;
+                if (ScraperType == EventTypes.FilteredVideoCompletion)
+                {
+                    lblUploadedText.Content = "Video : ";
+                    lblUploadingText.Visibility = Visibility.Hidden;
+                    lblWaitingtext.Visibility = Visibility.Hidden;
+                    msuVideos.BuildColumnCollection = ShortsScheduleDownloadColumnDefinitionsListBuilder;
+                }
                 if (ScraperType == EventTypes.ShortsSchedule)
                 {
                     lblUploadedText.Content = "Video : ";
@@ -1849,9 +1841,18 @@ namespace VideoGui
                     lblWaiting.Content = "";
                     lblUploaded.Content = "";
                     lblTotal.Content = "";
+                    msuVideos.BuildColumnCollection = ShortsScheduleDownloadColumnDefinitionsListBuilder;
+
                 }
                 if (ScraperType == EventTypes.ScapeSchedule)
                 {
+                    lblTotal.Content = "";
+                    lblUploading.Content = "";
+                    lblWaiting.Content = "";
+                    lblUploaded.Content = "";
+                    lblTotal.Content = "";
+                    msuVideos.BuildColumnCollection = ShortsScheduleDownloadColumnDefinitionsListBuilder;
+
                     /*lblTotalUploadsText.Content = "Files in DB";
                     lblUploadingText.Content = "Max Scraped";
                     lblUploadedText.Content = "Current Video:";
@@ -2010,7 +2011,12 @@ namespace VideoGui
             try
             {
                 string t = $"{Title.Replace("\n", "").Replace("\r", "").Trim()} {Id}";
-                lstMain.Items.Insert(0, t);
+
+                foreach (ScraperData sd in scrapeDataList.Where(s => s.VideoId == Id))
+                {
+                    sd.Filename = t;
+                }
+                //lstMain.Items.Insert(0, t);
                 if (Scope)
                 {
                     string newtitle = Title.Replace("\n", "").Replace("\r", "").Trim();
@@ -2246,7 +2252,8 @@ namespace VideoGui
 
                                 if (TimedOut || canceltoken.IsCancellationRequested)
                                 {
-                                    lstMain.Items.Insert(0, $"Timeout on getting filename");
+                                    scrapeDataList.Insert(0, new ScraperData() { Filename = $"Timeout on getting filename", VideoId = Id });
+                                    // lstMain.Items.Insert(0, $"Timeout on getting filename");
                                     break;
                                 }
 
@@ -2258,9 +2265,10 @@ namespace VideoGui
                                     if (HandlerOk == FinishType.Error)
                                     {
                                         bool IsTaskCanceled = false;
-                                        for (int ix = 0; ix < Math.Min(11, lstMain.Items.Count); ix++)
+
+                                        foreach (ScraperData sd in scrapeDataList)
                                         {
-                                            if (lstMain.Items[ix] is string rx && (rx.ToLower().ContainsAny(new List<string> { "task", "canceled", "ssl", "connection" })))
+                                            if (sd.Filename is string rx && (rx.ToLower().ContainsAny(new List<string> { "task", "canceled", "ssl", "connection" })))
                                             {
                                                 IsTaskCanceled = true;
                                                 break;
@@ -2268,7 +2276,12 @@ namespace VideoGui
                                         }
                                         if (!IsTaskCanceled)
                                         {
-                                            lstMain.Items.Insert(0, $"Error on Scheduling Detected. {Id}");
+
+                                            foreach (ScraperData sd in scrapeDataList.Where(s => s.VideoId == Id))
+                                            {
+                                                sd.Filename = $"Error on Scheduling Detected. {Id}";
+                                            }
+                                            //lstMain.Items.Insert(0, $"Error on Scheduling Detected. {Id}");
                                             string webAddress = $"https://studio.youtube.com/video/{Id}/edit";
                                             System.Windows.Clipboard.SetText(webAddress);
                                             canceltoken.Cancel();
@@ -2281,7 +2294,8 @@ namespace VideoGui
                                     }
                                     else if (HandlerOk == FinishType.LookUpError)
                                     {
-                                        lstMain.Items.Insert(0, $"Lookup Error on Scheduling Detected.");
+                                        scrapeDataList.Insert(0, new ScraperData() { Filename = $"Lookup Error on Scheduling Detected. {Id}", VideoId = Id });
+                                        //lstMain.Items.Insert(0, $"Lookup Error on Scheduling Detected.");
                                         string webAddress = $"https://studio.youtube.com/video/{Id}/edit";
                                         System.Windows.Clipboard.SetText(webAddress);
                                         canceltoken.Cancel();
@@ -2289,13 +2303,15 @@ namespace VideoGui
                                     }
                                     else if (HandlerOk == FinishType.GapTimeZero)
                                     {
-                                        lstMain.Items.Insert(0, $"Gap Is Zero Error on Scheduling Detected.");
+                                        scrapeDataList.Insert(0, new ScraperData() { Filename = $"Gap Is Zero Error on Scheduling Detected. {Id}", VideoId = Id });
+                                        //lstMain.Items.Insert(0, $"Gap Is Zero Error on Scheduling Detected.");
                                         canceltoken.Cancel();
                                         break;
                                     }
                                     else if (HandlerOk == FinishType.Finished)
                                     {
-                                        lstMain.Items.Insert(0, $"Scheduling Complete.");
+                                        scrapeDataList.Insert(0, new ScraperData() { Filename = $"Scheduling Complete. {Id}", VideoId = Id });
+                                        //lstMain.Items.Insert(0, $"Scheduling Complete.");
                                         canceltoken.Cancel();
                                         break;
                                     }
@@ -2303,7 +2319,8 @@ namespace VideoGui
                                 else if (directshortsScheduler is not null)
                                 {
                                     TimedOut = true;
-                                    lstMain.Items.Insert(0, $"Timeout on Scheduling Detected.");
+                                    scrapeDataList.Insert(0, new ScraperData() { Filename = $"Timeout on Scheduling Detected. {Id}", VideoId = Id });
+                                    //lstMain.Items.Insert(0, $"Timeout on Scheduling Detected.");
                                     DoNextNode = false;
                                 }
                             }
@@ -2331,10 +2348,19 @@ namespace VideoGui
 
                                     Dispatcher.Invoke(() =>
                                     {
-                                        if (!lstMain.Items.Contains($"{Id} "))
+                                        bool fnd = false;
+                                        foreach (ScraperData sd in scrapeDataList.Where(s => s.VideoId == Id))
                                         {
-                                            lstMain.Items.Insert(0, $"{Id} ");
+                                            fnd = true;
+                                            break;
                                         }
+                                        if (!fnd)
+                                        {
+                                            ScraperData sd = new ScraperData();
+                                            sd.VideoId = Id;
+                                            scrapeDataList.Insert(0, sd);
+                                        }
+
                                     });
 
                                     DoNextNode = DoNodeScrapeUpdate(Id, TitleStr, DescStr, "",
@@ -2344,36 +2370,39 @@ namespace VideoGui
                                 }
                                 else if (DoNextNode && Id != "" && ScraperType == EventTypes.ScapeSchedule)
                                 {
-                                    Dispatcher.Invoke(() =>
+                                    bool fnd = false;
+                                    foreach (ScraperData sd in scrapeDataList.Where(s => s.VideoId == Id))
                                     {
-                                        if (!lstMain.Items.Contains($"{Id} "))
-                                        {
-                                            lstMain.Items.Insert(0, $"{Id} ");
-                                        }
-                                    });
+                                        fnd = true;
+                                        break;
+                                    }
+                                    if (!fnd)
+                                    {
+                                        ScraperData sd = new ScraperData();
+                                        sd.VideoId = Id;
+                                        scrapeDataList.Insert(0, sd);
+                                    }
                                     var vid = Invoker.InvokeWithReturn<string>(this, new CustomParams_SelectById(Id));
                                     if (vid is string v && v != "")
                                     {
                                         files++;
                                         dbfiles++;
-                                        int lstCnt = lstMain.Items.Count;
-                                        foreach (var itemss in lstMain.Items)
+                                        int lstCnt = scrapeDataList.Count;
+                                        foreach (ScraperData sd in scrapeDataList.Where(s => s.Filename.Contains("_")))
                                         {
-                                            if (itemss.ToString().Contains("_"))
-                                            {
-                                                lstCnt--;
-                                                break;
-                                            }
+                                            lstCnt--;
                                         }
 
-                                        if (lstCnt == 0 && lstMain.Items.Count == MaxNodes)
+
+
+                                        if (lstCnt == 0 && scrapeDataList.Count == MaxNodes)
                                         {
                                             AutoClosedReboot = true;
                                             var _DoAutoCancel = new AutoCancel(DoAutoCancelCloseScraper, $"Scraped {files} Files", 5, "Scraper Finished");
                                             _DoAutoCancel.ShowActivated = true;
                                             _DoAutoCancel.Show();
                                         }
-                                        else if (lstMain.Items.Count == MaxNodes)
+                                        else if (scrapeDataList.Count == MaxNodes)
                                         {
                                             CloseScrape.Interval = TimeSpan.FromSeconds(10);
                                             CloseScrape.Tick += (s, e) =>
@@ -2485,22 +2514,22 @@ namespace VideoGui
                         }
                         else
                         {
-                            if (lstMain.Items.Count > 0)
+                            if (scrapeDataList.Count > 0)
                             {
-                                int lstCnt2 = lstMain.Items.Count;
-                                foreach (var item in lstMain.Items.OfType<string>().Where(item => item.Contains("_")))
+                                int lstCnt2 = scrapeDataList.Count;
+                                foreach (var item in scrapeDataList.OfType<ScraperData>().Where(item => item.Filename.Contains("_")))
                                 {
                                     lstCnt2--;
                                 }
 
-                                if (lstCnt2 == 0 && lstMain.Items.Count == MaxNodes)
+                                if (lstCnt2 == 0 && scrapeDataList.Count == MaxNodes)
                                 {
                                     AutoClosedReboot = true;
                                     var _DoAutoCancel = new AutoCancel(DoAutoCancelCloseScraper, $"Scraped {files} Files", 5, "Scraper Finished");
                                     _DoAutoCancel.ShowActivated = true;
                                     _DoAutoCancel.Show();
                                 }
-                                else if (lstMain.Items.Count == MaxNodes)
+                                else if (scrapeDataList.Count == MaxNodes)
                                 {
                                     CloseScrape.Interval = TimeSpan.FromSeconds(10);
                                     CloseScrape.Tick += (s, e) =>
@@ -4025,7 +4054,8 @@ namespace VideoGui
                 {
                     Errored = true;
                     message.WriteLog("QuotaExceeded");
-                    lstMain.Items.Insert(0, $"Schedule Error: {message} @ {DateTime.Now}");
+                    ScraperData sd = new ScraperData() { Filename = $"Schedule Error: {message} @ {DateTime.Now}" };
+                    scrapeDataList.Insert(0, sd);
                 }
                 CancellationTokenSource cts = new CancellationTokenSource(TimeSpan.FromSeconds(2));
                 while (!cts.IsCancellationRequested)
@@ -4146,7 +4176,8 @@ namespace VideoGui
                     bool res = false;
                     int r = directshortsScheduler.ScheduleNumber;
                     if (r >= ScheduleMax - 1) r = ScheduleMax - 1;
-                    lstMain.Items.Insert(0, $"{r + 1} Schedules Complete");
+                    scrapeDataList.Insert(0, new ScraperData() { Filename = $"{r + 1} Schedules Complete" });
+                    //lstMain.Items.Insert(0, $"{r + 1} Schedules Complete");
 
                     if (Days > 1)
                     {
@@ -4290,8 +4321,12 @@ namespace VideoGui
                 Dispatcher.Invoke(() =>
                 {
                     int r = directshortsScheduler.ScheduleNumber;
-                    string t = $"{id} {title.Replace("\n", "").Replace("\r", "").Trim()}  {r + 1} {dateTime}";
-                    lstMain.Items.Insert(0, t);
+                    string t = $"{title.Replace("\n", "").Replace("\r", "").Trim()}  {r + 1} {dateTime}";
+                    foreach (ScraperData sd in scrapeDataList.Where(sd => sd.VideoId == id))
+                    {
+                        sd.Filename = t;
+                    }
+
                     lblLastNode.Content = $"{r} Scheduled";
                     //StatusBar.ApplyMargin();
                     System.Windows.Forms.Application.DoEvents();
@@ -4438,7 +4473,7 @@ namespace VideoGui
                     if (e.HeightChanged)
                     {
                         brdmain.Height = e.NewSize.Height - 230;/// was 230
-                        brdInfo.Height = 150;
+                        msuVideos.Height = 150;
                         ActiveWebView[1].Height = brdmain.Height - 18;
                     }
                     RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
@@ -5147,7 +5182,8 @@ namespace VideoGui
                         files_deleted = (files_deleted == "") ? $"{file}" : files_deleted + $",{file}";
                         if (files_deleted.Length > 120)
                         {
-                            lstMain.Items.Insert(0, $"{files_deleted} Deleted");
+                            scrapeDataList.Insert(0, new ScraperData() { Filename = $"{files_deleted} Deleted" });
+                            //lstMain.Items.Insert(0, $"{files_deleted} Deleted");
                             files_deleted = "";
                         }
                         ScheduledOk.Add(file);
@@ -5158,7 +5194,8 @@ namespace VideoGui
 
                 if (files_deleted != "")
                 {
-                    lstMain.Items.Insert(0, $"{files_deleted} Deleted");
+                    scrapeDataList.Insert(0,new ScraperData() { Filename = $"{files_deleted} Deleted" });
+                    
                     files_deleted = "";
                 }
 
@@ -5417,53 +5454,26 @@ namespace VideoGui
                         }
                     }
                 }
-                filename = System.IO.Path.GetFileNameWithoutExtension(filename.Replace("/n", "").Trim());
-                int index1 = Ids.IndexOf(IntId);
-                if (index1 == -1)
-                {
-                    for (int i = 0; i < lstMain.Items.Count; i++)
-                    {
-                        if (lstMain.Items[i].ToString().Contains($"{IntId}"))
-                        {
-                            index1 = i;
-                            break;
-                        }
-                    }
-                    if (index1 != -1)
-                    {
-                        if (!(lstMain.Items[index1] as string).Contains(filename))
-                        {
-                            lstMain.Items[index1] += $" {filename}";
-                            files++;
 
-                            //StatusBar.ApplyMargin();
-                            int lstCnt = lstMain.Items.Count;
-                            foreach (var item in lstMain.Items)
-                            {
-                                if (item.ToString().Contains(" "))
-                                {
-                                    lstCnt--;
-                                }
-                            }
-                            if (files == lstCnt && lstMain.Items.Count == MaxCnts)
-                            {
-                                AutoClosedReboot = true;
-                                var _DoAutoCancel = new AutoCancel(DoAutoCancelCloseScraper, $"Scraped {files} Files", 5, "Scraper Finished");
-                                _DoAutoCancel.ShowActivated = true;
-
-                                _DoAutoCancel.Show();
-                            }
-                        }
-                    }
-                    //StatusBar.ApplyMargin();
-                }
-                else
+                int recsNoFile = 0;
+                foreach (ScraperData sd in scrapeDataList.Where(d => d.VideoId == IntId))
                 {
-                    if (!(lstMain.Items[index1] as string).Contains(filename))
-                    {
-                        lstMain.Items[index1] += $" {filename}";
-                    }
+                   sd.Filename = filename;
                 }
+                foreach (ScraperData sd in scrapeDataList.Where(sd => sd.Filename == ""))
+                {
+                    recsNoFile++;
+                }
+                if (recsNoFile == 0)
+                {
+                    AutoClosedReboot = true;
+                    var _DoAutoCancel = new AutoCancel(DoAutoCancelCloseScraper, $"Scraped {files} Files", 5, "Scraper Finished");
+                    _DoAutoCancel.ShowActivated = true;
+                    _DoAutoCancel.Show();
+                }
+                 
+
+                
                 if (ScraperType == EventTypes.ScapeSchedule)
                 {
                     Invoker?.Invoke(this, new CustomParams_InsertIntoTable(IntId, filename));
@@ -5472,67 +5482,67 @@ namespace VideoGui
                 if (IntId == LastIdNode && inserted >= MaxCnts)
                 {
                     Hide();
-                    var _DoAutoCancel = new AutoCancel(DoAutoCancelClose, "", 5, "Scaping Finished");
-                    _DoAutoCancel.ShowActivated = true;
+    var _DoAutoCancel = new AutoCancel(DoAutoCancelClose, "", 5, "Scaping Finished");
+    _DoAutoCancel.ShowActivated = true;
                     _DoAutoCancel.Show();
                     return;
                 }
-                files++;
-                Dispatcher.Invoke(() =>
+files++;
+Dispatcher.Invoke(() =>
+{
+    if (files > 0)
+    {
+        lblLastNode.Content = $"{files} Processed";
+        //StatusBar.ApplyMargin();
+    }
+});
+if (wv2Dictionary.ContainsKey(id))
+{
+    var webView2Instance = wv2Dictionary[id];
+    webView2Instance.AllowDrop = true;
+
+}
+CanSpool = true;
+
+if (Filter != "") return;
+if (nextaddress.Count > 0)
+{
+    int Avaialble = 0;
+    if (wv2A1.AllowDrop) Avaialble++;
+    if (wv2A2.AllowDrop) Avaialble++;
+    if (wv2A3.AllowDrop) Avaialble++;
+    if (wv2A4.AllowDrop) Avaialble++;
+    if (wv2A5.AllowDrop) Avaialble++;
+    if (wv2A6.AllowDrop) Avaialble++;
+    /*if (wv2A7.AllowDrop) Avaialble++;
+    if (wv2A8.AllowDrop) Avaialble++;
+    if (wv2A9.AllowDrop) Avaialble++;
+    if (wv2A10.AllowDrop) Avaialble++;*/
+    for (int ix = 0; ix < Avaialble; ix++)
+    {
+        if (nextaddress.Count > 0)
+        {
+            string url = nextaddress[0];
+            nextaddress.RemoveAt(0);
+            for (int iy = 1; iy < 7; iy++)
+            {
+                if (wv2Dictionary.ContainsKey(iy))
                 {
-                    if (files > 0)
+                    if (wv2Dictionary[iy].AllowDrop)
                     {
-                        lblLastNode.Content = $"{files} Processed";
-                        //StatusBar.ApplyMargin();
-                    }
-                });
-                if (wv2Dictionary.ContainsKey(id))
-                {
-                    var webView2Instance = wv2Dictionary[id];
-                    webView2Instance.AllowDrop = true;
-
-                }
-                CanSpool = true;
-
-                if (Filter != "") return;
-                if (nextaddress.Count > 0)
-                {
-                    int Avaialble = 0;
-                    if (wv2A1.AllowDrop) Avaialble++;
-                    if (wv2A2.AllowDrop) Avaialble++;
-                    if (wv2A3.AllowDrop) Avaialble++;
-                    if (wv2A4.AllowDrop) Avaialble++;
-                    if (wv2A5.AllowDrop) Avaialble++;
-                    if (wv2A6.AllowDrop) Avaialble++;
-                    /*if (wv2A7.AllowDrop) Avaialble++;
-                    if (wv2A8.AllowDrop) Avaialble++;
-                    if (wv2A9.AllowDrop) Avaialble++;
-                    if (wv2A10.AllowDrop) Avaialble++;*/
-                    for (int ix = 0; ix < Avaialble; ix++)
-                    {
-                        if (nextaddress.Count > 0)
-                        {
-                            string url = nextaddress[0];
-                            nextaddress.RemoveAt(0);
-                            for (int iy = 1; iy < 7; iy++)
-                            {
-                                if (wv2Dictionary.ContainsKey(iy))
-                                {
-                                    if (wv2Dictionary[iy].AllowDrop)
-                                    {
-                                        wv2Dictionary[iy].SetURL(webAddressBuilder.ScopeVideo(url).ScopeAddress);
-                                    }
-                                }
-                            }
-
-                        }
+                        wv2Dictionary[iy].SetURL(webAddressBuilder.ScopeVideo(url).ScopeAddress);
                     }
                 }
+            }
+
+        }
+    }
+}
             }
             catch (Exception ex)
             {
-                ex.LogWrite($"ProcessHTML {MethodBase.GetCurrentMethod()?.Name} {ex.Message} ");
-            }
+    ex.LogWrite($"ProcessHTML {MethodBase.GetCurrentMethod()?.Name} {ex.Message} ");
+}
         }
     }
 }

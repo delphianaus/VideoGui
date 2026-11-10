@@ -1,5 +1,9 @@
+using CustomComponents.ListBoxExtensions.models;
 using System;
+using System.Collections;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -34,7 +38,7 @@ namespace CustomComponents.ListBoxExtensions
             return new MultiListboxColumnDefinition().AsToggleButtonEx();
         }
 
-
+        
         public static MultiListboxColumnDefinition ComboBox()
         {
             return new MultiListboxColumnDefinition().AsComboBox();
@@ -49,7 +53,7 @@ namespace CustomComponents.ListBoxExtensions
         {
             return new MultiListboxColumnDefinition().AsTextBox();
         }
-
+        
         public static MultiListboxColumnDefinition Button()
         {
             return new MultiListboxColumnDefinition().AsButton();
@@ -90,7 +94,16 @@ namespace CustomComponents.ListBoxExtensions
             get => (bool)GetValue(SortableProperty);
             set => SetValue(SortableProperty, value);
         }
+        public bool IsSortActive
+        {
+            get => (bool)GetValue(IsSortActiveProperty);
+            set => SetValue(IsSortActiveProperty, value);
+        }
 
+        public static readonly DependencyProperty IsSortActiveProperty =
+            DependencyProperty.Register(nameof(IsSortActive),
+                typeof(bool), typeof(MultiListboxColumnDefinition),
+                new PropertyMetadata(true));
         public static readonly DependencyProperty SortableProperty =
             DependencyProperty.Register(nameof(Sortable),
                 typeof(bool), typeof(MultiListboxColumnDefinition),

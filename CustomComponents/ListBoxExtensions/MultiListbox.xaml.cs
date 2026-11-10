@@ -1,4 +1,5 @@
 using Accessibility;
+using CustomComponents.ListBoxExtensions.models;
 using System;
 using System.CodeDom;
 using System.Collections;
@@ -23,17 +24,17 @@ using System.Windows.Markup;
 using System.Windows.Media;
 using System.Windows.Threading;
 using ToggleClass;
+using Wpf.Ui.Controls;
 using Xceed.Wpf.Toolkit;
 using static CustomComponents.delegates;
 using static CustomComponents.Extensions;
 using static System.Net.Mime.MediaTypeNames;
+using Button = Wpf.Ui.Controls.Button;
 using Image = System.Windows.Controls.Image;
-using Wpf.Ui.Controls;
-using TimePicker = Wpf.Ui.Controls.TimePicker;
-using TextBox = Wpf.Ui.Controls.TextBox;
 using PasswordBox = Wpf.Ui.Controls.PasswordBox;
 using TextBlock = Wpf.Ui.Controls.TextBlock;
-using Button = Wpf.Ui.Controls.Button;
+using TextBox = Wpf.Ui.Controls.TextBox;
+using TimePicker = Wpf.Ui.Controls.TimePicker;
 
 
 namespace CustomComponents.ListBoxExtensions
@@ -81,6 +82,154 @@ namespace CustomComponents.ListBoxExtensions
         {
             get => (ObservableCollection<MultiListboxTemplate>)GetValue(TemplatesProperty);
             set => SetValue(TemplatesProperty, value);
+        }
+        public void UpdateHeight(double height)
+        {
+            try
+            {
+                Dispatcher.Invoke(new Action(() =>
+                {
+                    foreach (var item in lstBoxUploadItems.Items)
+                    {
+                        var container = lstBoxUploadItems.ItemContainerGenerator.ContainerFromItem(item) as ListBoxItem;
+                        if (container != null)
+                        {
+                            var border = VisualTreeHelper.GetChild(container, 0) as Border;
+                            if (border != null)
+                            {
+                                var contentPresenter = VisualTreeHelper.GetChild(border, 0) as ContentPresenter;
+                                if (contentPresenter != null)
+                                {
+                                    var grid = VisualTreeHelper.GetChild(contentPresenter, 0) as Grid;
+                                    if (grid != null && grid.Children.Count > 0)
+                                    {
+                                        var TextBlocks = grid.Children.OfType<TextBlock>();
+                                        foreach (var itemd in TextBlocks)
+                                        {
+                                            (itemd as TextBlock).Height = height;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }));
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error in UpdateHeight: {ex}");
+            }
+        }
+
+        public void UpdateFontSize(double fontSize)
+        {
+            try
+            {
+                Dispatcher.Invoke(new Action(() =>
+                {
+                    foreach (var item in lstBoxUploadItems.Items)
+                    {
+                        var container = lstBoxUploadItems.ItemContainerGenerator.ContainerFromItem(item) as ListBoxItem;
+                        if (container != null)
+                        {
+                            var border = VisualTreeHelper.GetChild(container, 0) as Border;
+                            if (border != null)
+                            {
+                                var contentPresenter = VisualTreeHelper.GetChild(border, 0) as ContentPresenter;
+                                if (contentPresenter != null)
+                                {
+                                    var grid = VisualTreeHelper.GetChild(contentPresenter, 0) as Grid;
+                                    if (grid != null && grid.Children.Count > 0)
+                                    {
+
+                                        var TextBlocks = grid.Children.OfType<TextBlock>();
+                                        foreach (var itemd in TextBlocks)
+                                        {
+                                            (itemd as TextBlock).FontSize = fontSize;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                }));
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error in UpdateFontSize: {ex}");
+            }
+        }
+        public Func<ListBoxBuilder> BuildColumnCollection
+        {
+            get => (Func<ListBoxBuilder>)GetValue(BuildColumnCollectionProperty);
+            set => SetValue(BuildColumnCollectionProperty, value);
+        }
+
+        public static readonly DependencyProperty BuildColumnCollectionProperty =
+              DependencyProperty.Register(
+                  nameof(BuildColumnCollection),
+                  typeof(Func<ListBoxBuilder>),
+                  typeof(MultiListbox),
+                  new PropertyMetadata(null, OnChangeAssignment));
+        private static void OnChangeAssignment(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            try
+            {
+                var control = (MultiListbox)d;
+                if (e.NewValue is Func<ListBoxBuilder> builder && builder.Invoke() is ListBoxBuilder lstFactory)
+                {
+                    control.ColumnDefinitions = new ObservableCollection<MultiListboxColumnDefinition>(lstFactory.Columns);
+                    control.ItemsSource = lstFactory.DataSource as IEnumerable;
+                    if (control.ItemsSource != null) control.SetMaxlstBoxWidth();
+                    bool ShowTitle = false;
+
+                    control.HeaderContextMenu = control.HeaderContextMenu ?? new ContextMenu();
+                    if (lstFactory.MenuItems_Title is not null)
+                    {
+                        foreach (var item in lstFactory.MenuItems_Title)
+                        {
+                            ShowTitle = true;
+                            control.HeaderContextMenu.Items.Add(item);
+                        }
+
+                        control.HeaderContextMenu.Visibility = ShowTitle ? Visibility.Visible : control.HeaderContextMenu.Visibility;
+
+                    }
+                    control.ItemsContextMenu = control.ItemsContextMenu ?? new ContextMenu();
+                    if (lstFactory.MenuItems_ListItems is not null)
+                    {
+                        foreach (var item in lstFactory.MenuItems_ListItems)
+                        {
+                            control.ItemsContextMenu.Items.Add(item);
+                            ShowTitle = true;
+                        }
+
+
+                        control.ItemsContextMenu.Visibility = ShowTitle ? Visibility.Visible : control.ItemsContextMenu.Visibility;
+
+                    }
+                    //control.FontSize = !double.IsNaN(lstFactory.FontSize) ? lstFactory.FontSize : control.FontSize;
+                    // control.ItemHeight = !double.IsNaN(lstFactory.ItemHeight) ? lstFactory.ItemHeight : control.ItemHeight;
+                    if (!double.IsNaN(lstFactory.ItemHeight))
+                    {
+                        control.UpdateHeight(lstFactory.ItemHeight);
+                    }
+                    if (!double.IsNaN(lstFactory.FontSize))
+                    {
+                        control.UpdateFontSize(lstFactory.FontSize);
+                    }
+
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error in OnChangeAssignment: {ex}");
+            }
+        }
+        public void SetMaxlstBoxWidth()
+        {
+            lstBoxUploadItems.MaxWidth = brdmain.Width - 5;
         }
         public VerticalAlignment ItemsVerticalAlignment
         {
