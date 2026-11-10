@@ -1,5 +1,8 @@
 using CliWrap;
 using CliWrap.EventStream;
+using CustomComponents.ListBoxExtensions;
+using CustomComponents.ListBoxExtensions.models;
+using CustomComponents;
 using FirebirdSql.Data.FirebirdClient;
 using FirebirdSql.Data.Isql;
 using Google.Apis.YouTube.v3.Data;
@@ -17,6 +20,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.DirectoryServices;
 using System.DirectoryServices.AccountManagement;
@@ -62,6 +66,7 @@ using VideoGui.Models;
 using VideoGui.Models.delegates;
 using Windows.UI.WebUI;
 using Windows.Web.UI.Interop;
+using Wpf.Ui.Controls;
 using static Microsoft.WindowsAPICodePack.Shell.PropertySystem.SystemProperties.System;
 using static System.Net.WebRequestMethods;
 using static System.Runtime.InteropServices.JavaScript.JSType;
@@ -69,6 +74,7 @@ using static System.Windows.Forms.AxHost;
 using static System.Windows.Forms.LinkLabel;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.ToolTip;
 using Application = System.Windows.Application;
 using Button = System.Windows.Controls.Button;
 using DataFormats = System.Windows.DataFormats;
@@ -83,7 +89,7 @@ using String = System.String;
 using Task = System.Threading.Tasks.Task;
 using WebView2 = Microsoft.Web.WebView2.Wpf.WebView2;
 using Window = System.Windows.Window;
-using Wpf.Ui.Controls;
+using static CustomComponents.ListBoxExtensions.MultiListboxColumnDefinition;
 
 namespace VideoGui
 {
@@ -115,17 +121,19 @@ namespace VideoGui
         int swap = 1, ct = 0, MaxNodes = -1, MaxUploads = 0, recs = 0, gmaxrecs = 0, files = 0, dbfiles = 0, max = 0, SlotsPerUpload = 0,
             ScheduleMax = 0, ts = 0, LastKey = -1, Days = 1, CurrentDay = 1, inserted = 0, WheelMove = 0;
         bool EditDone = false, btndone = false, ExitDialog = false, Waiting = false, IsVideoLookup = false, WaitingFileName = false;
-        bool Valid = false, IsVideoLookupShort = false, IsValid = false, IsUnlisted = false, IsDashboardMode = false, CanSpool = false, FirstRun = true, done = false, HasExited = false;
+        bool Valid = false, IsFilteredVideoCompletion = false, IsVideoLookupShort = false, IsValid = false, IsUnlisted = false, IsDashboardMode = false, CanSpool = false, FirstRun = true, done = false, HasExited = false;
         bool logginin = false, DoNextNode = true, finished = false, TimedOut = false, Uploading = false, NextRecord = false, Processing = false, clickupload = true;
         public bool IsClosing = false, IsClosed = false, Exceeded = false, KilledUploads = false, SwapEnabled = false, IsTitleEditor = false;
         public bool TaskHasCancelled = false, NewSession = false, QuotaExceeded = false, Errored = false;
 
-        string automation = "", user = "", SendKeysString = "", UploadPath = "", LastNode = "", DefaultUrl = "", LastValidFileName = "", TableDestination = "";
+        string automation = "", user = "", SendKeysString = "", UploadPath = "",
+         Filter = "", LastNode = "", DefaultUrl = "", LastValidFileName = "", TableDestination = "";
         List<ScraperUploads> Scraper_uploaded = new();
         List<string> IdNodes = new(), titles = new List<string>(), nextaddress = new(), Ids = new(), Idx = new(), ufiles = new(), Files = new();// DoneFiles = new();
         public List<string> ScheduledOk = new List<string>(), VideoFiles = new List<string>(), nodeslist = new List<string>();
         public List<ShortsDirectory> ShortsDirectoriesList = new(); // <shortname>
         public List<ListScheduleItems> listSchedules = new List<ListScheduleItems>();
+        public ObservableCollection<ScraperData> scrapeDataList = [];
         public List<VideoIdFileName> ScheduledFiles = new List<VideoIdFileName>();
         DispatcherTimer CloseTimer = new DispatcherTimer();
         DirectshortsScheduler directshortsScheduler = null;
@@ -304,7 +312,65 @@ namespace VideoGui
                 ex.LogWrite($"WebViewFileName_CoreWebView2InitializationCompleted {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
             }
         }
-        public ScraperModule(databasehook<object> _Invoker, OnFinishIdObj _OnFinish, string _Default_url, string _TargetUrl, int _EventId)
+
+
+        public ScraperModule(databasehook<object> _Invoker, OnFinishIdObj _OnFinish,
+                 string _FilterString)
+        {
+            try
+            {
+                ScraperType = EventTypes.FilteredVideoCompletion;
+                DoOnFinish = _OnFinish;
+                AutoClose = true;
+                EventId = -1;
+                Filter = _FilterString;
+                IsFilteredVideoCompletion = true;
+                IsDashboardMode = true;
+                Invoker = _Invoker;
+                InitializeComponent();
+                Closing += (s, e) =>
+                {
+                    TimerSimulate?.Stop();
+                    timer?.Stop();
+                    IsClosing = true;
+                    canceltoken.Cancel();
+                    cancelds();
+                    uploadedcnt = TotalScheduled;
+                    LocationTimer.Stop();
+                    TimerSimulate.Stop();
+                };
+                Closed += (s, e) =>
+                {
+                    IsClosed = true;
+                    DoOnFinish?.Invoke(this, EventId);
+                };
+                webAddressBuilder = new WebAddressBuilder(null, ReportNewAddress, "UCdMH7lMpKJRGbbszk5AUc7w");
+                wv2Dictionary.Add(1, wv2A1);//20
+             
+                wv2Dictionary.Add(2, wv2A2);//30
+                wv2Dictionary.Add(3, wv2A3);//40
+                wv2Dictionary.Add(4, wv2A4);//50
+                wv2Dictionary.Add(5, wv2A5);//60
+                wv2Dictionary.Add(6, wv2A6);//70
+                wv2Dictionary.Add(7, wv2A7);//80
+                wv2Dictionary.Add(8, wv2A8);//90
+                wv2Dictionary.Add(9, wv2A9);//100
+                wv2Dictionary.Add(10, wv2A10);
+                ActiveWebView.Add(1, wv2);
+                lblTotal.Content = "";
+                lblUploading.Content = "";
+                lblWaiting.Content = "";
+                lblUploaded.Content = "";
+                lblTotal.Content = "";
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"ScraperModule Filters {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
+        }
+
+        public ScraperModule(databasehook<object> _Invoker, OnFinishIdObj _OnFinish,
+          string _Default_url, string _TargetUrl, int _EventId)
         {
             try
             {
@@ -717,30 +783,27 @@ namespace VideoGui
             }
         }
 
-        private void DoNewVideoUpdate(string address)
+        private void DoNewVideoUpdate(string address, bool adf = false)
         {
             try
             {
-                while (true)
+
+                bool sent = false;
+                for (int i = 1; i <= wv2Dictionary.Count; i++)
                 {
-                    bool sent = false;
-                    for (int i = 0; i < wv2Dictionary.Count; i++)
+                    if (wv2Dictionary[i].AllowDrop)
                     {
-                        if (wv2Dictionary[i].AllowDrop)
-                        {
-                            Task.Run(() =>
-                            {
-                                wv2Dictionary[i].SetURL(webAddressBuilder.ScopeVideo(address).ScopeAddress);
-                            });
-                            sent = true;
-                            break;
-                        }
-                    }
-                    if (!sent)
-                    {
-                        nextaddress.Add(address);
+                        wv2Dictionary[i].SetURL(webAddressBuilder.ScopeVideo(address).ScopeAddress);
+
+                        sent = true;
+                        break;
                     }
                 }
+                if (!sent && nextaddress.IndexOf(address) == -1)
+                {
+                    nextaddress.Add(address);
+                }
+
             }
             catch (Exception ex)
             {
@@ -1696,6 +1759,61 @@ namespace VideoGui
                 ex.LogWrite($"SendKeys_Tick {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
+
+        private ListBoxBuilder ShortsScheduleDownloadColumnDefinitionsListBuilder()
+        {
+            try
+            {
+                var columns = new List<MultiListboxColumnDefinition>
+                {
+                    TextBlock().SetHeaderText("VideoId").SetName("VideoId").
+                      SetHeaderPadding(new Thickness(5,0,0,0)).
+                      SetHeaderMargin(new Thickness(5,0,0,0)).
+                      SetDataField(nameof(ScraperData.VideoId)).
+                      Hidden(),
+                    TextBlock().SetHeaderText("Video Title").SetHeaderFontSize(10.0).SetName("VideoTitle").
+                      SetDataField(nameof(DownloaderInformation.VideoTitle)).
+                      SetWidth(700),
+                    TextBlock().SetHeaderText("Length").SetName("Length").
+                      SetDataField(nameof(DownloaderInformation.Duration)).
+                      SetWidth(55),
+                   TextBlock().SetHeaderText("Status").SetName("Status").
+                      SetDataField(nameof(DownloaderInformation.Status)).
+                      SetWidth(80),
+                   ProgressBar().SetHeaderText("Progress").SetProgressBarMinimum(0).
+                      SetProgressBarMaximum(100).SetWidth(200).
+                      SetDataField(nameof(DownloaderInformation.Progress)).
+                      SetProgressBarForeground(Colors.Green),
+                   TextBlock().SetHeaderText("    Speed").SetName("SpeedTextBlock").
+                      SetDataField(nameof(DownloaderInformation.Speed)).
+                      SetWidth(80).SetHeaderMargin(new Thickness(10,0,0,0)).
+                      SetItemMargin(new Thickness(10,0,0,0))
+                };
+                List<object> ContextMenuItems = [];
+
+                MenuItem StopDownload = new MenuItem() { Header = "Stop This Download" };
+                StopDownload.Click += StopDownload_Click;
+                MenuItem RetryMenuItem = new MenuItem() { Header = "Retry This Download" };
+                RetryMenuItem.Click += RetryDownload_Click;
+                ContextMenuItems.Add(StopDownload);
+                ContextMenuItems.Add(RetryMenuItem);
+
+
+
+
+
+                DownloaderInfoList = [];
+                return new(DownloaderInfoList, columns, fontSize: 15, contextMenuItems: ContextMenuItems);
+
+
+
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"ColumnDefinitionsListBuilder {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+                return null;// TODO may change this
+            }
+        }
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             try
@@ -1714,7 +1832,7 @@ namespace VideoGui
                 Top = (Top != _top && _top != 0) ? _top : Top;
                 Width = (ActualWidth != _width && _width != 0) ? _width : Width;
                 Height = (ActualHeight != _height && _height != 0) ? _height : Height;
-                lstMain.Width = Width - 5;
+                msuVideos.Width = Width - 5;
                 var thick = new Thickness(0, 0, 0, 0);
                 thick.Left = Width - 190;
                 if (ScraperType == EventTypes.ShortsSchedule)
@@ -1722,6 +1840,7 @@ namespace VideoGui
                     lblUploadedText.Content = "Video : ";
                     lblUploadingText.Visibility = Visibility.Hidden;
                     lblWaitingtext.Visibility = Visibility.Hidden;
+                    msuVideos.BuildColumnCollection = ShortsScheduleDownloadColumnDefinitionsListBuilder;
                 }
                 if (ScraperType == EventTypes.VideoUpload)
                 {
@@ -1885,21 +2004,25 @@ namespace VideoGui
                 ex.LogWrite($"ProcessWV2Completed_ShortsScheduler {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
-        private bool DoNodeScrapeUpdate(string Id, string Title, string Desc, string FileName, string status, DateTime? dateTime)
+        private bool DoNodeScrapeUpdate(string Id, string Title, string Desc,
+           string FileName, string status, DateTime? dateTime, bool Scope = true)
         {
             try
             {
                 string t = $"{Title.Replace("\n", "").Replace("\r", "").Trim()} {Id}";
                 lstMain.Items.Insert(0, t);
-                string newtitle = Title.Replace("\n", "").Replace("\r", "").Trim();
-                var spliter = newtitle.Split(' ').ToList();
-                newtitle = string.Join(" ", spliter.Where(item => !item.StartsWith("#"))).Trim();
-                titles.Add(newtitle);
-                Ids.Insert(0, Id);
-                Invoker?.Invoke(this, new CustomParams_AddVideoInfo(null, VStatusType, Id, Title,
-                FileName, -1, false));
-                Id = (Id.Contains("webp/")) ? Id.Replace("webp/", "") : Id;
-                webAddressBuilder.ScopeVideo(Id, true);
+                if (Scope)
+                {
+                    string newtitle = Title.Replace("\n", "").Replace("\r", "").Trim();
+                    var spliter = newtitle.Split(' ').ToList();
+                    newtitle = string.Join(" ", spliter.Where(item => !item.StartsWith("#"))).Trim();
+                    titles.Add(newtitle);
+                    Ids.Insert(0, Id);
+                    Invoker?.Invoke(this, new CustomParams_AddVideoInfo(null, VStatusType, Id, Title,
+                    FileName, -1, false));
+                    Id = (Id.Contains("webp/")) ? Id.Replace("webp/", "") : Id;
+                    webAddressBuilder.ScopeVideo(Id, true);
+                }
                 return true;
             }
             catch (Exception ex)
@@ -2202,6 +2325,23 @@ namespace VideoGui
                                         Invoker?.Invoke(this, new CustomParams_ProcessTargets(Id, LinkedId, TitleStr, DescStr));
                                     }
                                 }
+                                else if (DoNextNode && Id != "" && ScraperType == EventTypes.FilteredVideoCompletion)
+                                {
+
+
+                                    Dispatcher.Invoke(() =>
+                                    {
+                                        if (!lstMain.Items.Contains($"{Id} "))
+                                        {
+                                            lstMain.Items.Insert(0, $"{Id} ");
+                                        }
+                                    });
+
+                                    DoNextNode = DoNodeScrapeUpdate(Id, TitleStr, DescStr, "",
+                                      StatusStr, dateTime, false);
+                                    DoNewVideoUpdate(Id);
+
+                                }
                                 else if (DoNextNode && Id != "" && ScraperType == EventTypes.ScapeSchedule)
                                 {
                                     Dispatcher.Invoke(() =>
@@ -2329,12 +2469,12 @@ namespace VideoGui
                                 }
                                 NextRecord = false;
                                 var webView = sender as WebView2;
-                                if (webView.CoreWebView2 != null && !canceltoken.IsCancellationRequested)
+                                if (!canceltoken.IsCancellationRequested)
                                 {
-                                    var task1 = webView.CoreWebView2.ExecuteScriptAsync("document.body.innerHTML");
+                                    var task1 = webView.ExecuteScriptAsync("document.body.innerHTML");
                                     task1.ContinueWith(x =>
                                     {
-                                        if (webView.CoreWebView2 != null && !canceltoken.IsCancellationRequested)
+                                        if (!canceltoken.IsCancellationRequested)
                                         {
                                             ProcessWV2Completed_ShortsScheduler(x.Result, sender);
                                         }
@@ -2614,6 +2754,7 @@ namespace VideoGui
                     {
                         if (ScraperType == EventTypes.ShortsSchedule ||
                             ScraperType == EventTypes.VideoLookup ||
+                            ScraperType == EventTypes.FilteredVideoCompletion ||
                             ScraperType == EventTypes.ScapeSchedule)
                         {
                             if (ehtml.Contains("Justin's Train Journey's"))
@@ -3010,14 +3151,14 @@ namespace VideoGui
                 }
                 if (sender is WebView2 webView2Instance)
                 {
-                    var task = webView2Instance.ExecuteScriptAsync("document.body.innerHTML");
+                    var html = await webView2Instance.ExecuteScriptAsync("document.body.innerHTML");
                     if (ScraperType != EventTypes.ShortsSchedule && ScraperType != EventTypes.ScapeSchedule)
                     {
-                        task.ContinueWith(x => { ProcessWV2Completed(x.Result, sender); }, TaskScheduler.FromCurrentSynchronizationContext());
+                        ProcessWV2Completed(html, sender);
                     }
                     else
                     {
-                        task.ContinueWith(x => { ProcessWV2Completed_ShortsScheduler(x.Result, sender); }, TaskScheduler.FromCurrentSynchronizationContext());
+                        ProcessWV2Completed_ShortsScheduler(html, sender);
                     }
                 }
             }
@@ -3037,8 +3178,8 @@ namespace VideoGui
                 }
                 if (sender is WebView2 webView2Instance)
                 {
-                    var task = webView2Instance.ExecuteScriptAsync("document.body.innerHTML");
-                    task.ContinueWith(x => { ProcessWV2(x.Result, sender); }, TaskScheduler.FromCurrentSynchronizationContext());
+                    var html = await webView2Instance.ExecuteScriptAsync("document.body.innerHTML");
+                    ProcessWV2(html, sender);
                 }
             }
             catch (Exception ex)
@@ -3068,6 +3209,160 @@ namespace VideoGui
                 ex.LogWrite($"ProcessWebView {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
             }
         }
+
+        private async Task<(bool, string, string)> LookUpTitleAndDesc(string filename)
+        {
+            try
+            {
+                if (filename is string fn && fn != "")
+                {
+                    string jtype = "Train", journey = "", strDate = "";
+                    List<string> TitleParts = fn.Split(" ").ToList();
+                    if (fn.ToLower().Contains(" part "))
+                    {
+                        int idx1 = TitleParts.FindIndex(p => p.ToLower() == "part");
+                        strDate = TitleParts[idx1 - 1];
+                        int idx2 = fn.IndexOf(strDate);
+                        if (idx2 != -1)
+                        {
+                            journey = fn.Substring(0, idx2).Replace("VLINE", "").Trim();
+                            if (journey.ToLower().StartsWith("steamrails"))
+                            {
+                                journey = journey.Replace("steamrails", "").Trim();
+                            }
+                            if (journey.ToLower().StartsWith("steamrail"))
+                            {
+                                journey = journey.Replace("steamrail", "").Trim();
+                            }
+                        }
+                        DateTime date = DateTime.ParseExact(strDate, "yyMMdd", CultureInfo.InvariantCulture);
+                        strDate = date.ToString("dd/MM/yy", CultureInfo.InvariantCulture);
+                    }
+                    List<string> tags = new();
+                    if (fn.ToLower().ContainsAny(["vline", "v/line"]))
+                    {
+                        tags.Add("V/LINE");
+                        jtype = "V/LINE";
+                    }
+                    List<string> TagsSeach = new() { "steamrail" };
+                    if (fn.ToLower().ContainsAny(["steamrail"]))
+                    {
+                        tags.AddRange(["Steamrail", "Heritage"]);
+                        jtype = "Steamrail";
+                    }
+                    bool Add = (tags.Count > 0);
+
+                    List<string> TagSearch = [  "Albury", "Ararat", "Bairnsdale", "Ballarat",
+                                    "Beaufort","Benalla","Bendigo", "Birregurra", "Broadford",
+                                    "Camperdown","Castlemaine","Chewton", "Clunes", "Colac", "Creswick",
+                                    "Dingee", "Donnybrook", "Drouin", "Echuca", "Elmore", "Euroa",
+                                    "Gisborne", "Goornong", "Gisborne", "Heathcote Junction", "Kangaroo Flat",
+                                    "Kilmore East", "Kyneton", "Lara", "Longwarry", "Macedon", "Malmsbury",
+                                    "Marona", "Marshall", "Maryborough","Melton", "Mooroopna", "Moe",
+                                    "Morwell", "Murchison East", "Nagambie", "Newstead", "North Geelong",
+                                    "North Shore", "Pyalong", "Raywood", "Riddells Creek",
+                                    "Rochester", "Rosedale", "Sale", "Seymour", "Shepparton", "South Geelong",
+                                    "Stratford","Sunbury", "Swan Hill", "Swanhill","Tallarook", "Talbot", "Tatura",
+                                    "Terang", "Trafalgar", "Traralgon", "Wandong", "Wangaratta","Warrnambool",
+                                    "Waurn Ponds", "Wallan","Winchelsea",  "Wodonga", "Woodend",  "Yarragon"];
+
+                    foreach (string Tag in TagSearch)
+                    {
+                        string tt = $" {Tag}";
+                        if (journey.ToLower().Contains(tt.ToLower()))
+                        {
+                            int ind = journey.ToLower().IndexOf(tt.ToLower());
+                            string pt = journey.Substring(0, ind).Trim() + " " + Tag;
+                            if (pt.Length == journey.Length)
+                            {
+                                journey = pt;
+                            }
+                        }
+                    }
+                    foreach (string Tag in TagSearch)
+                    {
+                        string tt2 = $"{Tag} ";
+                        if (journey.ToLower().Contains(tt2.ToLower()))
+                        {
+                            int ind = journey.ToLower().IndexOf(tt2.ToLower());
+                            string pt2 = journey.Substring(0, ind).Trim() + Tag + " ";
+                            if (pt2.Length == journey.Length)
+                            {
+                                journey = pt2;
+                            }
+                            else
+                            {
+                                pt2 += journey.Substring(ind + tt2.Length).Trim();
+                                journey = pt2;
+                            }
+                        }
+                    }
+
+                    foreach (string tag in TagSearch)
+                    {
+                        if (fn.ToLower().Contains(tag.ToLower()) || fn.ToLower().Contains(tag.ToLower().Replace(" ", "")))
+                        {
+                            if (tag.Contains(' '))
+                            {
+                                string t = tag.Replace(" ", "");
+                                if (tags.IndexOf(t) != -1)
+                                {
+                                    tags.Add(t);
+                                }
+                            }
+                            else
+                            {
+                                tags.Add(tag);
+                            }
+                        }
+                    }
+
+                    if (Add)
+                    {
+                        tags.AddRange(["trains", "travel", "railway", "windowview"]);
+                    }
+                    int idx = fn.ToLower().IndexOf(journey.ToLower());
+                    if (idx != -1)
+                    {
+                        string a = fn.Substring(0, idx) + journey;
+                        string b = fn.Substring(idx + journey.Length);
+                        fn = a + b;
+                    }
+                    string newtitle = fn;
+                    while (true)
+                    {
+                        foreach (string tag in tags)
+                        {
+                            string titleTag = $" #{tag.Replace(@"/", "")}";
+                            if ((newtitle + titleTag).Length > 100) break;
+                            newtitle += titleTag;
+                        }
+                        break;
+                    }
+
+                    string newdesc = $"{jtype} Journey from {journey.ToPascalCase()} filmed by Justin's Train Journeys on {strDate}" + Environment.NewLine +
+                      Environment.NewLine +
+                      "Enjoy a continuous window view experience capturing the full" +
+                      " trip as the train travels through regional Victoria." + Environment.NewLine + Environment.NewLine +
+                      "This video focuses on the scenery and ride itself, with " +
+                      "station stops and interruptions removed where possible for a " +
+                      "smoother viewing experience." + Environment.NewLine + Environment.NewLine +
+                      "🎥 Filmed in 4K for the best quality — sit back and enjoy the ride." + Environment.NewLine + Environment.NewLine +
+                      "If you enjoy this content, consider liking and subscribing for more rail " +
+                      "journeys across Victoria and beyond." + Environment.NewLine + Environment.NewLine +
+                      "Full Video's Are On Patreon @ https://www.patreon.com/join/JustinsTrainJourneys";
+
+                    return (true, newtitle, newdesc);
+                }
+                return (false, "", "");
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"LookUpTitleAndDesc {MethodBase.GetCurrentMethod().Name} {ex.Message} {this}");
+                return (false, "", "");
+            }
+        }
+
         private void ProcessHTML_Filename(string html, int id, string IntId, object sender)
         {
             try
@@ -3086,8 +3381,11 @@ namespace VideoGui
                             var node = doc.DocumentNode.SelectSingleNode("//div[@id='original-filename']");
                             filename = (node is not null) ? node.InnerText : filename;
 
+                            if (ScraperType == EventTypes.FilteredVideoCompletion)
+                            {
 
-                            if (filename.Contains("_") && IsVideoLookup && ScraperType == EventTypes.ShortsSchedule)
+                            }
+                            else if (filename.Contains("_") && IsVideoLookup && ScraperType == EventTypes.ShortsSchedule)
                             {
                                 string idp = filename.Split("_").ToArray<string>().ToList().LastOrDefault().Trim();
                                 if (idp is not null && idp != "")
@@ -3292,20 +3590,11 @@ namespace VideoGui
                 if (canceltoken.IsCancellationRequested) return;
                 if ((e is not null && e.IsSuccess) || e is null)
                 {
-                    NextRecord = false;
-
                     if (sender is WebView2 webView2Instance)
                     {
-                        string Urlx = webView2Instance.Source.ToString();
-                        if (Urlx is not null)
-                        {
-
-                        }
+                        var html = await webView2Instance.ExecuteScriptAsync("document.body.innerHTML");
+                        ProcessWV2Completed_ShortsScheduler(html, sender);
                     }
-                    var task = (sender as WebView2).CoreWebView2.ExecuteScriptAsync("document.body.innerHTML");
-
-                    task.ContinueWith(x => { ProcessWV2Completed_ShortsScheduler(x.Result, sender); }, TaskScheduler.FromCurrentSynchronizationContext());
-
                 }
             }
             catch (Exception ex)
@@ -3313,7 +3602,7 @@ namespace VideoGui
                 ex.LogWrite($"wv2_NavigationCompleted {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
- 
+
         async void NextTask()
         {
             try
@@ -3644,6 +3933,15 @@ namespace VideoGui
                             directshortsScheduler.connectionString = connectionStr;
                         }
                         IsVideoLookup = true;
+                        if (ScraperType == EventTypes.FilteredVideoCompletion)
+                        {
+                            DefaultUrl = webAddressBuilder.AddFiltersByDRAFT_UNLISTED(false).
+                             AddFilterByDesc(Filter).Finalize().Address;
+                            ActiveWebView[1].NavigationCompleted += wv2v_NavigationCompleted;
+                            ActiveWebView[1].ZoomFactor = 0.9;
+                            ActiveWebView[1].Source = new Uri(DefaultUrl);
+                            return true;
+                        }
                         if (ScraperType == EventTypes.ScapeSchedule)
                         {
                             bool ready = true;
@@ -3660,11 +3958,12 @@ namespace VideoGui
                         if (DefaultUrl is not null && DefaultUrl != "")
                         {
                             ActiveWebView[1].ZoomFactor = 0.6;
-                            if (ScraperType != EventTypes.VideoUpload && ScraperType != EventTypes.AutomatedUploadSchedule)
+                            if (ScraperType != EventTypes.VideoUpload)
                             {
                                 ActiveWebView[1].NavigationCompleted += wv2v_NavigationCompleted;
                             }
-                            if (ScraperType == EventTypes.VideoUpload || ScraperType == EventTypes.AutomatedUploadSchedule) clickupload = true;
+                            if (ScraperType == EventTypes.VideoUpload ||
+                                ScraperType == EventTypes.AutomatedUploadSchedule) clickupload = true;
                             ActiveWebView[1].Source = new Uri(DefaultUrl);
                             return true;
                         }
@@ -4130,15 +4429,16 @@ namespace VideoGui
                     if (e.WidthChanged)
                     {
                         brdmain.Width = e.NewSize.Width - 8;
+                        brdmainA1.Width = brdmain.Width;
+                        wv2A1.Width = brdmainA1.Width;
                         ActiveWebView[1].Width = brdmain.Width - 22;
 
                         StatusBar.Width = e.NewSize.Width - 1;
                     }
                     if (e.HeightChanged)
                     {
-                        // Main Height = 450 - 32 - 280;
-                        brdmain.Height = e.NewSize.Height - 230;
-                        brdInfo.Height = e.NewSize.Height - brdmain.Height - 80;
+                        brdmain.Height = e.NewSize.Height - 230;/// was 230
+                        brdInfo.Height = 150;
                         ActiveWebView[1].Height = brdmain.Height - 18;
                     }
                     RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
@@ -4872,6 +5172,141 @@ namespace VideoGui
         }
 
         bool AutoClosedReboot = false;
+
+        public async Task<bool> UpdateVideo(string Id, string filename, object sender, int wv2Id)
+        {
+            try
+            {
+                bool ok = false;
+                string NewTitle = "", NewDesc = "";
+                if (filename is string ss && ss != "" && sender is WebView2 wv2)
+                {
+                    (ok, NewTitle, NewDesc) =
+                      LookUpTitleAndDesc(Path.GetFileNameWithoutExtension(ss)).GetAwaiter().GetResult();
+                    if (ok)
+                    {
+                        string html = "";
+
+                        string script1 = $$"""
+(function() {
+    const el = document.querySelector('div#textbox[aria-required="true"][aria-label^="Add a title that describes your video (type @ to mention a channel)"]');
+    if (!el) return 'Not found';
+    
+    el.innerText = `{{NewTitle}}`;
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+    
+    const events = ['keydown', 'keypress', 'keyup'];
+    events.forEach(type => {
+        el.dispatchEvent(new KeyboardEvent(type, { 
+            key: 'Enter', 
+            code: 'Enter', 
+            keyCode: 13, 
+            which: 13, 
+            bubbles: true 
+        }));
+    });
+    
+    return 'Done';
+})();
+""";
+
+                        string script2 = $$"""
+(function() {
+    const el = document.querySelector('div#textbox[aria-required="false"][aria-label^="Tell viewers about your video"]');
+    if (!el) return 'Not found';
+    
+    el.innerText = `{{NewDesc}}`;
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+    
+    const events = ['keydown', 'keypress', 'keyup'];
+    events.forEach(type => {
+        el.dispatchEvent(new KeyboardEvent(type, { 
+            key: 'Enter', 
+            code: 'Enter', 
+            keyCode: 13, 
+            which: 13, 
+            bubbles: true 
+        }));
+    });
+    
+    return 'Done';
+})();
+""";
+
+                        while (true)
+                        {
+
+                            html = Regex.Unescape(await wv2.ExecuteScriptAsync("document.body.innerHTML"));
+                            if (html.Contains("Title (required)"))
+                            {
+                                var r = await wv2.ExecuteScriptAsync(script1);
+                                var result = await wv2.ExecuteScriptAsync(script2);
+                                break;
+                            }
+                        }
+                        html = "";
+                        string savebtn = "save";
+                        await wv2.ExecuteScriptAsync($"document.getElementById('{savebtn}').click();");
+
+                        while (true)
+                        {
+                            html = Regex.Unescape(await wv2.ExecuteScriptAsync("document.body.innerHTML"));
+                            if (html.Contains("Changes saved"))
+                            {
+                                Task.Delay(200);
+                                break;
+                            }
+                        }
+                        savebtn = "Close";
+                        await wv2.ExecuteScriptAsync($"document.getElementById('{savebtn}').click();");
+                        Task.Delay(1200);
+                        wv2Dictionary[wv2Id].AllowDrop = true;
+                        if (nextaddress.Count > 0)
+                        {
+                            int Avaialble = 0;
+                            if (wv2A1.AllowDrop) Avaialble++;
+                            if (wv2A2.AllowDrop) Avaialble++;
+                            if (wv2A3.AllowDrop) Avaialble++;
+                            if (wv2A4.AllowDrop) Avaialble++;
+                            if (wv2A5.AllowDrop) Avaialble++;
+                            if (wv2A6.AllowDrop) Avaialble++;
+                            /*if (wv2A7.AllowDrop) Avaialble++;
+                            if (wv2A8.AllowDrop) Avaialble++;
+                            if (wv2A9.AllowDrop) Avaialble++;
+                            if (wv2A10.AllowDrop) Avaialble++;*/
+                            for (int ix = 0; ix < Avaialble; ix++)
+                            {
+                                if (nextaddress.Count > 0)
+                                {
+                                    string url = nextaddress[0];
+                                    nextaddress.RemoveAt(0);
+                                    for (int iy = 1; iy < 7; iy++)
+                                    {
+                                        if (wv2Dictionary.ContainsKey(iy))
+                                        {
+                                            if (wv2Dictionary[iy].AllowDrop)
+                                            {
+                                                wv2Dictionary[iy].SetURL(webAddressBuilder.ScopeVideo(url).ScopeAddress);
+                                            }
+                                        }
+                                    }
+
+                                }
+                            }
+                        }
+                    }
+                    return true;
+                }
+                else return false;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"UpdateVideo {MethodBase.GetCurrentMethod()?.Name} {ex.Message} ");
+                return false;
+            }
+        }
+
+        bool hlt = false;
         public void ProcessHTML(string html, int id, string IntId, object sender)
         {
             try
@@ -4890,8 +5325,11 @@ namespace VideoGui
                             doc.LoadHtml(ehtml);
                             var node = doc.DocumentNode.SelectSingleNode("//div[@id='original-filename']");
                             filename = (node is not null) ? node.InnerText : filename;
-
-                            if (filename.Contains("_") && IsVideoLookup && ScraperType == EventTypes.UploadTest)
+                            if (ScraperType == EventTypes.FilteredVideoCompletion)
+                            {
+                                UpdateVideo(IntId, filename, sender, id);
+                            }
+                            else if (filename.Contains("_") && IsVideoLookup && ScraperType == EventTypes.UploadTest)
                             {
                                 string idp = filename.Split("_").ToArray<string>().ToList().LastOrDefault().Trim();
                                 if (idp is not null && idp != "")
@@ -5055,6 +5493,8 @@ namespace VideoGui
 
                 }
                 CanSpool = true;
+
+                if (Filter != "") return;
                 if (nextaddress.Count > 0)
                 {
                     int Avaialble = 0;

@@ -608,7 +608,7 @@ namespace VideoGui
                         var o = NetworkInterface.GetAllNetworkInterfaces();
                         foreach (var ni in o)
                         {
-                            if (ni.Name.StartsWith("Wi-Fi") && ni.OperationalStatus == OperationalStatus.Up)
+                            if (ni.Name.StartsWith("MainWifi") && ni.OperationalStatus == OperationalStatus.Up)
                             {
                                 return;
                             }
@@ -616,11 +616,13 @@ namespace VideoGui
                     }
                 }
 
+
                 connectwifi().ConfigureAwait(true);
+                _timer.Change(5000, 15000);
             }
             catch (Exception ex)
             {
-                ex.LogWrite($"Run Task {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+                ex.LogWrite($"Run Task Wifi {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
 
@@ -629,7 +631,7 @@ namespace VideoGui
             try
             {
                 var pwd = GetEncryptedString(new int[] { 148, 51, 68, 16, 242, 210, 193, 112, 160, 78, 42, 235, 216, 141, 29, 33, 108 }.Select(i => (byte)i).ToArray());
-                return await ConnectToWiFiNetwork(pwd, "Wi-Fi");
+                return await ConnectToWiFiNetwork(pwd, "MainWifi");
             }
             catch (Exception ex)
             {

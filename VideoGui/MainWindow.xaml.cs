@@ -4470,7 +4470,7 @@ namespace VideoGui
                 return new MemoryStream();
             }
         }
-        
+
         private void OnTargetsClose(object ThisForm)
         {
             try
@@ -12244,11 +12244,49 @@ namespace VideoGui
 
         }
 
-        private void BtnScan_Click(object sender, RoutedEventArgs e)
+        private void btnFillDraftOrUnlistedVideos_Click(object sender, RoutedEventArgs e)
         {
-            var ThemeExtractors = new TestListboxResizer();
-            ThemeExtractors.Show();
+            try
+            {
+                WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
+                string gUrl = webAddressBuilder.Dashboard().Address;
+                RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                string uploadsnumber = key.GetValueStr("UploadNumber", "5");
+                string MaxUploads = key.GetValueStr("MaxUploads", "100");
+                key?.Close();
+
+                var __scraperModule = new ScraperModule(InvokerHandler<object>,
+                _FilterScrapeFinish, "template");
+                Hide();
+                __scraperModule.ShowActivated = true;
+                __scraperModule.Show();
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"btnFillDraftOrUnlistedVideos_Click {this} {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+            }
         }
+
+        private void _FilterScrapeFinish(object ThisForm, int id)
+        {
+
+            try
+            {
+                try
+                {
+
+                }
+                catch (Exception ex)
+                {
+                    ex.LogWrite($"_FilterScrapeFinish {this} {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+                }
+            }
+            finally
+            {
+                Show();
+            }
+        }
+
         private void BtnScan_Click1(object sender, RoutedEventArgs e)
         {
             try

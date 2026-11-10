@@ -3,12 +3,12 @@ using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
-using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using Xceed.Wpf.Toolkit;
 using Xceed.Wpf.Toolkit.Primitives;
+using Xceed.Wpf.Toolkit.PropertyGrid.Converters;
 using static CustomComponents.delegates;
 
 namespace CustomComponents.ListBoxExtensions
@@ -29,6 +29,37 @@ namespace CustomComponents.ListBoxExtensions
         {
         }
 
+        public static MultiListboxColumnDefinition ButtonEx()
+        {
+            return new MultiListboxColumnDefinition().AsToggleButtonEx();
+        }
+
+
+        public static MultiListboxColumnDefinition ComboBox()
+        {
+            return new MultiListboxColumnDefinition().AsComboBox();
+        }
+
+        public static MultiListboxColumnDefinition TextBlock()
+        {
+            return new MultiListboxColumnDefinition().AsTextBlock();
+        }
+
+        public static MultiListboxColumnDefinition TextBox()
+        {
+            return new MultiListboxColumnDefinition().AsTextBox();
+        }
+
+        public static MultiListboxColumnDefinition Button()
+        {
+            return new MultiListboxColumnDefinition().AsButton();
+        }
+
+        public static MultiListboxColumnDefinition ProgressBar()
+        {
+            return new MultiListboxColumnDefinition().AsProgressBar();
+        }
+
         public string HeaderText
         {
             get => (string)GetValue(HeaderTextProperty);
@@ -39,8 +70,53 @@ namespace CustomComponents.ListBoxExtensions
             DependencyProperty.Register(nameof(HeaderText),
                 typeof(string), typeof(MultiListboxColumnDefinition),
                 new PropertyMetadata(string.Empty));
+        private SortChangedHandler _SortChange;
+        public event SortChangedHandler SortChange
+        {
+            add { _SortChange += value; }
+            remove { _SortChange -= value; }
+        }
+        protected virtual void OnSortChange(object sender, bool e)
+        {
+            _SortChange?.Invoke(sender, e);
+        }
+        internal void RaiseSortChange(object sender, bool e)
+        {
+            OnSortChange(sender, e);
+        }
+
+        public bool Sortable
+        {
+            get => (bool)GetValue(SortableProperty);
+            set => SetValue(SortableProperty, value);
+        }
+
+        public static readonly DependencyProperty SortableProperty =
+            DependencyProperty.Register(nameof(Sortable),
+                typeof(bool), typeof(MultiListboxColumnDefinition),
+                new PropertyMetadata(false));
+
+        public bool SortDirection
+        {
+            get => (bool)GetValue(SortDirectionProperty);
+            set => SetValue(SortDirectionProperty, value);
+        }
+        public TextAlignment ItemTextAlignment
+        {
+            get => (TextAlignment)GetValue(ItemTextAlignmentProperty);
+            set => SetValue(ItemTextAlignmentProperty, value);
+        }
+        public static readonly DependencyProperty ItemTextAlignmentProperty =
+            DependencyProperty.Register(nameof(ItemTextAlignmentProperty), typeof(TextAlignment),
+                typeof(MultiListboxColumnDefinition),
+                new PropertyMetadata(TextAlignment.Left));
 
 
+
+        public static readonly DependencyProperty SortDirectionProperty =
+            DependencyProperty.Register(nameof(SortDirection),
+                typeof(bool), typeof(MultiListboxColumnDefinition),
+                new PropertyMetadata(true));
         public double HeaderWidth
         {
             get => (double)GetValue(HeaderWidthProperty);
@@ -85,47 +161,7 @@ namespace CustomComponents.ListBoxExtensions
                 }
             }
         }
-        public string Name
-        {
-            get => (string)GetValue(NameProperty);
-            set => SetValue(NameProperty, value);
-        }
 
-        public static readonly DependencyProperty NameProperty =
-            DependencyProperty.Register(nameof(Name), typeof(string),
-                typeof(MultiListboxColumnDefinition),
-                new PropertyMetadata(""));
-        public SolidColorBrush ProgressBarForeground
-        {
-            get => (SolidColorBrush)GetValue(ProgressBarForegroundProperty);
-            set => SetValue(ProgressBarForegroundProperty, value);
-        }
-        public static readonly DependencyProperty ProgressBarForegroundProperty =
-            DependencyProperty.Register(nameof(ProgressBarForeground),
-                typeof(SolidColorBrush), typeof(MultiListboxColumnDefinition),
-                new PropertyMetadata(Brushes.Green));
-
-        public double ProgressBarMinimum
-        {
-            get => (double)GetValue(ProgressBarMinimumProperty);
-            set => SetValue(ProgressBarMinimumProperty, value);
-        }
-
-        public static readonly DependencyProperty ProgressBarMinimumProperty =
-            DependencyProperty.Register(nameof(ProgressBarMinimum),
-                typeof(double), typeof(MultiListboxColumnDefinition),
-                new PropertyMetadata(0.0));
-
-        public double ProgressBarMaximum
-        {
-            get => (double)GetValue(ProgressBarMaximumProperty);
-            set => SetValue(ProgressBarMaximumProperty, value);
-        }
-
-        public static readonly DependencyProperty ProgressBarMaximumProperty =
-            DependencyProperty.Register(nameof(ProgressBarMaximum),
-                typeof(double), typeof(MultiListboxColumnDefinition),
-                new PropertyMetadata(100.0));
         public double Height
         {
             get => (double)GetValue(HeightProperty);
@@ -164,6 +200,8 @@ namespace CustomComponents.ListBoxExtensions
             get => (Thickness)GetValue(ItemMarginProperty);
             set => SetValue(ItemMarginProperty, value);
         }
+
+
         public static readonly DependencyProperty ItemMarginProperty =
             DependencyProperty.Register(nameof(ItemMargin), typeof(Thickness),
                 typeof(MultiListboxColumnDefinition),
@@ -194,6 +232,18 @@ namespace CustomComponents.ListBoxExtensions
             DependencyProperty.Register(nameof(FontWeight), typeof(string),
                 typeof(MultiListboxColumnDefinition),
                 new PropertyMetadata(""));
+
+        public string Name
+        {
+            get => (string)GetValue(NameProperty);
+            set => SetValue(NameProperty, value);
+        }
+        public static readonly DependencyProperty NameProperty =
+            DependencyProperty.Register(nameof(Name), typeof(string),
+                typeof(MultiListboxColumnDefinition),
+                new PropertyMetadata(""));
+
+
         public string Foreground
         {
             get => (string)GetValue(ForegroundProperty);
@@ -212,6 +262,7 @@ namespace CustomComponents.ListBoxExtensions
             DependencyProperty.Register(nameof(ItemHorizontalAlignment), typeof(HorizontalAlignment),
                 typeof(MultiListboxColumnDefinition),
                 new PropertyMetadata(HorizontalAlignment.Left));
+
         public double MinWidth
         {
             get => (double)GetValue(MinWidthProperty);
@@ -221,6 +272,39 @@ namespace CustomComponents.ListBoxExtensions
             DependencyProperty.Register(nameof(MinWidth),
                 typeof(double), typeof(MultiListboxColumnDefinition),
                 new PropertyMetadata(double.NaN));
+
+        public SolidColorBrush ProgressBarForeground
+        {
+            get => (SolidColorBrush)GetValue(ProgressBarForegroundProperty);
+            set => SetValue(ProgressBarForegroundProperty, value);
+        }
+        public static readonly DependencyProperty ProgressBarForegroundProperty =
+            DependencyProperty.Register(nameof(ProgressBarForeground),
+                typeof(SolidColorBrush), typeof(MultiListboxColumnDefinition),
+                new PropertyMetadata(Brushes.Green));
+
+        public double ProgressBarMinimum
+        {
+            get => (double)GetValue(ProgressBarMinimumProperty);
+            set => SetValue(ProgressBarMinimumProperty, value);
+        }
+
+        public static readonly DependencyProperty ProgressBarMinimumProperty =
+            DependencyProperty.Register(nameof(ProgressBarMinimum),
+                typeof(double), typeof(MultiListboxColumnDefinition),
+                new PropertyMetadata(0.0));
+
+        public double ProgressBarMaximum
+        {
+            get => (double)GetValue(ProgressBarMaximumProperty);
+            set => SetValue(ProgressBarMaximumProperty, value);
+        }
+
+        public static readonly DependencyProperty ProgressBarMaximumProperty =
+            DependencyProperty.Register(nameof(ProgressBarMaximum),
+                typeof(double), typeof(MultiListboxColumnDefinition),
+                new PropertyMetadata(100.0));
+
         public double MinHeight
         {
             get => (double)GetValue(MinHeightProperty);
@@ -279,19 +363,6 @@ namespace CustomComponents.ListBoxExtensions
             DependencyProperty.Register(nameof(TextualFontSizeBindingProperty), typeof(string),
                 typeof(MultiListboxColumnDefinition),
                 new PropertyMetadata(string.Empty));
-        
-
-        public TextAlignment ItemTextAlignment
-        {
-            get => (TextAlignment)GetValue(ItemTextAlignmentProperty);
-            set => SetValue(ItemTextAlignmentProperty, value);
-        }
-        public static readonly DependencyProperty ItemTextAlignmentProperty =
-            DependencyProperty.Register(nameof(ItemTextAlignmentProperty), typeof(TextAlignment),
-                typeof(MultiListboxColumnDefinition),
-                new PropertyMetadata(TextAlignment.Left));
-
-
 
 
         public string ContentHorizontalAlignmentBinding
@@ -390,7 +461,15 @@ namespace CustomComponents.ListBoxExtensions
         public static readonly DependencyProperty HeaderMarginProperty =
             DependencyProperty.Register(nameof(HeaderMargin),
                 typeof(Thickness), typeof(MultiListboxColumnDefinition),
-                new PropertyMetadata(new Thickness(0)));
+                new PropertyMetadata(new Thickness(0), OnHeaderMarginChange));
+
+        private static void OnHeaderMarginChange(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is MultiListboxColumnDefinition colDef)
+            {
+                colDef.HeaderMargin = (Thickness)e.NewValue;
+            }
+        }
 
         public static readonly DependencyProperty HeaderHorizontalAlignmentProperty =
             DependencyProperty.Register(nameof(HeaderHorizontalAlignment), typeof(HorizontalAlignment), typeof(MultiListboxColumnDefinition),
@@ -416,51 +495,50 @@ namespace CustomComponents.ListBoxExtensions
         public static readonly DependencyProperty HeaderPaddingProperty =
             DependencyProperty.Register(nameof(HeaderPadding),
                 typeof(Thickness), typeof(MultiListboxColumnDefinition),
-                new PropertyMetadata(new Thickness(0)));
+                new PropertyMetadata(new Thickness(0), OnHeaderPaddingChange));
 
+        private static void OnHeaderPaddingChange(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is MultiListboxColumnDefinition colDef)
+            {
+                colDef.HeaderPadding = (Thickness)e.NewValue;
+            }
+        }
+
+
+
+
+        public double HeaderFontSize
+        {
+            get => (double)GetValue(HeaderFontSizeProperty);
+            set => SetValue(HeaderFontSizeProperty, value);
+        }
+
+        public static readonly DependencyProperty HeaderFontSizeProperty =
+            DependencyProperty.Register(nameof(HeaderFontSize),
+                typeof(double), typeof(MultiListboxColumnDefinition),
+                new PropertyMetadata(12.0, OnHeaderFontSizeChange));
+
+        private static void OnHeaderFontSizeChange(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is MultiListboxColumnDefinition colDef)
+            {
+                colDef.HeaderFontSize = (double)e.NewValue;
+            }
+        }
         public Thickness HeaderPadding
         {
             get => (Thickness)GetValue(HeaderPaddingProperty);
             set => SetValue(HeaderPaddingProperty, value);
         }
 
+
+
         public static readonly DependencyProperty UseStyleDimensionsProperty =
-                    DependencyProperty.Register(nameof(UseStyleDimensions),
-                        typeof(bool), typeof(MultiListboxColumnDefinition),
-                        new PropertyMetadata(true));
-
-        public bool Sortable
-        {
-            get => (bool)GetValue(SortableProperty);
-            set => SetValue(SortableProperty, value);
-        }
-
-        public static readonly DependencyProperty SortableProperty =
-            DependencyProperty.Register(nameof(Sortable),
-                typeof(bool), typeof(MultiListboxColumnDefinition),
-                new PropertyMetadata(false));
-
-        public bool SortDirection
-        {
-            get => (bool)GetValue(SortDirectionProperty);
-            set => SetValue(SortDirectionProperty, value);
-        }
-
-        public static readonly DependencyProperty SortDirectionProperty =
-            DependencyProperty.Register(nameof(SortDirection),
+            DependencyProperty.Register(nameof(UseStyleDimensions),
                 typeof(bool), typeof(MultiListboxColumnDefinition),
                 new PropertyMetadata(true));
 
-        public bool IsSortActive
-        {
-            get => (bool)GetValue(IsSortActiveProperty);
-            set => SetValue(IsSortActiveProperty, value);
-        }
-
-        public static readonly DependencyProperty IsSortActiveProperty =
-            DependencyProperty.Register(nameof(IsSortActive),
-                typeof(bool), typeof(MultiListboxColumnDefinition),
-                new PropertyMetadata(true));
         public bool UseStyleDimensions
         {
             get => (bool)GetValue(UseStyleDimensionsProperty);
@@ -694,7 +772,7 @@ namespace CustomComponents.ListBoxExtensions
 
 
         // EVENTS
-      
+
 
         private RoutedEventHandler _Click;
         public event RoutedEventHandler Click
@@ -713,39 +791,24 @@ namespace CustomComponents.ListBoxExtensions
             OnClick(sender, e);
         }
 
-        private SortChangedHandler _SortChange;
-        public event SortChangedHandler SortChange
-        {
-            add { _SortChange += value; }
-            remove { _SortChange-= value; }
-        }
-        protected virtual void OnSortChange(object sender, bool e)
-        {
-            _SortChange?.Invoke(sender, e);
-        }   
-        internal void RaiseSortChange(object sender, bool e)
-        {
-            OnSortChange(sender, e);
-        }
-
 
         // DropDownClosed
         private EventHandler _DropDownClosed;
         public event EventHandler DropDownClosed
         {
             add { _DropDownClosed += value; }
-            remove { _DropDownClosed-= value; }
+            remove { _DropDownClosed -= value; }
         }
         protected virtual void OnDropDownClosed(object sender, EventArgs e)
         {
 
             _DropDownClosed?.Invoke(sender, e);
-           
+
         }
         internal void RaiseDropDownClosed(object sender, EventArgs e)
         {
             OnDropDownClosed(sender, e);
-           
+
         }
 
 
@@ -840,7 +903,7 @@ namespace CustomComponents.ListBoxExtensions
         {
             _Initialized?.Invoke(sender, e);
         }
-        internal void       InitializedEvent(object sender, EventArgs e)
+        internal void InitializedEvent(object sender, EventArgs e)
         {
             OnInitialized(sender, e);
         }

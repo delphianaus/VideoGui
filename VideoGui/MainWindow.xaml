@@ -134,8 +134,8 @@
               Click="btnShortsCreator_Click" Margin="684,0,0,102"/>
             <Button x:Name="btnThumbnails" Content="Thumbnails Editor" Height="26" 
                Margin="113,0,0,102" VerticalAlignment="Bottom" Click="btnThumbNails_Click" Width="118"/>
-            <Button x:Name="BtnScan" Content="Scanner" 
-              Height="26" VerticalAlignment="Bottom" Width="60" Click="BtnScan_Click" 
+            <Button x:Name="btnFillDraftOrUnlistedVideos" Content="Update Full Video" 
+              Height="26" VerticalAlignment="Bottom" Width="139" Click="btnFillDraftOrUnlistedVideos_Click" 
               Margin="780,0,0,102"/>
             <Button x:Name="btnShortsInfo" Content="Shorts" HorizontalAlignment="Left" 
               Height="26" Margin="8,0,0,102" VerticalAlignment="Bottom" Width="97" 

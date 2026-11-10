@@ -3,8 +3,9 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:xctk="clr-namespace:VideoGui" 
+        xmlns:xctk="clr-namespace:VideoGui" d:Background="gray"
         xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+        xmlns:MSU="clr-namespace:CustomComponents.ListBoxExtensions;assembly=CustomComponents"
         mc:Ignorable="d" 
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
         ExtendsContentIntoTitleBar="True" WindowBackdropType="Mica"
@@ -32,13 +33,18 @@
             </ui:TitleBar.Icon>
         </ui:TitleBar>
         <Grid Grid.Row="1" Width="NaN">
-            <Border x:Name="brdmain" BorderBrush="CadetBlue" BorderThickness="3" Margin="2,1,5,40" AllowDrop="True"
-                VerticalAlignment="Top" Height="290" Width="785" SizeChanged="brdmain_SizeChanged">
+            <Border x:Name="brdmain" BorderBrush="CadetBlue" BorderThickness="2" 
+             Margin="2,0,5,0" AllowDrop="True"
+             VerticalAlignment="Top" Height="190" Width="785" SizeChanged="brdmain_SizeChanged">
                 <wv2:WebView2 x:Name="wv2" ZoomFactor="0.5" MouseMove="wv2_MouseMove" 
-              NavigationCompleted="wv2_NavigationCompleted" IsManipulationEnabled="True" Margin="2,2,5,2" HorizontalAlignment="Left" VerticalAlignment="Top" />
+                  NavigationCompleted="wv2_NavigationCompleted" 
+                  IsManipulationEnabled="True" Margin="2,2,5,2" 
+                 HorizontalAlignment="Left" VerticalAlignment="Top" />
             </Border>
-            <Border x:Name="brdmainA1" BorderBrush="CadetBlue" VerticalAlignment="Bottom" Margin="2,2,5,121">
-                <wv2:WebView2 x:Name="wv2A1" Height="0" NavigationCompleted="Wv2s_NavigationCompleted"/>
+            <Border x:Name="brdmainA1" BorderBrush="CadetBlue" Background="Blue"   BorderThickness="2" 
+                Margin="2,190,5,0" VerticalAlignment="Top" HorizontalAlignment="Left" Width="785">
+                <wv2:WebView2 x:Name="wv2A1" NavigationCompleted="Wv2s_NavigationCompleted" Margin="2,2,5,2" 
+                  HorizontalAlignment="Left" VerticalAlignment="Top" AllowDrop="True" IsManipulationEnabled="True"/>
             </Border>
             <Border x:Name="brdmainA2" BorderBrush="CadetBlue" VerticalAlignment="Top">
                 <wv2:WebView2 x:Name="wv2A2" Height="0" AllowDrop="True" NavigationCompleted="Wv2s_NavigationCompleted"/>
@@ -67,21 +73,23 @@
             <Border x:Name="brdmainA10" BorderBrush="CadetBlue" VerticalAlignment="Top">
                 <wv2:WebView2 x:Name="wv2A10" Height="0" AllowDrop="True" NavigationCompleted="Wv2s_NavigationCompleted"/>
             </Border>
-            <Border x:Name="brdInfo" BorderBrush="CadetBlue" BorderThickness="2" Margin="0,1,0,47" 
-                VerticalAlignment="Bottom" Height="69" >
-                <ListBox x:Name="lstMain" 
-                     MinHeight="91" MinWidth="799" 
-                     
-                     Margin="2,2,2,2" IsSynchronizedWithCurrentItem="False" 
-                     Padding="0" ScrollViewer.HorizontalScrollBarVisibility="Auto" 
-                     ScrollViewer.VerticalScrollBarVisibility="Auto" FontSize="11">
-                    <ListBox.ItemContainerStyle>
-                        <Style TargetType="ListBoxItem">
-                            <Setter Property="Height" Value="22" />
-                        </Style>
-                    </ListBox.ItemContainerStyle>
-                </ListBox>
-            </Border>
+            <MSU:MultiListbox Name="msuVideos" VerticalAlignment="Bottom" BorderMargin="0,6,0,0" 
+                 FontSize="10" BorderItemMargin="0,-14,0,0" IsDarkMode="True"
+                 VerticalContentAlignment="Top"  Margin="0,1,0,43" Height="173" Width="1200">
+                <MSU:MultiListbox.ColumnDefinitions>
+                    <MSU:MultiListboxColumnDefinition HeaderText="VideoId" Width="95"
+                       DataField="VideoId" ComponentType="TextBlock"/>
+                    <MSU:MultiListboxColumnDefinition HeaderText="Title" Width="550" 
+                      DataField="Title" ComponentType="TextBlock"/>
+                    <MSU:MultiListboxColumnDefinition HeaderText="Length" Width="50" 
+                      DataField="Duration" ComponentType="TextBlock"/>
+                    <MSU:MultiListboxColumnDefinition HeaderText="FileName" Width="350" 
+                      DataField="FileName" ComponentType="TextBlock"/>
+                </MSU:MultiListbox.ColumnDefinitions>
+                <MSU:MultiListbox.ItemsContextMenu>
+                    <ContextMenu Visibility="Hidden"/>
+                </MSU:MultiListbox.ItemsContextMenu>
+            </MSU:MultiListbox>
             <Border Name="brdStatusBar" BorderBrush="CadetBlue" BorderThickness="3" VerticalAlignment="Bottom" Margin="1,0,0,2">
                 <Grid Name="StatusBar" HorizontalAlignment="Left" 
                    VerticalAlignment="Bottom" Height="37" Background="#FF341919"
