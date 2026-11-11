@@ -4284,8 +4284,12 @@ namespace VideoGui
                     {
                         filename = item.FileName;
                         vid = item.VideoId;
+                        foreach (ScraperData sd in scraperModule.scrapeDataList.Where(s => s.VideoId == vid))
+                        {
+                            sd.Filename = filename;
+                        }
 
-                        for (int i = 0; i < scraperModule.lstMain.Items.Count; i++)
+                        /*for (int i = 0; i < scraperModule.lstMain.Items.Count; i++)
                         {
                             object id = scraperModule.lstMain.Items[i];
                             if (id is string s && s.StartsWith(vid))
@@ -4295,7 +4299,7 @@ namespace VideoGui
                                 scraperModule.lstMain.Items[i] = o;
                                 break;
                             }
-                        }
+                        }*/
                         return (TResult)Convert.ChangeType(item.FileName, typeof(TResult));
                     }
                     return (TResult)Convert.ChangeType("", typeof(TResult));
@@ -12256,7 +12260,7 @@ namespace VideoGui
                 key?.Close();
 
                 var __scraperModule = new ScraperModule(InvokerHandler<object>,
-                _FilterScrapeFinish, "template");
+                _FilterScrapeFinish, "template", true);
                 Hide();
                 __scraperModule.ShowActivated = true;
                 __scraperModule.Show();
