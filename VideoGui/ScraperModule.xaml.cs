@@ -1,8 +1,9 @@
+
 using CliWrap;
 using CliWrap.EventStream;
+using CustomComponents;
 using CustomComponents.ListBoxExtensions;
 using CustomComponents.ListBoxExtensions.models;
-using CustomComponents;
 using FirebirdSql.Data.FirebirdClient;
 using FirebirdSql.Data.Isql;
 using Google.Apis.YouTube.v3.Data;
@@ -67,6 +68,7 @@ using VideoGui.Models.delegates;
 using Windows.UI.WebUI;
 using Windows.Web.UI.Interop;
 using Wpf.Ui.Controls;
+using static CustomComponents.ListBoxExtensions.MultiListboxColumnDefinition;
 using static Microsoft.WindowsAPICodePack.Shell.PropertySystem.SystemProperties.System;
 using static System.Net.WebRequestMethods;
 using static System.Runtime.InteropServices.JavaScript.JSType;
@@ -80,17 +82,19 @@ using Button = System.Windows.Controls.Button;
 using DataFormats = System.Windows.DataFormats;
 using DataObject = System.Windows.DataObject;
 using DragDropEffects = System.Windows.DragDropEffects;
+using Exception = System.Exception;
 using File = System.IO.File;
 using HtmlDocument = HtmlAgilityPack.HtmlDocument;
 using Label = System.Windows.Controls.Label;
+using MenuItem = Wpf.Ui.Controls.MenuItem;
 using MouseEventArgs = System.Windows.Input.MouseEventArgs;
 using Path = System.IO.Path;
 using String = System.String;
 using Task = System.Threading.Tasks.Task;
+using TimeSpan = System.TimeSpan;
+using Uri = System.Uri;
 using WebView2 = Microsoft.Web.WebView2.Wpf.WebView2;
 using Window = System.Windows.Window;
-using static CustomComponents.ListBoxExtensions.MultiListboxColumnDefinition;
-using MenuItem = Wpf.Ui.Controls.MenuItem;
 
 namespace VideoGui
 {
@@ -165,7 +169,7 @@ namespace VideoGui
         Dictionary<int, WebView2> ActiveWebView = new Dictionary<int, WebView2>();
         DispatcherTimer InternalTimer = new DispatcherTimer();
         TaskCompletionSource<bool> tcs = new TaskCompletionSource<bool>();
-        public Nullable<DateTime> ReleaseDate = null, ReleaseEndDate = null;
+        public System.Nullable<DateTime> ReleaseDate = null, ReleaseEndDate = null;
         public int uploadedcnt = 0;
         public EventTypes ScraperType = EventTypes.VideoUpload;
         private const int WM_MOUSEWHEEL = 0x020A;
@@ -796,13 +800,14 @@ namespace VideoGui
             try
             {
 
+
                 bool sent = false;
                 for (int i = 1; i <= wv2Dictionary.Count; i++)
                 {
                     if (wv2Dictionary[i].AllowDrop)
                     {
                         wv2Dictionary[i].SetURL(webAddressBuilder.ScopeVideo(address).ScopeAddress);
-
+                        //     await NavigateBypassingUnloadAsync(wv2Dictionary[i], new Uri(webAddressBuilder.ScopeVideo(address).ScopeAddress));
                         sent = true;
                         break;
                     }
@@ -912,46 +917,134 @@ namespace VideoGui
                 wv2A1.CoreWebView2InitializationCompleted += (s, e) =>
                 {
                     (s as WebView2).Tag = 1;
+                    (s as WebView2).CoreWebView2.Settings.AreDefaultScriptDialogsEnabled = false;
+                    (s as WebView2).CoreWebView2.ScriptDialogOpening += (sender, e) =>
+                    {
+                        if (e.Kind == Microsoft.Web.WebView2.Core.CoreWebView2ScriptDialogKind.Beforeunload)
+                        {
+                            e.Accept(); // Automatically clicks "Leave"
+                        }
+                    };
                 };
                 wv2A2.CoreWebView2InitializationCompleted += (s, e) =>
                 {
                     (s as WebView2).Tag = 1;
+                    (s as WebView2).CoreWebView2.Settings.AreDefaultScriptDialogsEnabled = false;
+                    (s as WebView2).CoreWebView2.ScriptDialogOpening += (sender, e) =>
+                    {
+                        if (e.Kind == Microsoft.Web.WebView2.Core.CoreWebView2ScriptDialogKind.Beforeunload)
+                        {
+                            e.Accept(); // Automatically clicks "Leave"
+                        }
+                    };
                 };
                 wv2A3.CoreWebView2InitializationCompleted += (s, e) =>
                 {
                     (s as WebView2).Tag = 1;
+                    (s as WebView2).CoreWebView2.Settings.AreDefaultScriptDialogsEnabled = false;
+                    (s as WebView2).CoreWebView2.ScriptDialogOpening += (sender, e) =>
+                    {
+                        if (e.Kind == Microsoft.Web.WebView2.Core.CoreWebView2ScriptDialogKind.Beforeunload)
+                        {
+                            e.Accept(); // Automatically clicks "Leave"
+                        }
+                    };
                 };
                 wv2A4.CoreWebView2InitializationCompleted += (s, e) =>
                 {
                     (s as WebView2).Tag = 1;
+                    (s as WebView2).CoreWebView2.Settings.AreDefaultScriptDialogsEnabled = false;
+                    (s as WebView2).CoreWebView2.ScriptDialogOpening += (sender, e) =>
+                    {
+                        if (e.Kind == Microsoft.Web.WebView2.Core.CoreWebView2ScriptDialogKind.Beforeunload)
+                        {
+                            e.Accept(); // Automatically clicks "Leave"
+                        }
+                    };
                 };
                 wv2A5.CoreWebView2InitializationCompleted += (s, e) =>
                 {
                     (s as WebView2).Tag = 1;
+                    (s as WebView2).CoreWebView2.Settings.AreDefaultScriptDialogsEnabled = false;
+                    (s as WebView2).CoreWebView2.ScriptDialogOpening += (sender, e) =>
+                    {
+                        if (e.Kind == Microsoft.Web.WebView2.Core.CoreWebView2ScriptDialogKind.Beforeunload)
+                        {
+                            e.Accept(); // Automatically clicks "Leave"
+                        }
+                    };
                 };
                 wv2A6.CoreWebView2InitializationCompleted += (s, e) =>
                 {
                     (s as WebView2).Tag = 1;
+                    (s as WebView2).CoreWebView2.Settings.AreDefaultScriptDialogsEnabled = false;
+                    (s as WebView2).CoreWebView2.ScriptDialogOpening += (sender, e) =>
+                    {
+                        if (e.Kind == Microsoft.Web.WebView2.Core.CoreWebView2ScriptDialogKind.Beforeunload)
+                        {
+                            e.Accept(); // Automatically clicks "Leave"
+                        }
+                    };
                 };
                 wv2A7.CoreWebView2InitializationCompleted += (s, e) =>
                 {
                     (s as WebView2).Tag = 1;
+                    (s as WebView2).CoreWebView2.Settings.AreDefaultScriptDialogsEnabled = false;
+                    (s as WebView2).CoreWebView2.ScriptDialogOpening += (sender, e) =>
+                    {
+                        if (e.Kind == Microsoft.Web.WebView2.Core.CoreWebView2ScriptDialogKind.Beforeunload)
+                        {
+                            e.Accept(); // Automatically clicks "Leave"
+                        }
+                    };
                 };
                 wv2A8.CoreWebView2InitializationCompleted += (s, e) =>
                 {
                     (s as WebView2).Tag = 1;
+                    (s as WebView2).CoreWebView2.Settings.AreDefaultScriptDialogsEnabled = false;
+                    (s as WebView2).CoreWebView2.ScriptDialogOpening += (sender, e) =>
+                    {
+                        if (e.Kind == Microsoft.Web.WebView2.Core.CoreWebView2ScriptDialogKind.Beforeunload)
+                        {
+                            e.Accept(); // Automatically clicks "Leave"
+                        }
+                    };
                 };
                 wv2A9.CoreWebView2InitializationCompleted += (s, e) =>
                 {
                     (s as WebView2).Tag = 1;
+                    (s as WebView2).CoreWebView2.Settings.AreDefaultScriptDialogsEnabled = false;
+                    (s as WebView2).CoreWebView2.ScriptDialogOpening += (sender, e) =>
+                    {
+                        if (e.Kind == Microsoft.Web.WebView2.Core.CoreWebView2ScriptDialogKind.Beforeunload)
+                        {
+                            e.Accept(); // Automatically clicks "Leave"
+                        }
+                    };
                 };
                 wv2A10.CoreWebView2InitializationCompleted += (s, e) =>
                 {
                     (s as WebView2).Tag = 1;
+                    (s as WebView2).CoreWebView2.Settings.AreDefaultScriptDialogsEnabled = false;
+                    (s as WebView2).CoreWebView2.ScriptDialogOpening += (sender, e) =>
+                    {
+                        if (e.Kind == Microsoft.Web.WebView2.Core.CoreWebView2ScriptDialogKind.Beforeunload)
+                        {
+                            e.Accept(); // Automatically clicks "Leave"
+                        }
+                    };
                 };
                 wv2A6.CoreWebView2InitializationCompleted += (s, e) =>
                 {
-                    (s as WebView2).Tag = 1;
+                    (s as WebView2).Tag = 1; 
+                    (s as WebView2).CoreWebView2.Settings.AreDefaultScriptDialogsEnabled = false;
+                    (s as WebView2).CoreWebView2.ScriptDialogOpening += (sender, e) =>
+                    {
+                        if (e.Kind == Microsoft.Web.WebView2.Core.CoreWebView2ScriptDialogKind.Beforeunload)
+                        {
+                            e.Accept(); // Automatically clicks "Leave"
+                        }
+                    };
                 };
                 await wv2.EnsureCoreWebView2Async(env);
                 await wv2A1.EnsureCoreWebView2Async(env);
@@ -964,6 +1057,12 @@ namespace VideoGui
                 await wv2A8.EnsureCoreWebView2Async(env);
                 await wv2A9.EnsureCoreWebView2Async(env);
                 await wv2A10.EnsureCoreWebView2Async(env);
+
+               
+               
+
+
+
                 var connectionString = Invoker.InvokeWithReturn<string>(this, new CustomParams_GetConnectionString());
                 connectionString.ExecuteReader(GetUploadReleaseBuilderSql(), (FbDataReader r) =>
                 {
@@ -2372,7 +2471,7 @@ namespace VideoGui
 
                                     DoNextNode = DoNodeScrapeUpdate(Id, TitleStr, DescStr, "",
                                       StatusStr, dateTime, false);
-                                    DoNewVideoUpdate(Id);
+                                    DoNewVideoUpdate(Id);///.ConfigureAwait(true);
 
                                 }
                                 else if (DoNextNode && Id != "" && ScraperType == EventTypes.ScapeSchedule)
@@ -2521,14 +2620,15 @@ namespace VideoGui
                         }
                         else
                         {
-                            if (scrapeDataList.Count > 0 && 
-                             (!IsFilteredVideoCompletion || (!saving && nextaddress.Count >0)))
+                            if (scrapeDataList.Count > 0 &&
+                             (!IsFilteredVideoCompletion || (!saving && nextaddress.Count > 0)))
                             {
                                 int lstCnt2 = scrapeDataList.Count;
                                 foreach (var item in scrapeDataList.OfType<ScraperData>().Where(item => item.Filename.Contains("_")))
                                 {
                                     lstCnt2--;
                                 }
+                                if (scrapeDataList.Count > 0 && scrapeDataList.Where(s => !s.HasSaved).Count() > 0) return;
 
                                 if (lstCnt2 == 0 && scrapeDataList.Count == MaxNodes)
                                 {
@@ -2539,6 +2639,8 @@ namespace VideoGui
                                 }
                                 else if (scrapeDataList.Count == MaxNodes)
                                 {
+                                    if (scrapeDataList.Count > 0 && scrapeDataList.Where(s => !s.HasSaved).Count() > 0) return;
+
                                     CloseScrape.Interval = TimeSpan.FromSeconds(10);
                                     CloseScrape.Tick += (s, e) =>
                                     {
@@ -4484,10 +4586,12 @@ namespace VideoGui
                         msuVideos.Height = 150;
                         if (IsDebug)
                         {
-                            brdmainA1.Height = 200;
-                            wv2A1.Height = brdmainA1.Height;
-                            wv2A1.Width = brdmainA1.Width;
-
+                            var margin = brdmainA1.Margin;
+                            margin.Top = brdmain.Height + 5;
+                            brdmainA1.Margin = margin;
+                            brdmainA1.Height = e.NewSize.Height - 238 - msuVideos.Height;
+                            wv2A1.Height = brdmainA1.Height - 3;
+                            wv2A1.Width = brdmainA1.Width - 3;
                         }
                         ActiveWebView[1].Height = brdmain.Height - 18;
                     }
@@ -5224,6 +5328,7 @@ namespace VideoGui
         }
 
         bool AutoClosedReboot = false, saving = false;
+        public bool restart_required = false;
 
         public async Task<bool> UpdateVideo(string Id, string filename, object sender, int wv2Id)
         {
@@ -5237,6 +5342,12 @@ namespace VideoGui
                       LookUpTitleAndDesc(Path.GetFileNameWithoutExtension(ss)).GetAwaiter().GetResult();
                     if (ok)
                     {
+                        foreach (ScraperData sd in scrapeDataList.Where(s => s.VideoId == Id))
+                        {
+                            sd.HasSaved = false;
+                            sd.Filename = filename;
+                            sd.LookUpInit = true;
+                        }
                         saving = true;
                         string html = "";
 
@@ -5310,9 +5421,36 @@ namespace VideoGui
                                 break;
                             }
                         }
+
+                        foreach (ScraperData sd in scrapeDataList.Where(s => s.VideoId == Id))
+                        {
+                            sd.HasSaved = true;
+                            sd.Filename = filename;
+                        }
                         savebtn = "Close";
                         await wv2.ExecuteScriptAsync($"document.getElementById('{savebtn}').click();");
-                        Task.Delay(1200);
+
+
+                        while (true)
+                        {
+                            break;
+                            html = Regex.Unescape(await wv2.ExecuteScriptAsync("document.body.innerHTML"));
+                            if (html.Contains("Initial check"))
+                            {
+                                Task.Delay(250);
+                                continue;
+                            }
+                            if (html.Contains("Leave site?"))
+                            {
+                                savebtn = "Leave";
+                                await wv2.ExecuteScriptAsync($"document.getElementById('{savebtn}').click();");
+                                break;
+                            }
+
+                            break;
+                        }
+                        Task.Delay(500);
+
                         saving = false;
                         wv2Dictionary[wv2Id].AllowDrop = true;
                         if (nextaddress.Count > 0)
@@ -5324,10 +5462,10 @@ namespace VideoGui
                             if (wv2A4.AllowDrop) Avaialble++;
                             if (wv2A5.AllowDrop) Avaialble++;
                             if (wv2A6.AllowDrop) Avaialble++;
-                            /*if (wv2A7.AllowDrop) Avaialble++;
+                            if (wv2A7.AllowDrop) Avaialble++;
                             if (wv2A8.AllowDrop) Avaialble++;
                             if (wv2A9.AllowDrop) Avaialble++;
-                            if (wv2A10.AllowDrop) Avaialble++;*/
+                            if (wv2A10.AllowDrop) Avaialble++;
                             for (int ix = 0; ix < Avaialble; ix++)
                             {
                                 if (nextaddress.Count > 0)
@@ -5336,17 +5474,43 @@ namespace VideoGui
                                     nextaddress.RemoveAt(0);
                                     for (int iy = 1; iy < 7; iy++)
                                     {
+
                                         if (wv2Dictionary.ContainsKey(iy))
                                         {
                                             if (wv2Dictionary[iy].AllowDrop)
                                             {
+                                                //await NavigateBypassingUnloadAsync(wv2Dictionary[iy], new Uri(webAddressBuilder.ScopeVideo(url).ScopeAddress));
+
+
                                                 wv2Dictionary[iy].SetURL(webAddressBuilder.ScopeVideo(url).ScopeAddress);
                                             }
                                         }
+
                                     }
 
                                 }
                             }
+                        }
+                        else
+                        {
+                            if (scrapeDataList.Count() == 1 || scrapeDataList.Where(s => !s.HasSaved).Count() == 0)
+                            {
+                                AutoClosedReboot = true;
+                                var _DoAutoCancel = new AutoCancel(DoAutoCancelCloseScraper, $"Scraped aLL Files", 5, "Scraper Finished");
+                                _DoAutoCancel.ShowActivated = true;
+                                _DoAutoCancel.Show();
+                            }
+                            else if (scrapeDataList.Where(s => !s.LookUpInit).Count() > 0)
+                            {
+                                restart_required = true;
+                               
+                                AutoClosedReboot = true;
+                                Close();
+                              //  var _DoAutoCancel = new AutoCancel(DoAutoCancelCloseScraper, $"Scraping", 1, "Scraper Restaring");
+                                //_DoAutoCancel.ShowActivated = true;
+                              //  _DoAutoCancel.Show();
+                            }
+
                         }
                     }
                     return true;
@@ -5356,6 +5520,35 @@ namespace VideoGui
             catch (Exception ex)
             {
                 ex.LogWrite($"UpdateVideo {MethodBase.GetCurrentMethod()?.Name} {ex.Message} ");
+                return false;
+            }
+        }
+
+
+        public async Task<bool> NavigateBypassingUnloadAsync(WebView2 webView, Uri newUri)
+        {
+            try
+            {
+                if (webView.CoreWebView2 != null)
+                {
+                    // Nullify standard onbeforeunload and neutralize event listeners
+                    await webView.CoreWebView2.ExecuteScriptAsync(@"
+            window.onbeforeunload = null;
+            window.addEventListener('beforeunload', function(e) {
+                e.stopImmediatePropagation();
+            }, true);
+        ");
+                }
+                webView.AllowDrop = false;
+
+                webView.Source = newUri;
+                return true;
+
+
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"NavigateBypassingUnloadAsync {MethodBase.GetCurrentMethod()?.Name} {ex.Message} ");
                 return false;
             }
         }
@@ -5473,19 +5666,22 @@ namespace VideoGui
                 }
 
                 int recsNoFile = 0;
-                foreach (ScraperData sd in scrapeDataList.Where(d => d.VideoId == IntId))
-                {
-                    sd.Filename = filename;
-                }
-                foreach (ScraperData sd in scrapeDataList.Where(sd => sd.Filename == ""))
-                {
-                    recsNoFile++;
-                }
+
                 bool AllowClose = true;
-                if (IsFilteredVideoCompletion)
+                if (ScraperType != EventTypes.FilteredVideoCompletion)
                 {
-                    if (saving || nextaddress.Count > 0) AllowClose = false;
+                    foreach (ScraperData sd in scrapeDataList.Where(d => d.VideoId == IntId))
+                    {
+                        sd.Filename = filename;
+                    }
+                    recsNoFile = (scrapeDataList.Where(sd => sd.Filename == "")).Count();
                 }
+                else
+                {
+                    recsNoFile = (scrapeDataList.Where(sd => !sd.HasSaved)).Count();
+                    if (recsNoFile > 0 || nextaddress.Count > 0) AllowClose = false;
+                }
+
                 if (recsNoFile == 0 && AllowClose)
                 {
                     AutoClosedReboot = true;
@@ -5493,7 +5689,6 @@ namespace VideoGui
                     _DoAutoCancel.ShowActivated = true;
                     _DoAutoCancel.Show();
                 }
-
 
 
                 if (ScraperType == EventTypes.ScapeSchedule)
@@ -5526,38 +5721,54 @@ namespace VideoGui
                 }
                 CanSpool = true;
 
-                if (Filter != "") return;
+                if (ScraperType == EventTypes.FilteredVideoCompletion) return;
                 if (nextaddress.Count > 0)
                 {
                     int Avaialble = 0;
                     if (wv2A1.AllowDrop) Avaialble++;
-                    if (wv2A2.AllowDrop) Avaialble++;
-                    if (wv2A3.AllowDrop) Avaialble++;
-                    if (wv2A4.AllowDrop) Avaialble++;
-                    if (wv2A5.AllowDrop) Avaialble++;
-                    if (wv2A6.AllowDrop) Avaialble++;
-                    /*if (wv2A7.AllowDrop) Avaialble++;
-                    if (wv2A8.AllowDrop) Avaialble++;
-                    if (wv2A9.AllowDrop) Avaialble++;
-                    if (wv2A10.AllowDrop) Avaialble++;*/
-                    for (int ix = 0; ix < Avaialble; ix++)
+                    if (!IsDebug)
                     {
-                        if (nextaddress.Count > 0)
+                        if (wv2A2.AllowDrop) Avaialble++;
+                        if (wv2A3.AllowDrop) Avaialble++;
+                        if (wv2A4.AllowDrop) Avaialble++;
+                        if (wv2A5.AllowDrop) Avaialble++;
+                        if (wv2A6.AllowDrop) Avaialble++;
+                        if (wv2A7.AllowDrop) Avaialble++;
+                        if (wv2A8.AllowDrop) Avaialble++;
+                        if (wv2A9.AllowDrop) Avaialble++;
+                        if (wv2A10.AllowDrop) Avaialble++;
+                        for (int ix = 0; ix < Avaialble; ix++)
                         {
-                            string url = nextaddress[0];
-                            nextaddress.RemoveAt(0);
-                            for (int iy = 1; iy < 7; iy++)
+                            if (nextaddress.Count > 0)
                             {
-                                if (wv2Dictionary.ContainsKey(iy))
+                                string url = nextaddress[0];
+                                nextaddress.RemoveAt(0);
+                                for (int iy = 1; iy < 7; iy++)
                                 {
-                                    if (wv2Dictionary[iy].AllowDrop)
+
+                                    if (wv2Dictionary.ContainsKey(iy))
                                     {
-                                        wv2Dictionary[iy].SetURL(webAddressBuilder.ScopeVideo(url).ScopeAddress);
+                                        if (wv2Dictionary[iy].AllowDrop)
+                                        {
+                                            //await NavigateBypassingUnloadAsync(wv2Dictionary[iy], new Uri(webAddressBuilder.ScopeVideo(url).ScopeAddress));
+                                        }
                                     }
+
+
                                 }
                             }
-
                         }
+                    }
+                }
+                else
+                {
+                    if (scrapeDataList.Where(s => !s.LookUpInit).Count() > 0)
+                    {
+                        /* AutoClosedReboot = true;
+                         restart_required = true;
+                         var _DoAutoCancel = new AutoCancel(DoAutoCancelCloseScraper, $"Scraping", 1, "Scraper Restarting");
+                         _DoAutoCancel.ShowActivated = true;
+                         _DoAutoCancel.Show();*/
                     }
                 }
             }

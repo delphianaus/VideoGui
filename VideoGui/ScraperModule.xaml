@@ -42,7 +42,7 @@
                  HorizontalAlignment="Left" VerticalAlignment="Top" />
             </Border>
             <Border x:Name="brdmainA1" BorderBrush="CadetBlue" Background="Blue"   BorderThickness="2" 
-                Margin="2,190,5,0" VerticalAlignment="Top" HorizontalAlignment="Left" Width="785">
+                Margin="2,190,5,0" VerticalAlignment="Top" Width="785">
                 <wv2:WebView2 x:Name="wv2A1" NavigationCompleted="Wv2s_NavigationCompleted" Margin="2,2,5,2" 
                   HorizontalAlignment="Left" VerticalAlignment="Top" AllowDrop="True" IsManipulationEnabled="True"/>
             </Border>
@@ -75,7 +75,7 @@
             </Border>
             <MSU:MultiListbox Name="msuVideos" VerticalAlignment="Bottom" BorderMargin="0,6,0,0" 
                  FontSize="10" BorderItemMargin="0,-14,0,0" IsDarkMode="True"
-                 VerticalContentAlignment="Top"  Margin="0,1,0,43" Height="173" Width="1200">
+                 VerticalContentAlignment="Top"  Margin="0,0,9,43" Height="173">
                 <MSU:MultiListbox.ColumnDefinitions>
                     <MSU:MultiListboxColumnDefinition HeaderText="VideoId" Width="95"
                        DataField="VideoId" ComponentType="TextBlock"/>
