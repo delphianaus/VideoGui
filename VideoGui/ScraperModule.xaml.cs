@@ -807,8 +807,8 @@ namespace VideoGui
                     if (wv2Dictionary[i].AllowDrop)
                     {
                         string newurl = webAddressBuilder.ScopeVideo(address).ScopeAddress;
-                        string nw = $"Adding new record on webview - {wv2Dictionary[i].Name} new url = {newurl}";
-                        nw.WriteLog("webview2");
+                        //string nw = $"Adding new record on webview - {wv2Dictionary[i].Name} new url = {newurl}";
+                        //nw.WriteLog("webview2");
                         wv2Dictionary[i].SetURL(newurl);
                         //     await NavigateBypassingUnloadAsync(wv2Dictionary[i], new Uri(webAddressBuilder.ScopeVideo(address).ScopeAddress));
                         sent = true;
@@ -830,8 +830,8 @@ namespace VideoGui
         {
             try
             {
-                string url = $"webview {(sender as WebView2).Name} url {(sender as WebView2).Uid}";
-                url.WriteLog("webview2");
+               // string url = $"webview {(sender as WebView2).Name} url {(sender as WebView2).Uid}";
+                //url.WriteLog("webview2");
                 if (e.IsSuccess && sender is not null)
                 {
                     int Id = (sender as WebView2).Name.Replace("wv2A", "").ToInt(-1);
