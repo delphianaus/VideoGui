@@ -5733,39 +5733,14 @@ namespace VideoGui
                         if (wv2A8.AllowDrop) Avaialble++;
                         if (wv2A9.AllowDrop) Avaialble++;
                         if (wv2A10.AllowDrop) Avaialble++;
-                        for (int ix = 0; ix < Avaialble; ix++)
-                        {
-                            if (nextaddress.Count > 0)
-                            {
-                                string url = nextaddress[0];
-                                nextaddress.RemoveAt(0);
-                                for (int iy = 1; iy <= 10; iy++)
-                                {
-
-                                    if (wv2Dictionary.ContainsKey(iy))
-                                    {
-                                        if (wv2Dictionary[iy].AllowDrop)
-                                        {
-                                            //await NavigateBypassingUnloadAsync(wv2Dictionary[iy], new Uri(webAddressBuilder.ScopeVideo(url).ScopeAddress));
-                                        }
-                                    }
-
-
-                                }
-                            }
-                        }
                     }
+                    string url = nextaddress[0];
+                    nextaddress.RemoveAt(0);
+                    DoNewVideoUpdate(url);
                 }
                 else
                 {
-                    if (scrapeDataList.Where(s => !s.LookUpInit).Count() > 0)
-                    {
-                        /* AutoClosedReboot = true;
-                         restart_required = true;
-                         var _DoAutoCancel = new AutoCancel(DoAutoCancelCloseScraper, $"Scraping", 1, "Scraper Restarting");
-                         _DoAutoCancel.ShowActivated = true;
-                         _DoAutoCancel.Show();*/
-                    }
+
                 }
             }
             catch (Exception ex)
