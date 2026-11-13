@@ -806,7 +806,10 @@ namespace VideoGui
                 {
                     if (wv2Dictionary[i].AllowDrop)
                     {
-                        wv2Dictionary[i].SetURL(webAddressBuilder.ScopeVideo(address).ScopeAddress);
+                        string newurl = webAddressBuilder.ScopeVideo(address).ScopeAddress;
+                        string nw = $"Adding new record on webview - {wv2Dictionary[i].Name} new url = {newurl}";
+                        nw.WriteLog("webview2");
+                        wv2Dictionary[i].SetURL(newurl);
                         //     await NavigateBypassingUnloadAsync(wv2Dictionary[i], new Uri(webAddressBuilder.ScopeVideo(address).ScopeAddress));
                         sent = true;
                         break;
@@ -827,6 +830,8 @@ namespace VideoGui
         {
             try
             {
+                string url = $"webview {(sender as WebView2).Name} url {(sender as WebView2).Uid}";
+                url.WriteLog("webview2");
                 if (e.IsSuccess && sender is not null)
                 {
                     int Id = (sender as WebView2).Name.Replace("wv2A", "").ToInt(-1);
@@ -836,6 +841,7 @@ namespace VideoGui
                     {
                         IntId = source.Substring(p1 + 6, p2 - p1 - 6);
                     }
+
                     var task = (sender as WebView2).ExecuteScriptAsync("document.body.innerHTML");
                     task.ContinueWith(x => { ProcessHTML(x.Result, Id, IntId, sender); },
                         TaskScheduler.FromCurrentSynchronizationContext());
@@ -1036,7 +1042,7 @@ namespace VideoGui
                 };
                 wv2A6.CoreWebView2InitializationCompleted += (s, e) =>
                 {
-                    (s as WebView2).Tag = 1; 
+                    (s as WebView2).Tag = 1;
                     (s as WebView2).CoreWebView2.Settings.AreDefaultScriptDialogsEnabled = false;
                     (s as WebView2).CoreWebView2.ScriptDialogOpening += (sender, e) =>
                     {
@@ -1058,8 +1064,8 @@ namespace VideoGui
                 await wv2A9.EnsureCoreWebView2Async(env);
                 await wv2A10.EnsureCoreWebView2Async(env);
 
-               
-               
+
+
 
 
 
@@ -5466,30 +5472,31 @@ namespace VideoGui
                             if (wv2A8.AllowDrop) Avaialble++;
                             if (wv2A9.AllowDrop) Avaialble++;
                             if (wv2A10.AllowDrop) Avaialble++;
+                            string url = nextaddress[0];
+                            nextaddress.RemoveAt(0);
+                            DoNewVideoUpdate(url);
+                            /*return;
                             for (int ix = 0; ix < Avaialble; ix++)
                             {
                                 if (nextaddress.Count > 0)
                                 {
-                                    string url = nextaddress[0];
-                                    nextaddress.RemoveAt(0);
-                                    for (int iy = 1; iy < 7; iy++)
+
+
+                                    for (int iy = 1; iy <= 10; iy++)
                                     {
-
-                                        if (wv2Dictionary.ContainsKey(iy))
+                                        if (wv2Dictionary.ContainsKey(iy) && (wv2Dictionary[iy].AllowDrop))
                                         {
-                                            if (wv2Dictionary[iy].AllowDrop)
-                                            {
-                                                //await NavigateBypassingUnloadAsync(wv2Dictionary[iy], new Uri(webAddressBuilder.ScopeVideo(url).ScopeAddress));
-
-
-                                                wv2Dictionary[iy].SetURL(webAddressBuilder.ScopeVideo(url).ScopeAddress);
-                                            }
+                                            wv2Dictionary[iy].AllowDrop = false;
+                                            //await NavigateBypassingUnloadAsync(wv2Dictionary[iy], new Uri(webAddressBuilder.ScopeVideo(url).ScopeAddress));
+                                            wv2Dictionary[iy].Tag = 1;
+                                            string newurl = $"dropping URL on {wv2Dictionary[iy].Name} - " + webAddressBuilder.ScopeVideo(url).ScopeAddress;
+                                            newurl.WriteLog(@"webview2");
+                                            wv2Dictionary[iy].SetURL(newurl);
+                                            break;
                                         }
-
                                     }
-
                                 }
-                            }
+                            }*/
                         }
                         else
                         {
@@ -5500,17 +5507,6 @@ namespace VideoGui
                                 _DoAutoCancel.ShowActivated = true;
                                 _DoAutoCancel.Show();
                             }
-                            else if (scrapeDataList.Where(s => !s.LookUpInit).Count() > 0)
-                            {
-                                restart_required = true;
-                               
-                                AutoClosedReboot = true;
-                                Close();
-                              //  var _DoAutoCancel = new AutoCancel(DoAutoCancelCloseScraper, $"Scraping", 1, "Scraper Restaring");
-                                //_DoAutoCancel.ShowActivated = true;
-                              //  _DoAutoCancel.Show();
-                            }
-
                         }
                     }
                     return true;
@@ -5743,7 +5739,7 @@ namespace VideoGui
                             {
                                 string url = nextaddress[0];
                                 nextaddress.RemoveAt(0);
-                                for (int iy = 1; iy < 7; iy++)
+                                for (int iy = 1; iy <= 10; iy++)
                                 {
 
                                     if (wv2Dictionary.ContainsKey(iy))
