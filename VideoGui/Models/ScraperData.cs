@@ -13,14 +13,15 @@ namespace VideoGui.Models
 
         private string _videoId = "";
         private string _filename = "";
-        private bool _hasSaved = false, _loopUpInit = false;
-        
+        private bool _hasSaved = false, _loopUpInit = false, _IsDeletionHeader = false;
+
         private int _ScheduleNumber = 0;
         private Nullable<DateTime> _ScheduledDate = null;
 
         public string VideoId { get => _videoId; set { _videoId = value; OnPropertyChanged(); } }
         public string Filename { get => _filename; set { _filename = value; OnPropertyChanged(); } }
-        public bool HasSaved { get => _hasSaved; set { _hasSaved  = value; OnPropertyChanged(); } }
+        public bool HasSaved { get => _hasSaved; set { _hasSaved = value; OnPropertyChanged(); } }
+        public bool IsDeletionHeader { get => _IsDeletionHeader; set { _IsDeletionHeader = value; OnPropertyChanged(); } }
         public bool LookUpInit { get => _loopUpInit; set { _loopUpInit = value; OnPropertyChanged(); } }
         public Nullable<DateTime> ScheduledDate { get => _ScheduledDate; set { _ScheduledDate = value; OnPropertyChanged(); } }
         public int ScheduleNumber { get => _ScheduleNumber; set { _ScheduleNumber = value; OnPropertyChanged(); } }
@@ -28,6 +29,22 @@ namespace VideoGui.Models
         protected void OnPropertyChanged([CallerMemberName] string name = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+        }
+
+        public ScraperData(string _filename)
+        {
+            Filename = _filename;
+        }
+
+        public ScraperData(string _filename, string _videoId)
+        {
+            Filename = _filename;
+            VideoId = _videoId;
+        }
+
+        public ScraperData()
+        {
+            
         }
     }
 }

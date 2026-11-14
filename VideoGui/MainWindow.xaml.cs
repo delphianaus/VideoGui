@@ -12761,13 +12761,13 @@ namespace VideoGui
                             WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
                             string gUrl = webAddressBuilder.AddFilterByDraftShorts().GetHTML();
 
-                            /*var _scheduleScraperModule = new ScraperModule(InvokerHandler<object>, mnl_scraper_OnFinish, gUrl,
+                            var _scheduleScraperModule = new ScraperModule(InvokerHandler<object>, mnl_scraper_OnFinish, gUrl,
                                 startdate, enddate, max, _listItems, 0, IsTest);
                             _scheduleScraperModule.ShowActivated = true;
                             _scheduleScraperModule.IsMultiForm = true;
                             _scheduleScraperModule.ShowMultiForm = manualScheduler.ShowMultiForm;
                             manualScheduler = null;
-                            _scheduleScraperModule.Show();*/
+                            _scheduleScraperModule.Show();
                             return;
                         }
                     }
@@ -12824,13 +12824,13 @@ namespace VideoGui
                             enddate = startdate.Value;
                             startdate.Value.AtTime(ts);
                             enddate.Value.AtTime(te);
-                            /*var _scheduleScraperModule = new ScraperModule(InvokerHandler<object>, mnl_scraper_OnFinish, gUrl,
+                            var _scheduleScraperModule = new ScraperModule(InvokerHandler<object>, mnl_scraper_OnFinish, gUrl,
                                 startdate, enddate, Max, _listItems, 0, false);
                             _scheduleScraperModule.ShowActivated = true;
                             _scheduleScraperModule.IsMultiForm = ss.IsMultiForm;
                             _scheduleScraperModule.ShowMultiForm = (ss.IsMultiForm) ? ss.ShowMultiForm : null;
                             ss = null;
-                            _scheduleScraperModule.Show();*/
+                            _scheduleScraperModule.Show();
                         }
                     }
                     else

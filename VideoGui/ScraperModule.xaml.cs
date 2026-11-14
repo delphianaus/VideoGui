@@ -22,6 +22,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.DirectoryServices;
 using System.DirectoryServices.AccountManagement;
@@ -130,7 +131,7 @@ namespace VideoGui
         bool logginin = false, DoNextNode = true, finished = false, TimedOut = false, Uploading = false, NextRecord = false, Processing = false, clickupload = true;
         public bool IsClosing = false, IsClosed = false, Exceeded = false, KilledUploads = false, SwapEnabled = false, IsTitleEditor = false;
         public bool TaskHasCancelled = false, NewSession = false, QuotaExceeded = false, Errored = false;
-
+        DispatcherTimer checkforWaiting = null;
         string automation = "", user = "", SendKeysString = "", UploadPath = "",
          Filter = "", LastNode = "", DefaultUrl = "", LastValidFileName = "", TableDestination = "";
         List<ScraperUploads> Scraper_uploaded = new();
@@ -720,6 +721,58 @@ namespace VideoGui
                 ex.LogWrite($"Constructor VideoUploader {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
             }
         }
+        public async Task<bool> DragAndDropLocalFileAsync(WebView2 webView, string filePath)
+        {
+            try
+            {
+                // 1. Get file details and convert to base64
+                string fileName = Path.GetFileName(filePath);
+                byte[] fileBytes = File.ReadAllBytes(filePath);
+                string base64Data = Convert.ToBase64String(fileBytes);
+
+                // Determine standard MIME type
+                string mimeType = fileName.EndsWith(".png", StringComparison.OrdinalIgnoreCase) ? "image/png" : "image/jpeg";
+
+                // 2. JavaScript payload that injects the file payload and triggers the native upload handler
+                string jsScript = $@"
+    (async () => {{
+        // Target the file upload button container from YouTube Studio
+        const targetElement = document.querySelector('#select-button');
+        if (!targetElement) {{
+            console.error('Target element not found');
+            return false;
+        }}
+
+        // Convert base64 back into a blob, then into a File object
+        const base64Response = await fetch('data:{mimeType};base64,{base64Data}');
+        const blob = await base64Response.blob();
+        const file = new File([blob], '{fileName}', {{ type: '{mimeType}' }});
+
+        // Replicate a standard drag/drop DataTransfer environment
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file);
+
+        // Build and dispatch the drop event
+        const dropEvent = new DragEvent('drop', {{
+            bubbles: true,
+            cancelable: true,
+            dataTransfer: dataTransfer
+        }});
+
+        targetElement.dispatchEvent(dropEvent);
+        return true;
+    }})();";
+
+                // 3. Execute the payload in WebView2
+                await webView.ExecuteScriptAsync(jsScript);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"DragAndDropLocalFileAsync {MethodBase.GetCurrentMethod()?.Name} {ex.Message} {this}");
+                return false;
+            }
+        }
         private async void Uploads_TimerEvent_HandlerAsync(object? state)
         {
             try
@@ -830,7 +883,7 @@ namespace VideoGui
         {
             try
             {
-               // string url = $"webview {(sender as WebView2).Name} url {(sender as WebView2).Uid}";
+                // string url = $"webview {(sender as WebView2).Name} url {(sender as WebView2).Uid}";
                 //url.WriteLog("webview2");
                 if (e.IsSuccess && sender is not null)
                 {
@@ -841,7 +894,10 @@ namespace VideoGui
                     {
                         IntId = source.Substring(p1 + 6, p2 - p1 - 6);
                     }
-
+                    if (IntId.StartsWith("webp"))
+                    {
+                        IntId = IntId.Substring(5);
+                    }
                     var task = (sender as WebView2).ExecuteScriptAsync("document.body.innerHTML");
                     task.ContinueWith(x => { ProcessHTML(x.Result, Id, IntId, sender); },
                         TaskScheduler.FromCurrentSynchronizationContext());
@@ -1480,9 +1536,7 @@ namespace VideoGui
                             VideoFiles.Add(newfile);
                             r = r + newfile + " ";
                         }
-                        ScraperData sd = new ScraperData();
-                        sd.Filename = $"Inserting {max} Files {r}";
-                        scrapeDataList.Insert(0, sd);
+                        scrapeDataList.Insert(0, new ScraperData($"Inserting {max} Files {r}"));
                         await wv2.ExecuteScriptAsync("document.getElementById('upload-icon').click();");
                         await Task.Delay(500);
                         await wv2.ExecuteScriptAsync("document.getElementById('select-files-button').click();");
@@ -1890,20 +1944,33 @@ namespace VideoGui
                       SetDataField(nameof(ScraperData.Filename)).
                       SetWidth(700),
                 };
-
-
-
-
-
-
-
-
-
                 scrapeDataList = [];
                 return new(scrapeDataList, columns, fontSize: 15);
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"ColumnDefinitionsListBuilder {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+                return null;// TODO may change this
+            }
+        }
 
-
-
+        private ListBoxBuilder ShortsUploaderDownloadColumnDefinitionsListBuilder()
+        {
+            try
+            {
+                var columns = new List<MultiListboxColumnDefinition>
+                {
+                    TextBlock().SetHeaderText("VideoId").SetName("VideoId").
+                      SetHeaderPadding(new Thickness(5,0,   0,0)).
+                      SetHeaderMargin(new Thickness(5,0,0,0)).
+                      SetDataField(nameof(ScraperData.VideoId)).
+                      Hidden(),
+                    TextBlock().SetHeaderText("Status").SetHeaderFontSize(10.0).SetName("Filename").
+                      SetDataField(nameof(ScraperData.Filename)).
+                      SetWidth(700),
+                };
+                scrapeDataList = [];
+                return new(scrapeDataList, columns, fontSize: 15);
             }
             catch (Exception ex)
             {
@@ -1953,7 +2020,7 @@ namespace VideoGui
                     lblWaiting.Content = "";
                     lblUploaded.Content = "";
                     lblTotal.Content = "";
-                    msuVideos.BuildColumnCollection = ShortsScheduleDownloadColumnDefinitionsListBuilder;
+                    msuVideos.BuildColumnCollection = ShortsUploaderDownloadColumnDefinitionsListBuilder;
 
                 }
                 if (ScraperType == EventTypes.ScapeSchedule)
@@ -2290,7 +2357,10 @@ namespace VideoGui
                         string html2 = item.OuterHtml; ;
                         HtmlDocument doc2 = new HtmlDocument();
                         doc2.LoadHtml(html2);
-
+                        if (Id.StartsWith("webp"))
+                        {
+                            Id = Id.Substring(5);
+                        }
 
                         if (Id != "")
                         {
@@ -2312,6 +2382,10 @@ namespace VideoGui
                                 WaitingFileName = vidoeid == "";
                                 if (!WaitingFileName)
                                 {
+                                    if (vidoeid.EndsWith(".mp4"))
+                                    {
+                                        vidoeid = vidoeid.Replace(".mp4", "");
+                                    }
                                     bool fnd = false;
                                     string newid = "";
                                     DateTime q = DateTime.Now;
@@ -2365,7 +2439,7 @@ namespace VideoGui
 
                                 if (TimedOut || canceltoken.IsCancellationRequested)
                                 {
-                                    scrapeDataList.Insert(0, new ScraperData() { Filename = $"Timeout on getting filename", VideoId = Id });
+                                    scrapeDataList.Insert(0, new ScraperData($"Timeout on getting filename",Id));
                                     // lstMain.Items.Insert(0, $"Timeout on getting filename");
                                     break;
                                 }
@@ -2407,7 +2481,7 @@ namespace VideoGui
                                     }
                                     else if (HandlerOk == FinishType.LookUpError)
                                     {
-                                        scrapeDataList.Insert(0, new ScraperData() { Filename = $"Lookup Error on Scheduling Detected. {Id}", VideoId = Id });
+                                        scrapeDataList.Insert(0, new ScraperData($"Lookup Error on Scheduling Detected. {Id}", Id));
                                         //lstMain.Items.Insert(0, $"Lookup Error on Scheduling Detected.");
                                         string webAddress = $"https://studio.youtube.com/video/{Id}/edit";
                                         System.Windows.Clipboard.SetText(webAddress);
@@ -2416,14 +2490,14 @@ namespace VideoGui
                                     }
                                     else if (HandlerOk == FinishType.GapTimeZero)
                                     {
-                                        scrapeDataList.Insert(0, new ScraperData() { Filename = $"Gap Is Zero Error on Scheduling Detected. {Id}", VideoId = Id });
+                                        scrapeDataList.Insert(0, new ScraperData($"Gap Is Zero Error on Scheduling Detected. {Id}", Id));
                                         //lstMain.Items.Insert(0, $"Gap Is Zero Error on Scheduling Detected.");
                                         canceltoken.Cancel();
                                         break;
                                     }
                                     else if (HandlerOk == FinishType.Finished)
                                     {
-                                        scrapeDataList.Insert(0, new ScraperData() { Filename = $"Scheduling Complete. {Id}", VideoId = Id });
+                                        scrapeDataList.Insert(0, new ScraperData($"Scheduling Complete. {Id}", Id));
                                         //lstMain.Items.Insert(0, $"Scheduling Complete.");
                                         canceltoken.Cancel();
                                         break;
@@ -2432,7 +2506,7 @@ namespace VideoGui
                                 else if (directshortsScheduler is not null)
                                 {
                                     TimedOut = true;
-                                    scrapeDataList.Insert(0, new ScraperData() { Filename = $"Timeout on Scheduling Detected. {Id}", VideoId = Id });
+                                    scrapeDataList.Insert(0, new ScraperData($"Timeout on Scheduling Detected. {Id}",Id));
                                     //lstMain.Items.Insert(0, $"Timeout on Scheduling Detected.");
                                     DoNextNode = false;
                                 }
@@ -2457,21 +2531,11 @@ namespace VideoGui
                                 }
                                 else if (DoNextNode && Id != "" && ScraperType == EventTypes.FilteredVideoCompletion)
                                 {
-
-
                                     Dispatcher.Invoke(() =>
                                     {
-                                        bool fnd = false;
-                                        foreach (ScraperData sd in scrapeDataList.Where(s => s.VideoId == Id))
+                                        if (!scrapeDataList.Where(s => s.VideoId == Id).Any())
                                         {
-                                            fnd = true;
-                                            break;
-                                        }
-                                        if (!fnd)
-                                        {
-                                            ScraperData sd = new ScraperData();
-                                            sd.VideoId = Id;
-                                            scrapeDataList.Insert(0, sd);
+                                            scrapeDataList.Insert(0, new ScraperData("", Id));
                                         }
 
                                     });
@@ -2483,17 +2547,9 @@ namespace VideoGui
                                 }
                                 else if (DoNextNode && Id != "" && ScraperType == EventTypes.ScapeSchedule)
                                 {
-                                    bool fnd = false;
-                                    foreach (ScraperData sd in scrapeDataList.Where(s => s.VideoId == Id))
+                                    if (!scrapeDataList.Where(s => s.VideoId == Id).Any())
                                     {
-                                        fnd = true;
-                                        break;
-                                    }
-                                    if (!fnd)
-                                    {
-                                        ScraperData sd = new ScraperData();
-                                        sd.VideoId = Id;
-                                        scrapeDataList.Insert(0, sd);
+                                        scrapeDataList.Insert(0, new ScraperData("", Id));
                                     }
                                     var vid = Invoker.InvokeWithReturn<string>(this, new CustomParams_SelectById(Id));
                                     if (vid is string v && v != "")
@@ -2514,6 +2570,7 @@ namespace VideoGui
                                             var _DoAutoCancel = new AutoCancel(DoAutoCancelCloseScraper, $"Scraped {files} Files", 5, "Scraper Finished");
                                             _DoAutoCancel.ShowActivated = true;
                                             _DoAutoCancel.Show();
+
                                         }
                                         else if (scrapeDataList.Count == MaxNodes)
                                         {
@@ -2530,17 +2587,12 @@ namespace VideoGui
                                         }
                                         if (files > 0)
                                         {
-                                            lblLastNode.Content = $"{files} Processed";
-                                            //StatusBar.ApplyMargin();
-
+                                            lblLastNode.Content = $"{files-1} Processed";
                                         }
                                         if (dbfiles > 0)
                                         {
                                             lblTotal.Content = $"{dbfiles}";
-                                            //StatusBar.ApplyMargin();
                                         }
-
-                                        //StatusBar.ApplyMargin();
                                     }
                                     else webAddressBuilder.ScopeVideo(Id, true);
 
@@ -4171,8 +4223,7 @@ namespace VideoGui
                 {
                     Errored = true;
                     message.WriteLog("QuotaExceeded");
-                    ScraperData sd = new ScraperData() { Filename = $"Schedule Error: {message} @ {DateTime.Now}" };
-                    scrapeDataList.Insert(0, sd);
+                    scrapeDataList.Insert(0, new ScraperData($"Schedule Error: {message} @ {DateTime.Now}"));
                 }
                 CancellationTokenSource cts = new CancellationTokenSource(TimeSpan.FromSeconds(2));
                 while (!cts.IsCancellationRequested)
@@ -4293,7 +4344,7 @@ namespace VideoGui
                     bool res = false;
                     int r = directshortsScheduler.ScheduleNumber;
                     if (r >= ScheduleMax - 1) r = ScheduleMax - 1;
-                    scrapeDataList.Insert(0, new ScraperData() { Filename = $"{r + 1} Schedules Complete" });
+                    scrapeDataList.Insert(0, new ScraperData($"{r + 1} Schedules Complete"));
                     //lstMain.Items.Insert(0, $"{r + 1} Schedules Complete");
 
                     if (Days > 1)
@@ -4437,13 +4488,22 @@ namespace VideoGui
             {
                 Dispatcher.Invoke(() =>
                 {
+                    bool fnd = false;
                     int r = directshortsScheduler.ScheduleNumber;
                     string t = $"{title.Replace("\n", "").Replace("\r", "").Trim()}  {r + 1} {dateTime}";
                     foreach (ScraperData sd in scrapeDataList.Where(sd => sd.VideoId == id))
                     {
                         sd.Filename = t;
+                        fnd = true;
                     }
 
+                    if (!fnd)
+                    {
+                        ScraperData sd = new();
+                        sd.VideoId = id;
+                        sd.Filename = t;
+                        scrapeDataList.Insert(0, sd);
+                    }
                     lblLastNode.Content = $"{r} Scheduled";
                     //StatusBar.ApplyMargin();
                     System.Windows.Forms.Application.DoEvents();
@@ -5305,13 +5365,34 @@ namespace VideoGui
                     {
                         File.Delete(ft);
                         TotalScheduled++;
-                        files_deleted = (files_deleted == "") ? $"{file}" : files_deleted + $",{file}";
-                        if (files_deleted.Length > 120)
+                        files_deleted = file;
+
+                        if (!scrapeDataList.Where(s => s.IsDeletionHeader).Any())
                         {
-                            scrapeDataList.Insert(0, new ScraperData() { Filename = $"{files_deleted} Deleted" });
-                            //lstMain.Items.Insert(0, $"{files_deleted} Deleted");
-                            files_deleted = "";
+                            scrapeDataList.Insert(0, new ScraperData($"{files_deleted} Deleted"));
                         }
+                        else
+                        {
+                            bool fnd = false;
+                            foreach (ScraperData s in scrapeDataList)
+                            {
+                                if (s.Filename.Length < (80 - files_deleted.Length))
+                                {
+                                    fnd = true;
+                                    string r = $"{files_deleted} " + s.Filename;
+                                    s.Filename = r;
+                                    break;
+                                }
+                            }
+                            if (!fnd)
+                            {
+                                scrapeDataList.Insert(0, new ScraperData($"{files_deleted} Deleted"));
+                            }
+                        }
+
+                        //lstMain.Items.Insert(0, $"{files_deleted} Deleted");
+                        files_deleted = "";
+
                         ScheduledOk.Add(file);
                     }
 
@@ -5320,7 +5401,7 @@ namespace VideoGui
 
                 if (files_deleted != "")
                 {
-                    scrapeDataList.Insert(0, new ScraperData() { Filename = $"{files_deleted} Deleted" });
+                    scrapeDataList.Insert(0, new ScraperData($"{files_deleted} Deleted"));
 
                     files_deleted = "";
                 }
@@ -5356,7 +5437,7 @@ namespace VideoGui
                        LookUpTitleAndDesc(Path.GetFileNameWithoutExtension(ss)).GetAwaiter().GetResult();
                     if (ok)
                     {
-
+                        if (IsDebug) wv2.ZoomFactor = 0.45;
                         foreach (ScraperData sd in scrapeDataList.Where(s => s.VideoId == Id))
                         {
                             sd.HasSaved = false;
@@ -5423,6 +5504,55 @@ namespace VideoGui
                                 break;
                             }
                         }
+
+                        html = Regex.Unescape(await wv2.ExecuteScriptAsync("document.body.innerHTML"));
+                        HtmlDocument doc = new HtmlDocument();
+                        doc.LoadHtml(html);
+
+                        bool breakk = false;
+                        string thumb = "thumbnail_" +
+                          Path.GetFileNameWithoutExtension(filename) + ".png";
+                        string Thumbnail = Path.Combine(@"c:\GoPro9\Thumbnails", thumb);
+                        if (File.Exists(Thumbnail))
+                        {
+                            while (true)
+                            {
+                                DragAndDropLocalFileAsync(wv2, Thumbnail);
+                                breakk = true;
+                                while (true && !breakk)
+                                {
+                                    html = Regex.Unescape(await wv2.ExecuteScriptAsync("document.body.innerHTML"));
+
+                                    if (html.Contains("Uploading.."))
+                                    {
+                                        Task.Delay(100);
+                                        continue;
+                                    }
+                                    break;
+                                }
+                                string Span_Name = "container style-scope ytcp-img-with-fallback";
+                                var nodes = doc.DocumentNode.SelectNodes($"//div[@class='{Span_Name}']").ToList();
+                                bool ytthumb = false;
+                                if (nodes is not null)
+                                {
+
+                                    foreach (var _ in nodes.Where(node => node.InnerHtml.Contains("ytimg")).Select(node => new { }))
+                                    {
+                                        ytthumb = true;
+                                    }
+                                }
+                                if (ytthumb) break;
+                                Task.Delay(200);
+                            }
+                        }
+                        else
+                        {
+                            Task.Delay(100);
+                        }
+
+
+
+                        Task.Delay(100);
                         html = "";
                         string savebtn = "save";
                         await wv2.ExecuteScriptAsync($"document.getElementById('{savebtn}').click();");
@@ -5432,7 +5562,7 @@ namespace VideoGui
                             html = Regex.Unescape(await wv2.ExecuteScriptAsync("document.body.innerHTML"));
                             if (html.Contains("Changes saved"))
                             {
-                                Task.Delay(200);
+                                Task.Delay(100);
                                 break;
                             }
                         }
@@ -5452,7 +5582,7 @@ namespace VideoGui
                             html = Regex.Unescape(await wv2.ExecuteScriptAsync("document.body.innerHTML"));
                             if (html.Contains("Initial check"))
                             {
-                                Task.Delay(250);
+                                Task.Delay(150);
                                 continue;
                             }
                             if (html.Contains("Leave site?"))
@@ -5464,11 +5594,11 @@ namespace VideoGui
 
                             break;
                         }
-                        Task.Delay(500);
+                        Task.Delay(100);
 
                         saving = false;
                         wv2Dictionary[wv2Id].AllowDrop = true;
-                        if (nextaddress.Count < 0)
+                        if (nextaddress.Count == 0)
                         {
                             if (scrapeDataList.Count() == 1 || scrapeDataList.Where(s => !s.HasSaved).Count() == 0)
                             {
@@ -5690,7 +5820,7 @@ namespace VideoGui
                 else
                 {
                     recsNoFile = (scrapeDataList.Where(sd => !sd.HasSaved)).Count();
-                    if (recsNoFile > 0 || nextaddress.Count >= 0) AllowClose = false;
+                    if (recsNoFile > 0 || nextaddress.Count > 0) AllowClose = false;
                 }
 
                 if (recsNoFile == 0 && AllowClose)
@@ -5722,7 +5852,7 @@ namespace VideoGui
                     {
                         lblLastNode.Content = $"{files} Processed";
                         //StatusBar.ApplyMargin();
-                        checkforWaiting.Start();
+                        if (checkforWaiting is not null) checkforWaiting.Start();
                     }
                 });
                 if (wv2Dictionary.ContainsKey(id))
@@ -5734,7 +5864,7 @@ namespace VideoGui
                 CanSpool = true;
 
                 if (ScraperType == EventTypes.FilteredVideoCompletion) return;
-                if (nextaddress.Count >= 0)
+                if (nextaddress.Count > 0)
                 {
                     int Avaialble = 0;
                     if (wv2A1.AllowDrop) Avaialble++;
@@ -5765,6 +5895,6 @@ namespace VideoGui
             }
         }
 
-        DispatcherTimer checkforWaiting = null;
+        
     }
 }
