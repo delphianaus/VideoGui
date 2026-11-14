@@ -118,24 +118,26 @@ namespace VideoGui
     /// </summary>
     public partial class ScraperModule : FluentWindow
     {
-        object lockobj = new object();
         CancellationTokenSource canceltoken = new CancellationTokenSource();
         public int EventId, TotalScheduled = 0;
-        int WheelBody = 0, LastId = -1, Tid = -1, Did = -1, WheelMoveNode = 0;
+        int WheelBody = 0, LastId = -1;
         List<string> lookups = new List<string>();
         string LTitleStr = "", LDescStr = "", DirectoryPath = "";
-        int swap = 1, ct = 0, MaxNodes = -1, MaxUploads = 0, recs = 0, gmaxrecs = 0, files = 0, dbfiles = 0, max = 0, SlotsPerUpload = 0,
-            ScheduleMax = 0, ts = 0, LastKey = -1, Days = 1, CurrentDay = 1, inserted = 0, WheelMove = 0;
+        int swap = 1, MaxNodes = -1, MaxUploads = 0, files = 0, dbfiles = 0, SlotsPerUpload = 0,
+            ScheduleMax = 0, ts = 0, Days = 1, CurrentDay = 1, inserted = 0, WheelMove = 0;
         bool EditDone = false, btndone = false, ExitDialog = false, Waiting = false, IsVideoLookup = false, WaitingFileName = false;
-        bool Valid = false, IsFilteredVideoCompletion = false, IsVideoLookupShort = false, IsValid = false, IsUnlisted = false, IsDashboardMode = false, CanSpool = false, FirstRun = true, done = false, HasExited = false;
-        bool logginin = false, DoNextNode = true, finished = false, TimedOut = false, Uploading = false, NextRecord = false, Processing = false, clickupload = true;
+        bool Valid = false, IsFilteredVideoCompletion = false, IsVideoLookupShort = false, IsUnlisted = false,
+         IsDashboardMode = false, CanSpool = false, HasExited = false;
+        bool logginin = false, DoNextNode = true, finished = false, TimedOut = false, IsTest = false, AutoClose = false,
+        NextRecord = false, Processing = false, clickupload = true;
         public bool IsClosing = false, IsClosed = false, Exceeded = false, KilledUploads = false, SwapEnabled = false, IsTitleEditor = false;
         public bool TaskHasCancelled = false, NewSession = false, QuotaExceeded = false, Errored = false;
         DispatcherTimer checkforWaiting = null;
         string automation = "", user = "", SendKeysString = "", UploadPath = "",
-         Filter = "", LastNode = "", DefaultUrl = "", LastValidFileName = "", TableDestination = "";
+         Filter = "", LastNode = "", DefaultUrl = "";
         List<ScraperUploads> Scraper_uploaded = new();
-        List<string> IdNodes = new(), titles = new List<string>(), nextaddress = new(), Ids = new(), Idx = new(), ufiles = new(), Files = new();// DoneFiles = new();
+        List<string> IdNodes = new(), titles = new List<string>(), nextaddress = new(),
+        Ids = new(), Files = new();// DoneFiles = new();
         public List<string> ScheduledOk = new List<string>(), VideoFiles = new List<string>(), nodeslist = new List<string>();
         public List<ShortsDirectory> ShortsDirectoriesList = new(); // <shortname>
         public List<ListScheduleItems> listSchedules = new List<ListScheduleItems>();
@@ -143,11 +145,10 @@ namespace VideoGui
         public List<VideoIdFileName> ScheduledFiles = new List<VideoIdFileName>();
         DispatcherTimer CloseTimer = new DispatcherTimer();
         DirectshortsScheduler directshortsScheduler = null;
-        DispatcherTimer CloseScrape = new DispatcherTimer();
-        DispatcherTimer TimerSimulate = new DispatcherTimer();
-        DispatcherTimer timer = new DispatcherTimer();
-        DispatcherTimer LocationTimer = new DispatcherTimer();
-        public AddressUpdate DoVideoLookUp = null;
+        DispatcherTimer CloseScrape = new DispatcherTimer(),
+        TimerSimulate = new DispatcherTimer(), timer = new DispatcherTimer(),
+           LocationTimer = new DispatcherTimer(), InternalTimer = new DispatcherTimer();
+
         string TitleStr = "", DescStr = "", TargetUrl = "";
         StatusTypes VStatusType = StatusTypes.PRIVATE;
         WebAddressBuilder webAddressBuilder = null;
@@ -157,26 +158,25 @@ namespace VideoGui
         public bool ScheduledFinished = true, HasUploaded = false;
 
         System.Threading.Timer UploadsTimer = null;
-        TimeOnly CurrentTime = new TimeOnly();
-        DateOnly CurrentDate = DateOnly.FromDateTime(DateTime.Now);
-        public DateTime StartDate = DateTime.Now, EndDate = DateTime.Now, LastValidDate = DateTime.Now;
-        bool IsTest = false, AutoClose = false, AutoClosed = false, IsLocation = false,
-            IsMoving = false, HasMoved = false;
+
+
+
+       
+                  
         public bool TimedOutClose = false, IsMultiForm = false;
         public Action<object> ShowMultiForm = null;
         public Action<object, string> SendTraceInfo = null;
         List<DirectoriesProbe> Directories = new(); //Directories
         Dictionary<int, WebView2> wv2Dictionary = new Dictionary<int, WebView2>();
         Dictionary<int, WebView2> ActiveWebView = new Dictionary<int, WebView2>();
-        DispatcherTimer InternalTimer = new DispatcherTimer();
-        TaskCompletionSource<bool> tcs = new TaskCompletionSource<bool>();
+
+
         public System.Nullable<DateTime> ReleaseDate = null, ReleaseEndDate = null;
         public int uploadedcnt = 0;
         public EventTypes ScraperType = EventTypes.VideoUpload;
-        private const int WM_MOUSEWHEEL = 0x020A;
+
         private const int WHEEL_DELTA = 120; // Standard wheel delta value
-        private const int INPUT_MOUSE = 0;
-        private const int MOUSEEVENTF_WHEEL = 0x0800;
+
         private CoreWebView2CompositionController wv2CompositionController;
 
         [DllImport("user32.dll", SetLastError = true)]
@@ -224,12 +224,11 @@ namespace VideoGui
         [DllImport("user32.dll")]
         private static extern bool GetCursorPos(out POINT lpPoint);
 
-        [DllImport("user32.dll")]
-        private static extern bool SetCursorPos(int X, int Y);
+     
 
         private const int BM_CLICK = 0x00F5;
 
-        bool IsDebug = false, IsFilter = false;
+        bool IsDebug = false;
         private delegate bool EnumWindowProc(IntPtr hWnd, IntPtr parameter);
         public void DoLocationTimer()
         {
@@ -725,15 +724,10 @@ namespace VideoGui
         {
             try
             {
-                // 1. Get file details and convert to base64
                 string fileName = Path.GetFileName(filePath);
                 byte[] fileBytes = File.ReadAllBytes(filePath);
                 string base64Data = Convert.ToBase64String(fileBytes);
-
-                // Determine standard MIME type
                 string mimeType = fileName.EndsWith(".png", StringComparison.OrdinalIgnoreCase) ? "image/png" : "image/jpeg";
-
-                // 2. JavaScript payload that injects the file payload and triggers the native upload handler
                 string jsScript = $@"
     (async () => {{
         // Target the file upload button container from YouTube Studio
@@ -852,18 +846,13 @@ namespace VideoGui
         {
             try
             {
-
-
                 bool sent = false;
                 for (int i = 1; i <= wv2Dictionary.Count; i++)
                 {
                     if (wv2Dictionary[i].AllowDrop)
                     {
                         string newurl = webAddressBuilder.ScopeVideo(address).ScopeAddress;
-                        //string nw = $"Adding new record on webview - {wv2Dictionary[i].Name} new url = {newurl}";
-                        //nw.WriteLog("webview2");
                         wv2Dictionary[i].SetURL(newurl);
-                        //     await NavigateBypassingUnloadAsync(wv2Dictionary[i], new Uri(webAddressBuilder.ScopeVideo(address).ScopeAddress));
                         sent = true;
                         break;
                     }
@@ -872,7 +861,6 @@ namespace VideoGui
                 {
                     nextaddress.Add(address);
                 }
-
             }
             catch (Exception ex)
             {
@@ -883,11 +871,9 @@ namespace VideoGui
         {
             try
             {
-                // string url = $"webview {(sender as WebView2).Name} url {(sender as WebView2).Uid}";
-                //url.WriteLog("webview2");
-                if (e.IsSuccess && sender is not null)
+                if (e.IsSuccess && sender is not null && sender is WebView2 wv2)
                 {
-                    int Id = (sender as WebView2).Name.Replace("wv2A", "").ToInt(-1);
+                    int Id = wv2.Name.Replace("wv2A", "").ToInt(-1);
                     string source = (sender as WebView2).Source.AbsoluteUri.ToString(), IntId = "";
                     int p1 = source.IndexOf("video/"), p2 = source.IndexOf("/edit");
                     if (p1 != -1 && p2 != -1)
@@ -898,9 +884,8 @@ namespace VideoGui
                     {
                         IntId = IntId.Substring(5);
                     }
-                    var task = (sender as WebView2).ExecuteScriptAsync("document.body.innerHTML");
-                    task.ContinueWith(x => { ProcessHTML(x.Result, Id, IntId, sender); },
-                        TaskScheduler.FromCurrentSynchronizationContext());
+                    string html = Regex.Unescape(await wv2.ExecuteScriptAsync("document.body.innerHTML"));
+                    ProcessHTML(html, Id, IntId, sender);
                 }
             }
             catch (Exception ex)
@@ -2439,7 +2424,7 @@ namespace VideoGui
 
                                 if (TimedOut || canceltoken.IsCancellationRequested)
                                 {
-                                    scrapeDataList.Insert(0, new ScraperData($"Timeout on getting filename",Id));
+                                    scrapeDataList.Insert(0, new ScraperData($"Timeout on getting filename", Id));
                                     // lstMain.Items.Insert(0, $"Timeout on getting filename");
                                     break;
                                 }
@@ -2506,7 +2491,7 @@ namespace VideoGui
                                 else if (directshortsScheduler is not null)
                                 {
                                     TimedOut = true;
-                                    scrapeDataList.Insert(0, new ScraperData($"Timeout on Scheduling Detected. {Id}",Id));
+                                    scrapeDataList.Insert(0, new ScraperData($"Timeout on Scheduling Detected. {Id}", Id));
                                     //lstMain.Items.Insert(0, $"Timeout on Scheduling Detected.");
                                     DoNextNode = false;
                                 }
@@ -2587,7 +2572,7 @@ namespace VideoGui
                                         }
                                         if (files > 0)
                                         {
-                                            lblLastNode.Content = $"{files-1} Processed";
+                                            lblLastNode.Content = $"{files - 1} Processed";
                                         }
                                         if (dbfiles > 0)
                                         {
@@ -5695,20 +5680,19 @@ namespace VideoGui
         }
 
         bool hlt = false;
-        public void ProcessHTML(string html, int id, string IntId, object sender)
+        public async Task<bool> ProcessHTML(string html, int id, string IntId, object sender)
         {
             try
             {
-                if (canceltoken.IsCancellationRequested) return;
+                if (canceltoken.IsCancellationRequested) return true;
                 string filename = "";
-                if (html is not null)
+                if (html is not null && sender is WebView2 wv2)
                 {
                     string ehtml = Regex.Unescape(html);
                     if (ehtml is not null && ehtml != "")
                     {
                         if (ehtml.Contains(IntId))
                         {
-
                             HtmlDocument doc = new HtmlDocument();
                             doc.LoadHtml(ehtml);
                             var node = doc.DocumentNode.SelectSingleNode("//div[@id='original-filename']");
@@ -5745,11 +5729,11 @@ namespace VideoGui
                                                "divElements.forEach(function(divElement) {" +
                                               $"   divElement.textContent = '{DescStr}';" +
                                                "});";
-                                        (sender as WebView2).CoreWebView2.ExecuteScriptAsync(script2);
+                                        wv2.CoreWebView2.ExecuteScriptAsync(script2);
                                     }
                                     if (TitleStr != "" || DescStr != "")
                                     {
-                                        if ((sender as WebView2).CoreWebView2 != null)
+                                        if (wv2.CoreWebView2 != null)
                                         {
                                             while (true)
                                             {
@@ -5764,10 +5748,10 @@ namespace VideoGui
                                                            "if (saveButton) {" +
                                                            "   saveButton.click();" +
                                                            "}";
-                                            (sender as WebView2).CoreWebView2.ExecuteScriptAsync(script1);
+                                            wv2.CoreWebView2.ExecuteScriptAsync(script1);
                                             while (true)
                                             {
-                                                var p = IsButtonEnabled((sender as WebView2)).GetAwaiter().GetResult();
+                                                var p = await IsButtonEnabled(wv2);//.GetAwaiter().GetResult();
                                                 if (p == ButtonReturnType.Disabled)
                                                 {
                                                     break;
@@ -5795,16 +5779,17 @@ namespace VideoGui
                         if (filename == "")
                         {
                             Thread.Sleep(500);
-                            if (wv2Dictionary.ContainsKey(id))
+                            if ((wv2Dictionary.ContainsKey(id) && (wv2Dictionary[id] is WebView2 wvx)))
                             {
-                                var webView2Instance = wv2Dictionary[id];
-                                var task = webView2Instance.ExecuteScriptAsync("document.body.innerHTML");
-                                task.ContinueWith(x => { ProcessHTML(x.Result, id, IntId, sender); }, TaskScheduler.FromCurrentSynchronizationContext());
-                                return;
+                                html = Regex.Unescape(await wvx.ExecuteScriptAsync("document.body.innerHTML"));
+                                ProcessHTML(html, id, IntId, sender);
                             }
+
+                            return true;
                         }
                     }
                 }
+
 
                 int recsNoFile = 0;
 
@@ -5834,6 +5819,7 @@ namespace VideoGui
 
                 if (ScraperType == EventTypes.ScapeSchedule)
                 {
+                    filename = filename.EndsWith(".mp4") ? filename.Replace(".mp4", "") : filename;
                     Invoker?.Invoke(this, new CustomParams_InsertIntoTable(IntId, filename));
                     inserted++;
                 }
@@ -5843,7 +5829,7 @@ namespace VideoGui
                     var _DoAutoCancel = new AutoCancel(DoAutoCancelClose, "", 5, "Scaping Finished");
                     _DoAutoCancel.ShowActivated = true;
                     _DoAutoCancel.Show();
-                    return;
+                    return true;
                 }
                 files++;
                 Dispatcher.Invoke(() =>
@@ -5851,7 +5837,6 @@ namespace VideoGui
                     if (files > 0)
                     {
                         lblLastNode.Content = $"{files} Processed";
-                        //StatusBar.ApplyMargin();
                         if (checkforWaiting is not null) checkforWaiting.Start();
                     }
                 });
@@ -5859,11 +5844,10 @@ namespace VideoGui
                 {
                     var webView2Instance = wv2Dictionary[id];
                     webView2Instance.AllowDrop = true;
-
                 }
                 CanSpool = true;
 
-                if (ScraperType == EventTypes.FilteredVideoCompletion) return;
+                if (ScraperType == EventTypes.FilteredVideoCompletion) return true;
                 if (nextaddress.Count > 0)
                 {
                     int Avaialble = 0;
@@ -5888,13 +5872,13 @@ namespace VideoGui
                 {
 
                 }
+                return true;
             }
             catch (Exception ex)
             {
                 ex.LogWrite($"ProcessHTML {MethodBase.GetCurrentMethod()?.Name} {ex.Message} ");
+                return false;
             }
         }
-
-        
     }
 }
