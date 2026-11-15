@@ -7057,6 +7057,7 @@ namespace VideoGui
                 SourceDirectory720p.CreatePathIfNotExists();
                 SourceDirectory4K = key.GetValueStr("SourceDirectory4K");
                 SourceDirectoryMovies = key.GetValueStr("SourceDirectoryMovies");
+                SourceDirectoryYouTube = key.GetValueStr("SourceDirectoryYouTube");
                 bool ChkAutoAAC_IsChecked = key.GetValueBool("ChkAutoAAC", true);
                 bool ChkReEncode_IsChecked = key.GetValueBool("reencodefile", true);
                 SourceDirectoryAdobe4K = key.GetValueStr("SourceDirectory4KAdobe");
@@ -10580,6 +10581,11 @@ namespace VideoGui
                         }
 
                         if (IsDownloads) SourceFileIs = Path.GetFileName(SourceFileIs);
+
+                        if (SourceFileIs.Contains(@"\"))
+                        {
+                            SourceFileIs = SourceFileIs.Split(@"\").ToList()?.LastOrDefault();
+                        }
                         List<string> files = Directory.EnumerateFiles(SourceDirectory,
                            SourceFileIs, SearchOption.AllDirectories).ToList();
                         if (files.Count > 0)
@@ -12309,7 +12315,7 @@ namespace VideoGui
             }
             finally
             {
-               
+
             }
         }
 
@@ -13363,7 +13369,7 @@ namespace VideoGui
             try
             {
                 string myStrQuote = "\"";
-                ManagementObjectSearcher searcher = new($"SELECT * FROM `Process where name = {myStrQuote}{ExeName}{myStrQuote}");
+                ManagementObjectSearcher searcher = new($"SELECT * FROM Process where name = {myStrQuote}{ExeName}{myStrQuote}");
                 foreach (ManagementObject o in searcher.Get())
                 {
                     if (o.Properties["Handle"] is null || o.Properties["ProcessID"] is null)
