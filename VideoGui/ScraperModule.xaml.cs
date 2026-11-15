@@ -4831,12 +4831,12 @@ namespace VideoGui
         {
             try
             {
-                string javascript = @"
-    (function() {
-        var htmlString = document.documentElement.innerHTML;
-        return htmlString.includes('channel-id');
-    })();
-";
+                string javascript = $@"
+                (function() {{
+                    var htmlString = document.documentElement.innerHTML;
+                    return htmlString.includes('{webAddressBuilder.ChannelID}');
+                }})();
+            ";
                 javascript = javascript.Replace("channel-id", webAddressBuilder.channel_ID);
                 string resultJson = await wv2.CoreWebView2.ExecuteScriptAsync(javascript);
                 return resultJson.Equals("true", StringComparison.OrdinalIgnoreCase); ;
