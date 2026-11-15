@@ -42,6 +42,7 @@ using System.Security.Policy;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using System.Timers;
 using System.Windows;
@@ -2928,6 +2929,8 @@ namespace VideoGui
                         }
                         else break;
                     }
+
+                    bool IsYouTubeLoaded = await YouTubeIsLoggedIn(wv2);
                     if (html is not null && ehtml.Contains("Customize channel"))
                     {
                         Processing = !YouTubeLoaded();  // Load Default URL.(DefaultUrl)
@@ -2940,7 +2943,7 @@ namespace VideoGui
                             ScraperType == EventTypes.FilteredVideoCompletion ||
                             ScraperType == EventTypes.ScapeSchedule)
                         {
-                            if (ehtml.Contains("Justin's Train Journey's"))
+                            if (IsYouTubeLoaded)
                             {
                                 InsertAtZero = true;
                                 YouTubeLoaded();
@@ -4823,6 +4826,27 @@ namespace VideoGui
             public int Y;
         }
 
+
+        private async Task<bool> YouTubeIsLoggedIn(WebView2 wv2)
+        {
+            try
+            {
+                string javascript = @"
+    (function() {
+        var htmlString = document.documentElement.innerHTML;
+        return htmlString.includes('channel-id');
+    })();
+";
+                javascript = javascript.Replace("channel-id", webAddressBuilder.channel_ID);
+                string resultJson = await wv2.CoreWebView2.ExecuteScriptAsync(javascript);
+                return resultJson.Equals("true", StringComparison.OrdinalIgnoreCase); ;
+            }
+            catch (Exception ex)
+            {
+                ex.LogWrite($"YouTubeIsLoggedIn {MethodBase.GetCurrentMethod()?.Name} {ex.Message}");
+                return false;
+            }
+        }
         private async Task<bool> ProcessBody(string Span_Name, string Script_Close, string connectStr)
         {
             try
