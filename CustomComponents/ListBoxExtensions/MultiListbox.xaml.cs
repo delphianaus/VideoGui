@@ -183,7 +183,7 @@ namespace CustomComponents.ListBoxExtensions
                     control.ItemsSource = lstFactory.DataSource as IEnumerable;
                     if (control.ItemsSource != null) control.SetMaxlstBoxWidth();
                     bool ShowTitle = false;
-
+                    
                     control.HeaderContextMenu = control.HeaderContextMenu ?? new ContextMenu();
                     if (lstFactory.MenuItems_Title is not null)
                     {
@@ -208,6 +208,10 @@ namespace CustomComponents.ListBoxExtensions
 
                         control.ItemsContextMenu.Visibility = ShowTitle ? Visibility.Visible : control.ItemsContextMenu.Visibility;
 
+                    }
+                    if (lstFactory.BorderBrush is not null)
+                    {
+                        control.BorderBrush = control.BorderBrush ?? new SolidColorBrush(lstFactory.BorderBrush.Value);
                     }
                     //control.FontSize = !double.IsNaN(lstFactory.FontSize) ? lstFactory.FontSize : control.FontSize;
                     // control.ItemHeight = !double.IsNaN(lstFactory.ItemHeight) ? lstFactory.ItemHeight : control.ItemHeight;

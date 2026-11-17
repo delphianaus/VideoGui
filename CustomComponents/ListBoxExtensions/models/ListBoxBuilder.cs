@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,7 +14,7 @@ namespace CustomComponents.ListBoxExtensions.models
         private double fontSize = double.NaN, itemHeight = double.NaN;
         private List<MultiListboxColumnDefinition> columns = new List<MultiListboxColumnDefinition>();
         private List<object> menuItems_Title = null, menuItems_ListItems = null;
-
+        public Nullable<System.Windows.Media.Color> BorderBrush = null;
         public object DataSource { get => dataSource; set => dataSource = value; }
         public double FontSize { get => fontSize; set => fontSize = value; }
         public double ItemHeight { get => itemHeight; set => itemHeight = value; }
@@ -22,7 +23,8 @@ namespace CustomComponents.ListBoxExtensions.models
         public List<object> MenuItems_ListItems { get => menuItems_ListItems; set => menuItems_ListItems = value; }
         public ListBoxBuilder(object dataSource, List<MultiListboxColumnDefinition> columns, 
             double fontSize = double.NaN, double itemHeight = double.NaN,
-            List<object> contextMenuHdrItems = null, List<object> contextMenuItems = null)
+            List<object> contextMenuHdrItems = null, List<object> contextMenuItems = null,
+            Nullable<System.Windows.Media.Color> borderbrush = null)
         {
             this.dataSource = dataSource;
             this.columns = columns;
@@ -30,6 +32,7 @@ namespace CustomComponents.ListBoxExtensions.models
             this.itemHeight = itemHeight;
             this.menuItems_Title = contextMenuHdrItems;
             this.menuItems_ListItems = contextMenuItems;
+            this.BorderBrush = borderbrush;
         }
     }
 }

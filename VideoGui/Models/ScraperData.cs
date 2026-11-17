@@ -33,12 +33,18 @@ namespace VideoGui.Models
 
         public ScraperData(string _filename)
         {
-            Filename = _filename;
+            Filename = _filename.Replace(".mp4","");
+        }
+
+        public ScraperData(string _filename, bool _IsDeletionHeader)
+        {
+            Filename = _filename.Replace(".mp4", ""); ;
+            IsDeletionHeader = _IsDeletionHeader;
         }
 
         public ScraperData(string _filename, string _videoId)
         {
-            Filename = _filename;
+            Filename = _filename.Replace(".mp4", ""); ;
             VideoId = _videoId;
         }
 

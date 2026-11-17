@@ -98,7 +98,7 @@
                 </ui:TitleBar.Icon>
             </ui:TitleBar>
             <Grid Grid.Row="1">
-                <Grid Width="560" Height="806" x:Name="MainGrid" HorizontalAlignment="Left" VerticalAlignment="Top">
+                <Grid Width="560" Height="806"  x:Name="MainGrid" HorizontalAlignment="Left" VerticalAlignment="Top">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <!-- Loading Panel -->

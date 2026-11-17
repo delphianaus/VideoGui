@@ -324,6 +324,7 @@ namespace VideoGui
                     var r = _width - 530;
                     ShortsDirectoryNameWidth = r > 0 ? r : 100;
                     MultiShortsDirectoryNameWidth = r > 0 ? r : 100;
+                    
                 }
             }
             catch (Exception ex)
