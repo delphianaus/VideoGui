@@ -1073,7 +1073,7 @@ namespace VideoGui
 
         bool KeyState = false;
         private void btnSchdule_Click(object sender, RoutedEventArgs e)
-        {
+        {   
             try
             {
                 string logfile = "btnSchdule_Click";

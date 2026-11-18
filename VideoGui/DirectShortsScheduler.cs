@@ -32,6 +32,7 @@ namespace VideoGui
         DateTime ScheduleAt = DateTime.Now.AddYears(-500);
         public string connectionString = "";
         bool IsTest = true, IsFirstTime = true;
+        public int lastgap = -1;
         public CancellationTokenSource canceltoken = new CancellationTokenSource();
         List<ListScheduleItems> ScheduleList = new List<ListScheduleItems>();
         public DateTime StartDate = DateTime.Now, EndDate = DateTime.Now, LastValidDate = DateTime.Now;
@@ -43,7 +44,8 @@ namespace VideoGui
         bool setup = false, BeginMode = false, FinishMode = false, FirstTime = false;
         public bool CanSchedule = true;
         CancellationTokenSource cts = null;
-        public DirectshortsScheduler(OnFinish doOnFinish, OnFinishBool doOnFinishSchedulesComplete,
+        public DirectshortsScheduler(OnFinish doOnFinish, 
+            OnFinishBool doOnFinishSchedulesComplete,
             List<ListScheduleItems> listSchedules,
             DateTime startDate, DateTime endDate,
             ReportVideoScheduled doReportSchedule,
@@ -263,7 +265,7 @@ namespace VideoGui
                             }
                         }
 
-
+                        LastValidDate = ScheduleAt;
                         if (Desc_Str != "" && Title_str != "")
                         {
                             int iidx = Title_str.IndexOf("#");
@@ -296,7 +298,7 @@ namespace VideoGui
                             var updateResponse = updateRequest.Execute();// Async(cts.Token);
                             DoReportScheduled(ScheduleAt, videoId, Title_str);
                             ScheduleNumber++;
-                            LastValidDate = ScheduleAt;
+                            Task.Delay(200);
                             return FinishType.Scheduled;
                         }
                         return FinishType.LookUpError;
@@ -429,6 +431,7 @@ namespace VideoGui
                 }
                 if (GapTime != TimeSpan.Zero)
                 {
+                    
                     var ScheduleDate = CurrentDate.ToDateTime(CurrentTime);
                     if (ScheduleDate >= StartDate && ScheduleDate <= EndDate && ScheduleNumber < MaxNumberSchedules)
                     {

@@ -2390,9 +2390,9 @@ namespace VideoGui
                                 WaitingFileName = vidoeid == "";
                                 if (!WaitingFileName)
                                 {
-                                    if (vidoeid.EndsWith(".mp4"))
+                                    if (vidoeid.ToLower().EndsWith(".mp4"))
                                     {
-                                        vidoeid = vidoeid.Replace(".mp4", "");
+                                        vidoeid = Path.GetFileNameWithoutExtension(vidoeid);
                                     }
                                     bool fnd = false;
                                     string newid = "";
@@ -4498,13 +4498,16 @@ namespace VideoGui
             }
         }
         public bool HasCompleted = false;
+        public Nullable<DateTime> LastSchedule = null;
         private void DoReportSchedule(DateTime dateTime, string id, string title)
         {
             try
             {
                 Dispatcher.Invoke(() =>
                 {
+                    Thread.Sleep(200);
                     bool fnd = false;
+                    LastSchedule= dateTime;
                     int r = directshortsScheduler.ScheduleNumber;
                     string t = $"{title.Replace("\n", "").Replace("\r", "").Trim()}  {r + 1} {dateTime}";
                     foreach (ScraperData sd in scrapeDataList.Where(sd => sd.VideoId == id))
@@ -4515,10 +4518,7 @@ namespace VideoGui
 
                     if (!fnd)
                     {
-                        ScraperData sd = new();
-                        sd.VideoId = id;
-                        sd.Filename = t;
-                        scrapeDataList.Insert(0, sd);
+                        scrapeDataList.Insert(0, new ScraperData(t,id));
                     }
                     lblLastNode.Content = $"{r} Scheduled";
                     //StatusBar.ApplyMargin();

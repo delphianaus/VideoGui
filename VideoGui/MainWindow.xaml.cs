@@ -1602,6 +1602,7 @@ namespace VideoGui
                     Nullable<DateTime> dt = LoadDate("ScheduleDate");
                     Nullable<TimeSpan> st = LoadTime("ScheduleTimeStart");
                     Nullable<TimeSpan> et = LoadTime("ScheduleTimeEnd");
+                    Nullable<DateTime> gapdata = LoadDate("NextValidGap");
                     var s = LoadString("maxr");
 
                     if (et.HasValue && st.HasValue)
@@ -1626,11 +1627,45 @@ namespace VideoGui
                             int yrdiff = DateTime.Now.Year - dt.Value.Year;
                             dt = dt.Value.AddYears(yrdiff);
                         }
+                        Nullable<DateTime> LastSchedule = LoadDate("LAST_SUCCESSFULL_SCHEDULE");
+                        if (LastSchedule.HasValue && gapdata.HasValue)
+                        {
+                            if (dt.Value.Date != LastSchedule.Value.Date)
+                            {
+                                DateTime LS = LastSchedule.Value;
+                                TimeSpan tss = new TimeSpan(20, 0, 0);
+                                var LLS = LS.AddMinutes(gapdata.Value.TimeOfDay.Minutes);
+                                if (LLS.TimeOfDay < tss)
+                                {
+                                    manualScheduler.ReleaseDate.Value = LastSchedule.Value.Date;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            
+                            if (dt.Value.TimeOfDay == TimeSpan.Zero)
+                            {
+                                DateTime rr = dt.Value.Date.AddDays(-1);
+                                var newdate = rr.AtTime(st.Value);
+                                manualScheduler.ReleaseDate.Value = newdate.Date;
+                                r = newdate;
+                            }    
+                            else manualScheduler.ReleaseDate.Value = dt.Value.Date;
+
+
+                        }
+
+                        
+                        
+                        
                         manualScheduler.txtMaxSchedules.Text = pp;
-                        manualScheduler.ReleaseDate.Value = dt.Value.Date;
+                       
                         manualScheduler.ReleaseTimeStart.Value = r.AtTime(st);
                         manualScheduler.ReleaseTimeEnd.Value = r.AtTime(et);
                         manualScheduler.chkSchedule.IsChecked = IsTest;
+
+
                     }
                 }
                 else if (tld is CustomParams_SaveSchedule cpSaveSchedule)
@@ -12809,12 +12844,24 @@ namespace VideoGui
                     {
                         string sqla = "SELECT ID FROM SETTINGS WHERE SETTINGNAME = @P0";
                         int iScheduleID = connectionString.ExecuteScalar(sqla, [("@P0", "CURRENTSCHEDULINGID")]).ToInt(-1);
+
+                        if (ss.LastSchedule.HasValue)
+                        {
+                            SaveDates(ss.LastSchedule.Value, "LAST_SUCCESSFULL_SCHEDULE");
+                        }
                         List<ListScheduleItems> _listItems = SchedulingItemsList.Where(s => s.ScheduleId == iScheduleID)
                                  .Select(s => new ListScheduleItems(s.Start, s.End, s.Gap)).ToList();
                         WebAddressBuilder webAddressBuilder = new WebAddressBuilder("UCdMH7lMpKJRGbbszk5AUc7w");
                         string gUrl = webAddressBuilder.AddFilterByDraftShorts().GetHTML();
                         int Max = LoadString("maxr").ToInt(100);
                         Nullable<DateTime> startdate = LoadDate("ScheduleDate");
+                        if (startdate.HasValue)
+                        {
+                            if (startdate.Value.TimeOfDay == TimeSpan.Zero)
+                            {
+                                startdate = LoadDate("LAST_SUCCESSFULL_SCHEDULE");
+                            }
+                        }
                         Nullable<DateTime> enddate = DateTime.Now.AddHours(10);
                         Nullable<TimeSpan> ts = LoadTime("ScheduleTime");
                         if (ss.TaskHasCancelled)
