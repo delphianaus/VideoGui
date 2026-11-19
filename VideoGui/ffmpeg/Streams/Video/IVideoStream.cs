@@ -37,9 +37,10 @@ namespace VideoGui.ffmpeg.Streams.Video
         IVideoStream SetFPS(float fps);
         IVideoStream SetBitrate(long minBitrate, long maxBitrate, long bufferSize);
         IVideoStream SetBitrate(long bitrate);
-        IVideoStream SetSize(VideoSize size);
-        IVideoStream SetSize(int width, int height, double aspectratio, int Modulas, Scaling Scaler, int x, int y, int left, int top, string dar = "");
-        IVideoStream SetSize(int width, int height);
+        IVideoStream SetSize(VideoSize size, bool IsAND = false);
+        IVideoStream SetSize(int width, int height, double aspectratio, int Modulas, 
+            Scaling Scaler, int x, int y, int left, int top, string dar = "", bool IsAMD = false);
+        IVideoStream SetSize(int width, int height, bool IsAMD = false);
         IVideoStream SetCodec(VideoCodec codec);
         IVideoStream SetCodec(string codec);
         IVideoStream Crop(int x, int y, int left, int top, string dar = "");

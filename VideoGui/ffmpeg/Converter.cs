@@ -1667,6 +1667,11 @@ namespace VideoGui.ffmpeg
             {
                 if (decoder == "d3d11va") return this;
                 _parameters.Add(($"-hwaccel {hardwareAccelerator}", true));
+
+                if (hardwareAccelerator == HardwareAccelerator.d3d11va.ToString())
+                {
+                    _parameters.Add(($"-hwaccel_output_format d3d11", true));
+                }
                 if (decoder == "libaom_av1")
                 {
                     decoder = "libaom-av1";

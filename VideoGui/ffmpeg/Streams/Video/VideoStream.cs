@@ -347,11 +347,12 @@ namespace VideoGui.ffmpeg.Streams.Video
         }
 
         /// <inheritdoc />
-        public IVideoStream SetSize(VideoSize size)
+        public IVideoStream SetSize(VideoSize size,bool IsAMD = false)
         {
             try
             {
-                _parameters.AddIfNotExists($"scale={size.ToFFmpegFormat()}", PostInput);
+                _parameters.AddIfNotExists(IsAMD ? "scale_d3d11" : "scale" 
+                    + $"scale={size.ToFFmpegFormat()}", PostInput);
                 return this;
             }
             catch (Exception ex)
@@ -391,16 +392,19 @@ namespace VideoGui.ffmpeg.Streams.Video
                 return this;
             }
         }
-        public IVideoStream SetSize(int width, int height, double aspectratio, int Modulas, Scaling Scaler, int x, int y, int left, int top, string dar = "")
+        public IVideoStream SetSize(int width, int height, double aspectratio, 
+            int Modulas, Scaling Scaler, int x, int y, int left, int top, 
+            string dar = "", bool IsAMD = false)
         {
             try
             {
-                
+
                 if (width > 0 && height > 0)
                 {
                     string crop = x > 0 || y > 0 ? $"crop={x}:{y}:{left}:{top}" : "";
                     string setdar = (dar != "") ? $"setdar={dar}" : "";
-                    _size = $"scale={width}:{height}:flags=" + Scaler.ToString();//
+                    _size = (IsAMD && crop.Length == 0)? "scale_d3d11" : "scale" + $"={width}:{height}";
+                    _size += (IsAMD && crop.Length == 0) ? "" : $":flags={Scaler}";//.ToString();//
                     //crop + setdar;
                     _parameters.AddIfNotExists(_size, PostInput);
                     if ((x > 0) && (y > 0)) _parameters.AddIfNotExists(crop, PostInput);
@@ -416,7 +420,9 @@ namespace VideoGui.ffmpeg.Streams.Video
                     }
                     string crop = x > 0 || y > 0 ? $"crop={x}:{y}:{left}:{top}" : "";
                     string setdar = (dar != "") ? $"setdar={dar}" : "";
-                    _size = $"scale={AdjustedWidth}:{height}:flags=" + Scaler.ToString();//
+                    _size = (IsAMD && crop.Length == 0) ? "scale_d3d11" : "scale" +
+                        $"={AdjustedWidth}:{height}";
+                    _size += (IsAMD && crop.Length == 0) ? "" : $":flags={Scaler}";//.ToString();//
                     //crop + setdar;
                     _parameters.AddIfNotExists(_size, PostInput);
                     if ((x > 0) && (y > 0)) _parameters.AddIfNotExists(crop, PostInput);
@@ -433,8 +439,8 @@ namespace VideoGui.ffmpeg.Streams.Video
                     }
                     string crop = x > 0 || y > 0 ? $"crop={x}:{y}:{left}:{top}" : "";
                     string setdar = (dar != "") ? $"setdar={dar}" : "";
-                    _size = $"scale={width}:{AdjustedHeight}:flags=" + Scaler.ToString();//
-                    //crop + setdar;
+                    _size = (IsAMD && crop.Length == 0) ? "scale_d3d11" : "scale" + $"={width}:{AdjustedHeight}";//:flags=" + Scaler.ToString();//
+                    _size += (IsAMD && crop.Length == 0) ? "" : $":flags={Scaler}";//.ToString();////crop + setdar;
                     _parameters.AddIfNotExists(_size, PostInput);
                     if ((x > 0) && (y > 0)) _parameters.AddIfNotExists(crop, PostInput);
                     if (setdar != "") _parameters.AddIfNotExists(setdar, PostInput);
@@ -449,11 +455,12 @@ namespace VideoGui.ffmpeg.Streams.Video
         }
 
         /// <inheritdoc />
-        public IVideoStream SetSize(int width, int height)
+        public IVideoStream SetSize(int width, int height, bool IsAMD = false)
         {
             try
             {
-                _parameters.AddIfNotExists($"scale={width}x{height}", PostInput);
+                _parameters.AddIfNotExists(IsAMD ? "scale_d3d11" : "scale" 
+                    + $"={width}x{height}", PostInput);
                 return this;
             }
             catch (Exception ex)

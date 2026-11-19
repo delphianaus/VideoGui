@@ -9029,13 +9029,14 @@ namespace VideoGui
                 Video = CheckForGraphicsCard();
                 lbAccelHW.AutoSizeLabel(Video);
                 LineNum = 1;
+                bool IsAMD = false;
                 ffmpeg.VideoCodec Encoder = ffmpeg.VideoCodec.h264;
                 string HWInfo = GetCpuInfo();
                 HardwareAccelerator HardwareAcceleration = HardwareAccelerator.software;// "qsv";
                 if (HWInfo.ToLower().Contains("intel")) HardwareAcceleration = HardwareAccelerator.qsv;
                 if ((HWInfo.ToLower().Contains("amd") || (Video.Contains("AMD") || Video.Contains("Radeon"))))
                 {
-                    HardwareAcceleration = HardwareAccelerator.d3d12va;
+                    HardwareAcceleration = HardwareAccelerator.d3d11va;
                 }
                 if (Video.Contains("NVIDIA"))
                 {
@@ -9046,7 +9047,11 @@ namespace VideoGui
                     if (_X265Output)// hevc
                     {
                         if (Video.Contains("NVIDIA")) Encoder = ffmpeg.VideoCodec.hevc_nvenc;
-                        else if (Video.Contains("AMD") || (Video.Contains("Radeon"))) Encoder = ffmpeg.VideoCodec.hevc_amf;
+                        else if (Video.Contains("AMD") || (Video.Contains("Radeon")))
+                        {
+                            Encoder = ffmpeg.VideoCodec.hevc_amf;
+                            IsAMD = true;
+                        }
                     }
                     else // AV1
                     {
@@ -9567,7 +9572,9 @@ namespace VideoGui
                             job.ThreadWeight = 1.3;
 
 
-                            videoStream = videoStream = videoStream.SetSize(1920, -1, aspectratio, ArModulas.ToInt(), Scaling.lanczos, 0, 0, 0, 0);
+                            videoStream = videoStream = videoStream.SetSize(1920, -1, 
+                                aspectratio, ArModulas.ToInt(), 
+                                Scaling.lanczos, 0, 0, 0, 0, "", IsAMD);
                         }
                         Encoder = ffmpeg.VideoCodec.h264_amf;
                     }
@@ -9576,7 +9583,9 @@ namespace VideoGui
                         if (videowidth > 1080)
                         {
                             job.ThreadWeight = 1.3;
-                            videoStream = videoStream.SetSize(1920, -1, aspectratio, ArModulas.ToInt(), Scaling.lanczos, 0, 0, 0, 0);
+                            videoStream = videoStream.SetSize(1920, -1, 
+                                aspectratio, ArModulas.ToInt(), Scaling.lanczos, 0, 0, 0, 0,
+                                "",IsAMD);
                         }
                     }
                     else if ((IsResize1080shorts) || (job.FileNoExt.ToLower().Contains("shorts")))
@@ -9595,7 +9604,9 @@ namespace VideoGui
                             if (videowidth > 1080)
                             {
                                 job.ThreadWeight = 1.3;
-                                videoStream = videoStream.SetSize(1920, 1080, -1, -1, Scaling.lanczos, CropWidth, CropHeight, CropLeft, CropTop, "9/16");
+                                videoStream = videoStream.SetSize(1920, 1080, -1, -1,
+                                    Scaling.lanczos, CropWidth, CropHeight, 
+                                    CropLeft, CropTop, "9/16", IsAMD);
                             }
                             else if (videowidth == 1080)
                             {
@@ -9632,7 +9643,9 @@ namespace VideoGui
                                         int Weight1 = (int)Math.Round(10 * 0.3);
                                         Interlocked.Add(ref ThreadsInUse1080p, Weight1);
                                     }
-                                    videoStream = videoStream.SetSize(1920, 1080, -1, -1, Scaling.lanczos, CropWidth, CropHeight, CropLeft, CropTop, "9/16");
+                                    videoStream = videoStream.SetSize(1920, 1080, -1, -1,
+                                        Scaling.lanczos, CropWidth, CropHeight, 
+                                        CropLeft, CropTop, "9/16", IsAMD);
                                 }
                                 LineNum = 71;
                             }
@@ -9666,7 +9679,8 @@ namespace VideoGui
                                     Interlocked.Add(ref ThreadsInUse720p, Weight);
                                 }
                                 videoStream = videoStream.SetSize(-1, 720, aspectratio,
-                                    ArModulas.ToInt(), Scaling.lanczos, 0, 0, 0, 0);
+                                    ArModulas.ToInt(), Scaling.lanczos, 0, 0, 0, 0,
+                                    "",IsAMD);
                             }
                         }
 
@@ -9681,7 +9695,7 @@ namespace VideoGui
                                 Interlocked.Add(ref ThreadsInUse1440p, Weight);
                             }
                             videoStream = videoStream.SetSize(-1, 1440, aspectratio,
-                                ArModulas.ToInt(), Scaling.lanczos, 0, 0, 0, 0);
+                                ArModulas.ToInt(), Scaling.lanczos, 0, 0, 0, 0,"",IsAMD);
                         }
                         if ((job.Is1440p) && (videoStream.Framerate > 25))
                         {
