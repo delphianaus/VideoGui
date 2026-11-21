@@ -170,7 +170,16 @@ namespace VideoGui
         List<DirectoriesProbe> Directories = new(); //Directories
         Dictionary<int, WebView2> wv2Dictionary = new Dictionary<int, WebView2>();
         Dictionary<int, WebView2> ActiveWebView = new Dictionary<int, WebView2>();
+        public static readonly DependencyProperty StatusWidthBindingProperty =
+         DependencyProperty.Register(nameof(StatusWidthBinding),
+         typeof(GridLength), typeof(ScraperModule),
+         new FrameworkPropertyMetadata(GridLength.Auto));
 
+        public GridLength StatusWidthBinding
+        {
+            get => (GridLength)GetValue(StatusWidthBindingProperty);
+            set => SetValue(StatusWidthBindingProperty, value);
+        }
 
         public System.Nullable<DateTime> ReleaseDate = null, ReleaseEndDate = null;
         public int uploadedcnt = 0;
@@ -1915,6 +1924,8 @@ namespace VideoGui
             }
         }
 
+       
+
         private ListBoxBuilder ShortsScheduleDownloadColumnDefinitionsListBuilder()
         {
             try
@@ -1926,9 +1937,10 @@ namespace VideoGui
                       SetHeaderMargin(new Thickness(5,0,0,0)).
                       SetDataField(nameof(ScraperData.VideoId)).
                       Hidden(),
-                    TextBlock().SetHeaderText("Filename").SetHeaderFontSize(10.0).SetName("Filename").
+                    TextBlock().SetHeaderText("Filename").SetHeaderFontSize(10.0).
+                      SetName("Filename").
                       SetDataField(nameof(ScraperData.Filename)).
-                      SetWidth(1100),
+                      SetWidthBinding("StatusWidthBinding"),
                 };
                 scrapeDataList = [];
                 return new(scrapeDataList, columns, fontSize: 15);

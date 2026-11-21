@@ -160,7 +160,8 @@ namespace CustomComponents.ListBoxExtensions
                 Debug.WriteLine($"Error in UpdateFontSize: {ex}");
             }
         }
-        public Func<ListBoxBuilder> BuildColumnCollection
+        public Func<
+            er> BuildColumnCollection
         {
             get => (Func<ListBoxBuilder>)GetValue(BuildColumnCollectionProperty);
             set => SetValue(BuildColumnCollectionProperty, value);

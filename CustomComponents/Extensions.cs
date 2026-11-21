@@ -570,7 +570,7 @@ namespace CustomComponents
                 return def;
             }
         }
-        public static MultiListboxColumnDefinition SetWidthBinding(this MultiListboxColumnDefinition def, RoutedEventHandler _fw)
+        public static MultiListboxColumnDefinition SetWidthBinding(this MultiListboxColumnDefinition def, string _fw)
         {
             try
             {
