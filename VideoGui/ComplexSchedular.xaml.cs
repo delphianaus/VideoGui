@@ -1200,9 +1200,13 @@ namespace VideoGui
         {
             try
             {
-                string CompName;
+                string CompName, RegKey = "ShortsMasters";
+                if (sender is CheckBox chk)
+                {
+                    if (chk.Name == "ChkShorts") RegKey = "ShortsMasters";
+                }
                 RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
-                string rootfolder = key.GetValueStr("DestinationDir", "c:\\");
+                string rootfolder = key.GetValueStr(RegKey, "c:\\");
                 destinationdir = rootfolder;
                 key?.Close();
 

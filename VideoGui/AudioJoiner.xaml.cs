@@ -325,8 +325,10 @@ namespace VideoGui
         {
             try
             {
+                string RegKey = chkDest.IsChecked.Value ? "FilteredDirectory" : "AudioJoinerSourceDir";
+            
                 RegistryKey key1 = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
-                string InitFolder = key1.GetValueStr("AudioJoinerSourceDir", "c:\\");
+                string InitFolder = key1.GetValueStr(RegKey, "c:\\");
                 key1?.Close();
                 FolderBrowserDialog folderBrowserDialog = new FolderBrowserDialog();
                 folderBrowserDialog.Title = "Select Source folder";

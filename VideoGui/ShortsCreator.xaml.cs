@@ -814,12 +814,13 @@ namespace VideoGui
             try
             {
                 RegistryKey key = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
-                string Root = key.GetValueStr("ShortsFile", @"c:\");
+                string Root = key.GetValueStr("ShortsMasters", @"c:\");
                 key?.Close();
                 NumberShorts = 0;
                 var fld = new OpenFileDialog();
                 fld.Filter = "mp4|*.mp4";
                 fld.DefaultExt = "*.mp4";
+                fld.InitialDirectory = Root;
                 fld.DefaultDirectory = Root;
                 fld.Multiselect = false;
                 var fd = fld.ShowDialog();
@@ -836,9 +837,9 @@ namespace VideoGui
                             shortsfile = newfile;
                         }
                     }
-                    RegistryKey key2 = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
-                    key2.SetValue("ShortsFile", Path.GetDirectoryName(shortsfile));
-                    key2?.Close();
+                    /*RegistryKey key2 = "SOFTWARE\\VideoProcessor".OpenSubKey(Registry.CurrentUser);
+                    key2.SetValue("ShortsMasters", Path.GetDirectoryName(shortsfile));
+                    key2?.Close();*/
                     var bridge = new ffmpegbridge();
                     bridge.ReadFile(shortsfile, true, true);
                     while (!bridge.Finished)
